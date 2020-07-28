@@ -1,0 +1,4 @@
+mmcv>=0.3.0
+numpy
+torch>=1.1
+torchvision
