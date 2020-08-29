@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='xxx',
+    type='ResNet',
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',

@@ -5,16 +5,17 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import DistSamplerSeedHook, Runner
+from mmcv.runner import (DistSamplerSeedHook, OptimizerHook, Runner,
+                         build_optimizer)
 
-from mmtrack.core import (DistEvalHook, DistOptimizerHook, EvalHook,
-                          Fp16OptimizerHook, build_optimizer)
+from mmtrack.core import DistEvalHook, EvalHook, Fp16OptimizerHook
 from mmtrack.datasets import build_dataloader, build_dataset
 from mmtrack.utils import get_root_logger
 
 
 def set_random_seed(seed, deterministic=False):
     """Set random seed.
+
     Args:
         seed (int): Seed to be used.
         deterministic (bool): Whether to set the deterministic option for
@@ -56,6 +57,7 @@ def parse_losses(losses):
 
 def batch_processor(model, data, train_mode):
     """Process a data batch.
+
     This method is required as an argument of Runner, which defines how to
     process a data batch and obtain proper outputs. The first 3 arguments of
     batch_processor are fixed.
@@ -131,7 +133,7 @@ def train_model(model,
         optimizer_config = Fp16OptimizerHook(
             **cfg.optimizer_config, **fp16_cfg, distributed=distributed)
     elif distributed and 'type' not in cfg.optimizer_config:
-        optimizer_config = DistOptimizerHook(**cfg.optimizer_config)
+        optimizer_config = OptimizerHook(**cfg.optimizer_config)
     else:
         optimizer_config = cfg.optimizer_config
 
