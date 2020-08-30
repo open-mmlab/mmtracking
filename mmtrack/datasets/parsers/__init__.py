@@ -1,4 +1,4 @@
 from .cocovid_parser import CocoVID
-from .mmvid_parser import mmVID
+from .mmvid_parser import MmVID
 
-__all__ = ['CocoVID', 'mmVID']
+__all__ = ['CocoVID', 'MmVID']

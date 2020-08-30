@@ -1,3 +1,3 @@
-from .builder import MODELS, build_model
+from .builder import MODELS, TRACKERS, build_model, build_tracker
 
-__all__ = ['build_model', 'MODELS']
+__all__ = ['MODELS', 'TRACKERS', 'build_model', 'build_tracker']

@@ -1,18 +1,15 @@
-import torch.nn as nn
-from mmcv.utils import Registry, build_from_cfg
+from mmdet.models.builder import build
+from mmcv.utils import Registry
 
 MODELS = Registry('model')
+TRACKERS = Registry('tracker')
 
 
-def build(cfg, registry, default_args=None):
-    if isinstance(cfg, list):
-        modules = [
-            build_from_cfg(cfg_, registry, default_args) for cfg_ in cfg
-        ]
-        return nn.Sequential(*modules)
-    else:
-        return build_from_cfg(cfg, registry, default_args)
+def build_tracker(cfg):
+    """Build tracker."""
+    return build(cfg, TRACKERS)
 
 
 def build_model(cfg, train_cfg=None, test_cfg=None):
+    """Build model."""
     return build(cfg, MODELS, dict(train_cfg=train_cfg, test_cfg=test_cfg))

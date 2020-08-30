@@ -1,10 +1,14 @@
-from .base_dataset import BaseDataset
-from .builder import build_dataloader, build_dataset
-from .parsers import CocoVID, mmVID
-from .pipelines import Compose
-from .samplers import DistributedSampler
+from mmdet.datasets.builder import (DATASETS, PIPELINES, build_dataloader,
+                                    build_dataset)
+from .parsers import CocoVID, MmVID
+from .pipelines import (LoadMultiImagesFromFile, SeqLoadAnnotations, SeqResize,
+                        SeqRandomFlip, SeqNormalize, SeqPad,
+                        SeqDefaultFormatBundle, SeqCollect)
+from .mmvid_dataset import MmVIDDataset
 
 __all__ = [
-    'BaseDataset', 'build_dataloader', 'build_dataset', 'Compose',
-    'DistributedSampler', 'CocoVID', 'mmVID'
+    'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
+    'MmVID', 'MmVIDDataset', 'LoadMultiImagesFromFile', 'SeqLoadAnnotations',
+    'SeqResize', 'SeqNormalize', 'SeqRandomFlip', 'SeqPad',
+    'SeqDefaultFormatBundle', 'SeqCollect'
 ]
