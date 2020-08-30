@@ -8,11 +8,12 @@ import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
+from mmdet.apis import set_random_seed
+from mmdet.apis import train_detector as train_model
 
 from mmtrack import __version__
-from mmdet.apis import set_random_seed, train_detector
 from mmtrack.datasets import build_dataset
-from mmdet.models import build_detector
+from mmtrack.models import build_model
 from mmtrack.utils import collect_env, get_root_logger
 
 
@@ -126,7 +127,7 @@ def main():
     cfg.seed = args.seed
     meta['seed'] = args.seed
 
-    model = build_detector(
+    model = build_model(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
 
     datasets = [build_dataset(cfg.data.train)]
@@ -143,7 +144,7 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
-    train_detector(
+    train_model(
         model,
         datasets,
         cfg,

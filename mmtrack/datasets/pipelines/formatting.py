@@ -1,6 +1,6 @@
-from mmdet.datasets.pipelines.formating import DefaultFormatBundle
-from mmdet.datasets.pipelines import Collect
 from mmdet.datasets.builder import PIPELINES
+from mmdet.datasets.pipelines import Collect
+from mmdet.datasets.pipelines.formating import DefaultFormatBundle
 
 
 @PIPELINES.register_module()

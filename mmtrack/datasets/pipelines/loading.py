@@ -1,6 +1,5 @@
-from mmdet.datasets.pipelines import LoadImageFromFile, LoadAnnotations
-
 from mmdet.datasets.builder import PIPELINES
+from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
 
 @PIPELINES.register_module()

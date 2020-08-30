@@ -1,7 +1,6 @@
 import numpy as np
-from mmdet.datasets.pipelines import Resize, RandomFlip, Normalize, Pad
-
 from mmdet.datasets.builder import PIPELINES
+from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
 
 @PIPELINES.register_module()

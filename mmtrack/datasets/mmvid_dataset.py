@@ -1,12 +1,12 @@
 import numpy as np
-from torch.utils.data import Dataset
-
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CustomDataset
 from mmdet.datasets.pipelines import Compose
-from .parsers import MmVID
 from pycocotools.coco import COCO
-from mmcv.utils import print_log
+from torch.utils.data import Dataset
+
 from mmtrack.utils import get_root_logger
+from .parsers import MmVID
 
 
 # TODO: add classes filter

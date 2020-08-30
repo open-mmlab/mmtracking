@@ -1,5 +1,5 @@
-from mmdet.models.builder import build
 from mmcv.utils import Registry
+from mmdet.models.builder import build
 
 MODELS = Registry('model')
 TRACKERS = Registry('tracker')

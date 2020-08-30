@@ -1,9 +1,9 @@
-import numpy as np
 import random
 from collections import defaultdict
 from time import time
 
 import mmcv
+import numpy as np
 from mmcv.utils import get_logger
 
 
