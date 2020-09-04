@@ -33,7 +33,7 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='TrackRoIHead',
+        type='QuasiDenseRoIHead',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -65,7 +65,13 @@ model = dict(
             embed_channels=256,
             norm_cfg=dict(type='GN', num_groups=32),
             loss_track=dict(type='MultiPosCrossEntropyLoss', loss_weight=0.25),
-            loss_track_aux=None)),
+            loss_track_aux=dict(
+                type='L2Loss',
+                neg_pos_ub=3,
+                pos_margin=0,
+                neg_margin=0.3,
+                hard_mining=True,
+                loss_weight=1.0))),
     tracker=dict(
         type='QuasiDenseEmbedTracker',
         init_score_thr=0.8,

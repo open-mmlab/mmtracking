@@ -136,20 +136,25 @@ class QuasiDenseEmbedHead(nn.Module):
                 cos_dist = cal_similarity(
                     key_embed, ref_embed, method='cosine')
                 cos_dists.append(cos_dist)
+            else:
+                cos_dists.append(None)
         return dists, cos_dists
 
     def loss(self, dists, cos_dists, targets, weights):
         losses = dict()
 
         loss_track = 0.
-        for _dists, _targets, _weights in zip(dists, targets, weights):
+        loss_track_aux = 0.
+        for _dists, _cos_dists, _targets, _weights in zip(
+                dists, cos_dists, targets, weights):
             loss_track += self.loss_track(
                 _dists, _targets, _weights, avg_factor=_weights.sum())
+            if self.loss_track_aux is not None:
+                loss_track_aux += self.loss_track_aux(_cos_dists, _targets)
         losses['loss_track'] = loss_track / len(dists)
 
         if self.loss_track_aux is not None:
-            losses['loss_track_aux'] = self.loss_track_aux(
-                cos_dists, targets, weights)
+            losses['loss_track_aux'] = loss_track_aux / len(dists)
 
         return losses
 

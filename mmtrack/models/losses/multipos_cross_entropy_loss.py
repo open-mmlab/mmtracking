@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from mmdet.models import LOSSES
-from mmdet.models import weight_reduce_loss
+from mmdet.models import LOSSES, weight_reduce_loss
 
 
 def multi_pos_cross_entropy(pred,

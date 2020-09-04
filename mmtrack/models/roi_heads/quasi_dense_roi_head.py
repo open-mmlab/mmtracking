@@ -5,7 +5,7 @@ from mmdet.models.roi_heads import StandardRoIHead
 
 
 @HEADS.register_module()
-class TrackRoIHead(StandardRoIHead):
+class QuasiDenseRoIHead(StandardRoIHead):
 
     def __init__(self,
                  track_roi_extractor=None,

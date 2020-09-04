@@ -1,4 +1,4 @@
-from .track_roi_head import TrackRoIHead
+from .quasi_dense_roi_head import QuasiDenseRoIHead
 from .track_heads import QuasiDenseEmbedHead
 
-__all__ = ['TrackRoIHead', 'QuasiDenseEmbedHead']
+__all__ = ['QuasiDenseRoIHead', 'QuasiDenseEmbedHead']
