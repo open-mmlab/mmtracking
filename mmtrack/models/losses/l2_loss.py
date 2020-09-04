@@ -88,8 +88,8 @@ class L2Loss(nn.Module):
             pred[neg_inds] -= self.neg_margin
         pred = torch.clamp(pred, min=0, max=1)
 
-        num_pos = (target == 1).sum()
-        num_neg = (target == 0).sum()
+        num_pos = int((target == 1).sum())
+        num_neg = int((target == 0).sum())
         if self.neg_pos_ub > 0 and num_neg / num_pos > self.neg_pos_ub:
             num_neg = num_pos * self.neg_pos_ub
             neg_idx = torch.nonzero(target == 0, as_tuple=False)
