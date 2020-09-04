@@ -1,17 +1,18 @@
 import numpy as np
 from mmcv.utils import print_log
-from mmdet.datasets import DATASETS, CustomDataset
+from mmdet.datasets import DATASETS, CocoDataset
 from mmdet.datasets.pipelines import Compose
 from pycocotools.coco import COCO
 from torch.utils.data import Dataset
 
 from mmtrack.utils import get_root_logger
-from .parsers import MmVID
+from .parsers import CocoVID
 
 
-# TODO: add classes filter
 @DATASETS.register_module()
-class MmVIDDataset(CustomDataset):
+class CocoVideoDataset(CocoDataset):
+
+    CLASSES = None
 
     def __init__(self,
                  ann_file,
@@ -172,6 +173,9 @@ class MmVIDDataset(CustomDataset):
                 for i in ref_instances
             ])
         else:
+            if isinstance(ann['bboxes'], list):
+                import pdb
+                pdb.set_trace()
             gt_pids = np.arange(ann['bboxes'].shape[0], dtype=np.int64)
             ref_gt_pids = gt_pids.copy()
         return gt_pids, ref_gt_pids
@@ -196,6 +200,8 @@ class MmVIDDataset(CustomDataset):
 
         img_info = self.data_infos[idx]
         ann_info = self.get_ann_info(idx)
+        if len(ann_info['bboxes']) == 0:
+            return None
         results = dict(img_info=img_info, ann_info=ann_info)
         if img_info['type'] == 'VID':
             ref_img_info = self.VID.get_ref_img(idx, **self.sample_ref)

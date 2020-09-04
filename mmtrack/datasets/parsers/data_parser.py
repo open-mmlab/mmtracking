@@ -7,7 +7,7 @@ import numpy as np
 from mmcv.utils import get_logger
 
 
-class MmVID(object):
+class DataAPI(object):
     """API for instance annotations in videos.
 
     The annotation format is shown as follows.
@@ -49,7 +49,7 @@ class MmVID(object):
     """
 
     def __init__(self, ann_file):
-        self.logger = get_logger(name='MmVID')
+        self.logger = get_logger(name='DataAPI')
         self.time = time()
 
         if isinstance(ann_file, str):

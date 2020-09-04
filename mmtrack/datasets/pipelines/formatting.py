@@ -1,6 +1,5 @@
 from mmdet.datasets.builder import PIPELINES
-from mmdet.datasets.pipelines import Collect
-from mmdet.datasets.pipelines.formating import DefaultFormatBundle
+from mmdet.datasets.pipelines import Collect, DefaultFormatBundle
 
 
 @PIPELINES.register_module()
@@ -38,8 +37,5 @@ class SeqCollect(Collect):
         data.update(outs[0])
         for k, v in outs[1].items():
             data[f'{self.ref_prefix}_{k}'] = v
-
-        import pdb
-        pdb.set_trace()
 
         return data

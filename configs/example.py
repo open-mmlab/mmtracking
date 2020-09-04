@@ -1,6 +1,6 @@
 # model settings
 model = dict(
-    type='FasterRCNN',
+    type='QuasiDenseFasterRCNN',
     pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
@@ -33,7 +33,7 @@ model = dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
     roi_head=dict(
-        type='StandardRoIHead',
+        type='TrackRoIHead',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -44,7 +44,7 @@ model = dict(
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=8,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
@@ -52,7 +52,33 @@ model = dict(
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0))))
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        track_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        track_head=dict(
+            type='QuasiDenseEmbedHead',
+            num_convs=4,
+            num_fcs=1,
+            embed_channels=256,
+            norm_cfg=dict(type='GN', num_groups=32),
+            loss_track=dict(type='MultiPosCrossEntropyLoss', loss_weight=0.25),
+            loss_track_aux=None)),
+    tracker=dict(
+        type='QuasiDenseEmbedTracker',
+        init_score_thr=0.8,
+        obj_score_thr=0.5,
+        match_score_thr=0.5,
+        memo_tracklet_frames=10,
+        memo_backdrop_frames=1,
+        memo_momentum=0.8,
+        nms_conf_thr=0.5,
+        nms_backdrop_iou_thr=0.3,
+        nms_class_iou_thr=0.7,
+        with_cats=True,
+        match_metric='cycle_softmax'))
 # model training and testing settings
 train_cfg = dict(
     rpn=dict(
@@ -94,7 +120,27 @@ train_cfg = dict(
             neg_pos_ub=-1,
             add_gt_as_proposals=True),
         pos_weight=-1,
-        debug=False))
+        debug=False),
+    embed=dict(
+        assigner=dict(
+            type='MaxIoUAssigner',
+            pos_iou_thr=0.7,
+            neg_iou_thr=0.3,
+            min_pos_iou=0.5,
+            match_low_quality=False,
+            ignore_iof_thr=-1),
+        sampler=dict(
+            type='CombinedSampler',
+            num=256,
+            pos_fraction=0.5,
+            neg_pos_ub=3,
+            add_gt_as_proposals=True,
+            pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            neg_sampler=dict(
+                type='IoUBalancedNegSampler',
+                floor_thr=-1,
+                floor_fraction=0,
+                num_bins=3))))
 test_cfg = dict(
     rpn=dict(
         nms_across_levels=False,
@@ -106,12 +152,9 @@ test_cfg = dict(
     rcnn=dict(
         score_thr=0.05,
         nms=dict(type='nms', iou_threshold=0.5),
-        max_per_img=100)
-    # soft-nms is also supported for rcnn testing
-    # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
-)
+        max_per_img=100))
 # dataset settings
-dataset_type = 'MmVIDDataset'
+dataset_type = 'CustomVideoDataset'
 data_root = 'data/bdd/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -173,14 +216,14 @@ optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=1.0 / 3,
+    warmup_iters=1000,
+    warmup_ratio=1.0 / 16,
     step=[8, 11])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -188,7 +231,7 @@ log_config = dict(
 # yapf:enable
 # runtime settings
 total_epochs = 12
-dist_params = dict(backend='nccl')
+dist_params = dict(backend='nccl', port='12346')
 log_level = 'INFO'
 work_dir = './work_dirs/xxx'
 load_from = None
