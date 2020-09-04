@@ -188,15 +188,15 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=0,
+    workers_per_gpu=1,
     train=dict(
         type=dataset_type,
         ann_file=dict(
-            DET=data_root + 'detection/annotations/val_coco-format.json',
-            VID=data_root + 'tracking/annotations/val_coco-format.json'),
+            DET=data_root + 'detection/annotations/train_coco-format.json',
+            VID=data_root + 'tracking/annotations/train_coco-format.json'),
         img_prefix=dict(
-            DET=data_root + 'detection/images/val/',
-            VID=data_root + 'tracking/images/val/'),
+            DET=data_root + 'detection/images/train/',
+            VID=data_root + 'tracking/images/train/'),
         key_img_sampler=dict(interval=1),
         ref_img_sampler=dict(num=1, scope=3, method='uniform'),
         pipeline=train_pipeline),
@@ -211,7 +211,7 @@ data = dict(
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -224,7 +224,7 @@ lr_config = dict(
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
-    interval=1,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -238,3 +238,4 @@ work_dir = './work_dirs/xxx'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+evaluation = dict(interval=12)
