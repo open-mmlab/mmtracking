@@ -3,12 +3,15 @@ import os
 
 import mmcv
 import torch
+from mmcv import Config, DictAction
+from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
+from mmdet.core import wrap_fp16_model
+from mmdet.datasets import build_dataset
 
 from mmtrack.apis import multi_gpu_test, single_gpu_test
-from mmtrack.core import wrap_fp16_model
-from mmtrack.datasets import build_dataloader, build_dataset
+from mmtrack.datasets import build_video_dataloader
 from mmtrack.models import build_model
 
 
@@ -18,16 +21,40 @@ def parse_args():
     parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
-        '--eval',
-        type=str,
-        nargs='+',
-        choices=['proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints'],
-        help='eval types')
-    parser.add_argument(
-        '--gpu_collect',
+        '--fuse-conv-bn',
         action='store_true',
-        help='whether to use gpu to collect results')
-    parser.add_argument('--tmpdir', help='tmp dir for writing some results')
+        help='Whether to fuse conv and bn, this will slightly increase'
+        'the inference speed')
+    parser.add_argument(
+        '--format-only',
+        action='store_true',
+        help='Format the output results without perform evaluation. It is'
+        'useful when you want to format the result to a specific format and '
+        'submit it to the test server')
+    parser.add_argument('--eval', type=str, nargs='+', help='eval types')
+    parser.add_argument('--show', action='store_true', help='show results')
+    parser.add_argument(
+        '--show-dir', help='directory where painted images will be saved')
+    parser.add_argument(
+        '--gpu-collect',
+        action='store_true',
+        help='whether to use gpu to collect results.')
+    parser.add_argument(
+        '--tmpdir',
+        help='tmp directory used for collecting results from multiple '
+        'workers, available when gpu-collect is not specified')
+    parser.add_argument(
+        '--cfg-options',
+        nargs='+',
+        action=DictAction,
+        help='override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into config file.')
+    parser.add_argument(
+        '--eval-options',
+        nargs='+',
+        action=DictAction,
+        help='custom options for evaluation, the key-value pair in xxx=yyy '
+        'format will be kwargs for dataset.evaluate() function')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -43,7 +70,21 @@ def parse_args():
 def main():
     args = parse_args()
 
-    cfg = mmcv.Config.fromfile(args.config)
+    assert args.out or args.eval or args.format_only or args.show \
+        or args.show_dir, \
+        ('Please specify at least one operation (save/eval/format/show the '
+         'results / save the results) with the argument "--out", "--eval"'
+         ', "--format-only", "--show" or "--show-dir"')
+
+    if args.eval and args.format_only:
+        raise ValueError('--eval and --format_only cannot be both specified')
+
+    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
+        raise ValueError('The output file must be a pkl file.')
+
+    cfg = Config.fromfile(args.config)
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -60,9 +101,9 @@ def main():
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
     dataset = build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
+    data_loader = build_video_dataloader(
         dataset,
-        imgs_per_gpu=1,
+        samples_per_gpu=1,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         shuffle=False)
@@ -72,11 +113,20 @@ def main():
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    _ = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+
+    if 'CLASSES' in checkpoint['meta']:
+        model.CLASSES = checkpoint['meta']['CLASSES']
+    else:
+        model.CLASSES = dataset.CLASSES
+
+    if args.fuse_conv_bn:
+        model = fuse_conv_bn(model)
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader)
+        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
+                                  args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
@@ -86,9 +136,20 @@ def main():
                                  args.gpu_collect)
 
     rank, _ = get_dist_info()
-    if args.out and rank == 0:
-        print(f'\nwriting results to {args.out}')
-        mmcv.dump(outputs, args.out)
+    if rank == 0:
+        if args.out:
+            print(f'\nwriting results to {args.out}')
+            mmcv.dump(outputs, args.out)
+        kwargs = {} if args.eval_options is None else args.eval_options
+        if args.format_only:
+            dataset.format_results(outputs, **kwargs)
+        if args.eval:
+            eval_kwargs = cfg.get('evaluation', {}).copy()
+            # hard-code way to remove EvalHook args
+            for key in ['interval', 'tmpdir', 'start', 'gpu_collect']:
+                eval_kwargs.pop(key, None)
+            eval_kwargs.update(dict(metric=args.eval, **kwargs))
+            print(dataset.evaluate(outputs, **eval_kwargs))
 
 
 if __name__ == '__main__':

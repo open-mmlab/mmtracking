@@ -1,11 +1,10 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from mmdet.core import multi_apply, bbox_overlaps
-from mmtrack.core import cal_similarity
-from mmdet.models import HEADS, build_loss
 from mmcv.cnn import ConvModule
+from mmdet.models import HEADS, build_loss
+
+from mmtrack.core import cal_similarity
 
 
 @HEADS.register_module

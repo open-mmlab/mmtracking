@@ -84,7 +84,7 @@ model = dict(
         nms_backdrop_iou_thr=0.3,
         nms_class_iou_thr=0.7,
         with_cats=True,
-        match_metric='cycle_softmax'))
+        match_metric='bisoftmax'))
 # model training and testing settings
 train_cfg = dict(
     rpn=dict(

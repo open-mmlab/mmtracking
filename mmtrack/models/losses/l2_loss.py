@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-
 from mmdet.models import LOSSES, weighted_loss
 
 
@@ -96,8 +95,8 @@ class L2Loss(nn.Module):
 
             if self.hard_mining:
                 costs = l2_loss(
-                    pred, target,
-                    reduction='none')[neg_idx[:, 0], neg_idx[:, 1]].detach()
+                    pred, target, reduction='none')[neg_idx[:, 0],
+                                                    neg_idx[:, 1]].detach()
                 neg_idx = neg_idx[costs.topk(num_neg)[1], :]
             else:
                 neg_idx = self.random_choice(neg_idx, num_neg)

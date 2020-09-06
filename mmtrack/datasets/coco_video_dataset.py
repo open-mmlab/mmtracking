@@ -1,10 +1,12 @@
 import random
+
+import mmcv
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CocoDataset
 from mmdet.datasets.pipelines import Compose
-from pycocotools.coco import COCO
 
+from mmtrack.core import eval_mot
 from mmtrack.utils import get_root_logger
 from .parsers import CocoVID
 
@@ -47,8 +49,8 @@ class CocoVideoDataset(CocoDataset):
         if self.num_vid_imgs > 0:
             vid_img_ids = set(_['image_id'] for _ in self.VID.anns.values())
             for i, img_info in enumerate(self.data_infos[:self.num_vid_imgs]):
-                if self.filter_empty_gt and (
-                        img_info['id'] not in vid_img_ids):
+                if self.filter_empty_gt and (img_info['id']
+                                             not in vid_img_ids):
                     continue
                 if min(img_info['width'], img_info['height']) >= min_size:
                     valid_inds.append(i)
@@ -118,6 +120,7 @@ class CocoVideoDataset(CocoDataset):
                 f'Default loading {ann_file} as video dataset.',
                 logger=self.logger)
             ann_file = dict(VID=ann_file)
+            self.img_prefix = dict(VID=self.img_prefix)
         elif isinstance(ann_file, dict):
             for k in ann_file.keys():
                 if k not in ['VID', 'DET']:
@@ -139,8 +142,8 @@ class CocoVideoDataset(CocoDataset):
             data_infos.extend(det_data_infos)
         self.num_det_imgs = len(data_infos) - self.num_vid_imgs
 
-        print_log((f"{mode}: Load {self.num_vid_imgs} images from VID set "
-                   f"and {self.num_det_imgs} images from DET set."),
+        print_log((f'{mode}: Load {self.num_vid_imgs} images from VID set '
+                   f'and {self.num_det_imgs} images from DET set.'),
                   logger=self.logger)
         return data_infos
 
@@ -247,10 +250,20 @@ class CocoVideoDataset(CocoDataset):
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
-        for _results in results:
+
+        def _prepare(_results):
             _results['img_prefix'] = self.img_prefix[_results['img_info']
                                                      ['type']]
+            _results['frame_id'] = _results['img_info'].get('frame_id', -1)
             _results['bbox_fields'] = []
+
+        if isinstance(results, list):
+            for _results in results:
+                _prepare(_results)
+        elif isinstance(results, dict):
+            _prepare(results)
+        else:
+            raise TypeError('Input must be a list or dict.')
 
     def prepare_train_img(self, idx):
         """Get training data and annotations after pipeline.
@@ -302,19 +315,55 @@ class CocoVideoDataset(CocoDataset):
 
         img_info = self.data_infos[idx]
         results = dict(img_info=img_info)
-        if self.proposals is not None:
-            results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
         return self.pipeline(results)
 
-    def format_results(self, results, **kwargs):
+    def format_track_results(self, results, **kwargs):
         pass
 
     def evaluate(self,
                  results,
-                 metric='mAP',
+                 metric=['bbox', 'track'],
                  logger=None,
+                 classwise=False,
+                 mot_class_average=False,
                  proposal_nums=(100, 300, 1000),
-                 iou_thr=0.5,
-                 scale_ranges=None):
-        pass
+                 iou_thr=None,
+                 metric_items=None):
+        eval_results = dict()
+        metrics = metric if isinstance(metric, list) else [metric]
+        allowed_metrics = ['bbox', 'segm', 'track']
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported')
+
+        super_metrics = ['bbox', 'segm']
+        super_metrics = [_ for _ in metrics if _ in super_metrics]
+        if super_metrics:
+            if 'bbox' in super_metrics and 'segm' in super_metrics:
+                super_results = []
+                for bbox, segm in zip(results['bbox_result'],
+                                      results['segm_result']):
+                    super_results.append((bbox, segm))
+            else:
+                super_results = results['bbox_result']
+            self.img_ids = [_['id'] for _ in self.data_infos]
+            self.coco = self.VID
+            super_eval_results = super().evaluate(
+                results=super_results,
+                metric=super_metrics,
+                logger=logger,
+                classwise=classwise,
+                proposal_nums=proposal_nums,
+                iou_thrs=iou_thr,
+                metric_items=metric_items)
+            eval_results.update(super_eval_results)
+
+        if 'track' in metrics:
+            track_eval_results = eval_mot(
+                mmcv.load(self.ann_file),
+                results['track_result'],
+                class_average=mot_class_average)
+            eval_results.update(track_eval_results)
+
+        return eval_results

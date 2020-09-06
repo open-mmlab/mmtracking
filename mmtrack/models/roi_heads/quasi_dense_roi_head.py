@@ -1,5 +1,5 @@
 import torch
-from mmdet.core import build_assigner, build_sampler, bbox2roi
+from mmdet.core import bbox2roi, build_assigner, build_sampler
 from mmdet.models import HEADS, build_head, build_roi_extractor
 from mmdet.models.roi_heads import StandardRoIHead
 
@@ -17,7 +17,8 @@ class QuasiDenseRoIHead(StandardRoIHead):
         assert track_head is not None
         self.track_train_cfg = track_train_cfg
         self.init_track_head(track_roi_extractor, track_head)
-        self.init_track_assigner_sampler()
+        if self.track_train_cfg:
+            self.init_track_assigner_sampler()
 
     def init_track_assigner_sampler(self):
         """Initialize assigner and sampler."""
@@ -109,16 +110,10 @@ class QuasiDenseRoIHead(StandardRoIHead):
                 feats=[lvl_feat[i][None] for lvl_feat in ref_x])
             ref_sampling_results.append(ref_sampling_result)
 
-        key_pos_rois = bbox2roi(
-            [res.pos_bboxes for res in key_sampling_results])
-        key_pos_feats = self.track_roi_extractor(
-            x[:self.track_roi_extractor.num_inputs], key_pos_rois)
-        key_feats = self.track_head(key_pos_feats)
-
-        ref_rois = bbox2roi([res.bboxes for res in ref_sampling_results])
-        ref_feats = self.track_roi_extractor(
-            ref_x[:self.track_roi_extractor.num_inputs], ref_rois)
-        ref_feats = self.track_head(ref_feats)
+        key_bboxes = [res.pos_bboxes for res in key_sampling_results]
+        key_feats = self._track_forward(x, key_bboxes)
+        ref_bboxes = [res.bboxes for res in ref_sampling_results]
+        ref_feats = self._track_forward(ref_x, ref_bboxes)
 
         match_feats = self.track_head.match(key_feats, ref_feats,
                                             key_sampling_results,
@@ -126,7 +121,28 @@ class QuasiDenseRoIHead(StandardRoIHead):
         asso_targets = self.track_head.get_track_targets(
             gt_mids, key_sampling_results, ref_sampling_results)
         loss_track = self.track_head.loss(*match_feats, *asso_targets)
-        
+
         losses.update(loss_track)
 
         return losses
+
+    def _track_forward(self, x, bboxes):
+        """Track head forward function used in both training and testing."""
+        rois = bbox2roi(bboxes)
+        track_feats = self.track_roi_extractor(
+            x[:self.track_roi_extractor.num_inputs], rois)
+        track_feats = self.track_head(track_feats)
+        return track_feats
+
+    def simple_test(self, x, img_metas, proposal_list, rescale):
+        det_bboxes, det_labels = self.simple_test_bboxes(
+            x, img_metas, proposal_list, self.test_cfg, rescale=rescale)
+
+        if det_bboxes.size(0) == 0:
+            return det_bboxes, det_labels, None
+
+        track_bboxes = det_bboxes[:, :-1] * torch.tensor(
+            img_metas[0]['scale_factor']).to(det_bboxes.device)
+        track_feats = self._track_forward(x, [track_bboxes])
+
+        return det_bboxes, det_labels, track_feats

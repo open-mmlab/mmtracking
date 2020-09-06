@@ -31,7 +31,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
     roi_head=dict(
         type='QuasiDenseRoIHead',
         bbox_roi_extractor=dict(
@@ -52,7 +52,7 @@ model = dict(
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
         track_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -84,7 +84,7 @@ model = dict(
         nms_backdrop_iou_thr=0.3,
         nms_class_iou_thr=0.7,
         with_cats=True,
-        match_metric='cycle_softmax'))
+        match_metric='bisoftmax'))
 # model training and testing settings
 train_cfg = dict(
     rpn=dict(
@@ -189,12 +189,16 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img']),
+            dict(
+                type='Collect',
+                keys=['img'],
+                meta_keys=('filename', 'img_shape', 'scale_factor', 'flip',
+                           'img_norm_cfg', 'frame_id')),
         ])
 ]
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=1,
+    workers_per_gpu=0,
     train=dict(
         type=dataset_type,
         ann_file=dict(

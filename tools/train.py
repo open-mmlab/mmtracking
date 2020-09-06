@@ -9,9 +9,9 @@ import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
 from mmdet.apis import set_random_seed
-from mmdet.apis import train_detector as train_model
 
 from mmtrack import __version__
+from mmtrack.apis import train_model
 from mmtrack.datasets import build_dataset
 from mmtrack.models import build_model
 from mmtrack.utils import collect_env, get_root_logger

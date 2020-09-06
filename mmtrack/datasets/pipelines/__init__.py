@@ -1,6 +1,6 @@
+from .formatting import SeqCollect, SeqDefaultFormatBundle
 from .loading import LoadMultiImagesFromFile, SeqLoadAnnotations
-from .transforms import SeqResize, SeqRandomFlip, SeqNormalize, SeqPad
-from .formatting import SeqDefaultFormatBundle, SeqCollect
+from .transforms import SeqNormalize, SeqPad, SeqRandomFlip, SeqResize
 
 __all__ = [
     'LoadMultiImagesFromFile', 'SeqLoadAnnotations', 'SeqResize',

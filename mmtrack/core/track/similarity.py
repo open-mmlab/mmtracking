@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 
@@ -15,7 +14,7 @@ def cal_similarity(key_embeds,
         return torch.mm(key_embeds, ref_embeds.t())
     elif method == 'dot_product':
         if temperature > 0:
-            dists = get_similarity(key_embeds, ref_embeds, method='cosine')
+            dists = cal_similarity(key_embeds, ref_embeds, method='cosine')
             dists /= temperature
         else:
             return torch.mm(key_embeds, ref_embeds.t())
