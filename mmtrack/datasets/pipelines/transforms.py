@@ -40,9 +40,30 @@ class SeqRandomFlip(RandomFlip):
 
     def __call__(self, results):
         if self.share_params:
-            flip = True if np.random.rand() < self.flip_ratio else False
+            if isinstance(self.direction, list):
+                # None means non-flip
+                direction_list = self.direction + [None]
+            else:
+                # None means non-flip
+                direction_list = [self.direction, None]
+
+            if isinstance(self.flip_ratio, list):
+                non_flip_ratio = 1 - sum(self.flip_ratio)
+                flip_ratio_list = self.flip_ratio + [non_flip_ratio]
+            else:
+                non_flip_ratio = 1 - self.flip_ratio
+                # exclude non-flip
+                single_ratio = self.flip_ratio / (len(direction_list) - 1)
+                flip_ratio_list = [single_ratio] * (len(direction_list) -
+                                                    1) + [non_flip_ratio]
+
+            cur_dir = np.random.choice(direction_list, p=flip_ratio_list)
+            flip = cur_dir is not None
+            flip_direction = cur_dir
+
             for _results in results:
                 _results['flip'] = flip
+                _results['flip_direction'] = flip_direction
 
         outs = []
         for _results in results:
