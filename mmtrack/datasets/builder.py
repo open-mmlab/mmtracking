@@ -17,7 +17,7 @@ def build_dataloader(dataset,
                      num_gpus=1,
                      dist=True,
                      test_as_video=True,
-                     shuffle=False,
+                     shuffle=True,
                      seed=None,
                      **kwargs):
     """Build PyTorch DataLoader.

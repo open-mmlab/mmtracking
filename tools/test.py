@@ -99,18 +99,18 @@ def main():
 
     # build the dataloader
     samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
-    test_as_video = cfg.data.test.pop('test_as_video', True)
-    if test_as_video:
-        from mmtrack.apis import multi_gpu_test, single_gpu_test
-    else:
+    use_mmdet = cfg.get('USE_MMDET', False)
+    if use_mmdet:
         from mmdet.apis import multi_gpu_test, single_gpu_test
+    else:
+        from mmtrack.apis import multi_gpu_test, single_gpu_test
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
         samples_per_gpu=samples_per_gpu,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
-        test_as_video=test_as_video,
+        test_as_video=not use_mmdet,
         shuffle=False)
 
     # build the model and load checkpoint

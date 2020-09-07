@@ -90,20 +90,20 @@ def train_model(model,
 
     # register eval hooks
     if validate:
-        test_as_video = cfg.data.val.pop('test_as_video', True)
+        use_mmdet = cfg.get('USE_MMDET', False)
+        if use_mmdet:
+            from mmdet.core import EvalHook, DistEvalHook
+        else:
+            from mmtrack.core import EvalHook, DistEvalHook
         val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
         val_dataloader = build_dataloader(
             val_dataset,
             samples_per_gpu=1,
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
-            test_as_video=test_as_video,
+            test_as_video=not use_mmdet,
             shuffle=False)
         eval_cfg = cfg.get('evaluation', {})
-        if test_as_video:
-            from mmtrack.core import DistEvalHook, EvalHook
-        else:
-            from mmdet.core import DistEvalHook, EvalHook
         eval_hook = DistEvalHook if distributed else EvalHook
         runner.register_hook(eval_hook(val_dataloader, **eval_cfg))
 
