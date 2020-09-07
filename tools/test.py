@@ -10,8 +10,7 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
-from mmtrack.apis import multi_gpu_test, single_gpu_test
-from mmtrack.datasets import build_video_dataloader
+from mmtrack.datasets import build_dataloader
 from mmtrack.models import build_model
 
 
@@ -99,13 +98,19 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
-    # TODO: support multiple images per gpu (only minor changes are needed)
+    samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
+    test_as_video = cfg.data.test.pop('test_as_video', True)
+    if test_as_video:
+        from mmtrack.apis import multi_gpu_test, single_gpu_test
+    else:
+        from mmdet.apis import multi_gpu_test, single_gpu_test
     dataset = build_dataset(cfg.data.test)
-    data_loader = build_video_dataloader(
+    data_loader = build_dataloader(
         dataset,
-        samples_per_gpu=1,
+        samples_per_gpu=samples_per_gpu,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
+        test_as_video=test_as_video,
         shuffle=False)
 
     # build the model and load checkpoint
@@ -115,13 +120,13 @@ def main():
         wrap_fp16_model(model)
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
+    if args.fuse_conv_bn:
+        model = fuse_conv_bn(model)
+
     if 'CLASSES' in checkpoint['meta']:
         model.CLASSES = checkpoint['meta']['CLASSES']
     else:
         model.CLASSES = dataset.CLASSES
-
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])

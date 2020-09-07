@@ -3,11 +3,11 @@ from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          OptimizerHook, build_optimizer)
 from mmcv.utils import build_from_cfg
-from mmdet.core import DistEvalHook, EvalHook, Fp16OptimizerHook
-from mmdet.datasets import build_dataloader, build_dataset
+from mmdet.core import Fp16OptimizerHook
+from mmdet.datasets import build_dataset
 from mmdet.utils import get_root_logger
 
-from mmtrack.datasets import build_video_dataloader
+from mmtrack.datasets import build_dataloader
 
 
 def train_model(model,
@@ -90,14 +90,20 @@ def train_model(model,
 
     # register eval hooks
     if validate:
+        test_as_video = cfg.data.val.pop('test_as_video', True)
         val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
-        val_dataloader = build_video_dataloader(
+        val_dataloader = build_dataloader(
             val_dataset,
             samples_per_gpu=1,
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
+            test_as_video=test_as_video,
             shuffle=False)
         eval_cfg = cfg.get('evaluation', {})
+        if test_as_video:
+            from mmtrack.core import DistEvalHook, EvalHook
+        else:
+            from mmdet.core import DistEvalHook, EvalHook
         eval_hook = DistEvalHook if distributed else EvalHook
         runner.register_hook(eval_hook(val_dataloader, **eval_cfg))
 
