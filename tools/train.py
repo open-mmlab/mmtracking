@@ -9,11 +9,10 @@ import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
 from mmdet.apis import set_random_seed
+from mmdet.datasets import build_dataset
 
 from mmtrack import __version__
-from mmtrack.apis import train_model
-from mmtrack.datasets import build_dataset
-from mmtrack.models import build_model
+
 from mmtrack.utils import collect_env, get_root_logger
 
 
@@ -69,8 +68,11 @@ def main():
     cfg = Config.fromfile(args.config)
 
     if cfg.get('USE_MMDET', False):
-        from mmtrack.models import register_from_mmdet
-        register_from_mmdet(cfg.model.type)
+        from mmdet.apis import train_detector as train_model
+        from mmdet.models import build_detector as build_model
+    else:
+        from mmtrack.apis import train_model
+        from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark

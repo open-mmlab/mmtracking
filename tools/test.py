@@ -10,9 +10,6 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
-from mmtrack.datasets import build_dataloader
-from mmtrack.models import build_model
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description='mmtrack test model')
@@ -84,11 +81,13 @@ def main():
     cfg = Config.fromfile(args.config)
     use_mmdet = cfg.get('USE_MMDET', False)
     if use_mmdet:
-        from mmtrack.models import register_from_mmdet
-        register_from_mmdet(cfg.model.type)
         from mmdet.apis import multi_gpu_test, single_gpu_test
+        from mmdet.models import build_detector as build_model
+        from mmdet.datasets import build_dataloader
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
+        from mmtrack.models import build_model
+        from mmtrack.datasets import build_dataloader
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
@@ -111,7 +110,6 @@ def main():
         samples_per_gpu=1,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
-        test_as_video=not use_mmdet,
         shuffle=False)
 
     # build the model and load checkpoint

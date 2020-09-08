@@ -5,9 +5,10 @@ from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
 from mmcv.utils import build_from_cfg
 from mmdet.core import Fp16OptimizerHook
 from mmdet.datasets import build_dataset
-from mmdet.utils import get_root_logger
 
+from mmtrack.core import EvalHook, DistEvalHook
 from mmtrack.datasets import build_dataloader
+from mmtrack.utils import get_root_logger
 
 
 def train_model(model,
@@ -90,18 +91,12 @@ def train_model(model,
 
     # register eval hooks
     if validate:
-        use_mmdet = cfg.get('USE_MMDET', False)
-        if use_mmdet:
-            from mmdet.core import EvalHook, DistEvalHook
-        else:
-            from mmtrack.core import EvalHook, DistEvalHook
         val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
         val_dataloader = build_dataloader(
             val_dataset,
             samples_per_gpu=1,
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
-            test_as_video=not use_mmdet,
             shuffle=False)
         eval_cfg = cfg.get('evaluation', {})
         eval_hook = DistEvalHook if distributed else EvalHook
