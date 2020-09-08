@@ -7,6 +7,6 @@ from .trackers import *  # noqa: F401,F403
 from .VID import *  # noqa: F401,F403
 
 from mmdet.models import FasterRCNN
-MODELS.register_module(FasterRCNN)
+MODELS.register_module(module=FasterRCNN)
 
 __all__ = ['MODELS', 'TRACKERS', 'build_model', 'build_tracker']

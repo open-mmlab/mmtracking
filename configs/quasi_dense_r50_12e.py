@@ -31,7 +31,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
+        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
     roi_head=dict(
         type='QuasiDenseRoIHead',
         bbox_roi_extractor=dict(
@@ -49,10 +49,10 @@ model = dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
-            reg_class_agnostic=False,
+            reg_class_agnostic=True,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
         track_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -93,13 +93,12 @@ train_cfg = dict(
             pos_iou_thr=0.7,
             neg_iou_thr=0.3,
             min_pos_iou=0.3,
-            match_low_quality=True,
             ignore_iof_thr=-1),
         sampler=dict(
             type='RandomSampler',
             num=256,
             pos_fraction=0.5,
-            neg_pos_ub=-1,
+            neg_pos_ub=5,
             add_gt_as_proposals=False),
         allowed_border=-1,
         pos_weight=-1,
@@ -107,8 +106,8 @@ train_cfg = dict(
     rpn_proposal=dict(
         nms_across_levels=False,
         nms_pre=2000,
-        nms_post=1000,
-        max_num=1000,
+        nms_post=2000,
+        max_num=2000,
         nms_thr=0.7,
         min_bbox_size=0),
     rcnn=dict(
@@ -117,14 +116,18 @@ train_cfg = dict(
             pos_iou_thr=0.5,
             neg_iou_thr=0.5,
             min_pos_iou=0.5,
-            match_low_quality=False,
             ignore_iof_thr=-1),
         sampler=dict(
-            type='RandomSampler',
+            type='CombinedSampler',
             num=512,
             pos_fraction=0.25,
-            neg_pos_ub=-1,
-            add_gt_as_proposals=True),
+            add_gt_as_proposals=True,
+            pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            neg_sampler=dict(
+                type='IoUBalancedNegSampler',
+                floor_thr=-1,
+                floor_fraction=0,
+                num_bins=3)),
         pos_weight=-1,
         debug=False),
     embed=dict(
@@ -133,7 +136,6 @@ train_cfg = dict(
             pos_iou_thr=0.7,
             neg_iou_thr=0.3,
             min_pos_iou=0.5,
-            match_low_quality=False,
             ignore_iof_thr=-1),
         sampler=dict(
             type='CombinedSampler',
@@ -167,7 +169,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile'),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_ins_id=True),
-    dict(type='SeqResize', img_scale=(1333, 800), keep_ratio=True),
+    dict(type='SeqResize', img_scale=(1296, 720), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -181,7 +183,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1296, 720),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -197,8 +199,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         ann_file=dict(
@@ -228,7 +230,7 @@ lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=1000,
-    warmup_ratio=1.0 / 16,
+    warmup_ratio=1.0 / 1000,
     step=[8, 11])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
@@ -242,10 +244,9 @@ log_config = dict(
 # yapf:enable
 # runtime settings
 total_epochs = 12
-dist_params = dict(backend='nccl', port='12346')
+dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/xxx'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(interval=12)
+evaluation = dict(metric=['bbox', 'track'], interval=2)

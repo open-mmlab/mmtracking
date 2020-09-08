@@ -1,5 +1,6 @@
+from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
-from mmdet.datasets.pipelines import Collect, DefaultFormatBundle
+from mmdet.datasets.pipelines import Collect, DefaultFormatBundle, to_tensor
 
 
 @PIPELINES.register_module()
@@ -9,6 +10,7 @@ class SeqDefaultFormatBundle(DefaultFormatBundle):
         outs = []
         for _results in results:
             _results = super().__call__(_results)
+            _results['gt_mids'] = DC(to_tensor(_results['gt_mids']))
             outs.append(_results)
         return outs
 

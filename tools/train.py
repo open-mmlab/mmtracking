@@ -8,6 +8,7 @@ import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
+
 from mmdet.apis import set_random_seed
 
 from mmtrack import __version__
