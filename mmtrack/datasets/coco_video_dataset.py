@@ -223,7 +223,7 @@ class CocoVideoDataset(CocoDataset):
             masks=gt_masks_ann,
             seg_map=seg_map)
 
-        if gt_instance_ids:
+        if self.load_as_video:
             ann['instance_ids'] = gt_instance_ids
 
         return ann
