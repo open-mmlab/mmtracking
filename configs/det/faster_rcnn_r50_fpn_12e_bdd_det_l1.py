@@ -142,21 +142,26 @@ test_pipeline = [
             dict(type='Collect', keys=['img']),
         ])
 ]
+CLASSES = ('pedestrian', 'rider', 'car', 'bus', 'truck', 'bicycle',
+           'motorcycle', 'train')
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
+        classes=CLASSES,
         ann_file=data_root + 'detection/annotations/train_coco-format.json',
         img_prefix=data_root + 'detection/images/train/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
+        classes=CLASSES,
         ann_file=data_root + 'tracking/annotations/val_coco-format.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
+        classes=CLASSES,
         ann_file=data_root + 'tracking/annotations/val_coco-format.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline))
