@@ -150,8 +150,14 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=CLASSES,
-        ann_file=data_root + 'detection/annotations/train_coco-format.json',
-        img_prefix=data_root + 'detection/images/train/',
+        ann_file=[
+            data_root + 'detection/annotations/train_coco-format.json',
+            data_root + 'tracking/annotations/train_coco-format.json'
+        ],
+        img_prefix=[
+            data_root + 'detection/images/train/',
+            data_root + 'tracking/images/train/'
+        ],
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,

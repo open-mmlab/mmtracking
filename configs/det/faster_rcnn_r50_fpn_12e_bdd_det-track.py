@@ -31,7 +31,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
     roi_head=dict(
         type='StandardRoIHead',
         bbox_roi_extractor=dict(
@@ -52,7 +52,7 @@ model = dict(
             reg_class_agnostic=True,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0))))
+            loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))))
 # model training and testing settings
 train_cfg = dict(
     rpn=dict(
@@ -150,8 +150,14 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=CLASSES,
-        ann_file=data_root + 'detection/annotations/train_coco-format.json',
-        img_prefix=data_root + 'detection/images/train/',
+        ann_file=[
+            data_root + 'detection/annotations/train_coco-format.json',
+            data_root + 'tracking/annotations/train_coco-format.json'
+        ],
+        img_prefix=[
+            data_root + 'detection/images/train/',
+            data_root + 'tracking/images/train/'
+        ],
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
