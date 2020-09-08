@@ -79,8 +79,7 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
-    use_mmdet = cfg.get('USE_MMDET', False)
-    if use_mmdet:
+    if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
         from mmdet.models import build_detector as build_model
         from mmdet.datasets import build_dataloader

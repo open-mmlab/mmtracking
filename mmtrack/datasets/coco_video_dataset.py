@@ -2,12 +2,9 @@ import random
 
 import mmcv
 import numpy as np
-from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CocoDataset
-from mmdet.datasets.pipelines import Compose
 
 from mmtrack.core import eval_mot
-from mmtrack.utils import get_root_logger
 from .parsers import CocoVID
 
 
@@ -17,77 +14,62 @@ class CocoVideoDataset(CocoDataset):
     CLASSES = None
 
     def __init__(self,
-                 ann_file,
-                 pipeline,
-                 img_prefix=None,
-                 test_mode=False,
-                 filter_empty_gt=True,
+                 load_as_video=True,
+                 match_gts=True,
+                 skip_nomatch_pairs=True,
                  key_img_sampler=dict(interval=1),
-                 ref_img_sampler=dict(scope=3)):
-        self.logger = get_root_logger()
-        if isinstance(ann_file, str):
-            print_log(
-                f'Default loading {ann_file} as video dataset',
-                logger=self.logger)
-            ann_file = dict(VID=ann_file)
-            img_prefix = dict(VID=img_prefix)
-        elif isinstance(ann_file, dict):
-            for k in ann_file.keys():
-                if k not in ['VID', 'DET']:
-                    raise KeyError('keys must be DET or VID')
-        else:
-            raise TypeError('ann_file must be a str or a dict')
-        self.ann_file = ann_file
-        self.img_prefix = img_prefix
-        self.test_mode = test_mode
-        self.filter_empty_gt = filter_empty_gt
+                 ref_img_sampler=dict(
+                     scope=3, num_ref_imgs=1, method='uniform'),
+                 *args,
+                 **kwargs):
+        self.load_as_video = load_as_video
+        self.match_gts = match_gts
+        self.skip_nomatch_pairs = skip_nomatch_pairs
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
+        super().__init__(*args, **kwargs)
 
-        self.data_infos = self.load_annotations(self.ann_file)
-        self.pipeline = Compose(pipeline)
-        if not test_mode:
-            valid_inds = self._filter_imgs()
-            self.data_infos = [self.data_infos[i] for i in valid_inds]
-            self._set_group_flag()
+    def load_annotations(self, ann_file):
+        """Load annotation from annotation file."""
+        if not self.load_as_video:
+            data_infos = super().load_annotations(ann_file)
+        else:
+            data_infos = self.load_video_anns(ann_file)
+        return data_infos
 
-    def __len__(self):
-        """Total number of samples of data."""
-        return len(self.data_infos)
+    def load_video_anns(self, ann_file):
+        self.coco = CocoVID(ann_file)
+        self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
 
-    def _filter_imgs(self, min_size=32):
-        valid_inds = []
+        data_infos = []
+        self.vid_ids = self.coco.get_vid_ids()
+        self.img_ids = []
+        for vid_id in self.vid_ids:
+            img_ids = self.coco.get_img_ids_from_vid(vid_id)
+            img_ids = self.key_img_sampling(img_ids, **self.key_img_sampler)
+            self.img_ids.extend(img_ids)
+            for img_id in img_ids:
+                info = self.coco.load_imgs([img_id])[0]
+                info['filename'] = info['file_name']
+                data_infos.append(info)
+        return data_infos
 
-        if self.num_vid_imgs > 0:
-            vid_img_ids = set(_['image_id'] for _ in self.VID.anns.values())
-            for i, img_info in enumerate(self.data_infos[:self.num_vid_imgs]):
-                if self.filter_empty_gt and (img_info['id']
-                                             not in vid_img_ids):
-                    continue
-                if min(img_info['width'], img_info['height']) >= min_size:
-                    valid_inds.append(i)
+    def key_img_sampling(self, img_ids, interval=1):
+        return img_ids[::interval]
 
-        if self.num_det_imgs > 0:
-            det_img_ids = set(_['image_id'] for _ in self.coco.anns.values())
-            for i, img_info in enumerate(self.data_infos[self.num_vid_imgs:]):
-                if self.filter_empty_gt and img_info['id'] not in det_img_ids:
-                    continue
-                if min(img_info['width'], img_info['height']) >= min_size:
-                    valid_inds.append(i + self.num_vid_imgs)
-
-        return valid_inds
-
-    def key_img_sampling(self, vid_id, interval=1):
-        img_ids = self.VID.get_img_ids_from_vid(vid_id)
-        if not self.test_mode:
-            img_ids = img_ids[::interval]
-        return img_ids
-
-    def ref_img_sampling(self, img_info, scope, num=1, method='uniform'):
-        assert num == 1
-        if scope > 0:
+    def ref_img_sampling(self,
+                         img_info,
+                         scope,
+                         num_ref_imgs=1,
+                         method='uniform'):
+        if num_ref_imgs != 1 or method != 'uniform':
+            raise NotImplementedError
+        if img_info.get('frame_id', -1) < 0 or scope <= 0:
+            ref_img_info = img_info.copy()
+        else:
             vid_id = img_info['video_id']
-            img_ids = self.VID.get_img_ids_from_vid(vid_id)
+            img_ids = self.coco.get_img_ids_from_vid(vid_id)
             frame_id = img_info['frame_id']
             if method == 'uniform':
                 left = max(0, frame_id - scope)
@@ -95,58 +77,21 @@ class CocoVideoDataset(CocoDataset):
                 valid_inds = img_ids[left:frame_id] + img_ids[frame_id +
                                                               1:right + 1]
                 ref_img_id = random.choice(valid_inds)
-            else:
-                raise NotImplementedError(
-                    'only uniform sampling is supported now')
-            ref_img_info = self.VID.loadImgs([ref_img_id])[0]
+            ref_img_info = self.coco.loadImgs([ref_img_id])[0]
             ref_img_info['filename'] = ref_img_info['file_name']
-            ref_img_info['type'] = 'VID'
-        else:
-            ref_img_info = img_info.copy()
         return ref_img_info
 
-    def load_video_anns(self, ann_file):
-        data_infos = []
+    def pre_pipeline(self, results):
+        """Prepare results dict for pipeline."""
+        if isinstance(results, list):
+            for _results in results:
+                super().pre_pipeline(_results)
+        elif isinstance(results, dict):
+            super().pre_pipeline(results)
+        else:
+            raise TypeError('input must be a list or a dict')
 
-        self.VID = CocoVID(ann_file)
-
-        self.cat_ids = self.VID.get_cat_ids(cat_names=self.CLASSES)
-        self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
-
-        self.vid_ids = self.VID.get_vid_ids()
-        for vid_id in self.vid_ids:
-            img_ids = self.key_img_sampling(vid_id, **self.key_img_sampler)
-            for img_id in img_ids:
-                info = self.VID.load_imgs([img_id])[0]
-                info['filename'] = info['file_name']
-                info['type'] = 'VID'
-                data_infos.append(info)
-
-        return data_infos
-
-    def load_annotations(self, ann_file):
-        """Load annotation from annotation file."""
-        mode = 'TEST' if self.test_mode else 'TRAIN'
-        data_infos = []
-
-        if 'VID' in ann_file.keys():
-            vid_data_infos = self.load_video_anns(ann_file['VID'])
-            data_infos.extend(vid_data_infos)
-        self.num_vid_imgs = len(data_infos)
-
-        if 'DET' in ann_file.keys():
-            det_data_infos = super().load_annotations(ann_file['DET'])
-            for info in det_data_infos:
-                info['type'] = 'DET'
-            data_infos.extend(det_data_infos)
-        self.num_det_imgs = len(data_infos) - self.num_vid_imgs
-
-        print_log((f'{mode}: Load {self.num_vid_imgs} images from VID set '
-                   f'and {self.num_det_imgs} images from DET set.'),
-                  logger=self.logger)
-        return data_infos
-
-    def get_ann_info(self, idx):
+    def get_ann_info(self, img_info):
         """Get COCO annotation by index.
 
         Args:
@@ -155,29 +100,66 @@ class CocoVideoDataset(CocoDataset):
         Returns:
             dict: Annotation info of specified index.
         """
-        img_info = self.data_infos[idx]
         img_id = img_info['id']
-        api = self.coco if img_info['type'] == 'DET' else self.VID
-        ann_ids = api.get_ann_ids(img_ids=[img_id])
-        ann_info = api.load_anns(ann_ids)
-        return self._parse_ann_info(self.data_infos[idx], ann_info)
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_info = self.coco.load_anns(ann_ids)
+        return self._parse_ann_info(img_info, ann_info)
 
-    def match_gts(self, ann, ref_ann):
-        if 'instance_ids' in ann.keys():
-            gt_instances = list(ann['instance_ids'])
-            ref_instances = list(ref_ann['instance_ids'])
-            gt_pids = np.array([
-                ref_instances.index(i) if i in ref_instances else -1
-                for i in gt_instances
+    def prepare_results(self, img_info):
+        ann_info = self.get_ann_info(img_info)
+        results = dict(img_info=img_info, ann_info=ann_info)
+        if self.proposals is not None:
+            idx = self.img_ids.index(img_info['id'])
+            results['proposals'] = self.proposals[idx]
+        return results
+
+    def match_results(self, results, ref_results):
+        match_indices, ref_match_indices = self._match_gts(
+            results['ann_info'], ref_results['ann_info'])
+        results['ann_info']['match_indices'] = match_indices
+        ref_results['ann_info']['match_indices'] = ref_match_indices
+        return results, ref_results
+
+    def _match_gts(self, ann, ref_ann):
+        if ann.get('instance_ids', False):
+            ins_ids = list(ann['instance_ids'])
+            ref_ins_ids = list(ref_ann['instance_ids'])
+            match_indices = np.array([
+                ref_ins_ids.index(i) if i in ref_ins_ids else -1
+                for i in ins_ids
             ])
-            ref_gt_pids = np.array([
-                gt_instances.index(i) if i in gt_instances else -1
-                for i in ref_instances
+            ref_match_indices = np.array([
+                ins_ids.index(i) if i in ins_ids else -1 for i in ref_ins_ids
             ])
         else:
-            gt_pids = np.arange(ann['bboxes'].shape[0], dtype=np.int64)
-            ref_gt_pids = gt_pids.copy()
-        return gt_pids, ref_gt_pids
+            match_indices = np.arange(ann['bboxes'].shape[0], dtype=np.int64)
+            ref_match_indices = match_indices.copy()
+        return match_indices, ref_match_indices
+
+    def prepare_train_img(self, idx):
+        """Get training data and annotations after pipeline.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Training data and annotation after pipeline with new keys \
+                introduced by pipeline.
+        """
+        img_info = self.data_infos[idx]
+        ref_img_info = self.ref_img_sampling(img_info, **self.ref_img_sampler)
+
+        results = self.prepare_results(img_info)
+        ref_results = self.prepare_results(ref_img_info)
+
+        if self.match_gts:
+            results, ref_results = self.match_results(results, ref_results)
+            nomatch = (results['ann_info']['match_indices'] == -1).all()
+            if self.skip_nomatch_pairs and nomatch:
+                return None
+
+        self.pre_pipeline([results, ref_results])
+        return self.pipeline([results, ref_results])
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
@@ -195,8 +177,7 @@ class CocoVideoDataset(CocoDataset):
         gt_labels = []
         gt_bboxes_ignore = []
         gt_masks_ann = []
-        if img_info['type'] == 'VID':
-            gt_instance_ids = []
+        gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
@@ -242,83 +223,10 @@ class CocoVideoDataset(CocoDataset):
             masks=gt_masks_ann,
             seg_map=seg_map)
 
-        if img_info['type'] == 'VID':
+        if gt_instance_ids:
             ann['instance_ids'] = gt_instance_ids
 
         return ann
-
-    def pre_pipeline(self, results):
-        """Prepare results dict for pipeline."""
-
-        def _pre_pipeline(_results):
-            _results['img_prefix'] = self.img_prefix[_results['img_info']
-                                                     ['type']]
-            _results['frame_id'] = _results['img_info'].get('frame_id', -1)
-            _results['bbox_fields'] = []
-
-        if isinstance(results, list):
-            for _results in results:
-                _pre_pipeline(_results)
-        elif isinstance(results, dict):
-            _pre_pipeline(results)
-        else:
-            raise TypeError('input must be a list or a dict')
-
-    def get_ref_results(self, results):
-        img_info = results['img_info']
-        if img_info['type'] == 'VID':
-            ref_img_info = self.ref_img_sampling(img_info,
-                                                 **self.ref_img_sampler)
-            ref_ann_ids = self.VID.get_ann_ids(img_ids=[ref_img_info['id']])
-            ref_ann_info = self.VID.load_anns(ref_ann_ids)
-            ref_ann_info = self._parse_ann_info(ref_img_info, ref_ann_info)
-            ref_results = dict(img_info=ref_img_info, ann_info=ref_ann_info)
-        else:
-            ref_results = results.copy()
-
-        mids, ref_mids = self.match_gts(results['ann_info'],
-                                        ref_results['ann_info'])
-        results['ann_info']['mids'] = mids
-        ref_results['ann_info']['mids'] = ref_mids
-        return results, ref_results
-
-    def prepare_train_img(self, idx):
-        """Get training data and annotations after pipeline.
-
-        Args:
-            idx (int): Index of data.
-
-        Returns:
-            dict: Training data and annotation after pipeline with new keys \
-                introduced by pipeline.
-        """
-
-        img_info = self.data_infos[idx]
-        ann_info = self.get_ann_info(idx)
-        results = dict(img_info=img_info, ann_info=ann_info)
-
-        results, ref_results = self.get_ref_results(results)
-        if (results['img_info']['mids'] == -1).all():
-            return None
-        else:
-            self.pre_pipeline([results, ref_results])
-            return self.pipeline([results, ref_results])
-
-    def prepare_test_img(self, idx):
-        """Get testing data  after pipeline.
-
-        Args:
-            idx (int): Index of data.
-
-        Returns:
-            dict: Testing data after pipeline with new keys intorduced by \
-                piepline.
-        """
-
-        img_info = self.data_infos[idx]
-        results = dict(img_info=img_info)
-        self.pre_pipeline(results)
-        return self.pipeline(results)
 
     def format_track_results(self, results, **kwargs):
         pass
@@ -350,10 +258,6 @@ class CocoVideoDataset(CocoDataset):
                     super_results.append((bbox, segm))
             else:
                 super_results = results['bbox_result']
-            if not hasattr(self, 'img_ids'):
-                self.img_ids = [_['id'] for _ in self.data_infos]
-            if (not hasattr(self, 'coco')) and hasattr(self, 'VID'):
-                self.coco = self.VID
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,

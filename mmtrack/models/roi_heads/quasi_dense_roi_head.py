@@ -66,7 +66,7 @@ class QuasiDenseRoIHead(StandardRoIHead):
                       proposal_list,
                       gt_bboxes,
                       gt_labels,
-                      gt_mids,
+                      gt_match_indices,
                       ref_x,
                       ref_img_metas,
                       ref_proposals,
@@ -119,7 +119,7 @@ class QuasiDenseRoIHead(StandardRoIHead):
                                             key_sampling_results,
                                             ref_sampling_results)
         asso_targets = self.track_head.get_track_targets(
-            gt_mids, key_sampling_results, ref_sampling_results)
+            gt_match_indices, key_sampling_results, ref_sampling_results)
         loss_track = self.track_head.loss(*match_feats, *asso_targets)
 
         losses.update(loss_track)

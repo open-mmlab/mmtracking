@@ -98,18 +98,19 @@ class QuasiDenseEmbedHead(nn.Module):
         x = self.fc_embed(x)
         return x
 
-    def get_track_targets(self, gt_mids, key_sampling_results,
+    def get_track_targets(self, gt_match_indices, key_sampling_results,
                           ref_sampling_results):
         track_targets = []
         track_weights = []
-        for _gt_mids, key_res, ref_res in zip(gt_mids, key_sampling_results,
-                                              ref_sampling_results):
-            targets = _gt_mids.new_zeros(
+        for _gt_match_indices, key_res, ref_res in zip(gt_match_indices,
+                                                       key_sampling_results,
+                                                       ref_sampling_results):
+            targets = _gt_match_indices.new_zeros(
                 (key_res.pos_bboxes.size(0), ref_res.bboxes.size(0)),
                 dtype=torch.int)
-            _mids = _gt_mids[key_res.pos_assigned_gt_inds]
-            pos2pos = (_mids.view(-1, 1) == ref_res.pos_assigned_gt_inds.view(
-                1, -1)).int()
+            _match_indices = _gt_match_indices[key_res.pos_assigned_gt_inds]
+            pos2pos = (_match_indices.view(
+                -1, 1) == ref_res.pos_assigned_gt_inds.view(1, -1)).int()
             targets[:, :pos2pos.size(1)] = pos2pos
             weights = (targets.sum(dim=1) > 0).float()
             track_targets.append(targets)

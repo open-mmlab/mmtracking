@@ -23,12 +23,12 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
                       img_metas,
                       gt_bboxes,
                       gt_labels,
-                      gt_mids,
+                      gt_match_indices,
                       ref_img,
                       ref_img_metas,
                       ref_gt_bboxes,
                       ref_gt_labels,
-                      ref_gt_mids,
+                      ref_gt_match_indices,
                       gt_bboxes_ignore=None,
                       gt_masks=None,
                       ref_gt_bboxes_ignore=None,
@@ -53,9 +53,10 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
         ref_proposals = self.rpn_head.simple_test_rpn(ref_x, ref_img_metas)
 
         roi_losses = self.roi_head.forward_train(
-            x, img_metas, proposal_list, gt_bboxes, gt_labels, gt_mids, ref_x,
-            ref_img_metas, ref_proposals, ref_gt_bboxes, ref_gt_labels,
-            gt_bboxes_ignore, gt_masks, ref_gt_bboxes_ignore, **kwargs)
+            x, img_metas, proposal_list, gt_bboxes, gt_labels,
+            gt_match_indices, ref_x, ref_img_metas, ref_proposals,
+            ref_gt_bboxes, ref_gt_labels, gt_bboxes_ignore, gt_masks,
+            ref_gt_bboxes_ignore, **kwargs)
         losses.update(roi_losses)
 
         return losses

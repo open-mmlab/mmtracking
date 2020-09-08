@@ -34,7 +34,8 @@ class SeqLoadAnnotations(LoadAnnotations):
             dict: The dict contains loaded label annotations.
         """
 
-        results['gt_mids'] = results['ann_info']['mids'].copy()
+        results['gt_match_indices'] = results['ann_info'][
+            'match_indices'].copy()
 
         return results
 
