@@ -25,6 +25,18 @@ class CocoVideoDataset(CocoDataset):
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(scope=3)):
         self.logger = get_root_logger()
+        if isinstance(ann_file, str):
+            print_log(
+                f'Default loading {ann_file} as video dataset',
+                logger=self.logger)
+            ann_file = dict(VID=ann_file)
+            img_prefix = dict(VID=img_prefix)
+        elif isinstance(ann_file, dict):
+            for k in ann_file.keys():
+                if k not in ['VID', 'DET']:
+                    raise KeyError('keys must be DET or VID')
+        else:
+            raise TypeError('ann_file must be a str or a dict')
         self.ann_file = ann_file
         self.img_prefix = img_prefix
         self.test_mode = test_mode
@@ -85,7 +97,7 @@ class CocoVideoDataset(CocoDataset):
                 ref_img_id = random.choice(valid_inds)
             else:
                 raise NotImplementedError(
-                    'Only uniform sampling is supported now.')
+                    'only uniform sampling is supported now')
             ref_img_info = self.VID.loadImgs([ref_img_id])[0]
             ref_img_info['filename'] = ref_img_info['file_name']
             ref_img_info['type'] = 'VID'
@@ -115,19 +127,6 @@ class CocoVideoDataset(CocoDataset):
     def load_annotations(self, ann_file):
         """Load annotation from annotation file."""
         mode = 'TEST' if self.test_mode else 'TRAIN'
-        if isinstance(ann_file, str):
-            print_log(
-                f'Default loading {ann_file} as video dataset.',
-                logger=self.logger)
-            ann_file = dict(VID=ann_file)
-            self.img_prefix = dict(VID=self.img_prefix)
-        elif isinstance(ann_file, dict):
-            for k in ann_file.keys():
-                if k not in ['VID', 'DET']:
-                    raise ValueError('Keys must be DET or VID.')
-        else:
-            raise TypeError('ann_file must be a str or dict.')
-
         data_infos = []
 
         if 'VID' in ann_file.keys():
@@ -251,7 +250,7 @@ class CocoVideoDataset(CocoDataset):
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
 
-        def _prepare(_results):
+        def _pre_pipeline(_results):
             _results['img_prefix'] = self.img_prefix[_results['img_info']
                                                      ['type']]
             _results['frame_id'] = _results['img_info'].get('frame_id', -1)
@@ -259,11 +258,29 @@ class CocoVideoDataset(CocoDataset):
 
         if isinstance(results, list):
             for _results in results:
-                _prepare(_results)
+                _pre_pipeline(_results)
         elif isinstance(results, dict):
-            _prepare(results)
+            _pre_pipeline(results)
         else:
-            raise TypeError('Input must be a list or dict.')
+            raise TypeError('input must be a list or a dict')
+
+    def get_ref_results(self, results):
+        img_info = results['img_info']
+        if img_info['type'] == 'VID':
+            ref_img_info = self.ref_img_sampling(img_info,
+                                                 **self.ref_img_sampler)
+            ref_ann_ids = self.VID.get_ann_ids(img_ids=[ref_img_info['id']])
+            ref_ann_info = self.VID.load_anns(ref_ann_ids)
+            ref_ann_info = self._parse_ann_info(ref_img_info, ref_ann_info)
+            ref_results = dict(img_info=ref_img_info, ann_info=ref_ann_info)
+        else:
+            ref_results = results.copy()
+
+        mids, ref_mids = self.match_gts(results['ann_info'],
+                                        ref_results['ann_info'])
+        results['ann_info']['mids'] = mids
+        ref_results['ann_info']['mids'] = ref_mids
+        return results, ref_results
 
     def prepare_train_img(self, idx):
         """Get training data and annotations after pipeline.
@@ -280,26 +297,11 @@ class CocoVideoDataset(CocoDataset):
         ann_info = self.get_ann_info(idx)
         results = dict(img_info=img_info, ann_info=ann_info)
 
-        if img_info['type'] == 'VID':
-            ref_img_info = self.ref_img_sampling(img_info,
-                                                 **self.ref_img_sampler)
-            ref_ann_ids = self.VID.get_ann_ids(img_ids=[ref_img_info['id']])
-            ref_ann_info = self.VID.load_anns(ref_ann_ids)
-            ref_ann_info = self._parse_ann_info(ref_img_info, ref_ann_info)
-            ref_results = dict(img_info=ref_img_info, ann_info=ref_ann_info)
-        else:
-            ref_results = results.copy()
-
-        mids, ref_mids = self.match_gts(results['ann_info'],
-                                        ref_results['ann_info'])
-
-        if (mids == -1).all():
+        results, ref_results = self.get_ref_results(results)
+        if (results['img_info']['mids'] == -1).all():
             return None
         else:
-            results['ann_info']['mids'] = mids
-            ref_results['ann_info']['mids'] = ref_mids
             self.pre_pipeline([results, ref_results])
-
             return self.pipeline([results, ref_results])
 
     def prepare_test_img(self, idx):
@@ -330,6 +332,7 @@ class CocoVideoDataset(CocoDataset):
                  proposal_nums=(100, 300, 1000),
                  iou_thr=None,
                  metric_items=None):
+        # evaluate for detectors without tracker
         eval_results = dict()
         metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'track']
@@ -347,8 +350,10 @@ class CocoVideoDataset(CocoDataset):
                     super_results.append((bbox, segm))
             else:
                 super_results = results['bbox_result']
-            self.img_ids = [_['id'] for _ in self.data_infos]
-            self.coco = self.VID
+            if not hasattr(self, 'img_ids'):
+                self.img_ids = [_['id'] for _ in self.data_infos]
+            if (not hasattr(self, 'coco')) and hasattr(self, 'VID'):
+                self.coco = self.VID
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,

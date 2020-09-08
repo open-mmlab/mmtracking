@@ -7,7 +7,6 @@ from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
-
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
@@ -83,6 +82,13 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+    use_mmdet = cfg.get('USE_MMDET', False)
+    if use_mmdet:
+        from mmtrack.models import register_from_mmdet
+        register_from_mmdet(cfg.model.type)
+        from mmdet.apis import multi_gpu_test, single_gpu_test
+    else:
+        from mmtrack.apis import multi_gpu_test, single_gpu_test
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
@@ -99,16 +105,10 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
-    samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
-    use_mmdet = cfg.get('USE_MMDET', False)
-    if use_mmdet:
-        from mmdet.apis import multi_gpu_test, single_gpu_test
-    else:
-        from mmtrack.apis import multi_gpu_test, single_gpu_test
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
-        samples_per_gpu=samples_per_gpu,
+        samples_per_gpu=1,
         workers_per_gpu=cfg.data.workers_per_gpu,
         dist=distributed,
         test_as_video=not use_mmdet,

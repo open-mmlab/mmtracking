@@ -8,7 +8,6 @@ import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
-
 from mmdet.apis import set_random_seed
 
 from mmtrack import __version__
@@ -68,6 +67,10 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
+
+    if cfg.get('USE_MMDET', False):
+        from mmtrack.models import register_from_mmdet
+        register_from_mmdet(cfg.model.type)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
