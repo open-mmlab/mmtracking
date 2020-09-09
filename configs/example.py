@@ -195,12 +195,13 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
+    samples_per_gpu=2,
     workers_per_gpu=0,
     train=[
         dict(
             type=dataset_type,
-            ann_file=data_root + 'tracking/annotations/val_coco-format.json',
+            ann_file=data_root +
+            'tracking/annotations/bdd100k_track_mini.json',
             img_prefix=data_root + 'tracking/images/val/',
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
@@ -208,18 +209,18 @@ data = dict(
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root + 'detection/annotations/val_coco-format.json',
+            ann_file=data_root + 'detection/annotations/bdd100k_det_mini.json',
             img_prefix=data_root + 'detection/images/val/',
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'tracking/annotations/val_coco-format.json',
+        ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'tracking/annotations/val_coco-format.json',
+        ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline))
 # optimizer
@@ -229,7 +230,7 @@ optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
-    warmup_iters=1000,
+    warmup_iters=10,
     warmup_ratio=1.0 / 16,
     step=[8, 11])
 # checkpoint saving

@@ -26,7 +26,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    for subset in ['train', 'val']:
+    for subset in ['train', 'val', 'test']:
         print(f'convert BDD tracking {subset} set into COCO-VID format')
         vids = os.listdir(osp.join(args.input, subset))
         coco = defaultdict(list)
@@ -75,7 +75,9 @@ def main():
                     coco['annotations'].append(ann)
                     ann_id += 1
                 img_id += 1
-        mmcv.dump(coco, osp.join(args.output, f'{subset}_coco-format.json'))
+        mmcv.dump(
+            coco,
+            osp.join(args.output, f'bdd100k_track_{subset}_cocoformat.json'))
         print('converted {} videos, {} images with {} objects'.format(
             len(coco['videos']), len(coco['images']),
             len(coco['annotations'])))

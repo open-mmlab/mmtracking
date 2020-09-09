@@ -9,7 +9,7 @@ from ..builder import MODELS, build_tracker
 class QuasiDenseFasterRCNN(TwoStageDetector):
 
     def __init__(self, tracker=None, *args, **kwargs):
-        self.prepare_cfg(self, kwargs)
+        self.prepare_cfg(kwargs)
         super().__init__(*args, **kwargs)
         self.tracker_cfg = tracker
 
@@ -77,7 +77,7 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
             x, img_metas, proposal_list, rescale)
 
         if track_feats is not None:
-            _, _, ids = self.tracker.match(
+            bboxes, labels, ids = self.tracker.match(
                 bboxes=det_bboxes,
                 labels=det_labels,
                 track_feats=track_feats,
@@ -87,7 +87,7 @@ class QuasiDenseFasterRCNN(TwoStageDetector):
                                   self.roi_head.bbox_head.num_classes)
 
         if track_feats is not None:
-            track_result = track2result(det_bboxes, det_labels, ids)
+            track_result = track2result(bboxes, labels, ids)
         else:
             from collections import defaultdict
             track_result = defaultdict(list)

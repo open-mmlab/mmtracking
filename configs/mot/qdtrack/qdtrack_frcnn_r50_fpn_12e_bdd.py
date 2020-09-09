@@ -200,7 +200,8 @@ data = dict(
     train=[
         dict(
             type=dataset_type,
-            ann_file=data_root + 'tracking/annotations/train_coco-format.json',
+            ann_file=data_root +
+            'tracking/annotations/bdd100k_track_train_cocoformat.json',
             img_prefix=data_root + 'tracking/images/train/',
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
@@ -209,18 +210,20 @@ data = dict(
             type=dataset_type,
             load_as_video=False,
             ann_file=data_root +
-            'detection/annotations/train_coco-format.json',
+            'detection/annotations/bdd100k_det_train_cocoformat.json',
             img_prefix=data_root + 'detection/images/train/',
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'tracking/annotations/val_coco-format.json',
+        ann_file=data_root +
+        'tracking/annotations/bdd100k_track_val_cocoformat.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'tracking/annotations/val_coco-format.json',
+        ann_file=data_root +
+        'tracking/annotations/bdd100k_track_val_cocoformat.json',
         img_prefix=data_root + 'tracking/images/val/',
         pipeline=test_pipeline))
 # optimizer
@@ -250,4 +253,4 @@ log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox', 'track'], interval=2)
+evaluation = dict(metric=['bbox', 'track'], interval=12)
