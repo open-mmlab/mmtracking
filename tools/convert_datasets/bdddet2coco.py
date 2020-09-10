@@ -25,7 +25,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    for subset in ['train', 'val', 'test']:
+    for subset in ['train', 'val']:
         print(f'convert BDD100K detection {subset} set into coco format')
 
         bdd = mmcv.load(osp.join(args.input, f'det_v2_{subset}_release.json'))

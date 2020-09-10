@@ -26,7 +26,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    for subset in ['train', 'val', 'test']:
+    for subset in ['train', 'val']:
         print(f'convert BDD tracking {subset} set into COCO-VID format')
         vids = os.listdir(osp.join(args.input, subset))
         coco = defaultdict(list)
