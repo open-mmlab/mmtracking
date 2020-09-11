@@ -6,7 +6,7 @@ from mmcv.utils import build_from_cfg
 from mmdet.core import Fp16OptimizerHook
 from mmdet.datasets import build_dataset
 
-from mmtrack.core import EvalHook, DistEvalHook
+from mmtrack.core import DistEvalHook, EvalHook
 from mmtrack.datasets import build_dataloader
 from mmtrack.utils import get_root_logger
 
