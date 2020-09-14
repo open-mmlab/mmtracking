@@ -77,7 +77,7 @@ class CocoVideoDataset(CocoDataset):
                 valid_inds = img_ids[left:frame_id] + img_ids[frame_id +
                                                               1:right + 1]
                 ref_img_id = random.choice(valid_inds)
-            ref_img_info = self.coco.loadImgs([ref_img_id])[0]
+            ref_img_info = self.coco.load_imgs([ref_img_id])[0]
             ref_img_info['filename'] = ref_img_info['file_name']
         return ref_img_info
 

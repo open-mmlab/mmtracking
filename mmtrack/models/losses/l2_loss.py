@@ -76,6 +76,7 @@ class L2Loss(nn.Module):
     def update_weight(self, pred, target, weight, avg_factor):
         if weight is None:
             weight = target.new_ones(target.size())
+
         invalid_inds = weight <= 0
         target[invalid_inds] = -1
         pos_inds = target == 1

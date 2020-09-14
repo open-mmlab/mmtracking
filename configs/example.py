@@ -31,7 +31,7 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
     roi_head=dict(
         type='QuasiDenseRoIHead',
         bbox_roi_extractor=dict(
@@ -52,7 +52,7 @@ model = dict(
             reg_class_agnostic=True,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
         track_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
@@ -202,7 +202,7 @@ data = dict(
             type=dataset_type,
             ann_file=data_root +
             'tracking/annotations/bdd100k_track_mini.json',
-            img_prefix=data_root + 'tracking/images/val/',
+            img_prefix=data_root + 'tracking/images/train/',
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
             pipeline=train_pipeline),
@@ -210,18 +210,18 @@ data = dict(
             type=dataset_type,
             load_as_video=False,
             ann_file=data_root + 'detection/annotations/bdd100k_det_mini.json',
-            img_prefix=data_root + 'detection/images/val/',
+            img_prefix=data_root + 'detection/images/train/',
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
-        img_prefix=data_root + 'tracking/images/val/',
+        img_prefix=data_root + 'tracking/images/train/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
-        img_prefix=data_root + 'tracking/images/val/',
+        img_prefix=data_root + 'tracking/images/train/',
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
@@ -247,7 +247,7 @@ log_config = dict(
 total_epochs = 12
 dist_params = dict(backend='nccl', port='12346')
 log_level = 'INFO'
-work_dir = './work_dirs/xxx'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+evaluation = dict(metric=['bbox', 'track'], interval=1)

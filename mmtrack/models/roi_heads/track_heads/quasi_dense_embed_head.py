@@ -142,7 +142,6 @@ class QuasiDenseEmbedHead(nn.Module):
 
     def loss(self, dists, cos_dists, targets, weights):
         losses = dict()
-
         loss_track = 0.
         loss_track_aux = 0.
         for _dists, _cos_dists, _targets, _weights in zip(
