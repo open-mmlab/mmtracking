@@ -19,10 +19,10 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
 @PIPELINES.register_module()
 class SeqLoadAnnotations(LoadAnnotations):
 
-    def __init__(self, with_ins_id=False, *args, **kwargs):
+    def __init__(self, with_track=False, *args, **kwargs):
         # TODO: name
         super().__init__(*args, **kwargs)
-        self.with_ins_id = with_ins_id
+        self.with_track = with_track
 
     def _load_ins_ids(self, results):
         """Private function to load label annotations.
@@ -43,7 +43,7 @@ class SeqLoadAnnotations(LoadAnnotations):
         outs = []
         for _results in results:
             _results = super().__call__(_results)
-            if self.with_ins_id:
+            if self.with_track:
                 _results = self._load_ins_ids(_results)
             outs.append(_results)
         return outs

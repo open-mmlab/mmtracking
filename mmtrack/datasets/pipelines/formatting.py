@@ -10,8 +10,9 @@ class SeqDefaultFormatBundle(DefaultFormatBundle):
         outs = []
         for _results in results:
             _results = super().__call__(_results)
-            _results['gt_match_indices'] = DC(
-                to_tensor(_results['gt_match_indices']))
+            if 'gt_match_indices' in _results.keys():
+                _results['gt_match_indices'] = DC(
+                    to_tensor(_results['gt_match_indices']))
             outs.append(_results)
         return outs
 

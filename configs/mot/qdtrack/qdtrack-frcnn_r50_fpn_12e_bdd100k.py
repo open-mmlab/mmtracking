@@ -165,7 +165,7 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile'),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_ins_id=True),
+    dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
     dict(type='SeqResize', img_scale=(1296, 720), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
