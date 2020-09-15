@@ -1,3 +1,3 @@
-from .distributed_sampler import DistributedSampler
+from .distributed_video_sampler import DistributedVideoSampler
 
-__all__ = ['DistributedSampler']
+__all__ = ['DistributedVideoSampler']

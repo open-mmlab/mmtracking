@@ -1,4 +1,4 @@
-from .cocovid_parser import CocoVID
-from .mmvid_parser import mmVID
+from .coco_video_parser import CocoVID
+from .data_parser import DataAPI
 
-__all__ = ['CocoVID', 'mmVID']
+__all__ = ['CocoVID', 'DataAPI']

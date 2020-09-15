@@ -1,38 +1,13 @@
-import platform
 import random
 from functools import partial
 
 import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
-from mmcv.utils import Registry, build_from_cfg
+from mmdet.datasets.samplers import DistributedGroupSampler, GroupSampler
 from torch.utils.data import DataLoader
 
-from .samplers import DistributedSampler
-
-if platform.system() != 'Windows':
-    # https://github.com/pytorch/pytorch/issues/973
-    import resource
-    rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-    hard_limit = rlimit[1]
-    soft_limit = min(4096, hard_limit)
-    resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
-
-DATASETS = Registry('dataset')
-PIPELINES = Registry('pipeline')
-
-
-def build_dataset(cfg, default_args=None):
-    from .dataset_wrappers import ConcatDataset, RepeatDataset
-    if isinstance(cfg, (list, tuple)):
-        dataset = ConcatDataset([build_dataset(c, default_args) for c in cfg])
-    elif cfg['type'] == 'RepeatDataset':
-        dataset = RepeatDataset(
-            build_dataset(cfg['dataset'], default_args), cfg['times'])
-    else:
-        dataset = build_from_cfg(cfg, DATASETS, default_args)
-
-    return dataset
+from .samplers import DistributedVideoSampler
 
 
 def build_dataloader(dataset,
@@ -65,13 +40,16 @@ def build_dataloader(dataset,
     """
     rank, world_size = get_dist_info()
     if dist:
-        sampler = DistributedSampler(
-            dataset, world_size, rank, shuffle=shuffle)
-        shuffle = False
+        if shuffle:
+            sampler = DistributedGroupSampler(dataset, samples_per_gpu,
+                                              world_size, rank)
+        else:
+            sampler = DistributedVideoSampler(
+                dataset, world_size, rank, shuffle=False)
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:
-        sampler = None
+        sampler = GroupSampler(dataset, samples_per_gpu) if shuffle else None
         batch_size = num_gpus * samples_per_gpu
         num_workers = num_gpus * workers_per_gpu
 
@@ -85,7 +63,7 @@ def build_dataloader(dataset,
         sampler=sampler,
         num_workers=num_workers,
         collate_fn=partial(collate, samples_per_gpu=samples_per_gpu),
-        shuffle=shuffle,
+        pin_memory=False,
         worker_init_fn=init_fn,
         **kwargs)
 

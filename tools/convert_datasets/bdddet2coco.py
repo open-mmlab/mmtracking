@@ -36,8 +36,6 @@ def main():
 
         ann_id = 0
         for img_id, img_info in enumerate(tqdm(bdd)):
-            if img_info['labels'] is None:
-                continue
             img = dict(
                 file_name=img_info['name'],
                 height=720,
@@ -45,6 +43,8 @@ def main():
                 id=img_id,
                 metas=img_info['attributes'])
             coco['images'].append(img)
+            if img_info['labels'] is None:
+                continue
             for k, ann_info in enumerate(img_info['labels']):
                 if ann_info['category'] in CLASSES:
                     cls_id = CLASSES.index(ann_info['category']) + 1
@@ -68,7 +68,9 @@ def main():
                     truncated=ann_info['attributes']['truncated'])
                 coco['annotations'].append(ann)
                 ann_id += 1
-        mmcv.dump(coco, osp.join(args.output, f'{subset}_coco-format.json'))
+        mmcv.dump(
+            coco, osp.join(args.output,
+                           f'bdd100k_det_{subset}_cocoformat.json'))
         print('converted {} images with {} objects'.format(
             len(coco['images']), len(coco['annotations'])))
 

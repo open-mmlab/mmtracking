@@ -1,12 +1,14 @@
+# SKIP REVIEW
 import random
 from collections import defaultdict
 from time import time
 
 import mmcv
+import numpy as np
 from mmcv.utils import get_logger
 
 
-class mmVID(object):
+class DataAPI(object):
     """API for instance annotations in videos.
 
     The annotation format is shown as follows.
@@ -27,6 +29,7 @@ class mmVID(object):
                             {
                                 'bbox': [x1, y1, x2, y2],
                                 'label': int,
+                                'mask': list,
                                 'instance_id': int,
                                 'ignore': bool,
                                 'crowd': bool,
@@ -47,7 +50,7 @@ class mmVID(object):
     """
 
     def __init__(self, ann_file):
-        self.logger = get_logger(name='mmVID')
+        self.logger = get_logger(name='DataAPI')
         self.time = time()
 
         if isinstance(ann_file, str):
@@ -83,6 +86,10 @@ class mmVID(object):
 
             for k, image in enumerate(video['images']):
                 image['vid_id'] = vid_id
+                image['type'] = 'VID'
+                image['filename'] = image['name']
+                image['height'] = video['height']
+                image['width'] = video['width']
                 self.images.append(image)
 
                 num_anns += len(image['annotations'])
@@ -166,11 +173,16 @@ class mmVID(object):
             anns = self.parse_anns(anns, **kwargs)
         return anns
 
-    def parse_anns(self, raw_anns, classes=None, ins_ids=None):
+    def parse_anns(self,
+                   raw_anns,
+                   classes=None,
+                   ins_ids=None,
+                   ignore_keys=['ignore', 'crowd']):
         maps = dict(
-            bboxes='bbox',
-            labels='label',
-            instance_ids='instance_id',
+            bbox='bboxes',
+            label='labels',
+            mask='masks',
+            instance_id='instance_ids',
             crowd='crowd',
             ignore='ignore',
             occluded='occluded',
@@ -192,16 +204,36 @@ class mmVID(object):
                 if not isinstance(classes, list):
                     raise TypeError('Input should be str or int.')
 
-        anns = {k: [] for k in maps.keys()}
+        anns = defaultdict(list)
         for i, ann in enumerate(raw_anns):
             if classes is not None and ann['label'] not in classes:
                 continue
             if ins_ids is not None and ann['instance_id'] not in ins_ids:
                 continue
-            for k, v in maps.items():
-                if v not in ann.keys():
-                    continue
-                anns[k].append(ann[v])
+            for k, v in ann.items():
+                anns[maps[k]].append(v)
+
+        for k, v in anns.items():
+            # TODO: fix this
+            if k == 'bboxes':
+                anns[k] = np.array(v, dtype=np.float32)
+            else:
+                anns[k] = np.array(v)
+
+        ignore_keys = set(ignore_keys).intersection(set(anns.keys()))
+        if ignore_keys is not None:
+            ignore_inds = np.zeros(len(raw_anns), dtype=bool)
+            for k in ignore_keys:
+                _inds = anns[k] == 1
+                ignore_inds[_inds] = True
+            if ignore_inds.any():
+                anns['bboxes_ignore'] = anns['bboxes'][ignore_inds]
+                for k, v in anns.items():
+                    if 'ignore' in k:
+                        continue
+                    anns[k] = v[~ignore_inds]
+        if 'bboxes_ignore' not in anns.keys():
+            anns['bboxes_ignore'] = np.zeros((0, 4), dtype=np.float32)
 
         return anns
 
@@ -225,10 +257,11 @@ class mmVID(object):
 
         return front_imgs, behind_imgs
 
-    def get_ref_img(self, idx, scope=-1, method='uniform'):
+    def get_ref_img(self, idx, scope=-1, method='uniform', num=1):
         front_imgs, behind_imgs = self.get_neighbor_imgs(idx, scope)
 
         if method == 'uniform':
+            assert num == 1
             return random.choice(front_imgs + behind_imgs)
         else:
             raise NotImplementedError
