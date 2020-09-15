@@ -1,4 +1,3 @@
-from .eval_hooks import EvalHook, DistEvalHook
-from .mot import eval_mot
+from .eval_hooks import DistEvalHook, EvalHook
 
-__all__ = ['eval_mot', 'EvalHook', 'DistEvalHook']
+__all__ = ['EvalHook', 'DistEvalHook']
