@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SKIP REVIEW
 set -x
 # ----configs----
 config=$1
