@@ -205,7 +205,8 @@ data = dict(
             'tracking/annotations/bdd100k_track_mini.json',
             img_prefix=data_root + 'tracking/images/train/',
             key_img_sampler=dict(interval=1),
-            ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
+            ref_img_sampler=dict(
+                num_ref_imgs=1, frame_range=3, method='uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,
