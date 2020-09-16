@@ -19,7 +19,7 @@ class CocoVideoDataset(CocoDataset):
                  skip_nomatch_pairs=True,
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(
-                     scope=3, num_ref_imgs=1, method='uniform'),
+                     num_ref_imgs=1, frame_range=3, method='uniform'),
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
@@ -60,20 +60,20 @@ class CocoVideoDataset(CocoDataset):
 
     def ref_img_sampling(self,
                          img_info,
-                         scope,
+                         frame_range,
                          num_ref_imgs=1,
                          method='uniform'):
         if num_ref_imgs != 1 or method != 'uniform':
             raise NotImplementedError
-        if img_info.get('frame_id', -1) < 0 or scope <= 0:
+        if img_info.get('frame_id', -1) < 0 or frame_range <= 0:
             ref_img_info = img_info.copy()
         else:
             vid_id = img_info['video_id']
             img_ids = self.coco.get_img_ids_from_vid(vid_id)
             frame_id = img_info['frame_id']
             if method == 'uniform':
-                left = max(0, frame_id - scope)
-                right = min(frame_id + scope, len(img_ids) - 1)
+                left = max(0, frame_id - frame_range)
+                right = min(frame_id + frame_range, len(img_ids) - 1)
                 valid_inds = img_ids[left:frame_id] + img_ids[frame_id +
                                                               1:right + 1]
                 ref_img_id = random.choice(valid_inds)
