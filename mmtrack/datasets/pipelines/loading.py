@@ -20,11 +20,10 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
 class SeqLoadAnnotations(LoadAnnotations):
 
     def __init__(self, with_track=False, *args, **kwargs):
-        # TODO: name
         super().__init__(*args, **kwargs)
         self.with_track = with_track
 
-    def _load_ins_ids(self, results):
+    def _load_track(self, results):
         """Private function to load label annotations.
 
         Args:
@@ -44,6 +43,6 @@ class SeqLoadAnnotations(LoadAnnotations):
         for _results in results:
             _results = super().__call__(_results)
             if self.with_track:
-                _results = self._load_ins_ids(_results)
+                _results = self._load_track(_results)
             outs.append(_results)
         return outs
