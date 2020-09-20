@@ -63,19 +63,33 @@ class CocoVideoDataset(CocoDataset):
                          frame_range,
                          num_ref_imgs=1,
                          method='uniform'):
+        if isinstance(frame_range, int):
+            assert frame_range > 0, 'frame_range must bigger than 0.'
+            frame_range = [-frame_range, frame_range]
+        elif isinstance(frame_range, list):
+            assert len(frame_range) == 2, 'The length must be 2.'
+            assert frame_range[0] <= frame_range[1]
+            for i in frame_range:
+                assert isinstance(i, int), 'Each element must be int.'
+        else:
+            raise TypeError('The type of frame_range must be int or list.')
+
         if num_ref_imgs != 1 or method != 'uniform':
             raise NotImplementedError
-        if img_info.get('frame_id', -1) < 0 or frame_range <= 0:
+        if img_info.get('frame_id', -1) < 0:
             ref_img_info = img_info.copy()
         else:
             vid_id = img_info['video_id']
             img_ids = self.coco.get_img_ids_from_vid(vid_id)
             frame_id = img_info['frame_id']
             if method == 'uniform':
-                left = max(0, frame_id - frame_range)
-                right = min(frame_id + frame_range, len(img_ids) - 1)
-                valid_inds = img_ids[left:frame_id] + img_ids[frame_id +
-                                                              1:right + 1]
+                left = min(max(0, frame_id + frame_range[0]), len(img_ids) - 1)
+                right = min(
+                    max(0, frame_id + frame_range[1]),
+                    len(img_ids) - 1)
+                valid_inds = img_ids[left:right + 1]
+                if frame_id in valid_inds:
+                    valid_inds.remove(frame_id)
                 ref_img_id = random.choice(valid_inds)
             ref_img_info = self.coco.load_imgs([ref_img_id])[0]
             ref_img_info['filename'] = ref_img_info['file_name']

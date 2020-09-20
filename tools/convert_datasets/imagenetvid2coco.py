@@ -1,6 +1,5 @@
 import argparse
 import os.path as osp
-import random
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -29,40 +28,37 @@ for k, v in enumerate(CLASSES_ENCODES, 1):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='ImageNet DET and VID to COCO Video format')
+        description='ImageNet VID to COCO Video format')
     parser.add_argument(
-        '-d',
-        '--ann_dir',
-        help='root directory of BDD label Json files',
+        '-i',
+        '--input',
+        help='root directory of ImageNet VID annotations',
     )
     parser.add_argument(
-        '-s',
-        '--save_dir',
+        '-o',
+        '--output',
         help='directory to save coco formatted label file',
     )
     return parser.parse_args()
 
 
 def parse_train_list(ann_dir):
-    file = 'Lists/VID_train_15frames.txt'
-    img_list = osp.join(ann_dir, file)
+    img_list = osp.join(ann_dir, 'Lists/VID_train_15frames.txt')
     img_list = mmcv.list_from_file(img_list)
     train_infos = defaultdict(list)
     for info in img_list:
         info = info.split(' ')
-        if info[0] not in train_infos.keys():
+        if info[0] not in train_infos:
             train_infos[info[0]] = dict(
-                key_frames=[int(info[2]) - 1], num_frames=int(info[-1]))
+                train_frames=[int(info[2]) - 1], num_frames=int(info[-1]))
         else:
-            train_infos[info[0]]['key_frames'].append(int(info[2]) - 1)
+            train_infos[info[0]]['train_frames'].append(int(info[2]) - 1)
     return train_infos
 
 
 def parse_val_list(ann_dir):
-    file = 'Lists/VID_val_videos.txt'
-    img_list = osp.join(ann_dir, file)
+    img_list = osp.join(ann_dir, 'Lists/VID_val_videos.txt')
     img_list = mmcv.list_from_file(img_list)
-    random.shuffle(img_list)
     val_infos = defaultdict(list)
     for info in img_list:
         info = info.split(' ')
@@ -77,7 +73,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         img_id=0,
         ann_id=0,
         global_instance_id=0,
-        num_key_frames=0,
+        num_train_frames=0,
         num_no_objects=0)
     obj_num_classes = dict()
     xml_dir = osp.join(ann_dir, 'Annotations/VID/')
@@ -85,31 +81,32 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         vid_infos = parse_train_list(ann_dir)
     else:
         vid_infos = parse_val_list(ann_dir)
-    for vid_info in tqdm(vid_infos.keys()):
+    for vid_info in tqdm(vid_infos):
         instance_id_maps = dict()
-        key_frames = vid_infos[vid_info].get('key_frames', [])
-        records['num_key_frames'] += len(key_frames)
+        train_frames = vid_infos[vid_info].get('train_frames', [])
+        records['num_train_frames'] += len(train_frames)
         video = dict(
-            id=records['vid_id'], name=vid_info, key_frames=key_frames)
+            id=records['vid_id'], name=vid_info, train_frames=train_frames)
         VID['videos'].append(video)
         num_frames = vid_infos[vid_info]['num_frames']
         for frame_id in range(num_frames):
-            is_key_frame = True if frame_id in key_frames else False
-            img_prefix = vid_info + '/%06d' % frame_id
-            xml_name = xml_dir + '/{}.xml'.format(img_prefix)
+            is_train_frame = True if frame_id in train_frames else False
+            img_prefix = osp.join(vid_info, '%06d' % frame_id)
+            xml_name = osp.join(xml_dir, f'{img_prefix}.xml')
+            # parse XML annotation file
             tree = ET.parse(xml_name)
             root = tree.getroot()
             size = root.find('size')
             width = int(size.find('width').text)
             height = int(size.find('height').text)
             image = dict(
-                file_name='{}.JPEG'.format(img_prefix),
+                file_name=f'{img_prefix}.JPEG',
                 height=height,
                 width=width,
                 id=records['img_id'],
-                index=frame_id,
+                frame_id=frame_id,
                 video_id=records['vid_id'],
-                key_frame=is_key_frame)
+                is_train_frame=is_train_frame)
             VID['images'].append(image)
             if root.findall('object') == []:
                 print(xml_name, 'has no objects.')
@@ -118,7 +115,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                 continue
             for obj in root.findall('object'):
                 name = obj.find('name').text
-                if name not in cats_id_maps.keys():
+                if name not in cats_id_maps:
                     continue
                 category_id = cats_id_maps[name]
                 bnd_box = obj.find('bndbox')
@@ -128,10 +125,10 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                     int(bnd_box.find('xmax').text),
                     int(bnd_box.find('ymax').text)
                 ]
-                w = x2 - x1 + 1
-                h = y2 - y1 + 1
+                w = x2 - x1
+                h = y2 - y1
                 track_id = obj.find('trackid').text
-                if track_id in instance_id_maps.keys():
+                if track_id in instance_id_maps:
                     instance_id = instance_id_maps[track_id]
                 else:
                     instance_id = records['global_instance_id']
@@ -146,12 +143,9 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                     instance_id=instance_id,
                     bbox=[x1, y1, w, h],
                     area=w * h,
-                    iscrowd=False,
-                    ignore=False,
-                    segmentation=[[x1, y1, x1, y2, x2, y2, x2, y1]],
                     is_occluded=occluded == '1',
                     generated=generated == '1')
-                if category_id not in obj_num_classes.keys():
+                if category_id not in obj_num_classes:
                     obj_num_classes[category_id] = 1
                 else:
                     obj_num_classes[category_id] += 1
@@ -159,19 +153,16 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                 records['ann_id'] += 1
             records['img_id'] += 1
         records['vid_id'] += 1
-    mmcv.dump(VID, osp.join(save_dir, 'ImageNet_VID_{}.json'.format(mode)))
-    print('-----ImageNet VID {}------'.format(mode))
-    print('{} videos'.format(records['vid_id']))
-    print('{} images'.format(records['img_id']))
-    print('{} key frames'.format(records['num_key_frames']))
-    print('{} images have no objects'.format(records['num_no_objects']))
-    print('{} objects'.format(records['ann_id']))
+    mmcv.dump(VID, osp.join(save_dir, f'imagenet_vid_{mode}.json'))
+    print(f'-----ImageNet VID {mode}------')
+    print(f'{records["vid_id"]} videos')
+    print(f'{records["img_id"]} images')
+    print(f'{records["num_train_frames"]} train frames')
+    print(f'{records["num_no_objects"]} images have no objects')
+    print(f'{records["ann_id"]} objects')
     print('-----------------------')
-    # for k, v in obj_num_classes.items():
-    #     print('Class {} {} has {} objects.'.format(k, CLASSES[k - 1], v))
-    for i in range(1, 31):
-        print('Class {} {} has {} objects.'.format(i, CLASSES[i - 1],
-                                                   obj_num_classes[i]))
+    for i in range(1, len(CLASSES) + 1):
+        print(f'Class {i} {CLASSES[i - 1]} has {obj_num_classes[i]} objects.')
 
 
 def main():
@@ -179,15 +170,16 @@ def main():
 
     categories = []
     for k, v in enumerate(CLASSES, 1):
-        categories.append(dict(id=k, name=v))
+        categories.append(
+            dict(id=k, name=v, encode_name=CLASSES_ENCODES[k - 1]))
 
-    VID = defaultdict(list)
-    VID['categories'] = categories
-    VID = convert_vid(VID, args.ann_dir, args.save_dir, 'train')
+    VID_train = defaultdict(list)
+    VID_train['categories'] = categories
+    convert_vid(VID_train, args.input, args.output, 'train')
 
-    VID = defaultdict(list)
-    VID['categories'] = categories
-    VID = convert_vid(VID, args.ann_dir, args.save_dir, 'val')
+    VID_val = defaultdict(list)
+    VID_val['categories'] = categories
+    convert_vid(VID_val, args.input, args.output, 'val')
 
 
 if __name__ == '__main__':

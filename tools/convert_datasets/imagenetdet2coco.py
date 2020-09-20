@@ -6,23 +6,6 @@ from collections import defaultdict
 import mmcv
 from tqdm import tqdm
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='ImageNet DET and VID to COCO Video format')
-    parser.add_argument(
-        '-d',
-        '--ann_dir',
-        help='root directory of BDD label Json files',
-    )
-    parser.add_argument(
-        '-s',
-        '--save_dir',
-        help='directory to save coco formatted label file',
-    )
-    return parser.parse_args()
-
-
 CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
            'cattle', 'dog', 'domestic_cat', 'elephant', 'fox', 'giant_panda',
            'hamster', 'horse', 'lion', 'lizard', 'monkey', 'motorcycle',
@@ -43,16 +26,31 @@ for k, v in enumerate(CLASSES_ENCODES, 1):
     cats_id_maps[v] = k
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='ImageNet DET to COCO Video format')
+    parser.add_argument(
+        '-i',
+        '--input',
+        help='root directory of ImageNet DET annotations',
+    )
+    parser.add_argument(
+        '-o',
+        '--output',
+        help='directory to save coco formatted label file',
+    )
+    return parser.parse_args()
+
+
 def convert_det(DET, ann_dir, save_dir):
     records = dict(ann_id=0, num_no_objects=0)
     obj_num_classes = dict()
     img_list = osp.join(ann_dir, 'Lists/DET_train_30classes.txt')
     xml_dir = osp.join(ann_dir, 'Annotations/DET/')
     img_list = mmcv.list_from_file(img_list)
-    # random.shuffle(img_list)
     for img_id, img_info in tqdm(enumerate(img_list)):
         img_info = img_info.split(' ')
-        xml_name = osp.join(xml_dir, '{}.xml'.format(img_info[0]))
+        xml_name = osp.join(xml_dir, f'{img_info[0]}.xml')
         # parse XML annotation file
         tree = ET.parse(xml_name)
         root = tree.getroot()
@@ -60,18 +58,18 @@ def convert_det(DET, ann_dir, save_dir):
         width = int(size.find('width').text)
         height = int(size.find('height').text)
         image = dict(
-            file_name='{}.JPEG'.format(img_info[0]),
+            file_name=f'{img_info[0]}.JPEG',
             height=height,
             width=width,
             id=img_id)
         DET['images'].append(image)
         if root.findall('object') == []:
-            print(xml_name, 'has no objects.')
+            print(f'{xml_name} has no objects.')
             records['num_no_objects'] += 1
             continue
         for obj in root.findall('object'):
             name = obj.find('name').text
-            if name not in cats_id_maps.keys():
+            if name not in cats_id_maps:
                 continue
             category_id = cats_id_maps[name]
             bnd_box = obj.find('bndbox')
@@ -81,34 +79,28 @@ def convert_det(DET, ann_dir, save_dir):
                 int(bnd_box.find('xmax').text),
                 int(bnd_box.find('ymax').text)
             ]
-            w = x2 - x1 + 1
-            h = y2 - y1 + 1
+            w = x2 - x1
+            h = y2 - y1
             ann = dict(
                 id=records['ann_id'],
                 image_id=img_id,
                 category_id=category_id,
                 bbox=[x1, y1, w, h],
-                area=w * h,
-                iscrowd=False,
-                ignore=False,
-                segmentation=[[x1, y1, x1, y2, x2, y2, x2, y1]])
+                area=w * h)
             DET['annotations'].append(ann)
             records['ann_id'] += 1
-            if category_id not in obj_num_classes.keys():
+            if category_id not in obj_num_classes:
                 obj_num_classes[category_id] = 1
             else:
                 obj_num_classes[category_id] += 1
-    mmcv.dump(DET, osp.join(save_dir, 'ImageNet_DET_30cls.json'))
+    mmcv.dump(DET, osp.join(save_dir, 'imagenet_det_30cls.json'))
     print('-----ImageNet DET------')
-    print('{} images for training'.format(img_id + 1))
-    print('{} images have no objects'.format(records['num_no_objects']))
-    print('{} objects are annotated.'.format(records['ann_id']))
+    print(f'{img_id + 1} images for training')
+    print(f'{records["num_no_objects"]} images have no objects')
+    print(f'{records["ann_id"]} objects are annotated.')
     print('-----------------------')
-    # for k, v in obj_num_classes.items():
-    #     print('Class {} {} has {} objects.'.format(k, CLASSES[k - 1], v))
-    for i in range(1, 31):
-        print('Class {} {} has {} objects.'.format(i, CLASSES[i - 1],
-                                                   obj_num_classes[i]))
+    for i in range(1, len(CLASSES) + 1):
+        print(f'Class {i} {CLASSES[i - 1]} has {obj_num_classes[i]} objects.')
 
 
 def main():
@@ -116,10 +108,10 @@ def main():
 
     DET = defaultdict(list)
     for k, v in enumerate(CLASSES, 1):
-        DET['categories'].append(dict(id=k, name=v))
-    DET = convert_det(DET, args.ann_dir, args.save_dir)
+        DET['categories'].append(
+            dict(id=k, name=v, encode_name=CLASSES_ENCODES[k - 1]))
+    convert_det(DET, args.input, args.output)
 
 
 if __name__ == '__main__':
     main()
-    # srun -p ad_rs python -u imagenetdet2coco.py -d ../data/ILSVRC -s .

@@ -176,9 +176,9 @@ train_pipeline = [
     dict(type='SeqPad', size_divisor=32),
     dict(type='SeqDefaultFormatBundle'),
     dict(
-        type='SeqCollect',
+        type='SeqTrainCollect',
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_match_indices'],
-        ref_prefix='ref'),
+        ref_prefix=['ref']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -192,7 +192,7 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
+            dict(type='SeqTestCollect', keys=['img'])
         ])
 ]
 data = dict(
