@@ -20,6 +20,26 @@ class ImagenetVIDVideoDataset(CocoVideoDataset):
         assert self.dff_mode ^ self.fgfa_mode, 'Only support at most one mode'
         super().__init__(*args, **kwargs)
 
+        # check the validity of ref_img_sampler
+        num_ref_imgs = self.ref_img_sampler['num_ref_imgs']
+        if self.dff_mode:
+            num_ref_imgs = 1 if not self.load_as_video else num_ref_imgs
+            assert num_ref_imgs == 1, 'only support 1 ref_img in dff mode'
+        elif self.fgfa_mode:
+            num_ref_imgs = 2 if not self.load_as_video else num_ref_imgs
+            assert num_ref_imgs == 2, 'only support 2 ref_imgs in fgfa mode'
+
+        frame_range = self.ref_img_sampler['frame_range']
+        if isinstance(frame_range, int):
+            assert frame_range > 0, 'frame_range must bigger than 0.'
+        elif isinstance(frame_range, list):
+            assert len(frame_range) == 2, 'The length must be 2.'
+            assert frame_range[0] < 0 and frame_range[1] > 0
+            for i in frame_range:
+                assert isinstance(i, int), 'Each element must be int.'
+        else:
+            raise TypeError('The type of frame_range must be int or list.')
+
     def load_video_anns(self, ann_file):
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
@@ -52,27 +72,16 @@ class ImagenetVIDVideoDataset(CocoVideoDataset):
             dict: Training data and annotation after pipeline with new keys \
                 introduced by pipeline.
         """
-        num_ref_imgs = self.ref_img_sampler['num_ref_imgs']
         if self.dff_mode:
-            num_ref_imgs = 1 if not self.load_as_video else num_ref_imgs
-            assert num_ref_imgs == 1, 'only support 1 ref_img in dff mode'
             results = super().prepare_train_img(idx)
             results['is_video_data'] = self.load_as_video
             return results
         elif self.fgfa_mode:
-            num_ref_imgs = 2 if not self.load_as_video else num_ref_imgs
-            assert num_ref_imgs == 2, 'only support 2 ref_imgs in fgfa mode'
+            num_ref_imgs = 2 if not self.load_as_video else \
+                self.ref_img_sampler['num_ref_imgs']
             frame_range = self.ref_img_sampler['frame_range']
             if isinstance(frame_range, int):
-                assert frame_range > 0, 'frame_range must bigger than 0.'
                 frame_range = [-frame_range, frame_range]
-            elif isinstance(frame_range, list):
-                assert len(frame_range) == 2, 'The length must be 2.'
-                assert frame_range[0] < 0 and frame_range[1] > 0
-                for i in frame_range:
-                    assert isinstance(i, int), 'Each element must be int.'
-            else:
-                raise TypeError('The type of frame_range must be int or list.')
 
             img_info = self.data_infos[idx]
             results = self.prepare_results(img_info)

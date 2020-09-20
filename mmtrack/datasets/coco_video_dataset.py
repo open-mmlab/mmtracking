@@ -64,15 +64,7 @@ class CocoVideoDataset(CocoDataset):
                          num_ref_imgs=1,
                          method='uniform'):
         if isinstance(frame_range, int):
-            assert frame_range > 0, 'frame_range must bigger than 0.'
             frame_range = [-frame_range, frame_range]
-        elif isinstance(frame_range, list):
-            assert len(frame_range) == 2, 'The length must be 2.'
-            assert frame_range[0] <= frame_range[1]
-            for i in frame_range:
-                assert isinstance(i, int), 'Each element must be int.'
-        else:
-            raise TypeError('The type of frame_range must be int or list.')
 
         if num_ref_imgs != 1 or method != 'uniform':
             raise NotImplementedError
