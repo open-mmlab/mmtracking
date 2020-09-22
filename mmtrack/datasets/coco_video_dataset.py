@@ -204,6 +204,7 @@ class CocoVideoDataset(CocoDataset):
                 'matching gts only support 1 ref_img for now.'
             results, ref_results = self.match_results(results, ref_results[0])
             nomatch = (results['ann_info']['match_indices'] == -1).all()
+            ref_results = [ref_results]
             if self.skip_nomatch_pairs and nomatch:
                 return None
 
