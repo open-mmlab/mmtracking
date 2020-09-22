@@ -95,7 +95,8 @@ class CocoVideoDataset(CocoDataset):
             valid_inds = img_ids[left:right + 1]
             if filter_key_frame and frame_id in valid_inds:
                 valid_inds.remove(frame_id)
-            ref_img_ids = sorted(random.sample(valid_inds, num_ref_imgs))
+            num_sampled = min(num_ref_imgs, len(valid_inds))
+            ref_img_ids = sorted(random.sample(valid_inds, num_sampled))
         elif method == 'bilateral_uniform':
             assert num_ref_imgs % 2 == 0, \
                 'only support load even ref_imgs in "bilateral_uniform" mode'
@@ -109,8 +110,8 @@ class CocoVideoDataset(CocoDataset):
                     valid_inds = img_ids[frame_id:right + 1]
                 if filter_key_frame and frame_id in valid_inds:
                     valid_inds.remove(frame_id)
-                sampled_inds = sorted(
-                    random.sample(valid_inds, num_ref_imgs / 2))
+                num_sampled = min(num_ref_imgs / 2, len(valid_inds))
+                sampled_inds = sorted(random.sample(valid_inds, num_sampled))
                 ref_img_ids.extend(sampled_inds)
         else:
             raise NotImplementedError
