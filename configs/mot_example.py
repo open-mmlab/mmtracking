@@ -174,11 +174,12 @@ train_pipeline = [
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
+    dict(type='ConcatVideoReferences'),
     dict(type='SeqDefaultFormatBundle'),
     dict(
-        type='SeqTrainCollect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_match_indices'],
-        ref_prefix=['ref']),
+        type='VideoCollect',
+        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids'],
+        ref_prefix='ref'),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -192,7 +193,7 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='SeqTestCollect', keys=['img'])
+            dict(type='VideoCollect', keys=['img'])
         ])
 ]
 data = dict(
