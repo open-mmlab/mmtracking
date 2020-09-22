@@ -90,28 +90,28 @@ class CocoVideoDataset(CocoDataset):
         frame_id = img_info['frame_id']
 
         if method == 'uniform':
-            assert num_ref_imgs == 1, \
-                'only support load 1 ref_img in "uniform" mode'
             left = max(0, frame_id + frame_range[0])
             right = min(frame_id + frame_range[1], len(img_ids) - 1)
             valid_inds = img_ids[left:right + 1]
-            if frame_id in valid_inds and filter_key_frame:
+            if filter_key_frame and frame_id in valid_inds:
                 valid_inds.remove(frame_id)
-            ref_img_ids = [random.choice(valid_inds)]
+            ref_img_ids = sorted(random.sample(valid_inds, num_ref_imgs))
         elif method == 'bilateral_uniform':
-            assert num_ref_imgs == 2, \
-                'only support load 2 ref_imgs in "bilateral_uniform" mode'
+            assert num_ref_imgs % 2 == 0, \
+                'only support load even ref_imgs in "bilateral_uniform" mode'
             ref_img_ids = []
-            for i in range(num_ref_imgs):
+            for i in range(2):
                 if i == 0:
                     left = max(0, frame_id + frame_range[i])
                     valid_inds = img_ids[left:frame_id + 1]
                 else:
                     right = min(frame_id + frame_range[i], len(img_ids) - 1)
                     valid_inds = img_ids[frame_id:right + 1]
-                if frame_id in valid_inds and filter_key_frame:
+                if filter_key_frame and frame_id in valid_inds:
                     valid_inds.remove(frame_id)
-                ref_img_ids.append(random.choice(valid_inds))
+                sampled_inds = sorted(
+                    random.sample(valid_inds, num_ref_imgs / 2))
+                ref_img_ids.extend(sampled_inds)
         else:
             raise NotImplementedError
 
@@ -191,29 +191,25 @@ class CocoVideoDataset(CocoDataset):
             dict: Training data and annotation after pipeline with new keys \
                 introduced by pipeline.
         """
-        img_info = self.data_infos[idx]
-        results = self.prepare_results(img_info)
-
-        ref_img_infos = self.ref_img_sampling(img_info, **self.ref_img_sampler)
-        ref_results = []
-        for ref_img_info in ref_img_infos:
-            ref_results.append(self.prepare_results(ref_img_info))
+        img_infos = [self.data_infos[idx]]
+        ref_img_infos = self.ref_img_sampling(img_infos[0],
+                                              **self.ref_img_sampler)
+        img_infos.extend(ref_img_infos)
+        results = [self.prepare_results(img_info) for img_info in img_infos]
 
         if self.match_gts:
-            assert len(ref_results) == 1, \
+            assert len(results) == 2, \
                 'matching gts only support 1 ref_img for now.'
-            results, ref_results = self.match_results(results, ref_results[0])
+            results, ref_results = self.match_results(results[0], results[1])
             nomatch = (results['ann_info']['match_indices'] == -1).all()
-            ref_results = [ref_results]
+            results = [results, ref_results]
             if self.skip_nomatch_pairs and nomatch:
                 return None
 
-        all_results = ref_results
-        all_results.insert(0, results)
-        self.pre_pipeline(all_results)
-        all_results = self.pipeline(all_results)
-        all_results['is_video_data'] = self.load_as_video
-        return all_results
+        self.pre_pipeline(results)
+        results = self.pipeline(results)
+        results['is_video_data'] = self.load_as_video
+        return results
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
@@ -280,7 +276,7 @@ class CocoVideoDataset(CocoDataset):
         if self.load_as_video:
             ann['instance_ids'] = np.array(gt_instance_ids)
         else:
-            ann['instance_ids'] = np.zeros_like(gt_labels) - 1
+            ann['instance_ids'] = np.arange(len(gt_labels))
 
         return ann
 

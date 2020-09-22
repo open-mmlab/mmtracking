@@ -139,26 +139,21 @@ class SeqDefaultFormatBundle(object):
 @PIPELINES.register_module(force=True)
 class VideoCollect(Collect):
 
-    def __init__(
-            self,
-            keys,
-            ref_prefix='ref',
-            default_meta_keys={
-                'filename', 'ori_filename', 'ori_shape', 'img_shape',
-                'pad_shape', 'scale_factor', 'flip', 'flip_direction',
-                'img_norm_cfg'
-            },
-            meta_keys='frame_id'):
+    def __init__(self,
+                 keys,
+                 ref_prefix='ref',
+                 meta_keys='frame_id',
+                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
+                                    'img_shape', 'pad_shape', 'scale_factor',
+                                    'flip', 'flip_direction', 'img_norm_cfg')):
         self.keys = keys
         self.ref_prefix = ref_prefix
         if isinstance(meta_keys, str):
-            meta_keys = {meta_keys}
-        elif isinstance(meta_keys, list):
-            meta_keys = set(meta_keys)
+            meta_keys = (meta_keys, )
         else:
-            raise TypeError('meta_keys must be str or list')
-        default_meta_keys.update(meta_keys)
-        self.meta_keys = default_meta_keys
+            assert isinstance(meta_keys, tuple), \
+                'meta_keys must be str or tuple'
+        self.meta_keys = meta_keys + default_meta_keys
 
     def __call__(self, results):
         if self.ref_prefix is None:
