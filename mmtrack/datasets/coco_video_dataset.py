@@ -84,44 +84,43 @@ class CocoVideoDataset(CocoDataset):
             for i in range(num_ref_imgs):
                 ref_img_infos.append(img_info.copy())
             return ref_img_infos
-        else:
-            vid_id = img_info['video_id']
-            img_ids = self.coco.get_img_ids_from_vid(vid_id)
-            frame_id = img_info['frame_id']
 
-            if method == 'uniform':
-                assert num_ref_imgs == 1, \
-                    'only support load 1 ref_img in "uniform" mode'
-                left = max(0, frame_id + frame_range[0])
-                right = min(frame_id + frame_range[1], len(img_ids) - 1)
-                valid_inds = img_ids[left:right + 1]
+        vid_id = img_info['video_id']
+        img_ids = self.coco.get_img_ids_from_vid(vid_id)
+        frame_id = img_info['frame_id']
+
+        if method == 'uniform':
+            assert num_ref_imgs == 1, \
+                'only support load 1 ref_img in "uniform" mode'
+            left = max(0, frame_id + frame_range[0])
+            right = min(frame_id + frame_range[1], len(img_ids) - 1)
+            valid_inds = img_ids[left:right + 1]
+            if frame_id in valid_inds and filter_key_frame:
+                valid_inds.remove(frame_id)
+            ref_img_ids = [random.choice(valid_inds)]
+        elif method == 'bilateral_uniform':
+            assert num_ref_imgs == 2, \
+                'only support load 2 ref_imgs in "bilateral_uniform" mode'
+            ref_img_ids = []
+            for i in range(num_ref_imgs):
+                if i == 0:
+                    left = max(0, frame_id + frame_range[i])
+                    valid_inds = img_ids[left:frame_id + 1]
+                else:
+                    right = min(frame_id + frame_range[i], len(img_ids) - 1)
+                    valid_inds = img_ids[frame_id:right + 1]
                 if frame_id in valid_inds and filter_key_frame:
                     valid_inds.remove(frame_id)
-                ref_img_ids = [random.choice(valid_inds)]
-            elif method == 'bilateral_uniform':
-                assert num_ref_imgs == 2, \
-                    'only support load 2 ref_imgs in "bilateral_uniform" mode'
-                ref_img_ids = []
-                for i in range(num_ref_imgs):
-                    if i == 0:
-                        left = max(0, frame_id + frame_range[i])
-                        valid_inds = img_ids[left:frame_id + 1]
-                    else:
-                        right = min(frame_id + frame_range[i],
-                                    len(img_ids) - 1)
-                        valid_inds = img_ids[frame_id:right + 1]
-                    if frame_id in valid_inds and filter_key_frame:
-                        valid_inds.remove(frame_id)
-                    ref_img_ids.append(random.choice(valid_inds))
-            else:
-                raise NotImplementedError
+                ref_img_ids.append(random.choice(valid_inds))
+        else:
+            raise NotImplementedError
 
-            ref_img_infos = []
-            for ref_img_id in ref_img_ids:
-                ref_img_info = self.coco.load_imgs([ref_img_id])[0]
-                ref_img_info['filename'] = ref_img_info['file_name']
-                ref_img_infos.append(ref_img_info)
-            return ref_img_infos
+        ref_img_infos = []
+        for ref_img_id in ref_img_ids:
+            ref_img_info = self.coco.load_imgs([ref_img_id])[0]
+            ref_img_info['filename'] = ref_img_info['file_name']
+            ref_img_infos.append(ref_img_info)
+        return ref_img_infos
 
     def _pre_pipeline(self, _results):
         super().pre_pipeline(_results)
