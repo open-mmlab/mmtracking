@@ -19,7 +19,10 @@ class CocoVideoDataset(CocoDataset):
                  skip_nomatch_pairs=True,
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(
-                     num_ref_imgs=1, frame_range=3, method='uniform'),
+                     num_ref_imgs=1,
+                     frame_range=3,
+                     filter_key_frame=True,
+                     method='uniform'),
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
@@ -62,28 +65,66 @@ class CocoVideoDataset(CocoDataset):
                          img_info,
                          frame_range,
                          num_ref_imgs=1,
+                         filter_key_frame=True,
                          method='uniform'):
-        if num_ref_imgs != 1 or method != 'uniform':
-            raise NotImplementedError
-        if img_info.get('frame_id', -1) < 0 or frame_range <= 0:
-            ref_img_info = img_info.copy()
+        if isinstance(frame_range, int):
+            assert frame_range >= 0, 'frame_range can not be a negative value.'
+            frame_range = [-frame_range, frame_range]
+        elif isinstance(frame_range, list):
+            assert len(frame_range) == 2, 'The length must be 2.'
+            assert frame_range[0] <= 0 and frame_range[1] >= 0
+            for i in frame_range:
+                assert isinstance(i, int), 'Each element must be int.'
         else:
-            vid_id = img_info['video_id']
-            img_ids = self.coco.get_img_ids_from_vid(vid_id)
-            frame_id = img_info['frame_id']
-            if method == 'uniform':
-                left = max(0, frame_id - frame_range)
-                right = min(frame_id + frame_range, len(img_ids) - 1)
-                valid_inds = img_ids[left:frame_id] + img_ids[frame_id +
-                                                              1:right + 1]
-                ref_img_id = random.choice(valid_inds)
+            raise TypeError('The type of frame_range must be int or list.')
+
+        if img_info.get('frame_id', -1) < 0 \
+                or (frame_range[0] == 0 and frame_range[1] == 0):
+            ref_img_infos = []
+            for i in range(num_ref_imgs):
+                ref_img_infos.append(img_info.copy())
+            return ref_img_infos
+
+        vid_id = img_info['video_id']
+        img_ids = self.coco.get_img_ids_from_vid(vid_id)
+        frame_id = img_info['frame_id']
+        left = max(0, frame_id + frame_range[0])
+        right = min(frame_id + frame_range[1], len(img_ids) - 1)
+
+        if method == 'uniform':
+            valid_inds = img_ids[left:right + 1]
+            if filter_key_frame and frame_id in valid_inds:
+                valid_inds.remove(frame_id)
+            num_sampled = min(num_ref_imgs, len(valid_inds))
+            ref_img_ids = sorted(random.sample(valid_inds, num_sampled))
+        elif method == 'bilateral_uniform':
+            assert num_ref_imgs % 2 == 0, \
+                'only support load even ref_imgs in "bilateral_uniform" mode'
+            ref_img_ids = []
+            for mode in ['left', 'right']:
+                if mode == 'left':
+                    valid_inds = img_ids[left:frame_id + 1]
+                else:
+                    valid_inds = img_ids[frame_id:right + 1]
+                if filter_key_frame and frame_id in valid_inds:
+                    valid_inds.remove(frame_id)
+                num_sampled = min(num_ref_imgs // 2, len(valid_inds))
+                sampled_inds = sorted(random.sample(valid_inds, num_sampled))
+                ref_img_ids.extend(sampled_inds)
+        else:
+            raise NotImplementedError
+
+        ref_img_infos = []
+        for ref_img_id in ref_img_ids:
             ref_img_info = self.coco.load_imgs([ref_img_id])[0]
             ref_img_info['filename'] = ref_img_info['file_name']
-        return ref_img_info
+            ref_img_infos.append(ref_img_info)
+        return ref_img_infos
 
     def _pre_pipeline(self, _results):
         super().pre_pipeline(_results)
         _results['frame_id'] = _results['img_info'].get('frame_id', -1)
+        _results['is_video_data'] = self.load_as_video
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
@@ -150,20 +191,24 @@ class CocoVideoDataset(CocoDataset):
             dict: Training data and annotation after pipeline with new keys \
                 introduced by pipeline.
         """
-        img_info = self.data_infos[idx]
-        ref_img_info = self.ref_img_sampling(img_info, **self.ref_img_sampler)
-
-        results = self.prepare_results(img_info)
-        ref_results = self.prepare_results(ref_img_info)
+        img_infos = [self.data_infos[idx]]
+        ref_img_infos = self.ref_img_sampling(img_infos[0],
+                                              **self.ref_img_sampler)
+        img_infos.extend(ref_img_infos)
+        results = [self.prepare_results(img_info) for img_info in img_infos]
 
         if self.match_gts:
-            results, ref_results = self.match_results(results, ref_results)
+            assert len(results) == 2, \
+                'matching gts only support 1 ref_img for now.'
+            results, ref_results = self.match_results(results[0], results[1])
             nomatch = (results['ann_info']['match_indices'] == -1).all()
+            results = [results, ref_results]
             if self.skip_nomatch_pairs and nomatch:
                 return None
 
-        self.pre_pipeline([results, ref_results])
-        return self.pipeline([results, ref_results])
+        self.pre_pipeline(results)
+        results = self.pipeline(results)
+        return results
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
@@ -201,9 +246,9 @@ class CocoVideoDataset(CocoDataset):
             else:
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
-                if ann.get('segmentation', False):
+                if 'segmentation' in ann:
                     gt_masks_ann.append(ann['segmentation'])
-                if ann.get('instance_id', False):
+                if 'instance_id' in ann:
                     gt_instance_ids.append(ann['instance_id'])
 
         if gt_bboxes:
@@ -228,7 +273,9 @@ class CocoVideoDataset(CocoDataset):
             seg_map=seg_map)
 
         if self.load_as_video:
-            ann['instance_ids'] = gt_instance_ids
+            ann['instance_ids'] = np.array(gt_instance_ids)
+        else:
+            ann['instance_ids'] = np.arange(len(gt_labels))
 
         return ann
 
