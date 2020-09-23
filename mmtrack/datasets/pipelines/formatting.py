@@ -1,7 +1,7 @@
 import numpy as np
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
-from mmdet.datasets.pipelines import Collect, to_tensor
+from mmdet.datasets.pipelines import to_tensor
 
 
 @PIPELINES.register_module()
@@ -20,7 +20,7 @@ class ConcatVideoReferences(object):
                 else:
                     outs[1]['img'] = np.concatenate(
                         (outs[1]['img'], np.expand_dims(img, -1)), axis=-1)
-            for key in ['filename', 'ori_filename', 'gt_masks']:
+            for key in ['img_metas', 'gt_masks']:
                 if key in result:
                     if i == 1:
                         result[key] = [result[key]]
@@ -60,12 +60,21 @@ class ConcatVideoReferences(object):
 @PIPELINES.register_module()
 class SeqDefaultFormatBundle(object):
 
+    def __init__(self, ref_prefix='ref'):
+        self.ref_prefix = ref_prefix
+
     def __call__(self, results):
         outs = []
         for _results in results:
             _results = self.default_format_bundle(_results)
             outs.append(_results)
-        return outs
+
+        data = {}
+        data.update(outs[0])
+        for k, v in outs[1].items():
+            data[f'{self.ref_prefix}_{k}'] = v
+
+        return data
 
     def default_format_bundle(self, results):
         """Call function to transform and format common fields in results.
@@ -80,8 +89,6 @@ class SeqDefaultFormatBundle(object):
 
         if 'img' in results:
             img = results['img']
-            # add default meta keys
-            results = self._add_default_meta_keys(results)
             if len(img.shape) == 3:
                 img = np.ascontiguousarray(img.transpose(2, 0, 1))
             else:
@@ -94,8 +101,9 @@ class SeqDefaultFormatBundle(object):
             if key not in results:
                 continue
             results[key] = DC(to_tensor(results[key]))
-        if 'gt_masks' in results:
-            results['gt_masks'] = DC(results['gt_masks'], cpu_only=True)
+        for key in ['img_metas', 'gt_masks']:
+            if key in results:
+                results[key] = DC(results[key], cpu_only=True)
         if 'gt_semantic_seg' in results:
             semantic_seg = results['gt_semantic_seg']
             if len(semantic_seg.shape) == 2:
@@ -106,6 +114,46 @@ class SeqDefaultFormatBundle(object):
             results['gt_semantic_seg'] = DC(
                 to_tensor(results['gt_semantic_seg']), stack=True)
         return results
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+
+@PIPELINES.register_module()
+class VideoCollect(object):
+
+    def __init__(self,
+                 keys,
+                 meta_keys=('frame_id', 'is_video_data'),
+                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
+                                    'img_shape', 'pad_shape', 'scale_factor',
+                                    'flip', 'flip_direction', 'img_norm_cfg')):
+        self.keys = keys
+        if isinstance(meta_keys, str):
+            meta_keys = (meta_keys, )
+        else:
+            assert isinstance(meta_keys, tuple), \
+                'meta_keys must be str or tuple'
+        self.meta_keys = meta_keys + default_meta_keys
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = self._add_default_meta_keys(_results)
+            _results = self._collect_meta_keys(_results)
+            outs.append(_results)
+
+        return outs
+
+    def _collect_meta_keys(self, results):
+        data = {}
+        img_meta = {}
+        for key in self.meta_keys:
+            img_meta[key] = results[key]
+        data['img_metas'] = img_meta
+        for key in self.keys:
+            data[key] = results[key]
+        return data
 
     def _add_default_meta_keys(self, results):
         """Add default meta keys.
@@ -131,46 +179,3 @@ class SeqDefaultFormatBundle(object):
                 std=np.ones(num_channels, dtype=np.float32),
                 to_rgb=False))
         return results
-
-    def __repr__(self):
-        return self.__class__.__name__
-
-
-@PIPELINES.register_module(force=True)
-class VideoCollect(Collect):
-
-    def __init__(self,
-                 keys,
-                 ref_prefix='ref',
-                 meta_keys='frame_id',
-                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
-                                    'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg')):
-        self.keys = keys
-        self.ref_prefix = ref_prefix
-        if isinstance(meta_keys, str):
-            meta_keys = (meta_keys, )
-        else:
-            assert isinstance(meta_keys, tuple), \
-                'meta_keys must be str or tuple'
-        self.meta_keys = meta_keys + default_meta_keys
-
-    def __call__(self, results):
-        if self.ref_prefix is None:
-            assert isinstance(results, dict), \
-                'results must be a dict when self.ref_prefix is None'
-            return super().__call__(results)
-
-        assert len(results) == 2
-
-        outs = []
-        for _results in results:
-            _results = super().__call__(_results)
-            outs.append(_results)
-
-        data = {}
-        data.update(outs[0])
-        for k, v in outs[1].items():
-            data[f'{self.ref_prefix}_{k}'] = v
-
-        return data

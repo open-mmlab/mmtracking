@@ -88,10 +88,10 @@ class CocoVideoDataset(CocoDataset):
         vid_id = img_info['video_id']
         img_ids = self.coco.get_img_ids_from_vid(vid_id)
         frame_id = img_info['frame_id']
+        left = max(0, frame_id + frame_range[0])
+        right = min(frame_id + frame_range[1], len(img_ids) - 1)
 
         if method == 'uniform':
-            left = max(0, frame_id + frame_range[0])
-            right = min(frame_id + frame_range[1], len(img_ids) - 1)
             valid_inds = img_ids[left:right + 1]
             if filter_key_frame and frame_id in valid_inds:
                 valid_inds.remove(frame_id)
@@ -101,16 +101,14 @@ class CocoVideoDataset(CocoDataset):
             assert num_ref_imgs % 2 == 0, \
                 'only support load even ref_imgs in "bilateral_uniform" mode'
             ref_img_ids = []
-            for i in range(2):
-                if i == 0:
-                    left = max(0, frame_id + frame_range[i])
+            for mode in ['left', 'right']:
+                if mode == 'left':
                     valid_inds = img_ids[left:frame_id + 1]
                 else:
-                    right = min(frame_id + frame_range[i], len(img_ids) - 1)
                     valid_inds = img_ids[frame_id:right + 1]
                 if filter_key_frame and frame_id in valid_inds:
                     valid_inds.remove(frame_id)
-                num_sampled = min(num_ref_imgs / 2, len(valid_inds))
+                num_sampled = min(num_ref_imgs // 2, len(valid_inds))
                 sampled_inds = sorted(random.sample(valid_inds, num_sampled))
                 ref_img_ids.extend(sampled_inds)
         else:
@@ -126,6 +124,7 @@ class CocoVideoDataset(CocoDataset):
     def _pre_pipeline(self, _results):
         super().pre_pipeline(_results)
         _results['frame_id'] = _results['img_info'].get('frame_id', -1)
+        _results['is_video_data'] = self.load_as_video
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
@@ -209,7 +208,6 @@ class CocoVideoDataset(CocoDataset):
 
         self.pre_pipeline(results)
         results = self.pipeline(results)
-        results['is_video_data'] = self.load_as_video
         return results
 
     def _parse_ann_info(self, img_info, ann_info):
