@@ -182,19 +182,17 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadMultiImagesFromFile'),
+    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
+    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
+    dict(type='SeqNormalize', **img_norm_cfg),
+    dict(type='SeqPad', size_divisor=16),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1296, 720),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=32),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
-        ])
+        type='VideoCollect',
+        keys=['img'],
+        meta_keys=('frame_id', 'is_video_data')),
+    dict(type='ConcatVideoReferences'),
+    dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]
 data = dict(
     samples_per_gpu=2,

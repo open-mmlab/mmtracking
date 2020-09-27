@@ -2,6 +2,7 @@ import random
 
 import mmcv
 import numpy as np
+import Warnings
 from mmdet.datasets import DATASETS, CocoDataset
 
 from mmtrack.core import eval_mot
@@ -64,6 +65,7 @@ class CocoVideoDataset(CocoDataset):
     def ref_img_sampling(self,
                          img_info,
                          frame_range,
+                         stride=1,
                          num_ref_imgs=1,
                          filter_key_frame=True,
                          method='uniform'):
@@ -78,6 +80,13 @@ class CocoVideoDataset(CocoDataset):
         else:
             raise TypeError('The type of frame_range must be int or list.')
 
+        if 'test' in method and \
+                (frame_range[1] - frame_range[0]) != num_ref_imgs:
+            Warnings.warn(
+                "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
+                'Set num_ref_imgs to frame_range[1] - frame_range[0].')
+            num_ref_imgs = frame_range[1] - frame_range[0]
+
         if img_info.get('frame_id', -1) < 0 \
                 or (frame_range[0] == 0 and frame_range[1] == 0):
             ref_img_infos = []
@@ -91,16 +100,16 @@ class CocoVideoDataset(CocoDataset):
         left = max(0, frame_id + frame_range[0])
         right = min(frame_id + frame_range[1], len(img_ids) - 1)
 
+        ref_img_ids = []
         if method == 'uniform':
             valid_inds = img_ids[left:right + 1]
             if filter_key_frame and frame_id in valid_inds:
                 valid_inds.remove(frame_id)
             num_sampled = min(num_ref_imgs, len(valid_inds))
-            ref_img_ids = sorted(random.sample(valid_inds, num_sampled))
+            ref_img_ids.extend(sorted(random.sample(valid_inds, num_sampled)))
         elif method == 'bilateral_uniform':
             assert num_ref_imgs % 2 == 0, \
                 'only support load even ref_imgs in "bilateral_uniform" mode'
-            ref_img_ids = []
             for mode in ['left', 'right']:
                 if mode == 'left':
                     valid_inds = img_ids[left:frame_id + 1]
@@ -111,6 +120,24 @@ class CocoVideoDataset(CocoDataset):
                 num_sampled = min(num_ref_imgs // 2, len(valid_inds))
                 sampled_inds = sorted(random.sample(valid_inds, num_sampled))
                 ref_img_ids.extend(sampled_inds)
+        elif method == 'test_with_adaptive_stride':
+            if frame_id == 0:
+                stride = float(len(img_ids) - 1) / (num_ref_imgs - 1)
+                for i in range(num_ref_imgs):
+                    ref_id = round(i * stride)
+                    ref_img_ids.append(img_ids[ref_id])
+        elif method == 'test_with_fix_stride':
+            if frame_id == 0:
+                for i in range(frame_range[0], 0):
+                    ref_img_ids.append(img_ids[0])
+                for i in range(1, frame_range[1] + 1):
+                    ref_id = min(round(i * stride), len(img_ids) - 1)
+                    ref_img_ids.append(img_ids[ref_id])
+            elif frame_id % stride == 0:
+                ref_id = min(
+                    round(frame_id + frame_range[1] * stride),
+                    len(img_ids) - 1)
+                ref_img_ids.append(img_ids[ref_id])
         else:
             raise NotImplementedError
 
@@ -150,9 +177,10 @@ class CocoVideoDataset(CocoDataset):
         ann_info = self.coco.load_anns(ann_ids)
         return self._parse_ann_info(img_info, ann_info)
 
-    def prepare_results(self, img_info):
-        ann_info = self.get_ann_info(img_info)
-        results = dict(img_info=img_info, ann_info=ann_info)
+    def prepare_results(self, img_info, load_ann=True):
+        results = dict(img_info=img_info)
+        if load_ann:
+            results['ann_info'] = self.get_ann_info(img_info)
         if self.proposals is not None:
             idx = self.img_ids.index(img_info['id'])
             results['proposals'] = self.proposals[idx]
@@ -208,6 +236,33 @@ class CocoVideoDataset(CocoDataset):
 
         self.pre_pipeline(results)
         results = self.pipeline(results)
+        return results
+
+    def prepare_test_img(self, idx):
+        """Get testing data  after pipeline.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Testing data after pipeline with new keys intorduced by \
+                piepline.
+        """
+
+        img_infos = [self.data_infos[idx]]
+        ref_img_infos = self.ref_img_sampling(img_infos[0],
+                                              **self.ref_img_sampler)
+        img_infos.extend(ref_img_infos)
+        results = [
+            self.prepare_results(img_info, load_ann=False)
+            for img_info in img_infos
+        ]
+        self.pre_pipeline(results)
+        results = self.pipeline(results)
+
+        frame_range = self.ref_img_sampler['frame_range']
+        results['num_ref_imgs'] = abs(frame_range[0]) \
+            if isinstance(frame_range, list) else frame_range
         return results
 
     def _parse_ann_info(self, img_info, ann_info):

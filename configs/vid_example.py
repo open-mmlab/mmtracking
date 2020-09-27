@@ -135,20 +135,17 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadMultiImagesFromFile'),
+    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
+    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
+    dict(type='SeqNormalize', **img_norm_cfg),
+    dict(type='SeqPad', size_divisor=16),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1000, 600),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=16),
-            dict(type='ConcatVideoReferences'),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
-        ])
+        type='VideoCollect',
+        keys=['img'],
+        meta_keys=('frame_id', 'is_video_data')),
+    dict(type='ConcatVideoReferences'),
+    dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]
 data = dict(
     samples_per_gpu=1,
@@ -189,7 +186,13 @@ data = dict(
         match_gts=False,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        pipeline=test_pipeline))
+        ref_img_sampler=dict(
+            num_ref_imgs=1,
+            frame_range=9,
+            filter_key_frame=True,
+            method='uniform'),
+        pipeline=test_pipeline,
+        test_mode=True))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
