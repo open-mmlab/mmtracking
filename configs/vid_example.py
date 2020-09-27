@@ -143,7 +143,7 @@ test_pipeline = [
     dict(
         type='VideoCollect',
         keys=['img'],
-        meta_keys=('frame_id', 'is_video_data')),
+        meta_keys=('frame_id', 'is_video_data', 'num_left_ref_imgs')),
     dict(type='ConcatVideoReferences'),
     dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]

@@ -152,6 +152,9 @@ class CocoVideoDataset(CocoDataset):
         super().pre_pipeline(_results)
         _results['frame_id'] = _results['img_info'].get('frame_id', -1)
         _results['is_video_data'] = self.load_as_video
+        frame_range = self.ref_img_sampler['frame_range']
+        _results['num_left_ref_imgs'] = abs(frame_range[0]) \
+            if isinstance(frame_range, list) else frame_range
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
@@ -235,8 +238,7 @@ class CocoVideoDataset(CocoDataset):
                 return None
 
         self.pre_pipeline(results)
-        results = self.pipeline(results)
-        return results
+        return self.pipeline(results)
 
     def prepare_test_img(self, idx):
         """Get testing data  after pipeline.
@@ -257,13 +259,9 @@ class CocoVideoDataset(CocoDataset):
             self.prepare_results(img_info, load_ann=False)
             for img_info in img_infos
         ]
-        self.pre_pipeline(results)
-        results = self.pipeline(results)
 
-        frame_range = self.ref_img_sampler['frame_range']
-        results['num_ref_imgs'] = abs(frame_range[0]) \
-            if isinstance(frame_range, list) else frame_range
-        return results
+        self.pre_pipeline(results)
+        return self.pipeline(results)
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
