@@ -192,7 +192,7 @@ test_pipeline = [
         keys=['img'],
         meta_keys=('frame_id', 'is_video_data')),
     dict(type='ConcatVideoReferences'),
-    dict(type='MultiImagesToTensor', ref_prefix='ref')
+    dict(type='MultiImagesToTensor')
 ]
 data = dict(
     samples_per_gpu=2,

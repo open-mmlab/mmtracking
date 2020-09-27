@@ -60,7 +60,7 @@ class ConcatVideoReferences(object):
 @PIPELINES.register_module()
 class MultiImagesToTensor(object):
 
-    def __init__(self, ref_prefix):
+    def __init__(self, ref_prefix='ref'):
         self.ref_prefix = ref_prefix
 
     def __call__(self, results):
