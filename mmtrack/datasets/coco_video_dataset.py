@@ -85,7 +85,8 @@ class CocoVideoDataset(CocoDataset):
             Warnings.warn(
                 "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
                 'Set num_ref_imgs to frame_range[1] - frame_range[0].')
-            num_ref_imgs = frame_range[1] - frame_range[0]
+            self.ref_img_sampler[
+                'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
         if img_info.get('frame_id', -1) < 0 \
                 or (frame_range[0] == 0 and frame_range[1] == 0):
@@ -252,16 +253,20 @@ class CocoVideoDataset(CocoDataset):
         """
 
         img_infos = [self.data_infos[idx]]
-        ref_img_infos = self.ref_img_sampling(img_infos[0],
-                                              **self.ref_img_sampler)
-        img_infos.extend(ref_img_infos)
+        if self.ref_img_sampler is not None:
+            ref_img_infos = self.ref_img_sampling(img_infos[0],
+                                                  **self.ref_img_sampler)
+            img_infos.extend(ref_img_infos)
         results = [
             self.prepare_results(img_info, load_ann=False)
             for img_info in img_infos
         ]
 
         self.pre_pipeline(results)
-        return self.pipeline(results)
+        if self.ref_img_sampler is not None:
+            return self.pipeline(results)
+        else:
+            return self.pipeline(results[0])
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.

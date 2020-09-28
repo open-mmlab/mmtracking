@@ -172,13 +172,16 @@ class VideoCollect(object):
         self.meta_keys = meta_keys + default_meta_keys
 
     def __call__(self, results):
+        results_is_dict = isinstance(results, dict)
+        if results_is_dict:
+            results = [results]
         outs = []
         for _results in results:
             _results = self._add_default_meta_keys(_results)
             _results = self._collect_meta_keys(_results)
             outs.append(_results)
 
-        return outs
+        return outs[0] if results_is_dict else outs
 
     def _collect_meta_keys(self, results):
         data = {}

@@ -1,6 +1,6 @@
 find_unused_parameters = True
 model = dict(
-    type='FasterRCNNDFF',
+    type='DffFasterRCNN',
     pretrained='torchvision://resnet101',
     backbone=dict(
         type='ResNet',
@@ -11,7 +11,7 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
         style='pytorch'),
-    flow_net=dict(
+    motion=dict(
         type='FlowNetSimple',
         pretrained='data/imagenet_vid/pretrained_flownet/'
         'cpu_flownets_EPE1.951.pth.tar',
@@ -137,7 +137,6 @@ train_pipeline = [
 test_pipeline = [
     dict(type='LoadMultiImagesFromFile'),
     dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
-    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=16),
     dict(
