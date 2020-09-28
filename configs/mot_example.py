@@ -193,7 +193,10 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
+            dict(
+                type='VideoCollect',
+                keys=['img'],
+                meta_keys=('frame_id', 'is_video_data'))
         ])
 ]
 data = dict(
@@ -220,11 +223,13 @@ data = dict(
         type=dataset_type,
         ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
         img_prefix=data_root + 'tracking/images/train/',
+        ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'tracking/annotations/bdd100k_track_mini.json',
         img_prefix=data_root + 'tracking/images/train/',
+        ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
