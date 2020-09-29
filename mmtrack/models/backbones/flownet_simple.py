@@ -147,7 +147,7 @@ class FlowNetSimple(nn.Module):
             print_log(f'load flownet from: {self.pretrained}', logger=logger)
             load_checkpoint(self, self.pretrained)
         else:
-            raise TypeError('Pretained must be a str')
+            raise TypeError('Pretained must be None or a str')
 
     def prepare_imgs(self, imgs, img_metas):
         flow_img = imgs * self.img_norm_std + self.img_norm_mean

@@ -43,12 +43,12 @@ class DffTwoStage(TwoStageDetector):
         # 2. compute the flow_field (grid in the code) used to warp features.
         H, W = ref_x_single.shape[-2:]
         h_grid, w_grid = torch.meshgrid(torch.arange(H), torch.arange(W))
-        # [1, H, W]
-        h_grid = h_grid.float().cuda().unsqueeze(0)
-        # [1, H, W]
-        w_grid = w_grid.float().cuda().unsqueeze(0)
+        # [1, 1, H, W]
+        h_grid = h_grid.float().cuda()[None, None, ...]
+        # [1, 1, H, W]
+        w_grid = w_grid.float().cuda()[None, None, ...]
         # [1, 2, H, W]
-        grid = torch.cat((w_grid, h_grid), dim=0).unsqueeze(0)
+        grid = torch.cat((w_grid, h_grid), dim=1)
         grid = grid + flow
         grid[:, 0] = grid[:, 0] / W * 2 - 1
         grid[:, 1] = grid[:, 1] / H * 2 - 1
