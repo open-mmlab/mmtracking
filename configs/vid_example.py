@@ -15,8 +15,7 @@ model = dict(
         type='FlowNetSimple',
         pretrained='data/imagenet_vid/pretrained_flownet/'
         'cpu_flownets_EPE1.951.pth.tar',
-        img_scale_factor=0.5,
-    ),
+        img_scale_factor=0.5),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
