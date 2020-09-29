@@ -1,8 +1,8 @@
 import random
+import warnings
 
 import mmcv
 import numpy as np
-import Warnings
 from mmdet.datasets import DATASETS, CocoDataset
 
 from mmtrack.core import eval_mot
@@ -82,7 +82,7 @@ class CocoVideoDataset(CocoDataset):
 
         if 'test' in method and \
                 (frame_range[1] - frame_range[0]) != num_ref_imgs:
-            Warnings.warn(
+            warnings.warn(
                 "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
                 'Set num_ref_imgs to frame_range[1] - frame_range[0].')
             self.ref_img_sampler[
@@ -153,9 +153,10 @@ class CocoVideoDataset(CocoDataset):
         super().pre_pipeline(_results)
         _results['frame_id'] = _results['img_info'].get('frame_id', -1)
         _results['is_video_data'] = self.load_as_video
-        frame_range = self.ref_img_sampler['frame_range']
-        _results['num_left_ref_imgs'] = abs(frame_range[0]) \
-            if isinstance(frame_range, list) else frame_range
+        if self.ref_img_sampler is not None:
+            frame_range = self.ref_img_sampler['frame_range']
+            _results['num_left_ref_imgs'] = abs(frame_range[0]) \
+                if isinstance(frame_range, list) else frame_range
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""

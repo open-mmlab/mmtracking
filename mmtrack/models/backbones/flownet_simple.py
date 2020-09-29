@@ -1,0 +1,206 @@
+import torch
+import torch.nn as nn
+from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import load_checkpoint
+from mmcv.utils import print_log
+from mmdet.models import BACKBONES
+
+from mmtrack.utils import get_root_logger
+
+
+@BACKBONES.register_module()
+class FlowNetSimple(nn.Module):
+
+    arch_setting = {
+        'conv_layers': {
+            'inplanes': (6, 64, 128, 256, 512, 512),
+            'kernel_size': (7, 5, 5, 3, 3, 3),
+            'num_convs': (1, 1, 2, 2, 2, 2)
+        },
+        'deconv_layers': {
+            'inplanes': (386, 770, 1026, 1024)
+        }
+    }
+
+    def __init__(self,
+                 pretrained=None,
+                 out_indices=[2, 3, 4, 5, 6],
+                 img_scale_factor=0.5,
+                 flow_scale_factor=5.0,
+                 img_norm_mean=[123.675, 116.28, 103.53],
+                 img_norm_std=[58.395, 57.12, 57.375],
+                 flow_img_norm_std=[255.0, 255.0, 255.0],
+                 flow_img_norm_mean=[0.411, 0.432, 0.450]):
+        super(FlowNetSimple, self).__init__()
+        self.pretrained = pretrained
+        self.out_indices = out_indices
+        self.img_scale_factor = img_scale_factor
+        self.flow_scale_factor = flow_scale_factor
+        self.img_norm_mean = torch.tensor(img_norm_mean).cuda().float().repeat(
+            2)[None, :, None, None]
+        self.img_norm_std = torch.tensor(img_norm_std).cuda().float().repeat(
+            2)[None, :, None, None]
+        self.flow_img_norm_mean = torch.tensor(
+            flow_img_norm_mean).cuda().float().repeat(2)[None, :, None, None]
+        self.flow_img_norm_std = torch.tensor(
+            flow_img_norm_std).cuda().float().repeat(2)[None, :, None, None]
+
+        self.conv_layers = []
+        conv_layers_setting = self.arch_setting['conv_layers']
+        for i in range(len(conv_layers_setting['inplanes'])):
+            num_convs = conv_layers_setting['num_convs'][i]
+            kernel_size = conv_layers_setting['kernel_size'][i]
+            inplanes = conv_layers_setting['inplanes'][i]
+            if i == len(conv_layers_setting['inplanes']) - 1:
+                planes = 2 * inplanes
+            else:
+                planes = conv_layers_setting['inplanes'][i + 1]
+
+            conv_layer = nn.ModuleList()
+            conv_layer.append(
+                ConvModule(
+                    in_channels=inplanes,
+                    out_channels=planes,
+                    kernel_size=kernel_size,
+                    stride=2,
+                    padding=(kernel_size - 1) // 2,
+                    bias=True,
+                    conv_cfg=dict(type='Conv'),
+                    act_cfg=dict(type='LeakyReLU', negative_slope=0.1)))
+            for j in range(1, num_convs):
+                kernel_size = 3 if i == 2 else kernel_size
+                conv_layer.append(
+                    ConvModule(
+                        in_channels=planes,
+                        out_channels=planes,
+                        kernel_size=kernel_size,
+                        stride=1,
+                        padding=(kernel_size - 1) // 2,
+                        bias=True,
+                        conv_cfg=dict(type='Conv'),
+                        act_cfg=dict(type='LeakyReLU', negative_slope=0.1)))
+
+            self.add_module(f'conv{i+1}', conv_layer)
+            self.conv_layers.append(f'conv{i+1}')
+
+        self.deconv_layers = []
+        self.flow_layers = []
+        self.upflow_layers = []
+        deconv_layers_setting = self.arch_setting['deconv_layers']
+        planes = deconv_layers_setting['inplanes'][-1] // 2
+        for i in range(len(deconv_layers_setting['inplanes']) - 1, -1, -1):
+            inplanes = deconv_layers_setting['inplanes'][i]
+
+            deconv_layer = ConvModule(
+                in_channels=inplanes,
+                out_channels=planes,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
+                conv_cfg=dict(type='deconv'),
+                act_cfg=dict(type='LeakyReLU', negative_slope=0.1))
+            self.add_module(f'deconv{i+2}', deconv_layer)
+            self.deconv_layers.insert(0, f'deconv{i+2}')
+
+            flow_layer = ConvModule(
+                in_channels=inplanes,
+                out_channels=2,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=False,
+                conv_cfg=dict(type='Conv'),
+                act_cfg=None)
+            self.add_module(f'predict_flow{i+3}', flow_layer)
+            self.flow_layers.insert(0, f'predict_flow{i+3}')
+
+            upflow_layer = ConvModule(
+                in_channels=2,
+                out_channels=2,
+                kernel_size=4,
+                stride=2,
+                padding=1,
+                bias=False,
+                conv_cfg=dict(type='deconv'),
+                act_cfg=None)
+            self.add_module(f'upsample_flow{i+2}', upflow_layer)
+            self.upflow_layers.insert(0, f'upsample_flow{i+2}')
+            planes = planes // 2
+
+        self.predict_flow = ConvModule(
+            in_channels=planes * (2 + 4) + 2,
+            out_channels=2,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+            conv_cfg=dict(type='Conv'),
+            act_cfg=None)
+
+    def init_weights(self):
+        logger = get_root_logger()
+        if self.pretrained is None:
+            print_log(
+                'Warning: The flownet is random initialized!', logger=logger)
+        if isinstance(self.pretrained, str):
+            print_log(f'load flownet from: {self.pretrained}', logger=logger)
+            load_checkpoint(self, self.pretrained)
+        else:
+            raise TypeError('Pretained must be a str')
+
+    def prepare_imgs(self, imgs, img_metas):
+        flow_img = imgs * self.img_norm_std + self.img_norm_mean
+        flow_img = flow_img / self.flow_img_norm_std - self.flow_img_norm_mean
+        flow_img[:, :, img_metas[0]['img_shape'][0]:, :] = 0.0
+        flow_img[:, :, :, img_metas[0]['img_shape'][1]:] = 0.0
+        flow_img = torch.nn.functional.interpolate(
+            flow_img,
+            scale_factor=self.img_scale_factor,
+            mode='bilinear',
+            align_corners=False)
+        return flow_img
+
+    def forward(self, imgs, img_metas):
+        x = self.prepare_imgs(imgs, img_metas)
+        conv_outs = []
+        for i, conv_name in enumerate(self.conv_layers, 1):
+            conv_layer = getattr(self, conv_name)
+            for module in conv_layer:
+                x = module(x)
+            if i in self.out_indices:
+                conv_outs.append(x)
+
+        num_outs = len(conv_outs)
+        for i, deconv_name, flow_name, upflow_name in zip(
+                range(1, num_outs)[::-1], self.deconv_layers[::-1],
+                self.flow_layers[::-1], self.upflow_layers[::-1]):
+            deconv_layer = getattr(self, deconv_name)
+            flow_layer = getattr(self, flow_name)
+            upflow_layer = getattr(self, upflow_name)
+
+            if i == num_outs - 1:
+                concat_out = conv_outs[i]
+            flow = flow_layer(concat_out)
+            upflow = self.crop_like(upflow_layer(flow), conv_outs[i - 1])
+            deconv_out = self.crop_like(
+                deconv_layer(concat_out), conv_outs[i - 1])
+            concat_out = torch.cat((conv_outs[i - 1], deconv_out, upflow),
+                                   dim=1)
+
+        flow = self.predict_flow(concat_out)
+        flow = torch.nn.functional.interpolate(
+            flow,
+            scale_factor=4 / self.img_scale_factor,
+            mode='bilinear',
+            align_corners=False)
+        flow *= 4 / self.img_scale_factor
+        flow *= self.flow_scale_factor
+
+        return flow
+
+    def crop_like(self, input, target):
+        if input.size()[2:] == target.size()[2:]:
+            return input
+        else:
+            return input[:, :, :target.size(2), :target.size(3)]
