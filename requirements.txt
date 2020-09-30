@@ -1,5 +1,6 @@
+coverage
 mmcv>=1.0.0
-mmdet==2.4.0
+mmdet
 motmetrics
 numpy
 torch>=1.3

@@ -5,6 +5,69 @@ from mmdet.datasets.pipelines import to_tensor
 
 
 @PIPELINES.register_module()
+class VideoCollect(object):
+
+    def __init__(self,
+                 keys,
+                 meta_keys=('frame_id', 'is_video_data'),
+                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
+                                    'img_shape', 'pad_shape', 'scale_factor',
+                                    'flip', 'flip_direction', 'img_norm_cfg')):
+        self.keys = keys
+        if isinstance(meta_keys, str):
+            meta_keys = (meta_keys, )
+        else:
+            assert isinstance(meta_keys, tuple), \
+                'meta_keys must be str or tuple'
+        self.meta_keys = meta_keys + default_meta_keys
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = self._add_default_meta_keys(_results)
+            _results = self._collect(_results)
+            outs.append(_results)
+
+        return outs
+
+    def _collect(self, results):
+        data = {}
+        img_meta = {}
+        for key in self.meta_keys:
+            if key in results:
+                img_meta[key] = results[key]
+        data['img_metas'] = img_meta
+        for key in self.keys:
+            data[key] = results[key]
+        return data
+
+    def _add_default_meta_keys(self, results):
+        """Add default meta keys.
+
+        We set default meta keys including `pad_shape`, `scale_factor` and
+        `img_norm_cfg` to avoid the case where no `Resize`, `Normalize` and
+        `Pad` are implemented during the whole pipeline.
+
+        Args:
+            results (dict): Result dict contains the data to convert.
+
+        Returns:
+            results (dict): Updated result dict contains the data to convert.
+        """
+        img = results['img']
+        results.setdefault('pad_shape', img.shape)
+        results.setdefault('scale_factor', 1.0)
+        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
+        results.setdefault(
+            'img_norm_cfg',
+            dict(
+                mean=np.zeros(num_channels, dtype=np.float32),
+                std=np.ones(num_channels, dtype=np.float32),
+                to_rgb=False))
+        return results
+
+
+@PIPELINES.register_module()
 class ConcatVideoReferences(object):
 
     def __call__(self, results):
@@ -117,65 +180,3 @@ class SeqDefaultFormatBundle(object):
 
     def __repr__(self):
         return self.__class__.__name__
-
-
-@PIPELINES.register_module()
-class VideoCollect(object):
-
-    def __init__(self,
-                 keys,
-                 meta_keys=('frame_id', 'is_video_data'),
-                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
-                                    'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg')):
-        self.keys = keys
-        if isinstance(meta_keys, str):
-            meta_keys = (meta_keys, )
-        else:
-            assert isinstance(meta_keys, tuple), \
-                'meta_keys must be str or tuple'
-        self.meta_keys = meta_keys + default_meta_keys
-
-    def __call__(self, results):
-        outs = []
-        for _results in results:
-            _results = self._add_default_meta_keys(_results)
-            _results = self._collect_meta_keys(_results)
-            outs.append(_results)
-
-        return outs
-
-    def _collect_meta_keys(self, results):
-        data = {}
-        img_meta = {}
-        for key in self.meta_keys:
-            img_meta[key] = results[key]
-        data['img_metas'] = img_meta
-        for key in self.keys:
-            data[key] = results[key]
-        return data
-
-    def _add_default_meta_keys(self, results):
-        """Add default meta keys.
-
-        We set default meta keys including `pad_shape`, `scale_factor` and
-        `img_norm_cfg` to avoid the case where no `Resize`, `Normalize` and
-        `Pad` are implemented during the whole pipeline.
-
-        Args:
-            results (dict): Result dict contains the data to convert.
-
-        Returns:
-            results (dict): Updated result dict contains the data to convert.
-        """
-        img = results['img']
-        results.setdefault('pad_shape', img.shape)
-        results.setdefault('scale_factor', 1.0)
-        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
-        results.setdefault(
-            'img_norm_cfg',
-            dict(
-                mean=np.zeros(num_channels, dtype=np.float32),
-                std=np.ones(num_channels, dtype=np.float32),
-                to_rgb=False))
-        return results
