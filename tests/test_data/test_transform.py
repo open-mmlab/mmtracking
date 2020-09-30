@@ -11,7 +11,7 @@ class TestTransforms(object):
 
     @classmethod
     def setup_class(cls):
-        cls.data_prefix = osp.join(osp.dirname(__file__), '../data')
+        cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
         img_names = ['image_a.jpg', 'image_b.jpg']
         results = [

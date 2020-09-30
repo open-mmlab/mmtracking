@@ -23,7 +23,7 @@ def _create_dummy_results(num_imgs):
     return results
 
 
-PREFIX = osp.join(osp.dirname(__file__), '../data')
+PREFIX = osp.join(osp.dirname(__file__), '../assets')
 COCO_VIDEO_ANN_FILE = f'{PREFIX}/video_annotations_coco-format.json'
 
 

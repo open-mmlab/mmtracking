@@ -10,7 +10,7 @@ class TestFormatting(object):
 
     @classmethod
     def setup_class(cls):
-        cls.data_prefix = osp.join(osp.dirname(__file__), '../data')
+        cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
     def test_formatting(self):
         img_names = ['image_a.jpg', 'image_b.jpg', 'image_c.jpg']
