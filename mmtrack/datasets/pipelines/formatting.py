@@ -58,6 +58,41 @@ class ConcatVideoReferences(object):
 
 
 @PIPELINES.register_module()
+class MultiImagesToTensor(object):
+
+    def __init__(self, ref_prefix='ref'):
+        self.ref_prefix = ref_prefix
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = self.images_to_tensor(_results)
+            outs.append(_results)
+
+        data = {}
+        data.update(outs[0])
+        if len(outs) == 2:
+            for k, v in outs[1].items():
+                data[f'{self.ref_prefix}_{k}'] = v
+
+        return data
+
+    def images_to_tensor(self, results):
+        if 'img' in results:
+            img = results['img']
+            if len(img.shape) == 3:
+                img = np.ascontiguousarray(img.transpose(2, 0, 1))
+            else:
+                img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+            results['img'] = to_tensor(img)
+        if 'proposals' in results:
+            results['proposals'] = to_tensor(results['proposals'])
+        if 'img_metas' in results:
+            results['img_metas'] = DC(results['img_metas'], cpu_only=True)
+        return results
+
+
+@PIPELINES.register_module()
 class SeqDefaultFormatBundle(object):
 
     def __init__(self, ref_prefix='ref'):
@@ -137,13 +172,16 @@ class VideoCollect(object):
         self.meta_keys = meta_keys + default_meta_keys
 
     def __call__(self, results):
+        results_is_dict = isinstance(results, dict)
+        if results_is_dict:
+            results = [results]
         outs = []
         for _results in results:
             _results = self._add_default_meta_keys(_results)
             _results = self._collect_meta_keys(_results)
             outs.append(_results)
 
-        return outs
+        return outs[0] if results_is_dict else outs
 
     def _collect_meta_keys(self, results):
         data = {}
