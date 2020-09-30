@@ -187,7 +187,8 @@ class VideoCollect(object):
         data = {}
         img_meta = {}
         for key in self.meta_keys:
-            img_meta[key] = results[key]
+            if key in results:
+                img_meta[key] = results[key]
         data['img_metas'] = img_meta
         for key in self.keys:
             data[key] = results[key]
