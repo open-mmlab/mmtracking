@@ -2,7 +2,6 @@ import random
 
 import mmcv
 import numpy as np
-import Warnings
 from mmdet.datasets import DATASETS, CocoDataset
 
 from mmtrack.core import eval_mot
@@ -82,9 +81,11 @@ class CocoVideoDataset(CocoDataset):
 
         if 'test' in method and \
                 (frame_range[1] - frame_range[0]) != num_ref_imgs:
-            Warnings.warn(
-                "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
-                'Set num_ref_imgs to frame_range[1] - frame_range[0].')
+            # TODO: use warning in logger
+            # Warnings.warn(
+            #     "frame_range[1] - frame_range[0] isn't equal to
+            # num_ref_imgs."
+            #     'Set num_ref_imgs to frame_range[1] - frame_range[0].')
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
