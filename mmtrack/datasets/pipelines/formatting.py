@@ -5,69 +5,6 @@ from mmdet.datasets.pipelines import to_tensor
 
 
 @PIPELINES.register_module()
-class VideoCollect(object):
-
-    def __init__(self,
-                 keys,
-                 meta_keys=('frame_id', 'is_video_data'),
-                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
-                                    'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg')):
-        self.keys = keys
-        if isinstance(meta_keys, str):
-            meta_keys = (meta_keys, )
-        else:
-            assert isinstance(meta_keys, tuple), \
-                'meta_keys must be str or tuple'
-        self.meta_keys = meta_keys + default_meta_keys
-
-    def __call__(self, results):
-        outs = []
-        for _results in results:
-            _results = self._add_default_meta_keys(_results)
-            _results = self._collect(_results)
-            outs.append(_results)
-
-        return outs
-
-    def _collect(self, results):
-        data = {}
-        img_meta = {}
-        for key in self.meta_keys:
-            if key in results:
-                img_meta[key] = results[key]
-        data['img_metas'] = img_meta
-        for key in self.keys:
-            data[key] = results[key]
-        return data
-
-    def _add_default_meta_keys(self, results):
-        """Add default meta keys.
-
-        We set default meta keys including `pad_shape`, `scale_factor` and
-        `img_norm_cfg` to avoid the case where no `Resize`, `Normalize` and
-        `Pad` are implemented during the whole pipeline.
-
-        Args:
-            results (dict): Result dict contains the data to convert.
-
-        Returns:
-            results (dict): Updated result dict contains the data to convert.
-        """
-        img = results['img']
-        results.setdefault('pad_shape', img.shape)
-        results.setdefault('scale_factor', 1.0)
-        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
-        results.setdefault(
-            'img_norm_cfg',
-            dict(
-                mean=np.zeros(num_channels, dtype=np.float32),
-                std=np.ones(num_channels, dtype=np.float32),
-                to_rgb=False))
-        return results
-
-
-@PIPELINES.register_module()
 class ConcatVideoReferences(object):
 
     def __call__(self, results):
@@ -118,6 +55,41 @@ class ConcatVideoReferences(object):
             if i == 1:
                 outs.append(result)
         return outs
+
+
+@PIPELINES.register_module()
+class MultiImagesToTensor(object):
+
+    def __init__(self, ref_prefix='ref'):
+        self.ref_prefix = ref_prefix
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = self.images_to_tensor(_results)
+            outs.append(_results)
+
+        data = {}
+        data.update(outs[0])
+        if len(outs) == 2:
+            for k, v in outs[1].items():
+                data[f'{self.ref_prefix}_{k}'] = v
+
+        return data
+
+    def images_to_tensor(self, results):
+        if 'img' in results:
+            img = results['img']
+            if len(img.shape) == 3:
+                img = np.ascontiguousarray(img.transpose(2, 0, 1))
+            else:
+                img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+            results['img'] = to_tensor(img)
+        if 'proposals' in results:
+            results['proposals'] = to_tensor(results['proposals'])
+        if 'img_metas' in results:
+            results['img_metas'] = DC(results['img_metas'], cpu_only=True)
+        return results
 
 
 @PIPELINES.register_module()
@@ -180,3 +152,69 @@ class SeqDefaultFormatBundle(object):
 
     def __repr__(self):
         return self.__class__.__name__
+
+
+@PIPELINES.register_module()
+class VideoCollect(object):
+
+    def __init__(self,
+                 keys,
+                 meta_keys=('frame_id', 'is_video_data'),
+                 default_meta_keys=('filename', 'ori_filename', 'ori_shape',
+                                    'img_shape', 'pad_shape', 'scale_factor',
+                                    'flip', 'flip_direction', 'img_norm_cfg')):
+        self.keys = keys
+        if isinstance(meta_keys, str):
+            meta_keys = (meta_keys, )
+        else:
+            assert isinstance(meta_keys, tuple), \
+                'meta_keys must be str or tuple'
+        self.meta_keys = meta_keys + default_meta_keys
+
+    def __call__(self, results):
+        results_is_dict = isinstance(results, dict)
+        if results_is_dict:
+            results = [results]
+        outs = []
+        for _results in results:
+            _results = self._add_default_meta_keys(_results)
+            _results = self._collect_meta_keys(_results)
+            outs.append(_results)
+
+        return outs[0] if results_is_dict else outs
+
+    def _collect_meta_keys(self, results):
+        data = {}
+        img_meta = {}
+        for key in self.meta_keys:
+            if key in results:
+                img_meta[key] = results[key]
+        data['img_metas'] = img_meta
+        for key in self.keys:
+            data[key] = results[key]
+        return data
+
+    def _add_default_meta_keys(self, results):
+        """Add default meta keys.
+
+        We set default meta keys including `pad_shape`, `scale_factor` and
+        `img_norm_cfg` to avoid the case where no `Resize`, `Normalize` and
+        `Pad` are implemented during the whole pipeline.
+
+        Args:
+            results (dict): Result dict contains the data to convert.
+
+        Returns:
+            results (dict): Updated result dict contains the data to convert.
+        """
+        img = results['img']
+        results.setdefault('pad_shape', img.shape)
+        results.setdefault('scale_factor', 1.0)
+        num_channels = 1 if len(img.shape) < 3 else img.shape[2]
+        results.setdefault(
+            'img_norm_cfg',
+            dict(
+                mean=np.zeros(num_channels, dtype=np.float32),
+                std=np.ones(num_channels, dtype=np.float32),
+                to_rgb=False))
+        return results

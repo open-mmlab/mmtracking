@@ -5,7 +5,7 @@ from .parsers import CocoVID
 
 
 @DATASETS.register_module()
-class ImagenetVIDVideoDataset(CocoVideoDataset):
+class ImagenetVIDDataset(CocoVideoDataset):
 
     CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
                'cattle', 'dog', 'domestic_cat', 'elephant', 'fox',
