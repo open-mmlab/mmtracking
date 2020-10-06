@@ -3,12 +3,12 @@ import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmcv.runner import load_checkpoint
 from mmcv.utils import print_log
-from mmdet.models import BACKBONES
 
 from mmtrack.utils import get_root_logger
+from ..builder import MOTION
 
 
-@BACKBONES.register_module()
+@MOTION.register_module()
 class FlowNetSimple(nn.Module):
 
     arch_setting = {

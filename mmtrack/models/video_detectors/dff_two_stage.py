@@ -1,35 +1,28 @@
 import torch
-from mmdet.models import build_backbone
-from mmdet.models.detectors import TwoStageDetector
+from mmdet.models import build_detector
+from mmdet.models.detectors import BaseDetector
 
 from mmtrack.core import flow_warp_feats
-from ..builder import MODELS
+from ..builder import MODELS, build_motion
 
 
 @MODELS.register_module()
-class DffTwoStage(TwoStageDetector):
+class DffTwoStage(BaseDetector):
 
-    def __init__(self,
-                 backbone,
-                 motion,
-                 neck=None,
-                 rpn_head=None,
-                 roi_head=None,
-                 train_cfg=None,
-                 test_cfg=None,
-                 pretrained=None,
-                 key_frame_interval=10):
-        super(DffTwoStage, self).__init__(
-            backbone=backbone,
-            neck=neck,
-            rpn_head=rpn_head,
-            roi_head=roi_head,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            pretrained=pretrained)
-        self.key_frame_interval = key_frame_interval
-        self.motion = build_backbone(motion)
+    def __init__(self, detector, motion, train_cfg=None, test_cfg=None):
+        super(DffTwoStage, self).__init__()
+        self.detector = build_detector(detector, train_cfg, test_cfg)
+        self.motion = build_motion(motion)
         self.motion.init_weights()
+        self.train_cfg = train_cfg
+        self.test_cfg = test_cfg
+        if 'key_frame_interval' in test_cfg:
+            self.key_frame_interval = test_cfg['key_frame_interval']
+        else:
+            self.key_frame_interval = 1
+
+    def extract_feat(self, img):
+        return self.detector.extract_feat(img)
 
     def forward_train(self,
                       img,
@@ -67,10 +60,10 @@ class DffTwoStage(TwoStageDetector):
         losses = dict()
 
         # RPN forward and loss
-        if self.with_rpn:
+        if self.detector.with_rpn:
             proposal_cfg = self.train_cfg.get('rpn_proposal',
                                               self.test_cfg.rpn)
-            rpn_losses, proposal_list = self.rpn_head.forward_train(
+            rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
                 x,
                 img_metas,
                 gt_bboxes,
@@ -81,17 +74,15 @@ class DffTwoStage(TwoStageDetector):
         else:
             proposal_list = proposals
 
-        roi_losses = self.roi_head.forward_train(x, img_metas, proposal_list,
-                                                 gt_bboxes, gt_labels,
-                                                 gt_bboxes_ignore, gt_masks,
-                                                 **kwargs)
+        roi_losses = self.detector.roi_head.forward_train(
+            x, img_metas, proposal_list, gt_bboxes, gt_labels,
+            gt_bboxes_ignore, gt_masks, **kwargs)
         losses.update(roi_losses)
 
         return losses
 
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
-        assert self.with_bbox, 'Bbox head must be implemented.'
 
         frame_id = img_metas[0]['frame_id']
         is_key_frame = False if frame_id % self.key_frame_interval else True
@@ -109,11 +100,12 @@ class DffTwoStage(TwoStageDetector):
                 x.append(x_single)
 
         if proposals is None:
-            proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
+            proposal_list = self.detector.rpn_head.simple_test_rpn(
+                x, img_metas)
         else:
             proposal_list = proposals
 
-        outs = self.roi_head.simple_test(
+        outs = self.detector.roi_head.simple_test(
             x, proposal_list, img_metas, rescale=rescale)
         results = dict()
         if len(outs) == 1:
@@ -121,3 +113,7 @@ class DffTwoStage(TwoStageDetector):
         if len(outs) == 2:
             results['segm_result'] = outs[1]
         return results
+
+    def aug_test(self, imgs, img_metas, **kwargs):
+        """Test function with test time augmentation."""
+        raise NotImplementedError
