@@ -229,7 +229,6 @@ class CocoVideoDataset(CocoDataset):
                                               **self.ref_img_sampler)
         img_infos.extend(ref_img_infos)
         results = [self.prepare_results(img_info) for img_info in img_infos]
-
         if self.match_gts:
             assert len(results) == 2, \
                 'matching gts only support 1 ref_img for now.'
@@ -238,7 +237,6 @@ class CocoVideoDataset(CocoDataset):
             results = [results, ref_results]
             if self.skip_nomatch_pairs and nomatch:
                 return None
-
         self.pre_pipeline(results)
         return self.pipeline(results)
 
