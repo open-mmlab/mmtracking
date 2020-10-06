@@ -19,7 +19,7 @@ class DffTwoStage(BaseDetector):
         if 'key_frame_interval' in test_cfg:
             self.key_frame_interval = test_cfg['key_frame_interval']
         else:
-            self.key_frame_interval = 1
+            self.key_frame_interval = 10
 
     def extract_feat(self, img):
         return self.detector.extract_feat(img)
@@ -108,8 +108,7 @@ class DffTwoStage(BaseDetector):
         outs = self.detector.roi_head.simple_test(
             x, proposal_list, img_metas, rescale=rescale)
         results = dict()
-        if len(outs) == 1:
-            results['bbox_result'] = outs[0]
+        results['bbox_result'] = outs[0]
         if len(outs) == 2:
             results['segm_result'] = outs[1]
         return results

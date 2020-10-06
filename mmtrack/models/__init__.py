@@ -1,8 +1,9 @@
-from .builder import MODELS, TRACKERS, build_model, build_tracker
+from .builder import (MODELS, MOTION, TRACKERS, build_model, build_motion,
+                      build_tracker)
 from .motion import FlowNetSimple
 from .video_detectors import DffTwoStage
 
 __all__ = [
-    'MODELS', 'TRACKERS', 'build_model', 'build_tracker', 'FlowNetSimple',
-    'DffTwoStage'
+    'MODELS', 'TRACKERS', 'MOTION', 'build_model', 'build_tracker',
+    'build_motion', 'FlowNetSimple', 'DffTwoStage'
 ]
