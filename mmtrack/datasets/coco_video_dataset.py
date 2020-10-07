@@ -2,10 +2,11 @@ import random
 
 import mmcv
 import numpy as np
-import Warnings
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CocoDataset
 
 from mmtrack.core import eval_mot
+from mmtrack.utils import get_root_logger
 from .parsers import CocoVID
 
 
@@ -82,9 +83,12 @@ class CocoVideoDataset(CocoDataset):
 
         if 'test' in method and \
                 (frame_range[1] - frame_range[0]) != num_ref_imgs:
-            Warnings.warn(
+            logger = get_root_logger()
+            print_log(
+                'Warning:'
                 "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
-                'Set num_ref_imgs to frame_range[1] - frame_range[0].')
+                'Set num_ref_imgs to frame_range[1] - frame_range[0].',
+                logger=logger)
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
@@ -153,9 +157,10 @@ class CocoVideoDataset(CocoDataset):
         super().pre_pipeline(_results)
         _results['frame_id'] = _results['img_info'].get('frame_id', -1)
         _results['is_video_data'] = self.load_as_video
-        frame_range = self.ref_img_sampler['frame_range']
-        _results['num_left_ref_imgs'] = abs(frame_range[0]) \
-            if isinstance(frame_range, list) else frame_range
+        if self.ref_img_sampler is not None:
+            frame_range = self.ref_img_sampler['frame_range']
+            _results['num_left_ref_imgs'] = abs(frame_range[0]) \
+                if isinstance(frame_range, list) else frame_range
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
@@ -228,7 +233,6 @@ class CocoVideoDataset(CocoDataset):
                                               **self.ref_img_sampler)
         img_infos.extend(ref_img_infos)
         results = [self.prepare_results(img_info) for img_info in img_infos]
-
         if self.match_gts:
             assert len(results) == 2, \
                 'matching gts only support 1 ref_img for now.'
@@ -237,7 +241,6 @@ class CocoVideoDataset(CocoDataset):
             results = [results, ref_results]
             if self.skip_nomatch_pairs and nomatch:
                 return None
-
         self.pre_pipeline(results)
         return self.pipeline(results)
 

@@ -93,6 +93,10 @@ if __name__ == '__main__':
         version=get_version(),
         description='A template for pytorch projects.',
         long_description=readme(),
+        author='OpenMMLab',
+        author_email='openmmlab@gmail.com',
+        keywords='object tracking, video object detection',
+        url='https://github.com/open-mmlab/mmtracking',
         packages=find_packages(exclude=('configs', 'tools', 'demo')),
         package_data={'mmtrack.ops': ['*/*.so']},
         classifiers=[

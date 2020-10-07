@@ -181,13 +181,17 @@ class VideoCollect(object):
             _results = self._collect_meta_keys(_results)
             outs.append(_results)
 
+        if results_is_dict:
+            outs[0]['img_metas'] = DC(outs[0]['img_metas'], cpu_only=True)
+
         return outs[0] if results_is_dict else outs
 
     def _collect_meta_keys(self, results):
         data = {}
         img_meta = {}
         for key in self.meta_keys:
-            img_meta[key] = results[key]
+            if key in results:
+                img_meta[key] = results[key]
         data['img_metas'] = img_meta
         for key in self.keys:
             data[key] = results[key]

@@ -1,6 +1,6 @@
 name: build
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   lint:
@@ -50,8 +50,8 @@ jobs:
         run: pip install torch==${{matrix.torch}}+cpu torchvision==${{matrix.torchvision}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install MMCV
         run: pip install mmcv-full==latest+torch${{matrix.torch}}+cpu -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
-      - name: Install unittest dependencies
-        run: pip install -r requirements/tests.txt -r requirements/optional.txt
+      - name: Install requirements
+        run: pip install -r requirements.txt
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
