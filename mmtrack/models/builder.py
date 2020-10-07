@@ -3,11 +3,17 @@ from mmdet.models.builder import build
 
 MODELS = Registry('model')
 TRACKERS = Registry('tracker')
+MOTION = Registry('motion')
 
 
 def build_tracker(cfg):
     """Build tracker."""
     return build(cfg, TRACKERS)
+
+
+def build_motion(cfg):
+    """Build motion model."""
+    return build(cfg, MOTION)
 
 
 def build_model(cfg, train_cfg=None, test_cfg=None):

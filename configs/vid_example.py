@@ -1,64 +1,68 @@
 find_unused_parameters = True
 model = dict(
-    type='DffFasterRCNN',
-    pretrained='torchvision://resnet101',
-    backbone=dict(
-        type='ResNet',
-        depth=101,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch'),
+    type='DffTwoStage',
+    detector=dict(
+        type='FasterRCNN',
+        pretrained='torchvision://resnet101',
+        backbone=dict(
+            type='ResNet',
+            depth=101,
+            num_stages=4,
+            out_indices=(0, 1, 2, 3),
+            frozen_stages=1,
+            norm_cfg=dict(type='BN', requires_grad=True),
+            norm_eval=True,
+            style='pytorch'),
+        neck=dict(
+            type='FPN',
+            in_channels=[256, 512, 1024, 2048],
+            out_channels=256,
+            num_outs=5),
+        rpn_head=dict(
+            type='RPNHead',
+            in_channels=256,
+            feat_channels=256,
+            anchor_generator=dict(
+                type='AnchorGenerator',
+                scales=[8],
+                ratios=[0.5, 1.0, 2.0],
+                strides=[4, 8, 16, 32, 64]),
+            bbox_coder=dict(
+                type='DeltaXYWHBBoxCoder',
+                target_means=[.0, .0, .0, .0],
+                target_stds=[1.0, 1.0, 1.0, 1.0]),
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        roi_head=dict(
+            type='StandardRoIHead',
+            bbox_roi_extractor=dict(
+                type='SingleRoIExtractor',
+                roi_layer=dict(
+                    type='RoIAlign', output_size=7, sampling_ratio=2),
+                out_channels=256,
+                featmap_strides=[4, 8, 16, 32]),
+            bbox_head=dict(
+                type='Shared2FCBBoxHead',
+                in_channels=256,
+                fc_out_channels=1024,
+                roi_feat_size=7,
+                num_classes=30,
+                bbox_coder=dict(
+                    type='DeltaXYWHBBoxCoder',
+                    target_means=[0., 0., 0., 0.],
+                    target_stds=[0.1, 0.1, 0.2, 0.2]),
+                reg_class_agnostic=False,
+                loss_cls=dict(
+                    type='CrossEntropyLoss',
+                    use_sigmoid=False,
+                    loss_weight=1.0),
+                loss_bbox=dict(type='L1Loss', loss_weight=1.0)))),
     motion=dict(
         type='FlowNetSimple',
         pretrained='data/imagenet_vid/pretrained_flownet/'
         'cpu_flownets_EPE1.951.pth.tar',
-        img_scale_factor=0.5,
-    ),
-    neck=dict(
-        type='FPN',
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        num_outs=5),
-    rpn_head=dict(
-        type='RPNHead',
-        in_channels=256,
-        feat_channels=256,
-        anchor_generator=dict(
-            type='AnchorGenerator',
-            scales=[8],
-            ratios=[0.5, 1.0, 2.0],
-            strides=[4, 8, 16, 32, 64]),
-        bbox_coder=dict(
-            type='DeltaXYWHBBoxCoder',
-            target_means=[.0, .0, .0, .0],
-            target_stds=[1.0, 1.0, 1.0, 1.0]),
-        loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
-    roi_head=dict(
-        type='StandardRoIHead',
-        bbox_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=2),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
-        bbox_head=dict(
-            type='Shared2FCBBoxHead',
-            in_channels=256,
-            fc_out_channels=1024,
-            roi_feat_size=7,
-            num_classes=30,
-            bbox_coder=dict(
-                type='DeltaXYWHBBoxCoder',
-                target_means=[0., 0., 0., 0.],
-                target_stds=[0.1, 0.1, 0.2, 0.2]),
-            reg_class_agnostic=False,
-            loss_cls=dict(
-                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0))))
+        img_scale_factor=0.5))
 # model training and testing settings
 train_cfg = dict(
     rpn=dict(
@@ -110,10 +114,10 @@ test_cfg = dict(
     rcnn=dict(
         score_thr=0.0001,
         nms=dict(type='nms', iou_threshold=0.5),
-        max_per_img=100)
+        max_per_img=100),
     # soft-nms is also supported for rcnn testing
     # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
-)
+    key_frame_interval=10)
 
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
@@ -126,7 +130,7 @@ train_pipeline = [
     dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=16),
+    dict(type='SeqPad', size_divisor=64),
     dict(
         type='VideoCollect',
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids'],
@@ -135,16 +139,22 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadMultiImagesFromFile'),
-    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
-    dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=16),
+    dict(type='LoadImageFromFile'),
     dict(
-        type='VideoCollect',
-        keys=['img'],
-        meta_keys=('frame_id', 'is_video_data', 'num_left_ref_imgs')),
-    dict(type='ConcatVideoReferences'),
-    dict(type='MultiImagesToTensor', ref_prefix='ref')
+        type='MultiScaleFlipAug',
+        img_scale=(1000, 600),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=64),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(
+                type='VideoCollect',
+                keys=['img'],
+                meta_keys=('frame_id', 'is_video_data'))
+        ])
 ]
 data = dict(
     samples_per_gpu=1,
@@ -179,17 +189,15 @@ data = dict(
         match_gts=False,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        pipeline=test_pipeline),
+        ref_img_sampler=None,
+        pipeline=test_pipeline,
+        test_mode=True),
     test=dict(
         type=dataset_type,
         match_gts=False,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=dict(
-            num_ref_imgs=1,
-            frame_range=9,
-            filter_key_frame=True,
-            method='uniform'),
+        ref_img_sampler=None,
         pipeline=test_pipeline,
         test_mode=True))
 # optimizer
