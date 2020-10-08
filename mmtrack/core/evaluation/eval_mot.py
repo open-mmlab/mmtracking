@@ -66,6 +66,7 @@ def _aggregate_eval_results(summary, metrics, classes):
         sum_results = s.sum()
         results = []
         for metric in metrics:
+            # TODO: check the efficiency in pymotmetrics
             if metric == 'mota':
                 result = 1. - quiet_divide(
                     sum_results['num_misses'] + sum_results['num_switches'] +
