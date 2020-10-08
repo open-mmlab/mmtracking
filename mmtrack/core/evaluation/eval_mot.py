@@ -57,7 +57,7 @@ def eval_single_video(results,
     return accumulators
 
 
-def _aggregate_eval_results(mh, summary, metrics, classes):
+def _aggregate_eval_results(summary, metrics, classes):
     classes += ['OVERALL']
     all_summary = pd.DataFrame(columns=metrics)
     for cls in classes:
@@ -150,7 +150,7 @@ def eval_mot(results,
         generate_overall=False)
 
     print_log('Aggregating...', logger)
-    summary = _aggregate_eval_results(mh, summary, METRIC_MAPS.keys(), classes)
+    summary = _aggregate_eval_results(summary, METRIC_MAPS.keys(), classes)
     strsummary = mm.io.render_summary(
         summary, formatters=mh.formatters, namemap=METRIC_MAPS)
     print_log(strsummary, logger)
