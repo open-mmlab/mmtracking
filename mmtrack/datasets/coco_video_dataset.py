@@ -181,7 +181,7 @@ class CocoVideoDataset(CocoDataset):
             dict: Annotation info of specified index.
         """
         img_id = img_info['id']
-        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id], cat_ids=self.cat_ids)
         ann_info = self.coco.load_anns(ann_ids)
         return self._parse_ann_info(img_info, ann_info)
 

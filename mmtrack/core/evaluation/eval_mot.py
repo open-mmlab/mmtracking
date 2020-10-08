@@ -82,7 +82,7 @@ def _aggregate_eval_results(summary, metrics, classes):
                 result = sum_results[metric]
             results.append(result)
         all_summary.loc[cls] = results
-    all_summary['motp'] = (1 - all_summary['motp']) * 100
+    all_summary['motp'] = 1 - all_summary['motp']
 
     cls_summary = all_summary[~all_summary.index.str.startswith('OVERALL'
                                                                 )].copy()
@@ -155,10 +155,15 @@ def eval_mot(results,
         summary, formatters=mh.formatters, namemap=METRIC_MAPS)
     print_log(strsummary, logger)
     print_log(f'Evaluation finishes with {(time.time() - t):.2f} s.', logger)
-    out = {METRIC_MAPS[k]: v['OVERALL'] for k, v in summary.to_dict().items()}
+
+    summary = summary.to_dict()
+    out = {METRIC_MAPS[k]: v['OVERALL'] for k, v in summary.items()}
     for k, v in out.items():
-        if isinstance(v, float):
-            out[k] = f'{(v):.3f}'
-        else:
-            out[k] = f'{v}'
+        out[k] = float(f'{(v):.3f}') if isinstance(v, float) else int(f'{v}')
+    for m in ['OVERALL', 'AVERAGE']:
+        out[f'track_{m}_copypaste'] = ''
+        for k in METRIC_MAPS.keys():
+            v = summary[k][m]
+            v = f'{(v):.3f} ' if isinstance(v, float) else f'{v} '
+            out[f'track_{m}_copypaste'] += v
     return out

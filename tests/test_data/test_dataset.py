@@ -16,9 +16,26 @@ from mmtrack.datasets import DATASETS, CocoVideoDataset
 
 PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
-# 1 videos, 2 categories (car, 'person')
-# 8 images, 2 instances, 13 objects
+# 1 videos, 2 categories ('car', 'person')
+# 8 images, 2 instances, 13 objects, 1 ignore objects
 COCO_VIDEO_ANN_FILE = f'{PREFIX}/video_annotations_coco-format.json'
+
+
+def _create_gt_results(dataset):
+    from mmdet.core import bbox2result
+    from mmtrack.core import track2result
+    results = defaultdict(list)
+    for img_info in dataset.data_infos:
+        ann = dataset.get_ann_info(img_info)
+        scores = np.ones((ann['bboxes'].shape[0], 1), dtype=np.float)
+        bboxes = np.concatenate((ann['bboxes'], scores), axis=1)
+        bbox_result = bbox2result(bboxes, ann['labels'], len(dataset.CLASSES))
+        track_result = track2result(bboxes, ann['labels'],
+                                    ann['instance_ids'].astype(np.int),
+                                    len(dataset.CLASSES))
+        results['bbox_result'].append(bbox_result)
+        results['track_result'].append(track_result)
+    return results
 
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'BDDVideoDataset'])
@@ -56,34 +73,34 @@ def test_video_data_sampling(dataset):
 
 def test_dataset_evaluation():
     classes = ('car', 'person')
-
-    def _create_gt_results(dataset):
-        from mmdet.core import bbox2result
-        from mmtrack.core import track2result
-        results = defaultdict(list)
-        for img_info in dataset.data_infos:
-            ann = dataset.get_ann_info(img_info)
-            scores = np.ones((ann['bboxes'].shape[0], 1), dtype=np.float)
-            bboxes = np.concatenate((ann['bboxes'], scores), axis=1)
-            bbox_result = bbox2result(bboxes, ann['labels'], len(classes))
-            track_result = track2result(bboxes, ann['labels'],
-                                        ann['instance_ids'].astype(np.int),
-                                        len(classes))
-            results['bbox_result'].append(bbox_result)
-            results['track_result'].append(track_result)
-        return results
-
     dataset = CocoVideoDataset(
-        ann_file=COCO_VIDEO_ANN_FILE, classes=('car', 'person'), pipeline=[])
+        ann_file=COCO_VIDEO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
     eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
     assert eval_results['bbox_mAP'] == 1.0
     assert eval_results['bbox_mAP_50'] == 1.0
     assert eval_results['bbox_mAP_75'] == 1.0
     assert 'bbox_mAP_copypaste' in eval_results
-    assert 'MOTA' in eval_results
-    assert 'IDF1' in eval_results
-    assert 'IDSw.' in eval_results
+    assert eval_results['MOTA'] == 1.0
+    assert eval_results['IDF1'] == 1.0
+    assert eval_results['MT'] == 2
+    assert 'track_OVERALL_copypaste' in eval_results
+    assert 'track_AVERAGE_copypaste' in eval_results
+
+    classes = ('car', )
+    dataset = CocoVideoDataset(
+        ann_file=COCO_VIDEO_ANN_FILE, classes=classes, pipeline=[])
+    results = _create_gt_results(dataset)
+    eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
+    assert eval_results['bbox_mAP'] == 1.0
+    assert eval_results['bbox_mAP_50'] == 1.0
+    assert eval_results['bbox_mAP_75'] == 1.0
+    assert 'bbox_mAP_copypaste' in eval_results
+    assert eval_results['MOTA'] == 1.0
+    assert eval_results['IDF1'] == 1.0
+    assert eval_results['MT'] == 1
+    assert 'track_OVERALL_copypaste' in eval_results
+    assert 'track_AVERAGE_copypaste' in eval_results
 
 
 @patch('mmtrack.apis.single_gpu_test', MagicMock)
