@@ -289,6 +289,7 @@ class CocoVideoDataset(CocoDataset):
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
+            # TODO: how to treat ignore objects
             # if ann.get('ignore', False):
             #     continue
             x1, y1, w, h = ann['bbox']

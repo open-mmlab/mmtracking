@@ -1,0 +1,158 @@
+{
+    "categories": [
+        {
+            "id": 1,
+            "name": "pedestrian"
+        }
+    ],
+    "annotations": [
+        {
+            "detected": false,
+            "category_id": 1,
+            "bbox": [
+                1368.0,
+                394.0,
+                74.0,
+                226.0
+            ],
+            "area": 16724.0,
+            "ori_ins_id": 1,
+            "ignore": false,
+            "visibility": 1.0,
+            "id": 1,
+            "image_id": 1,
+            "instance_id": 1
+        },
+        {
+            "detected": true,
+            "id": 2,
+            "image_id": 1,
+            "category_id": 1,
+            "bboxes": [
+                [
+                    473.9,
+                    425.4,
+                    59.629,
+                    180.89,
+                    2.3341
+                ]
+            ]
+        },
+        {
+            "detected": false,
+            "category_id": 1,
+            "bbox": [
+                1366.0,
+                394.0,
+                75.0,
+                229.0
+            ],
+            "area": 17175.0,
+            "ori_ins_id": 1,
+            "ignore": false,
+            "visibility": 1.0,
+            "id": 3,
+            "image_id": 2,
+            "instance_id": 1
+        },
+        {
+            "detected": true,
+            "id": 4,
+            "image_id": 2,
+            "category_id": 1,
+            "bboxes": [
+                [
+                    473.9,
+                    425.4,
+                    59.629,
+                    180.89,
+                    2.3341
+                ]
+            ]
+        },
+        {
+            "detected": false,
+            "category_id": 1,
+            "bbox": [
+                1365.0,
+                394.0,
+                76.0,
+                232.0
+            ],
+            "area": 17632.0,
+            "ori_ins_id": 1,
+            "ignore": false,
+            "visibility": 0.1,
+            "id": 5,
+            "image_id": 3,
+            "instance_id": 1
+        },
+        {
+            "detected": true,
+            "id": 6,
+            "image_id": 3,
+            "category_id": 1,
+            "bboxes": [
+                [
+                    473.9,
+                    425.4,
+                    59.629,
+                    180.89,
+                    2.3341
+                ]
+            ]
+        },
+        {
+            "detected": false,
+            "category_id": 1,
+            "bbox": [
+                1365.0,
+                394.0,
+                76.0,
+                232.0
+            ],
+            "area": 17632.0,
+            "ori_ins_id": 1,
+            "ignore": true,
+            "visibility": 1.0,
+            "id": 7,
+            "image_id": 3,
+            "instance_id": 1
+        }
+    ],
+    "images": [
+        {
+            "id": 1,
+            "video_id": 1,
+            "file_name": "MOT17-10-DPM/img1/000001.jpg",
+            "height": 1080,
+            "width": 1920,
+            "frame_id": 0
+        },
+        {
+            "id": 2,
+            "video_id": 1,
+            "file_name": "MOT17-10-DPM/img1/000002.jpg",
+            "height": 1080,
+            "width": 1920,
+            "frame_id": 1
+        },
+        {
+            "id": 3,
+            "video_id": 1,
+            "file_name": "MOT17-10-DPM/img1/000003.jpg",
+            "height": 1080,
+            "width": 1920,
+            "frame_id": 2
+        }
+    ],
+    "videos": [
+        {
+            "id": 1,
+            "name": "MOT17-10-DPM",
+            "fps": 30,
+            "width": 1920,
+            "height": 1080
+        }
+    ]
+}

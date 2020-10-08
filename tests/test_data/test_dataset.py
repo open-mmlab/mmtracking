@@ -18,7 +18,8 @@ PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
 # 1 videos, 2 categories ('car', 'person')
 # 8 images, 2 instances, 13 objects, 1 ignore objects
-COCO_VIDEO_ANN_FILE = f'{PREFIX}/video_annotations_coco-format.json'
+COCO_VIDEO_ANN_FILE = f'{PREFIX}/demo_video_annotations_cocoformat.json'
+MOT17_ANN_FILE = f'{PREFIX}/demo_mot17_cocoformat.json'
 
 
 def _create_gt_results(dataset):
@@ -36,6 +37,29 @@ def _create_gt_results(dataset):
         results['bbox_result'].append(bbox_result)
         results['track_result'].append(track_result)
     return results
+
+
+def test_mot17_dataset():
+    dataset_class = DATASETS.get('MOT17Dataset')
+
+    dataset = dataset_class(
+        ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
+    # image 3 has 1 unvisualable object and 1 ignore object
+    img_info = dataset.coco.load_imgs([3])[0]
+    ann_ids = dataset.coco.get_ann_ids([3])
+    ann_info = dataset.coco.loadAnns(ann_ids)
+    ann = dataset._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape[0] == 1
+    assert ann['bboxes'].shape[1] == 4
+    assert ann['bboxes_ignore'].shape[0] == 1
+    assert ann['public_bboxes'].shape[0] == 1
+    assert ann['public_bboxes'].shape[1] == 5
+
+    dataset.visibility_thr = 0.25
+    ann = dataset._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape[0] == 0
+    assert ann['bboxes_ignore'].shape[0] == 1
+    assert ann['public_bboxes'].shape[0] == 1
 
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'BDDVideoDataset'])
