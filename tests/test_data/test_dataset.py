@@ -44,22 +44,42 @@ def test_mot17_dataset():
 
     dataset = dataset_class(
         ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
-    # image 3 has 1 unvisualable object and 1 ignore object
-    img_info = dataset.coco.load_imgs([3])[0]
-    ann_ids = dataset.coco.get_ann_ids([3])
+
+    # image 1 doesn't have gt and detected objects
+    img_id = 1
+    img_info = dataset.coco.load_imgs([img_id])[0]
+    ann_ids = dataset.coco.get_ann_ids([img_id])
     ann_info = dataset.coco.loadAnns(ann_ids)
     ann = dataset._parse_ann_info(img_info, ann_info)
-    assert ann['bboxes'].shape[0] == 1
-    assert ann['bboxes'].shape[1] == 4
-    assert ann['bboxes_ignore'].shape[0] == 1
-    assert ann['public_bboxes'].shape[0] == 1
-    assert ann['public_bboxes'].shape[1] == 5
+    assert ann['bboxes'].shape == (0, 4)
+    assert ann['bboxes_ignore'].shape == (0, 4)
+    assert ann['public_bboxes'].shape == (0, 5)
+
+    # image 2 has 1 object and doesn't have detected objects
+    img_id = 2
+    img_info = dataset.coco.load_imgs([img_id])[0]
+    ann_ids = dataset.coco.get_ann_ids([img_id])
+    ann_info = dataset.coco.loadAnns(ann_ids)
+    ann = dataset._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape == (1, 4)
+    assert ann['bboxes_ignore'].shape == (0, 4)
+    assert ann['public_bboxes'].shape == (1, 5)
+
+    # image 3 has 1 unvisualable object and 1 ignore object
+    img_id = 3
+    img_info = dataset.coco.load_imgs([img_id])[0]
+    ann_ids = dataset.coco.get_ann_ids([img_id])
+    ann_info = dataset.coco.loadAnns(ann_ids)
+    ann = dataset._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape == (1, 4)
+    assert ann['bboxes_ignore'].shape == (1, 4)
+    assert ann['public_bboxes'].shape == (1, 5)
 
     dataset.visibility_thr = 0.25
     ann = dataset._parse_ann_info(img_info, ann_info)
-    assert ann['bboxes'].shape[0] == 0
-    assert ann['bboxes_ignore'].shape[0] == 1
-    assert ann['public_bboxes'].shape[0] == 1
+    assert ann['bboxes'].shape == (0, 4)
+    assert ann['bboxes_ignore'].shape == (1, 4)
+    assert ann['public_bboxes'].shape == (1, 5)
 
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'BDDVideoDataset'])

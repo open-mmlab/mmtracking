@@ -7,36 +7,11 @@
     ],
     "annotations": [
         {
-            "detected": false,
-            "category_id": 1,
-            "bbox": [
-                1368.0,
-                394.0,
-                74.0,
-                226.0
-            ],
-            "area": 16724.0,
-            "ori_ins_id": 1,
-            "ignore": false,
-            "visibility": 1.0,
-            "id": 1,
-            "image_id": 1,
-            "instance_id": 1
-        },
-        {
             "detected": true,
             "id": 2,
             "image_id": 1,
             "category_id": 1,
-            "bboxes": [
-                [
-                    473.9,
-                    425.4,
-                    59.629,
-                    180.89,
-                    2.3341
-                ]
-            ]
+            "bboxes": []
         },
         {
             "detected": false,
@@ -112,12 +87,12 @@
                 232.0
             ],
             "area": 17632.0,
-            "ori_ins_id": 1,
+            "ori_ins_id": 2,
             "ignore": true,
             "visibility": 1.0,
             "id": 7,
             "image_id": 3,
-            "instance_id": 1
+            "instance_id": 2
         }
     ],
     "images": [
