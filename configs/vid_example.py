@@ -60,8 +60,7 @@ model = dict(
                 loss_bbox=dict(type='L1Loss', loss_weight=1.0)))),
     motion=dict(
         type='FlowNetSimple',
-        pretrained='data/imagenet_vid/pretrained_flownet/'
-        'cpu_flownets_EPE1.951.pth.tar',
+        pretrained='data/imagenet_vid/pretrained_flownet/flownet_simple.pth',
         img_scale_factor=0.5))
 # model training and testing settings
 train_cfg = dict(

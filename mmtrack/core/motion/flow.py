@@ -17,10 +17,11 @@ def flow_warp_feats(flow, ref_x_single):
     w_grid = w_grid.float().cuda()[None, None, ...]
     # [1, 2, H, W]
     grid = torch.cat((w_grid, h_grid), dim=1)
+    # [N, 2, H, W]
     grid = grid + flow
     grid[:, 0] = grid[:, 0] / W * 2 - 1
     grid[:, 1] = grid[:, 1] / H * 2 - 1
-    # [1, H, W, 2]
+    # [N, H, W, 2]
     grid = grid.permute(0, 2, 3, 1)
 
     # 3. warp features.

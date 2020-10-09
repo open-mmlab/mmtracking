@@ -27,8 +27,6 @@ class FlowNetSimple(nn.Module):
                  out_indices=[2, 3, 4, 5, 6],
                  img_scale_factor=0.5,
                  flow_scale_factor=5.0,
-                 img_norm_mean=[123.675, 116.28, 103.53],
-                 img_norm_std=[58.395, 57.12, 57.375],
                  flow_img_norm_std=[255.0, 255.0, 255.0],
                  flow_img_norm_mean=[0.411, 0.432, 0.450]):
         super(FlowNetSimple, self).__init__()
@@ -36,10 +34,6 @@ class FlowNetSimple(nn.Module):
         self.out_indices = out_indices
         self.img_scale_factor = img_scale_factor
         self.flow_scale_factor = flow_scale_factor
-        self.img_norm_mean = torch.tensor(img_norm_mean).cuda().float().repeat(
-            2)[None, :, None, None]
-        self.img_norm_std = torch.tensor(img_norm_std).cuda().float().repeat(
-            2)[None, :, None, None]
         self.flow_img_norm_mean = torch.tensor(
             flow_img_norm_mean).cuda().float().repeat(2)[None, :, None, None]
         self.flow_img_norm_std = torch.tensor(
@@ -150,6 +144,14 @@ class FlowNetSimple(nn.Module):
             raise TypeError('Pretained must be None or a str')
 
     def prepare_imgs(self, imgs, img_metas):
+        if not hasattr(self, 'img_norm_mean'):
+            img_norm_mean = torch.tensor(img_metas[0]['img_norm_cfg']['mean'])
+            img_norm_mean = img_norm_mean.cuda().float()
+            self.img_norm_mean = img_norm_mean.repeat(2)[None, :, None, None]
+        if not hasattr(self, 'img_norm_std'):
+            img_norm_std = torch.tensor(img_metas[0]['img_norm_cfg']['std'])
+            img_norm_std = img_norm_std.cuda().float()
+            self.img_norm_std = img_norm_std.repeat(2)[None, :, None, None]
         flow_img = imgs * self.img_norm_std + self.img_norm_mean
         flow_img = flow_img / self.flow_img_norm_std - self.flow_img_norm_mean
         flow_img[:, :, img_metas[0]['img_shape'][0]:, :] = 0.0

@@ -2,7 +2,7 @@ import torch
 from mmdet.models import build_detector
 from mmdet.models.detectors import BaseDetector
 
-from mmtrack.core import flow_warp_feats
+from mmtrack.core.motion import flow_warp_feats
 from ..builder import MODELS, build_motion
 
 
@@ -16,10 +16,7 @@ class DffTwoStage(BaseDetector):
         self.motion.init_weights()
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        if 'key_frame_interval' in test_cfg:
-            self.key_frame_interval = test_cfg['key_frame_interval']
-        else:
-            self.key_frame_interval = 10
+        self.key_frame_interval = test_cfg.get('key_frame_interval', 10)
 
     def extract_feat(self, img):
         return self.detector.extract_feat(img)
