@@ -50,6 +50,7 @@ def _get_model_cfg(fname):
 def test_video_detectorsforward(cfg_file):
     model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
     model['detector']['pretrained'] = None
+    model['motion']['pretrained'] = None
 
     from mmtrack.models import build_model
     detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
