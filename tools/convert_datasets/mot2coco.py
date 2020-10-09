@@ -68,7 +68,6 @@ def parse_gts(gts):
             assert class_id == 1
             ignore = False if conf else True
         anns = dict(
-            detected=False,
             category_id=1,
             bbox=bbox,
             area=bbox[2] * bbox[3],
@@ -85,8 +84,10 @@ def parse_dets(dets):
         det = det.strip().split(',')
         frame_id, ins_id = map(int, det[:2])
         assert ins_id == -1
-        bbox = list(map(float, det[2:7]))
+        # cat_id, x1, y1, w, h, score
+        bbox = list(map(float, [1] + det[2:7]))
         outputs[frame_id].append(bbox)
+
     return outputs
 
 
@@ -104,9 +105,10 @@ def main():
         else:
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'mot17_{subset}_cocoformat.json')
-
+        det_file = osp.join(args.output, f'mot17_{subset}_detections.json')
         outputs = defaultdict(list)
         outputs['categories'] = [dict(id=1, name='pedestrian')]
+        detections = dict()
 
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
@@ -170,20 +172,14 @@ def main():
                         outputs['annotations'].append(gt)
                         ann_id += 1
                 dets = img2dets[_frame_id]
-                dets = dict(
-                    detected=True,
-                    id=ann_id,
-                    image_id=img_id,
-                    category_id=1,
-                    bboxes=dets)
-                outputs['annotations'].append(dets)
-                ann_id += 1
+                detections[img_name] = dets
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)
             vid_id += 1
         mmcv.dump(outputs, out_file)
-        print(f'Done! Saved as {out_file}')
+        mmcv.dump(detections, det_file)
+        print(f'Done! Saved as {out_file} and {det_file}')
 
 
 if __name__ == '__main__':
