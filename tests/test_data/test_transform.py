@@ -13,7 +13,7 @@ class TestTransforms(object):
     def setup_class(cls):
         cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
-        img_names = ['image_a.jpg', 'image_b.jpg']
+        img_names = ['image_1.jpg', 'image_2.jpg']
         results = [
             dict(img_prefix=cls.data_prefix, img_info=dict(filename=name))
             for name in img_names

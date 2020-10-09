@@ -14,12 +14,12 @@ from torch.utils.data import DataLoader
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
 from mmtrack.datasets import DATASETS, CocoVideoDataset
 
-PREFIX = osp.join(osp.dirname(__file__), '../assets')
+PREFIX = osp.join(osp.dirname(__file__), '../assets/demo_cocovid_data')
 # This is a demo annotation file for CocoVideoDataset
 # 1 videos, 2 categories ('car', 'person')
-# 8 images, 2 instances, 13 objects, 1 ignore objects
-COCO_VIDEO_ANN_FILE = f'{PREFIX}/demo_video_annotations_cocoformat.json'
-MOT17_ANN_FILE = f'{PREFIX}/demo_mot17_cocoformat.json'
+# 8 images, 2 instances -> [4, 3] objects
+# 1 ignore, 2 crowd
+DEMO_ANN_FILE = f'{PREFIX}/demo_annfile_cocoformat.json'
 
 
 def _create_gt_results(dataset):
@@ -30,20 +30,24 @@ def _create_gt_results(dataset):
         ann = dataset.get_ann_info(img_info)
         scores = np.ones((ann['bboxes'].shape[0], 1), dtype=np.float)
         bboxes = np.concatenate((ann['bboxes'], scores), axis=1)
-        bbox_result = bbox2result(bboxes, ann['labels'], len(dataset.CLASSES))
-        track_result = track2result(bboxes, ann['labels'],
-                                    ann['instance_ids'].astype(np.int),
-                                    len(dataset.CLASSES))
-        results['bbox_result'].append(bbox_result)
-        results['track_result'].append(track_result)
+        bbox_results = bbox2result(bboxes, ann['labels'], len(dataset.CLASSES))
+        track_results = track2result(bboxes, ann['labels'],
+                                     ann['instance_ids'].astype(np.int),
+                                     len(dataset.CLASSES))
+        results['bbox_results'].append(bbox_results)
+        results['track_results'].append(track_results)
     return results
 
 
-def test_mot17_dataset():
-    dataset_class = DATASETS.get('MOT17Dataset')
+@pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'MOT17Dataset'])
+def test_parse_ann_info(dataset):
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
-        ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
+        ann_file=DEMO_ANN_FILE,
+        load_as_video=True,
+        classes=('car', 'person'),
+        pipeline=[])
 
     # image 1 doesn't have gt and detected objects
     img_id = 1
@@ -52,52 +56,62 @@ def test_mot17_dataset():
     ann_info = dataset.coco.loadAnns(ann_ids)
     ann = dataset._parse_ann_info(img_info, ann_info)
     assert ann['bboxes'].shape == (0, 4)
-    assert ann['bboxes_ignore'].shape == (0, 4)
-    assert ann['public_bboxes'].shape == (0, 5)
+    assert ann['bboxes_ignore'].shape == (3, 4)
 
-    # image 2 has 1 object and doesn't have detected objects
-    img_id = 2
+    # image 5 has 2 objects
+    img_id = 5
     img_info = dataset.coco.load_imgs([img_id])[0]
     ann_ids = dataset.coco.get_ann_ids([img_id])
     ann_info = dataset.coco.loadAnns(ann_ids)
     ann = dataset._parse_ann_info(img_info, ann_info)
-    assert ann['bboxes'].shape == (1, 4)
+    assert ann['bboxes'].shape == (2, 4)
     assert ann['bboxes_ignore'].shape == (0, 4)
-    assert ann['public_bboxes'].shape == (1, 5)
 
-    # image 3 has 1 unvisualable object and 1 ignore object
-    img_id = 3
+    # image 8 doesn't have objects
+    img_id = 8
     img_info = dataset.coco.load_imgs([img_id])[0]
     ann_ids = dataset.coco.get_ann_ids([img_id])
     ann_info = dataset.coco.loadAnns(ann_ids)
-    ann = dataset._parse_ann_info(img_info, ann_info)
-    assert ann['bboxes'].shape == (1, 4)
-    assert ann['bboxes_ignore'].shape == (1, 4)
-    assert ann['public_bboxes'].shape == (1, 5)
-
-    dataset.visibility_thr = 0.25
     ann = dataset._parse_ann_info(img_info, ann_info)
     assert ann['bboxes'].shape == (0, 4)
-    assert ann['bboxes_ignore'].shape == (1, 4)
-    assert ann['public_bboxes'].shape == (1, 5)
+    assert ann['bboxes_ignore'].shape == (0, 4)
 
 
-@pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'BDDVideoDataset'])
+# def test_mot17_format_results():
+#     dataset_class = DATASETS.get('MOT17Dataset')
+
+#     dataset = dataset_class(
+#         ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
+
+#     num_frames = 3
+#     pseudo_bbox = [
+#         np.array([[1.0, 100.2, 100.2, 20.2, 20.2, 0.8],
+#                   [2.0, 200.2, 200.2, 20.2, 20.2, 0.9]])
+#     ]
+#     pseudo_bboxes = [pseudo_bbox for i in range(num_frames)]
+
+#     import pdb
+#     pdb.set_trace()
+
+
+@pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_video_data_sampling(dataset):
     dataset_class = DATASETS.get(dataset)
 
     # key image sampling
     for interval in [4, 2, 1]:
         dataset = dataset_class(
-            ann_file=COCO_VIDEO_ANN_FILE,
+            ann_file=DEMO_ANN_FILE,
             load_as_video=True,
+            classes=['car', 'person'],
             key_img_sampler=dict(interval=interval),
             ref_img_sampler=dict(
                 num_ref_imgs=1,
                 frame_range=3,
                 filter_key_frame=True,
                 method='uniform'),
-            pipeline=[])
+            pipeline=[],
+            test_mode=True)
         assert len(dataset.data_infos) == 8 // interval
 
     # ref image sampling
@@ -118,7 +132,7 @@ def test_video_data_sampling(dataset):
 def test_dataset_evaluation():
     classes = ('car', 'person')
     dataset = CocoVideoDataset(
-        ann_file=COCO_VIDEO_ANN_FILE, classes=classes, pipeline=[])
+        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
     eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
     assert eval_results['bbox_mAP'] == 1.0
@@ -133,7 +147,7 @@ def test_dataset_evaluation():
 
     classes = ('car', )
     dataset = CocoVideoDataset(
-        ann_file=COCO_VIDEO_ANN_FILE, classes=classes, pipeline=[])
+        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
     eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
     assert eval_results['bbox_mAP'] == 1.0

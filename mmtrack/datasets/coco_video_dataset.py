@@ -291,7 +291,7 @@ class CocoVideoDataset(CocoDataset):
         for i, ann in enumerate(ann_info):
             # TODO: how to treat ignore objects
             # if ann.get('ignore', False):
-            #     continue
+            # continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
             inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
@@ -302,7 +302,7 @@ class CocoVideoDataset(CocoDataset):
             if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
-            if ann.get('iscrowd', False):
+            if ann.get('iscrowd', False) or ann.get('ignore', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
@@ -375,11 +375,11 @@ class CocoVideoDataset(CocoDataset):
         if super_metrics:
             if 'bbox' in super_metrics and 'segm' in super_metrics:
                 super_results = []
-                for bbox, segm in zip(results['bbox_result'],
-                                      results['segm_result']):
+                for bbox, segm in zip(results['bbox_results'],
+                                      results['segm_results']):
                     super_results.append((bbox, segm))
             else:
-                super_results = results['bbox_result']
+                super_results = results['bbox_results']
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,
@@ -388,14 +388,15 @@ class CocoVideoDataset(CocoDataset):
             eval_results.update(super_eval_results)
 
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['track_result'])
+            assert len(self.data_infos) == len(results['track_results'])
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
             ]
             inds.append(len(self.data_infos))
 
             track_results = [
-                results['track_result'][inds[i]:inds[i + 1]] for i in inds[:-1]
+                results['track_results'][inds[i]:inds[i + 1]]
+                for i in inds[:-1]
             ]
             ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
             ann_infos = [ann_infos[inds[i]:inds[i + 1]] for i in inds[:-1]]

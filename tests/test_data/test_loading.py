@@ -13,7 +13,7 @@ class TestLoading(object):
         cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
     def test_load_seq_imgs(self):
-        img_names = ['image_a.jpg', 'image_b.jpg', 'image_c.jpg']
+        img_names = ['image_1.jpg', 'image_2.jpg', 'image_3.jpg']
         results = [
             dict(img_prefix=self.data_prefix, img_info=dict(filename=name))
             for name in img_names
