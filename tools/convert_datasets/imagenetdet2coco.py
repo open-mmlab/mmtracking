@@ -48,7 +48,7 @@ def convert_det(DET, ann_dir, save_dir):
     img_list = osp.join(ann_dir, 'Lists/DET_train_30classes.txt')
     xml_dir = osp.join(ann_dir, 'Annotations/DET/')
     img_list = mmcv.list_from_file(img_list)
-    for img_id, img_info in tqdm(enumerate(img_list), 1):
+    for img_id, img_info in enumerate(tqdm(img_list), 1):
         img_info = img_info.split(' ')
         xml_name = osp.join(xml_dir, f'{img_info[0]}.xml')
         # parse XML annotation file
