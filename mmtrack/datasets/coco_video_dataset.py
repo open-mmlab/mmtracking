@@ -391,7 +391,7 @@ class CocoVideoDataset(CocoDataset):
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
             ]
-            inds.append(len(self.data_infos) + 1)
+            inds.append(len(self.data_infos))
 
             track_results = [
                 results['track_result'][inds[i]:inds[i + 1]] for i in inds[:-1]
