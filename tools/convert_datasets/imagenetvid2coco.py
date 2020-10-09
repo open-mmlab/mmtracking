@@ -69,10 +69,10 @@ def parse_val_list(ann_dir):
 def convert_vid(VID, ann_dir, save_dir, mode='train'):
     assert mode in ['train', 'val']
     records = dict(
-        vid_id=0,
-        img_id=0,
-        ann_id=0,
-        global_instance_id=0,
+        vid_id=1,
+        img_id=1,
+        ann_id=1,
+        global_instance_id=1,
         num_train_frames=0,
         num_no_objects=0)
     obj_num_classes = dict()
@@ -157,11 +157,11 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         records['vid_id'] += 1
     mmcv.dump(VID, osp.join(save_dir, f'imagenet_vid_{mode}.json'))
     print(f'-----ImageNet VID {mode}------')
-    print(f'{records["vid_id"]} videos')
-    print(f'{records["img_id"]} images')
+    print(f'{records["vid_id"]- 1} videos')
+    print(f'{records["img_id"]- 1} images')
     print(f'{records["num_train_frames"]} train frames')
     print(f'{records["num_no_objects"]} images have no objects')
-    print(f'{records["ann_id"]} objects')
+    print(f'{records["ann_id"] - 1} objects')
     print('-----------------------')
     for i in range(1, len(CLASSES) + 1):
         print(f'Class {i} {CLASSES[i - 1]} has {obj_num_classes[i]} objects.')

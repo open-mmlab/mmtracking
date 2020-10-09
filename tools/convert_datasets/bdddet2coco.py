@@ -34,8 +34,8 @@ def main():
         for cls_id, cls in enumerate(CLASSES, 1):
             coco['categories'].append(dict(id=cls_id, name=cls))
 
-        ann_id = 0
-        for img_id, img_info in enumerate(tqdm(bdd)):
+        ann_id = 1
+        for img_id, img_info in enumerate(tqdm(bdd), 1):
             img = dict(
                 file_name=img_info['name'],
                 height=720,
