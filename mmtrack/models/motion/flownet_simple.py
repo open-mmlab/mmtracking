@@ -23,21 +23,19 @@ class FlowNetSimple(nn.Module):
     }
 
     def __init__(self,
-                 pretrained=None,
+                 pretrained,
+                 img_scale_factor,
                  out_indices=[2, 3, 4, 5, 6],
-                 img_scale_factor=0.5,
                  flow_scale_factor=5.0,
                  flow_img_norm_std=[255.0, 255.0, 255.0],
                  flow_img_norm_mean=[0.411, 0.432, 0.450]):
         super(FlowNetSimple, self).__init__()
         self.pretrained = pretrained
-        self.out_indices = out_indices
         self.img_scale_factor = img_scale_factor
+        self.out_indices = out_indices
         self.flow_scale_factor = flow_scale_factor
-        self.flow_img_norm_mean = torch.tensor(
-            flow_img_norm_mean).cuda().float().repeat(2)[None, :, None, None]
-        self.flow_img_norm_std = torch.tensor(
-            flow_img_norm_std).cuda().float().repeat(2)[None, :, None, None]
+        self.flow_img_norm_mean = flow_img_norm_mean
+        self.flow_img_norm_std = flow_img_norm_std
 
         self.conv_layers = []
         conv_layers_setting = self.arch_setting['conv_layers']
@@ -137,7 +135,7 @@ class FlowNetSimple(nn.Module):
         if self.pretrained is None:
             print_log(
                 'Warning: The flownet is random initialized!', logger=logger)
-        if isinstance(self.pretrained, str):
+        elif isinstance(self.pretrained, str):
             print_log(f'load flownet from: {self.pretrained}', logger=logger)
             load_checkpoint(self, self.pretrained)
         else:
@@ -145,13 +143,23 @@ class FlowNetSimple(nn.Module):
 
     def prepare_imgs(self, imgs, img_metas):
         if not hasattr(self, 'img_norm_mean'):
-            img_norm_mean = torch.tensor(img_metas[0]['img_norm_cfg']['mean'])
-            img_norm_mean = img_norm_mean.cuda().float()
-            self.img_norm_mean = img_norm_mean.repeat(2)[None, :, None, None]
+            mean = img_metas[0]['img_norm_cfg']['mean']
+            mean = torch.tensor(mean, device=imgs.device)
+            self.img_norm_mean = mean.repeat(2)[None, :, None, None]
+
+            mean = self.flow_img_norm_mean
+            mean = torch.tensor(mean, device=imgs.device)
+            self.flow_img_norm_mean = mean.repeat(2)[None, :, None, None]
+
         if not hasattr(self, 'img_norm_std'):
-            img_norm_std = torch.tensor(img_metas[0]['img_norm_cfg']['std'])
-            img_norm_std = img_norm_std.cuda().float()
-            self.img_norm_std = img_norm_std.repeat(2)[None, :, None, None]
+            std = img_metas[0]['img_norm_cfg']['std']
+            std = torch.tensor(std, device=imgs.device)
+            self.img_norm_std = std.repeat(2)[None, :, None, None]
+
+            std = self.flow_img_norm_std
+            std = torch.tensor(std, device=imgs.device)
+            self.flow_img_norm_std = std.repeat(2)[None, :, None, None]
+
         flow_img = imgs * self.img_norm_std + self.img_norm_mean
         flow_img = flow_img / self.flow_img_norm_std - self.flow_img_norm_mean
         flow_img[:, :, img_metas[0]['img_shape'][0]:, :] = 0.0
