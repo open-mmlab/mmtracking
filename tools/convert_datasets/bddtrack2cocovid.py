@@ -34,8 +34,8 @@ def main():
         for cls_id, cls in enumerate(CLASSES, 1):
             coco['categories'].append(dict(id=cls_id, name=cls))
 
-        img_id, ann_id = 0, 0
-        for vid_id, vid_name in enumerate(tqdm(vids)):
+        img_id, ann_id = 1, 1
+        for vid_id, vid_name in enumerate(tqdm(vids), 1):
             vid_infos = mmcv.load(osp.join(args.input, subset, vid_name))
             video = dict(id=vid_id, name=vid_infos[0]['video_name'])
             coco['videos'].append(video)

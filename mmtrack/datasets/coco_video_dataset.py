@@ -1,6 +1,5 @@
 import random
 
-import mmcv
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CocoDataset
@@ -33,6 +32,7 @@ class CocoVideoDataset(CocoDataset):
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
         super().__init__(*args, **kwargs)
+        self.logger = get_root_logger()
 
     def load_annotations(self, ann_file):
         """Load annotation from annotation file."""
@@ -83,12 +83,11 @@ class CocoVideoDataset(CocoDataset):
 
         if 'test' in method and \
                 (frame_range[1] - frame_range[0]) != num_ref_imgs:
-            logger = get_root_logger()
             print_log(
                 'Warning:'
                 "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
                 'Set num_ref_imgs to frame_range[1] - frame_range[0].',
-                logger=logger)
+                logger=self.logger)
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
@@ -182,7 +181,7 @@ class CocoVideoDataset(CocoDataset):
             dict: Annotation info of specified index.
         """
         img_id = img_info['id']
-        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id], cat_ids=self.cat_ids)
         ann_info = self.coco.load_anns(ann_ids)
         return self._parse_ann_info(img_info, ann_info)
 
@@ -290,8 +289,8 @@ class CocoVideoDataset(CocoDataset):
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
-            if ann.get('ignore', False):
-                continue
+            # if ann.get('ignore', False):
+            #     continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
             inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
@@ -334,7 +333,7 @@ class CocoVideoDataset(CocoDataset):
             seg_map=seg_map)
 
         if self.load_as_video:
-            ann['instance_ids'] = np.array(gt_instance_ids)
+            ann['instance_ids'] = np.array(gt_instance_ids).astype(np.int)
         else:
             ann['instance_ids'] = np.arange(len(gt_labels))
 
@@ -347,19 +346,29 @@ class CocoVideoDataset(CocoDataset):
                  results,
                  metric=['bbox', 'track'],
                  logger=None,
-                 classwise=False,
-                 mot_class_average=False,
-                 proposal_nums=(100, 300, 1000),
-                 iou_thr=None,
-                 metric_items=None):
-        # evaluate for detectors without tracker
-        eval_results = dict()
-        metrics = metric if isinstance(metric, list) else [metric]
+                 bbox_kwargs=dict(
+                     classwise=False,
+                     proposal_nums=(100, 300, 1000),
+                     iou_thrs=None,
+                     metric_items=None),
+                 track_kwargs=dict(
+                     iou_thr=0.5,
+                     ignore_iof_thr=0.5,
+                     ignore_by_classes=False,
+                     nproc=4)):
+        if isinstance(metric, list):
+            metrics = metric
+        elif isinstance(metric, str):
+            metrics = [metric]
+        else:
+            raise TypeError('metric must be a list or a str.')
         allowed_metrics = ['bbox', 'segm', 'track']
         for metric in metrics:
             if metric not in allowed_metrics:
-                raise KeyError(f'metric {metric} is not supported')
+                raise KeyError(f'metric {metric} is not supported.')
 
+        eval_results = dict()
+        # evaluate for detectors without tracker
         super_metrics = ['bbox', 'segm']
         super_metrics = [_ for _ in metrics if _ in super_metrics]
         if super_metrics:
@@ -374,17 +383,27 @@ class CocoVideoDataset(CocoDataset):
                 results=super_results,
                 metric=super_metrics,
                 logger=logger,
-                classwise=classwise,
-                proposal_nums=proposal_nums,
-                iou_thrs=iou_thr,
-                metric_items=metric_items)
+                **bbox_kwargs)
             eval_results.update(super_eval_results)
 
         if 'track' in metrics:
+            assert len(self.data_infos) == len(results['track_result'])
+            inds = [
+                i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
+            ]
+            inds.append(len(self.data_infos))
+
+            track_results = [
+                results['track_result'][inds[i]:inds[i + 1]] for i in inds[:-1]
+            ]
+            ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
+            ann_infos = [ann_infos[inds[i]:inds[i + 1]] for i in inds[:-1]]
             track_eval_results = eval_mot(
-                mmcv.load(self.ann_file),
-                results['track_result'],
-                class_average=mot_class_average)
+                results=track_results,
+                gts=ann_infos,
+                logger=logger,
+                classes=self.CLASSES,
+                **track_kwargs)
             eval_results.update(track_eval_results)
 
         return eval_results

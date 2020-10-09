@@ -43,12 +43,12 @@ def parse_args():
 
 
 def convert_det(DET, ann_dir, save_dir):
-    records = dict(ann_id=0, num_no_objects=0)
+    records = dict(ann_id=1, num_no_objects=0)
     obj_num_classes = dict()
     img_list = osp.join(ann_dir, 'Lists/DET_train_30classes.txt')
     xml_dir = osp.join(ann_dir, 'Annotations/DET/')
     img_list = mmcv.list_from_file(img_list)
-    for img_id, img_info in tqdm(enumerate(img_list)):
+    for img_id, img_info in tqdm(enumerate(img_list, 1)):
         img_info = img_info.split(' ')
         xml_name = osp.join(xml_dir, f'{img_info[0]}.xml')
         # parse XML annotation file
@@ -97,9 +97,9 @@ def convert_det(DET, ann_dir, save_dir):
                 obj_num_classes[category_id] += 1
     mmcv.dump(DET, osp.join(save_dir, 'imagenet_det_30cls.json'))
     print('-----ImageNet DET------')
-    print(f'{img_id + 1} images for training')
+    print(f'{img_id} images for training')
     print(f'{records["num_no_objects"]} images have no objects')
-    print(f'{records["ann_id"]} objects are annotated.')
+    print(f'{records["ann_id"] - 1} objects are annotated.')
     print('-----------------------')
     for i in range(1, len(CLASSES) + 1):
         print(f'Class {i} {CLASSES[i - 1]} has {obj_num_classes[i]} objects.')
