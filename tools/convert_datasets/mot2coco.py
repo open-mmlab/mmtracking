@@ -31,6 +31,7 @@ import os.path as osp
 from collections import defaultdict
 
 import mmcv
+import numpy as np
 from tqdm import tqdm
 
 USELESS = [3, 4, 5, 6, 9, 10, 11]
@@ -84,8 +85,10 @@ def parse_dets(dets):
         det = det.strip().split(',')
         frame_id, ins_id = map(int, det[:2])
         assert ins_id == -1
-        # cat_id, x1, y1, w, h, score
-        bbox = list(map(float, [1] + det[2:7]))
+        bbox = list(map(float, det[2:7]))
+        bbox = [
+            bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3], bbox[4]
+        ]
         outputs[frame_id].append(bbox)
 
     return outputs
@@ -105,10 +108,10 @@ def main():
         else:
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'mot17_{subset}_cocoformat.json')
-        det_file = osp.join(args.output, f'mot17_{subset}_detections.json')
+        det_file = osp.join(args.output, f'mot17_{subset}_detections.pkl')
         outputs = defaultdict(list)
         outputs['categories'] = [dict(id=1, name='pedestrian')]
-        detections = dict()
+        detections = dict(bbox_results=dict())
 
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
@@ -171,8 +174,8 @@ def main():
                             ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
-                dets = img2dets[_frame_id]
-                detections[img_name] = dets
+                dets = [np.array(img2dets[_frame_id])]
+                detections['bbox_results'][img_name] = dets
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)
