@@ -87,8 +87,7 @@ def convert_det(DET, ann_dir, save_dir):
                 category_id=category_id,
                 bbox=[x1, y1, w, h],
                 area=w * h,
-                iscrowd=False,
-                ignore=False)
+                iscrowd=False)
             DET['annotations'].append(ann)
             records['ann_id'] += 1
             if category_id not in obj_num_classes:

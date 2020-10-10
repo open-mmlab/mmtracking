@@ -77,6 +77,21 @@ def test_parse_ann_info(dataset):
     assert ann['bboxes_ignore'].shape == (0, 4)
 
 
+# @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
+# def test_prepare_img(dataset):
+#     dataset_class = DATASETS.get(dataset)
+
+#     dataset = dataset_class(
+#         ann_file=DEMO_ANN_FILE,
+#         classes=['car', 'person'],
+#         pipeline=[],
+#         test_mode=False)
+#     assert len(dataset) == 7
+
+#     results = dataset.prepare_train_img(0)
+#     import pdb
+#     pdb.set_trace()
+
 # def test_mot17_format_results():
 #     dataset_class = DATASETS.get('MOT17Dataset')
 

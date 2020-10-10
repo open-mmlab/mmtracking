@@ -65,7 +65,8 @@ def main():
                     bbox=[x1, y1, x2 - x1, y2 - y1],
                     area=area,
                     occluded=ann_info['attributes']['occluded'],
-                    truncated=ann_info['attributes']['truncated'])
+                    truncated=ann_info['attributes']['truncated'],
+                    iscrowd=False)
                 coco['annotations'].append(ann)
                 ann_id += 1
         mmcv.dump(

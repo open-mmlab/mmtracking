@@ -45,3 +45,21 @@ class SeqLoadAnnotations(LoadAnnotations):
                 _results = self._load_track(_results)
             outs.append(_results)
         return outs
+
+
+@PIPELINES.register_module()
+class LoadDetections(object):
+
+    def __call__(self, results):
+        detections = results['detections']
+        assert isinstance(detections, dict)
+        assert 'public_bboxes' in detections
+        assert 'public_labels' in detections
+        results['public_bboxes'] = detections['bboxes'].copy()
+        results['public_labels'] = detections['labels'].copy()
+        results['bbox_fields'].append('public_bboxes')
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + \
+            f'(num_max_proposals={self.num_max_proposals})'

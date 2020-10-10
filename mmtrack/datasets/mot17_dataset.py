@@ -42,6 +42,19 @@ class MOT17Dataset(CocoVideoDataset):
         else:
             return None
 
+    def _parse_detections(self, img_info):
+        dets = dict()
+        if isinstance(self.detections, list):
+            # return by indices of the dataloader
+            raise NotImplementedError()
+        else:
+            assert isinstance(self.detections, dict)
+            detections = self.detections[img_info['file_name']]
+            public_bboxes, public_labels = restore_result(detections)
+            dets['public_bboxes'] = public_bboxes
+            dets['public_labels'] = public_labels
+        return dets
+
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.
 
@@ -99,16 +112,6 @@ class MOT17Dataset(CocoVideoDataset):
             bboxes_ignore=gt_bboxes_ignore,
             instance_ids=gt_instance_ids)
 
-        if self.detections is not None:
-            if isinstance(self.detections, list):
-                # return by indices of the dataloader
-                raise NotImplementedError()
-            else:
-                assert isinstance(self.detections, dict)
-                detections = self.detections[img_info['file_name']]
-                public_bboxes, public_labels = restore_result(detections)
-                ann['public_bboxes'] = public_bboxes
-                ann['public_labels'] = public_labels
         return ann
 
     def format_track_results(self, results, outfile_prefix=None, **kwargs):

@@ -16,19 +16,15 @@ class CocoVideoDataset(CocoDataset):
 
     def __init__(self,
                  load_as_video=True,
-                 match_gts=True,
-                 skip_nomatch_pairs=True,
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(
                      num_ref_imgs=1,
-                     frame_range=3,
-                     filter_key_frame=True,
+                     frame_range=1,
+                     filter_key_img=True,
                      method='uniform'),
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
-        self.match_gts = match_gts
-        self.skip_nomatch_pairs = skip_nomatch_pairs
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
         super().__init__(*args, **kwargs)
@@ -52,7 +48,9 @@ class CocoVideoDataset(CocoDataset):
         self.img_ids = []
         for vid_id in self.vid_ids:
             img_ids = self.coco.get_img_ids_from_vid(vid_id)
-            img_ids = self.key_img_sampling(img_ids, **self.key_img_sampler)
+            if self.key_img_sampler is not None:
+                img_ids = self.key_img_sampling(img_ids,
+                                                **self.key_img_sampler)
             self.img_ids.extend(img_ids)
             for img_id in img_ids:
                 info = self.coco.load_imgs([img_id])[0]
@@ -68,8 +66,10 @@ class CocoVideoDataset(CocoDataset):
                          frame_range,
                          stride=1,
                          num_ref_imgs=1,
-                         filter_key_frame=True,
-                         method='uniform'):
+                         filter_key_img=True,
+                         method='uniform',
+                         return_key_img=True):
+        assert isinstance(img_info, dict)
         if isinstance(frame_range, int):
             assert frame_range >= 0, 'frame_range can not be a negative value.'
             frame_range = [-frame_range, frame_range]
@@ -96,80 +96,67 @@ class CocoVideoDataset(CocoDataset):
             ref_img_infos = []
             for i in range(num_ref_imgs):
                 ref_img_infos.append(img_info.copy())
-            return ref_img_infos
+        else:
+            vid_id, img_id, frame_id = img_info['video_id'], img_info[
+                'id'], img_info['frame_id']
+            img_ids = self.coco.get_img_ids_from_vid(vid_id)
+            left = max(0, frame_id + frame_range[0])
+            right = min(frame_id + frame_range[1], len(img_ids) - 1)
 
-        vid_id = img_info['video_id']
-        img_ids = self.coco.get_img_ids_from_vid(vid_id)
-        img_id, frame_id = img_info['id'], img_info['frame_id']
-        left = max(0, frame_id + frame_range[0])
-        right = min(frame_id + frame_range[1], len(img_ids) - 1)
-
-        ref_img_ids = []
-        if method == 'uniform':
-            valid_ids = img_ids[left:right + 1]
-            if filter_key_frame and img_id in valid_ids:
-                valid_ids.remove(img_id)
-            num_sampled = min(num_ref_imgs, len(valid_ids))
-            ref_img_ids.extend(sorted(random.sample(valid_ids, num_sampled)))
-        elif method == 'bilateral_uniform':
-            assert num_ref_imgs % 2 == 0, \
-                'only support load even ref_imgs in "bilateral_uniform" mode'
-            for mode in ['left', 'right']:
-                if mode == 'left':
-                    valid_ids = img_ids[left:frame_id + 1]
-                else:
-                    valid_ids = img_ids[frame_id:right + 1]
-                if filter_key_frame and img_id in valid_ids:
+            ref_img_ids = []
+            if method == 'uniform':
+                valid_ids = img_ids[left:right + 1]
+                if filter_key_img and img_id in valid_ids:
                     valid_ids.remove(img_id)
-                num_sampled = min(num_ref_imgs // 2, len(valid_ids))
-                sampled_inds = sorted(random.sample(valid_ids, num_sampled))
-                ref_img_ids.extend(sampled_inds)
-        elif method == 'test_with_adaptive_stride':
-            if frame_id == 0:
-                stride = float(len(img_ids) - 1) / (num_ref_imgs - 1)
-                for i in range(num_ref_imgs):
-                    ref_id = round(i * stride)
+                num_samples = min(num_ref_imgs, len(valid_ids))
+                ref_img_ids.extend(random.sample(valid_ids, num_samples))
+            elif method == 'bilateral_uniform':
+                assert num_ref_imgs % 2 == 0, \
+                    'only support load even number of ref_imgs.'
+                for mode in ['left', 'right']:
+                    if mode == 'left':
+                        valid_ids = img_ids[left:frame_id + 1]
+                    else:
+                        valid_ids = img_ids[frame_id:right + 1]
+                    if filter_key_img and img_id in valid_ids:
+                        valid_ids.remove(img_id)
+                    num_samples = min(num_ref_imgs // 2, len(valid_ids))
+                    sampled_inds = random.sample(valid_ids, num_samples)
+                    ref_img_ids.extend(sampled_inds)
+            elif method == 'test_with_adaptive_stride':
+                if frame_id == 0:
+                    stride = float(len(img_ids) - 1) / (num_ref_imgs - 1)
+                    for i in range(num_ref_imgs):
+                        ref_id = round(i * stride)
+                        ref_img_ids.append(img_ids[ref_id])
+            elif method == 'test_with_fix_stride':
+                if frame_id == 0:
+                    for i in range(frame_range[0], 0):
+                        ref_img_ids.append(img_ids[0])
+                    for i in range(1, frame_range[1] + 1):
+                        ref_id = min(round(i * stride), len(img_ids) - 1)
+                        ref_img_ids.append(img_ids[ref_id])
+                elif frame_id % stride == 0:
+                    ref_id = min(
+                        round(frame_id + frame_range[1] * stride),
+                        len(img_ids) - 1)
                     ref_img_ids.append(img_ids[ref_id])
-        elif method == 'test_with_fix_stride':
-            if frame_id == 0:
-                for i in range(frame_range[0], 0):
-                    ref_img_ids.append(img_ids[0])
-                for i in range(1, frame_range[1] + 1):
-                    ref_id = min(round(i * stride), len(img_ids) - 1)
-                    ref_img_ids.append(img_ids[ref_id])
-            elif frame_id % stride == 0:
-                ref_id = min(
-                    round(frame_id + frame_range[1] * stride),
-                    len(img_ids) - 1)
-                ref_img_ids.append(img_ids[ref_id])
+            else:
+                raise NotImplementedError
+
+            ref_img_infos = []
+            for ref_img_id in ref_img_ids:
+                ref_img_info = self.coco.load_imgs([ref_img_id])[0]
+                ref_img_info['filename'] = ref_img_info['file_name']
+                ref_img_infos.append(ref_img_info)
+            ref_img_infos = sorted(ref_img_infos, key=lambda i: i['frame_id'])
+
+        if return_key_img:
+            img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
+                    if isinstance(frame_range, list) else frame_range
+            return [img_info, *ref_img_infos]
         else:
-            raise NotImplementedError
-
-        ref_img_infos = []
-        for ref_img_id in ref_img_ids:
-            ref_img_info = self.coco.load_imgs([ref_img_id])[0]
-            ref_img_info['filename'] = ref_img_info['file_name']
-            ref_img_infos.append(ref_img_info)
-        return ref_img_infos
-
-    def _pre_pipeline(self, _results):
-        super().pre_pipeline(_results)
-        _results['frame_id'] = _results['img_info'].get('frame_id', -1)
-        _results['is_video_data'] = self.load_as_video
-        if self.ref_img_sampler is not None:
-            frame_range = self.ref_img_sampler['frame_range']
-            _results['num_left_ref_imgs'] = abs(frame_range[0]) \
-                if isinstance(frame_range, list) else frame_range
-
-    def pre_pipeline(self, results):
-        """Prepare results dict for pipeline."""
-        if isinstance(results, list):
-            for _results in results:
-                self._pre_pipeline(_results)
-        elif isinstance(results, dict):
-            self._pre_pipeline(results)
-        else:
-            raise TypeError('input must be a list or a dict')
+            return ref_img_infos
 
     def get_ann_info(self, img_info):
         """Get COCO annotation by index.
@@ -185,37 +172,29 @@ class CocoVideoDataset(CocoDataset):
         ann_info = self.coco.load_anns(ann_ids)
         return self._parse_ann_info(img_info, ann_info)
 
-    def prepare_results(self, img_info, load_ann=True):
+    def prepare_results(self, img_info):
         results = dict(img_info=img_info)
-        if load_ann:
+        if not self.test_mode:
             results['ann_info'] = self.get_ann_info(img_info)
         if self.proposals is not None:
             idx = self.img_ids.index(img_info['id'])
             results['proposals'] = self.proposals[idx]
+
+        super().pre_pipeline(results)
+        results['frame_id'] = img_info.get('frame_id', -1)
+        results['is_video_data'] = self.load_as_video
         return results
 
-    def match_results(self, results, ref_results):
-        match_indices, ref_match_indices = self._match_gts(
-            results['ann_info'], ref_results['ann_info'])
-        results['ann_info']['match_indices'] = match_indices
-        ref_results['ann_info']['match_indices'] = ref_match_indices
-        return results, ref_results
-
-    def _match_gts(self, ann, ref_ann):
-        if ann.get('instance_ids', False):
-            ins_ids = list(ann['instance_ids'])
-            ref_ins_ids = list(ref_ann['instance_ids'])
-            match_indices = np.array([
-                ref_ins_ids.index(i) if i in ref_ins_ids else -1
-                for i in ins_ids
-            ])
-            ref_match_indices = np.array([
-                ins_ids.index(i) if i in ins_ids else -1 for i in ref_ins_ids
-            ])
+    def prepare_data(self, idx):
+        img_info = self.data_infos[idx]
+        if self.ref_img_sampler is not None:
+            img_infos = self.ref_img_sampling(img_info, **self.ref_img_sampler)
+            results = [
+                self.prepare_results(img_info) for img_info in img_infos
+            ]
         else:
-            match_indices = np.arange(ann['bboxes'].shape[0], dtype=np.int64)
-            ref_match_indices = match_indices.copy()
-        return match_indices, ref_match_indices
+            results = self.prepare_results(img_info)
+        return self.pipeline(results)
 
     def prepare_train_img(self, idx):
         """Get training data and annotations after pipeline.
@@ -227,21 +206,7 @@ class CocoVideoDataset(CocoDataset):
             dict: Training data and annotation after pipeline with new keys \
                 introduced by pipeline.
         """
-        img_infos = [self.data_infos[idx]]
-        ref_img_infos = self.ref_img_sampling(img_infos[0],
-                                              **self.ref_img_sampler)
-        img_infos.extend(ref_img_infos)
-        results = [self.prepare_results(img_info) for img_info in img_infos]
-        if self.match_gts:
-            assert len(results) == 2, \
-                'matching gts only support 1 ref_img for now.'
-            results, ref_results = self.match_results(results[0], results[1])
-            nomatch = (results['ann_info']['match_indices'] == -1).all()
-            results = [results, ref_results]
-            if self.skip_nomatch_pairs and nomatch:
-                return None
-        self.pre_pipeline(results)
-        return self.pipeline(results)
+        return self.prepare_data(idx)
 
     def prepare_test_img(self, idx):
         """Get testing data  after pipeline.
@@ -253,22 +218,7 @@ class CocoVideoDataset(CocoDataset):
             dict: Testing data after pipeline with new keys intorduced by \
                 piepline.
         """
-
-        img_infos = [self.data_infos[idx]]
-        if self.ref_img_sampler is not None:
-            ref_img_infos = self.ref_img_sampling(img_infos[0],
-                                                  **self.ref_img_sampler)
-            img_infos.extend(ref_img_infos)
-        results = [
-            self.prepare_results(img_info, load_ann=False)
-            for img_info in img_infos
-        ]
-
-        self.pre_pipeline(results)
-        if self.ref_img_sampler is not None:
-            return self.pipeline(results)
-        else:
-            return self.pipeline(results[0])
+        return self.prepare_data(idx)
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.

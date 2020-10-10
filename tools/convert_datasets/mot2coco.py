@@ -72,8 +72,11 @@ def parse_gts(gts):
             category_id=1,
             bbox=bbox,
             area=bbox[2] * bbox[3],
-            ori_ins_id=ins_id,
+            official_id=ins_id,
             ignore=ignore,
+            # alias 'iscrowd' == 'ignore'
+            # cocoapi evaluation scripts ignore objects by 'iscrowd'
+            iscrowd=ignore,
             visibility=visibility)
         outputs[frame_id].append(anns)
     return outputs
@@ -86,6 +89,7 @@ def parse_dets(dets):
         frame_id, ins_id = map(int, det[:2])
         assert ins_id == -1
         bbox = list(map(float, det[2:7]))
+        # [x1, y1, x2, y2] to be consistent with mmdet
         bbox = [
             bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3], bbox[4]
         ]
@@ -166,11 +170,11 @@ def main():
                     gts = img2gts[_frame_id]
                     for gt in gts:
                         gt.update(id=ann_id, image_id=img_id)
-                        if ins_maps.get(gt['ori_ins_id']):
-                            gt['instance_id'] = ins_maps[gt['ori_ins_id']]
+                        if ins_maps.get(gt['official_id']):
+                            gt['instance_id'] = ins_maps[gt['official_id']]
                         else:
                             gt['instance_id'] = ins_id
-                            ins_maps[gt['ori_ins_id']] = ins_id
+                            ins_maps[gt['official_id']] = ins_id
                             ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
