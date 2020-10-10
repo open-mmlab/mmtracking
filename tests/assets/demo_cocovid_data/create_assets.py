@@ -21,7 +21,7 @@ def create_dummy_data():
     attrs['is_train_frame'] = False  # ImageNet VID
     attrs['visibility'] = 1.0  # MOT17
     # set all corner cases in img_id == 1
-    corner_cases = dict(ignore=1, iscrowd=2)
+    corner_cases = dict(ignore=0, iscrowd=3)
 
     ann = defaultdict(list)
     img_id, ann_id, ins_id = 1, 1, 1

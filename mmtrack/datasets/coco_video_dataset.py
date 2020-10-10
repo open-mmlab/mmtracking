@@ -100,29 +100,29 @@ class CocoVideoDataset(CocoDataset):
 
         vid_id = img_info['video_id']
         img_ids = self.coco.get_img_ids_from_vid(vid_id)
-        frame_id = img_info['frame_id']
+        img_id, frame_id = img_info['id'], img_info['frame_id']
         left = max(0, frame_id + frame_range[0])
         right = min(frame_id + frame_range[1], len(img_ids) - 1)
 
         ref_img_ids = []
         if method == 'uniform':
-            valid_inds = img_ids[left:right + 1]
-            if filter_key_frame and frame_id in valid_inds:
-                valid_inds.remove(frame_id)
-            num_sampled = min(num_ref_imgs, len(valid_inds))
-            ref_img_ids.extend(sorted(random.sample(valid_inds, num_sampled)))
+            valid_ids = img_ids[left:right + 1]
+            if filter_key_frame and img_id in valid_ids:
+                valid_ids.remove(img_id)
+            num_sampled = min(num_ref_imgs, len(valid_ids))
+            ref_img_ids.extend(sorted(random.sample(valid_ids, num_sampled)))
         elif method == 'bilateral_uniform':
             assert num_ref_imgs % 2 == 0, \
                 'only support load even ref_imgs in "bilateral_uniform" mode'
             for mode in ['left', 'right']:
                 if mode == 'left':
-                    valid_inds = img_ids[left:frame_id + 1]
+                    valid_ids = img_ids[left:frame_id + 1]
                 else:
-                    valid_inds = img_ids[frame_id:right + 1]
-                if filter_key_frame and frame_id in valid_inds:
-                    valid_inds.remove(frame_id)
-                num_sampled = min(num_ref_imgs // 2, len(valid_inds))
-                sampled_inds = sorted(random.sample(valid_inds, num_sampled))
+                    valid_ids = img_ids[frame_id:right + 1]
+                if filter_key_frame and img_id in valid_ids:
+                    valid_ids.remove(img_id)
+                num_sampled = min(num_ref_imgs // 2, len(valid_ids))
+                sampled_inds = sorted(random.sample(valid_ids, num_sampled))
                 ref_img_ids.extend(sampled_inds)
         elif method == 'test_with_adaptive_stride':
             if frame_id == 0:
@@ -369,25 +369,8 @@ class CocoVideoDataset(CocoDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         eval_results = dict()
-        # evaluate for detectors without tracker
-        super_metrics = ['bbox', 'segm']
-        super_metrics = [_ for _ in metrics if _ in super_metrics]
-        if super_metrics:
-            if 'bbox' in super_metrics and 'segm' in super_metrics:
-                super_results = []
-                for bbox, segm in zip(results['bbox_results'],
-                                      results['segm_results']):
-                    super_results.append((bbox, segm))
-            else:
-                super_results = results['bbox_results']
-            super_eval_results = super().evaluate(
-                results=super_results,
-                metric=super_metrics,
-                logger=logger,
-                **bbox_kwargs)
-            eval_results.update(super_eval_results)
-
         if 'track' in metrics:
+            # TODO: figure out the changes in coco api
             assert len(self.data_infos) == len(results['track_results'])
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
@@ -407,5 +390,23 @@ class CocoVideoDataset(CocoDataset):
                 classes=self.CLASSES,
                 **track_kwargs)
             eval_results.update(track_eval_results)
+
+        # evaluate for detectors without tracker
+        super_metrics = ['bbox', 'segm']
+        super_metrics = [_ for _ in metrics if _ in super_metrics]
+        if super_metrics:
+            if 'bbox' in super_metrics and 'segm' in super_metrics:
+                super_results = []
+                for bbox, segm in zip(results['bbox_results'],
+                                      results['segm_results']):
+                    super_results.append((bbox, segm))
+            else:
+                super_results = results['bbox_results']
+            super_eval_results = super().evaluate(
+                results=super_results,
+                metric=super_metrics,
+                logger=logger,
+                **bbox_kwargs)
+            eval_results.update(super_eval_results)
 
         return eval_results
