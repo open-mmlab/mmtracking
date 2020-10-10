@@ -4,6 +4,7 @@ import tempfile
 from collections import defaultdict
 from unittest.mock import MagicMock, patch
 
+import mmcv
 import numpy as np
 import pytest
 import torch
@@ -37,6 +38,69 @@ def _create_gt_results(dataset):
         results['bbox_results'].append(bbox_results)
         results['track_results'].append(track_results)
     return results
+
+
+# def test_mot17_format_results():
+#     dataset_class = DATASETS.get('MOT17Dataset')
+
+#     dataset = dataset_class(
+#         ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
+
+#     num_frames = 3
+#     pseudo_bbox = [
+#         np.array([[1.0, 100.2, 100.2, 20.2, 20.2, 0.8],
+#                   [2.0, 200.2, 200.2, 20.2, 20.2, 0.9]])
+#     ]
+#     pseudo_bboxes = [pseudo_bbox for i in range(num_frames)]
+
+#     import pdb
+#     pdb.set_trace()
+
+
+@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
+def test_load_detections(dataset):
+    dataset_class = DATASETS.get(dataset)
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE,
+        classes=('car', 'person'),
+        pipeline=[],
+        test_mode=True)
+
+    tmp_dir = tempfile.TemporaryDirectory()
+    det_file = osp.join(tmp_dir.name, 'det.pkl')
+    outputs = _create_gt_results(dataset)
+
+    mmcv.dump(outputs['bbox_results'], det_file)
+    detections = dataset.load_detections(det_file)
+    assert isinstance(detections, list)
+    assert len(detections) == 8
+
+    mmcv.dump(outputs, det_file)
+    detections = dataset.load_detections(det_file)
+    assert isinstance(detections, list)
+    assert len(detections) == 8
+    dataset.detections = detections
+    i = np.random.randint(0, len(dataset.data_infos))
+    results = dataset.prepare_results(dataset.data_infos[i])
+    assert 'detections' in results
+    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+        assert (a == b).all()
+
+    out = dict()
+    for i in range(len(dataset.data_infos)):
+        out[dataset.data_infos[i]['file_name']] = outputs['bbox_results'][i]
+    mmcv.dump(out, det_file)
+    detections = dataset.load_detections(det_file)
+    assert isinstance(detections, dict)
+    assert len(detections) == 8
+    dataset.detections = detections
+    i = np.random.randint(0, len(dataset.data_infos))
+    results = dataset.prepare_results(dataset.data_infos[i])
+    assert 'detections' in results
+    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+        assert (a == b).all()
+
+    tmp_dir.cleanup()
 
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'MOT17Dataset'])
@@ -127,23 +191,6 @@ def test_prepare_data(dataset):
     assert 'ann_info' not in results
 
 
-# def test_mot17_format_results():
-#     dataset_class = DATASETS.get('MOT17Dataset')
-
-#     dataset = dataset_class(
-#         ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
-
-#     num_frames = 3
-#     pseudo_bbox = [
-#         np.array([[1.0, 100.2, 100.2, 20.2, 20.2, 0.8],
-#                   [2.0, 200.2, 200.2, 20.2, 20.2, 0.9]])
-#     ]
-#     pseudo_bboxes = [pseudo_bbox for i in range(num_frames)]
-
-#     import pdb
-#     pdb.set_trace()
-
-
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_video_data_sampling(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -167,11 +214,13 @@ def test_video_data_sampling(dataset):
     # ref image sampling
     data = dataset.data_infos[3]
     sampler = dict(num_ref_imgs=1, frame_range=3, method='uniform')
-    ref_data = dataset.ref_img_sampling(data, **sampler)[0]
+    ref_data = dataset.ref_img_sampling(data, **sampler)[1]
     assert abs(ref_data['frame_id'] -
                data['frame_id']) <= sampler['frame_range']
     sampler = dict(num_ref_imgs=2, frame_range=3, method='bilateral_uniform')
     ref_data = dataset.ref_img_sampling(data, **sampler)
+    assert len(ref_data) == 3
+    ref_data = dataset.ref_img_sampling(data, **sampler, return_key_img=False)
     assert len(ref_data) == 2
     assert ref_data[0]['frame_id'] < data['frame_id']
     assert ref_data[1]['frame_id'] > data['frame_id']

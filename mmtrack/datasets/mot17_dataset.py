@@ -2,7 +2,6 @@ import mmcv
 import numpy as np
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import restore_result
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -42,18 +41,15 @@ class MOT17Dataset(CocoVideoDataset):
         else:
             return None
 
-    def _parse_detections(self, img_info):
-        dets = dict()
-        if isinstance(self.detections, list):
-            # return by indices of the dataloader
-            raise NotImplementedError()
-        else:
-            assert isinstance(self.detections, dict)
-            detections = self.detections[img_info['file_name']]
-            public_bboxes, public_labels = restore_result(detections)
-            dets['public_bboxes'] = public_bboxes
-            dets['public_labels'] = public_labels
-        return dets
+    def prepare_results(self, img_info):
+        results = super().prepare_results(img_info)
+        if self.detections is not None:
+            if isinstance(self.detections, dict):
+                indice = img_info['file_name']
+            elif isinstance(self.detections, list):
+                indice = self.img_ids.index(img_info['id'])
+            results['detections'] = self.detections[indice]
+        return results
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox and mask annotation.

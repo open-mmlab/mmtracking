@@ -1,6 +1,8 @@
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
+from mmtrack.core import restore_result
+
 
 @PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):
@@ -52,14 +54,8 @@ class LoadDetections(object):
 
     def __call__(self, results):
         detections = results['detections']
-        assert isinstance(detections, dict)
-        assert 'public_bboxes' in detections
-        assert 'public_labels' in detections
-        results['public_bboxes'] = detections['bboxes'].copy()
-        results['public_labels'] = detections['labels'].copy()
+        bboxes, labels = restore_result(detections)
+        results['public_bboxes'] = bboxes
+        results['public_labels'] = labels
         results['bbox_fields'].append('public_bboxes')
         return results
-
-    def __repr__(self):
-        return self.__class__.__name__ + \
-            f'(num_max_proposals={self.num_max_proposals})'
