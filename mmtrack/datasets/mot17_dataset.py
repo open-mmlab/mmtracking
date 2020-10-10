@@ -188,7 +188,7 @@ class MOT17Dataset(CocoVideoDataset):
             summary,
             formatters=mh.formatters,
             namemap=mm.io.motchallenge_metric_names)
-        print(str_summary)
+        print_log(str_summary, logger)
 
         eval_results = {
             mm.io.motchallenge_metric_names[k]: v['OVERALL']
