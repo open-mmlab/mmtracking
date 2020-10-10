@@ -42,62 +42,6 @@ def _create_gt_results(dataset):
 
 
 @pytest.mark.parametrize('dataset', ['MOT17Dataset'])
-def test_mot17_evaluation(dataset):
-    tmp_dir = tempfile.TemporaryDirectory()
-    videos = ['TUD-Campus', 'TUD-Stadtmitte']
-
-    dataset_class = DATASETS.get(dataset)
-    dataset_class.cat_ids = MagicMock()
-    dataset_class.coco = MagicMock()
-    dataset_class.load_annotations = MagicMock()
-
-    dataset = dataset_class(
-        ann_file=MagicMock(), visibility_thr=-1, pipeline=[])
-    dataset.img_prefix = MOT_ANN_PATH
-    dataset.vid_ids = [1, 2]
-    vid_infos = [dict(name=_) for _ in videos]
-    dataset.coco.load_vids = MagicMock(return_value=vid_infos)
-    dataset.data_infos = []
-
-    def _load_results(videos):
-        track_results, data_infos = [], []
-        for video in videos:
-            dets = mmcv.list_from_file(
-                osp.join(MOT_ANN_PATH, 'results', f'{video}.txt'))
-            results = defaultdict(list)
-            for det in dets:
-                det = det.strip().split(',')
-                frame_id, ins_id = map(int, det[:2])
-                bbox = list(map(float, det[2:7]))
-                bbox = [
-                    ins_id, bbox[0], bbox[1], bbox[0] + bbox[2],
-                    bbox[1] + bbox[3], bbox[4]
-                ]
-                results[frame_id].append(bbox)
-            max_frame = max(results.keys())
-            for i in range(1, max_frame + 1):
-                result = [np.array(results[i], dtype=np.float32)]
-                track_results.append(result)
-                data_infos.append(dict(frame_id=i - 1))
-        return track_results, data_infos
-
-    results, data_infos = _load_results(videos)
-    dataset.data_infos = data_infos
-    eval_results = dataset.evaluate(
-        dict(track_results=results),
-        metric='track',
-        logger=None,
-        outfile_prefix=None,
-        iou_thr=0.5)
-    assert eval_results['IDF1'] == 0.624
-    assert eval_results['IDP'] == 0.799
-    assert eval_results['MOTA'] == 0.555
-    assert eval_results['IDs'] == 14
-
-    tmp_dir.cleanup()
-
-
-@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
 def test_load_detections(dataset):
     dataset_class = DATASETS.get(dataset)
     dataset = dataset_class(
@@ -298,6 +242,62 @@ def test_coco_video_evaluation():
     assert eval_results['MT'] == 1
     assert 'track_OVERALL_copypaste' in eval_results
     assert 'track_AVERAGE_copypaste' in eval_results
+
+
+@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
+def test_mot17_evaluation(dataset):
+    tmp_dir = tempfile.TemporaryDirectory()
+    videos = ['TUD-Campus', 'TUD-Stadtmitte']
+
+    dataset_class = DATASETS.get(dataset)
+    dataset_class.cat_ids = MagicMock()
+    dataset_class.coco = MagicMock()
+    dataset_class.load_annotations = MagicMock()
+
+    dataset = dataset_class(
+        ann_file=MagicMock(), visibility_thr=-1, pipeline=[])
+    dataset.img_prefix = MOT_ANN_PATH
+    dataset.vid_ids = [1, 2]
+    vid_infos = [dict(name=_) for _ in videos]
+    dataset.coco.load_vids = MagicMock(return_value=vid_infos)
+    dataset.data_infos = []
+
+    def _load_results(videos):
+        track_results, data_infos = [], []
+        for video in videos:
+            dets = mmcv.list_from_file(
+                osp.join(MOT_ANN_PATH, 'results', f'{video}.txt'))
+            results = defaultdict(list)
+            for det in dets:
+                det = det.strip().split(',')
+                frame_id, ins_id = map(int, det[:2])
+                bbox = list(map(float, det[2:7]))
+                bbox = [
+                    ins_id, bbox[0], bbox[1], bbox[0] + bbox[2],
+                    bbox[1] + bbox[3], bbox[4]
+                ]
+                results[frame_id].append(bbox)
+            max_frame = max(results.keys())
+            for i in range(1, max_frame + 1):
+                result = [np.array(results[i], dtype=np.float32)]
+                track_results.append(result)
+                data_infos.append(dict(frame_id=i - 1))
+        return track_results, data_infos
+
+    results, data_infos = _load_results(videos)
+    dataset.data_infos = data_infos
+    eval_results = dataset.evaluate(
+        dict(track_results=results),
+        metric='track',
+        logger=None,
+        outfile_prefix=None,
+        iou_thr=0.5)
+    assert eval_results['IDF1'] == 0.624
+    assert eval_results['IDP'] == 0.799
+    assert eval_results['MOTA'] == 0.555
+    assert eval_results['IDs'] == 14
+
+    tmp_dir.cleanup()
 
 
 @patch('mmtrack.apis.single_gpu_test', MagicMock)
