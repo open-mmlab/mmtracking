@@ -48,10 +48,11 @@ jobs:
         if: ${{matrix.torchvision == '0.4.2'}}
       - name: Install PyTorch
         run: pip install torch==${{matrix.torch}}+cpu torchvision==${{matrix.torchvision}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      - name: Install MMCV
-        run: pip install mmcv-full==latest+torch${{matrix.torch}}+cpu -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
-      - name: Install requirements
-        run: pip install -r requirements.txt
+      - name: Install mmtrack dependencies
+        run: |
+          pip install mmcv-full==${{matrix.mmcv}} -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
+          pip install git+https://github.com/open-mmlab/mmdetection.git
+          pip install -r requirements.txt
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
@@ -117,6 +118,7 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           pip install mmcv-full==${{matrix.mmcv}} -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
+          pip install git+https://github.com/open-mmlab/mmdetection.git
           pip install -r requirements.txt
       - name: Build and install
         run: |
