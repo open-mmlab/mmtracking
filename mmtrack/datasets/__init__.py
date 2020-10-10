@@ -5,11 +5,11 @@ from .builder import build_dataloader
 from .coco_video_dataset import CocoVideoDataset
 from .imagenet_vid_dataset import ImagenetVIDDataset
 from .mot17_dataset import MOT17Dataset
-from .parsers import CocoVID, DataAPI
+from .parsers import CocoVID
 from .pipelines import PIPELINES
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset',
-    'BDDVideoDataset', 'CocoVID', 'CocoVideoDataset', 'DataAPI',
-    'ImagenetVIDDataset', 'MOT17Dataset'
+    'BDDVideoDataset', 'CocoVID', 'CocoVideoDataset', 'ImagenetVIDDataset',
+    'MOT17Dataset'
 ]
