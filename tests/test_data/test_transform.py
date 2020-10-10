@@ -24,12 +24,12 @@ class TestTransforms(object):
     def test_seq_resize(self):
         results = copy.deepcopy(self.results)
         transform = dict(
-            type='SeqResize', img_scale=(512, 512), keep_ratio=True)
+            type='SeqResize', img_scale=(512, 1024), keep_ratio=True)
         seq_resize = build_from_cfg(transform, PIPELINES)
 
         results = seq_resize(results)
-        assert results[0]['img'].shape == (512, 512, 3)
-        assert results[1]['img'].shape == (512, 512, 3)
+        assert results[0]['img'].shape == (512, 1024, 3)
+        assert results[1]['img'].shape == (512, 1024, 3)
 
     def test_seq_flip(self):
 

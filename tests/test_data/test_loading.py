@@ -25,10 +25,10 @@ class TestLoading(object):
             assert results['filename'] == osp.join(self.data_prefix,
                                                    img_names[i])
             assert results['ori_filename'] == img_names[i]
-            assert results['img'].shape == (256, 256, 3)
+            assert results['img'].shape == (256, 512, 3)
             assert results['img'].dtype == np.uint8
-            assert results['img_shape'] == (256, 256, 3)
-            assert results['ori_shape'] == (256, 256, 3)
+            assert results['img_shape'] == (256, 512, 3)
+            assert results['ori_shape'] == (256, 512, 3)
             assert repr(transform) == transform.__class__.__name__ + \
                 "(to_float32=False, color_type='color', " + \
                 "file_client_args={'backend': 'disk'})"
