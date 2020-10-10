@@ -15,12 +15,13 @@ from torch.utils.data import DataLoader
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
 from mmtrack.datasets import DATASETS, CocoVideoDataset
 
-PREFIX = osp.join(osp.dirname(__file__), '../assets/demo_cocovid_data')
+PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
 # 1 videos, 2 categories ('car', 'person')
 # 8 images, 2 instances -> [4, 3] objects
 # 1 ignore, 2 crowd
-DEMO_ANN_FILE = f'{PREFIX}/demo_annfile_cocoformat.json'
+DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
+MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
 
 
 def _create_gt_results(dataset):
@@ -40,21 +41,60 @@ def _create_gt_results(dataset):
     return results
 
 
-# def test_mot17_format_results():
-#     dataset_class = DATASETS.get('MOT17Dataset')
+@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
+def test_mot17_evaluation(dataset):
+    tmp_dir = tempfile.TemporaryDirectory()
+    videos = ['TUD-Campus', 'TUD-Stadtmitte']
 
-#     dataset = dataset_class(
-#         ann_file=MOT17_ANN_FILE, visibility_thr=-1, pipeline=[])
+    dataset_class = DATASETS.get(dataset)
+    dataset_class.cat_ids = MagicMock()
+    dataset_class.coco = MagicMock()
+    dataset_class.load_annotations = MagicMock()
 
-#     num_frames = 3
-#     pseudo_bbox = [
-#         np.array([[1.0, 100.2, 100.2, 20.2, 20.2, 0.8],
-#                   [2.0, 200.2, 200.2, 20.2, 20.2, 0.9]])
-#     ]
-#     pseudo_bboxes = [pseudo_bbox for i in range(num_frames)]
+    dataset = dataset_class(
+        ann_file=MagicMock(), visibility_thr=-1, pipeline=[])
+    dataset.img_prefix = MOT_ANN_PATH
+    dataset.vid_ids = [1, 2]
+    vid_infos = [dict(name=_) for _ in videos]
+    dataset.coco.load_vids = MagicMock(return_value=vid_infos)
+    dataset.data_infos = []
 
-#     import pdb
-#     pdb.set_trace()
+    def _load_results(videos):
+        track_results, data_infos = [], []
+        for video in videos:
+            dets = mmcv.list_from_file(
+                osp.join(MOT_ANN_PATH, 'results', f'{video}.txt'))
+            results = defaultdict(list)
+            for det in dets:
+                det = det.strip().split(',')
+                frame_id, ins_id = map(int, det[:2])
+                bbox = list(map(float, det[2:7]))
+                bbox = [
+                    ins_id, bbox[0], bbox[1], bbox[0] + bbox[2],
+                    bbox[1] + bbox[3], bbox[4]
+                ]
+                results[frame_id].append(bbox)
+            max_frame = max(results.keys())
+            for i in range(1, max_frame + 1):
+                result = [np.array(results[i], dtype=np.float32)]
+                track_results.append(result)
+                data_infos.append(dict(frame_id=i - 1))
+        return track_results, data_infos
+
+    results, data_infos = _load_results(videos)
+    dataset.data_infos = data_infos
+    eval_results = dataset.evaluate(
+        dict(track_results=results),
+        metric='track',
+        logger=None,
+        outfile_prefix=None,
+        iou_thr=0.5)
+    assert eval_results['IDF1'] == 0.624
+    assert eval_results['IDP'] == 0.799
+    assert eval_results['MOTA'] == 0.555
+    assert eval_results['IDs'] == 14
+
+    tmp_dir.cleanup()
 
 
 @pytest.mark.parametrize('dataset', ['MOT17Dataset'])

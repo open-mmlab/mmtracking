@@ -325,14 +325,17 @@ class CocoVideoDataset(CocoDataset):
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
             ]
+            num_vids = len(inds)
             inds.append(len(self.data_infos))
 
             track_results = [
                 results['track_results'][inds[i]:inds[i + 1]]
-                for i in inds[:-1]
+                for i in range(num_vids)
             ]
             ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
-            ann_infos = [ann_infos[inds[i]:inds[i + 1]] for i in inds[:-1]]
+            ann_infos = [
+                ann_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
+            ]
             track_eval_results = eval_mot(
                 results=track_results,
                 gts=ann_infos,

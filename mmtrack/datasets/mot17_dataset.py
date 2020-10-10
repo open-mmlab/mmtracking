@@ -1,7 +1,14 @@
+import os
+import os.path as osp
+import tempfile
+
 import mmcv
+import motmetrics as mm
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
+from mmtrack.core import restore_result
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -110,15 +117,36 @@ class MOT17Dataset(CocoVideoDataset):
 
         return ann
 
-    def format_track_results(self, results, outfile_prefix=None, **kwargs):
+    def format_results(self, results, outfile_prefix=None):
         assert isinstance(results, list), 'results must be a list.'
-        pass
-        # if outfile_prefix is None:
-        #     tmp_dir = tempfile.TemporaryDirectory()
-        #     outfile_prefix = osp.join(tmp_dir.name, 'results')
-        # else:
-        #     tmp_dir = None
-        # outfile
+        if outfile_prefix is None:
+            tmp_dir = tempfile.TemporaryDirectory()
+            res_path = osp.join(tmp_dir.name, 'results')
+        else:
+            tmp_dir = None
+            res_path = osp.join(outfile_prefix, 'results')
+        os.makedirs(res_path, exist_ok=True)
+        inds = [i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0]
+        num_vids = len(inds)
+        assert num_vids == len(self.vid_ids)
+        inds.append(len(self.data_infos))
+        vid_infos = self.coco.load_vids(self.vid_ids)
+        names = [_['name'] for _ in vid_infos]
+        for i in range(num_vids):
+            f = open(f'{res_path}/{names[i]}.txt', 'wt')
+            result = results[inds[i]:inds[i + 1]]
+            data_info = self.data_infos[inds[i]:inds[i + 1]]
+            assert len(result) == len(data_info)
+            for info, res in zip(data_info, result):
+                frame = info['frame_id'] + 1
+                bboxes, labels, ids = restore_result(res, return_ids=True)
+                for bbox, label, id in zip(bboxes, labels, ids):
+                    x1, y1, x2, y2, conf = bbox
+                    f.writelines(
+                        f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
+                        f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
+            f.close()
+        return names, res_path, tmp_dir
 
     def evaluate(self,
                  results,
@@ -126,17 +154,49 @@ class MOT17Dataset(CocoVideoDataset):
                  logger=None,
                  outfile_prefix=None,
                  iou_thr=0.5):
-        if isinstance(metric, list):
-            metrics = metric
-        elif isinstance(metric, str):
-            metrics = [metric]
-        else:
-            raise TypeError('metric must be a list or a str.')
-        allowed_metrics = ['bbox', 'track']
-        for metric in metrics:
-            if metric not in allowed_metrics:
-                raise KeyError(f'metric {metric} is not supported.')
+        print_log('Evaluate CLEAR MOT results.', logger=logger)
+        assert metric == 'track'
+        results = results['track_results']
 
-        for metric in metrics:
-            if metric == 'bbox':
-                results = results['bbox_results']
+        names, res_path, tmp_dir = self.format_results(results, outfile_prefix)
+
+        accs = []
+        for name in names:
+            gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
+            res_file = osp.join(res_path, f'{name}.txt')
+            gt = mm.io.loadtxt(gt_file)
+            res = mm.io.loadtxt(res_file)
+            ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
+            if osp.exists(ini_file):
+                acc, ana = mm.utils.CLEAR_MOT_M(
+                    gt, res, ini_file, distth=1 - iou_thr)
+            else:
+                acc = mm.utils.compare_to_groundtruth(
+                    gt, res, distth=1 - iou_thr)
+            accs.append(acc)
+
+        if tmp_dir is not None:
+            tmp_dir.cleanup()
+
+        mh = mm.metrics.create()
+        summary = mh.compute_many(
+            accs,
+            names=names,
+            metrics=mm.metrics.motchallenge_metrics,
+            generate_overall=True)
+        str_summary = mm.io.render_summary(
+            summary,
+            formatters=mh.formatters,
+            namemap=mm.io.motchallenge_metric_names)
+        print(str_summary)
+
+        eval_results = {
+            mm.io.motchallenge_metric_names[k]: v['OVERALL']
+            for k, v in summary.to_dict().items()
+        }
+        for k, v in eval_results.items():
+            if isinstance(v, float):
+                eval_results[k] = float(f'{(v):.3f}')
+            else:
+                eval_results[k] = int(f'{v}')
+        return eval_results

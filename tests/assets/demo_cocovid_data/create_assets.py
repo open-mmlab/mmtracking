@@ -106,7 +106,7 @@ def create_dummy_data():
             ann_id += 1
             ins_id += 1
 
-    mmcv.dump(ann, 'demo_annfile_cocoformat.json')
+    mmcv.dump(ann, 'ann.json')
 
 
 if __name__ == '__main__':
