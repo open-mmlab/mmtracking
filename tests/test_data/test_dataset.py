@@ -44,10 +44,7 @@ def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
-        ann_file=DEMO_ANN_FILE,
-        load_as_video=True,
-        classes=('car', 'person'),
-        pipeline=[])
+        ann_file=DEMO_ANN_FILE, classes=('car', 'person'), pipeline=[])
 
     # image 1 doesn't have gt and detected objects
     img_id = 1
@@ -77,20 +74,58 @@ def test_parse_ann_info(dataset):
     assert ann['bboxes_ignore'].shape == (0, 4)
 
 
-# @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
-# def test_prepare_img(dataset):
-#     dataset_class = DATASETS.get(dataset)
+@pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
+def test_prepare_data(dataset):
+    dataset_class = DATASETS.get(dataset)
 
-#     dataset = dataset_class(
-#         ann_file=DEMO_ANN_FILE,
-#         classes=['car', 'person'],
-#         pipeline=[],
-#         test_mode=False)
-#     assert len(dataset) == 7
+    # train
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE,
+        classes=['car', 'person'],
+        ref_img_sampler=dict(
+            num_ref_imgs=1,
+            frame_range=1,
+            filter_key_img=True,
+            method='uniform'),
+        pipeline=[],
+        test_mode=False)
+    assert len(dataset) == 7
 
-#     results = dataset.prepare_train_img(0)
-#     import pdb
-#     pdb.set_trace()
+    results = dataset.prepare_train_img(0)
+    assert isinstance(results, list)
+    assert len(results) == 2
+    assert 'ann_info' in results[0]
+    assert results[0].keys() == results[1].keys()
+
+    dataset.ref_img_sampler = None
+    results = dataset.prepare_train_img(0)
+    assert isinstance(results, dict)
+    assert 'ann_info' in results
+
+    # test
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE,
+        classes=['car', 'person'],
+        ref_img_sampler=dict(
+            num_ref_imgs=1,
+            frame_range=1,
+            filter_key_img=True,
+            method='uniform'),
+        pipeline=[],
+        test_mode=True)
+    assert len(dataset) == 8
+
+    results = dataset.prepare_test_img(0)
+    assert isinstance(results, list)
+    assert len(results) == 2
+    assert 'ann_info' not in results[0]
+    assert results[0].keys() == results[1].keys()
+
+    dataset.ref_img_sampler = None
+    results = dataset.prepare_test_img(0)
+    assert isinstance(results, dict)
+    assert 'ann_info' not in results
+
 
 # def test_mot17_format_results():
 #     dataset_class = DATASETS.get('MOT17Dataset')
@@ -144,7 +179,7 @@ def test_video_data_sampling(dataset):
     assert ref_data[1]['frame_id'] - data['frame_id'] <= sampler['frame_range']
 
 
-def test_dataset_evaluation():
+def test_coco_video_evaluation():
     classes = ('car', 'person')
     dataset = CocoVideoDataset(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])

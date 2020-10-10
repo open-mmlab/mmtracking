@@ -123,6 +123,8 @@ class CocoVideoDataset(CocoDataset):
                     num_samples = min(num_ref_imgs // 2, len(valid_ids))
                     sampled_inds = random.sample(valid_ids, num_samples)
                     ref_img_ids.extend(sampled_inds)
+                img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
+                    if isinstance(frame_range, list) else frame_range
             elif method == 'test_with_adaptive_stride':
                 if frame_id == 0:
                     stride = float(len(img_ids) - 1) / (num_ref_imgs - 1)
@@ -152,8 +154,6 @@ class CocoVideoDataset(CocoDataset):
             ref_img_infos = sorted(ref_img_infos, key=lambda i: i['frame_id'])
 
         if return_key_img:
-            img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
-                    if isinstance(frame_range, list) else frame_range
             return [img_info, *ref_img_infos]
         else:
             return ref_img_infos
