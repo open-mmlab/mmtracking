@@ -30,9 +30,7 @@ def eval_single_video(results,
                       ignore_iof_thr=0.5,
                       ignore_by_classes=False):
     num_classes = len(results[0])
-    accumulators = [
-        mm.MOTAccumulator(auto_id=True) for i in range(num_classes)
-    ]
+    accs = [mm.MOTAccumulator(auto_id=True) for i in range(num_classes)]
     for result, gt in zip(results, gts):
         if ignore_by_classes:
             gt_ignore = bbox2result(gt['bboxes_ignore'], gt['labels_ignore'],
@@ -50,13 +48,13 @@ def eval_single_video(results,
                 valid_inds = (iofs < ignore_iof_thr).all(axis=1)
                 pred_ids = pred_ids[valid_inds]
                 pred_bboxes = pred_bboxes[valid_inds]
-            ious = bbox_overlaps(gt_bboxes, pred_bboxes, mode='iou')
-            distances = 1 - ious
-            distances = np.where(distances > iou_thr, np.nan, distances)
-            accumulators[i].update(gt_ids, pred_ids, distances)
-    return accumulators
+            distances = mm.distances.iou_matrix(
+                gt_bboxes, pred_bboxes, max_iou=1 - iou_thr)
+            accs[i].update(gt_ids, pred_ids, distances)
+    return accs
 
 
+# TODO: polish this function
 def _aggregate_eval_results(summary, metrics, classes):
     classes += ['OVERALL']
     all_summary = pd.DataFrame(columns=metrics)
@@ -105,7 +103,7 @@ def _aggregate_eval_results(summary, metrics, classes):
 
 
 def eval_mot(results,
-             gts,
+             annotations,
              logger=None,
              classes=None,
              iou_thr=0.5,
@@ -114,6 +112,7 @@ def eval_mot(results,
              nproc=4):
     t = time.time()
     print_log('Evaluate CLEAR MOT metrics...', logger)
+    gts = annotations.copy()
     if classes is None:
         num_classes = len(results[0])
         classes = [i + 1 for i in range(num_classes)]
@@ -121,6 +120,7 @@ def eval_mot(results,
         if isinstance(classes, tuple):
             classes = list(classes)
     assert len(results) == len(gts)
+
     print_log('Obtain results for each video...', logger)
     pool = Pool(nproc)
     results = pool.starmap(
@@ -130,18 +130,18 @@ def eval_mot(results,
             [ignore_by_classes for _ in range(len(gts))]))
     pool.close()
 
-    names, accumulators = [], []
+    names, accs = [], []
     for video_ind, accs in enumerate(results):
         for i, acc in enumerate(accs):
             name = f'{classes[i]}_{video_ind}'
             if acc._events == 0:
                 continue
             names.append(name)
-            accumulators.append(acc)
+            accs.append(acc)
 
     mh = mm.metrics.create()
     summary = mh.compute_many(
-        accumulators,
+        accs,
         metrics=[
             'num_objects', 'num_predictions', 'num_detections', 'num_misses',
             'num_false_positives', 'num_switches', 'mostly_tracked',

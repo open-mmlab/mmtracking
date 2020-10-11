@@ -235,13 +235,12 @@ class CocoVideoDataset(CocoDataset):
         gt_bboxes = []
         gt_labels = []
         gt_bboxes_ignore = []
-        gt_masks_ann = []
+        gt_masks = []
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
-            # TODO: how to treat ignore objects
-            # if ann.get('ignore', False):
-            # continue
+            if ann.get('ignore', False):
+                continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
             inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
@@ -252,13 +251,13 @@ class CocoVideoDataset(CocoDataset):
             if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
-            if ann.get('iscrowd', False) or ann.get('ignore', False):
+            if ann.get('iscrowd', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
                 if 'segmentation' in ann:
-                    gt_masks_ann.append(ann['segmentation'])
+                    gt_masks.append(ann['segmentation'])
                 if 'instance_id' in ann:
                     gt_instance_ids.append(ann['instance_id'])
 
@@ -280,7 +279,7 @@ class CocoVideoDataset(CocoDataset):
             bboxes=gt_bboxes,
             labels=gt_labels,
             bboxes_ignore=gt_bboxes_ignore,
-            masks=gt_masks_ann,
+            masks=gt_masks,
             seg_map=seg_map)
 
         if self.load_as_video:
@@ -320,7 +319,6 @@ class CocoVideoDataset(CocoDataset):
 
         eval_results = dict()
         if 'track' in metrics:
-            # TODO: figure out the changes in coco api
             assert len(self.data_infos) == len(results['track_results'])
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
@@ -338,7 +336,7 @@ class CocoVideoDataset(CocoDataset):
             ]
             track_eval_results = eval_mot(
                 results=track_results,
-                gts=ann_infos,
+                annotations=ann_infos,
                 logger=logger,
                 classes=self.CLASSES,
                 **track_kwargs)
