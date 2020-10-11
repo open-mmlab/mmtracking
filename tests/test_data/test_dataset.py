@@ -13,7 +13,7 @@ from mmcv.runner import EpochBasedRunner
 from torch.utils.data import DataLoader
 
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
-from mmtrack.datasets import DATASETS, CocoVideoDataset
+from mmtrack.datasets import DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
@@ -214,7 +214,8 @@ def test_video_data_sampling(dataset):
 
 def test_coco_video_evaluation():
     classes = ('car', 'person')
-    dataset = CocoVideoDataset(
+    dataset_class = DATASETS.get('CocoVideoDataset')
+    dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
     eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
@@ -229,7 +230,7 @@ def test_coco_video_evaluation():
     assert 'track_AVERAGE_copypaste' in eval_results
 
     classes = ('car', )
-    dataset = CocoVideoDataset(
+    dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
     eval_results = dataset.evaluate(results, metric=['bbox', 'track'])
@@ -244,15 +245,29 @@ def test_coco_video_evaluation():
     assert 'track_AVERAGE_copypaste' in eval_results
 
 
+def test_mot17_bbox_evaluation():
+    classes = ('car', 'person')
+    dataset_class = DATASETS.get('MOT17Dataset')
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
+    results = _create_gt_results(dataset)
+
+    eval_results = dataset.evaluate(results, metric='bbox')
+    assert eval_results['mAP'] == 1.0
+    eval_results = dataset.evaluate(results['bbox_results'], metric='bbox')
+    assert eval_results['mAP'] == 1.0
+
+
+@patch('mmtrack.datasets.MOT17Dataset.load_annotations', MagicMock)
+@patch('mmtrack.datasets.MOT17Dataset._filter_imgs', MagicMock)
 @pytest.mark.parametrize('dataset', ['MOT17Dataset'])
-def test_mot17_evaluation(dataset):
+def test_mot17_track_evaluation(dataset):
     tmp_dir = tempfile.TemporaryDirectory()
     videos = ['TUD-Campus', 'TUD-Stadtmitte']
 
     dataset_class = DATASETS.get(dataset)
     dataset_class.cat_ids = MagicMock()
     dataset_class.coco = MagicMock()
-    dataset_class.load_annotations = MagicMock()
 
     dataset = dataset_class(
         ann_file=MagicMock(), visibility_thr=-1, pipeline=[])
@@ -267,31 +282,32 @@ def test_mot17_evaluation(dataset):
         for video in videos:
             dets = mmcv.list_from_file(
                 osp.join(MOT_ANN_PATH, 'results', f'{video}.txt'))
-            results = defaultdict(list)
+            track_result = defaultdict(list)
             for det in dets:
                 det = det.strip().split(',')
                 frame_id, ins_id = map(int, det[:2])
                 bbox = list(map(float, det[2:7]))
-                bbox = [
+                track = [
                     ins_id, bbox[0], bbox[1], bbox[0] + bbox[2],
                     bbox[1] + bbox[3], bbox[4]
                 ]
-                results[frame_id].append(bbox)
-            max_frame = max(results.keys())
+                track_result[frame_id].append(track)
+            max_frame = max(track_result.keys())
             for i in range(1, max_frame + 1):
-                result = [np.array(results[i], dtype=np.float32)]
-                track_results.append(result)
+                track_results.append(
+                    [np.array(track_result[i], dtype=np.float32)])
                 data_infos.append(dict(frame_id=i - 1))
         return track_results, data_infos
 
-    results, data_infos = _load_results(videos)
+    track_results, data_infos = _load_results(videos)
     dataset.data_infos = data_infos
+
     eval_results = dataset.evaluate(
-        dict(track_results=results),
+        dict(track_results=track_results),
         metric='track',
         logger=None,
         outfile_prefix=None,
-        iou_thr=0.5)
+        track_iou_thr=0.5)
     assert eval_results['IDF1'] == 0.624
     assert eval_results['IDP'] == 0.799
     assert eval_results['MOTA'] == 0.555

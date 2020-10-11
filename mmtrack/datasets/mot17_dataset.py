@@ -6,6 +6,7 @@ import mmcv
 import motmetrics as mm
 import numpy as np
 from mmcv.utils import print_log
+from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
 from mmtrack.core import restore_result
@@ -88,7 +89,8 @@ class MOT17Dataset(CocoVideoDataset):
             if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
-            if ann.get('iscrowd', False) or ann.get('ignore', False):
+            if ann.get('ignore', False) or ann.get('iscrowd', False):
+                # note: normally no `iscrowd` for MOT17Dataset
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
@@ -153,50 +155,80 @@ class MOT17Dataset(CocoVideoDataset):
                  metric='track',
                  logger=None,
                  outfile_prefix=None,
-                 iou_thr=0.5):
-        print_log('Evaluate CLEAR MOT results.', logger=logger)
-        assert metric == 'track'
-        results = results['track_results']
+                 bbox_iou_thr=0.5,
+                 track_iou_thr=0.5):
+        eval_results = dict()
+        if isinstance(metric, list):
+            metrics = metric
+        elif isinstance(metric, str):
+            metrics = [metric]
+        else:
+            raise TypeError('metric must be a list or a str.')
+        allowed_metrics = ['bbox', 'track']
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported.')
 
-        names, res_path, tmp_dir = self.format_results(results, outfile_prefix)
+        if 'track' in metrics:
+            assert isinstance(results, dict)
+            assert 'track_results' in results
+            print_log('Evaluate CLEAR MOT results.', logger=logger)
+            distth = 1 - track_iou_thr
+            names, res_path, tmp_dir = self.format_results(
+                results['track_results'], outfile_prefix)
 
-        accs = []
-        for name in names:
-            gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
-            res_file = osp.join(res_path, f'{name}.txt')
-            gt = mm.io.loadtxt(gt_file)
-            res = mm.io.loadtxt(res_file)
-            ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
-            if osp.exists(ini_file):
-                acc, ana = mm.utils.CLEAR_MOT_M(
-                    gt, res, ini_file, distth=1 - iou_thr)
+            accs = []
+            for name in names:
+                gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
+                res_file = osp.join(res_path, f'{name}.txt')
+                gt = mm.io.loadtxt(gt_file)
+                res = mm.io.loadtxt(res_file)
+                ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
+                if osp.exists(ini_file):
+                    acc, ana = mm.utils.CLEAR_MOT_M(
+                        gt, res, ini_file, distth=distth)
+                else:
+                    acc = mm.utils.compare_to_groundtruth(
+                        gt, res, distth=distth)
+                accs.append(acc)
+
+            if tmp_dir is not None:
+                tmp_dir.cleanup()
+
+            mh = mm.metrics.create()
+            summary = mh.compute_many(
+                accs,
+                names=names,
+                metrics=mm.metrics.motchallenge_metrics,
+                generate_overall=True)
+            str_summary = mm.io.render_summary(
+                summary,
+                formatters=mh.formatters,
+                namemap=mm.io.motchallenge_metric_names)
+            print_log(str_summary, logger)
+
+            eval_results.update({
+                mm.io.motchallenge_metric_names[k]: v['OVERALL']
+                for k, v in summary.to_dict().items()
+            })
+
+        if 'bbox' in metrics:
+            if isinstance(results, dict):
+                bbox_results = results['bbox_results']
+            elif isinstance(results, list):
+                bbox_results = results
             else:
-                acc = mm.utils.compare_to_groundtruth(
-                    gt, res, distth=1 - iou_thr)
-            accs.append(acc)
+                raise TypeError('results must be a dict or a list.')
+            annotations = [self.get_ann_info(info) for info in self.data_infos]
+            mean_ap, _ = eval_map(
+                bbox_results,
+                annotations,
+                iou_thr=bbox_iou_thr,
+                dataset=self.CLASSES,
+                logger=logger)
+            eval_results['mAP'] = mean_ap
 
-        if tmp_dir is not None:
-            tmp_dir.cleanup()
-
-        mh = mm.metrics.create()
-        summary = mh.compute_many(
-            accs,
-            names=names,
-            metrics=mm.metrics.motchallenge_metrics,
-            generate_overall=True)
-        str_summary = mm.io.render_summary(
-            summary,
-            formatters=mh.formatters,
-            namemap=mm.io.motchallenge_metric_names)
-        print_log(str_summary, logger)
-
-        eval_results = {
-            mm.io.motchallenge_metric_names[k]: v['OVERALL']
-            for k, v in summary.to_dict().items()
-        }
         for k, v in eval_results.items():
             if isinstance(v, float):
                 eval_results[k] = float(f'{(v):.3f}')
-            else:
-                eval_results[k] = int(f'{v}')
         return eval_results

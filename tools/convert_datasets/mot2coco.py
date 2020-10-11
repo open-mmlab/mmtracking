@@ -25,6 +25,9 @@
 #   10: 'occluder on the ground',
 #   11: 'occluder full'
 #   12: 'reflection'
+#
+#   USELESS classes are not included into the json file.
+#   IGNORES classes are included with `ignore=True`.
 import argparse
 import os
 import os.path as osp
@@ -74,9 +77,6 @@ def parse_gts(gts):
             area=bbox[2] * bbox[3],
             official_id=ins_id,
             ignore=ignore,
-            # alias 'iscrowd' == 'ignore'
-            # cocoapi evaluation scripts ignore objects by 'iscrowd'
-            iscrowd=ignore,
             visibility=visibility)
         outputs[frame_id].append(anns)
     return outputs
