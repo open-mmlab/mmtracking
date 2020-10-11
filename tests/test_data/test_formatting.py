@@ -13,7 +13,7 @@ class TestFormatting(object):
         cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
     def test_formatting(self):
-        img_names = ['image_a.jpg', 'image_b.jpg', 'image_c.jpg']
+        img_names = ['image_1.jpg', 'image_2.jpg', 'image_3.jpg']
         collect_keys = ['img', 'gt_bboxes']
         num_objects = 4
         num_ref_imgs = len(img_names) - 1

@@ -52,8 +52,12 @@ def main():
                 for ann_info in img_info['labels']:
                     if ann_info['category'] in CLASSES:
                         cls_id = CLASSES.index(ann_info['category']) + 1
-                    elif ann_info['category'] in USELESS or ann_info[
-                            'category'] in IGNORES:
+                        ignore = False
+                    elif ann_info['category'] in IGNORES:
+                        c = IGNORES[ann_info['category']]
+                        cls_id = CLASSES.index(c) + 1
+                        ignore = True
+                    elif ann_info['category'] in USELESS:
                         continue
                     else:
                         raise ValueError('Category do not exist.')
@@ -71,7 +75,7 @@ def main():
                         area=area,
                         occluded=ann_info['attributes']['Occluded'],
                         truncated=ann_info['attributes']['Truncated'],
-                        iscrowd=ann_info['attributes']['Crowd'])
+                        iscrowd=ann_info['attributes']['Crowd'] or ignore)
                     coco['annotations'].append(ann)
                     ann_id += 1
                 img_id += 1

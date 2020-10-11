@@ -10,7 +10,11 @@ CLASSES = [
     'train'
 ]
 USELESS = ['traffic light', 'traffic sign']
-IGNORES = ['trailer', 'other person', 'other vehicle']
+IGNORES = {
+    'trailer': 'truck',
+    'other person': 'pedestrian',
+    'other vehicle': 'car'
+}
 
 
 def parse_args():
@@ -48,8 +52,12 @@ def main():
             for k, ann_info in enumerate(img_info['labels']):
                 if ann_info['category'] in CLASSES:
                     cls_id = CLASSES.index(ann_info['category']) + 1
-                elif ann_info['category'] in USELESS or ann_info[
-                        'category'] in IGNORES:
+                    ignore = False
+                elif ann_info['category'] in IGNORES:
+                    c = IGNORES[ann_info['category']]
+                    cls_id = CLASSES.index(c) + 1
+                    ignore = True
+                elif ann_info['category'] in USELESS:
                     continue
                 else:
                     raise ValueError('Category do not exist.')
@@ -65,7 +73,8 @@ def main():
                     bbox=[x1, y1, x2 - x1, y2 - y1],
                     area=area,
                     occluded=ann_info['attributes']['occluded'],
-                    truncated=ann_info['attributes']['truncated'])
+                    truncated=ann_info['attributes']['truncated'],
+                    iscrowd=ignore)
                 coco['annotations'].append(ann)
                 ann_id += 1
         mmcv.dump(

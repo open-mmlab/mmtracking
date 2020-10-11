@@ -13,7 +13,7 @@ class TestTransforms(object):
     def setup_class(cls):
         cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
 
-        img_names = ['image_a.jpg', 'image_b.jpg']
+        img_names = ['image_1.jpg', 'image_2.jpg']
         results = [
             dict(img_prefix=cls.data_prefix, img_info=dict(filename=name))
             for name in img_names
@@ -24,12 +24,12 @@ class TestTransforms(object):
     def test_seq_resize(self):
         results = copy.deepcopy(self.results)
         transform = dict(
-            type='SeqResize', img_scale=(512, 512), keep_ratio=True)
+            type='SeqResize', img_scale=(512, 1024), keep_ratio=True)
         seq_resize = build_from_cfg(transform, PIPELINES)
 
         results = seq_resize(results)
-        assert results[0]['img'].shape == (512, 512, 3)
-        assert results[1]['img'].shape == (512, 512, 3)
+        assert results[0]['img'].shape == (512, 1024, 3)
+        assert results[1]['img'].shape == (512, 1024, 3)
 
     def test_seq_flip(self):
 
