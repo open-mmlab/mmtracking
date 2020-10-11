@@ -30,7 +30,9 @@ def eval_single_video(results,
                       ignore_iof_thr=0.5,
                       ignore_by_classes=False):
     num_classes = len(results[0])
-    accs = [mm.MOTAccumulator(auto_id=True) for i in range(num_classes)]
+    accumulators = [
+        mm.MOTAccumulator(auto_id=True) for i in range(num_classes)
+    ]
     for result, gt in zip(results, gts):
         if ignore_by_classes:
             gt_ignore = bbox2result(gt['bboxes_ignore'], gt['labels_ignore'],
@@ -50,8 +52,8 @@ def eval_single_video(results,
                 pred_bboxes = pred_bboxes[valid_inds]
             distances = mm.distances.iou_matrix(
                 gt_bboxes, pred_bboxes, max_iou=1 - iou_thr)
-            accs[i].update(gt_ids, pred_ids, distances)
-    return accs
+            accumulators[i].update(gt_ids, pred_ids, distances)
+    return accumulators
 
 
 # TODO: polish this function
@@ -130,18 +132,18 @@ def eval_mot(results,
             [ignore_by_classes for _ in range(len(gts))]))
     pool.close()
 
-    names, accs = [], []
+    names, accumulators = [], []
     for video_ind, accs in enumerate(results):
         for i, acc in enumerate(accs):
             name = f'{classes[i]}_{video_ind}'
             if acc._events == 0:
                 continue
             names.append(name)
-            accs.append(acc)
+            accumulators.append(acc)
 
     mh = mm.metrics.create()
     summary = mh.compute_many(
-        accs,
+        accumulators,
         metrics=[
             'num_objects', 'num_predictions', 'num_detections', 'num_misses',
             'num_false_positives', 'num_switches', 'mostly_tracked',
