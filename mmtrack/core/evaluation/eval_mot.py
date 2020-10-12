@@ -139,14 +139,11 @@ def eval_mot(results,
         zip(results, gts, [iou_thr for _ in range(len(gts))],
             [ignore_iof_thr for _ in range(len(gts))],
             [ignore_by_classes for _ in range(len(gts))]))
-    pool.close()
     names, accs, items = aggregate_accs(accs, classes)
-
     print_log('Evaluating...', logger)
     eval_results = pd.DataFrame(columns=metrics)
-    summaries = []
-    for name, acc in zip(names, accs):
-        summaries.append(eval_single_class(name, acc))
+    summaries = pool.starmap(eval_single_class, zip(names, accs))
+    pool.close()
 
     # category and overall results
     for i, item in enumerate(items):
