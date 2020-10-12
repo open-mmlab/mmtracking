@@ -8,6 +8,7 @@ from mmcv.utils import print_log
 from mmdet.core import bbox2result
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
+from motmetrics.math_util import quiet_divide
 
 from ..track import track2result
 
@@ -71,7 +72,8 @@ def acc_single_video(results,
                 valid_inds = ~(fps & ignores)
                 pred_ids = pred_ids[valid_inds]
                 dist = dist[:, valid_inds]
-            accumulators[i].update(gt_ids, pred_ids, dist)
+            if dist.shape != (0, 0):
+                accumulators[i].update(gt_ids, pred_ids, dist)
     return accumulators
 
 
@@ -81,7 +83,7 @@ def aggregate_accs(accumulators, classes):
     names, accs = [[] for c in classes], [[] for c in classes]
     for video_ind, _accs in enumerate(accumulators):
         for cls_ind, acc in enumerate(_accs):
-            if acc._events == 0:
+            if len(acc._events['Type']) == 0:
                 continue
             name = f'{classes[cls_ind]}_{video_ind}'
             names[cls_ind].append(name)
@@ -99,8 +101,18 @@ def eval_single_class(names, accs):
     mh = mm.metrics.create()
     summary = mh.compute_many(
         accs, names=names, metrics=METRIC_MAPS.keys(), generate_overall=True)
-    summary = [v['OVERALL'] for k, v in summary.to_dict().items()]
-    return summary
+    results = [v['OVERALL'] for k, v in summary.to_dict().items()]
+    motp_ind = list(METRIC_MAPS).index('motp')
+    if np.isnan(results[motp_ind]):
+        num_dets = mh.compute_many(
+            accs,
+            names=names,
+            metrics=['num_detections'],
+            generate_overall=True)
+        sum_motp = (summary['motp'] * num_dets['num_detections']).sum()
+        motp = quiet_divide(sum_motp, num_dets['num_detections']['OVERALL'])
+        results[motp_ind] = float(1 - motp)
+    return results
 
 
 def eval_mot(results,
@@ -120,18 +132,22 @@ def eval_mot(results,
     metrics = METRIC_MAPS.keys()
 
     print_log('Accumulating...', logger)
+
     pool = Pool(nproc)
     accs = pool.starmap(
         acc_single_video,
         zip(results, gts, [iou_thr for _ in range(len(gts))],
             [ignore_iof_thr for _ in range(len(gts))],
             [ignore_by_classes for _ in range(len(gts))]))
+    pool.close()
     names, accs, items = aggregate_accs(accs, classes)
 
     print_log('Evaluating...', logger)
     eval_results = pd.DataFrame(columns=metrics)
-    summaries = pool.starmap(eval_single_class, zip(names, accs))
-    pool.close()
+    summaries = []
+    for name, acc in zip(names, accs):
+        summaries.append(eval_single_class(name, acc))
+
     # category and overall results
     for i, item in enumerate(items):
         eval_results.loc[item] = summaries[i]
