@@ -50,13 +50,13 @@ def eval_single_video(results,
                 valid_inds = (iofs < ignore_iof_thr).all(axis=1)
                 pred_ids = pred_ids[valid_inds]
                 pred_bboxes = pred_bboxes[valid_inds]
-            ious = bbox_overlaps(gt_bboxes, pred_bboxes, mode='iou')
-            distances = 1 - ious
-            distances = np.where(distances > iou_thr, np.nan, distances)
+            distances = mm.distances.iou_matrix(
+                gt_bboxes, pred_bboxes, max_iou=1 - iou_thr)
             accumulators[i].update(gt_ids, pred_ids, distances)
     return accumulators
 
 
+# TODO: polish this function
 def _aggregate_eval_results(summary, metrics, classes):
     classes += ['OVERALL']
     all_summary = pd.DataFrame(columns=metrics)
@@ -66,6 +66,7 @@ def _aggregate_eval_results(summary, metrics, classes):
         sum_results = s.sum()
         results = []
         for metric in metrics:
+            # TODO: check the efficiency in pymotmetrics
             if metric == 'mota':
                 result = 1. - quiet_divide(
                     sum_results['num_misses'] + sum_results['num_switches'] +
@@ -104,7 +105,7 @@ def _aggregate_eval_results(summary, metrics, classes):
 
 
 def eval_mot(results,
-             gts,
+             annotations,
              logger=None,
              classes=None,
              iou_thr=0.5,
@@ -113,6 +114,7 @@ def eval_mot(results,
              nproc=4):
     t = time.time()
     print_log('Evaluate CLEAR MOT metrics...', logger)
+    gts = annotations.copy()
     if classes is None:
         num_classes = len(results[0])
         classes = [i + 1 for i in range(num_classes)]
@@ -120,6 +122,7 @@ def eval_mot(results,
         if isinstance(classes, tuple):
             classes = list(classes)
     assert len(results) == len(gts)
+
     print_log('Obtain results for each video...', logger)
     pool = Pool(nproc)
     results = pool.starmap(

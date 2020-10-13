@@ -1,6 +1,8 @@
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
+from mmtrack.core import restore_result
+
 
 @PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):
@@ -45,3 +47,15 @@ class SeqLoadAnnotations(LoadAnnotations):
                 _results = self._load_track(_results)
             outs.append(_results)
         return outs
+
+
+@PIPELINES.register_module()
+class LoadDetections(object):
+
+    def __call__(self, results):
+        detections = results['detections']
+        bboxes, labels = restore_result(detections)
+        results['public_bboxes'] = bboxes
+        results['public_labels'] = labels
+        results['bbox_fields'].append('public_bboxes')
+        return results

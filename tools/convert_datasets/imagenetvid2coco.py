@@ -144,8 +144,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                     bbox=[x1, y1, w, h],
                     area=w * h,
                     iscrowd=False,
-                    ignore=False,
-                    is_occluded=occluded == '1',
+                    occluded=occluded == '1',
                     generated=generated == '1')
                 if category_id not in obj_num_classes:
                     obj_num_classes[category_id] = 1

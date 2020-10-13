@@ -19,3 +19,17 @@ def track2result(bboxes, labels, ids, num_classes):
             np.concatenate((ids[labels == i, None], bboxes[labels == i, :]),
                            axis=1) for i in range(num_classes)
         ]
+
+
+def restore_result(result, return_ids=False):
+    labels = []
+    for i, bbox in enumerate(result):
+        labels.extend([i] * bbox.shape[0])
+    bboxes = np.concatenate(result, axis=0)
+    labels = np.array(labels, dtype=np.int64)
+    if return_ids:
+        ids = bboxes[:, 0].astype(np.int64)
+        bboxes = bboxes[:, 1:]
+        return bboxes, labels, ids
+    else:
+        return bboxes, labels
