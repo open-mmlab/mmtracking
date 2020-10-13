@@ -61,6 +61,7 @@ def test_video_detectorsforward(cfg_file):
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[10])
     imgs = mm_inputs.pop('imgs')
     img_metas = mm_inputs.pop('img_metas')
+    img_metas[0]['is_video_data'] = True
     gt_bboxes = mm_inputs['gt_bboxes']
     gt_labels = mm_inputs['gt_labels']
     gt_masks = mm_inputs['gt_masks']
@@ -86,6 +87,7 @@ def test_video_detectorsforward(cfg_file):
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[0])
     imgs = mm_inputs.pop('imgs')
     img_metas = mm_inputs.pop('img_metas')
+    img_metas[0]['is_video_data'] = True
     gt_bboxes = mm_inputs['gt_bboxes']
     gt_labels = mm_inputs['gt_labels']
     gt_masks = mm_inputs['gt_masks']
@@ -152,10 +154,9 @@ def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
         'scale_factor': 1.0,
         'flip': False,
         'frame_id': 0,
-        'is_video_data': True,
         'img_norm_cfg': {
-            'mean': (128, 128, 128),
-            'std': (10, 10, 10)
+            'mean': (128.0, 128.0, 128.0),
+            'std': (10.0, 10.0, 10.0)
         }
     } for _ in range(N)]
 
