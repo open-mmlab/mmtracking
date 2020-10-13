@@ -123,8 +123,6 @@ class CocoVideoDataset(CocoDataset):
                     num_samples = min(num_ref_imgs // 2, len(valid_ids))
                     sampled_inds = random.sample(valid_ids, num_samples)
                     ref_img_ids.extend(sampled_inds)
-                img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
-                    if isinstance(frame_range, list) else frame_range
             elif method == 'test_with_adaptive_stride':
                 if frame_id == 0:
                     stride = float(len(img_ids) - 1) / (num_ref_imgs - 1)
@@ -143,6 +141,8 @@ class CocoVideoDataset(CocoDataset):
                         round(frame_id + frame_range[1] * stride),
                         len(img_ids) - 1)
                     ref_img_ids.append(img_ids[ref_id])
+                img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
+                    if isinstance(frame_range, list) else frame_range
             else:
                 raise NotImplementedError
 
@@ -182,6 +182,7 @@ class CocoVideoDataset(CocoDataset):
 
         super().pre_pipeline(results)
         results['frame_id'] = img_info.get('frame_id', -1)
+        results['num_left_ref_imgs'] = img_info.get('num_left_ref_imgs', -1)
         results['is_video_data'] = self.load_as_video
         return results
 
