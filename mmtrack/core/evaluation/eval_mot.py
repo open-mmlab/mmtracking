@@ -15,10 +15,10 @@ from ..track import track2result
 METRIC_MAPS = {
     'idf1': 'IDF1',
     'mota': 'MOTA',
+    'motp': 'MOTP',
     'num_false_positives': 'FP',
     'num_misses': 'FN',
     'num_switches': 'IDSw',
-    'motp': 'MOTP',
     'recall': 'Rcll',
     'precision': 'Prcn',
     'mostly_tracked': 'MT',

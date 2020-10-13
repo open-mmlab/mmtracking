@@ -306,7 +306,7 @@ def test_mot17_track_evaluation(dataset):
         dict(track_results=track_results),
         metric='track',
         logger=None,
-        outfile_prefix=None,
+        resfile_path=None,
         track_iou_thr=0.5)
     assert eval_results['IDF1'] == 0.624
     assert eval_results['IDP'] == 0.799
