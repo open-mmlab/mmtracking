@@ -94,3 +94,7 @@ class TestTransforms(object):
         for i, result in enumerate(results):
             converted_img = (self.results[i]['img'][..., ::-1] - mean) / std
             assert np.allclose(result['img'], converted_img)
+
+    # def test_seq_random_crop(self):
+    #     transform = dict(type='SeqRandomCrop', **img_norm_cfg)
+    #     transform = build_from_cfg(transform, PIPELINES)
