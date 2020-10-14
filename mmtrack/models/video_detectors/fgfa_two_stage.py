@@ -74,7 +74,7 @@ class FgfaTwoStage(BaseDetector):
             all_x = self.extract_feat(all_imgs)
             x = []
             for i in range(len(all_x)):
-                ref_x_single = flow_warp_feats(flows, all_x[i][1:])
+                ref_x_single = flow_warp_feats(all_x[i][1:], flows)
                 x_single = torch.cat((all_x[i][[0]], ref_x_single), dim=0)
                 ada_weights = self.compute_adaptive_weights(
                     x_single, target_index=0)
@@ -164,7 +164,7 @@ class FgfaTwoStage(BaseDetector):
 
         x = []
         for i in range(len(x_frame)):
-            x_single = flow_warp_feats(flows, self.ref_x[i])
+            x_single = flow_warp_feats(self.ref_x[i], flows)
             if frame_stride < 1:
                 x_single = torch.cat((x_frame[i], x_single), dim=0)
                 ada_weights = self.compute_adaptive_weights(
