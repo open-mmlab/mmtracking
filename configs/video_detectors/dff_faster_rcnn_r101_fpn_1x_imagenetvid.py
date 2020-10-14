@@ -1,3 +1,11 @@
+# Skip Review
+# difference:
+# use 1. two reg loss L1 or smooth L1
+# use 2. roi align
+# 3. img RGB or BGR
+# use 4. bbox target_stds
+# use 5. 3e2e1e or 25e35e05e
+# use 6. train ref img sample -9--0 or -9--9
 find_unused_parameters = True
 model = dict(
     type='DffTwoStage',
@@ -33,7 +41,8 @@ model = dict(
                 target_stds=[1.0, 1.0, 1.0, 1.0]),
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+            loss_bbox=dict(
+                type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
         roi_head=dict(
             type='StandardRoIHead',
             bbox_roi_extractor=dict(
@@ -51,16 +60,18 @@ model = dict(
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
-                    target_stds=[0.1, 0.1, 0.2, 0.2]),
+                    target_stds=[0.2, 0.2, 0.2, 0.2]),
                 reg_class_agnostic=False,
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='L1Loss', loss_weight=1.0)))),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                               loss_weight=1.0)))),
     motion=dict(
         type='FlowNetSimple',
         pretrained='data/imagenet_vid/pretrained_flownet/flownet_simple.pth',
+        flow_img_norm_mean=[0.450, 0.432, 0.411],
         img_scale_factor=0.5))
 # model training and testing settings
 train_cfg = dict(
@@ -157,35 +168,32 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=0,
+    workers_per_gpu=2,
     train=[
         dict(
             type=dataset_type,
-            match_gts=False,
             ann_file=data_root + 'annotations/imagenet_vid_train.json',
             img_prefix=data_root + 'data/VID/',
             ref_img_sampler=dict(
                 num_ref_imgs=1,
-                frame_range=9,
-                filter_key_frame=True,
+                frame_range=[-9, 0],
+                filter_key_img=False,
                 method='uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,
-            match_gts=False,
             load_as_video=False,
             ann_file=data_root + 'annotations/imagenet_det_30cls.json',
             img_prefix=data_root + 'data/DET/',
             ref_img_sampler=dict(
                 num_ref_imgs=1,
-                frame_range=9,
-                filter_key_frame=True,
+                frame_range=0,
+                filter_key_img=False,
                 method='uniform'),
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
-        match_gts=False,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
         ref_img_sampler=None,
@@ -193,7 +201,6 @@ data = dict(
         test_mode=True),
     test=dict(
         type=dataset_type,
-        match_gts=False,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
         ref_img_sampler=None,
@@ -201,14 +208,15 @@ data = dict(
         test_mode=True))
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=None)
+optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='step',
     warmup='linear',
+    by_epoch=False,
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[3, 5])
+    step=[17140, 37708])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
@@ -226,4 +234,4 @@ log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox'], interval=1)
+evaluation = dict(metric=['bbox'], interval=6)

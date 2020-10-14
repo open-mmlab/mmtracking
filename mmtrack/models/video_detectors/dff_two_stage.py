@@ -2,7 +2,7 @@ import torch
 from mmdet.models import build_detector
 from mmdet.models.detectors import BaseDetector
 
-from mmtrack.core import flow_warp_feats
+from mmtrack.core.motion import flow_warp_feats
 from ..builder import MODELS, build_motion
 
 
@@ -16,10 +16,6 @@ class DffTwoStage(BaseDetector):
         self.motion.init_weights()
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
-        if 'key_frame_interval' in test_cfg:
-            self.key_frame_interval = test_cfg['key_frame_interval']
-        else:
-            self.key_frame_interval = 10
 
     def extract_feat(self, img):
         return self.detector.extract_feat(img)
@@ -52,7 +48,7 @@ class DffTwoStage(BaseDetector):
             ref_x = self.extract_feat(ref_img[:, 0])
             x = []
             for i in range(len(ref_x)):
-                x_single = flow_warp_feats(flow, ref_x[i])
+                x_single = flow_warp_feats(ref_x[i], flow)
                 x.append(x_single)
         else:
             x = self.extract_feat(img)
@@ -83,9 +79,9 @@ class DffTwoStage(BaseDetector):
 
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
-
+        key_frame_interval = self.test_cfg.get('key_frame_interval', 10)
         frame_id = img_metas[0]['frame_id']
-        is_key_frame = False if frame_id % self.key_frame_interval else True
+        is_key_frame = False if frame_id % key_frame_interval else True
 
         if is_key_frame:
             x = self.extract_feat(img)
@@ -96,7 +92,7 @@ class DffTwoStage(BaseDetector):
             flow = self.motion(flow_img, img_metas)
             x = []
             for i in range(len(self.key_img_feats)):
-                x_single = flow_warp_feats(flow, self.key_img_feats[i])
+                x_single = flow_warp_feats(self.key_img_feats[i], flow)
                 x.append(x_single)
 
         if proposals is None:
