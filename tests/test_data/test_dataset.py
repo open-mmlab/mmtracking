@@ -254,8 +254,6 @@ def test_bdd100k_format():
     results = _create_gt_results(dataset)
     tmp_dir = tempfile.TemporaryDirectory()
     dataset.format_bdd100k_results(results, resfile_path=tmp_dir.name)
-    files = os.listdir(tmp_dir.name)
-    assert files == ['track', 'bbox']
     files = os.listdir(osp.join(tmp_dir.name, 'track'))
     assert len(files) == 1
     assert files[0] == 'dummy_video.json'
