@@ -138,6 +138,7 @@ class SeqRandomCrop(object):
                 offset_h, offset_w = offsets
             else:
                 offset_h, offset_w = self.get_offsets(img)
+            results['img_info']['crop_offsets'] = (offset_h, offset_w)
             crop_y1, crop_y2 = offset_h, offset_h + self.crop_size[0]
             crop_x1, crop_x2 = offset_w, offset_w + self.crop_size[1]
 
@@ -179,7 +180,6 @@ class SeqRandomCrop(object):
         # crop semantic seg
         for key in results.get('seg_fields', []):
             results[key] = results[key][crop_y1:crop_y2, crop_x1:crop_x2]
-
         return results
 
     def __call__(self, results):
@@ -196,9 +196,6 @@ class SeqRandomCrop(object):
             outs.append(_results)
 
         return outs
-
-    def __repr__(self):
-        return self.__class__.__name__ + f'(crop_size={self.crop_size})'
 
 
 @PIPELINES.register_module()
@@ -281,6 +278,7 @@ class SeqPhotoMetricDistortion(object):
         """
         if params is None:
             params = self.get_params()
+        results['img_info']['color_jitter'] = params
 
         if 'img_fields' in results:
             assert results['img_fields'] == ['img'], \

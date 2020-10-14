@@ -5,8 +5,8 @@ from mmdet.datasets.builder import PIPELINES
 @PIPELINES.register_module()
 class MatchInstances(object):
 
-    def __init__(self, skip_nomatch_pairs=True):
-        self.skip_nomatch_pairs = skip_nomatch_pairs
+    def __init__(self, skip_nomatch=True):
+        self.skip_nomatch = skip_nomatch
 
     def _match_gts(self, instance_ids, ref_instance_ids):
         ins_ids = list(instance_ids)
@@ -25,7 +25,7 @@ class MatchInstances(object):
         match_indices, ref_match_indices = self._match_gts(
             results[0]['gt_instance_ids'], results[1]['gt_instance_ids'])
         nomatch = (match_indices == -1).all()
-        if self.skip_nomatch_pairs and nomatch:
+        if self.skip_nomatch and nomatch:
             return None
         else:
             results[0]['gt_match_indices'] = match_indices.copy()
