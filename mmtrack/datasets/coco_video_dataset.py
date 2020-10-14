@@ -131,7 +131,7 @@ class CocoVideoDataset(CocoDataset):
                         ref_img_ids.append(img_ids[ref_id])
             elif method == 'test_with_fix_stride':
                 if frame_id == 0:
-                    for i in range(frame_range[0], 0):
+                    for i in range(frame_range[0], 1):
                         ref_img_ids.append(img_ids[0])
                     for i in range(1, frame_range[1] + 1):
                         ref_id = min(round(i * stride), len(img_ids) - 1)
@@ -143,6 +143,7 @@ class CocoVideoDataset(CocoDataset):
                     ref_img_ids.append(img_ids[ref_id])
                 img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
                     if isinstance(frame_range, list) else frame_range
+                img_info['frame_stride'] = stride
             else:
                 raise NotImplementedError
 
@@ -183,6 +184,7 @@ class CocoVideoDataset(CocoDataset):
         super().pre_pipeline(results)
         results['frame_id'] = img_info.get('frame_id', -1)
         results['num_left_ref_imgs'] = img_info.get('num_left_ref_imgs', -1)
+        results['frame_stride'] = img_info.get('frame_stride', -1)
         results['is_video_data'] = self.load_as_video
         return results
 

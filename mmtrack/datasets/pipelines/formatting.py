@@ -71,6 +71,10 @@ class MultiImagesToTensor(object):
 
         data = {}
         data.update(outs[0])
+        if 'img' in data:
+            data['img'] = [data['img']]
+        if 'img_metas' in data:
+            data['img_metas'] = [data['img_metas']]
         if len(outs) == 2:
             for k, v in outs[1].items():
                 data[f'{self.ref_prefix}_{k}'] = v

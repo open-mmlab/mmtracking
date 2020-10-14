@@ -105,9 +105,9 @@ class DffTwoStage(BaseDetector):
         outs = self.detector.roi_head.simple_test(
             x, proposal_list, img_metas, rescale=rescale)
         results = dict()
-        results['bbox_result'] = outs[0]
+        results['bbox_results'] = outs[0]
         if len(outs) == 2:
-            results['segm_result'] = outs[1]
+            results['segm_results'] = outs[1]
         return results
 
     def aug_test(self, imgs, img_metas, **kwargs):
