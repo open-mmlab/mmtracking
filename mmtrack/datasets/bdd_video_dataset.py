@@ -26,7 +26,7 @@ class BDDVideoDataset(CocoVideoDataset):
         if resfile_path is None:
             raise NotImplementedError('waiting for offical API.')
         for task in ['track', 'bbox']:
-            self.format_bdd100k(
+            self._format_bdd100k(
                 results[f'{task}_results'], resfile_path, task=task)
 
     def _format_bdd100k(self, results, resfile_path=None, task='track'):
