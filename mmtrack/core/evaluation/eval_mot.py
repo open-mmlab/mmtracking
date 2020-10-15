@@ -60,8 +60,8 @@ def acc_single_video(results,
             if gt_ignore[i].shape[0] > 0:
                 # 1. assign gt and preds
                 fps = np.ones(pred_bboxes.shape[0]).astype(np.bool)
-                le, ri = linear_sum_assignment(dist)
-                for m, n in zip(le, ri):
+                row, col = linear_sum_assignment(dist)
+                for m, n in zip(row, col):
                     if not np.isfinite(dist[m, n]):
                         continue
                     fps[n] = False
