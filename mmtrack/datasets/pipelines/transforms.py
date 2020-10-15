@@ -120,7 +120,7 @@ class SeqRandomCrop(object):
         offset_w = np.random.randint(0, margin_w + 1)
         return offset_h, offset_w
 
-    def call(self, results, offsets=None):
+    def random_crop(self, results, offsets=None):
         """Call function to randomly crop images, bounding boxes, masks,
         semantic segmentation maps.
 
@@ -190,7 +190,7 @@ class SeqRandomCrop(object):
 
         outs = []
         for _results in results:
-            _results = self.call(_results, offsets)
+            _results = self.random_crop(_results, offsets)
             if _results is None:
                 return None
             outs.append(_results)
@@ -267,7 +267,7 @@ class SeqPhotoMetricDistortion(object):
             params['permutation'] = None
         return params
 
-    def call(self, results, params=None):
+    def photo_metric_distortion(self, results, params=None):
         """Call function to perform photometric distortion on images.
 
         Args:
@@ -333,7 +333,7 @@ class SeqPhotoMetricDistortion(object):
 
         outs = []
         for _results in results:
-            _results = self.call(_results, params)
+            _results = self.photo_metric_distortion(_results, params)
             outs.append(_results)
 
         return outs
