@@ -47,7 +47,7 @@ def _get_model_cfg(fname):
 
 @pytest.mark.parametrize(
     'cfg_file', ['video_detectors/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
-def test_video_detectorsforward(cfg_file):
+def test_dff_forward(cfg_file):
     model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
     model['detector']['pretrained'] = None
     model['motion']['pretrained'] = None
@@ -55,9 +55,8 @@ def test_video_detectorsforward(cfg_file):
     from mmtrack.models import build_model
     detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
 
-    input_shape = (1, 3, 256, 256)
-
     # Test forward train with a non-empty truth batch
+    input_shape = (1, 3, 256, 256)
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[10])
     imgs = mm_inputs.pop('imgs')
     img_metas = mm_inputs.pop('img_metas')
@@ -65,17 +64,27 @@ def test_video_detectorsforward(cfg_file):
     gt_bboxes = mm_inputs['gt_bboxes']
     gt_labels = mm_inputs['gt_labels']
     gt_masks = mm_inputs['gt_masks']
+
+    ref_input_shape = (1, 3, 256, 256)
+    ref_mm_inputs = _demo_mm_inputs(ref_input_shape, num_items=[11])
+    ref_img = ref_mm_inputs.pop('imgs')[None]
+    ref_img_metas = ref_mm_inputs.pop('img_metas')
+    ref_img_metas[0]['is_video_data'] = True
+    ref_gt_bboxes = ref_mm_inputs['gt_bboxes']
+    ref_gt_labels = ref_mm_inputs['gt_labels']
+    ref_gt_masks = ref_mm_inputs['gt_masks']
+
     losses = detector.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
         gt_labels=gt_labels,
-        ref_img=imgs.clone()[:, None, ...],
-        ref_img_metas=copy.deepcopy(img_metas),
-        ref_gt_bboxes=copy.deepcopy(gt_bboxes),
-        ref_gt_labels=copy.deepcopy(gt_labels),
+        ref_img=ref_img,
+        ref_img_metas=ref_img_metas,
+        ref_gt_bboxes=ref_gt_bboxes,
+        ref_gt_labels=ref_gt_labels,
         gt_masks=gt_masks,
-        ref_gt_masks=copy.deepcopy(gt_masks),
+        ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
     loss, _ = detector._parse_losses(losses)
@@ -91,17 +100,27 @@ def test_video_detectorsforward(cfg_file):
     gt_bboxes = mm_inputs['gt_bboxes']
     gt_labels = mm_inputs['gt_labels']
     gt_masks = mm_inputs['gt_masks']
+
+    ref_input_shape = (1, 3, 256, 256)
+    ref_mm_inputs = _demo_mm_inputs(ref_input_shape, num_items=[0])
+    ref_img = ref_mm_inputs.pop('imgs')[None]
+    ref_img_metas = ref_mm_inputs.pop('img_metas')
+    ref_img_metas[0]['is_video_data'] = True
+    ref_gt_bboxes = ref_mm_inputs['gt_bboxes']
+    ref_gt_labels = ref_mm_inputs['gt_labels']
+    ref_gt_masks = ref_mm_inputs['gt_masks']
+
     losses = detector.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
         gt_labels=gt_labels,
-        ref_img=imgs.clone()[:, None, ...],
-        ref_img_metas=copy.deepcopy(img_metas),
-        ref_gt_bboxes=copy.deepcopy(gt_bboxes),
-        ref_gt_labels=copy.deepcopy(gt_labels),
+        ref_img=ref_img,
+        ref_img_metas=ref_img_metas,
+        ref_gt_bboxes=ref_gt_bboxes,
+        ref_gt_labels=ref_gt_labels,
         gt_masks=gt_masks,
-        ref_gt_masks=copy.deepcopy(gt_masks),
+        ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
     loss, _ = detector._parse_losses(losses)
@@ -114,11 +133,121 @@ def test_video_detectorsforward(cfg_file):
         imgs = torch.cat([imgs, imgs.clone()], dim=0)
         img_list = [g[None, :] for g in imgs]
         img_metas.extend(copy.deepcopy(img_metas))
-        for i in range(1, len(img_metas)):
+        for i in range(len(img_metas)):
             img_metas[i]['frame_id'] = i
         results = defaultdict(list)
         for one_img, one_meta in zip(img_list, img_metas):
             result = detector.forward([one_img], [[one_meta]],
+                                      return_loss=False)
+            for k, v in result.items():
+                results[k].append(v)
+
+
+@pytest.mark.parametrize(
+    'cfg_file',
+    ['video_detectors/fgfa_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
+def test_fgfa_forward(cfg_file):
+    model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
+    model['detector']['pretrained'] = None
+    model['motion']['pretrained'] = None
+
+    from mmtrack.models import build_model
+    detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
+
+    # Test forward train with a non-empty truth batch
+    input_shape = (1, 3, 256, 256)
+    mm_inputs = _demo_mm_inputs(input_shape, num_items=[10])
+    imgs = mm_inputs.pop('imgs')
+    img_metas = mm_inputs.pop('img_metas')
+    img_metas[0]['is_video_data'] = True
+    gt_bboxes = mm_inputs['gt_bboxes']
+    gt_labels = mm_inputs['gt_labels']
+    gt_masks = mm_inputs['gt_masks']
+
+    ref_input_shape = (2, 3, 256, 256)
+    ref_mm_inputs = _demo_mm_inputs(ref_input_shape, num_items=[9, 11])
+    ref_img = ref_mm_inputs.pop('imgs')[None]
+    ref_img_metas = ref_mm_inputs.pop('img_metas')
+    ref_img_metas[0]['is_video_data'] = True
+    ref_img_metas[1]['is_video_data'] = True
+    ref_gt_bboxes = ref_mm_inputs['gt_bboxes']
+    ref_gt_labels = ref_mm_inputs['gt_labels']
+    ref_gt_masks = ref_mm_inputs['gt_masks']
+
+    losses = detector.forward(
+        img=imgs,
+        img_metas=img_metas,
+        gt_bboxes=gt_bboxes,
+        gt_labels=gt_labels,
+        ref_img=ref_img,
+        ref_img_metas=ref_img_metas,
+        ref_gt_bboxes=ref_gt_bboxes,
+        ref_gt_labels=ref_gt_labels,
+        gt_masks=gt_masks,
+        ref_gt_masks=ref_gt_masks,
+        return_loss=True)
+    assert isinstance(losses, dict)
+    loss, _ = detector._parse_losses(losses)
+    loss.requires_grad_(True)
+    assert float(loss.item()) > 0
+    loss.backward()
+
+    # Test forward train with an empty truth batch
+    mm_inputs = _demo_mm_inputs(input_shape, num_items=[0])
+    imgs = mm_inputs.pop('imgs')
+    img_metas = mm_inputs.pop('img_metas')
+    img_metas[0]['is_video_data'] = True
+    gt_bboxes = mm_inputs['gt_bboxes']
+    gt_labels = mm_inputs['gt_labels']
+    gt_masks = mm_inputs['gt_masks']
+
+    ref_mm_inputs = _demo_mm_inputs(ref_input_shape, num_items=[0, 0])
+    ref_imgs = ref_mm_inputs.pop('imgs')[None]
+    ref_img_metas = ref_mm_inputs.pop('img_metas')
+    ref_img_metas[0]['is_video_data'] = True
+    ref_img_metas[1]['is_video_data'] = True
+    ref_gt_bboxes = ref_mm_inputs['gt_bboxes']
+    ref_gt_labels = ref_mm_inputs['gt_labels']
+    ref_gt_masks = ref_mm_inputs['gt_masks']
+
+    losses = detector.forward(
+        img=imgs,
+        img_metas=img_metas,
+        gt_bboxes=gt_bboxes,
+        gt_labels=gt_labels,
+        ref_img=ref_imgs,
+        ref_img_metas=ref_img_metas,
+        ref_gt_bboxes=ref_gt_bboxes,
+        ref_gt_labels=ref_gt_labels,
+        gt_masks=gt_masks,
+        ref_gt_masks=ref_gt_masks,
+        return_loss=True)
+    assert isinstance(losses, dict)
+    loss, _ = detector._parse_losses(losses)
+    loss.requires_grad_(True)
+    assert float(loss.item()) > 0
+    loss.backward()
+
+    # Test forward test with frame_stride=1 and frame_range=[-1,0]
+    with torch.no_grad():
+        imgs = torch.cat([imgs, imgs.clone()], dim=0)
+        img_list = [g[None, :] for g in imgs]
+        img_metas.extend(copy.deepcopy(img_metas))
+        for i in range(len(img_metas)):
+            img_metas[i]['frame_id'] = i
+            img_metas[i]['num_left_ref_imgs'] = 1
+            img_metas[i]['frame_stride'] = 1
+        ref_imgs = [ref_imgs.clone(), imgs[[0]][None].clone()]
+        ref_img_metas = [
+            copy.deepcopy(ref_img_metas),
+            copy.deepcopy([img_metas[0]])
+        ]
+        results = defaultdict(list)
+        for one_img, one_meta, ref_img, ref_img_meta in zip(
+                img_list, img_metas, ref_imgs, ref_img_metas):
+            result = detector.forward([one_img], [[one_meta]],
+                                      ref_img=ref_img,
+                                      ref_img_metas=ref_img_meta,
                                       return_loss=False)
             for k, v in result.items():
                 results[k].append(v)
@@ -153,12 +282,12 @@ def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
         'filename': '<demo>.png',
         'scale_factor': 1.0,
         'flip': False,
-        'frame_id': 0,
+        'frame_id': i,
         'img_norm_cfg': {
             'mean': (128.0, 128.0, 128.0),
             'std': (10.0, 10.0, 10.0)
         }
-    } for _ in range(N)]
+    } for i in range(N)]
 
     gt_bboxes = []
     gt_labels = []

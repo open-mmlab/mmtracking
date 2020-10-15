@@ -71,7 +71,6 @@ model = dict(
     motion=dict(
         type='FlowNetSimple',
         pretrained='data/imagenet_vid/pretrained_flownet/flownet_simple.pth',
-        flow_img_norm_mean=[0.450, 0.432, 0.411],
         img_scale_factor=0.5),
     embed_network=dict(
         in_channels=256,
