@@ -11,7 +11,11 @@ CLASSES = [
     'train'
 ]
 USELESS = ['traffic light', 'traffic sign']
-IGNORES = ['trailer', 'other person', 'other vehicle']
+IGNORES = {
+    'trailer': 'truck',
+    'other person': 'pedestrian',
+    'other vehicle': 'car'
+}
 
 
 def parse_args():

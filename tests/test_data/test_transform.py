@@ -2,7 +2,9 @@ import copy
 import os.path as osp
 
 import numpy as np
+import pytest
 from mmcv.utils import build_from_cfg
+from mmdet.core.bbox.demodata import random_boxes
 
 from mmtrack.datasets import PIPELINES
 
@@ -18,7 +20,8 @@ class TestTransforms(object):
             dict(img_prefix=cls.data_prefix, img_info=dict(filename=name))
             for name in img_names
         ]
-        load = build_from_cfg(dict(type='LoadMultiImagesFromFile'), PIPELINES)
+        load = build_from_cfg(
+            dict(type='LoadMultiImagesFromFile', to_float32=True), PIPELINES)
         cls.results = load(results)
 
     def test_seq_resize(self):
@@ -94,3 +97,52 @@ class TestTransforms(object):
         for i, result in enumerate(results):
             converted_img = (self.results[i]['img'][..., ::-1] - mean) / std
             assert np.allclose(result['img'], converted_img)
+
+    def test_seq_random_crop(self):
+        # test assertion for invalid random crop
+        with pytest.raises(AssertionError):
+            transform = dict(
+                type='SeqRandomCrop', crop_size=(-1, 0), share_params=False)
+            build_from_cfg(transform, PIPELINES)
+
+        crop_size = (256, 384)
+        transform = dict(
+            type='SeqRandomCrop', crop_size=crop_size, share_params=False)
+        crop_module = build_from_cfg(transform, PIPELINES)
+
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(8, 256)
+            res['gt_labels'] = np.random.randint(8)
+            res['gt_instance_ids'] = np.random.randint(8)
+            res['gt_bboxes_ignore'] = random_boxes(2, 256)
+
+        outs = crop_module(results)
+        assert len(outs) == len(results)
+        for res in results:
+            assert res['img'].shape[:2] == crop_size
+            # All bboxes should be reserved after crop
+            assert res['img_shape'][:2] == crop_size
+            assert res['gt_bboxes'].shape[0] == 8
+            assert res['gt_bboxes_ignore'].shape[0] == 2
+        assert outs[0]['img_info']['crop_offsets'] != outs[1]['img_info'][
+            'crop_offsets']
+
+        crop_module.share_params = True
+        outs = crop_module(results)
+        assert outs[0]['img_info']['crop_offsets'] == outs[1]['img_info'][
+            'crop_offsets']
+
+    def test_seq_color_jitter(self):
+        results = self.results.copy()
+        transform = dict(type='SeqPhotoMetricDistortion', share_params=False)
+        transform = build_from_cfg(transform, PIPELINES)
+
+        outs = transform(results)
+        assert outs[0]['img_info']['color_jitter'] != outs[1]['img_info'][
+            'color_jitter']
+
+        transform.share_params = True
+        outs = transform(results)
+        assert outs[0]['img_info']['color_jitter'] == outs[1]['img_info'][
+            'color_jitter']
