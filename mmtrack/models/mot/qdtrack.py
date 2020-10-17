@@ -13,8 +13,8 @@ class QDTrack(BaseMultiObjectTracker):
                  detector=None,
                  track_head=None,
                  tracker=None,
-                 pretrain=None,
-                 frozen_module=False,
+                 pretrains=None,
+                 frozen_modules=False,
                  dense_matching=True):
         super().__init__()
         if detector is not None:
@@ -28,8 +28,8 @@ class QDTrack(BaseMultiObjectTracker):
 
         self.dense_matching = dense_matching
 
-        self.init_weights(pretrain)
-        self.freeze_module(self.frozen_module)
+        self.init_weights(pretrains)
+        self.freeze_module(self.frozen_modules)
 
     def init_weights(self, pretrain):
         assert isinstance(pretrain, dict), '`pretrain` must be a dict.'

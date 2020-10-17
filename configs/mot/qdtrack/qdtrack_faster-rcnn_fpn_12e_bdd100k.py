@@ -1,12 +1,12 @@
 _base_ = [
     '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/bdd100k_track_joint.py',
+    '../../_base_/datasets/bdd100k_track_debug.py',
     '../../_base_/default_runtime.py'
 ]
 model = dict(
     type='QDTrack',
-    pretrain=None,
-    frozen_module=None,
+    pretrains=None,
+    frozen_modules=None,
     detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))),
     track_head=dict(
         type='QuasiDenseTrackHead',
