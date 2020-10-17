@@ -10,7 +10,7 @@ train_pipeline = [
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
-    dict(type='MatchInstances', filter_nomatch=True),
+    dict(type='MatchInstances', skip_nomatch=True),
     dict(
         type='VideoCollect',
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_match_indices']),
@@ -42,7 +42,8 @@ data = dict(
             'tracking/annotations/bdd100k_track_train_cocoformat.json',
             img_prefix=data_root + 'tracking/train/',
             key_img_sampler=dict(interval=1),
-            ref_img_sampler=dict(num_ref_imgs=1, scope=3, method='uniform'),
+            ref_img_sampler=dict(
+                num_ref_imgs=1, frame_range=3, method='uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,

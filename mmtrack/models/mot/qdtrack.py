@@ -61,7 +61,8 @@ class QDTrack(BaseMultiObjectTracker):
                       ref_gt_masks=None,
                       **kwargs):
         losses = dict()
-
+        import pdb
+        pdb.set_trace()
         # feature extraction
         x = self.detector.extract_feat(img)
         ref_x = self.detector.extract_feat(ref_img)

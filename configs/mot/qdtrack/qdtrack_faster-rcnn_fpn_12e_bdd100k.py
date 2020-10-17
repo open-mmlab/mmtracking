@@ -62,7 +62,7 @@ model = dict(
         nms_class_iou_thr=0.7,
         with_cats=True,
         match_metric='bisoftmax'))
-data = dict(samplers_per_gpu=1, workers_per_gpu=1)
+data = dict(samplers_per_gpu=2, workers_per_gpu=0)
 # optimizer
 optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)
 # learning policy
@@ -75,4 +75,5 @@ lr_config = dict(
 # runtime settings
 total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=2)
+log_config = dict(interval=1)
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']

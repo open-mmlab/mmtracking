@@ -131,7 +131,7 @@ class SeqDefaultFormatBundle(object):
             results['img'] = DC(to_tensor(img), stack=True)
         for key in [
                 'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
-                'gt_instance_ids'
+                'gt_instance_ids', 'gt_match_indices'
         ]:
             if key not in results:
                 continue
