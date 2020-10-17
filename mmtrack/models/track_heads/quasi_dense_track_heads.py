@@ -16,9 +16,8 @@ class QuasiDenseTrackHead(nn.Module):
         super().__init__()
         self.multi_positive = multi_positive
         self.roi_extractor = build_roi_extractor(roi_extractor)
-        self.roi_assigner = build_assigner(self.track_train_cfg.assigner)
-        self.roi_sampler = build_sampler(
-            self.track_train_cfg.sampler, context=self)
+        self.roi_assigner = build_assigner(roi_assigner)
+        self.roi_sampler = build_sampler(roi_sampler, context=self)
         self.embed_head = build_head(embed_head)
 
     @property
@@ -110,19 +109,19 @@ class QuasiDenseTrackHead(nn.Module):
             ]
         ref_feats = self._track_forward(ref_x, ref_bboxes, split=True)
 
-        match_feats = self.track_head.match(key_feats, ref_feats)
-        asso_targets = self.track_head.get_track_targets(
+        match_feats = self.embed_head.match(key_feats, ref_feats)
+        asso_targets = self.embed_head.get_track_targets(
             gt_match_indices, ref_gt_bboxes, key_sampling_results,
             ref_sampling_results, self.multi_positive)
-        loss_track = self.track_head.loss(*match_feats, *asso_targets)
+        loss_track = self.embed_head.loss(*match_feats, *asso_targets)
         return loss_track
 
     def _track_forward(self, x, bboxes, split=False):
         """Track head forward function used in both training and testing."""
         rois = bbox2roi(bboxes)
-        track_feats = self.track_roi_extractor(
-            x[:self.track_roi_extractor.num_inputs], rois)
-        track_feats = self.track_head(track_feats)
+        track_feats = self.roi_extractor(x[:self.roi_extractor.num_inputs],
+                                         rois)
+        track_feats = self.embed_head(track_feats)
         if split:
             nums = [b.size(0) for b in bboxes]
             track_feats = torch.split(track_feats, nums)

@@ -65,24 +65,6 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
         return hasattr(self, 'tracker') and self.tracker is not None
 
     @abstractmethod
-    def extract_feat(self, imgs):
-        """Extract features from images."""
-        pass
-
-    def extract_feats(self, imgs):
-        """Extract features from multiple images.
-
-        Args:
-            imgs (list[torch.Tensor]): A list of images. The images are
-                augmented from the same image but in different ways.
-
-        Returns:
-            list[torch.Tensor]: Features of different images
-        """
-        assert isinstance(imgs, list)
-        return [self.extract_feat(img) for img in imgs]
-
-    @abstractmethod
     def forward_train(self, imgs, img_metas, **kwargs):
         """
         Args:
@@ -101,7 +83,6 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
     def simple_test(self, img, img_metas, **kwargs):
         pass
 
-    @abstractmethod
     def aug_test(self, imgs, img_metas, **kwargs):
         """Test function with test time augmentation."""
         pass

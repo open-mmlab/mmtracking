@@ -29,9 +29,12 @@ class QDTrack(BaseMultiObjectTracker):
         self.dense_matching = dense_matching
 
         self.init_weights(pretrains)
-        self.freeze_module(self.frozen_modules)
+        if frozen_modules is not None:
+            self.freeze_module(frozen_modules)
 
     def init_weights(self, pretrain):
+        if pretrain is None:
+            pretrain = dict()
         assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
         if self.with_detector:
             self.init_module('detector', pretrain.get('detector', None))
@@ -134,7 +137,7 @@ class QDTrack(BaseMultiObjectTracker):
                 embeds=embeds,
                 frame_id=frame_id,
                 temperature=self.track_head.embed_head.softmax_temperature)
-            track_result = track2result(bboxes, labels, ids)
+            track_result = track2result(bboxes, labels, ids, num_classes)
         else:
             from collections import defaultdict
             track_result = defaultdict(list)

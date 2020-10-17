@@ -149,8 +149,8 @@ class QuasiDenseEmbedHead(nn.Module):
 
     def loss(self, sims, cos_sims, targets, weights):
         losses = dict()
-        loss_track = 0.
-        loss_track_aux = 0.
+        loss_track = torch.tensor([0.])
+        loss_track_aux = torch.tensor([0.])
         nums = len(sims)
         for _sims, _cos_sims, _targets, _weights in zip(
                 sims, cos_sims, targets, weights):
