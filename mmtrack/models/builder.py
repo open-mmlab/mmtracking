@@ -27,4 +27,4 @@ def build_model(cfg, train_cfg=None, test_cfg=None):
     if train_cfg is None and test_cfg is None:
         return build(cfg, MODELS)
     else:
-        build(cfg, MODELS, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+        return build(cfg, MODELS, dict(train_cfg=train_cfg, test_cfg=test_cfg))

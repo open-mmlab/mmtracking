@@ -54,7 +54,6 @@ def test_vid_forward(cfg_file):
 
     from mmtrack.models import build_model
     detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
-
     input_shape = (1, 3, 256, 256)
 
     # Test forward train with a non-empty truth batch

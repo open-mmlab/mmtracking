@@ -159,17 +159,20 @@ class VideoCollect(object):
 
     def __init__(self,
                  keys,
-                 meta_keys=('frame_id', 'is_video_data'),
+                 meta_keys=None,
                  default_meta_keys=('filename', 'ori_filename', 'ori_shape',
                                     'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg')):
+                                    'flip', 'flip_direction', 'img_norm_cfg',
+                                    'frame_id', 'is_video_data')):
         self.keys = keys
-        if isinstance(meta_keys, str):
-            meta_keys = (meta_keys, )
-        else:
-            assert isinstance(meta_keys, tuple), \
-                'meta_keys must be str or tuple'
-        self.meta_keys = meta_keys + default_meta_keys
+        self.meta_keys = default_meta_keys
+        if meta_keys is not None:
+            if isinstance(meta_keys, str):
+                meta_keys = (meta_keys, )
+            else:
+                assert isinstance(meta_keys, tuple), \
+                    'meta_keys must be str or tuple'
+            self.meta_keys += default_meta_keys
 
     def __call__(self, results):
         results_is_dict = isinstance(results, dict)
