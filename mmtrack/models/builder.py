@@ -1,4 +1,5 @@
 from mmcv.utils import Registry
+from mmdet.models import DETECTORS
 from mmdet.models.builder import build
 
 MODELS = Registry('model')
@@ -16,6 +17,11 @@ def build_motion(cfg):
     return build(cfg, MOTION)
 
 
-def build_model(cfg, train_cfg=None, test_cfg=None):
+def build_detector(cfg):
+    """Build detector."""
+    return build(cfg, DETECTORS)
+
+
+def build_model(cfg):
     """Build model."""
-    return build(cfg, MODELS, dict(train_cfg=train_cfg, test_cfg=test_cfg))
+    return build(cfg, MODELS)

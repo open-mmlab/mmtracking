@@ -5,15 +5,37 @@ _base_ = [
 ]
 model = dict(
     type='QDTrack',
+    pretrain=None,
+    frozen_module=None,
     detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))),
     track_head=dict(
-        type='TrackRoIHead',
-        track_roi_extractor=dict(
+        type='QuasiDenseTrackHead',
+        multi_positive=True,
+        roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
-        track_head=dict(
+        roi_assigner=dict(
+            type='MaxIoUAssigner',
+            pos_iou_thr=0.7,
+            neg_iou_thr=0.3,
+            min_pos_iou=0.5,
+            match_low_quality=False,
+            ignore_iof_thr=-1),
+        roi_sampler=dict(
+            type='CombinedSampler',
+            num=256,
+            pos_fraction=0.5,
+            neg_pos_ub=3,
+            add_gt_as_proposals=True,
+            pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            neg_sampler=dict(
+                type='IoUBalancedNegSampler',
+                floor_thr=-1,
+                floor_fraction=0,
+                num_bins=3)),
+        embed_head=dict(
             type='QuasiDenseEmbedHead',
             num_convs=4,
             num_fcs=1,
@@ -40,29 +62,6 @@ model = dict(
         nms_class_iou_thr=0.7,
         with_cats=True,
         match_metric='bisoftmax'))
-train_cfg = dict(
-    embed=dict(
-        quasi_dense=True,
-        multi_positives=True,
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.7,
-            neg_iou_thr=0.3,
-            min_pos_iou=0.5,
-            match_low_quality=False,
-            ignore_iof_thr=-1),
-        sampler=dict(
-            type='CombinedSampler',
-            num=256,
-            pos_fraction=0.5,
-            neg_pos_ub=3,
-            add_gt_as_proposals=True,
-            pos_sampler=dict(type='InstanceBalancedPosSampler'),
-            neg_sampler=dict(
-                type='IoUBalancedNegSampler',
-                floor_thr=-1,
-                floor_fraction=0,
-                num_bins=3))))
 data = dict(samplers_per_gpu=1, workers_per_gpu=1)
 # optimizer
 optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)

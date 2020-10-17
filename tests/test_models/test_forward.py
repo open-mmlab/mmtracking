@@ -45,8 +45,8 @@ def _get_model_cfg(fname):
     return model, train_cfg, test_cfg
 
 
-@pytest.mark.parametrize(
-    'cfg_file', ['video_detectors/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
+@pytest.mark.parametrize('cfg_file',
+                         ['vid/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
 def test_video_detectorsforward(cfg_file):
     model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
     model['detector']['pretrained'] = None
