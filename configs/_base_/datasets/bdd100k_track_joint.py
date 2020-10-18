@@ -58,10 +58,12 @@ data = dict(
         ann_file=data_root +
         'tracking/annotations/bdd100k_track_val_cocoformat.json',
         img_prefix=data_root + 'tracking/val/',
+        ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
         'tracking/annotations/bdd100k_track_val_cocoformat.json',
         img_prefix=data_root + 'tracking/val/',
+        ref_img_sampler=None,
         pipeline=test_pipeline))

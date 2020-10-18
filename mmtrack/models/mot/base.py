@@ -8,7 +8,8 @@ import torch.distributed as dist
 import torch.nn as nn
 from mmcv.runner import auto_fp16, load_checkpoint
 from mmcv.utils import print_log
-from mmdet.utils import get_root_logger
+
+from mmtrack.utils import get_root_logger
 
 
 class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):

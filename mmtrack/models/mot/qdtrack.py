@@ -36,8 +36,8 @@ class QDTrack(BaseMultiObjectTracker):
         if pretrain is None:
             pretrain = dict()
         assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
-        if self.with_detector:
-            self.init_module('detector', pretrain.get('detector', None))
+        if self.with_detector and pretrain.get('detector', False):
+            self.init_module('detector', pretrain['detector'])
         if self.with_track_head:
             self.init_module('track_head', pretrain.get('track_head', None))
 
@@ -61,8 +61,6 @@ class QDTrack(BaseMultiObjectTracker):
                       ref_gt_masks=None,
                       **kwargs):
         losses = dict()
-        import pdb
-        pdb.set_trace()
         # feature extraction
         x = self.detector.extract_feat(img)
         ref_x = self.detector.extract_feat(ref_img)
