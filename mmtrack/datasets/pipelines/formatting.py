@@ -172,7 +172,7 @@ class VideoCollect(object):
             else:
                 assert isinstance(meta_keys, tuple), \
                     'meta_keys must be str or tuple'
-            self.meta_keys += default_meta_keys
+            self.meta_keys += meta_keys
 
     def __call__(self, results):
         results_is_dict = isinstance(results, dict)
