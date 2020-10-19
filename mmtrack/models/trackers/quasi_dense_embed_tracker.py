@@ -61,7 +61,7 @@ class QuasiDenseEmbedTracker(object):
                 self.tracklets[id]['labels'].append(label)
                 self.tracklets[id]['embeds'] = (
                     1 - self.memo_momentum
-                ) * self.tracklets[id]['embed'] + self.memo_momentum * embed
+                ) * self.tracklets[id]['embeds'] + self.memo_momentum * embed
                 self.tracklets[id]['frame_ids'].append(frame_id)
             else:
                 self.tracklets[id] = dict(
