@@ -1,8 +1,6 @@
 _base_ = 'faster_rcnn_r50_fpn.py'
 model = dict(
     type='QDTrack',
-    pretrains=None,
-    frozen_modules=None,
     track_head=dict(
         type='QuasiDenseTrackHead',
         multi_positive=True,
