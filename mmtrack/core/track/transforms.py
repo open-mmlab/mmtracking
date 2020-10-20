@@ -9,7 +9,7 @@ def track2result(bboxes, labels, ids, num_classes):
     ids = ids[valid_inds]
 
     if bboxes.shape[0] == 0:
-        return [bboxes for i in range(num_classes)]
+        return [np.zeros(bboxes.shape) for i in range(num_classes)]
     else:
         if isinstance(bboxes, torch.Tensor):
             bboxes = bboxes.cpu().numpy()
