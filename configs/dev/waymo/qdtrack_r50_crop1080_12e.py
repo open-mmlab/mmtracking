@@ -46,8 +46,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=0,
+    samples_per_gpu=2,
+    workers_per_gpu=1,
     train=dict(
         type=dataset_type,
         classes=('vehicle', 'pedestrian', 'cyclist'),
@@ -74,7 +74,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -83,5 +83,5 @@ lr_config = dict(
     warmup_iters=5000,
     warmup_ratio=0.001,
     step=[8, 11])
-total_epochs = 13
-evaluation = dict(metric=['bbox', 'track'], interval=13)
+total_epochs = 12
+evaluation = dict(metric=['bbox', 'track'], interval=12)

@@ -4,16 +4,15 @@ data_root = 'data/bdd100k/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
+    dict(type='LoadMultiImagesFromFile'),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
     dict(
         type='SeqResize',
         share_params=True,
         ratio_range=(0.8, 1.2),
-        img_scale=(1296, 720),
+        img_scale=(736, 1280),
         keep_ratio=True),
-    dict(type='SeqPhotoMetricDistortion', share_params=True),
-    dict(type='SeqRandomCrop', share_params=False, crop_size=(600, 1080)),
+    dict(type='SeqRandomCrop', share_params=False, crop_size=(736, 1280)),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -27,7 +26,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1296, 720),
+        img_scale=(736, 1280),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
