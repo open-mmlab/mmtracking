@@ -59,14 +59,18 @@ data = dict(
                 type=dataset_type,
                 classes='data/tao/annotations/tao_classes.txt',
                 load_as_video=True,
-                ann_file='data/lvis/annotations/lvis_v0.5_coco2017_train.json',
-                img_prefix='data/lvis/train2017/',
+                # ann_file='data/lvis/annotations/lvis_v0.5_coco2017_train.json',
+                ann_file='data/tao/annotations/train_mini.json',
+                # img_prefix='data/lvis/train2017/',
+                img_prefix='data/tao/frames/',
                 pipeline=train_pipeline)),
     ],
     val=dict(
         type=dataset_type,
         classes='data/tao/annotations/tao_classes.txt',
-        ann_file='data/tao/annotations/validation_ours.json',
+        # ann_file='data/tao/annotations/validation_ours.json',
+        ann_file='data/tao/annotations/train_mini.json',
+        # img_prefix='data/tao/frames/val/',
         img_prefix='data/tao/frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
@@ -88,4 +92,5 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[16, 22])
 total_epochs = 24
-evaluation = dict(metric=['bbox', 'track'], start=16, interval=2)
+# evaluation = dict(metric=['bbox', 'track'], start=16, interval=2)
+evaluation = dict(metric=['bbox', 'track'], interval=1)
