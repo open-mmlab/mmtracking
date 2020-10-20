@@ -1,4 +1,3 @@
-optimizer_config = dict(grad_clip=None)
 checkpoint_config = dict(interval=1)
 # yapf:disable
 log_config = dict(
