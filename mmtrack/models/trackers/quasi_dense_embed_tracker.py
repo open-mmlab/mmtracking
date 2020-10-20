@@ -200,6 +200,9 @@ class QuasiDenseEmbedTracker(object):
         return ids
 
     def match(self, bboxes, labels, embeds, frame_id, temperature=-1):
+        if embeds is None:
+            ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
+            return bboxes, labels, ids
         # duplicate removal for potential backdrops and cross classes
         bboxes, labels, embeds = self.nms_cross_classes(bboxes, labels, embeds)
 
