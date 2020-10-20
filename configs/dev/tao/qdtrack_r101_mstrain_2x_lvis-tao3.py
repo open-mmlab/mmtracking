@@ -62,6 +62,19 @@ data = dict(
                 ann_file='data/lvis/annotations/lvis_v0.5_coco2017_train.json',
                 img_prefix='data/lvis/train2017/',
                 pipeline=train_pipeline)),
+        dict(
+            type='RepeatDataset',
+            times=3,
+            dataset=dict(
+                _delete_=True,
+                type='ClassBalancedDataset',
+                oversample_thr=1e-3,
+                dataset=dict(
+                    type=dataset_type,
+                    classes='data/tao/annotations/tao_classes.txt',
+                    ann_file='data/tao/annotations/train_ours.json',
+                    img_prefix='data/tao/frames/',
+                    pipeline=train_pipeline)))
     ],
     val=dict(
         type=dataset_type,

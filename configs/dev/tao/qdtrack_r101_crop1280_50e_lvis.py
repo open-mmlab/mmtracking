@@ -18,11 +18,11 @@ train_pipeline = [
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
     dict(
         type='SeqResize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
+        img_scale=(1280, 1280),
         share_params=True,
-        multiscale_mode='value',
+        ratio_range=(0.8, 1.2),
         keep_ratio=True),
+    dict(type='SeqRandomCrop', share_params=False, crop_size=(1280, 1280)),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -36,7 +36,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1280, 1280),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -86,6 +86,6 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[16, 22])
-total_epochs = 24
-evaluation = dict(metric=['bbox', 'track'], interval=24)
+    step=[30, 40])
+total_epochs = 50
+evaluation = dict(metric=['bbox', 'track'], interval=50)

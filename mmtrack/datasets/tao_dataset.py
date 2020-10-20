@@ -5,24 +5,9 @@ import mmcv
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 from pycocotools.coco import COCO
-from tao.toolkit.tao import TaoEval
 
 from .coco_video_dataset import CocoVideoDataset
 from .parsers import CocoVID
-
-try:
-    import lvis
-    assert lvis.__version__ >= '10.5.3'
-    from lvis import LVIS, LVISResults, LVISEval
-except AssertionError:
-    raise AssertionError('Incompatible version of lvis is installed. '
-                         'Run pip uninstall lvis first. Then run pip '
-                         'install mmlvis to install open-mmlab forked '
-                         'lvis. ')
-except ImportError:
-    raise ImportError('Package lvis is not installed. Please run pip '
-                      'install mmlvis to install open-mmlab forked '
-                      'lvis.')
 
 
 @DATASETS.register_module()
@@ -172,6 +157,7 @@ class TaoDataset(CocoVideoDataset):
         eval_results = dict()
 
         if 'track' in metrics:
+            from tao.toolkit.tao import TaoEval
             print_log('Evaluating TAO results...', logger)
             tao_eval = TaoEval(
                 self.ann_file, result_files['track'], logger=logger)
@@ -181,6 +167,21 @@ class TaoDataset(CocoVideoDataset):
             tao_eval.print_results()
 
         if 'bbox' in metrics:
+            try:
+                import lvis
+                assert lvis.__version__ >= '10.5.3'
+                from lvis import LVIS, LVISResults, LVISEval
+            except AssertionError:
+                raise AssertionError(
+                    'Incompatible version of lvis is installed. '
+                    'Run pip uninstall lvis first. Then run pip '
+                    'install mmlvis to install open-mmlab forked '
+                    'lvis. ')
+            except ImportError:
+                raise ImportError(
+                    'Package lvis is not installed. Please run pip '
+                    'install mmlvis to install open-mmlab forked '
+                    'lvis.')
             print_log('Evaluating detection results...', logger)
             lvis_gt = LVIS(self.ann_file)
             lvis_dt = LVISResults(lvis_gt, result_files['bbox'])
