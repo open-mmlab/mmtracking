@@ -11,7 +11,6 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='Make annotation files for TAO')
     parser.add_argument('-t', '--tao', help='path of TAO json file')
-    parser.add_argument('-l', '--lvis', help='path of LVIS json file')
     parser.add_argument(
         '--filter-classes',
         action='store_true',
@@ -33,11 +32,18 @@ def get_classes(tao_path, filter_classes=True):
     test_classes = list(set([_['id'] for _ in test['categories']]))
     print(f'TAO test set contains {len(test_classes)} categories.')
 
-    all_classes = set(train_classes + val_classes + test_classes)
-    print(f'TAO totally contains {len(all_classes)} categories.')
+    tao_classes = set(train_classes + val_classes + test_classes)
+    print(f'TAO totally contains {len(tao_classes)} categories.')
+
+    tao_classes = [_ for _ in train['categories'] if _['id'] in tao_classes]
+
+    with open(osp.join(tao_path, 'tao_classes.txt'), 'wt') as f:
+        for c in tao_classes:
+            name = c['name']
+            f.writelines(f'{name}\n')
 
     if filter_classes:
-        return [_ for _ in train['categories'] if _['id'] in all_classes]
+        return tao_classes
     else:
         return train['categories']
 
@@ -60,6 +66,9 @@ def convert_tao(file, classes):
         out['videos'].append(video)
         for i, img_info in enumerate(img_infos):
             img_info['frame_id'] = i
+            img_info['neg_category_ids'] = video['neg_category_ids']
+            img_info['not_exhaustive_category_ids'] = video[
+                'not_exhaustive_category_ids']
             out['images'].append(img_info)
             ann_infos = tao.img_ann_map[img_info['id']]
             for ann_info in ann_infos:
@@ -86,13 +95,7 @@ def main():
         c = '_482' if args.filter_classes else ''
         prefix = file.split('.')[0].split('_')[0]
         out_file = f'{prefix}{c}_ours.json'
-        mmcv.dump(out, out_file)
-
-    if args.filter_classes:
-        with open(osp.join(args.tao, 'tao_classes.txt'), 'wt') as f:
-            for c in classes:
-                name = c['name']
-                f.writelines(f'{name}\n')
+        mmcv.dump(out, osp.join(args.tao, out_file))
 
 
 if __name__ == '__main__':

@@ -132,8 +132,7 @@ class MOT17Dataset(CocoVideoDataset):
                 print_log('remove previous results.', self.logger)
                 import shutil
                 shutil.rmtree(resfile_path)
-            else:
-                os.makedirs(resfile_path, exist_ok=False)
+        os.makedirs(resfile_path, exist_ok=True)
         inds = [i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0]
         num_vids = len(inds)
         assert num_vids == len(self.vid_ids)
