@@ -129,16 +129,12 @@ class QDTrack(BaseMultiObjectTracker):
             raise TypeError('detector must has roi_head or bbox_head.')
 
         embeds = self.track_head.simple_test(x, img_metas, det_bboxes, rescale)
-        if embeds is not None:
-            bboxes, labels, ids = self.tracker.match(
-                bboxes=det_bboxes,
-                labels=det_labels,
-                embeds=embeds,
-                frame_id=frame_id,
-                temperature=self.track_head.embed_head.softmax_temperature)
-            track_result = track2result(bboxes, labels, ids, num_classes)
-        else:
-            from collections import defaultdict
-            track_result = defaultdict(list)
+        bboxes, labels, ids = self.tracker.match(
+            bboxes=det_bboxes,
+            labels=det_labels,
+            embeds=embeds,
+            frame_id=frame_id,
+            temperature=self.track_head.embed_head.softmax_temperature)
+        track_result = track2result(bboxes, labels, ids, num_classes)
         bbox_result = bbox2result(det_bboxes, det_labels, num_classes)
         return dict(bbox_results=bbox_result, track_results=track_result)
