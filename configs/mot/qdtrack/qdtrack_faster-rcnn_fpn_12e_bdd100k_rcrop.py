@@ -62,7 +62,7 @@ model = dict(
         nms_class_iou_thr=0.7,
         with_cats=True,
         match_metric='bisoftmax'))
-data = dict(samples_per_gpu=2, workers_per_gpu=2)
+data = dict(samples_per_gpu=4, workers_per_gpu=2)
 # optimizer
 optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)
 # learning policy
