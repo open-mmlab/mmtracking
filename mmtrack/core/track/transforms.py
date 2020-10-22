@@ -25,7 +25,7 @@ def restore_result(result, return_ids=False):
     labels = []
     for i, bbox in enumerate(result):
         labels.extend([i] * bbox.shape[0])
-    bboxes = np.concatenate(result, axis=0)
+    bboxes = np.concatenate(result, axis=0).astype(np.float32)
     labels = np.array(labels, dtype=np.int64)
     if return_ids:
         ids = bboxes[:, 0].astype(np.int64)

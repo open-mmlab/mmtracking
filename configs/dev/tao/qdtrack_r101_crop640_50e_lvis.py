@@ -9,7 +9,20 @@ model = dict(
         pretrained='torchvision://resnet101',
         backbone=dict(depth=101),
         roi_head=dict(bbox_head=dict(num_classes=482)),
-        test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))))
+        test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
+    tracker=dict(
+        type='TaoTracker',
+        init_score_thr=0.0001,
+        obj_score_thr=0.0001,
+        match_score_thr=0.5,
+        memo_tracklet_frames=10,
+        memo_backdrop_frames=0,
+        memo_momentum=0.8,
+        nms_conf_thr=1.0,
+        nms_backdrop_iou_thr=1.0,
+        nms_class_iou_thr=1.0,
+        with_cats=True,
+        match_metric='cosine'))
 dataset_type = 'TaoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)

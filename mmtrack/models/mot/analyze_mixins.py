@@ -142,27 +142,6 @@ class AnalyzeMixin(object):
         gt_ignores = torch.tensor(gt_ignores, dtype=torch.float)
         return gt_bboxes, gt_labels, gt_ids, gt_ignores
 
-    def save_pkl(self,
-                 img_meta,
-                 det_bboxes,
-                 det_labels,
-                 embeds,
-                 bboxes=None,
-                 cls_logits=None,
-                 keep_inds=None):
-        vid_name, img_name = img_meta[0]['img_info']['file_name'].split('/')
-        save_path = os.path.join(self.out, 'pkls', vid_name)
-        os.makedirs(save_path, exist_ok=True)
-        save_file = os.path.join(save_path, '{}.pkl'.format(img_name))
-        to_save = dict(
-            det_bboxes=det_bboxes.cpu(),
-            det_labels=det_labels.cpu(),
-            bboxes=bboxes.cpu() if bboxes else None,
-            embeds=embeds.cpu(),
-            keep_inds=keep_inds.cpu() if keep_inds else None,
-            cls_logits=cls_logits.cpu() if cls_logits else None)
-        mmcv.dump(to_save, save_file)
-
     def show_tracklets(self, img_meta, track_bboxes, track_labels, track_ids):
         vid_name, img_name = img_meta[0]['img_info']['file_name'].split('/')
         save_path = os.path.join(self.out, 'shows', vid_name)
@@ -171,18 +150,3 @@ class AnalyzeMixin(object):
         img = os.path.join(self.data.img_prefix, vid_name, img_name)
         img = mmcv.imshow_tracklets(
             img, track_bboxes, track_labels, track_ids, out_file=save_file)
-
-    # def plt_tracklets(self, img_meta, track_bboxes, track_labels, track_ids):
-    #     vid_name, img_name = img_meta[0]['img_info']['file_name'].split('/')
-    #     save_path = os.path.join(self.out, 'shows', vid_name)
-    #     os.makedirs(save_path, exist_ok=True)
-    #     save_file = os.path.join(save_path, img_name.split('-')[-1])
-    #     img = os.path.join(self.data.img_prefix, vid_name, img_name)
-    #     # car_inds = track_labels == 2
-    #     # img = imshow_bboxes_w_ids(
-    #     #     img,
-    #     #     track_bboxes[car_inds],
-    #     #     track_ids[car_inds],
-    #     #     out_file=save_file)
-    #     img = imshow_bboxes_w_ids(
-    #         img, track_bboxes, track_ids, out_file=save_file)
