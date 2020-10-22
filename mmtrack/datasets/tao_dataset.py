@@ -81,22 +81,36 @@ class TaoDataset(CocoVideoDataset):
         return data_infos
 
     def _track2json(self, results):
-        """Convert detection results to COCO json style."""
+        """Convert tracking results to TAO json style."""
+        inds = [i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0]
+        num_vids = len(inds)
+        inds.append(len(self.data_infos))
+        results = [results[inds[i]:inds[i + 1]] for i in range(num_vids)]
+        img_infos = [
+            self.data_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
+        ]
+
         json_results = []
-        for idx in range(len(self)):
-            img_id = self.img_ids[idx]
-            result = results[idx]
-            for label in range(len(result)):
-                bboxes = result[label]
-                for i in range(bboxes.shape[0]):
-                    data = dict()
-                    data['image_id'] = img_id
-                    data['bbox'] = self.xyxy2xywh(bboxes[i, 1:])
-                    data['score'] = float(bboxes[i][-1])
-                    data['category_id'] = self.cat_ids[label]
-                    data['video_id'] = self.data_infos[idx]['video_id']
-                    data['track_id'] = int(bboxes[i][0])
-                    json_results.append(data)
+        max_track_id = 0
+        for _img_infos, _results in zip(img_infos, results):
+            track_ids = []
+            for img_info, result in zip(_img_infos, _results):
+                img_id = img_info['id']
+                for label in range(len(result)):
+                    bboxes = result[label]
+                    for i in range(bboxes.shape[0]):
+                        data = dict()
+                        data['image_id'] = img_id
+                        data['bbox'] = self.xyxy2xywh(bboxes[i, 1:])
+                        data['score'] = float(bboxes[i][-1])
+                        data['category_id'] = self.cat_ids[label]
+                        data['video_id'] = img_info['video_id']
+                        data['track_id'] = max_track_id + int(bboxes[i][0])
+                        track_ids.append(int(bboxes[i][0]))
+                        json_results.append(data)
+            track_ids = list(set(track_ids))
+            max_track_id += max(track_ids) + 1
+
         return json_results
 
     def format_results(self, results, resfile_path=None):
@@ -159,12 +173,17 @@ class TaoDataset(CocoVideoDataset):
         if 'track' in metrics:
             from tao.toolkit.tao import TaoEval
             print_log('Evaluating TAO results...', logger)
-            tao_eval = TaoEval(
-                self.ann_file, result_files['track'], logger=logger)
+            tao_eval = TaoEval(self.ann_file, result_files['track'])
             tao_eval.params.imgIds = self.img_ids
             tao_eval.params.catIds = self.cat_ids
             tao_eval.run()
             tao_eval.print_results()
+            tao_results = tao_eval.get_results()
+            for k, v in tao_results.items():
+                if isinstance(k, str) and k.startswith('AP'):
+                    key = 'track_{}'.format(k)
+                    val = float('{:.3f}'.format(float(v)))
+                    eval_results[key] = val
 
         if 'bbox' in metrics:
             try:
@@ -191,17 +210,18 @@ class TaoDataset(CocoVideoDataset):
             lvis_eval.evaluate()
             lvis_eval.accumulate()
             lvis_eval.summarize()
+            lvis_eval.print_results()
             lvis_results = lvis_eval.get_results()
             for k, v in lvis_results.items():
                 if k.startswith('AP'):
-                    key = '{}_{}'.format(metric, k)
+                    key = '{}_{}'.format('bbox', k)
                     val = float('{:.3f}'.format(float(v)))
                     eval_results[key] = val
             ap_summary = ' '.join([
                 '{}:{:.3f}'.format(k, float(v))
                 for k, v in lvis_results.items() if k.startswith('AP')
             ])
-            eval_results['{}_mAP_copypaste'.format(metric)] = ap_summary
+            eval_results['bbox_mAP_copypaste'] = ap_summary
 
         if tmp_dir is not None:
             tmp_dir.cleanup()
