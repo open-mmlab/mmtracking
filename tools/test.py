@@ -122,6 +122,10 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
+    if cfg.get('save_variables', False):
+        model.save_variables = cfg.save_variables
+        model.out_path = args.out.rsplit('/')[0]
+
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)

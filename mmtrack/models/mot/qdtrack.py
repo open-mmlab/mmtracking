@@ -129,6 +129,16 @@ class QDTrack(BaseMultiObjectTracker):
             raise TypeError('detector must has roi_head or bbox_head.')
 
         embeds = self.track_head.simple_test(x, img_metas, det_bboxes, rescale)
+
+        # if hasattr(self, 'save_variables') and self.save_variables
+        # is not None:
+        #     saves = dict()
+        #     for k in self.save_variables:
+        #         v = eval(k)
+        #         import pdb
+        #         pdb.set_trace()
+        #     self.save(img_metas[0], saves)
+
         bboxes, labels, ids = self.tracker.match(
             bboxes=det_bboxes,
             labels=det_labels,
