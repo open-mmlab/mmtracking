@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 
 import mmcv
@@ -143,6 +144,7 @@ class QDTrack(BaseMultiObjectTracker):
                 save[k] = v
             out_name = img_metas[0]['ori_filename'].rsplit('.', 1)[0] + '.pkl'
             out_path = osp.join(self.out_path, 'pkls', out_name)
+            os.makedirs(out_path.rsplit('/', 1)[0], exist_ok=True)
             mmcv.dump(save, out_path)
 
         bboxes, labels, ids = self.tracker.match(
