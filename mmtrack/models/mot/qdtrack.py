@@ -1,3 +1,7 @@
+import os.path as osp
+
+import mmcv
+import torch
 from mmdet.core import bbox2result
 from mmdet.models.builder import build_head
 
@@ -130,14 +134,16 @@ class QDTrack(BaseMultiObjectTracker):
 
         embeds = self.track_head.simple_test(x, img_metas, det_bboxes, rescale)
 
-        # if hasattr(self, 'save_variables') and self.save_variables
-        # is not None:
-        #     saves = dict()
-        #     for k in self.save_variables:
-        #         v = eval(k)
-        #         import pdb
-        #         pdb.set_trace()
-        #     self.save(img_metas[0], saves)
+        if hasattr(self, 'save_variables') and self.save_variables is not None:
+            save = dict()
+            for k in self.save_variables:
+                v = eval(k)
+                if isinstance(v, torch.Tensor):
+                    v = v.cpu()
+                save[k] = v
+            out_name = img_metas[0]['ori_filename'].rsplit('.', 1)[0] + '.pkl'
+            out_path = osp.join(self.out_path, 'pkls', out_name)
+            mmcv.dump(save, out_path)
 
         bboxes, labels, ids = self.tracker.match(
             bboxes=det_bboxes,

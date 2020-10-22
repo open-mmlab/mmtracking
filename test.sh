@@ -11,6 +11,8 @@ folder=work_dirs
 # -----------------
 ROOT=.
 
+export PYTHONPATH=`pwd`:$PYTHONPATH
+
 # test
 srun -p ${part} --gres=gpu:${gpu_nums} -n${gpu_nums} --ntasks-per-node=${gpu_nums} \
 --job-name=python --kill-on-bad-exit=1 \

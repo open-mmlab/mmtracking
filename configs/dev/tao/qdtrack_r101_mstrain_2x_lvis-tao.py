@@ -2,6 +2,7 @@ _base_ = [
     '../../_base_/models/qdtrack_faster-rcnn_r50_fpn.py',
     '../../_base_/default_runtime.py'
 ]
+save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
     pretrains=None,
     frozen_modules=None,
@@ -83,7 +84,7 @@ data = dict(
     test=dict(
         type=dataset_type,
         classes='data/tao/annotations/tao_classes.txt',
-        ann_file='data/tao/annotations/validation_ours.json',
+        ann_file='data/tao/annotations/tao_mini_val.json',
         img_prefix='data/tao/frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
