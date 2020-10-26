@@ -1,3 +1,4 @@
+import os
 import random
 from collections import defaultdict
 
@@ -20,26 +21,28 @@ class TaoTracker(object):
     def __init__(self,
                  init_score_thr=0.0001,
                  obj_score_thr=0.0001,
-                 obj_score_diff=0.75,
                  match_score_thr=0.5,
                  memo_frames=10,
                  momentum_embed=0.8,
                  momentum_obj_score=0.5,
+                 obj_score_diff_thr=0.8,
                  distractor_nms_thr=0.3,
-                 distractor_score_thr=0.1,
-                 match_metric='bisoftmax'):
+                 distractor_score_thr=0.5,
+                 match_metric='bisoftmax',
+                 match_with_cosine=True):
         self.init_score_thr = init_score_thr
         self.obj_score_thr = obj_score_thr
-        self.obj_score_diff = obj_score_diff
         self.match_score_thr = match_score_thr
 
         self.memo_frames = memo_frames
         self.momentum_embed = momentum_embed
         self.momentum_obj_score = momentum_obj_score
+        self.obj_score_diff_thr = obj_score_diff_thr
         self.distractor_nms_thr = distractor_nms_thr
         self.distractor_score_thr = distractor_score_thr
         assert match_metric in ['bisoftmax', 'cosine']
         self.match_metric = match_metric
+        self.match_with_cosine = match_with_cosine
 
         self.reset()
 
@@ -127,13 +130,11 @@ class TaoTracker(object):
               frame_id,
               temperature=-1,
               **kwargs):
-        # metas = kwargs['metas']
         if embeds is None:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
             return bboxes, labels, ids
 
-        # valid_inds = (labels.view(-1, 1) == metas['valid_labels'].view(
-        #     1, -1)).any(dim=1)
+        # all objects is valid here
         valid_inds = labels > -1
         # nms
         low_inds = torch.nonzero(
@@ -167,184 +168,164 @@ class TaoTracker(object):
                 cos_scores = embed_similarity(
                     embeds, memo_embeds, method='cosine', transpose=True)
                 cos_scores *= cat_same
-                scores = (d2t_scores + t2d_scores + cos_scores) / 3
-                # scores = (d2t_scores + t2d_scores) / 2
-
+                scores = (d2t_scores + t2d_scores) / 2
+                if self.match_with_cosine:
+                    scores = (scores + cos_scores) / 2
             elif self.match_metric == 'cosine':
-                scores = embed_similarity(
+                cos_scores = embed_similarity(
                     embeds, memo_embeds, method='cosine', transpose=True)
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
-                scores *= cat_same.float()
+                scores = cos_scores * cat_same.float()
             else:
                 raise NotImplementedError()
-            # raw_scores = scores.clone()
-            det_sims = torch.abs(bboxes[:, -1].view(-1, 1).expand_as(scores) -
-                                 memo_bboxes[:,
-                                             -1].view(1, -1).expand_as(scores))
+            if 'metas' in kwargs:
+                raw_scores = scores.clone()
+
+            obj_score_diffs = torch.abs(
+                bboxes[:, -1].view(-1, 1).expand_as(scores) -
+                memo_bboxes[:, -1].view(1, -1).expand_as(scores))
+
             num_objs = bboxes.size(0)
             ids = torch.full((num_objs, ), -1, dtype=torch.long)
             for i in range(num_objs):
+                if bboxes[i, -1] < self.obj_score_thr:
+                    continue
                 conf, memo_ind = torch.max(scores[i, :], dim=0)
-                id = memo_ids[memo_ind]
-                if conf > self.match_score_thr:
-                    if (det_sims[i, memo_ind] < self.obj_score_diff) and (
-                            bboxes[i, -1] > self.obj_score_thr):
-                        ids[i] = id
-                        scores[:i, memo_ind] = 0
-                        scores[i + 1:, memo_ind] = 0
-                        bboxes[i, -1] = self.momentum_obj_score * bboxes[
-                            i, -1] + (1 - self.momentum_obj_score
-                                      ) * memo_bboxes[memo_ind, -1]
+                obj_score_diff = obj_score_diffs[i, memo_ind]
+                if (conf > self.match_score_thr) and (obj_score_diff <
+                                                      self.obj_score_diff_thr):
+                    ids[i] = memo_ids[memo_ind]
+                    scores[:i, memo_ind] = 0
+                    scores[i + 1:, memo_ind] = 0
+                    m = self.momentum_obj_score
+                    bboxes[i, -1] = m * bboxes[i, -1] + (
+                        1 - m) * memo_bboxes[memo_ind, -1]
         else:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
         # init tracklets
         ids = self.init_tracklets(ids, bboxes[:, -1])
         self.update_memo(ids, bboxes, labels, embeds, frame_id)
 
-        # if '0331' in metas.img_name:
-        #     self_ious = bbox_overlaps(bboxes[:, :-1], bboxes[:, :-1])
-        #     memo_ious = bbox_overlaps(memo_bboxes[:, :-1], memo_bboxes[:,
-        #  :-1])
-        #     import pdb
-        #     pdb.set_trace()
-
         # ----------------
-        # if metas.analyze:
-        #     gt_bboxes, gt_labels, gt_ids = [
-        #         metas['bboxes'], metas['labels'], metas['instance_ids']
-        #     ]
-        #     gt_bboxes = torch.cat(
-        #         (gt_bboxes, torch.zeros(gt_bboxes.size(0), 1)), dim=1)
+        if 'metas' in kwargs and kwargs['metas'].analyze:
+            metas = kwargs['metas']
+            gt_bboxes, gt_labels, gt_ids = [
+                metas['bboxes'], metas['labels'], metas['instance_ids']
+            ]
+            gt_bboxes = torch.cat(
+                (gt_bboxes, torch.zeros(gt_bboxes.size(0), 1)), dim=1)
 
-        #     if bboxes.size(0) == 0 or gt_bboxes.size(0) == 0:
-        #         return bboxes, labels, ids
+            if bboxes.size(0) == 0 or gt_bboxes.size(0) == 0:
+                return bboxes, labels, ids
 
-        #     fns = torch.ones(gt_bboxes.size(0), dtype=torch.long)
-        #     fps = torch.ones(bboxes.size(0), dtype=torch.long)
-        #     sw_fps = torch.zeros(bboxes.size(0), dtype=torch.long)
-        #     idsw = torch.zeros(bboxes.size(0), dtype=torch.long)
+            fns = torch.ones(gt_bboxes.size(0), dtype=torch.long)
+            fps = torch.ones(bboxes.size(0), dtype=torch.long)
+            sw_fps = torch.zeros(bboxes.size(0), dtype=torch.long)
+            idsw = torch.zeros(bboxes.size(0), dtype=torch.long)
 
-        #     ious = bbox_overlaps(bboxes[:, :4], gt_bboxes[:, :4])
-        #     same_cat = labels.view(-1, 1) == gt_labels.view(1, -1)
-        #     ious *= same_cat.float()
+            ious = bbox_overlaps(bboxes[:, :4], gt_bboxes[:, :4])
+            same_cat = labels.view(-1, 1) == gt_labels.view(1, -1)
+            ious *= same_cat.float()
 
-        #     gt_inds = torch.full(ids.size(), -1, dtype=torch.long)
-        #     for i, bbox in enumerate(bboxes):
-        #         max_iou, j = ious[i].max(dim=0)
-        #         if max_iou > 0.5:
-        #             fps[i], fns[j] = 0, 0
-        #             gt_inds[i] = j
-        #             ious[:, j] = -1
+            gt_inds = torch.full(ids.size(), -1, dtype=torch.long)
+            for i, bbox in enumerate(bboxes):
+                max_iou, j = ious[i].max(dim=0)
+                if max_iou > 0.5:
+                    fps[i], fns[j] = 0, 0
+                    gt_inds[i] = j
+                    ious[:, j] = -1
 
-        #             gt_id = int(gt_ids[j])
-        #             pred_id = int(ids[i])
-        #             if len(self.gt_tracks[gt_id]['ids']) > 0:
-        #                 if pred_id != self.gt_tracks[gt_id]['ids'][-1]:
-        #                     idsw[i] = 1
-        #             else:
-        #                 if pred_id in self.pred_tracks:
-        #                     idsw[i] = 1
-        #             self.gt_tracks[gt_id]['scores'].append(
-        #                 float(f'{bbox[-1]:.3f}'))
-        #             self.gt_tracks[gt_id]['ids'].append(pred_id)
-        #             self.gt_tracks[gt_id]['frame_ids'].append(
-        #                 metas.img_info['frame_id'])
+                    gt_id = int(gt_ids[j])
+                    pred_id = int(ids[i])
+                    if len(self.gt_tracks[gt_id]['ids']) > 0:
+                        if pred_id != self.gt_tracks[gt_id]['ids'][-1]:
+                            idsw[i] = 1
+                    else:
+                        if pred_id in self.pred_tracks:
+                            idsw[i] = 1
+                    self.gt_tracks[gt_id]['scores'].append(
+                        float(f'{bbox[-1]:.3f}'))
+                    self.gt_tracks[gt_id]['ids'].append(pred_id)
+                    self.gt_tracks[gt_id]['frame_ids'].append(
+                        metas.img_info['frame_id'])
 
-        #     for i, id in enumerate(ids):
-        #         id = int(id)
+            for i, id in enumerate(ids):
+                id = int(id)
 
-        #         self.pred_tracks[id]['scores'].append(
-        #             float(f'{bboxes[i, -1]:.3f}'))
-        #         if metas.img_info['frame_id'] > 0:
-        #             memo_ind = torch.nonzero(
-        #                 memo_ids == id, as_tuple=False).squeeze(1)
-        #         else:
-        #             memo_ind = []
-        #         if len(memo_ind) > 0:
-        #             self.pred_tracks[id]['match_scores'].append(
-        #                 float(f'{raw_scores[i, memo_ind[0]]:.3f}'))
-        #         else:
-        #             self.pred_tracks[id]['match_scores'].append(-1)
-        #         if gt_inds[i] == -1:
-        #             self.pred_tracks[id]['ids'].append(-1)
-        #         else:
-        #             self.pred_tracks[id]['ids'].append(int(gt_ids[gt_inds[i]]))
-        #         self.pred_tracks[id]['frame_ids'].append(
-        #             metas.img_info['frame_id'])
+                self.pred_tracks[id]['scores'].append(
+                    float(f'{bboxes[i, -1]:.3f}'))
+                if metas.img_info['frame_id'] > 0:
+                    memo_ind = torch.nonzero(
+                        memo_ids == id, as_tuple=False).squeeze(1)
+                else:
+                    memo_ind = []
+                if len(memo_ind) > 0:
+                    self.pred_tracks[id]['match_scores'].append(
+                        float(f'{raw_scores[i, memo_ind[0]]:.3f}'))
+                else:
+                    self.pred_tracks[id]['match_scores'].append(-1)
+                if gt_inds[i] == -1:
+                    self.pred_tracks[id]['ids'].append(-1)
+                else:
+                    self.pred_tracks[id]['ids'].append(int(gt_ids[gt_inds[i]]))
+                self.pred_tracks[id]['frame_ids'].append(
+                    metas.img_info['frame_id'])
 
-        #         if fps[i]:
-        #             if id in self.valid_ids:
-        #                 sw_fps[i] = 1
-        #             continue
+                if fps[i]:
+                    if id in self.valid_ids:
+                        sw_fps[i] = 1
+                    continue
 
-        #     fp_inds = sw_fps == 1  # red
-        #     fn_inds = fns == 1  # yellow
-        #     idsw_inds = idsw == 1  # cyan
-        #     tp_inds = fps == 0  # green
-        #     tp_inds[idsw_inds] = 0
+            fp_inds = sw_fps == 1  # red
+            fn_inds = fns == 1  # yellow
+            idsw_inds = idsw == 1  # cyan
+            tp_inds = fps == 0  # green
+            tp_inds[idsw_inds] = 0
 
-        #     os.makedirs(metas.out_file.rsplit('/', 1)[0], exist_ok=True)
-        #     img = metas.img_name
-        #     # black
-        #     if idsw_inds.any():
-        #         sw_ids = ids[idsw_inds]
-        #         memo_inds = (memo_ids.view(-1, 1) == sw_ids.view(
-        #             1, -1)).sum(dim=1) > 0
-        #         img = imshow_tracklets(
-        #             img,
-        #             memo_bboxes[memo_inds].numpy(),
-        #             memo_labels[memo_inds].numpy(),
-        #             memo_ids[memo_inds].numpy(),
-        #             color='magenta',
-        #             show=False)
-        #     img = imshow_tracklets(
-        #         img,
-        #         bboxes[tp_inds].numpy(),
-        #         labels[tp_inds].numpy(),
-        #         ids[tp_inds].numpy(),
-        #         color='green',
-        #         show=False)
-        #     img = imshow_tracklets(
-        #         img,
-        #         bboxes[fp_inds].numpy(),
-        #         labels[fp_inds].numpy(),
-        #         ids[fp_inds].numpy(),
-        #         color='red',
-        #         show=False)
-        #     img = imshow_tracklets(
-        #         img,
-        #         bboxes=gt_bboxes[fn_inds, :].numpy(),
-        #         labels=gt_labels[fn_inds].numpy(),
-        #         color='yellow',
-        #         show=False)
-        #     img = imshow_tracklets(
-        #         img,
-        #         bboxes[idsw_inds].numpy(),
-        #         labels[idsw_inds].numpy(),
-        #         ids[idsw_inds].numpy(),
-        #         color='cyan',
-        #         show=False,
-        #         out_file=metas.out_file)
-
-        # for k, v in self.gt_tracks.items():
-        #     if len(v['pred_id']) > 1:
-        #         if v['pred_id'][-1] != v['pred_id'][-2]:
-        #             print(f'img {metas["img_name"]}')
-        #             print(f'prev_ids: {v["pred_id"]}')
-        #             this_ind = torch.nonzero(
-        #                 ids == v['pred_id'][-1], as_tuple=False).squeeze(1)
-        #             import pdb
-        #             pdb.set_trace()
+            os.makedirs(metas.out_file.rsplit('/', 1)[0], exist_ok=True)
+            img = metas.img_name
+            # black
+            if idsw_inds.any():
+                sw_ids = ids[idsw_inds]
+                memo_inds = (memo_ids.view(-1, 1) == sw_ids.view(
+                    1, -1)).sum(dim=1) > 0
+                img = imshow_tracklets(
+                    img,
+                    memo_bboxes[memo_inds].numpy(),
+                    memo_labels[memo_inds].numpy(),
+                    memo_ids[memo_inds].numpy(),
+                    color='magenta',
+                    show=False)
+            img = imshow_tracklets(
+                img,
+                bboxes[tp_inds].numpy(),
+                labels[tp_inds].numpy(),
+                ids[tp_inds].numpy(),
+                color='green',
+                show=False)
+            img = imshow_tracklets(
+                img,
+                bboxes[fp_inds].numpy(),
+                labels[fp_inds].numpy(),
+                ids[fp_inds].numpy(),
+                color='red',
+                show=False)
+            img = imshow_tracklets(
+                img,
+                bboxes=gt_bboxes[fn_inds, :].numpy(),
+                labels=gt_labels[fn_inds].numpy(),
+                color='yellow',
+                show=False)
+            img = imshow_tracklets(
+                img,
+                bboxes[idsw_inds].numpy(),
+                labels[idsw_inds].numpy(),
+                ids[idsw_inds].numpy(),
+                color='cyan',
+                show=False,
+                out_file=metas.out_file)
 
         return bboxes, labels, ids
-
-
-# ---------------------------------------------------
-# ---------------------------------------------------
-# ---------------------------------------------------
-# ---------------------------------------------------
-# ---------------------------------------------------
-# ---------------------------------------------------
 
 
 def random_color(seed):

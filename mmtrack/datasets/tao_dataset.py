@@ -174,9 +174,10 @@ class TaoDataset(CocoVideoDataset):
             from tao.toolkit.tao import TaoEval
             print_log('Evaluating TAO results...', logger)
             tao_eval = TaoEval(self.ann_file, result_files['track'])
-            tao_eval.params.imgIds = self.img_ids
-            tao_eval.params.catIds = self.cat_ids
+            tao_eval.params.img_ids = self.img_ids
+            tao_eval.params.cat_ids = self.cat_ids
             tao_eval.run()
+
             tao_eval.print_results()
             tao_results = tao_eval.get_results()
             for k, v in tao_results.items():
