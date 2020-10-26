@@ -40,18 +40,14 @@ class DffTwoStage(BaseDetector):
                       **kwargs):
         assert len(img) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
-        is_video_data = img_metas[0]['is_video_data']
-        if is_video_data:
-            flow_img = torch.cat((img, ref_img[:, 0]), dim=1)
-            flow = self.motion(flow_img, img_metas)
 
-            ref_x = self.extract_feat(ref_img[:, 0])
-            x = []
-            for i in range(len(ref_x)):
-                x_single = flow_warp_feats(ref_x[i], flow)
-                x.append(x_single)
-        else:
-            x = self.extract_feat(img)
+        flow_img = torch.cat((img, ref_img[:, 0]), dim=1)
+        flow = self.motion(flow_img, img_metas)
+        ref_x = self.extract_feat(ref_img[:, 0])
+        x = []
+        for i in range(len(ref_x)):
+            x_single = flow_warp_feats(ref_x[i], flow)
+            x.append(x_single)
 
         losses = dict()
 

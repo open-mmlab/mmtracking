@@ -32,15 +32,19 @@ class FgfaTwoStage(BaseDetector):
     def extract_feat(self, img):
         return self.detector.extract_feat(img)
 
-    def compute_adaptive_weights(self, x_single, target_index):
-        x_single_embed = self.embed_network(x_single)
-        x_single_embed = x_single_embed / x_single_embed.norm(
+    def aggregator(self, target_x, ref_x):
+        target_x_embed = self.embed_network(target_x)
+        target_x_embed = target_x_embed / target_x_embed.norm(
             p=2, dim=1, keepdim=True)
-        x_target_embed = x_single_embed[[target_index]]
+
+        ref_x_embed = self.embed_network(ref_x)
+        ref_x_embed = ref_x_embed / ref_x_embed.norm(p=2, dim=1, keepdim=True)
+
         ada_weights = torch.sum(
-            x_single_embed * x_target_embed, dim=1, keepdim=True)
+            ref_x_embed * target_x_embed, dim=1, keepdim=True)
         ada_weights = ada_weights.softmax(dim=0)
-        return ada_weights
+        agg_x = torch.sum(ref_x * ada_weights, dim=0, keepdim=True)
+        return agg_x
 
     def forward_train(self,
                       img,
@@ -62,27 +66,20 @@ class FgfaTwoStage(BaseDetector):
                       **kwargs):
         assert len(img) == 1, \
             'fgfa video detectors only support 1 batch size per gpu for now.'
-        is_video_data = img_metas[0]['is_video_data']
-        if is_video_data:
-            flow_imgs = torch.cat((img, ref_img[:, 0]), dim=1)
-            for i in range(1, ref_img.shape[1]):
-                flow_img = torch.cat((img, ref_img[:, i]), dim=1)
-                flow_imgs = torch.cat((flow_imgs, flow_img), dim=0)
-            flows = self.motion(flow_imgs, img_metas)
 
-            all_imgs = torch.cat((img, ref_img[0]), dim=0)
-            all_x = self.extract_feat(all_imgs)
-            x = []
-            for i in range(len(all_x)):
-                ref_x_single = flow_warp_feats(all_x[i][1:], flows)
-                x_single = torch.cat((all_x[i][[0]], ref_x_single), dim=0)
-                ada_weights = self.compute_adaptive_weights(
-                    x_single, target_index=0)
-                x_single = torch.sum(
-                    x_single * ada_weights, dim=0, keepdim=True)
-                x.append(x_single)
-        else:
-            x = self.extract_feat(img)
+        flow_imgs = torch.cat((img, ref_img[:, 0]), dim=1)
+        for i in range(1, ref_img.shape[1]):
+            flow_img = torch.cat((img, ref_img[:, i]), dim=1)
+            flow_imgs = torch.cat((flow_imgs, flow_img), dim=0)
+        flows = self.motion(flow_imgs, img_metas)
+
+        all_imgs = torch.cat((img, ref_img[0]), dim=0)
+        all_x = self.extract_feat(all_imgs)
+        x = []
+        for i in range(len(all_x)):
+            ref_x_single = flow_warp_feats(all_x[i][1:], flows)
+            agg_x_single = self.aggregator(all_x[i][[0]], ref_x_single)
+            x.append(agg_x_single)
 
         losses = dict()
 
@@ -152,7 +149,8 @@ class FgfaTwoStage(BaseDetector):
                     self.ref_x[i] = torch.cat((self.ref_x[i], ref_x[i]),
                                               dim=0)[1:]
                     x_frame.append(self.ref_x[i][[num_left_ref_imgs]])
-                self.ref_imgs = torch.cat((self.ref_imgs, img), dim=0)[1:]
+                self.ref_imgs = torch.cat((self.ref_imgs, ref_img[0]),
+                                          dim=0)[1:]
             else:
                 assert ref_img is None
                 x_frame = self.extract_feat(img)
@@ -167,14 +165,10 @@ class FgfaTwoStage(BaseDetector):
             x_single = flow_warp_feats(self.ref_x[i], flows)
             if frame_stride < 1:
                 x_single = torch.cat((x_frame[i], x_single), dim=0)
-                ada_weights = self.compute_adaptive_weights(
-                    x_single, target_index=0)
             else:
                 x_single[num_left_ref_imgs] = x_frame[i]
-                ada_weights = self.compute_adaptive_weights(
-                    x_single, target_index=num_left_ref_imgs)
-            x_single = torch.sum(x_single * ada_weights, dim=0, keepdim=True)
-            x.append(x_single)
+            agg_x_single = self.aggregator(x_frame[i], x_single)
+            x.append(agg_x_single)
 
         if proposals is None:
             proposal_list = self.detector.rpn_head.simple_test_rpn(

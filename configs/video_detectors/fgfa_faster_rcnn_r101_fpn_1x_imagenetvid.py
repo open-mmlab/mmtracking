@@ -6,7 +6,6 @@
 # use 4. bbox target_stds
 # use 5. 3e2e1e or 25e35e05e
 # use 6. train ref img sample -9--0 or -9--9
-find_unused_parameters = True
 model = dict(
     type='FgfaTwoStage',
     detector=dict(
@@ -225,7 +224,7 @@ lr_config = dict(
     by_epoch=False,
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[17140, 37708])
+    step=[int(2.5 * 6856), int(5.5 * 6856)])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
