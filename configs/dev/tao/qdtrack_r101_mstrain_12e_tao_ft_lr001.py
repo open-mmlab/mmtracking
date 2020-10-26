@@ -4,7 +4,7 @@ _base_ = [
 ]
 model = dict(
     pretrains=None,
-    frozen_modules='detector',
+    frozen_modules=None,
     detector=dict(
         pretrained='torchvision://resnet101',
         backbone=dict(depth=101),
@@ -61,8 +61,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=1,
+    workers_per_gpu=1,
     train=dict(
         _delete_=True,
         type='ClassBalancedDataset',
@@ -88,7 +88,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -98,5 +98,5 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[16, 22])
 total_epochs = 24
-evaluation = dict(metric=['bbox', 'track'], start=12, interval=4)
+evaluation = dict(metric=['bbox', 'track'], interval=4, start=12)
 load_from = 'work_dirs/dev/tao/qdtrack_r101_mstrain_2x_lvis/epoch_24.pth'
