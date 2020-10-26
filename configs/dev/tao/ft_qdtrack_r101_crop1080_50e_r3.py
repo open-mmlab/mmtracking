@@ -19,7 +19,7 @@ model = dict(
                 floor_fraction=0,
                 num_bins=3)),
         embed_head=dict(
-            dict(
+            loss_track_aux=dict(
                 type='L2Loss',
                 neg_pos_ub=3,
                 pos_margin=0,

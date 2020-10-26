@@ -14,7 +14,7 @@ model = dict(
     track_head=dict(
         roi_sampler=dict(neg_sampler=dict(type='RandomSampler')),
         embed_head=dict(
-            dict(
+            loss_track_aux=dict(
                 type='L2Loss',
                 neg_pos_ub=3,
                 pos_margin=0,
