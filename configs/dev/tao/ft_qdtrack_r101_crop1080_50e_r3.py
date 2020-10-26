@@ -11,13 +11,13 @@ model = dict(
         backbone=dict(depth=101),
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
-    roi_sampler=dict(
-        neg_sampler=dict(
-            type='IoUBalancedNegSampler',
-            floor_thr=-1,
-            floor_fraction=0,
-            num_bins=3)),
     track_head=dict(
+        roi_sampler=dict(
+            neg_sampler=dict(
+                type='IoUBalancedNegSampler',
+                floor_thr=-1,
+                floor_fraction=0,
+                num_bins=3)),
         embed_head=dict(
             dict(
                 type='L2Loss',
