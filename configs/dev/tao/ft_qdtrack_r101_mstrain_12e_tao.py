@@ -2,28 +2,29 @@ _base_ = [
     '../../_base_/models/qdtrack_faster-rcnn_r50_fpn.py',
     '../../_base_/default_runtime.py'
 ]
-save_variables = ['det_bboxes', 'det_labels', 'embeds']
+# save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
     pretrains=None,
-    frozen_modules=None,
+    frozen_modules='detector',
     detector=dict(
         pretrained='torchvision://resnet101',
         backbone=dict(depth=101),
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
     tracker=dict(
+        _delete_=True,
         type='TaoTracker',
         init_score_thr=0.0001,
         obj_score_thr=0.0001,
         match_score_thr=0.5,
-        memo_tracklet_frames=10,
-        memo_backdrop_frames=0,
-        memo_momentum=0.8,
-        nms_conf_thr=1.0,
-        nms_backdrop_iou_thr=1.0,
-        nms_class_iou_thr=1.0,
-        with_cats=True,
-        match_metric='cosine'))
+        memo_frames=10,
+        momentum_embed=0.8,
+        momentum_obj_score=0.5,
+        obj_score_diff_thr=0.8,
+        distractor_nms_thr=0.3,
+        distractor_score_thr=0.5,
+        match_metric='bisoftmax',
+        match_with_cosine=True))
 dataset_type = 'TaoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -62,31 +63,24 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
-    train=[
-        dict(
-            _delete_=True,
-            type='ClassBalancedDataset',
-            oversample_thr=1e-3,
-            dataset=dict(
-                type=dataset_type,
-                classes='data/tao/annotations/tao_classes.txt',
-                load_as_video=False,
-                ann_file='data/lvis/annotations/lvis_v0.5_coco2017_train.json',
-                img_prefix='data/lvis/train2017/',
-                pipeline=train_pipeline)),
-        dict(
-            _delete_=True,
-            type='ClassBalancedDataset',
-            oversample_thr=1e-3,
-            dataset=dict(
-                type=dataset_type,
-                classes='data/tao/annotations/tao_classes.txt',
-                ann_file='data/tao/annotations/train_ours.json',
-                img_prefix='data/tao/frames/',
-                pipeline=train_pipeline))
-    ],
+    samples_per_gpu=2,
+    workers_per_gpu=2,
+    train=dict(
+        _delete_=True,
+        type='ClassBalancedDataset',
+        oversample_thr=1e-3,
+        dataset=dict(
+            type=dataset_type,
+            classes='data/tao/annotations/tao_classes.txt',
+            ann_file='data/tao/annotations/train_ours.json',
+            img_prefix='data/tao/frames/',
+            key_img_sampler=dict(interval=1),
+            ref_img_sampler=dict(
+                num_ref_imgs=1,
+                frame_range=1,
+                filter_key_img=True,
+                method='uniform'),
+            pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         classes='data/tao/annotations/tao_classes.txt',
@@ -97,20 +91,20 @@ data = dict(
     test=dict(
         type=dataset_type,
         classes='data/tao/annotations/tao_classes.txt',
-        ann_file='data/tao/annotations/tao_mini_val.json',
+        ann_file='data/tao/annotations/validation_ours.json',
         img_prefix='data/tao/frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
     warmup='linear',
-    warmup_iters=5000,
+    warmup_iters=500,
     warmup_ratio=0.001,
-    step=[16, 22])
-total_epochs = 24
-evaluation = dict(metric=['bbox', 'track'], interval=24)
-dist_params = dict(port='12345')
+    step=[8, 11])
+total_epochs = 12
+evaluation = dict(metric=['bbox', 'track'], interval=2)
+load_from = 'work_dirs/dev/tao/qdtrack_r101_mstrain_2x_lvis/latest.pth'
