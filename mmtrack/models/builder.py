@@ -5,7 +5,7 @@ from mmdet.models.builder import build
 MODELS = Registry('model')
 TRACKERS = Registry('tracker')
 MOTION = Registry('motion')
-AGGREGATOR = Registry('aggregator')
+AGGREGATORS = Registry('aggregator')
 
 
 def build_tracker(cfg):
@@ -19,8 +19,8 @@ def build_motion(cfg):
 
 
 def build_aggregator(cfg):
-    """Build motion model."""
-    return build(cfg, AGGREGATOR)
+    """Build aggregator model."""
+    return build(cfg, AGGREGATORS)
 
 
 def build_detector(cfg):
