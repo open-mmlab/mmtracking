@@ -46,9 +46,6 @@ class QDTrack(BaseMultiObjectTracker):
         if self.with_track_head:
             self.init_module('track_head', pretrain.get('track_head', None))
 
-    def init_tracker(self):
-        self.tracker = build_tracker(self.tracker_cfg)
-
     def forward_train(self,
                       img,
                       img_metas,

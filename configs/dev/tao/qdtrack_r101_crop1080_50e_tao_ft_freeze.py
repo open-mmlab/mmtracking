@@ -11,16 +11,6 @@ model = dict(
         backbone=dict(depth=101),
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
-    track_head=dict(
-        roi_sampler=dict(neg_sampler=dict(type='RandomSampler')),
-        embed_head=dict(
-            loss_track_aux=dict(
-                type='L2Loss',
-                neg_pos_ub=3,
-                pos_margin=0,
-                neg_margin=0.1,
-                hard_mining=True,
-                loss_weight=1.0))),
     tracker=dict(
         _delete_=True,
         type='TaoTracker',
@@ -34,7 +24,7 @@ model = dict(
         distractor_nms_thr=0.3,
         distractor_score_thr=0.5,
         match_metric='bisoftmax',
-        match_with_cosine=True))
+        match_with_cosine=False))
 dataset_type = 'TaoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -85,12 +75,6 @@ data = dict(
                 classes='data/tao/annotations/tao_classes.txt',
                 ann_file='data/tao/annotations/train_ours.json',
                 img_prefix='data/tao/frames/',
-                key_img_sampler=dict(interval=1),
-                ref_img_sampler=dict(
-                    num_ref_imgs=1,
-                    frame_range=3,
-                    filter_key_img=True,
-                    method='uniform'),
                 pipeline=train_pipeline)),
     ],
     val=dict(
@@ -116,7 +100,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[8, 11])
-total_epochs = 12
-evaluation = dict(metric=['track'], interval=2)
+    step=[16, 22])
+total_epochs = 24
+evaluation = dict(metric=['track'], interval=4)
 load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'

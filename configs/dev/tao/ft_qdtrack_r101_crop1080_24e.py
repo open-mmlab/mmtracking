@@ -12,18 +12,13 @@ model = dict(
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
     track_head=dict(
-        roi_sampler=dict(
-            neg_sampler=dict(
-                type='IoUBalancedNegSampler',
-                floor_thr=-1,
-                floor_fraction=0,
-                num_bins=3)),
+        roi_sampler=dict(neg_sampler=dict(type='RandomSampler')),
         embed_head=dict(
             loss_track_aux=dict(
                 type='L2Loss',
                 neg_pos_ub=3,
                 pos_margin=0,
-                neg_margin=0.3,
+                neg_margin=0.1,
                 hard_mining=True,
                 loss_weight=1.0))),
     tracker=dict(
@@ -121,7 +116,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[8, 11])
-total_epochs = 12
-evaluation = dict(metric=['track'], interval=2)
+    step=[16, 22])
+total_epochs = 24
+evaluation = dict(metric=['track'], interval=2, start=12)
 load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'

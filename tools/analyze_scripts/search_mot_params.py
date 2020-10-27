@@ -10,6 +10,8 @@ from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
 
+from mmtrack.models import build_tracker
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='mmtrack test model')
@@ -168,11 +170,11 @@ def main():
     print_log(f'Record {cfg.search_metrics}.', logger)
     for i, search_cfg in enumerate(search_cfgs):
         if not distributed:
-            model.tracker_cfg = search_cfg
+            model.tracker = build_tracker(search_cfg)
             outputs = single_gpu_test(model, data_loader, args.show,
                                       args.show_dir, args.show_score_thr)
         else:
-            model.module.tracker_cfg = search_cfg
+            model.module.tracker = build_tracker(search_cfg)
             outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                      args.gpu_collect)
         rank, _ = get_dist_info()

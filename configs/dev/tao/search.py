@@ -3,6 +3,10 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 # save_variables = ['det_bboxes', 'det_labels', 'embeds']
+search_metrics = [
+    'track_AP', 'track_AP50', 'track_AP75', 'track_AP_P', 'track_AP50_P',
+    'track_AP75_P'
+]
 model = dict(
     pretrains=None,
     frozen_modules='detector',
@@ -23,7 +27,7 @@ model = dict(
                 type='L2Loss',
                 neg_pos_ub=3,
                 pos_margin=0,
-                neg_margin=0.1,
+                neg_margin=0.3,
                 hard_mining=True,
                 loss_weight=1.0))),
     tracker=dict(
@@ -32,10 +36,10 @@ model = dict(
         init_score_thr=0.0001,
         obj_score_thr=0.0001,
         match_score_thr=0.5,
-        memo_frames=10,
+        memo_frames=[5, 10, 15],
         momentum_embed=0.8,
         momentum_obj_score=0.5,
-        obj_score_diff_thr=0.8,
+        obj_score_diff_thr=[0.7, 0.8, 1.0],
         distractor_nms_thr=0.3,
         distractor_score_thr=0.5,
         match_metric='bisoftmax',
@@ -93,7 +97,7 @@ data = dict(
                 key_img_sampler=dict(interval=1),
                 ref_img_sampler=dict(
                     num_ref_imgs=1,
-                    frame_range=3,
+                    frame_range=1,
                     filter_key_img=True,
                     method='uniform'),
                 pipeline=train_pipeline)),
@@ -125,3 +129,4 @@ lr_config = dict(
 total_epochs = 12
 evaluation = dict(metric=['track'], interval=2)
 load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'
+dist_params = dict(port='12345')
