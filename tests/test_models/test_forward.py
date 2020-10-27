@@ -45,9 +45,9 @@ def _get_model_cfg(fname):
     return model, train_cfg, test_cfg
 
 
-@pytest.mark.parametrize(
-    'cfg_file', ['video_detectors/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
-def test_dff_forward(cfg_file):
+@pytest.mark.parametrize('cfg_file',
+                         ['vid/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
+def test_vid_forward(cfg_file):
     model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
     model['detector']['pretrained'] = None
     model['motion']['pretrained'] = None
@@ -143,9 +143,8 @@ def test_dff_forward(cfg_file):
                 results[k].append(v)
 
 
-@pytest.mark.parametrize(
-    'cfg_file',
-    ['video_detectors/fgfa_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
+@pytest.mark.parametrize('cfg_file',
+                         ['vid/fgfa_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
 def test_fgfa_forward(cfg_file):
     model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
     model['detector']['pretrained'] = None
@@ -253,8 +252,94 @@ def test_fgfa_forward(cfg_file):
                 results[k].append(v)
 
 
-def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
-                    num_items=None, num_classes=10):  # yapf: disable
+@pytest.mark.parametrize(
+    'cfg_file', ['mot/qdtrack/qdtrack_faster-rcnn_fpn_12e_bdd100k.py'])
+def test_mot_forward(cfg_file):
+    config = _get_config_module(cfg_file)
+    model = copy.deepcopy(config.model)
+    model.detector.pretrained = None
+    from mmtrack.models import build_model
+    tracker = build_model(model)
+
+    input_shape = (1, 3, 256, 256)
+
+    # Test forward train with a non-empty truth batch
+    mm_inputs = _demo_mm_inputs(input_shape, num_items=[2], with_track=True)
+    img = mm_inputs['imgs']
+    img_metas = mm_inputs['img_metas']
+    gt_bboxes = mm_inputs['gt_bboxes']
+    gt_labels = mm_inputs['gt_labels']
+    gt_match_indices = mm_inputs['gt_match_indices']
+    losses = tracker.forward(
+        img,
+        img_metas,
+        gt_bboxes=gt_bboxes,
+        gt_labels=gt_labels,
+        gt_match_indices=gt_match_indices,
+        ref_img=copy.deepcopy(img),
+        ref_img_metas=copy.deepcopy(img_metas),
+        ref_gt_bboxes=copy.deepcopy(gt_bboxes),
+        ref_gt_labels=copy.deepcopy(gt_labels),
+        ref_gt_match_indices=copy.deepcopy(gt_match_indices),
+        gt_bboxes_ignore=None,
+        gt_masks=None,
+        ref_gt_bboxes_ignore=None,
+        ref_gt_masks=None)
+    assert isinstance(losses, dict)
+    loss, _ = tracker._parse_losses(losses)
+    loss.requires_grad_(True)
+    assert float(loss.item()) > 0
+    loss.backward()
+
+    # Test forward train with an empty truth batch
+    mm_inputs = _demo_mm_inputs(input_shape, num_items=[0], with_track=True)
+    img = mm_inputs['imgs']
+    img_metas = mm_inputs['img_metas']
+    gt_bboxes = mm_inputs['gt_bboxes']
+    gt_labels = mm_inputs['gt_labels']
+    gt_match_indices = mm_inputs['gt_match_indices']
+    losses = tracker.forward(
+        img,
+        img_metas,
+        gt_bboxes=gt_bboxes,
+        gt_labels=gt_labels,
+        gt_match_indices=gt_match_indices,
+        ref_img=copy.deepcopy(img),
+        ref_img_metas=copy.deepcopy(img_metas),
+        ref_gt_bboxes=copy.deepcopy(gt_bboxes),
+        ref_gt_labels=copy.deepcopy(gt_labels),
+        ref_gt_match_indices=copy.deepcopy(gt_match_indices),
+        gt_bboxes_ignore=None,
+        gt_masks=None,
+        ref_gt_bboxes_ignore=None,
+        ref_gt_masks=None)
+    assert isinstance(losses, dict)
+    loss, _ = tracker._parse_losses(losses)
+    loss.requires_grad_(True)
+    assert float(loss.item()) > 0
+    loss.backward()
+
+    # Test forward test
+    with torch.no_grad():
+        N = 5
+        img_list = [img for i in range(N)]
+        img_metas = [img_metas for i in range(N)]
+        for i in range(1, len(img_metas)):
+            img_metas[i][0]['frame_id'] = i
+        results = defaultdict(list)
+        for _img, _meta in zip(img_list, img_metas):
+            result = tracker.forward([_img], [_meta], return_loss=False)
+            for k, v in result.items():
+                results[k].append(v)
+        assert 'bbox_results' in results
+        assert 'track_results' in results
+
+
+def _demo_mm_inputs(
+        input_shape=(1, 3, 300, 300),
+        num_items=None,
+        num_classes=10,
+        with_track=False):
     """Create a superset of inputs needed to run test or train batches.
 
     Args:
@@ -292,6 +377,7 @@ def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
     gt_bboxes = []
     gt_labels = []
     gt_masks = []
+    gt_match_indices = []
 
     for batch_idx in range(N):
         if num_items is None:
@@ -311,6 +397,8 @@ def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
 
         gt_bboxes.append(torch.FloatTensor(boxes))
         gt_labels.append(torch.LongTensor(class_idxs))
+        if with_track:
+            gt_match_indices.append(torch.arange(boxes.shape[0]))
 
     mask = np.random.randint(0, 2, (len(boxes), H, W), dtype=np.uint8)
     gt_masks.append(BitmapMasks(mask, H, W))
@@ -323,4 +411,6 @@ def _demo_mm_inputs(input_shape=(1, 3, 300, 300),
         'gt_bboxes_ignore': None,
         'gt_masks': gt_masks,
     }
+    if with_track:
+        mm_inputs['gt_match_indices'] = gt_match_indices
     return mm_inputs

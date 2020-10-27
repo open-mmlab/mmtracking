@@ -15,7 +15,11 @@ class DistributedVideoSampler(_DistributedSampler):
             if img_info['frame_id'] == 0:
                 first_frame_indices.append(i)
 
-        chunks = np.array_split(first_frame_indices, num_replicas)
+        if len(first_frame_indices) < num_replicas:
+            raise ValueError(f'only {len(first_frame_indices)} videos loaded,'
+                             f'but {self.num_replicas} gpus were given.')
+
+        chunks = np.array_split(first_frame_indices, self.num_replicas)
         split_flags = [c[0] for c in chunks]
         split_flags.append(self.num_samples)
 

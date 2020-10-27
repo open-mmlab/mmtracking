@@ -117,7 +117,11 @@ def main():
         shuffle=False)
 
     # build the model and load checkpoint
-    model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+    if cfg.get('test_cfg', False):
+        model = build_model(
+            cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    else:
+        model = build_model(cfg.model)
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)

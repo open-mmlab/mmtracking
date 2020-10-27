@@ -1,4 +1,5 @@
 import logging
+import os
 import os.path as osp
 import tempfile
 from collections import defaultdict
@@ -245,6 +246,20 @@ def test_coco_video_evaluation():
     assert 'track_AVERAGE_copypaste' in eval_results
 
 
+def test_bdd100k_format():
+    classes = ('car', 'person')
+    dataset_class = DATASETS.get('BDDVideoDataset')
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
+    results = _create_gt_results(dataset)
+    tmp_dir = tempfile.TemporaryDirectory()
+    dataset.format_bdd100k_results(results, resfile_path=tmp_dir.name)
+    files = os.listdir(osp.join(tmp_dir.name, 'track'))
+    assert len(files) == 1
+    assert files[0] == 'dummy_video.json'
+    tmp_dir.cleanup()
+
+
 def test_mot17_bbox_evaluation():
     classes = ('car', 'person')
     dataset_class = DATASETS.get('MOT17Dataset')
@@ -306,7 +321,7 @@ def test_mot17_track_evaluation(dataset):
         dict(track_results=track_results),
         metric='track',
         logger=None,
-        outfile_prefix=None,
+        resfile_path=None,
         track_iou_thr=0.5)
     assert eval_results['IDF1'] == 0.624
     assert eval_results['IDP'] == 0.799

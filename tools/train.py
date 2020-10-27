@@ -132,8 +132,11 @@ def main():
     cfg.seed = args.seed
     meta['seed'] = args.seed
 
-    model = build_model(
-        cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    if cfg.get('train_cfg', False):
+        model = build_model(
+            cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    else:
+        model = build_model(cfg.model)
 
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:

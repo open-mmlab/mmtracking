@@ -292,9 +292,6 @@ class CocoVideoDataset(CocoDataset):
 
         return ann
 
-    def format_track_results(self, results, **kwargs):
-        pass
-
     def evaluate(self,
                  results,
                  metric=['bbox', 'track'],

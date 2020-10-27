@@ -119,15 +119,21 @@ class MOT17Dataset(CocoVideoDataset):
 
         return ann
 
-    def format_results(self, results, outfile_prefix=None):
+    def format_results(self, results, resfile_path=None):
+        if isinstance(results, dict):
+            results = results['track_results']
         assert isinstance(results, list), 'results must be a list.'
-        if outfile_prefix is None:
+        if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
-            res_path = osp.join(tmp_dir.name, 'results')
+            resfile_path = tmp_dir.name
         else:
             tmp_dir = None
-            res_path = osp.join(outfile_prefix, 'results')
-        os.makedirs(res_path, exist_ok=True)
+            if osp.exists(resfile_path):
+                print_log('remove previous results.', self.logger)
+                import shutil
+                shutil.rmtree(resfile_path)
+            else:
+                os.makedirs(resfile_path, exist_ok=False)
         inds = [i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0]
         num_vids = len(inds)
         assert num_vids == len(self.vid_ids)
@@ -135,7 +141,7 @@ class MOT17Dataset(CocoVideoDataset):
         vid_infos = self.coco.load_vids(self.vid_ids)
         names = [_['name'] for _ in vid_infos]
         for i in range(num_vids):
-            f = open(f'{res_path}/{names[i]}.txt', 'wt')
+            f = open(f'{resfile_path}/{names[i]}.txt', 'wt')
             result = results[inds[i]:inds[i + 1]]
             data_info = self.data_infos[inds[i]:inds[i + 1]]
             assert len(result) == len(data_info)
@@ -148,13 +154,13 @@ class MOT17Dataset(CocoVideoDataset):
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
                         f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
             f.close()
-        return names, res_path, tmp_dir
+        return names, tmp_dir
 
     def evaluate(self,
                  results,
                  metric='track',
                  logger=None,
-                 outfile_prefix=None,
+                 resfile_path=None,
                  bbox_iou_thr=0.5,
                  track_iou_thr=0.5):
         eval_results = dict()
@@ -174,13 +180,15 @@ class MOT17Dataset(CocoVideoDataset):
             assert 'track_results' in results
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
-            names, res_path, tmp_dir = self.format_results(
-                results['track_results'], outfile_prefix)
+            names, tmp_dir = self.format_results(results['track_results'],
+                                                 resfile_path)
+            if tmp_dir is not None:
+                resfile_path = tmp_dir.name
 
             accs = []
             for name in names:
                 gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
-                res_file = osp.join(res_path, f'{name}.txt')
+                res_file = osp.join(resfile_path, f'{name}.txt')
                 gt = mm.io.loadtxt(gt_file)
                 res = mm.io.loadtxt(res_file)
                 ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
