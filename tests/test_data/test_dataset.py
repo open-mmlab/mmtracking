@@ -198,10 +198,8 @@ def test_video_data_sampling(dataset):
 
     # ref image sampling
     data = dataset.data_infos[3]
-    sampler = dict(num_ref_imgs=1, frame_range=1, method='uniform')
+    sampler = dict(num_ref_imgs=1, frame_range=3, method='uniform')
     ref_data = dataset.ref_img_sampling(data, **sampler)[1]
-    import pdb
-    pdb.set_trace()
     assert abs(ref_data['frame_id'] -
                data['frame_id']) <= sampler['frame_range']
     sampler = dict(num_ref_imgs=2, frame_range=3, method='bilateral_uniform')
