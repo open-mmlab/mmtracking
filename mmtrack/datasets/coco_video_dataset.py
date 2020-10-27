@@ -91,7 +91,7 @@ class CocoVideoDataset(CocoDataset):
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
-        if img_info.get('frame_id', -1) < 0 \
+        if (not self.load_as_video) or img_info.get('frame_id', -1) < 0 \
                 or (frame_range[0] == 0 and frame_range[1] == 0):
             ref_img_infos = []
             for i in range(num_ref_imgs):
