@@ -47,13 +47,14 @@ def _get_model_cfg(fname):
 
 @pytest.mark.parametrize('cfg_file',
                          ['vid/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
-def test_vid_forward(cfg_file):
-    model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
-    model['detector']['pretrained'] = None
-    model['motion']['pretrained'] = None
+def test_vid_dff_forward(cfg_file):
+    config = _get_config_module(cfg_file)
+    model = copy.deepcopy(config.model)
+    model.pretrains = None
+    model.detector.pretrained = None
 
     from mmtrack.models import build_model
-    detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
+    detector = build_model(model)
 
     # Test forward train with a non-empty truth batch
     input_shape = (1, 3, 256, 256)
@@ -145,13 +146,14 @@ def test_vid_forward(cfg_file):
 
 @pytest.mark.parametrize('cfg_file',
                          ['vid/fgfa_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
-def test_fgfa_forward(cfg_file):
-    model, train_cfg, test_cfg = _get_model_cfg(cfg_file)
-    model['detector']['pretrained'] = None
-    model['motion']['pretrained'] = None
+def test_vid_fgfa_forward(cfg_file):
+    config = _get_config_module(cfg_file)
+    model = copy.deepcopy(config.model)
+    model.pretrains = None
+    model.detector.pretrained = None
 
     from mmtrack.models import build_model
-    detector = build_model(model, train_cfg=train_cfg, test_cfg=test_cfg)
+    detector = build_model(model)
 
     # Test forward train with a non-empty truth batch
     input_shape = (1, 3, 256, 256)
