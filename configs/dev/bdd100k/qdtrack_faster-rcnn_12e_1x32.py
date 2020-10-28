@@ -51,8 +51,8 @@ model = dict(
                 loss_weight=1.0))),
     tracker=dict(
         type='QuasiDenseEmbedTracker',
-        init_score_thr=0.7,
-        obj_score_thr=0.3,
+        init_score_thr=[0.7, 0.8],
+        obj_score_thr=[0.3, 0.4, 0.5],
         match_score_thr=0.5,
         memo_tracklet_frames=10,
         memo_backdrop_frames=1,
@@ -76,5 +76,5 @@ lr_config = dict(
 total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=3)
 log_config = dict(interval=50)
-search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDSw', 'MT', 'ML']
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))

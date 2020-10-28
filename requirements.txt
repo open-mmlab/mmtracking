@@ -1,5 +1,5 @@
 coverage
-mmcv>=1.0.0
+mmcv
 mmdet
 motmetrics
 numpy
