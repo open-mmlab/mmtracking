@@ -182,9 +182,6 @@ class CocoVideoDataset(CocoDataset):
             results['proposals'] = self.proposals[idx]
 
         super().pre_pipeline(results)
-        results['frame_id'] = img_info.get('frame_id', -1)
-        results['num_left_ref_imgs'] = img_info.get('num_left_ref_imgs', -1)
-        results['frame_stride'] = img_info.get('frame_stride', -1)
         results['is_video_data'] = self.load_as_video
         return results
 

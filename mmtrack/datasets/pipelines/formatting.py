@@ -71,10 +71,6 @@ class MultiImagesToTensor(object):
 
         data = {}
         data.update(outs[0])
-        if 'img' in data:
-            data['img'] = [data['img']]
-        if 'img_metas' in data:
-            data['img_metas'] = [data['img_metas']]
         if len(outs) == 2:
             for k, v in outs[1].items():
                 data[f'{self.ref_prefix}_{k}'] = v
@@ -166,8 +162,9 @@ class VideoCollect(object):
                  meta_keys=None,
                  default_meta_keys=('filename', 'ori_filename', 'ori_shape',
                                     'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg',
-                                    'frame_id', 'is_video_data')):
+                                    'flip', 'flip_direction', 'img_norm_cfg'),
+                 meta_keys_in_img_info=('frame_id', 'num_left_ref_imgs',
+                                        'frame_stride')):
         self.keys = keys
         self.meta_keys = default_meta_keys
         if meta_keys is not None:
@@ -177,6 +174,13 @@ class VideoCollect(object):
                 assert isinstance(meta_keys, tuple), \
                     'meta_keys must be str or tuple'
             self.meta_keys += meta_keys
+        if meta_keys_in_img_info is not None:
+            if isinstance(meta_keys_in_img_info, str):
+                meta_keys_in_img_info = (meta_keys_in_img_info, )
+            else:
+                assert isinstance(meta_keys_in_img_info, tuple), \
+                    'meta_keys_in_img_info must be str or tuple'
+            self.meta_keys_in_img_info = meta_keys_in_img_info
 
     def __call__(self, results):
         results_is_dict = isinstance(results, dict)
@@ -199,6 +203,9 @@ class VideoCollect(object):
         for key in self.meta_keys:
             if key in results:
                 img_meta[key] = results[key]
+        for key in self.meta_keys_in_img_info:
+            if key in results['img_info']:
+                img_meta[key] = results['img_info'][key]
         data['img_metas'] = img_meta
         for key in self.keys:
             data[key] = results[key]

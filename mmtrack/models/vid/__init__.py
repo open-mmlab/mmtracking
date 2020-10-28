@@ -1,4 +1,5 @@
-from .dff_two_stage import DffTwoStage
-from .fgfa_two_stage import FgfaTwoStage
+from .base import BaseVideoDetector
+from .dff import DFF
+from .fgfa import FGFA
 
-__all__ = ['DffTwoStage', 'FgfaTwoStage']
+__all__ = ['BaseVideoDetector', 'DFF', 'FGFA']
