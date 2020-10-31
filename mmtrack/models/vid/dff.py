@@ -56,6 +56,7 @@ class DFF(BaseVideoDetector):
                       **kwargs):
         assert len(img) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
+        is_video_data = img_metas[0]['is_video_data']
 
         flow_img = torch.cat((img, ref_img[:, 0]), dim=1)
         flow = self.motion(flow_img, img_metas)
@@ -63,6 +64,8 @@ class DFF(BaseVideoDetector):
         x = []
         for i in range(len(ref_x)):
             x_single = flow_warp_feats(ref_x[i], flow)
+            if not is_video_data:
+                x_single = 0 * x_single + ref_x[i]
             x.append(x_single)
 
         losses = dict()

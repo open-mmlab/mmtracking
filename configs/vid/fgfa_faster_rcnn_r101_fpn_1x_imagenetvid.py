@@ -71,7 +71,7 @@ model = dict(
                                loss_weight=1.0)))),
     motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
     aggregator=dict(
-        type='StackedEmbedConvs', num_convs=1, channels=256, kernel_size=3),
+        type='EmbedAggregator', num_convs=1, channels=256, kernel_size=3),
     # model training and testing settings
     train_cfg=dict(
         rpn=dict(
@@ -156,9 +156,8 @@ test_pipeline = [
     dict(
         type='VideoCollect',
         keys=['img'],
-        meta_keys=('is_video_data'),
-        meta_keys_in_img_info=('frame_id', 'num_left_ref_imgs',
-                               'frame_stride')),
+        meta_keys=('is_video_data', 'frame_id', 'num_left_ref_imgs',
+                   'frame_stride')),
     dict(type='ConcatVideoReferences'),
     dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]

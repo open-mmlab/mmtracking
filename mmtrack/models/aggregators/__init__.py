@@ -1,3 +1,3 @@
-from .stacked_embed_convs import StackedEmbedConvs
+from .embed_aggregator import EmbedAggregator
 
-__all__ = ['StackedEmbedConvs']
+__all__ = ['EmbedAggregator']

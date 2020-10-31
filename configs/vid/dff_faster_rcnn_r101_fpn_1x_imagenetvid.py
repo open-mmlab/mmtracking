@@ -160,8 +160,7 @@ test_pipeline = [
             dict(
                 type='VideoCollect',
                 keys=['img'],
-                meta_keys=('is_video_data'),
-                meta_keys_in_img_info=('frame_id'))
+                meta_keys=('is_video_data', 'frame_id'))
         ])
 ]
 data = dict(
