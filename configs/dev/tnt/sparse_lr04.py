@@ -19,17 +19,18 @@ model = dict(
         test_cfg=dict(score_thr=0.001)),
     track_head=dict(
         type='TrackNoTrackHead',
-        match_method='cycle_dot_product',
-        match_with_gumbel=True,
+        match_method='sparse_aggregation',
+        match_with_gumbel=False,
         embed_head=dict(
-            # loss_track_aux=dict(
-            #     type='L2Loss',
-            #     neg_pos_ub=3,
-            #     pos_margin=0,
-            #     neg_margin=0.3,
-            #     hard_mining=True,
-            #     loss_weight=1.0),
-            loss_track_aux=None, )),
+            loss_track_aux=dict(
+                type='L2Loss',
+                neg_pos_ub=3,
+                pos_margin=0,
+                neg_margin=0.3,
+                hard_mining=True,
+                loss_weight=1.0),
+            # loss_track_aux=None,
+        )),
     tracker=dict(init_score_thr=0.8, obj_score_thr=0.5))
 data = dict(
     samples_per_gpu=4,
@@ -37,7 +38,7 @@ data = dict(
     # test=dict(ann_file='data/bdd100k/tracking/annotations/3vid.json'),
 )
 # optimizer
-optimizer = dict(type='SGD', lr=0.004, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.04, momentum=0.9, weight_decay=0.0001)
 # learning policy
 lr_config = dict(
     policy='step',
