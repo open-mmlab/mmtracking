@@ -75,9 +75,11 @@ def parse_gts(gts):
             category_id=1,
             bbox=bbox,
             area=bbox[2] * bbox[3],
-            official_id=ins_id,
+            instance_id=ins_id,
             ignore=ignore,
-            visibility=visibility)
+            visibility=visibility,
+            mot_score=conf,
+            mot_class_id=class_id)
         outputs[frame_id].append(anns)
     return outputs
 
@@ -103,7 +105,7 @@ def main():
     sets = ['train', 'test']
     if args.split_train:
         sets += ['half-train', 'half-val']
-    vid_id, img_id, ann_id, ins_id = 1, 1, 1, 1
+    vid_id, img_id, ann_id = 1, 1, 1
 
     for subset in sets:
         print(f'Converting MOT17 {subset} set to COCO format')
@@ -121,7 +123,6 @@ def main():
         for video_name in tqdm(video_names):
             # basic params
             parse_gt = 'test' not in subset
-            ins_maps = dict()
             # load video infos
             video_folder = osp.join(in_folder, video_name)
             infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
@@ -147,6 +148,7 @@ def main():
                 width=width,
                 height=height)
             if 'half' in subset:
+                f = open(f'{video_folder}/gt/gt_{subset}.txt', 'wt')
                 split_frame = num_imgs // 2 + 1
                 if 'train' in subset:
                     img_names = img_names[:split_frame]
@@ -169,19 +171,22 @@ def main():
                 if parse_gt:
                     gts = img2gts[_frame_id]
                     for gt in gts:
+                        x1, y1, w, h = map(int, gt['bbox'])
                         gt.update(id=ann_id, image_id=img_id)
-                        if ins_maps.get(gt['official_id']):
-                            gt['instance_id'] = ins_maps[gt['official_id']]
-                        else:
-                            gt['instance_id'] = ins_id
-                            ins_maps[gt['official_id']] = ins_id
-                            ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
+                        if 'half' in subset:
+                            f.writelines(
+                                f"{frame_id + 1},{gt['instance_id']},"
+                                f'{x1},{y1},{w},{h},'
+                                f"{int(gt['mot_score'])},{gt['mot_class_id']},"
+                                f"{gt['visibility']}\n")
                 dets = [np.array(img2dets[_frame_id])]
                 detections['bbox_results'][img_name] = dets
                 outputs['images'].append(image)
                 img_id += 1
+            if 'half' in subset:
+                f.close()
             outputs['videos'].append(video)
             vid_id += 1
         mmcv.dump(outputs, out_file)

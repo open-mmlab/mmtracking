@@ -120,8 +120,8 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[16, 22])
-total_epochs = 24
-evaluation = dict(metric=['track'], interval=2, start=4)
+    step=[8, 11])
+total_epochs = 12
+evaluation = dict(metric=['track'], interval=1, start=2)
 dist_params = dict(port='17892')
 load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'
