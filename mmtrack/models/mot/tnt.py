@@ -70,23 +70,27 @@ class TNT(QDTrack):
                 gt_labels[i] = gt_labels[i][valid_inds]
 
         if self.auto_corr or (not self.use_bbox_gt):
-            key_proposals = self.rpn_head.simple_test_rpn(x, img_metas)
+            key_proposals = self.detector.rpn_head.simple_test_rpn(
+                x, img_metas)
         else:
             key_proposals = gt_bboxes.copy()
 
         if self.use_ref_rois or (not self.use_ref_bbox_gt):
-            ref_proposals = self.rpn_head.simple_test_rpn(ref_x, ref_img_metas)
+            ref_proposals = self.detector.rpn_head.simple_test_rpn(
+                ref_x, ref_img_metas)
         else:
             ref_proposals = ref_gt_bboxes.copy()
 
         if not self.use_bbox_gt:
-            key_bboxes, key_labels = self.roi_head.simple_test_detector(
-                x, img_metas, key_proposals, rescale=False)
+            (key_bboxes,
+             key_labels) = self.detector.roi_head.simple_test_detector(
+                 x, img_metas, key_proposals, rescale=False)
             gt_bboxes, gt_labels = self.cross_nms(key_bboxes, key_labels)
 
         if not self.use_ref_bbox_gt:
-            ref_bboxes, ref_labels = self.roi_head.simple_test_detector(
-                ref_x, ref_img_metas, key_proposals, rescale=False)
+            (ref_bboxes,
+             ref_labels) = self.detector.roi_head.simple_test_detector(
+                 ref_x, ref_img_metas, key_proposals, rescale=False)
             ref_gt_bboxes, ref_gt_labels = self.cross_nms(
                 ref_bboxes, ref_labels)
 
