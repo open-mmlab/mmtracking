@@ -7,7 +7,7 @@
 # use 5. 3e2e1e or 25e35e05e
 # use 6. train ref img sample -9--0 or -9--9
 model = dict(
-    type='DFF',
+    type='FGFA',
     pretrains=dict(
         motion='data/imagenet_vid/pretrained_flownet/flownet_simple.pth'),
     detector=dict(
@@ -70,6 +70,8 @@ model = dict(
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
                                loss_weight=1.0)))),
     motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
+    aggregator=dict(
+        type='EmbedAggregator', num_convs=1, channels=256, kernel_size=3),
     # model training and testing settings
     train_cfg=dict(
         rpn=dict(
@@ -124,7 +126,7 @@ model = dict(
             max_per_img=100),
         # soft-nms is also supported for rcnn testing
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
-        key_frame_interval=10))
+    ))
 
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
@@ -146,22 +148,18 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadMultiImagesFromFile'),
+    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
+    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
+    dict(type='SeqNormalize', **img_norm_cfg),
+    dict(type='SeqPad', size_divisor=64),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1000, 600),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=64),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(
-                type='VideoCollect',
-                keys=['img'],
-                meta_keys=('is_video_data', 'frame_id'))
-        ])
+        type='VideoCollect',
+        keys=['img'],
+        meta_keys=('is_video_data', 'frame_id', 'num_left_ref_imgs',
+                   'frame_stride')),
+    dict(type='ConcatVideoReferences'),
+    dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]
 data = dict(
     samples_per_gpu=1,
@@ -172,10 +170,10 @@ data = dict(
             ann_file=data_root + 'annotations/imagenet_vid_train.json',
             img_prefix=data_root + 'data/VID/',
             ref_img_sampler=dict(
-                num_ref_imgs=1,
-                frame_range=[-9, 0],
-                filter_key_img=False,
-                method='uniform'),
+                num_ref_imgs=2,
+                frame_range=9,
+                filter_key_img=True,
+                method='bilateral_uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,
@@ -183,24 +181,32 @@ data = dict(
             ann_file=data_root + 'annotations/imagenet_det_30cls.json',
             img_prefix=data_root + 'data/DET/',
             ref_img_sampler=dict(
-                num_ref_imgs=1,
+                num_ref_imgs=2,
                 frame_range=0,
-                filter_key_img=False,
-                method='uniform'),
+                filter_key_img=True,
+                method='bilateral_uniform'),
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=None,
+        ref_img_sampler=dict(
+            num_ref_imgs=18,
+            frame_range=[-9, 9],
+            stride=1,
+            method='test_with_fix_stride'),
         pipeline=test_pipeline,
         test_mode=True),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=None,
+        ref_img_sampler=dict(
+            num_ref_imgs=18,
+            frame_range=[-9, 9],
+            stride=1,
+            method='test_with_fix_stride'),
         pipeline=test_pipeline,
         test_mode=True))
 # optimizer
