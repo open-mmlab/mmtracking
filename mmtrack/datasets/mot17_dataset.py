@@ -147,6 +147,28 @@ class MOT17Dataset(CocoVideoDataset):
             for info, res in zip(data_info, result):
                 frame = info['frame_id'] + 1
                 bboxes, labels, ids = restore_result(res, return_ids=True)
+
+                # ann_info = self.get_ann_info(info)
+                # f_gt_inds = (ann_info['bboxes'][:, 0] < 0) | (
+                #     ann_info['bboxes'][:, 2] > info['width'])
+                # f_gts = ann_info['bboxes'][f_gt_inds]
+                # f_clip_gts = f_gts.copy()
+                # f_clip_gts[:, 0] = np.clip(f_clip_gts[:, 0], 0,
+                #                            info['width'] - 1)
+                # f_clip_gts[:, 2] = np.clip(f_clip_gts[:, 2], 0,
+                #                            info['width'] - 1)
+                # ious1 = bbox_overlaps(
+                #     torch.tensor(bboxes[:, :-1]), torch.tensor(f_gts))
+                # ious2 = bbox_overlaps(
+                #     torch.tensor(bboxes[:, :-1]), torch.tensor(f_clip_gts))
+                # if ious1.nelement() > 0:
+                #     ious1 = ious1.max(dim=1)[0]
+                #     ious2 = ious2.max(dim=1)[0]
+                #     f_dt_inds = (ious1 < 0.5) & (ious2 > 0.5)
+                #     bboxes = bboxes[~f_dt_inds]
+                #     labels = labels[~f_dt_inds]
+                #     ids = ids[~f_dt_inds]
+
                 for bbox, label, id in zip(bboxes, labels, ids):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(

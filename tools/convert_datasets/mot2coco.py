@@ -48,13 +48,21 @@ def parse_args():
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
     parser.add_argument(
+        '--convert-det',
+        action='store_true',
+        help='split the train set into half-train and half-validate.')
+    parser.add_argument(
         '--split-train',
+        action='store_true',
+        help='split the train set into half-train and half-validate.')
+    parser.add_argument(
+        '--clean',
         action='store_true',
         help='split the train set into half-train and half-validate.')
     return parser.parse_args()
 
 
-def parse_gts(gts):
+def parse_gts(gts, width, height, clean=False):
     outputs = defaultdict(list)
     for gt in gts:
         gt = gt.strip().split(',')
@@ -63,6 +71,16 @@ def parse_gts(gts):
         conf = float(gt[6])
         class_id = int(gt[7])
         visibility = float(gt[8])
+        if clean:
+            x1, y1, w, h = bbox
+            x2, y2 = x1 + w, y1 + h
+            x1 = max(x1, 0)
+            y1 = max(y1, 0)
+            x2 = min(x2, width - 1)
+            y2 = min(y2, height - 1)
+            bbox = [x1, y1, x2 - x1, y2 - y1]
+            if (visibility < 0.1) & (conf > 0):
+                continue
         if class_id in USELESS:
             continue
         elif class_id in IGNORES:
@@ -115,8 +133,8 @@ def main():
         det_file = osp.join(args.output, f'mot17_{subset}_detections.pkl')
         outputs = defaultdict(list)
         outputs['categories'] = [dict(id=1, name='pedestrian')]
-        detections = dict(bbox_results=dict())
-
+        if args.convert_det:
+            detections = dict(bbox_results=dict())
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
             # basic params
@@ -125,11 +143,6 @@ def main():
             # load video infos
             video_folder = osp.join(in_folder, video_name)
             infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
-            if parse_gt:
-                gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
-                img2gts = parse_gts(gts)
-            dets = mmcv.list_from_file(f'{video_folder}/det/det.txt')
-            img2dets = parse_dets(dets)
             # video-level infos
             assert video_name == infos[1].strip().split('=')[1]
             img_folder = infos[2].strip().split('=')[1]
@@ -146,6 +159,12 @@ def main():
                 fps=fps,
                 width=width,
                 height=height)
+            if parse_gt:
+                gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
+                img2gts = parse_gts(gts, width, height, args.clean)
+            if args.convert_det:
+                dets = mmcv.list_from_file(f'{video_folder}/det/det.txt')
+                img2dets = parse_dets(dets)
             if 'half' in subset:
                 split_frame = num_imgs // 2 + 1
                 if 'train' in subset:
@@ -178,15 +197,19 @@ def main():
                             ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
-                dets = [np.array(img2dets[_frame_id])]
-                detections['bbox_results'][img_name] = dets
+                if args.convert_det:
+                    dets = [np.array(img2dets[_frame_id])]
+                    detections['bbox_results'][img_name] = dets
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)
             vid_id += 1
         mmcv.dump(outputs, out_file)
-        mmcv.dump(detections, det_file)
-        print(f'Done! Saved as {out_file} and {det_file}')
+        if args.convert_det:
+            mmcv.dump(detections, det_file)
+            print(f'Done! Saved as {out_file} and {det_file}')
+        else:
+            print(f'Done! Saved as {out_file}')
 
 
 if __name__ == '__main__':

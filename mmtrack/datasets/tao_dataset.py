@@ -142,6 +142,7 @@ class TaoDataset(CocoVideoDataset):
 
         bbox_results = self._det2json(results['bbox_results'])
         result_files['bbox'] = f'{resfile_path}/tao_bbox.json'
+
         mmcv.dump(bbox_results, result_files['bbox'])
 
         track_results = self._track2json(results['track_results'])
