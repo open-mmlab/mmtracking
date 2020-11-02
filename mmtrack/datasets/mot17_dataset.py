@@ -16,7 +16,7 @@ from .coco_video_dataset import CocoVideoDataset
 @DATASETS.register_module()
 class MOT17Dataset(CocoVideoDataset):
 
-    CLASSES = ('pedestrian')
+    CLASSES = ('pedestrian', )
 
     def __init__(self,
                  visibility_thr=-1,
@@ -208,7 +208,14 @@ class MOT17Dataset(CocoVideoDataset):
 
             accs = []
             for name in names:
-                gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
+                if 'half-train' in self.ann_file:
+                    gt_file = osp.join(self.img_prefix,
+                                       f'{name}/gt/gt_half-train.txt')
+                elif 'half-val' in self.ann_file:
+                    gt_file = osp.join(self.img_prefix,
+                                       f'{name}/gt/gt_half-val.txt')
+                else:
+                    gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
                 res_file = osp.join(resfile_path, f'{name}.txt')
                 gt = mm.io.loadtxt(gt_file)
                 res = mm.io.loadtxt(res_file)
@@ -234,7 +241,7 @@ class MOT17Dataset(CocoVideoDataset):
                 summary,
                 formatters=mh.formatters,
                 namemap=mm.io.motchallenge_metric_names)
-            print_log(str_summary, logger)
+            print(str_summary, logger)
 
             eval_results.update({
                 mm.io.motchallenge_metric_names[k]: v['OVERALL']

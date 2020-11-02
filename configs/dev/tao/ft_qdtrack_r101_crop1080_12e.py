@@ -11,20 +11,34 @@ model = dict(
         backbone=dict(depth=101),
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
+    track_head=dict(
+        roi_assigner=dict(
+            pos_iou_thr=0.7,
+            neg_iou_thr=0.3,
+            min_pos_iou=0.5,
+            match_low_quality=False),
+        roi_sampler=dict(
+            num=256,
+            pos_fraction=0.5,
+            neg_pos_ub=3,
+            neg_sampler=dict(type='RandomSampler')),
+        embed_head=dict(
+            loss_track_aux=dict(
+                type='L2Loss',
+                neg_pos_ub=3,
+                pos_margin=0,
+                neg_margin=0.1,
+                hard_mining=True,
+                loss_weight=1.0))),
     tracker=dict(
         _delete_=True,
         type='TaoTracker',
-        init_score_thr=0.0001,
-        obj_score_thr=0.0001,
-        match_score_thr=0.5,
         memo_frames=10,
         momentum_embed=0.8,
         momentum_obj_score=0.5,
-        obj_score_diff_thr=0.8,
         distractor_nms_thr=0.3,
         distractor_score_thr=0.5,
-        match_metric='bisoftmax',
-        match_with_cosine=True))
+        match_metric='bisoftmax'))
 dataset_type = 'TaoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -33,11 +47,11 @@ train_pipeline = [
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
     dict(
         type='SeqResize',
-        img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
-                   (1333, 768), (1333, 800)],
+        img_scale=(1080, 1080),
         share_params=True,
-        multiscale_mode='value',
+        ratio_range=(0.8, 1.2),
         keep_ratio=True),
+    dict(type='SeqRandomCrop', share_params=False, crop_size=(1080, 1080)),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -51,7 +65,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        img_scale=(1080, 1080),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -64,23 +78,25 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
-        _delete_=True,
-        type='ClassBalancedDataset',
-        oversample_thr=1e-3,
-        dataset=dict(
-            type=dataset_type,
-            classes='data/tao/annotations/tao_classes.txt',
-            ann_file='data/tao/annotations/train_ours.json',
-            img_prefix='data/tao/frames/',
-            key_img_sampler=dict(interval=1),
-            ref_img_sampler=dict(
-                num_ref_imgs=1,
-                frame_range=1,
-                filter_key_img=True,
-                method='uniform'),
-            pipeline=train_pipeline)),
+    workers_per_gpu=1,
+    train=[
+        dict(
+            _delete_=True,
+            type='ClassBalancedDataset',
+            oversample_thr=1e-3,
+            dataset=dict(
+                type=dataset_type,
+                classes='data/tao/annotations/tao_classes.txt',
+                ann_file='data/tao/annotations/train_ours.json',
+                img_prefix='data/tao/frames/',
+                key_img_sampler=dict(interval=1),
+                ref_img_sampler=dict(
+                    num_ref_imgs=1,
+                    frame_range=1,
+                    filter_key_img=True,
+                    method='uniform'),
+                pipeline=train_pipeline)),
+    ],
     val=dict(
         type=dataset_type,
         classes='data/tao/annotations/tao_classes.txt',
@@ -96,7 +112,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -106,5 +122,6 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[8, 11])
 total_epochs = 12
-evaluation = dict(metric=['bbox', 'track'], interval=2)
-load_from = 'work_dirs/dev/tao/qdtrack_r101_mstrain_2x_lvis/latest.pth'
+evaluation = dict(metric=['track'], interval=1, start=2)
+dist_params = dict(port='17892')
+load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'

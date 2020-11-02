@@ -6,7 +6,20 @@ _base_ = [
 model = dict(
     pretrains=None,
     frozen_modules=None,
-    detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))))
+    detector=dict(roi_head=dict(bbox_head=dict(num_classes=8))),
+    tracker=dict(
+        type='QuasiDenseEmbedTracker',
+        init_score_thr=[0.5, 0.6, 0.7, 0.8],
+        obj_score_thr=[0.3, 0.4, 0.5],
+        match_score_thr=0.5,
+        memo_tracklet_frames=10,
+        memo_backdrop_frames=1,
+        memo_momentum=0.8,
+        nms_conf_thr=0.5,
+        nms_backdrop_iou_thr=0.3,
+        nms_class_iou_thr=0.7,
+        with_cats=True,
+        match_metric='bisoftmax'))
 data = dict(samples_per_gpu=2, workers_per_gpu=2)
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)

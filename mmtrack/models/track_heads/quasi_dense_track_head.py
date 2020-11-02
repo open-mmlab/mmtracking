@@ -127,10 +127,11 @@ class QuasiDenseTrackHead(nn.Module):
             track_feats = torch.split(track_feats, nums)
         return track_feats
 
-    def simple_test(self, x, img_metas, det_bboxes, rescale):
+    def simple_test(self, x, img_metas, det_bboxes, rescale=False):
         if det_bboxes.size(0) == 0:
             return None
-        track_bboxes = det_bboxes[:, :-1] * torch.tensor(
-            img_metas[0]['scale_factor']).to(det_bboxes.device)
-        track_feats = self._track_forward(x, [track_bboxes])
+        if rescale:
+            det_bboxes = det_bboxes[:, :-1] * torch.tensor(
+                img_metas[0]['scale_factor']).to(det_bboxes.device)
+        track_feats = self._track_forward(x, [det_bboxes])
         return track_feats

@@ -12,7 +12,16 @@ model = dict(
         roi_head=dict(bbox_head=dict(num_classes=482)),
         test_cfg=dict(rcnn=dict(score_thr=0.0001, max_per_img=300))),
     track_head=dict(
-        roi_sampler=dict(neg_sampler=dict(type='RandomSampler')),
+        roi_assigner=dict(
+            pos_iou_thr=0.7,
+            neg_iou_thr=0.3,
+            min_pos_iou=0.5,
+            match_low_quality=False),
+        roi_sampler=dict(
+            num=256,
+            pos_fraction=0.5,
+            neg_pos_ub=3,
+            neg_sampler=dict(type='RandomSampler')),
         embed_head=dict(
             loss_track_aux=dict(
                 type='L2Loss',
@@ -24,17 +33,12 @@ model = dict(
     tracker=dict(
         _delete_=True,
         type='TaoTracker',
-        init_score_thr=0.0001,
-        obj_score_thr=0.0001,
-        match_score_thr=0.5,
         memo_frames=10,
         momentum_embed=0.8,
         momentum_obj_score=0.5,
-        obj_score_diff_thr=0.8,
         distractor_nms_thr=0.3,
         distractor_score_thr=0.5,
-        match_metric='bisoftmax',
-        match_with_cosine=True))
+        match_metric='bisoftmax'))
 dataset_type = 'TaoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -88,7 +92,7 @@ data = dict(
                 key_img_sampler=dict(interval=1),
                 ref_img_sampler=dict(
                     num_ref_imgs=1,
-                    frame_range=3,
+                    frame_range=1,
                     filter_key_img=True,
                     method='uniform'),
                 pipeline=train_pipeline)),
@@ -108,7 +112,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
@@ -118,5 +122,6 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[16, 22])
 total_epochs = 24
-evaluation = dict(metric=['track'], interval=2, start=12)
+evaluation = dict(metric=['track'], interval=2, start=4)
+dist_params = dict(port='17892')
 load_from = 'work_dirs/dev/tao/qdtrack_r101_crop1080_50e_lvis/latest.pth'
