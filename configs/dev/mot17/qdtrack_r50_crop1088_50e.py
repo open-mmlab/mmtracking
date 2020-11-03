@@ -2,7 +2,7 @@ _base_ = [
     '../../_base_/models/qdtrack_faster-rcnn_r50_fpn.py',
     '../../_base_/default_runtime.py'
 ]
-save_variables = ['det_bboxes', 'det_labels', 'embeds']
+# save_variables = ['det_bboxes', 'det_labels', 'embeds']
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
 model = dict(
     pretrains=dict(detector='ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox' +
