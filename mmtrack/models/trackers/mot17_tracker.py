@@ -309,9 +309,9 @@ class MOT17Tracker(object):
                 self.pred_tracks[id]['frame_ids'].append(
                     metas.img_info['frame_id'])
 
-            if metas['img_info']['frame_id'] == 5:
-                import pdb
-                pdb.set_trace()
+            # if metas['img_info']['frame_id'] == 5:
+            #     import pdb
+            #     pdb.set_trace()
 
             fp_inds = fps == 1  # red
             fn_inds = fns == 1  # yellow

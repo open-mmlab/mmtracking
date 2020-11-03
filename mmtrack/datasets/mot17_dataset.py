@@ -119,10 +119,8 @@ class MOT17Dataset(CocoVideoDataset):
 
         return ann
 
-    def format_results(self, results, resfile_path=None):
-        if isinstance(results, dict):
-            results = results['track_results']
-        assert isinstance(results, list), 'results must be a list.'
+    def format_results(self, results, resfile_path=None, metrics=None):
+        assert isinstance(results, dict), 'results must be a dict.'
         if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
             resfile_path = tmp_dir.name
@@ -132,50 +130,50 @@ class MOT17Dataset(CocoVideoDataset):
                 print_log('remove previous results.', self.logger)
                 import shutil
                 shutil.rmtree(resfile_path)
-        os.makedirs(resfile_path, exist_ok=True)
+
+        resfiles = dict()
+        for metric in metrics:
+            resfiles[metric] = osp.join(resfile_path, metric)
+            os.makedirs(resfiles[metric], exist_ok=True)
+
         inds = [i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0]
         num_vids = len(inds)
         assert num_vids == len(self.vid_ids)
         inds.append(len(self.data_infos))
         vid_infos = self.coco.load_vids(self.vid_ids)
         names = [_['name'] for _ in vid_infos]
+
         for i in range(num_vids):
-            f = open(f'{resfile_path}/{names[i]}.txt', 'wt')
-            result = results[inds[i]:inds[i + 1]]
-            data_info = self.data_infos[inds[i]:inds[i + 1]]
-            assert len(result) == len(data_info)
-            for info, res in zip(data_info, result):
-                frame = info['frame_id'] + 1
+            for metric in metrics:
+                formatter = getattr(self, f'format_{metric}_results')
+                formatter(results[f'{metric}_results'][inds[i]:inds[i + 1]],
+                          self.data_infos[inds[i]:inds[i + 1]],
+                          f'{resfiles[metric]}/{names[i]}.txt')
+
+        return resfiles, names, tmp_dir
+
+    def format_track_results(self, results, infos, resfile):
+        with open(resfile, 'wt') as f:
+            for res, info in zip(results, infos):
+                frame = info['mot_frame_id']
                 bboxes, labels, ids = restore_result(res, return_ids=True)
-
-                # ann_info = self.get_ann_info(info)
-                # f_gt_inds = (ann_info['bboxes'][:, 0] < 0) | (
-                #     ann_info['bboxes'][:, 2] > info['width'])
-                # f_gts = ann_info['bboxes'][f_gt_inds]
-                # f_clip_gts = f_gts.copy()
-                # f_clip_gts[:, 0] = np.clip(f_clip_gts[:, 0], 0,
-                #                            info['width'] - 1)
-                # f_clip_gts[:, 2] = np.clip(f_clip_gts[:, 2], 0,
-                #                            info['width'] - 1)
-                # ious1 = bbox_overlaps(
-                #     torch.tensor(bboxes[:, :-1]), torch.tensor(f_gts))
-                # ious2 = bbox_overlaps(
-                #     torch.tensor(bboxes[:, :-1]), torch.tensor(f_clip_gts))
-                # if ious1.nelement() > 0:
-                #     ious1 = ious1.max(dim=1)[0]
-                #     ious2 = ious2.max(dim=1)[0]
-                #     f_dt_inds = (ious1 < 0.5) & (ious2 > 0.5)
-                #     bboxes = bboxes[~f_dt_inds]
-                #     labels = labels[~f_dt_inds]
-                #     ids = ids[~f_dt_inds]
-
                 for bbox, label, id in zip(bboxes, labels, ids):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
                         f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
+
+    def format_bbox_results(self, results, infos, resfile):
+        with open(resfile, 'wt') as f:
+            for res, info in zip(results, infos):
+                frame = info['mot_frame_id']
+                bboxes, labels = restore_result(res)
+                for bbox, label in zip(bboxes, labels):
+                    x1, y1, x2, y2, conf = bbox
+                    f.writelines(
+                        f'{frame},-1,{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
+                        f'{(y2-y1):.3f},{conf:.3f}\n')
             f.close()
-        return names, tmp_dir
 
     def evaluate(self,
                  results,
@@ -196,15 +194,12 @@ class MOT17Dataset(CocoVideoDataset):
             if metric not in allowed_metrics:
                 raise KeyError(f'metric {metric} is not supported.')
 
+        resfiles, names, tmp_dir = self.format_results(results, resfile_path,
+                                                       metrics)
+
         if 'track' in metrics:
-            assert isinstance(results, dict)
-            assert 'track_results' in results
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
-            names, tmp_dir = self.format_results(results['track_results'],
-                                                 resfile_path)
-            if tmp_dir is not None:
-                resfile_path = tmp_dir.name
 
             accs = []
             for name in names:
@@ -216,7 +211,7 @@ class MOT17Dataset(CocoVideoDataset):
                                        f'{name}/gt/gt_half-val.txt')
                 else:
                     gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
-                res_file = osp.join(resfile_path, f'{name}.txt')
+                res_file = osp.join(resfiles['track'], f'{name}.txt')
                 gt = mm.io.loadtxt(gt_file)
                 res = mm.io.loadtxt(res_file)
                 ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
@@ -228,9 +223,6 @@ class MOT17Dataset(CocoVideoDataset):
                         gt, res, distth=distth)
                 accs.append(acc)
 
-            if tmp_dir is not None:
-                tmp_dir.cleanup()
-
             mh = mm.metrics.create()
             summary = mh.compute_many(
                 accs,
@@ -241,7 +233,7 @@ class MOT17Dataset(CocoVideoDataset):
                 summary,
                 formatters=mh.formatters,
                 namemap=mm.io.motchallenge_metric_names)
-            print(str_summary, logger)
+            print(str_summary)
 
             eval_results.update({
                 mm.io.motchallenge_metric_names[k]: v['OVERALL']
@@ -264,7 +256,11 @@ class MOT17Dataset(CocoVideoDataset):
                 logger=logger)
             eval_results['mAP'] = mean_ap
 
+        if tmp_dir is not None:
+            tmp_dir.cleanup()
+
         for k, v in eval_results.items():
             if isinstance(v, float):
                 eval_results[k] = float(f'{(v):.3f}')
+
         return eval_results

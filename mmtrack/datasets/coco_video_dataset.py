@@ -45,6 +45,7 @@ class CocoVideoDataset(CocoDataset):
 
         data_infos = []
         self.vid_ids = self.coco.get_vid_ids()
+        # self.vid_ids = [self.vid_ids[-3]]
         self.img_ids = []
         for vid_id in self.vid_ids:
             img_ids = self.coco.get_img_ids_from_vid(vid_id)
