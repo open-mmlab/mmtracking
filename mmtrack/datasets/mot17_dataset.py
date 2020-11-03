@@ -194,10 +194,9 @@ class MOT17Dataset(CocoVideoDataset):
             if metric not in allowed_metrics:
                 raise KeyError(f'metric {metric} is not supported.')
 
-        resfiles, names, tmp_dir = self.format_results(results, resfile_path,
-                                                       metrics)
-
         if 'track' in metrics:
+            resfiles, names, tmp_dir = self.format_results(
+                results, resfile_path, metrics)
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
 
@@ -240,6 +239,9 @@ class MOT17Dataset(CocoVideoDataset):
                 for k, v in summary.to_dict().items()
             })
 
+            if tmp_dir is not None:
+                tmp_dir.cleanup()
+
         if 'bbox' in metrics:
             if isinstance(results, dict):
                 bbox_results = results['bbox_results']
@@ -255,9 +257,6 @@ class MOT17Dataset(CocoVideoDataset):
                 dataset=self.CLASSES,
                 logger=logger)
             eval_results['mAP'] = mean_ap
-
-        if tmp_dir is not None:
-            tmp_dir.cleanup()
 
         for k, v in eval_results.items():
             if isinstance(v, float):

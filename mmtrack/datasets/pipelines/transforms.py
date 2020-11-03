@@ -98,7 +98,8 @@ class SeqRandomCrop(object):
     def __init__(self,
                  crop_size,
                  allow_negative_crop=False,
-                 share_params=False):
+                 share_params=False,
+                 bbox_clip_border=True):
         assert crop_size[0] > 0 and crop_size[1] > 0
         self.crop_size = crop_size
         self.allow_negative_crop = allow_negative_crop
@@ -112,6 +113,7 @@ class SeqRandomCrop(object):
             'gt_bboxes': 'gt_masks',
             'gt_bboxes_ignore': 'gt_masks_ignore'
         }
+        self.bbox_clip_border = bbox_clip_border
 
     def get_offsets(self, img):
         margin_h = max(img.shape[0] - self.crop_size[0], 0)
@@ -154,8 +156,9 @@ class SeqRandomCrop(object):
             bbox_offset = np.array([offset_w, offset_h, offset_w, offset_h],
                                    dtype=np.float32)
             bboxes = results[key] - bbox_offset
-            bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
-            bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
+            if self.bbox_clip_border:
+                bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
+                bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
             valid_inds = (bboxes[:, 2] > bboxes[:, 0]) & (
                 bboxes[:, 3] > bboxes[:, 1])
             # If the crop does not contain any gt-bbox area and

@@ -96,9 +96,9 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    if cfg.get('pretrained', False):
+    if cfg.model.get('pretrained', False):
         cfg.model.pretrained = None
-    if cfg.get('pretrains', False):
+    if cfg.model.get('pretrains', False):
         cfg.model.pretrains = None
     if cfg.model.get('detector', False):
         cfg.model.detector.pretrained = None

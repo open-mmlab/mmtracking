@@ -78,6 +78,7 @@ def parse_gts(gts):
             bbox=bbox,
             area=bbox[2] * bbox[3],
             instance_id=ins_id,
+            iscrowd=False,
             visibility=visibility,
             mot_conf=conf,
             mot_class_id=class_id)
