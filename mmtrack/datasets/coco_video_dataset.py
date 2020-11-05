@@ -241,8 +241,8 @@ class CocoVideoDataset(CocoDataset):
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
-            # if ann.get('ignore', False):
-            #     continue
+            if ann.get('ignore', False):
+                continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
             inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
@@ -345,13 +345,16 @@ class CocoVideoDataset(CocoDataset):
         super_metrics = ['bbox', 'segm']
         super_metrics = [_ for _ in metrics if _ in super_metrics]
         if super_metrics:
-            if 'bbox' in super_metrics and 'segm' in super_metrics:
-                super_results = []
-                for bbox, segm in zip(results['bbox_results'],
-                                      results['segm_results']):
-                    super_results.append((bbox, segm))
+            if isinstance(results, dict):
+                if 'bbox' in super_metrics and 'segm' in super_metrics:
+                    super_results = []
+                    for bbox, segm in zip(results['bbox_results'],
+                                          results['segm_results']):
+                        super_results.append((bbox, segm))
+                else:
+                    super_results = results['bbox_results']
             else:
-                super_results = results['bbox_results']
+                super_results = results
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,

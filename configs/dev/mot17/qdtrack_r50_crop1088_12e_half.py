@@ -77,9 +77,9 @@ data = dict(
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        visibility_thr=0.1,
-        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        visibility_thr=-1,
+        ann_file='data/mot17/annotations/mot17_half-train_cocoformat.json',
+        img_prefix='data/mot17/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
             frame_range=10,
@@ -88,8 +88,8 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        ann_file='data/mot17/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot17/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
@@ -99,10 +99,12 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=None)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[8, 11])
 total_epochs = 12
-evaluation = dict(metric=['bbox', 'track'], interval=2)
-checkpoint_config = dict(interval=2)
+evaluation = dict(metric=['bbox', 'track'], interval=1)
+checkpoint_config = dict(interval=1)
+dist_params = dict(port='12349')
+# log_config = dict(interval=1)

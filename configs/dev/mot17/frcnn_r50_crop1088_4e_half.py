@@ -153,20 +153,25 @@ data = dict(
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
+        classes=('pedestrian', ),
         load_as_video=False,
-        visibility_thr=0.1,
-        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        visibility_thr=-1,
+        ann_file='data/mot17/annotations/mot17_half-train_cocoformat.json',
+        img_prefix='data/mot17/train/',
         ref_img_sampler=None,
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
+        classes=('pedestrian', ),
+        load_as_video=False,
         ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
         img_prefix='data/mot17det/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
+        classes=('pedestrian', ),
+        load_as_video=False,
         ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
         img_prefix='data/mot17det/train/',
         ref_img_sampler=None,
@@ -175,8 +180,9 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
-lr_config = dict(policy='step', step=[8, 11])
-total_epochs = 12
-evaluation = dict(metric=['bbox'], interval=2)
-checkpoint_config = dict(interval=2)
+lr_config = dict(policy='step', step=[2, 3])
+total_epochs = 4
+evaluation = dict(metric=['bbox'], interval=1)
+checkpoint_config = dict(interval=1)
 load_from = 'ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth'
+dist_params = dict(port='12345')

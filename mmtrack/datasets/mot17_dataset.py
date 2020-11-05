@@ -77,7 +77,10 @@ class MOT17Dataset(CocoVideoDataset):
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
-            if ann['visibility'] < self.visibility_thr:
+            if ann.get('ignore', False):
+                continue
+            if (not self.test_mode) and (ann['visibility'] <
+                                         self.visibility_thr):
                 continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
@@ -89,7 +92,7 @@ class MOT17Dataset(CocoVideoDataset):
             if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
-            if ann.get('ignore', False) or ann.get('iscrowd', False):
+            if ann.get('iscrowd', False):
                 # note: normally no `iscrowd` for MOT17Dataset
                 gt_bboxes_ignore.append(bbox)
             else:
