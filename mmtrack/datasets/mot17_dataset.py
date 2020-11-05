@@ -20,11 +20,13 @@ class MOT17Dataset(CocoVideoDataset):
 
     def __init__(self,
                  visibility_thr=-1,
+                 track_visibility_thr=-1,
                  detection_file=None,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.visibility_thr = visibility_thr
+        self.track_visibility_thr = track_visibility_thr
         self.detections = self.load_detections(detection_file)
 
     def load_detections(self, detection_file=None):
@@ -98,7 +100,11 @@ class MOT17Dataset(CocoVideoDataset):
             else:
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
-                gt_instance_ids.append(ann['instance_id'])
+                if (not self.test_mode) and (ann['visibility'] <
+                                             self.track_visibility_thr):
+                    gt_instance_ids.append(-1)
+                else:
+                    gt_instance_ids.append(ann['instance_id'])
 
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)

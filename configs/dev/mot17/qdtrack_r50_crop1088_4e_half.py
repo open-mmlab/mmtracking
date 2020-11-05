@@ -2,6 +2,7 @@ _base_ = [
     '../../_base_/models/qdtrack_faster-rcnn_r50_fpn.py',
     '../../_base_/default_runtime.py'
 ]
+search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
 # save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
     pretrains=dict(detector='ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox' +
@@ -10,16 +11,12 @@ model = dict(
     detector=dict(
         rpn_head=dict(reg_clip_border=False),
         roi_head=dict(bbox_head=dict(reg_clip_border=False, num_classes=1)),
-        test_cfg=dict(
-            rcnn=dict(
-                score_thr=0.05,
-                nms=dict(type='nms', iou_threshold=0.5),
-                max_per_img=100))),
+        test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
     track_head=dict(embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
         type='MOT17Tracker',
-        init_score_thr=0.8,
-        obj_score_thr=0.4,
+        init_score_thr=0.9,
+        obj_score_thr=0.5,
         match_score_thr=0.5,
         memo_tracklet_frames=30,
         memo_backdrop_frames=1,
@@ -78,6 +75,7 @@ data = dict(
     train=dict(
         type=dataset_type,
         visibility_thr=-1,
+        track_visibility_thr=0.1,
         ann_file='data/mot17/annotations/mot17_half-train_cocoformat.json',
         img_prefix='data/mot17/train/',
         ref_img_sampler=dict(
@@ -99,7 +97,7 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[2, 3])
