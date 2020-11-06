@@ -22,7 +22,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 
 # train
 srun -p ${part} --gres=gpu:${gpu_per} -n${gpu_nums} --ntasks-per-node=${gpu_per} \
---job-name=python --kill-on-bad-exit=1 \
+--job-name=quick --kill-on-bad-exit=1 \
 python3 -u ${ROOT}/tools/train.py \
 ./configs/${config}.py \
 --work-dir=./${folder}/${config} \
