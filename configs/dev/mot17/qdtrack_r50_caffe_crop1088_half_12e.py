@@ -7,7 +7,7 @@ search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
 model = dict(
     pretrains=dict(
         detector='ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'),
-    frozen_modules='detector',
+    frozen_modules=None,
     detector=dict(
         pretrained=None,
         backbone=dict(norm_cfg=dict(requires_grad=False), style='caffe'),
@@ -105,10 +105,9 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[6])
-total_epochs = 8
+lr_config = dict(policy='step', step=[9])
+total_epochs = 15
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='12349')
 # log_config = dict(interval=1)
-load_from = 'work_dirs/dev/mot17/qdtrack_r50_caffe_crop1088_4e_half/good.pth'
