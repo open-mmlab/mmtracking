@@ -12,7 +12,9 @@ model = dict(
         rpn_head=dict(reg_clip_border=False),
         roi_head=dict(bbox_head=dict(reg_clip_border=False, num_classes=1)),
         test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
-    track_head=dict(embed_head=dict(loss_track=dict(loss_weight=0.25))),
+    track_head=dict(
+        roi_assigner=dict(neg_iou_thr=0.5),
+        embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
         type='MOT17Tracker',
         init_score_thr=0.9,
@@ -100,8 +102,8 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[2, 3])
-total_epochs = 4
+lr_config = dict(policy='step', step=[2])
+total_epochs = 3
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='12349')

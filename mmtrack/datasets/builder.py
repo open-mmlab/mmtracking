@@ -4,7 +4,8 @@ from functools import partial
 import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
-from mmdet.datasets.samplers import DistributedGroupSampler, GroupSampler
+from mmdet.datasets.samplers import (DistributedGroupSampler, GroupSampler,
+                                     DistributedSampler)
 from torch.utils.data import DataLoader
 
 from .samplers import DistributedVideoSampler
@@ -44,8 +45,12 @@ def build_dataloader(dataset,
             sampler = DistributedGroupSampler(dataset, samples_per_gpu,
                                               world_size, rank)
         else:
-            sampler = DistributedVideoSampler(
-                dataset, world_size, rank, shuffle=False)
+            if dataset.load_as_video:
+                sampler = DistributedVideoSampler(
+                    dataset, world_size, rank, shuffle=False)
+            else:
+                sampler = DistributedSampler(
+                    dataset, world_size, rank, shuffle=False)
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:

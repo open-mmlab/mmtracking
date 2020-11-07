@@ -5,20 +5,25 @@ _base_ = [
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
 # save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
-    pretrains=dict(detector='ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox' +
-                   '_mAP-0.384_20200504_210434-a5d8aa15.pth'),
+    pretrains=dict(
+        detector='ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'),
     frozen_modules=None,
     detector=dict(
-        rpn_head=dict(reg_clip_border=False),
-        roi_head=dict(bbox_head=dict(reg_clip_border=False, num_classes=1)),
+        pretrained=None,
+        backbone=dict(norm_cfg=dict(requires_grad=False), style='caffe'),
+        rpn_head=dict(bbox_coder=dict(clip_border=False)),
+        roi_head=dict(
+            bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
         test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
-    track_head=dict(embed_head=dict(loss_track=dict(loss_weight=0.25))),
+    track_head=dict(
+        roi_assigner=dict(neg_iou_thr=0.5),
+        embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
         type='MOT17Tracker',
         init_score_thr=0.9,
-        obj_score_thr=0.7,
+        obj_score_thr=0.5,
         match_score_thr=0.5,
-        memo_tracklet_frames=30,
+        memo_tracklet_frames=20,
         memo_backdrop_frames=1,
         memo_momentum=0.8,
         nms_conf_thr=0.5,
@@ -28,7 +33,7 @@ model = dict(
         match_metric='bisoftmax'))
 dataset_type = 'MOT17Dataset'
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+    mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
@@ -76,33 +81,33 @@ data = dict(
         type=dataset_type,
         visibility_thr=-1,
         track_visibility_thr=0.1,
-        ann_file='data/mot17/annotations/mot17_train_cocoformat.json',
-        img_prefix='data/mot17/train/',
+        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
+        img_prefix='data/mot17det/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
-            frame_range=5,
+            frame_range=10,
             filter_key_img=True,
             method='uniform'),
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot17/annotations/mot17_train_cocoformat.json',
-        img_prefix='data/mot17/train/',
+        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot17det/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file='data/mot17/annotations/mot17_test_cocoformat.json',
-        img_prefix='data/mot17/test/',
+        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot17det/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[3])
-total_epochs = 4
+lr_config = dict(policy='step', step=[6])
+total_epochs = 8
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
-dist_params = dict(port='12351')
+dist_params = dict(port='12349')
 # log_config = dict(interval=1)

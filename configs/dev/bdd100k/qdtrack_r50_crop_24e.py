@@ -33,6 +33,6 @@ lr_config = dict(
     step=[16, 22])
 # runtime settings
 total_epochs = 24
-evaluation = dict(metric=['bbox', 'track'], interval=24)
+evaluation = dict(metric=['track'], interval=24)
 log_config = dict(interval=50)
-search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDSw', 'MT', 'ML']

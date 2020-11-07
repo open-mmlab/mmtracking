@@ -130,6 +130,10 @@ class QDTrack(BaseMultiObjectTracker):
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 
+        if frame_id < 0:
+            bbox_result = bbox2result(det_bboxes, det_labels, num_classes)
+            return dict(bbox_results=bbox_result, track_results=None)
+
         embeds = self.track_head.simple_test(x, img_metas, det_bboxes, rescale)
 
         if hasattr(self, 'save_variables') and self.save_variables is not None:
