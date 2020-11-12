@@ -18,8 +18,7 @@ model = dict(
     track_head=dict(
         roi_extractor=dict(
             type='CenterRoIExtractor',
-            featmap_strides=[4],
-            roi_scale_factor=0.5),
+            roi_scale_factor=0.6),
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
@@ -106,11 +105,11 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[8, 11])
-total_epochs = 12
+lr_config = dict(policy='step', step=[2])
+total_epochs = 3
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='12349')

@@ -47,7 +47,7 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=1,
+    workers_per_gpu=0,
     train=dict(
         type=dataset_type,
         classes=('vehicle', 'pedestrian', 'cyclist'),

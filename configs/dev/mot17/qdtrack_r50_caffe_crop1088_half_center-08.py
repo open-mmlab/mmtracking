@@ -18,7 +18,7 @@ model = dict(
     track_head=dict(
         roi_extractor=dict(
             type='CenterRoIExtractor',
-            roi_scale_factor=0.5),
+            roi_scale_factor=0.8),
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
