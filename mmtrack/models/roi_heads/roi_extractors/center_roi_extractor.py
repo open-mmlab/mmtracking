@@ -24,6 +24,31 @@ class CenterRoIExtractor(SingleRoIExtractor):
         super(CenterRoIExtractor, self).__init__(*args, **kwargs)
         self.roi_scale_factor = roi_scale_factor
 
+    def roi_rescale(self, rois, scale_factor):
+        """Scale RoI coordinates by scale factor.
+
+        Args:
+            rois (torch.Tensor): RoI (Region of Interest), shape (n, 5)
+            scale_factor (float): Scale factor that RoI will be multiplied by.
+
+        Returns:
+            torch.Tensor: Scaled RoI.
+        """
+
+        cx = (rois[:, 1] + rois[:, 3]) * 0.5
+        # cy = (rois[:, 2] + rois[:, 4]) * 0.5
+        w = rois[:, 3] - rois[:, 1]
+        # h = rois[:, 4] - rois[:, 2]
+        new_w = w * scale_factor
+        # new_h = h * scale_factor
+        x1 = cx - new_w * 0.5
+        x2 = cx + new_w * 0.5
+        # y1 = cy - new_h * 0.5
+        # y2 = cy + new_h * 0.5
+        rois[:, 1] = x1
+        rois[:, 3] = x2
+        return rois
+
     @force_fp32(apply_to=('feats', ), out_fp16=True)
     def forward(self, feats, rois):
         """Forward function."""
