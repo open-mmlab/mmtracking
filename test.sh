@@ -15,7 +15,6 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 
 # test
 srun -p ${part} --gres=gpu:${gpu_nums} -n${gpu_nums} --ntasks-per-node=${gpu_nums} \
--x SH-IDC1-10-5-38-66 \
 --job-name=python --kill-on-bad-exit=1 \
 python3 -u ${ROOT}/tools/test.py \
 ./configs/${config}.py \

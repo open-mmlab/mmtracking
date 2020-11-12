@@ -5,14 +5,21 @@ _base_ = [
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
 # save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
-    pretrains=dict(detector='ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox' +
-                   '_mAP-0.384_20200504_210434-a5d8aa15.pth'),
+    pretrains=dict(
+        detector='ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'),
     frozen_modules=None,
     detector=dict(
-        rpn_head=dict(reg_clip_border=False),
-        roi_head=dict(bbox_head=dict(reg_clip_border=False, num_classes=1)),
+        pretrained=None,
+        backbone=dict(norm_cfg=dict(requires_grad=False), style='caffe'),
+        rpn_head=dict(bbox_coder=dict(clip_border=False)),
+        roi_head=dict(
+            bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
         test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
     track_head=dict(
+        roi_extractor=dict(
+            type='CenterRoIExtractor',
+            featmap_strides=[4],
+            roi_scale_factor=0.05),
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
@@ -30,7 +37,7 @@ model = dict(
         match_metric='bisoftmax'))
 dataset_type = 'MOT17Dataset'
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+    mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
@@ -99,11 +106,11 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[2])
-total_epochs = 3
+lr_config = dict(policy='step', step=[8, 11])
+total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='12349')

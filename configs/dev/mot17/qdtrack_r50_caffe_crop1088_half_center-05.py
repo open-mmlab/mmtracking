@@ -16,6 +16,10 @@ model = dict(
             bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
         test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
     track_head=dict(
+        roi_extractor=dict(
+            type='CenterRoIExtractor',
+            featmap_strides=[4],
+            roi_scale_factor=0.5),
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(loss_track=dict(loss_weight=0.25))),
     tracker=dict(
@@ -23,7 +27,7 @@ model = dict(
         init_score_thr=0.9,
         obj_score_thr=0.5,
         match_score_thr=0.5,
-        memo_tracklet_frames=20,
+        memo_tracklet_frames=30,
         memo_backdrop_frames=1,
         memo_momentum=0.8,
         nms_conf_thr=0.5,
@@ -81,8 +85,8 @@ data = dict(
         type=dataset_type,
         visibility_thr=-1,
         track_visibility_thr=0.1,
-        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        ann_file='data/mot17/annotations/mot17_half-train_cocoformat.json',
+        img_prefix='data/mot17/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
             frame_range=10,
@@ -91,8 +95,8 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        ann_file='data/mot17/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot17/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
@@ -105,8 +109,8 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[6])
-total_epochs = 12
+lr_config = dict(policy='step', step=[2])
+total_epochs = 3
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='12349')
