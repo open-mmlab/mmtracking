@@ -107,7 +107,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[6])
 total_epochs = 9
-evaluation = dict(metric=['bbox', 'track'], interval=1)
+evaluation = dict(metric=['bbox', 'track'], start=6, interval=1)
 checkpoint_config = dict(interval=1)
-dist_params = dict(port='12349')
+dist_params = dict(port='12341')
 # log_config = dict(interval=1)

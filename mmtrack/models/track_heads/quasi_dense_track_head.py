@@ -61,7 +61,8 @@ class QuasiDenseTrackHead(nn.Module):
                       ref_gt_labels,
                       ref_gt_match_indices,
                       gt_bboxes_ignore=None,
-                      ref_gt_bboxes_ignore=None):
+                      ref_gt_bboxes_ignore=None,
+                      gt_instance_ids=None):
         num_imgs = len(img_metas)
         if gt_bboxes_ignore is None:
             gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -113,7 +114,13 @@ class QuasiDenseTrackHead(nn.Module):
         asso_targets = self.embed_head.get_track_targets(
             gt_match_indices, ref_gt_bboxes, key_sampling_results,
             ref_sampling_results, self.multi_positive)
-        loss_track = self.embed_head.loss(*match_feats, *asso_targets)
+        if self.embed_head.loss_track is not None:
+            loss_track = self.embed_head.loss(*match_feats, *asso_targets)
+        if self.embed_head.loss_id is not None:
+            loss_id = self.embed_head.cal_loss_id(key_feats, gt_instance_ids,
+                                                  key_sampling_results)
+            # return loss_id
+            loss_track.update(loss_id)
         return loss_track
 
     def _track_forward(self, x, bboxes, split=False):

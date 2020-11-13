@@ -210,7 +210,7 @@ class QuasiDenseEmbedTracker(object):
         if bboxes.size(0) > 0 and not self.empty:
             memo_bboxes, memo_labels, memo_embeds, memo_ids = self.memo
             scores = self.cal_similarity(labels, embeds, memo_labels,
-                                         memo_embeds)
+                                         memo_embeds, temperature)
             ids = self.assign_ids(scores, bboxes[:, -1], memo_ids)
         else:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)

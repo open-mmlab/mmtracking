@@ -230,7 +230,7 @@ class MOT17Tracker(object):
         if bboxes.size(0) > 0 and not self.empty:
             memo_bboxes, memo_labels, memo_embeds, memo_ids = self.memo
             scores = self.cal_similarity(labels, embeds, memo_labels,
-                                         memo_embeds)
+                                         memo_embeds, temperature)
             if self.cosine_factor > 0:
                 cos_scores = embed_similarity(
                     embeds, memo_embeds, method='cosine', transpose=True)

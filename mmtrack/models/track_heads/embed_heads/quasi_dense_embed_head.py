@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from mmcv.cnn import ConvModule
 from mmdet.models import HEADS, build_loss
 
@@ -29,7 +30,9 @@ class QuasiDenseEmbedHead(nn.Module):
                      pos_margin=0,
                      neg_margin=0.3,
                      hard_mining=True,
-                     loss_weight=1.0)):
+                     loss_weight=1.0),
+                 num_ids=None,
+                 loss_id=None):
         super(QuasiDenseEmbedHead, self).__init__()
         self.num_convs = num_convs
         self.num_fcs = num_fcs
@@ -46,11 +49,20 @@ class QuasiDenseEmbedHead(nn.Module):
         self.fc_embed = nn.Linear(last_layer_dim, embed_channels)
 
         self.softmax_temperature = softmax_temperature
-        self.loss_track = build_loss(loss_track)
+        if loss_track is not None:
+            self.loss_track = build_loss(loss_track)
+        else:
+            self.loss_track = None
         if loss_track_aux is not None:
             self.loss_track_aux = build_loss(loss_track_aux)
         else:
             self.loss_track_aux = None
+        if num_ids is not None:
+            self.fc_id = nn.Linear(embed_channels, num_ids, bias=False)
+        if loss_id is not None:
+            self.loss_id = build_loss(loss_id)
+        else:
+            self.loss_id = None
 
     def _add_conv_fc_branch(self, num_convs, num_fcs, in_channels):
         last_layer_dim = in_channels
@@ -87,6 +99,8 @@ class QuasiDenseEmbedHead(nn.Module):
                 nn.init.constant_(m.bias, 0)
         nn.init.normal_(self.fc_embed.weight, 0, 0.01)
         nn.init.constant_(self.fc_embed.bias, 0)
+        if hasattr(self, 'fc_id'):
+            nn.init.kaiming_normal_(self.fc_id.weight)
 
     def forward(self, x):
         if x.numel() == 0:
@@ -164,6 +178,23 @@ class QuasiDenseEmbedHead(nn.Module):
         if self.loss_track_aux is not None:
             losses['loss_track_aux'] = loss_track_aux / nums
         return losses
+
+    def cal_loss_id(self, key_feats, gt_instance_ids, key_sampling_results):
+        key_feats = torch.cat(key_feats, dim=0)
+        logits = embed_similarity(
+            key_feats,
+            self.fc_id.weight,
+            method='dot_product',
+            temperature=self.softmax_temperature)
+        pos_gt_inds = [_.pos_assigned_gt_inds for _ in key_sampling_results]
+        gt_ids = [
+            _ids[_inds] for (_ids, _inds) in zip(gt_instance_ids, pos_gt_inds)
+        ]
+        gt_ids = torch.cat(gt_ids, dim=0)
+        weights = torch.ones_like(gt_ids)
+        weights[gt_ids < 0] = 0
+        loss_id = self.loss_id(logits, gt_ids, weight=weights)
+        return dict(loss_id=loss_id)
 
     @staticmethod
     def random_choice(gallery, num):

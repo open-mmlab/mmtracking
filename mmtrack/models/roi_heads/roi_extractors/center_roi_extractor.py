@@ -20,7 +20,7 @@ class CenterRoIExtractor(SingleRoIExtractor):
         finest_scale (int): Scale threshold of mapping to level 0. Default: 56.
     """
 
-    def __init__(self, roi_scale_factor=-1, *args, **kwargs):
+    def __init__(self, roi_scale_factor=None, *args, **kwargs):
         super(CenterRoIExtractor, self).__init__(*args, **kwargs)
         self.roi_scale_factor = roi_scale_factor
 
@@ -34,20 +34,20 @@ class CenterRoIExtractor(SingleRoIExtractor):
         Returns:
             torch.Tensor: Scaled RoI.
         """
-
+        if isinstance(scale_factor, float):
+            scale_factor = [scale_factor, scale_factor]
         cx = (rois[:, 1] + rois[:, 3]) * 0.5
-        # cy = (rois[:, 2] + rois[:, 4]) * 0.5
+        cy = (rois[:, 2] + rois[:, 4]) * 0.5
         w = rois[:, 3] - rois[:, 1]
-        # h = rois[:, 4] - rois[:, 2]
-        new_w = w * scale_factor
-        # new_h = h * scale_factor
+        h = rois[:, 4] - rois[:, 2]
+        new_w = w * scale_factor[0]
+        new_h = h * scale_factor[1]
         x1 = cx - new_w * 0.5
         x2 = cx + new_w * 0.5
-        # y1 = cy - new_h * 0.5
-        # y2 = cy + new_h * 0.5
-        rois[:, 1] = x1
-        rois[:, 3] = x2
-        return rois
+        y1 = cy - new_h * 0.5
+        y2 = cy + new_h * 0.5
+        new_rois = torch.stack((rois[:, 0], x1, y1, x2, y2), dim=-1)
+        return new_rois
 
     @force_fp32(apply_to=('feats', ), out_fp16=True)
     def forward(self, feats, rois):
@@ -63,12 +63,12 @@ class CenterRoIExtractor(SingleRoIExtractor):
         if num_levels == 1:
             if len(rois) == 0:
                 return roi_feats
-            if self.roi_scale_factor > 0:
+            if self.roi_scale_factor is not None:
                 rois = self.roi_rescale(rois, self.roi_scale_factor)
             return self.roi_layers[0](feats[0], rois)
 
         target_lvls = self.map_roi_levels(rois, num_levels)
-        if self.roi_scale_factor > 0:
+        if self.roi_scale_factor is not None:
             rois = self.roi_rescale(rois, self.roi_scale_factor)
         for i in range(num_levels):
             inds = target_lvls == i

@@ -77,9 +77,9 @@ def parse_gts(gts):
             category_id=1,
             bbox=bbox,
             area=bbox[2] * bbox[3],
-            instance_id=ins_id,
             iscrowd=False,
             visibility=visibility,
+            mot_instance_id=ins_id,
             mot_conf=conf,
             mot_class_id=class_id)
         outputs[frame_id].append(anns)
@@ -110,6 +110,7 @@ def main():
     vid_id, img_id, ann_id = 1, 1, 1
 
     for subset in sets:
+        ins_id = 0
         print(f'Converting MOT17 {subset} set to COCO format')
         if 'half' in subset:
             in_folder = osp.join(args.input, 'train')
@@ -125,6 +126,7 @@ def main():
         for video_name in tqdm(video_names):
             # basic params
             parse_gt = 'test' not in subset
+            ins_maps = dict()
             # load video infos
             video_folder = osp.join(in_folder, video_name)
             infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
@@ -182,6 +184,13 @@ def main():
                     gts = img2gts[mot_frame_id]
                     for gt in gts:
                         gt.update(id=ann_id, image_id=img_id)
+                        mot_ins_id = gt['mot_instance_id']
+                        if mot_ins_id in ins_maps:
+                            gt['instance_id'] = ins_maps[mot_ins_id]
+                        else:
+                            gt['instance_id'] = ins_id
+                            ins_maps[mot_ins_id] = ins_id
+                            ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
                 if args.convert_det:
@@ -191,6 +200,7 @@ def main():
                 img_id += 1
             outputs['videos'].append(video)
             vid_id += 1
+        print(f'{subset} has {ins_id} instances.')
         mmcv.dump(outputs, out_file)
         if args.convert_det:
             mmcv.dump(detections, det_file)

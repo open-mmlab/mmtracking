@@ -61,6 +61,8 @@ class QDTrack(BaseMultiObjectTracker):
                       gt_masks=None,
                       ref_gt_bboxes_ignore=None,
                       ref_gt_masks=None,
+                      gt_instance_ids=None,
+                      ref_gt_instance_ids=None,
                       **kwargs):
         losses = dict()
         # feature extraction
@@ -90,11 +92,12 @@ class QDTrack(BaseMultiObjectTracker):
             else:
                 key_proposals = gt_bboxes.copy()
                 ref_proposals = ref_proposals.copy()
+
             loss_track = self.track_head.forward_train(
                 x, img_metas, key_proposals, gt_bboxes, gt_labels,
                 gt_match_indices, ref_x, ref_img_metas, ref_proposals,
                 ref_gt_bboxes, ref_gt_labels, ref_gt_match_indices,
-                gt_bboxes_ignore, ref_gt_bboxes_ignore)
+                gt_bboxes_ignore, ref_gt_bboxes_ignore, gt_instance_ids)
         elif hasattr(self.detector, 'bbox_head'):
             # Single stage detector
             loss_bbox = self.detector.bbox_head.forward_train(
