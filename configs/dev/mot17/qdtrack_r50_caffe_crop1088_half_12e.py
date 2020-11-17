@@ -20,8 +20,8 @@ model = dict(
         embed_head=dict(
             softmax_temperature=0.07,
             # loss_track=None,
-            loss_track_aux=None,
-            num_ids=546,
+            # loss_track_aux=None,
+            num_ids=359,
             loss_id=dict(
                 type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.25))),
     tracker=dict(
@@ -90,7 +90,7 @@ data = dict(
         type=dataset_type,
         visibility_thr=-1,
         track_visibility_thr=-1,
-        ann_file='data/mot17det/annotations/mot17_train_cocoformat.json',
+        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
         img_prefix='data/mot17det/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
@@ -100,23 +100,23 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot17det/annotations/mot17_train_cocoformat.json',
+        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
         img_prefix='data/mot17det/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file='data/mot17/annotations/mot17_test_cocoformat.json',
-        img_prefix='data/mot17/test/',
+        ann_file='data/mot17det/annotations/mot17_test_cocoformat.json',
+        img_prefix='data/mot17det/test/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[6, 15])
-total_epochs = 18
+lr_config = dict(policy='step', step=[9])
+total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
-dist_params = dict(port='11313')
+dist_params = dict(port='11312')
 # log_config = dict(interval=1)

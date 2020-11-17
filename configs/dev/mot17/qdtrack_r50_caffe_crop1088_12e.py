@@ -3,7 +3,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
-# save_variables = ['det_bboxes', 'det_labels', 'embeds']
+save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
     pretrains=dict(
         detector='ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'),
@@ -14,13 +14,13 @@ model = dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
             bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
-        test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
+        test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.4)))),
     track_head=dict(
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(
             softmax_temperature=0.07,
             # loss_track=None,
-            loss_track_aux=None,
+            # loss_track_aux=None,
             num_ids=546,
             loss_id=dict(
                 type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.25))),
@@ -106,17 +106,17 @@ data = dict(
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file='data/mot17/annotations/mot17_test_cocoformat.json',
-        img_prefix='data/mot17/test/',
+        ann_file='data/mot17det/annotations/mot17_test_cocoformat.json',
+        img_prefix='data/mot17det/test/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[6, 15])
-total_epochs = 18
+lr_config = dict(policy='step', step=[9])
+total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
-dist_params = dict(port='11313')
+dist_params = dict(port='11312')
 # log_config = dict(interval=1)

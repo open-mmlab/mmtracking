@@ -57,10 +57,10 @@ class QuasiDenseEmbedHead(nn.Module):
             self.loss_track_aux = build_loss(loss_track_aux)
         else:
             self.loss_track_aux = None
-        if num_ids is not None:
-            self.fc_id = nn.Linear(embed_channels, num_ids, bias=False)
         if loss_id is not None:
+            assert num_ids > 0
             self.loss_id = build_loss(loss_id)
+            self.fc_id = nn.Linear(embed_channels, num_ids, bias=False)
         else:
             self.loss_id = None
 
@@ -169,12 +169,13 @@ class QuasiDenseEmbedHead(nn.Module):
         for _sims, _cos_sims, _targets, _weights in zip(
                 sims, cos_sims, targets, weights):
             if _targets.numel() > 0:
-                loss_track += self.loss_track(
-                    _sims, _targets, _weights, avg_factor=_weights.sum())
+                if self.loss_track is not None:
+                    loss_track += self.loss_track(
+                        _sims, _targets, _weights, avg_factor=_weights.sum())
                 if self.loss_track_aux is not None:
                     loss_track_aux += self.loss_track_aux(_cos_sims, _targets)
-        losses['loss_track'] = loss_track / nums
-
+        if self.loss_track is not None:
+            losses['loss_track'] = loss_track / nums
         if self.loss_track_aux is not None:
             losses['loss_track_aux'] = loss_track_aux / nums
         return losses
