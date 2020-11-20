@@ -9,6 +9,7 @@ from mmdet.models.builder import build_head
 from mmtrack.core import track2result
 from ..builder import MODELS, build_detector, build_tracker
 from .base import BaseMultiObjectTracker
+import time
 
 
 @MODELS.register_module()
@@ -110,6 +111,7 @@ class QDTrack(BaseMultiObjectTracker):
         return losses
 
     def simple_test(self, img, img_metas, rescale=False):
+        t1 = time.time()
         frame_id = img_metas[0].get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()
@@ -158,4 +160,6 @@ class QDTrack(BaseMultiObjectTracker):
             temperature=self.track_head.embed_head.softmax_temperature)
         track_result = track2result(bboxes, labels, ids, num_classes)
         bbox_result = bbox2result(det_bboxes, det_labels, num_classes)
+        t2 = time.time()
+        print(t2 - t1)
         return dict(bbox_results=bbox_result, track_results=track_result)
