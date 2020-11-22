@@ -13,19 +13,19 @@ class SelsaAggregator(nn.Module):
     Link: https://arxiv.org/abs/1907.06390
 
     Args:
-        in_channels (int): The channels of proposal features.
+        in_channels (int): The number of channels of the features of proposal.
         num_attention_blocks (int): The number of attention blocks used in
             SELSA module. Default: 16.
 
     Attributes:
-        fc_embed (nn.Linear): Fc layer used to embed the target proposals
-            features.
-        ref_fc_embed (nn.Linear): Fc layer used to embed the support proposals
-            features.
-        fc (nn.Linear): Fc layer used to transform the final target proposals
-            features.
-        ref_fc (nn.Linear): Fc layer used to transform support proposals
-            features.
+        fc_embed (nn.Linear): Fc layer used to embed the features of target
+            proposals.
+        ref_fc_embed (nn.Linear): Fc layer used to embed the features of
+            support proposals.
+        fc (nn.Linear): Fc layer used to transform the final features of
+            target proposals.
+        ref_fc (nn.Linear): Fc layer used to transform the features of support
+            proposals.
         num_attention_blocks (int): The number of attention blocks used in
             SELSA module. Default: 16.
     """

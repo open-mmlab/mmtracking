@@ -1,7 +1,7 @@
 import torch
-from mmdet.models import build_detector
+from addict import Dict
 
-from ..builder import MODELS
+from ..builder import MODELS, build_detector
 from .base import BaseVideoDetector
 
 
@@ -15,7 +15,9 @@ class SELSA(BaseVideoDetector):
                  train_cfg=None,
                  test_cfg=None):
         super(SELSA, self).__init__()
-        self.detector = build_detector(detector, train_cfg, test_cfg)
+        self.detector = build_detector(detector)
+        assert hasattr(self.detector, 'roi_head'), \
+            'selsa video detector only supports two stage detector'
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -63,12 +65,10 @@ class SELSA(BaseVideoDetector):
 
         losses = dict()
 
-        assert hasattr(self.detector, 'roi_head'), \
-            'selsa video detector only supports two stage detector'
         # RPN forward and loss
         if self.detector.with_rpn:
-            proposal_cfg = self.train_cfg.get('rpn_proposal',
-                                              self.test_cfg.rpn)
+            proposal_cfg = self.detector.train_cfg.get(
+                'rpn_proposal', self.detector.test_cfg.rpn)
             rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
                 x,
                 img_metas,
@@ -91,6 +91,66 @@ class SELSA(BaseVideoDetector):
 
         return losses
 
+    def extract_feats(self, img, img_metas, ref_img, ref_img_metas):
+        frame_id = img_metas[0].get('frame_id', -1)
+        assert frame_id >= 0
+        num_left_ref_imgs = img_metas[0].get('num_left_ref_imgs', -1)
+        frame_stride = img_metas[0].get('frame_stride', -1)
+
+        # test with adaptive stride
+        if frame_stride < 1:
+            if frame_id == 0:
+                self.memo = Dict()
+                self.memo.img_metas = ref_img_metas[0]
+                ref_x = self.detector.extract_feat(ref_img[0])
+                # 'tuple' object (e.g. the output of FPN) does not support
+                # item assignment
+                self.memo.feats = []
+                for i in range(len(ref_x)):
+                    self.memo.feats.append(ref_x[i])
+
+            x = self.detector.extract_feat(img)
+            ref_x = self.memo.feats.copy()
+            for i in range(len(x)):
+                ref_x[i] = torch.cat((ref_x[i], x[i]), dim=0)
+            ref_img_metas = self.memo.img_metas.copy()
+            ref_img_metas.extend(img_metas)
+        # test with fixed stride
+        else:
+            if frame_id == 0:
+                self.memo = Dict()
+                self.memo.img_metas = ref_img_metas[0]
+                ref_x = self.detector.extract_feat(ref_img[0])
+                # 'tuple' object (e.g. the output of FPN) does not support
+                # item assignment
+                self.memo.feats = []
+                # the features of img is same as ref_x[i][[num_left_ref_imgs]]
+                x = []
+                for i in range(len(ref_x)):
+                    self.memo.feats.append(ref_x[i])
+                    x.append(ref_x[i][[num_left_ref_imgs]])
+            elif frame_id % frame_stride == 0:
+                assert ref_img is not None
+                x = []
+                ref_x = self.detector.extract_feat(ref_img[0])
+                for i in range(len(ref_x)):
+                    self.memo.feats[i] = torch.cat(
+                        (self.memo.feats[i], ref_x[i]), dim=0)[1:]
+                    x.append(self.memo.feats[i][[num_left_ref_imgs]])
+                self.memo.img_metas.extend(ref_img_metas[0])
+                self.memo.img_metas = self.memo.img_metas[1:]
+            else:
+                assert ref_img is None
+                x = self.detector.extract_feat(img)
+
+            ref_x = self.memo.feats.copy()
+            for i in range(len(x)):
+                ref_x[i][num_left_ref_imgs] = x[i]
+            ref_img_metas = self.memo.img_metas.copy()
+            ref_img_metas[num_left_ref_imgs] = img_metas[0]
+
+        return x, img_metas, ref_x, ref_img_metas
+
     def simple_test(self,
                     img,
                     img_metas,
@@ -100,69 +160,9 @@ class SELSA(BaseVideoDetector):
                     ref_proposals=None,
                     rescale=False):
         """Test without augmentation."""
-        frame_id = img_metas[0].get('frame_id', -1)
-        assert frame_id >= 0
-        num_left_ref_imgs = img_metas[0].get('num_left_ref_imgs', -1)
-        frame_stride = img_metas[0].get('frame_stride', -1)
+        x, img_metas, ref_x, ref_img_metas = self.extract_feats(
+            img, img_metas, ref_img, ref_img_metas)
 
-        # test with adaptive stride
-        if frame_stride < 1:
-            if frame_id == 0:
-                self.buffer_img_metas = ref_img_metas[0]
-                buffer_x = self.detector.extract_feat(ref_img[0])
-                # 'tuple' object (e.g. the output of FPN) does not support
-                # item assignment
-                self.buffer_x = []
-                for i in range(len(buffer_x)):
-                    self.buffer_x.append(buffer_x[i])
-            x_current_frame = self.detector.extract_feat(img)
-
-            x = x_current_frame
-            ref_x = self.buffer_x
-            ref_img_metas = self.buffer_img_metas
-        # test with fixed stride
-        else:
-            if frame_id == 0:
-                self.buffer_img_metas = ref_img_metas[0]
-                buffer_x = self.detector.extract_feat(ref_img[0])
-                # 'tuple' object (e.g. the output of FPN) does not support
-                # item assignment
-                self.buffer_x = []
-                # the features of img is same as ref_x[i][[num_left_ref_imgs]]
-                x_current_frame = []
-                for i in range(len(buffer_x)):
-                    self.buffer_x.append(buffer_x[i])
-                    x_current_frame.append(buffer_x[i][[num_left_ref_imgs]])
-            elif frame_id % frame_stride == 0:
-                assert ref_img is not None
-                x_current_frame = []
-                buffer_x = self.detector.extract_feat(ref_img[0])
-                for i in range(len(buffer_x)):
-                    self.buffer_x[i] = torch.cat(
-                        (self.buffer_x[i], buffer_x[i]), dim=0)[1:]
-                    x_current_frame.append(
-                        self.buffer_x[i][[num_left_ref_imgs]])
-                self.buffer_img_metas.extend(ref_img_metas[0])
-                self.buffer_img_metas = self.buffer_img_metas[1:]
-            else:
-                assert ref_img is None
-                x_current_frame = self.detector.extract_feat(img)
-
-            x = x_current_frame
-            ref_x = []
-            for i in range(len(self.buffer_x)):
-                ref_x_single = torch.cat(
-                    (self.buffer_x[i][:num_left_ref_imgs],
-                     self.buffer_x[i][num_left_ref_imgs + 1:]),
-                    dim=0)
-                ref_x.append(ref_x_single)
-            ref_img_metas = []
-            for i in range(len(self.buffer_img_metas)):
-                if i != num_left_ref_imgs:
-                    ref_img_metas.append(self.buffer_img_metas[i])
-
-        assert hasattr(self.detector, 'roi_head'), \
-            'selsa video detector only supports two stage detector'
         if proposals is None:
             proposal_list = self.detector.rpn_head.simple_test_rpn(
                 x, img_metas)

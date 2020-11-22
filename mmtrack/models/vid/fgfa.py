@@ -1,9 +1,9 @@
 import torch
+from addict import Dict
 from mmdet.core import bbox2result
-from mmdet.models import build_detector
 
 from mmtrack.core import flow_warp_feats
-from ..builder import MODELS, build_aggregator, build_motion
+from ..builder import MODELS, build_aggregator, build_detector, build_motion
 from .base import BaseVideoDetector
 
 
@@ -19,7 +19,7 @@ class FGFA(BaseVideoDetector):
                  train_cfg=None,
                  test_cfg=None):
         super(FGFA, self).__init__()
-        self.detector = build_detector(detector, train_cfg, test_cfg)
+        self.detector = build_detector(detector)
         self.motion = build_motion(motion)
         self.aggregator = build_aggregator(aggregator)
         self.train_cfg = train_cfg
@@ -79,8 +79,8 @@ class FGFA(BaseVideoDetector):
         if hasattr(self.detector, 'roi_head'):
             # RPN forward and loss
             if self.detector.with_rpn:
-                proposal_cfg = self.train_cfg.get('rpn_proposal',
-                                                  self.test_cfg.rpn)
+                proposal_cfg = self.detector.train_cfg.get(
+                    'rpn_proposal', self.detector.test_cfg.rpn)
                 rpn_losses, proposal_list = \
                     self.detector.rpn_head.forward_train(
                         x,
@@ -107,14 +107,7 @@ class FGFA(BaseVideoDetector):
 
         return losses
 
-    def simple_test(self,
-                    img,
-                    img_metas,
-                    ref_img=None,
-                    ref_img_metas=None,
-                    proposals=None,
-                    rescale=False):
-        """Test without augmentation."""
+    def extract_feats(self, img, img_metas, ref_img, ref_img_metas):
         frame_id = img_metas[0].get('frame_id', -1)
         assert frame_id >= 0
         num_left_ref_imgs = img_metas[0].get('num_left_ref_imgs', -1)
@@ -123,55 +116,69 @@ class FGFA(BaseVideoDetector):
         # test with adaptive stride
         if frame_stride < 1:
             if frame_id == 0:
-                self.ref_imgs = ref_img[0]
+                self.memo = Dict()
+                self.memo.img = ref_img[0]
                 ref_x = self.detector.extract_feat(ref_img[0])
                 # 'tuple' object (e.g. the output of FPN) does not support
                 # item assignment
-                self.ref_x = []
+                self.memo.feats = []
                 for i in range(len(ref_x)):
-                    self.ref_x.append(ref_x[i])
-            x_frame = self.detector.extract_feat(img)
+                    self.memo.feats.append(ref_x[i])
+            x = self.detector.extract_feat(img)
         # test with fixed stride
         else:
             if frame_id == 0:
-                self.ref_imgs = ref_img[0]
+                self.memo = Dict()
+                self.memo.img = ref_img[0]
                 ref_x = self.detector.extract_feat(ref_img[0])
                 # 'tuple' object (e.g. the output of FPN) does not support
                 # item assignment
-                self.ref_x = []
+                self.memo.feats = []
                 # the features of img is same as ref_x[i][[num_left_ref_imgs]]
-                x_frame = []
+                x = []
                 for i in range(len(ref_x)):
-                    self.ref_x.append(ref_x[i])
-                    x_frame.append(ref_x[i][[num_left_ref_imgs]])
+                    self.memo.feats.append(ref_x[i])
+                    x.append(ref_x[i][[num_left_ref_imgs]])
             elif frame_id % frame_stride == 0:
                 assert ref_img is not None
-                x_frame = []
+                x = []
                 ref_x = self.detector.extract_feat(ref_img[0])
                 for i in range(len(ref_x)):
-                    self.ref_x[i] = torch.cat((self.ref_x[i], ref_x[i]),
-                                              dim=0)[1:]
-                    x_frame.append(self.ref_x[i][[num_left_ref_imgs]])
-                self.ref_imgs = torch.cat((self.ref_imgs, ref_img[0]),
+                    self.memo.feats[i] = torch.cat(
+                        (self.memo.feats[i], ref_x[i]), dim=0)[1:]
+                    x.append(self.memo.feats[i][[num_left_ref_imgs]])
+                self.memo.img = torch.cat((self.memo.img, ref_img[0]),
                                           dim=0)[1:]
             else:
                 assert ref_img is None
-                x_frame = self.detector.extract_feat(img)
+                x = self.detector.extract_feat(img)
 
         flow_imgs = torch.cat(
-            (img.repeat(self.ref_imgs.shape[0], 1, 1, 1), self.ref_imgs),
+            (img.repeat(self.memo.img.shape[0], 1, 1, 1), self.memo.img),
             dim=1)
         flows = self.motion(flow_imgs, img_metas)
 
-        x = []
-        for i in range(len(x_frame)):
-            x_single = flow_warp_feats(self.ref_x[i], flows)
+        agg_x = []
+        for i in range(len(x)):
+            agg_x_single = flow_warp_feats(self.memo.feats[i], flows)
             if frame_stride < 1:
-                x_single = torch.cat((x_frame[i], x_single), dim=0)
+                agg_x_single = torch.cat((x[i], agg_x_single), dim=0)
             else:
-                x_single[num_left_ref_imgs] = x_frame[i]
-            agg_x_single = self.aggregator(x_frame[i], x_single)
-            x.append(agg_x_single)
+                agg_x_single[num_left_ref_imgs] = x[i]
+            agg_x_single = self.aggregator(x[i], agg_x_single)
+            agg_x.append(agg_x_single)
+        return agg_x
+
+    def simple_test(self,
+                    img,
+                    img_metas,
+                    ref_img=None,
+                    ref_img_metas=None,
+                    proposals=None,
+                    rescale=False):
+        """Test without augmentation."""
+
+        x = self.extract_feats(img, img_metas, ref_img, ref_img_metas)
 
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):
