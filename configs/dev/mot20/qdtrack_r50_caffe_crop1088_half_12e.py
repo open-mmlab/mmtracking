@@ -3,7 +3,7 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs']
-# save_variables = ['det_bboxes', 'det_labels', 'embeds']
+save_variables = ['det_bboxes', 'det_labels', 'embeds']
 model = dict(
     pretrains=dict(
         detector='ckpts/mmdet/faster_rcnn_r50_caffe_fpn_person_ap551.pth'),
@@ -11,18 +11,23 @@ model = dict(
     detector=dict(
         pretrained=None,
         backbone=dict(norm_cfg=dict(requires_grad=False), style='caffe'),
-        rpn_head=dict(bbox_coder=dict(clip_border=False)),
+        rpn_head=dict(bbox_coder=dict(clip_border=True)),
         roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
-        test_cfg=dict(rcnn=dict(nms=dict(type='nms', iou_threshold=0.5)))),
+            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1)),
+        test_cfg=dict(
+            rcnn=dict(
+                score_thr=0.001,
+                max_per_img=300,
+                nms=dict(type='nms', iou_threshold=0.5)))),
     track_head=dict(
         roi_assigner=dict(neg_iou_thr=0.5),
         embed_head=dict(
             softmax_temperature=0.07,
-            loss_track=None,
-            # loss_track_aux=None,
-            num_ids=359,
-            loss_id=None)),
+            # loss_track=None,
+            loss_track_aux=None,
+            num_ids=1241,
+            loss_id=dict(
+                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.25))),
     tracker=dict(
         type='MOT17Tracker',
         init_score_thr=0.9,
@@ -48,13 +53,13 @@ train_pipeline = [
         share_params=True,
         ratio_range=(0.8, 1.2),
         keep_ratio=True,
-        bbox_clip_border=False),
+        bbox_clip_border=True),
     dict(type='SeqPhotoMetricDistortion', share_params=True),
     dict(
         type='SeqRandomCrop',
         share_params=False,
         crop_size=(1088, 1088),
-        bbox_clip_border=False),
+        bbox_clip_border=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
     dict(type='SeqPad', size_divisor=32),
@@ -89,8 +94,8 @@ data = dict(
         type=dataset_type,
         visibility_thr=-1,
         track_visibility_thr=-1,
-        ann_file='data/mot17det/annotations/mot17_half-train_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        ann_file='data/mot20/annotations/mot17_half-train_cocoformat.json',
+        img_prefix='data/mot20/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
             frame_range=10,
@@ -99,23 +104,23 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot17det/annotations/mot17_half-val_cocoformat.json',
-        img_prefix='data/mot17det/train/',
+        ann_file='data/mot20/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot20/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file='data/mot17det/annotations/mot17_test_cocoformat.json',
-        img_prefix='data/mot17det/test/',
+        ann_file='data/mot20/annotations/mot17_half-val_cocoformat.json',
+        img_prefix='data/mot20/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[16, 22])
-total_epochs = 24
+lr_config = dict(policy='step', step=[9])
+total_epochs = 12
 evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
-dist_params = dict(port='11310')
+dist_params = dict(port='11311')
 # log_config = dict(interval=1)

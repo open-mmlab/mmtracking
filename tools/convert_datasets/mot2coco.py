@@ -38,7 +38,7 @@ import numpy as np
 from tqdm import tqdm
 
 USELESS = [3, 4, 5, 6, 9, 10, 11]
-IGNORES = [2, 7, 8, 12]
+IGNORES = [2, 7, 8, 12, 13]
 
 
 def parse_args():
@@ -72,7 +72,8 @@ def parse_gts(gts):
         elif class_id in IGNORES:
             continue
         else:
-            assert class_id == 1
+            if class_id != 1:
+                import pdb; pdb.set_trace()
         anns = dict(
             category_id=1,
             bbox=bbox,
