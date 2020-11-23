@@ -32,13 +32,13 @@ model = dict(
             softmax_temperature=0.07,
             # loss_track=None,
             loss_track_aux=None,
-            num_ids=1241,
+            num_ids=2215,
             loss_id=dict(
                 type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.25))),
     tracker=dict(
         type='MOT17Tracker',
         init_score_thr=0.9,
-        obj_score_thr=0.5,
+        obj_score_thr=0.3,
         match_score_thr=0.5,
         memo_tracklet_frames=30,
         memo_backdrop_frames=1,
@@ -101,7 +101,7 @@ data = dict(
         type=dataset_type,
         visibility_thr=-1,
         track_visibility_thr=-1,
-        ann_file='data/mot20/annotations/mot17_half-train_cocoformat.json',
+        ann_file='data/mot20/annotations/mot17_train_cocoformat.json',
         img_prefix='data/mot20/train/',
         ref_img_sampler=dict(
             num_ref_imgs=1,
@@ -111,13 +111,13 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file='data/mot20/annotations/mot17_half-val_cocoformat.json',
+        ann_file='data/mot20/annotations/mot17_train_cocoformat.json',
         img_prefix='data/mot20/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file='data/mot20/annotations/mot17_half-val_cocoformat.json',
+        ann_file='data/mot20/annotations/mot17_train_cocoformat.json',
         img_prefix='data/mot20/train/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
@@ -131,3 +131,4 @@ evaluation = dict(metric=['bbox', 'track'], interval=1)
 checkpoint_config = dict(interval=1)
 dist_params = dict(port='11311')
 # log_config = dict(interval=1)
+load_from = 'ckpts/mot/mot17.pth'
