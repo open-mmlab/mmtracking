@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from mmtrack.models.aggregators import EmbedAggregator
+from mmtrack.models.aggregators import EmbedAggregator, SelsaAggregator
 
 
 def test_embed_aggregator():
@@ -25,5 +25,17 @@ def test_embed_aggregator():
 
     target_x = torch.randn(1, 32, 224, 224)
     ref_x = torch.randn(4, 32, 224, 224)
+    agg_x = model(target_x, ref_x)
+    assert agg_x.shape == target_x.shape
+
+
+def test_selsa_aggregator():
+    """Test selsa_aggregator."""
+    # Test embed_aggregator forward
+    model = SelsaAggregator(in_channels=16, num_attention_blocks=4)
+    model.train()
+
+    target_x = torch.randn(2, 16)
+    ref_x = torch.randn(4, 16)
     agg_x = model(target_x, ref_x)
     assert agg_x.shape == target_x.shape

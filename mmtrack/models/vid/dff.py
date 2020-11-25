@@ -1,9 +1,9 @@
 import torch
+from addict import Dict
 from mmdet.core import bbox2result
-from mmdet.models import build_detector
 
 from mmtrack.core.motion import flow_warp_feats
-from ..builder import MODELS, build_motion
+from ..builder import MODELS, build_detector, build_motion
 from .base import BaseVideoDetector
 
 
@@ -18,7 +18,7 @@ class DFF(BaseVideoDetector):
                  train_cfg=None,
                  test_cfg=None):
         super(DFF, self).__init__()
-        self.detector = build_detector(detector, train_cfg, test_cfg)
+        self.detector = build_detector(detector)
         self.motion = build_motion(motion)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -74,8 +74,8 @@ class DFF(BaseVideoDetector):
         if hasattr(self.detector, 'roi_head'):
             # RPN forward and loss
             if self.detector.with_rpn:
-                proposal_cfg = self.train_cfg.get('rpn_proposal',
-                                                  self.test_cfg.rpn)
+                proposal_cfg = self.detector.train_cfg.get(
+                    'rpn_proposal', self.detector.test_cfg.rpn)
                 rpn_losses, proposal_list = \
                     self.detector.rpn_head.forward_train(
                         x,
@@ -102,24 +102,30 @@ class DFF(BaseVideoDetector):
 
         return losses
 
-    def simple_test(self, img, img_metas, proposals=None, rescale=False):
-        """Test without augmentation."""
+    def extract_feats(self, img, img_metas):
         key_frame_interval = self.test_cfg.get('key_frame_interval', 10)
         frame_id = img_metas[0].get('frame_id', -1)
         assert frame_id >= 0
         is_key_frame = False if frame_id % key_frame_interval else True
 
         if is_key_frame:
+            self.memo = Dict()
+            self.memo.img = img
             x = self.detector.extract_feat(img)
-            self.key_img = img
-            self.key_img_feats = x
+            self.memo.feats = x
         else:
-            flow_img = torch.cat((img, self.key_img), dim=1)
+            flow_img = torch.cat((img, self.memo.img), dim=1)
             flow = self.motion(flow_img, img_metas)
             x = []
-            for i in range(len(self.key_img_feats)):
-                x_single = flow_warp_feats(self.key_img_feats[i], flow)
+            for i in range(len(self.memo.feats)):
+                x_single = flow_warp_feats(self.memo.feats[i], flow)
                 x.append(x_single)
+        return x
+
+    def simple_test(self, img, img_metas, proposals=None, rescale=False):
+        """Test without augmentation."""
+
+        x = self.extract_feats(img, img_metas)
 
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):

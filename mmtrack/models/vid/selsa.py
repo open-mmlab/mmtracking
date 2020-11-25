@@ -1,27 +1,23 @@
 import torch
 from addict import Dict
-from mmdet.core import bbox2result
 
-from mmtrack.core import flow_warp_feats
-from ..builder import MODELS, build_aggregator, build_detector, build_motion
+from ..builder import MODELS, build_detector
 from .base import BaseVideoDetector
 
 
 @MODELS.register_module()
-class FGFA(BaseVideoDetector):
+class SELSA(BaseVideoDetector):
 
     def __init__(self,
                  detector,
-                 motion,
-                 aggregator,
                  pretrains=None,
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
-        super(FGFA, self).__init__()
+        super(SELSA, self).__init__()
         self.detector = build_detector(detector)
-        self.motion = build_motion(motion)
-        self.aggregator = build_aggregator(aggregator)
+        assert hasattr(self.detector, 'roi_head'), \
+            'selsa video detector only supports two stage detector'
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -57,53 +53,41 @@ class FGFA(BaseVideoDetector):
                       ref_proposals=None,
                       **kwargs):
         assert len(img) == 1, \
-            'fgfa video detectors only support 1 batch size per gpu for now.'
-
-        flow_imgs = torch.cat((img, ref_img[:, 0]), dim=1)
-        for i in range(1, ref_img.shape[1]):
-            flow_img = torch.cat((img, ref_img[:, i]), dim=1)
-            flow_imgs = torch.cat((flow_imgs, flow_img), dim=0)
-        flows = self.motion(flow_imgs, img_metas)
+            'selsa video detector only supports 1 batch size per gpu for now.'
 
         all_imgs = torch.cat((img, ref_img[0]), dim=0)
         all_x = self.detector.extract_feat(all_imgs)
         x = []
+        ref_x = []
         for i in range(len(all_x)):
-            ref_x_single = flow_warp_feats(all_x[i][1:], flows)
-            agg_x_single = self.aggregator(all_x[i][[0]], ref_x_single)
-            x.append(agg_x_single)
+            x.append(all_x[i][[0]])
+            ref_x.append(all_x[i][1:])
 
         losses = dict()
 
-        # Two stage detector
-        if hasattr(self.detector, 'roi_head'):
-            # RPN forward and loss
-            if self.detector.with_rpn:
-                proposal_cfg = self.detector.train_cfg.get(
-                    'rpn_proposal', self.detector.test_cfg.rpn)
-                rpn_losses, proposal_list = \
-                    self.detector.rpn_head.forward_train(
-                        x,
-                        img_metas,
-                        gt_bboxes,
-                        gt_labels=None,
-                        gt_bboxes_ignore=gt_bboxes_ignore,
-                        proposal_cfg=proposal_cfg)
-                losses.update(rpn_losses)
-            else:
-                proposal_list = proposals
+        # RPN forward and loss
+        if self.detector.with_rpn:
+            proposal_cfg = self.detector.train_cfg.get(
+                'rpn_proposal', self.detector.test_cfg.rpn)
+            rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
+                x,
+                img_metas,
+                gt_bboxes,
+                gt_labels=None,
+                gt_bboxes_ignore=gt_bboxes_ignore,
+                proposal_cfg=proposal_cfg)
+            losses.update(rpn_losses)
 
-            roi_losses = self.detector.roi_head.forward_train(
-                x, img_metas, proposal_list, gt_bboxes, gt_labels,
-                gt_bboxes_ignore, gt_masks, **kwargs)
-            losses.update(roi_losses)
-        # Single stage detector
-        elif hasattr(self.detector, 'bbox_head'):
-            bbox_losses = self.detector.bbox_head.forward_train(
-                x, img_metas, gt_bboxes, gt_labels, gt_bboxes_ignore)
-            losses.update(bbox_losses)
+            ref_proposals_list = self.detector.rpn_head.simple_test_rpn(
+                ref_x, ref_img_metas[0])
         else:
-            raise TypeError('detector must has roi_head or bbox_head.')
+            proposal_list = proposals
+            ref_proposals_list = ref_proposals
+
+        roi_losses = self.detector.roi_head.forward_train(
+            x, ref_x, img_metas, proposal_list, ref_proposals_list, gt_bboxes,
+            gt_labels, gt_bboxes_ignore, gt_masks, **kwargs)
+        losses.update(roi_losses)
 
         return losses
 
@@ -117,19 +101,25 @@ class FGFA(BaseVideoDetector):
         if frame_stride < 1:
             if frame_id == 0:
                 self.memo = Dict()
-                self.memo.img = ref_img[0]
+                self.memo.img_metas = ref_img_metas[0]
                 ref_x = self.detector.extract_feat(ref_img[0])
                 # 'tuple' object (e.g. the output of FPN) does not support
                 # item assignment
                 self.memo.feats = []
                 for i in range(len(ref_x)):
                     self.memo.feats.append(ref_x[i])
+
             x = self.detector.extract_feat(img)
+            ref_x = self.memo.feats.copy()
+            for i in range(len(x)):
+                ref_x[i] = torch.cat((ref_x[i], x[i]), dim=0)
+            ref_img_metas = self.memo.img_metas.copy()
+            ref_img_metas.extend(img_metas)
         # test with fixed stride
         else:
             if frame_id == 0:
                 self.memo = Dict()
-                self.memo.img = ref_img[0]
+                self.memo.img_metas = ref_img_metas[0]
                 ref_x = self.detector.extract_feat(ref_img[0])
                 # 'tuple' object (e.g. the output of FPN) does not support
                 # item assignment
@@ -147,27 +137,19 @@ class FGFA(BaseVideoDetector):
                     self.memo.feats[i] = torch.cat(
                         (self.memo.feats[i], ref_x[i]), dim=0)[1:]
                     x.append(self.memo.feats[i][[num_left_ref_imgs]])
-                self.memo.img = torch.cat((self.memo.img, ref_img[0]),
-                                          dim=0)[1:]
+                self.memo.img_metas.extend(ref_img_metas[0])
+                self.memo.img_metas = self.memo.img_metas[1:]
             else:
                 assert ref_img is None
                 x = self.detector.extract_feat(img)
 
-        flow_imgs = torch.cat(
-            (img.repeat(self.memo.img.shape[0], 1, 1, 1), self.memo.img),
-            dim=1)
-        flows = self.motion(flow_imgs, img_metas)
+            ref_x = self.memo.feats.copy()
+            for i in range(len(x)):
+                ref_x[i][num_left_ref_imgs] = x[i]
+            ref_img_metas = self.memo.img_metas.copy()
+            ref_img_metas[num_left_ref_imgs] = img_metas[0]
 
-        agg_x = []
-        for i in range(len(x)):
-            agg_x_single = flow_warp_feats(self.memo.feats[i], flows)
-            if frame_stride < 1:
-                agg_x_single = torch.cat((x[i], agg_x_single), dim=0)
-            else:
-                agg_x_single[num_left_ref_imgs] = x[i]
-            agg_x_single = self.aggregator(x[i], agg_x_single)
-            agg_x.append(agg_x_single)
-        return agg_x
+        return x, img_metas, ref_x, ref_img_metas
 
     def simple_test(self,
                     img,
@@ -175,36 +157,28 @@ class FGFA(BaseVideoDetector):
                     ref_img=None,
                     ref_img_metas=None,
                     proposals=None,
+                    ref_proposals=None,
                     rescale=False):
         """Test without augmentation."""
+        x, img_metas, ref_x, ref_img_metas = self.extract_feats(
+            img, img_metas, ref_img, ref_img_metas)
 
-        x = self.extract_feats(img, img_metas, ref_img, ref_img_metas)
-
-        # Two stage detector
-        if hasattr(self.detector, 'roi_head'):
-            if proposals is None:
-                proposal_list = self.detector.rpn_head.simple_test_rpn(
-                    x, img_metas)
-            else:
-                proposal_list = proposals
-
-            outs = self.detector.roi_head.simple_test(
-                x, proposal_list, img_metas, rescale=rescale)
-        # Single stage detector
-        elif hasattr(self.detector, 'bbox_head'):
-            outs = self.bbox_head(x)
-            bbox_list = self.bbox_head.get_bboxes(
-                *outs, img_metas, rescale=rescale)
-            # skip post-processing when exporting to ONNX
-            if torch.onnx.is_in_onnx_export():
-                return bbox_list
-
-            outs = [
-                bbox2result(det_bboxes, det_labels, self.bbox_head.num_classes)
-                for det_bboxes, det_labels in bbox_list
-            ]
+        if proposals is None:
+            proposal_list = self.detector.rpn_head.simple_test_rpn(
+                x, img_metas)
+            ref_proposals_list = self.detector.rpn_head.simple_test_rpn(
+                ref_x, ref_img_metas)
         else:
-            raise TypeError('detector must has roi_head or bbox_head.')
+            proposal_list = proposals
+            ref_proposals_list = ref_proposals
+
+        outs = self.detector.roi_head.simple_test(
+            x,
+            ref_x,
+            proposal_list,
+            ref_proposals_list,
+            img_metas,
+            rescale=rescale)
 
         results = dict()
         results['bbox_results'] = outs[0]

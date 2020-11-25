@@ -7,9 +7,8 @@
 # use 5. 3e2e1e or 25e35e05e
 # use 6. train ref img sample -9--0 or -9--9
 model = dict(
-    type='FGFA',
-    pretrains=dict(
-        motion='data/imagenet_vid/pretrained_flownet/flownet_simple.pth'),
+    type='SELSA',
+    pretrains=None,
     detector=dict(
         type='FasterRCNN',
         pretrained='torchvision://resnet101',
@@ -17,25 +16,27 @@ model = dict(
             type='ResNet',
             depth=101,
             num_stages=4,
-            out_indices=(0, 1, 2, 3),
+            out_indices=(3, ),
+            strides=(1, 2, 2, 1),
+            dilations=(1, 1, 1, 2),
             frozen_stages=1,
             norm_cfg=dict(type='BN', requires_grad=True),
             norm_eval=True,
             style='pytorch'),
         neck=dict(
-            type='FPN',
-            in_channels=[256, 512, 1024, 2048],
-            out_channels=256,
-            num_outs=5),
+            type='ChannelMapper',
+            in_channels=[2048],
+            out_channels=512,
+            kernel_size=3),
         rpn_head=dict(
             type='RPNHead',
-            in_channels=256,
-            feat_channels=256,
+            in_channels=512,
+            feat_channels=512,
             anchor_generator=dict(
                 type='AnchorGenerator',
-                scales=[8],
+                scales=[4, 8, 16, 32],
                 ratios=[0.5, 1.0, 2.0],
-                strides=[4, 8, 16, 32, 64]),
+                strides=[16]),
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[.0, .0, .0, .0],
@@ -45,16 +46,17 @@ model = dict(
             loss_bbox=dict(
                 type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
         roi_head=dict(
-            type='StandardRoIHead',
+            type='SelsaRoIHead',
             bbox_roi_extractor=dict(
                 type='SingleRoIExtractor',
                 roi_layer=dict(
                     type='RoIAlign', output_size=7, sampling_ratio=2),
-                out_channels=256,
-                featmap_strides=[4, 8, 16, 32]),
+                out_channels=512,
+                featmap_strides=[16]),
             bbox_head=dict(
-                type='Shared2FCBBoxHead',
-                in_channels=256,
+                type='SelsaBBoxHead',
+                num_shared_fcs=2,
+                in_channels=512,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=30,
@@ -67,8 +69,11 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0))),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0),
+                aggregator=dict(
+                    type='SelsaAggregator',
+                    in_channels=1024,
+                    num_attention_blocks=16))),
         # detector training and testing settings
         train_cfg=dict(
             rpn=dict(
@@ -89,9 +94,9 @@ model = dict(
                 debug=False),
             rpn_proposal=dict(
                 nms_across_levels=False,
-                nms_pre=2000,
-                nms_post=2000,
-                max_num=2000,
+                nms_pre=6000,
+                nms_post=600,
+                max_num=600,
                 nms_thr=0.7,
                 min_bbox_size=0),
             rcnn=dict(
@@ -103,7 +108,7 @@ model = dict(
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
-                    num=512,
+                    num=256,
                     pos_fraction=0.25,
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
@@ -112,9 +117,9 @@ model = dict(
         test_cfg=dict(
             rpn=dict(
                 nms_across_levels=False,
-                nms_pre=1000,
-                nms_post=1000,
-                max_num=1000,
+                nms_pre=6000,
+                nms_post=300,
+                max_num=300,
                 nms_thr=0.7,
                 min_bbox_size=0),
             rcnn=dict(
@@ -123,11 +128,7 @@ model = dict(
                 max_per_img=100))
         # soft-nms is also supported for rcnn testing
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
-    ),
-    motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
-    aggregator=dict(
-        type='EmbedAggregator', num_convs=1, channels=256, kernel_size=3),
-)
+    ))
 
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
@@ -140,7 +141,7 @@ train_pipeline = [
     dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=64),
+    dict(type='SeqPad', size_divisor=16),
     dict(
         type='VideoCollect',
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids'],
@@ -153,7 +154,7 @@ test_pipeline = [
     dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
     dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=64),
+    dict(type='SeqPad', size_divisor=16),
     dict(
         type='VideoCollect',
         keys=['img'],
@@ -193,10 +194,9 @@ data = dict(
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
         ref_img_sampler=dict(
-            num_ref_imgs=18,
-            frame_range=[-9, 9],
-            stride=1,
-            method='test_with_fix_stride'),
+            num_ref_imgs=14,
+            frame_range=[-7, 7],
+            method='test_with_adaptive_stride'),
         pipeline=test_pipeline,
         test_mode=True),
     test=dict(
@@ -204,10 +204,9 @@ data = dict(
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
         ref_img_sampler=dict(
-            num_ref_imgs=18,
-            frame_range=[-9, 9],
-            stride=1,
-            method='test_with_fix_stride'),
+            num_ref_imgs=14,
+            frame_range=[-7, 7],
+            method='test_with_adaptive_stride'),
         pipeline=test_pipeline,
         test_mode=True))
 # optimizer
