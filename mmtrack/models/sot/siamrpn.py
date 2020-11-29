@@ -1,4 +1,5 @@
 import torch
+from addict import Dict
 from mmdet.models.builder import build_backbone, build_neck
 
 from ..builder import MODELS, build_sot_head
@@ -148,25 +149,28 @@ class SiamRPNTracker(BaseSingleObjectTracker):
 
         if frame_id == 0:
             gt_bboxes = gt_bboxes[0]
+            self.memo = Dict()
             # convert [x1, y1, x2, y2] to [cx, cy, w, h]
-            self.bbox = torch.zeros_like(gt_bboxes)
-            self.bbox[0] = 0.5 * (gt_bboxes[0] + gt_bboxes[2])
-            self.bbox[1] = 0.5 * (gt_bboxes[1] + gt_bboxes[3])
-            self.bbox[2] = gt_bboxes[2] - gt_bboxes[0]
-            self.bbox[3] = gt_bboxes[3] - gt_bboxes[1]
+            self.memo.bbox = torch.zeros_like(gt_bboxes)
+            self.memo.bbox[0] = 0.5 * (gt_bboxes[0] + gt_bboxes[2])
+            self.memo.bbox[1] = 0.5 * (gt_bboxes[1] + gt_bboxes[3])
+            self.memo.bbox[2] = gt_bboxes[2] - gt_bboxes[0]
+            self.memo.bbox[3] = gt_bboxes[3] - gt_bboxes[1]
 
-            self.z_feat, self.avg_channel = self.init(img, self.bbox)
+            self.memo.z_feat, self.memo.avg_channel = self.init(
+                img, self.memo.bbox)
             best_score = None
         else:
-            best_score, self.bbox = self.track(img, self.bbox, self.z_feat,
-                                               self.avg_channel)
+            best_score, self.memo.bbox = self.track(img, self.memo.bbox,
+                                                    self.memo.z_feat,
+                                                    self.memo.avg_channel)
 
         # convert [cx, cy, w, h] to [x1, y1, x2, y2]
-        bbox_pred = torch.zeros_like(self.bbox)
-        bbox_pred[0] = self.bbox[0] - self.bbox[2] / 2
-        bbox_pred[1] = self.bbox[1] - self.bbox[3] / 2
-        bbox_pred[2] = self.bbox[0] + self.bbox[2] / 2
-        bbox_pred[3] = self.bbox[1] + self.bbox[3] / 2
+        bbox_pred = torch.zeros_like(self.memo.bbox)
+        bbox_pred[0] = self.memo.bbox[0] - self.memo.bbox[2] / 2
+        bbox_pred[1] = self.memo.bbox[1] - self.memo.bbox[3] / 2
+        bbox_pred[2] = self.memo.bbox[0] + self.memo.bbox[2] / 2
+        bbox_pred[3] = self.memo.bbox[1] + self.memo.bbox[3] / 2
         results = dict()
         if best_score is None:
             results['score'] = best_score
