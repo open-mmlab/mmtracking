@@ -26,6 +26,9 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     videos_list = osp.join(ann_dir, 'testing_set.txt')
     videos_list = mmcv.list_from_file(videos_list)
+
+    lasot_test['categories'] = [dict(id=0, name=0)]
+
     for video_name in tqdm(videos_list):
         video_path = osp.join(ann_dir, video_name)
         video = dict(id=records['vid_id'], name=video_name)
@@ -59,6 +62,7 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
                 id=records['ann_id'],
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
+                category_id=0,
                 bbox=[int(x1), int(y1), int(w),
                       int(h)],
                 area=int(w) * int(h),

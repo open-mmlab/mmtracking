@@ -14,9 +14,9 @@ def flow_warp_feats(x, flow):
     H, W = x.shape[-2:]
     h_grid, w_grid = torch.meshgrid(torch.arange(H), torch.arange(W))
     # [1, 1, H, W]
-    h_grid = torch.tensor(h_grid, device=flow.device).float()[None, None, ...]
+    h_grid = h_grid.to(flow.device).float()[None, None, ...]
     # [1, 1, H, W]
-    w_grid = torch.tensor(w_grid, device=flow.device).float()[None, None, ...]
+    w_grid = w_grid.to(flow.device).float()[None, None, ...]
     # [1, 2, H, W]
     grid = torch.cat((w_grid, h_grid), dim=1)
     # [N, 2, H, W]
