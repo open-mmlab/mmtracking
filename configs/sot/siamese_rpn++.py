@@ -21,12 +21,12 @@ model = dict(
         act_cfg=None),
     head=dict(
         type='MultiDepthwiseRPN',
-        # anchor
-        stride=8,
-        ratios=[0.33, 0.5, 1, 2, 3],
-        scales=[8],
-        score_map_size=25,
-        # anchor
+        anchor_generator=dict(
+            type='SOTAnchorGenerator',
+            stride=8,
+            ratios=[0.33, 0.5, 1, 2, 3],
+            scales=[8],
+            score_map_size=25),
         in_channels=[256, 256, 256],
         weighted=True))
 train_cfg = dict(cls_weight=1.0, loc_weight=1.2)
@@ -41,7 +41,7 @@ data_root = 'data/sot/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', to_float32=True),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='ImageToTensor', keys=['img']),
     dict(

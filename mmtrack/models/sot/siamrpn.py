@@ -59,27 +59,25 @@ class SiamRPNTracker(BaseSingleObjectTracker):
     def get_cropped_img(self, img, center_xy, target_size, crop_size,
                         avg_channel):
         N, C, H, W = img.shape
-        context_distance = (crop_size + 1) / 2
-        context_xmin = torch.floor(center_xy[0] - context_distance + 0.5)
-        context_xmax = context_xmin + crop_size - 1
-        context_ymin = torch.floor(center_xy[1] - context_distance + 0.5)
-        context_ymax = context_ymin + crop_size - 1
+        context_xmin = int(center_xy[0] - crop_size / 2)
+        context_xmax = int(center_xy[0] + crop_size / 2)
+        context_ymin = int(center_xy[1] - crop_size / 2)
+        context_ymax = int(center_xy[1] + crop_size / 2)
 
-        left_pad = int(max(0., -context_xmin))
-        top_pad = int(max(0., -context_ymin))
-        right_pad = int(max(0., context_xmax - W + 1))
-        bottom_pad = int(max(0., context_ymax - H + 1))
+        left_pad = max(0, -context_xmin)
+        top_pad = max(0, -context_ymin)
+        right_pad = max(0, context_xmax - W)
+        bottom_pad = max(0, context_ymax - H)
 
-        context_xmin = int(context_xmin + left_pad)
-        context_xmax = int(context_xmax + left_pad)
-        context_ymin = int(context_ymin + top_pad)
-        context_ymax = int(context_ymax + top_pad)
+        context_xmin += left_pad
+        context_xmax += left_pad
+        context_ymin += top_pad
+        context_ymax += top_pad
 
         avg_channel = avg_channel[:, None, None]
         if any([top_pad, bottom_pad, left_pad, right_pad]):
-            new_size = (N, C, H + top_pad + bottom_pad,
-                        W + left_pad + right_pad)
-            new_img = torch.zeros(new_size, dtype=torch.uint8)
+            new_img = img.new_zeros(N, C, H + top_pad + bottom_pad,
+                                    W + left_pad + right_pad)
             new_img[..., top_pad:top_pad + H, left_pad:left_pad + W] = img
             if top_pad:
                 new_img[..., :top_pad, left_pad:left_pad + W] = avg_channel
@@ -95,14 +93,13 @@ class SiamRPNTracker(BaseSingleObjectTracker):
             crop_img = img[..., context_ymin:context_ymax + 1,
                            context_xmin:context_xmax + 1]
 
-        crop_img = crop_img.float()
         if target_size != crop_size:
             crop_img = torch.nn.functional.interpolate(
                 crop_img,
                 size=(target_size, target_size),
                 mode='bilinear',
                 align_corners=False)
-        return crop_img.to(img.device)
+        return crop_img
 
     def _bbox_clip(self, bbox, img_h, img_w):
         bbox[0] = bbox[0].clamp(0., img_w)
@@ -115,7 +112,7 @@ class SiamRPNTracker(BaseSingleObjectTracker):
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_size = torch.round(torch.sqrt(z_width * z_height))
-        avg_channel = torch.mean(img.float(), dim=(0, 2, 3))
+        avg_channel = torch.mean(img, dim=(0, 2, 3))
         z_crop = self.get_cropped_img(img, bbox[0:2],
                                       self.test_cfg.exemplar_size, z_size,
                                       avg_channel)
@@ -144,7 +141,7 @@ class SiamRPNTracker(BaseSingleObjectTracker):
         best_bbox = self._bbox_clip(best_bbox, img.shape[2], img.shape[3])
         return best_score, best_bbox
 
-    def forward_test(self, img, img_metas, gt_bboxes, **kwargs):
+    def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
         frame_id = img_metas[0].get('frame_id', -1)
         assert frame_id >= 0
         assert len(img) == 1, 'only support batch_size=1 when testing'
@@ -177,3 +174,6 @@ class SiamRPNTracker(BaseSingleObjectTracker):
             results['score'] = best_score.cpu().numpy()
         results['bbox'] = bbox_pred.cpu().numpy()
         return results
+
+    def forward_train(self, **kwargs):
+        pass

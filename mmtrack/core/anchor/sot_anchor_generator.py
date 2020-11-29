@@ -1,27 +1,26 @@
 import numpy as np
-import torch
-import torch.nn as nn
+from mmdet.core.anchor import ANCHOR_GENERATORS
 
 
-class BaseAnchorHead(nn.Module):
+@ANCHOR_GENERATORS.register_module()
+class SOTAnchorGenerator(object):
 
     def __init__(self,
                  stride=8,
                  ratios=[0.33, 0.5, 1, 2, 3],
                  scales=[8],
                  score_map_size=25):
-        super(BaseAnchorHead, self).__init__()
         self.stride = stride
         self.ratios = ratios
         self.scales = scales
         self.num_anchor = len(self.ratios) * len(self.scales)
         self.score_map_size = score_map_size
-        self.anchors = torch.tensor(
-            self.generate_anchors(stride, ratios, scales, score_map_size))
+        self.anchors = self.generate_anchors(stride, ratios, scales,
+                                             score_map_size)
 
         hanning = np.hanning(self.score_map_size)
         window = np.outer(hanning, hanning)
-        self.window = torch.tensor(np.tile(window.flatten(), self.num_anchor))
+        self.window = np.tile(window.flatten(), self.num_anchor)
 
     def generate_anchors(self, stride, ratios, scales, score_map_size):
         anchor = self.generate_one_location_anchors(stride, ratios, scales)
