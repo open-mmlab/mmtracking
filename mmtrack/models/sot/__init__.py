@@ -1,3 +1,3 @@
-from .siamrpn import SiamRPNTracker
+from .siamrpn import SiamRPN
 
-__all__ = ['SiamRPNTracker']
+__all__ = ['SiamRPN']

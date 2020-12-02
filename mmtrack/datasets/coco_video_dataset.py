@@ -22,13 +22,13 @@ class CocoVideoDataset(CocoDataset):
                      frame_range=1,
                      filter_key_img=True,
                      method='uniform'),
-                 force_load_test_ann=False,
+                 test_load_ann=False,
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
-        self.force_load_test_ann = force_load_test_ann
+        self.test_load_ann = test_load_ann
         super().__init__(*args, **kwargs)
         self.logger = get_root_logger()
 
@@ -177,7 +177,7 @@ class CocoVideoDataset(CocoDataset):
 
     def prepare_results(self, img_info):
         results = dict(img_info=img_info)
-        if not self.test_mode or self.force_load_test_ann:
+        if not self.test_mode or self.test_load_ann:
             results['ann_info'] = self.get_ann_info(img_info)
         if self.proposals is not None:
             idx = self.img_ids.index(img_info['id'])

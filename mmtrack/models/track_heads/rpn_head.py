@@ -1,14 +1,61 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from mmcv.cnn.bricks import ConvModule
 from mmdet.core.anchor import build_anchor_generator
+from mmdet.models import HEADS
 
-from mmtrack.core.correlation import CorrelationHead
-from ..builder import SOT_HEADS
+from mmtrack.core.correlation import depthwise_correlation
 
 
-@SOT_HEADS.register_module()
+@HEADS.register_module()
+class CorrelationHead(nn.Module):
+
+    def __init__(self,
+                 in_channels,
+                 mid_channels,
+                 out_channels,
+                 kernel_size=3,
+                 norm_cfg=dict(type='BN'),
+                 act_cfg=dict(type='ReLU'),
+                 **kwargs):
+        super(CorrelationHead, self).__init__()
+        self.kernel_convs = ConvModule(
+            in_channels=in_channels,
+            out_channels=mid_channels,
+            kernel_size=kernel_size,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+
+        self.search_convs = ConvModule(
+            in_channels=in_channels,
+            out_channels=mid_channels,
+            kernel_size=kernel_size,
+            norm_cfg=norm_cfg,
+            act_cfg=act_cfg)
+
+        self.head_convs = nn.Sequential(
+            ConvModule(
+                in_channels=mid_channels,
+                out_channels=mid_channels,
+                kernel_size=1,
+                norm_cfg=norm_cfg,
+                act_cfg=act_cfg),
+            ConvModule(
+                in_channels=mid_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                act_cfg=None))
+
+    def forward(self, kernel, search):
+        kernel = self.kernel_convs(kernel)
+        search = self.search_convs(search)
+        correlation_maps = depthwise_correlation(search, kernel)
+        out = self.head_convs(correlation_maps)
+        return out
+
+
+@HEADS.register_module()
 class MultiDepthwiseRPN(nn.Module):
 
     def __init__(self,
@@ -16,7 +63,7 @@ class MultiDepthwiseRPN(nn.Module):
                  in_channels,
                  kernel_size=3,
                  norm_cfg=dict(type='BN'),
-                 weighted=False,
+                 weighted_sum=False,
                  train_cfg=None,
                  test_cfg=None,
                  *args,
@@ -40,8 +87,8 @@ class MultiDepthwiseRPN(nn.Module):
                                 4 * self.anchor_generator.num_anchor,
                                 kernel_size, norm_cfg))
 
-        self.weighted = weighted
-        if self.weighted:
+        self.weighted_sum = weighted_sum
+        if self.weighted_sum:
             self.cls_weight = nn.Parameter(torch.ones(len(in_channels)))
             self.reg_weight = nn.Parameter(torch.ones(len(in_channels)))
 
@@ -50,9 +97,9 @@ class MultiDepthwiseRPN(nn.Module):
         assert len(z_feats) == len(x_feats) and len(z_feats) == len(
             self.cls_heads)
 
-        if self.weighted:
-            cls_weight = F.softmax(self.cls_weight, dim=0)
-            reg_weight = F.softmax(self.reg_weight, dim=0)
+        if self.weighted_sum:
+            cls_weight = nn.functional.softmax(self.cls_weight, dim=0)
+            reg_weight = nn.functional.softmax(self.reg_weight, dim=0)
         else:
             reg_weight = cls_weight = [
                 1.0 / len(z_feats) for i in range(len(z_feats))

@@ -6,7 +6,6 @@ MODELS = Registry('model')
 TRACKERS = Registry('tracker')
 MOTION = Registry('motion')
 AGGREGATORS = Registry('aggregator')
-SOT_HEADS = Registry('sot_head')
 
 
 def build_tracker(cfg):
@@ -22,11 +21,6 @@ def build_motion(cfg):
 def build_aggregator(cfg):
     """Build aggregator model."""
     return build(cfg, AGGREGATORS)
-
-
-def build_sot_head(cfg):
-    """Build sot heads model."""
-    return build(cfg, SOT_HEADS)
 
 
 def build_detector(cfg):

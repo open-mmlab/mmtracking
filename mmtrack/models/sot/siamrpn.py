@@ -1,13 +1,13 @@
 import torch
 from addict import Dict
-from mmdet.models.builder import build_backbone, build_neck
+from mmdet.models.builder import build_backbone, build_head, build_neck
 
-from ..builder import MODELS, build_sot_head
+from ..builder import MODELS
 from .base import BaseSingleObjectTracker
 
 
 @MODELS.register_module()
-class SiamRPNTracker(BaseSingleObjectTracker):
+class SiamRPN(BaseSingleObjectTracker):
 
     def __init__(self,
                  pretrains=None,
@@ -17,13 +17,13 @@ class SiamRPNTracker(BaseSingleObjectTracker):
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
-        super(SiamRPNTracker, self).__init__()
+        super(SiamRPN, self).__init__()
         self.backbone = build_backbone(backbone)
         if neck is not None:
             self.neck = build_neck(neck)
         head = head.copy()
         head.update(train_cfg=None, test_cfg=test_cfg.rpn)
-        self.rpn_head = build_sot_head(head)
+        self.head = build_head(head)
 
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
@@ -133,10 +133,10 @@ class SiamRPNTracker(BaseSingleObjectTracker):
                                       avg_channel)
 
         x_feat = self.forward_search(x_crop)
-        cls_score, bbox_pred = self.rpn_head(z_feat, x_feat)
+        cls_score, bbox_pred = self.head(z_feat, x_feat)
         scale_factor = self.test_cfg.exemplar_size / z_size
-        best_score, best_bbox = self.rpn_head.get_bbox(cls_score, bbox_pred,
-                                                       bbox, scale_factor)
+        best_score, best_bbox = self.head.get_bbox(cls_score, bbox_pred, bbox,
+                                                   scale_factor)
 
         # clip boundary
         best_bbox = self._bbox_clip(best_bbox, img.shape[2], img.shape[3])

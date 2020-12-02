@@ -1,47 +1,4 @@
-import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn.bricks import ConvModule
-
-
-class CorrelationHead(nn.Module):
-
-    def __init__(self,
-                 in_channels,
-                 mid_channels,
-                 out_channels,
-                 kernel_size=3,
-                 norm_cfg=dict(type='BN')):
-        super(CorrelationHead, self).__init__()
-        self.kernel_convs = ConvModule(
-            in_channels=in_channels,
-            out_channels=mid_channels,
-            kernel_size=kernel_size,
-            norm_cfg=norm_cfg)
-
-        self.search_convs = ConvModule(
-            in_channels=in_channels,
-            out_channels=mid_channels,
-            kernel_size=kernel_size,
-            norm_cfg=norm_cfg)
-
-        self.head_convs = nn.Sequential(
-            ConvModule(
-                in_channels=mid_channels,
-                out_channels=mid_channels,
-                kernel_size=1,
-                norm_cfg=norm_cfg),
-            ConvModule(
-                in_channels=mid_channels,
-                out_channels=out_channels,
-                kernel_size=1,
-                act_cfg=None))
-
-    def forward(self, kernel, search):
-        kernel = self.kernel_convs(kernel)
-        search = self.search_convs(search)
-        correlation_maps = depthwise_correlation(search, kernel)
-        out = self.head_convs(correlation_maps)
-        return out
 
 
 def depthwise_correlation(x, kernel):

@@ -96,35 +96,37 @@ class SOTResNetAtrous(nn.Module):
     def _make_layer(self, block, planes, blocks, stride=1, dilation=1):
         downsample = None
         dd = dilation
-        if stride != 1 or self.inplanes != planes * block.expansion:
-            if stride == 1 and dilation == 1:
-                downsample = nn.Sequential(
-                    nn.Conv2d(
-                        self.inplanes,
-                        planes * block.expansion,
-                        kernel_size=1,
-                        stride=stride,
-                        bias=False),
-                    nn.BatchNorm2d(planes * block.expansion),
-                )
+        if stride == 1 and dilation == 1:
+            # layer1
+            downsample = nn.Sequential(
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+        else:
+            if dilation > 1:
+                # layer3, 4
+                dd = dilation // 2
+                padding = dd
             else:
-                if dilation > 1:
-                    dd = dilation // 2
-                    padding = dd
-                else:
-                    dd = 1
-                    padding = 0
-                downsample = nn.Sequential(
-                    nn.Conv2d(
-                        self.inplanes,
-                        planes * block.expansion,
-                        kernel_size=3,
-                        stride=stride,
-                        bias=False,
-                        padding=padding,
-                        dilation=dd),
-                    nn.BatchNorm2d(planes * block.expansion),
-                )
+                # layer2
+                dd = 1
+                padding = 0
+            downsample = nn.Sequential(
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=3,
+                    stride=stride,
+                    bias=False,
+                    padding=padding,
+                    dilation=dd),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
 
         layers = []
         layers.append(

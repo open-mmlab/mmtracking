@@ -3,7 +3,7 @@
 # cudnn_benchmark = True
 # model settings
 model = dict(
-    type='SiamRPNTracker',
+    type='SiamRPN',
     pretrains=dict(backbone='/mnt/lustre/gongtao/Tracking_Code/MMTRACK/'
                    'pretrained_models/resnet50.model'),
     backbone=dict(
@@ -23,12 +23,12 @@ model = dict(
         type='MultiDepthwiseRPN',
         anchor_generator=dict(
             type='SOTAnchorGenerator',
-            stride=8,
+            strides=8,
             ratios=[0.33, 0.5, 1, 2, 3],
             scales=[8],
             score_map_size=25),
         in_channels=[256, 256, 256],
-        weighted=True))
+        weighted_sum=True))
 train_cfg = dict(cls_weight=1.0, loc_weight=1.2)
 test_cfg = dict(
     exemplar_size=127,
@@ -57,7 +57,7 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='LaSOTDataset',
-        force_load_test_ann=True,
+        test_load_ann=True,
         ann_file=data_root + 'lasot_test/lasot_test.json',
         img_prefix=data_root + 'lasot_test/',
         pipeline=test_pipeline,
@@ -65,7 +65,7 @@ data = dict(
         test_mode=False),
     val=dict(
         type='LaSOTDataset',
-        force_load_test_ann=True,
+        test_load_ann=True,
         ann_file=data_root + 'lasot_test/lasot_test.json',
         img_prefix=data_root + 'lasot_test/',
         pipeline=test_pipeline,
@@ -73,7 +73,7 @@ data = dict(
         test_mode=True),
     test=dict(
         type='LaSOTDataset',
-        force_load_test_ann=True,
+        test_load_ann=True,
         ann_file=data_root + 'lasot_test/lasot_test.json',
         img_prefix=data_root + 'lasot_test/',
         pipeline=test_pipeline,

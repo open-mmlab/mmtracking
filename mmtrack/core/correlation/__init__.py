@@ -1,3 +1,3 @@
-from .correlation import CorrelationHead
+from .correlation import depthwise_correlation
 
-__all__ = ['CorrelationHead']
+__all__ = ['depthwise_correlation']

@@ -73,12 +73,12 @@ def eval_ope_benchmark(results, annotations):
         # eval normed precison
         gt_bboxes_wh = np.array((gt_bboxes[:, 2] - gt_bboxes[:, 0],
                                  gt_bboxes[:, 3] - gt_bboxes[:, 1])).T
-        normed_gt_bboxes_center = gt_bboxes_center / (gt_bboxes_wh + 1e-16)
-        normed_pred_bboxes_center = pred_bboxes_center / (gt_bboxes_wh + 1e-16)
-        normed_pixel_offset_th = pixel_offset_th / 100.
+        norm_gt_bboxes_center = gt_bboxes_center / (gt_bboxes_wh + 1e-16)
+        norm_pred_bboxes_center = pred_bboxes_center / (gt_bboxes_wh + 1e-16)
+        norm_pixel_offset_th = pixel_offset_th / 100.
         norm_precision_results.append(
-            success_error(normed_gt_bboxes_center, normed_pred_bboxes_center,
-                          normed_pixel_offset_th, video_length))
+            success_error(norm_gt_bboxes_center, norm_pred_bboxes_center,
+                          norm_pixel_offset_th, video_length))
 
     success = np.mean(success_results) * 100
     precision = np.mean(precision_results, axis=0)[20] * 100
