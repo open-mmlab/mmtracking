@@ -1,3 +1,3 @@
-from .sot_resnet_atrous import SOTResNetAtrous
+from .sot_resnet import SOTResNet
 
-__all__ = ['SOTResNetAtrous']
+__all__ = ['SOTResNet']

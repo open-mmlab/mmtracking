@@ -7,10 +7,12 @@ model = dict(
     pretrains=dict(backbone='/mnt/lustre/gongtao/Tracking_Code/MMTRACK/'
                    'pretrained_models/resnet50.model'),
     backbone=dict(
-        type='SOTResNetAtrous',
+        type='SOTResNet',
         depth=50,
-        out_indices=(2, 3, 4),
-        freeze_stage=4,
+        out_indices=(1, 2, 3),
+        frozen_stages=4,
+        strides=(1, 2, 1, 1),
+        dilations=(1, 1, 2, 4),
         norm_eval=True),
     neck=dict(
         type='ChannelMapper',
