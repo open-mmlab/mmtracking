@@ -1,57 +1,81 @@
 import numpy as np
-from mmdet.core.anchor import ANCHOR_GENERATORS
+import torch
+from mmdet.core.anchor import ANCHOR_GENERATORS, AnchorGenerator
 
 
 @ANCHOR_GENERATORS.register_module()
-class SOTAnchorGenerator(object):
+class SOTAnchorGenerator(AnchorGenerator):
 
-    def __init__(self,
-                 strides=8,
-                 ratios=[0.33, 0.5, 1, 2, 3],
-                 scales=[8],
-                 score_map_size=25,
-                 **kwargs):
-        self.strides = strides
-        self.ratios = ratios
-        self.scales = scales
-        self.num_anchor = len(self.ratios) * len(self.scales)
-        self.score_map_size = score_map_size
-        self.anchors = self.gen_anchors(strides, ratios, scales,
-                                        score_map_size)
+    def __init__(self, strides, *args, **kwargs):
+        assert len(strides) == 1, 'only support one feature map level'
+        super(SOTAnchorGenerator, self).__init__(strides, *args, **kwargs)
 
-        hanning = np.hanning(self.score_map_size)
-        window = np.outer(hanning, hanning)
-        self.window = np.tile(window.flatten(), self.num_anchor)
+    def gen_2d_hanning_windows(self, featmap_sizes, device='cuda'):
+        assert self.num_levels == len(featmap_sizes)
+        multi_level_windows = []
+        for i in range(self.num_levels):
+            hanning_h = np.hanning(featmap_sizes[i][0])
+            hanning_w = np.hanning(featmap_sizes[i][1])
+            window = np.outer(hanning_h, hanning_w)
+            window = np.tile(window.flatten(), self.num_base_anchors[i])
+            multi_level_windows.append(torch.from_numpy(window).to(device))
+        return multi_level_windows
 
-    def gen_anchors(self, strides, ratios, scales, score_map_size):
-        anchor = self.gen_one_location_anchors(strides, ratios, scales)
+    def gen_single_level_base_anchors(self,
+                                      base_size,
+                                      scales,
+                                      ratios,
+                                      center=None):
+        w = base_size
+        h = base_size
+        if center is None:
+            x_center = self.center_offset * w
+            y_center = self.center_offset * h
+        else:
+            x_center, y_center = center
 
-        x_grid, y_grid = np.meshgrid(
-            [strides * i for i in range(score_map_size)],
-            [strides * j for j in range(score_map_size)])
+        h_ratios = torch.sqrt(ratios)
+        w_ratios = 1 / h_ratios
+        if self.scale_major:
+            ws = ((w * w_ratios[:, None]).long() * scales[None, :]).view(-1)
+            hs = ((h * h_ratios[:, None]).long() * scales[None, :]).view(-1)
+        else:
+            ws = (w * scales[:, None] * w_ratios[None, :]).view(-1)
+            hs = (h * scales[:, None] * h_ratios[None, :]).view(-1)
 
-        num_anchor = len(scales) * len(ratios)
-        x_grid = np.tile(x_grid.flatten(), num_anchor)
-        y_grid = np.tile(y_grid.flatten(), num_anchor)
+        base_anchors = [
+            torch.ones_like(ws) * x_center,
+            torch.ones_like(hs) * y_center, ws, hs
+        ]
+        base_anchors = torch.stack(base_anchors, dim=-1)
 
-        anchor = np.tile(anchor, score_map_size * score_map_size).reshape(
-            (-1, 4))
-        offset = -(score_map_size // 2) * strides
-        anchor[:, 0] = offset + x_grid.astype(np.float32)
-        anchor[:, 1] = offset + y_grid.astype(np.float32)
-        return anchor
+        return base_anchors
 
-    def gen_one_location_anchors(self, strides, ratios, scales):
-        """generate anchors based on predefined configuration."""
-        num_anchor = len(scales) * len(ratios)
-        anchors = np.zeros((num_anchor, 4), dtype=np.float32)
-        base_size = strides**2
+    def single_level_grid_anchors(self,
+                                  base_anchors,
+                                  featmap_size,
+                                  stride=(16, 16),
+                                  device='cuda'):
+        feat_h, feat_w = featmap_size
+        # convert Tensor to int, so that we can covert to ONNX correctlly
+        feat_h = int(feat_h)
+        feat_w = int(feat_w)
+        shift_x = torch.arange(0, feat_w, device=device) * stride[0]
+        shift_y = torch.arange(0, feat_h, device=device) * stride[1]
 
-        for i, ratio in enumerate(ratios):
-            base_width = int(np.sqrt(base_size / float(ratio)))
-            base_height = int(np.sqrt(base_size * ratio))
-            for j, scale in enumerate(scales):
-                width = scale * base_width
-                height = scale * base_height
-                anchors[i * len(scales) + j] = [0., 0., width, height]
-        return anchors
+        shift_xx, shift_yy = self._meshgrid(shift_x, shift_y)
+        shifts = torch.stack([
+            shift_xx, shift_yy,
+            torch.zeros_like(shift_xx),
+            torch.zeros_like(shift_yy)
+        ],
+                             dim=-1)
+        shifts = shifts.type_as(base_anchors)
+
+        all_anchors = base_anchors[:, None, :] + shifts[None, :, :]
+        all_anchors = all_anchors.view(-1, 4)
+
+        all_anchors[:, 0] += -(feat_w // 2) * stride[0]
+        all_anchors[:, 1] += -(feat_h // 2) * stride[1]
+
+        return all_anchors

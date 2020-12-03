@@ -25,10 +25,9 @@ model = dict(
         type='MultiDepthwiseRPN',
         anchor_generator=dict(
             type='SOTAnchorGenerator',
-            strides=8,
+            strides=[8],
             ratios=[0.33, 0.5, 1, 2, 3],
-            scales=[8],
-            score_map_size=25),
+            scales=[8]),
         in_channels=[256, 256, 256],
         weighted_sum=True))
 train_cfg = dict(cls_weight=1.0, loc_weight=1.2)

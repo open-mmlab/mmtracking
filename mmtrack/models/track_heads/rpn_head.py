@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
@@ -70,8 +69,6 @@ class MultiDepthwiseRPN(nn.Module):
                  **kwargs):
         super(MultiDepthwiseRPN, self).__init__(*args, **kwargs)
         self.anchor_generator = build_anchor_generator(anchor_generator)
-        self.anchors = self.anchor_generator.anchors
-        self.window = self.anchor_generator.window
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
@@ -80,11 +77,11 @@ class MultiDepthwiseRPN(nn.Module):
         for i in range(len(in_channels)):
             self.cls_heads.append(
                 CorrelationHead(in_channels[i], in_channels[i],
-                                2 * self.anchor_generator.num_anchor,
+                                2 * self.anchor_generator.num_base_anchors[0],
                                 kernel_size, norm_cfg))
             self.reg_heads.append(
                 CorrelationHead(in_channels[i], in_channels[i],
-                                4 * self.anchor_generator.num_anchor,
+                                4 * self.anchor_generator.num_base_anchors[0],
                                 kernel_size, norm_cfg))
 
         self.weighted_sum = weighted_sum
@@ -116,10 +113,13 @@ class MultiDepthwiseRPN(nn.Module):
         return cls_score, bbox_pred
 
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
-        if isinstance(self.anchors, np.ndarray):
-            self.anchors = torch.from_numpy(self.anchors).to(cls_score.device)
-        if isinstance(self.window, np.ndarray):
-            self.window = torch.from_numpy(self.window).to(cls_score.device)
+        score_maps_size = [(cls_score.shape[2:])]
+        if not hasattr(self, 'anchors'):
+            self.anchors = self.anchor_generator.grid_anchors(
+                score_maps_size, cls_score.device)[0]
+        if not hasattr(self, 'windows'):
+            self.windows = self.anchor_generator.gen_2d_hanning_windows(
+                score_maps_size, cls_score.device)[0]
 
         cls_score = cls_score.permute(1, 2, 3, 0).contiguous()
         cls_score = cls_score.view(2, -1).permute(1, 0)
@@ -158,7 +158,7 @@ class MultiDepthwiseRPN(nn.Module):
 
         # window penalty
         penalty_score = penalty_score * (1 - self.test_cfg.window_influence) \
-            + self.window * self.test_cfg.window_influence
+            + self.windows * self.test_cfg.window_influence
 
         best_idx = torch.argmax(penalty_score)
         best_score = cls_score[best_idx]
