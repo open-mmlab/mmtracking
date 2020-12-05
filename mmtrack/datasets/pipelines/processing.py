@@ -16,7 +16,7 @@ class MatchInstances(object):
             for i in ins_ids
         ])
         ref_match_indices = np.array([
-            ins_ids.index(i) if (i in ref_ins_ids and i > 0) else -1
+            ins_ids.index(i) if (i in ins_ids and i > 0) else -1
             for i in ref_ins_ids
         ])
         return match_indices, ref_match_indices
