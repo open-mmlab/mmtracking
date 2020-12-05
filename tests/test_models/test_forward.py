@@ -1,9 +1,10 @@
 import copy
+from collections import defaultdict
+from os.path import dirname, exists, join
+
 import numpy as np
 import pytest
 import torch
-from collections import defaultdict
-from os.path import dirname, exists, join
 
 
 def _get_config_directory():

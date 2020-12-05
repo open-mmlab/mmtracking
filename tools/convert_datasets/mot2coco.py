@@ -29,11 +29,12 @@
 #   USELESS classes are not included into the json file.
 #   IGNORES classes are included with `ignore=True`.
 import argparse
-import mmcv
-import numpy as np
 import os
 import os.path as osp
 from collections import defaultdict
+
+import mmcv
+import numpy as np
 from tqdm import tqdm
 
 USELESS = [3, 4, 5, 6, 9, 10, 11]

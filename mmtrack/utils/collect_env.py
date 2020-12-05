@@ -1,11 +1,12 @@
-import cv2
-import mmcv
 import os.path as osp
 import subprocess
 import sys
+from collections import defaultdict
+
+import cv2
+import mmcv
 import torch
 import torchvision
-from collections import defaultdict
 
 import mmtrack
 
