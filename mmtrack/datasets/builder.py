@@ -1,11 +1,10 @@
+import numpy as np
 import random
 from functools import partial
-
-import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
-from mmdet.datasets.samplers import (DistributedGroupSampler, GroupSampler,
-                                     DistributedSampler)
+from mmdet.datasets.samplers import (DistributedGroupSampler,
+                                     DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
 
 from .samplers import DistributedVideoSampler
