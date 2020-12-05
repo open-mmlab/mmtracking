@@ -9,7 +9,7 @@ def track2result(bboxes, labels, ids, num_classes):
     ids = ids[valid_inds]
 
     if bboxes.shape[0] == 0:
-        return [bboxes for i in range(num_classes)]
+        return [np.zeros(bboxes.shape) for i in range(num_classes)]
     else:
         if isinstance(bboxes, torch.Tensor):
             bboxes = bboxes.cpu().numpy()
@@ -25,7 +25,7 @@ def restore_result(result, return_ids=False):
     labels = []
     for i, bbox in enumerate(result):
         labels.extend([i] * bbox.shape[0])
-    bboxes = np.concatenate(result, axis=0)
+    bboxes = np.concatenate(result, axis=0).astype(np.float32)
     labels = np.array(labels, dtype=np.int64)
     if return_ids:
         ids = bboxes[:, 0].astype(np.int64)
