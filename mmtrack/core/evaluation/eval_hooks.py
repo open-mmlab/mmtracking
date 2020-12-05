@@ -12,7 +12,7 @@ class EvalHook(_EvalHook):
         if self.dataloader.dataset.load_as_video:
             from mmtrack.apis import single_gpu_test
         else:
-            from mmdet.apis import multi_gpu_test
+            from mmdet.apis import single_gpu_test
         results = single_gpu_test(runner.model, self.dataloader, show=False)
         self.evaluate(runner, results)
 
@@ -23,7 +23,7 @@ class DistEvalHook(_DistEvalHook):
         if not self.evaluation_flag(runner):
             return
         if self.dataloader.dataset.load_as_video:
-            from mmtrack.apis import single_gpu_test
+            from mmtrack.apis import multi_gpu_test
         else:
             from mmdet.apis import multi_gpu_test
         tmpdir = self.tmpdir

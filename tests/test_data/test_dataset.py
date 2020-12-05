@@ -337,6 +337,7 @@ def test_mot17_track_evaluation(dataset):
 def test_evaluation_hook(EvalHookParam):
     # create dummy data
     dataloader = DataLoader(torch.ones((5, 2)))
+    dataloader.dataset.load_as_video = True
 
     # 0.1. dataloader is not a DataLoader object
     with pytest.raises(TypeError):
