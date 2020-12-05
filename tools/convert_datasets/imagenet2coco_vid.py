@@ -1,9 +1,8 @@
 import argparse
+import mmcv
 import os.path as osp
 import xml.etree.ElementTree as ET
 from collections import defaultdict
-
-import mmcv
 from tqdm import tqdm
 
 CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',

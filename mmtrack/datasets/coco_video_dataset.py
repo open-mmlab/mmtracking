@@ -1,6 +1,5 @@
-import random
-
 import numpy as np
+import random
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS, CocoDataset
 
