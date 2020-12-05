@@ -155,7 +155,10 @@ class MOT17Dataset(CocoVideoDataset):
     def format_track_results(self, results, infos, resfile):
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
-                frame = info['mot_frame_id']
+                if 'mot_frame_id' in info:
+                    frame = info['mot_frame_id']
+                else:
+                    frame = info['frame_id'] + 1
                 bboxes, labels, ids = restore_result(res, return_ids=True)
                 for bbox, label, id in zip(bboxes, labels, ids):
                     x1, y1, x2, y2, conf = bbox
@@ -166,7 +169,10 @@ class MOT17Dataset(CocoVideoDataset):
     def format_bbox_results(self, results, infos, resfile):
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
-                frame = info['mot_frame_id']
+                if 'mot_frame_id' in info:
+                    frame = info['mot_frame_id']
+                else:
+                    frame = info['frame_id'] + 1
                 bboxes, labels = restore_result(res)
                 for bbox, label in zip(bboxes, labels):
                     x1, y1, x2, y2, conf = bbox
