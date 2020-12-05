@@ -9,7 +9,10 @@ class EvalHook(_EvalHook):
     def after_train_epoch(self, runner):
         if not self.evaluation_flag(runner):
             return
-        from mmtrack.apis import single_gpu_test
+        if self.dataloader.dataset.load_as_video:
+            from mmtrack.apis import single_gpu_test
+        else:
+            from mmdet.apis from multi_gpu_test
         results = single_gpu_test(runner.model, self.dataloader, show=False)
         self.evaluate(runner, results)
 
@@ -19,7 +22,10 @@ class DistEvalHook(_DistEvalHook):
     def after_train_epoch(self, runner):
         if not self.evaluation_flag(runner):
             return
-        from mmtrack.apis import multi_gpu_test
+        if self.dataloader.dataset.load_as_video:
+            from mmtrack.apis import single_gpu_test
+        else:
+            from mmdet.apis from multi_gpu_test
         tmpdir = self.tmpdir
         if tmpdir is None:
             tmpdir = osp.join(runner.work_dir, '.eval_hook')

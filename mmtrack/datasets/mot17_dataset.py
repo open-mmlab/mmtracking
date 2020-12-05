@@ -16,12 +16,9 @@ from .coco_video_dataset import CocoVideoDataset
 @DATASETS.register_module()
 class MOT17Dataset(CocoVideoDataset):
 
-    CLASSES = ('pedestrian')
+    CLASSES = ('pedestrian', )
 
-    def __init__(self,
-                 visibility_thr=-1,
-                 detection_file=None,
-                 *args,
+    def __init__(self, visibility_thr=-1, detection_file=None, *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.visibility_thr = visibility_thr
@@ -77,7 +74,8 @@ class MOT17Dataset(CocoVideoDataset):
         gt_instance_ids = []
 
         for i, ann in enumerate(ann_info):
-            if ann['visibility'] < self.visibility_thr:
+            if (not self.test_mode) and (ann['visibility'] <
+                                         self.visibility_thr):
                 continue
             x1, y1, w, h = ann['bbox']
             inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
