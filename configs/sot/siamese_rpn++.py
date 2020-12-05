@@ -22,9 +22,9 @@ model = dict(
         norm_cfg=dict(type='BN'),
         act_cfg=None),
     head=dict(
-        type='MultiDepthwiseRPN',
+        type='SiameseRPNHead',
         anchor_generator=dict(
-            type='SOTAnchorGenerator',
+            type='SiameseRPNAnchorGenerator',
             strides=[8],
             ratios=[0.33, 0.5, 1, 2, 3],
             scales=[8]),

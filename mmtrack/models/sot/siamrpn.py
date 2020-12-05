@@ -1,5 +1,6 @@
 import torch
 from addict import Dict
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head, build_neck
 
 from ..builder import MODELS
@@ -150,13 +151,7 @@ class SiamRPN(BaseSingleObjectTracker):
         if frame_id == 0:
             gt_bboxes = gt_bboxes[0]
             self.memo = Dict()
-            # convert [x1, y1, x2, y2] to [cx, cy, w, h]
-            self.memo.bbox = torch.zeros_like(gt_bboxes)
-            self.memo.bbox[0] = 0.5 * (gt_bboxes[0] + gt_bboxes[2])
-            self.memo.bbox[1] = 0.5 * (gt_bboxes[1] + gt_bboxes[3])
-            self.memo.bbox[2] = gt_bboxes[2] - gt_bboxes[0]
-            self.memo.bbox[3] = gt_bboxes[3] - gt_bboxes[1]
-
+            self.memo.bbox = bbox_xyxy_to_cxcywh(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
                 img, self.memo.bbox)
             best_score = None
@@ -165,12 +160,7 @@ class SiamRPN(BaseSingleObjectTracker):
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
 
-        # convert [cx, cy, w, h] to [x1, y1, x2, y2]
-        bbox_pred = torch.zeros_like(self.memo.bbox)
-        bbox_pred[0] = self.memo.bbox[0] - self.memo.bbox[2] / 2
-        bbox_pred[1] = self.memo.bbox[1] - self.memo.bbox[3] / 2
-        bbox_pred[2] = self.memo.bbox[0] + self.memo.bbox[2] / 2
-        bbox_pred[3] = self.memo.bbox[1] + self.memo.bbox[3] / 2
+        bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()
         if best_score is None:
             results['score'] = best_score

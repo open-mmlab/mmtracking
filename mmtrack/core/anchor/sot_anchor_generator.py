@@ -4,11 +4,12 @@ from mmdet.core.anchor import ANCHOR_GENERATORS, AnchorGenerator
 
 
 @ANCHOR_GENERATORS.register_module()
-class SOTAnchorGenerator(AnchorGenerator):
+class SiameseRPNAnchorGenerator(AnchorGenerator):
 
     def __init__(self, strides, *args, **kwargs):
         assert len(strides) == 1, 'only support one feature map level'
-        super(SOTAnchorGenerator, self).__init__(strides, *args, **kwargs)
+        super(SiameseRPNAnchorGenerator,
+              self).__init__(strides, *args, **kwargs)
 
     def gen_2d_hanning_windows(self, featmap_sizes, device='cuda'):
         assert self.num_levels == len(featmap_sizes)

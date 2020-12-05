@@ -2,7 +2,7 @@ import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
-from mmtrack.core.evaluation import eval_ope_benchmark
+from mmtrack.core.evaluation import eval_sot_ope
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -54,7 +54,7 @@ class LaSOTDataset(CocoVideoDataset):
             ann_infos = [
                 ann_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
             ]
-            track_eval_results = eval_ope_benchmark(
+            track_eval_results = eval_sot_ope(
                 results=track_results, annotations=ann_infos)
             eval_results.update(track_eval_results)
             print_log(eval_results, logger=logger)

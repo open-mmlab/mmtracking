@@ -1,3 +1,3 @@
-from .sot_anchor_generator import SOTAnchorGenerator
+from .sot_anchor_generator import SiameseRPNAnchorGenerator
 
-__all__ = ['SOTAnchorGenerator']
+__all__ = ['SiameseRPNAnchorGenerator']

@@ -1,6 +1,6 @@
 import torch.nn as nn
 from mmcv.cnn import build_conv_layer, build_norm_layer
-from mmdet.models import Bottleneck, ResNet
+from mmdet.models.backbones.resnet import Bottleneck, ResNet
 from mmdet.models.builder import BACKBONES
 
 

@@ -1,18 +1,5 @@
 import numpy as np
-
-
-def compute_iou(bbox1, bbox2):
-    left = np.maximum(bbox1[:, 0], bbox2[:, 0])
-    right = np.minimum(bbox1[:, 2], bbox2[:, 2])
-    top = np.maximum(bbox1[:, 1], bbox2[:, 1])
-    bottom = np.minimum(bbox1[:, 3], bbox2[:, 3])
-
-    intersect = np.maximum(0, right - left) * np.maximum(0, bottom - top)
-    union = (bbox1[:, 2] - bbox1[:, 0]) * (bbox1[:, 3] - bbox1[:, 1]) + (
-        bbox2[:, 2] - bbox2[:, 0]) * (bbox2[:, 3] - bbox2[:, 1]) - intersect
-    iou = intersect / union
-    iou = np.maximum(np.minimum(1, iou), 0)
-    return iou
+from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 
 
 def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
@@ -20,7 +7,10 @@ def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
     iou = np.ones(len(gt_bboxes)) * (-1)
     valid = (gt_bboxes[:, 2] > gt_bboxes[:, 0]) & (
         gt_bboxes[:, 3] > gt_bboxes[:, 1])
-    iou[valid] = compute_iou(gt_bboxes[valid], pred_bboxes[valid])
+    iou_matrix = bbox_overlaps(gt_bboxes[valid], pred_bboxes[valid])
+    iou[valid] = iou_matrix[np.arange(len(gt_bboxes[valid])),
+                            np.arange(len(gt_bboxes[valid]))]
+
     for i in range(len(iou_th)):
         success[i] = np.sum(iou > iou_th[i]) / float(video_length)
     return success
@@ -39,7 +29,7 @@ def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
     return success
 
 
-def eval_ope_benchmark(results, annotations):
+def eval_sot_ope(results, annotations):
     success_results = []
     precision_results = []
     norm_precision_results = []

@@ -4,7 +4,7 @@ from mmcv.cnn.bricks import ConvModule
 from mmdet.core.anchor import build_anchor_generator
 from mmdet.models import HEADS
 
-from mmtrack.core.correlation import depthwise_correlation
+from mmtrack.core.track import depthwise_correlation
 
 
 @HEADS.register_module()
@@ -55,7 +55,7 @@ class CorrelationHead(nn.Module):
 
 
 @HEADS.register_module()
-class MultiDepthwiseRPN(nn.Module):
+class SiameseRPNHead(nn.Module):
 
     def __init__(self,
                  anchor_generator,
@@ -67,7 +67,7 @@ class MultiDepthwiseRPN(nn.Module):
                  test_cfg=None,
                  *args,
                  **kwargs):
-        super(MultiDepthwiseRPN, self).__init__(*args, **kwargs)
+        super(SiameseRPNHead, self).__init__(*args, **kwargs)
         self.anchor_generator = build_anchor_generator(anchor_generator)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
