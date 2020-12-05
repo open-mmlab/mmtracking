@@ -1,6 +1,5 @@
-from collections import defaultdict
-
 import numpy as np
+from collections import defaultdict
 from pycocotools.coco import COCO, _isArrayLike
 
 

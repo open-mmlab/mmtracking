@@ -1,5 +1,4 @@
 import logging
-
 from mmcv.utils import get_logger
 
 

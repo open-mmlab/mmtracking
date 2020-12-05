@@ -1,8 +1,7 @@
+import mmcv
 import os
 import os.path as osp
 import tempfile
-
-import mmcv
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
