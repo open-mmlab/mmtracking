@@ -43,8 +43,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install pip
-        run: pip install pip==20.2.0
       - name: Install Pillow
         run: pip install Pillow==6.2.2
         if: ${{matrix.torchvision == '0.4.2'}}
@@ -52,7 +50,7 @@ jobs:
         run: pip install torch==${{matrix.torch}}+cpu torchvision==${{matrix.torchvision}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install mmtrack dependencies
         run: |
-          pip install mmcv-full==latest+torch${{matrix.torch}}+cpu -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
+          pip install mmcv-full==latest+torch${{matrix.torch}}+cpu -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html --use-deprecated=legacy-resolver
           pip install git+https://github.com/open-mmlab/mmdetection.git
           pip install -r requirements.txt
       - name: Build and install
@@ -112,8 +110,6 @@ jobs:
           export CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
           export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/include:${LD_LIBRARY_PATH}
           export PATH=${CUDA_HOME}/bin:${PATH}
-      - name: Install pip
-        run: pip install pip==20.2.0
       - name: Install Pillow
         run: pip install Pillow==6.2.2
         if: ${{matrix.torchvision < 0.5}}
@@ -121,7 +117,7 @@ jobs:
         run: pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install mmtrack dependencies
         run: |
-          pip install mmcv-full==${{matrix.mmcv}} -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
+          pip install mmcv-full==${{matrix.mmcv}} -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html --use-deprecated=legacy-resolver
           pip install git+https://github.com/open-mmlab/mmdetection.git
           pip install -r requirements.txt
       - name: Build and install
