@@ -1,13 +1,14 @@
+import time
+from multiprocessing import Pool
+
 import motmetrics as mm
 import numpy as np
 import pandas as pd
-import time
 from mmcv.utils import print_log
 from mmdet.core import bbox2result
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 from motmetrics.math_util import quiet_divide
-from multiprocessing import Pool
 
 from ..track import track2result
 

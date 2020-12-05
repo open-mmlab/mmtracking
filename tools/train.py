@@ -1,9 +1,10 @@
 import argparse
 import copy
-import mmcv
 import os
 import os.path as osp
 import time
+
+import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist

@@ -1,7 +1,8 @@
 import argparse
-import mmcv
 import os.path as osp
 from collections import defaultdict
+
+import mmcv
 from tqdm import tqdm
 
 CLASSES = [

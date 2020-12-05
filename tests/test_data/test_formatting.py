@@ -1,5 +1,6 @@
-import numpy as np
 import os.path as osp
+
+import numpy as np
 from mmcv.utils import build_from_cfg
 
 from mmtrack.datasets import PIPELINES

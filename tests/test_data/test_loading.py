@@ -1,6 +1,7 @@
 import copy
-import numpy as np
 import os.path as osp
+
+import numpy as np
 
 from mmtrack.datasets import PIPELINES
 

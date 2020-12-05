@@ -1,5 +1,6 @@
-import mmcv
 from collections import defaultdict
+
+import mmcv
 from mmdet.core.bbox.demodata import random_boxes
 
 

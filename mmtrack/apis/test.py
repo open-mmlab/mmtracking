@@ -1,11 +1,12 @@
-import mmcv
 import os.path as osp
 import shutil
 import tempfile
 import time
+from collections import defaultdict
+
+import mmcv
 import torch
 import torch.distributed as dist
-from collections import defaultdict
 from mmcv.runner import get_dist_info
 
 
