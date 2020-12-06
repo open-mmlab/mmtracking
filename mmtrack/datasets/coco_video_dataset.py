@@ -93,7 +93,7 @@ class CocoVideoDataset(CocoDataset):
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
-        if img_info.get('frame_id', -1) < 0 \
+        if (not self.load_as_video) or img_info.get('frame_id', -1) < 0 \
                 or (frame_range[0] == 0 and frame_range[1] == 0):
             ref_img_infos = []
             for i in range(num_ref_imgs):
@@ -345,13 +345,18 @@ class CocoVideoDataset(CocoDataset):
         super_metrics = ['bbox', 'segm']
         super_metrics = [_ for _ in metrics if _ in super_metrics]
         if super_metrics:
-            if 'bbox' in super_metrics and 'segm' in super_metrics:
-                super_results = []
-                for bbox, segm in zip(results['bbox_results'],
-                                      results['segm_results']):
-                    super_results.append((bbox, segm))
+            if isinstance(results, dict):
+                if 'bbox' in super_metrics and 'segm' in super_metrics:
+                    super_results = []
+                    for bbox, segm in zip(results['bbox_results'],
+                                          results['segm_results']):
+                        super_results.append((bbox, segm))
+                else:
+                    super_results = results['bbox_results']
+            elif isinstance(results, list):
+                super_results = results
             else:
-                super_results = results['bbox_results']
+                raise TypeError('Results must be a dict or a list.')
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,

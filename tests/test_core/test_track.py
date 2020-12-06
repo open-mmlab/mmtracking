@@ -5,6 +5,7 @@ from mmdet.core.bbox.demodata import random_boxes
 
 def test_track2result():
     from mmtrack.core import track2result
+
     # pseudo data
     num_objects, num_classes = 8, 4
     bboxes = random_boxes(num_objects, 640)
