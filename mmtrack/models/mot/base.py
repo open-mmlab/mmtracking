@@ -56,6 +56,11 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
         return hasattr(self, 'detector') and self.detector is not None
 
     @property
+    def with_reid(self):
+        """bool: whether the framework has a reid model"""
+        return hasattr(self, 'reid') and self.reid is not None
+
+    @property
     def with_track_head(self):
         """bool: whether the framework has a track_head"""
         return hasattr(self, 'track_head') and self.track_head is not None
