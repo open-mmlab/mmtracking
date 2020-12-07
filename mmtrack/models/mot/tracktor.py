@@ -1,6 +1,3 @@
-# from mmtrack.core import track2result
-# import cv2
-# import numpy as np
 from mmdet.core import bbox2result
 
 from mmtrack.core import track2result
@@ -16,7 +13,6 @@ class Tracktor(BaseMultiObjectTracker):
                  reid=None,
                  tracker=None,
                  motion=None,
-                 with_align=None,
                  with_public_bboxes=False,
                  pretrains=None):
         super().__init__()
@@ -46,14 +42,24 @@ class Tracktor(BaseMultiObjectTracker):
             'Please train `detector` and `reid` models first and \
                 inference with Tracktor.')
 
-    def simple_test(self, img, img_metas, public_bboxes=None, rescale=False):
+    def simple_test(self,
+                    img,
+                    img_metas,
+                    rescale=False,
+                    public_bboxes=None,
+                    **kwargs):
         frame_id = img_metas[0].get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()
 
         x = self.detector.extract_feat(img)
         if hasattr(self.detector, 'roi_head'):
-            proposals = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+            # TODO: check whether this is the case
+            if self.with_public_bboxes:
+                proposals = public_bboxes
+            else:
+                proposals = self.detector.rpn_head.simple_test_rpn(
+                    x, img_metas)
             det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
                 x,
                 img_metas,
@@ -75,7 +81,8 @@ class Tracktor(BaseMultiObjectTracker):
             model=self,
             bboxes=det_bboxes,
             labels=det_labels,
-            frame_id=frame_id)
+            frame_id=frame_id,
+            **kwargs)
 
         track_result = track2result(bboxes, labels, ids, num_classes)
         bbox_result = bbox2result(det_bboxes, det_labels, num_classes)

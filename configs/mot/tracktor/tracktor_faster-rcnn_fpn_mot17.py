@@ -26,7 +26,14 @@ model = dict(
             out_channels=128,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU'))),
-    motion=dict(type='LinearMotion'),
+    motion=[
+        dict(
+            type='CameraMotionCompensation',
+            warp_mode='cv2.MOTION_EUCLIDEAN',
+            num_iters=100,
+            stop_eps=0.00001),
+        dict(type='LinearMotion', num_samples=2, center_motion=True)
+    ],
     tracker=dict(type='TracktorTracker'))
 data = dict(samples_per_gpu=1, workers_per_gpu=1)
 # optimizer

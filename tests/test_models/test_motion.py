@@ -1,6 +1,8 @@
 import torch
+from mmdet.core.bbox.demodata import random_boxes
 
-from mmtrack.models.motion import FlowNetSimple
+from mmtrack.models.motion import (CameraMotionCompensation, FlowNetSimple,
+                                   LinearMotion)
 
 
 def test_flownet_simple():
@@ -18,3 +20,42 @@ def test_flownet_simple():
     ]
     flow = model(imgs, img_metas)
     assert flow.shape == torch.Size([2, 2, 224, 224])
+
+
+def test_cmc():
+    cmc = CameraMotionCompensation()
+    img = torch.randn(3, 256, 256)
+    ref_img = img.clone()
+
+    warp_matrix = cmc.get_warp_matrix(img, ref_img)
+    assert isinstance(warp_matrix, torch.Tensor)
+
+    bboxes = random_boxes(5, 256)
+    trans_bboxes = cmc.warp_bboxes(bboxes, warp_matrix)
+    assert (bboxes == trans_bboxes).all()
+
+
+def test_linear_motion():
+    linear_motion = LinearMotion(num_samples=2, center_motion=False)
+    bboxes = [[1, 1, 1, 1], [3, 3, 3, 3], [6, 6, 6, 6]]
+    bboxes = [torch.tensor(_, dtype=torch.float32) for _ in bboxes]
+    bbox = linear_motion.step(bboxes)
+    assert (bbox == torch.tensor([9., 9., 9., 9.])).all()
+
+    linear_motion = LinearMotion(num_samples=3, center_motion=False)
+    bboxes = [[1, 1, 1, 1], [3, 3, 3, 3], [6, 6, 6, 6]]
+    bboxes = [torch.tensor(_, dtype=torch.float32) for _ in bboxes]
+    bbox = linear_motion.step(bboxes)
+    assert (bbox == torch.tensor([8.5, 8.5, 8.5, 8.5])).all()
+
+    linear_motion = LinearMotion(num_samples=4, center_motion=False)
+    bboxes = [[1, 1, 1, 1], [3, 3, 3, 3], [6, 6, 6, 6]]
+    bboxes = [torch.tensor(_, dtype=torch.float32) for _ in bboxes]
+    bbox = linear_motion.step(bboxes)
+    assert (bbox == torch.tensor([8.5, 8.5, 8.5, 8.5])).all()
+
+    linear_motion = LinearMotion(num_samples=4, center_motion=True)
+    bboxes = [[1, 1, 1, 1], [3, 3, 3, 3], [6, 6, 6, 6]]
+    bboxes = [torch.tensor(_, dtype=torch.float32) for _ in bboxes]
+    bbox = linear_motion.step(bboxes)
+    assert (bbox == torch.tensor([8.5, 8.5, 8.5, 8.5])).all()
