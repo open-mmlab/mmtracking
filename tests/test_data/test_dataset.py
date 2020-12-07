@@ -1,5 +1,4 @@
 import logging
-import os
 import os.path as osp
 import tempfile
 from collections import defaultdict
@@ -27,6 +26,7 @@ MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
 
 def _create_gt_results(dataset):
     from mmdet.core import bbox2result
+
     from mmtrack.core import track2result
     results = defaultdict(list)
     for img_info in dataset.data_infos:
@@ -246,20 +246,6 @@ def test_coco_video_evaluation():
     assert 'track_AVERAGE_copypaste' in eval_results
 
 
-def test_bdd100k_format():
-    classes = ('car', 'person')
-    dataset_class = DATASETS.get('BDDVideoDataset')
-    dataset = dataset_class(
-        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
-    results = _create_gt_results(dataset)
-    tmp_dir = tempfile.TemporaryDirectory()
-    dataset.format_bdd100k_results(results, resfile_path=tmp_dir.name)
-    files = os.listdir(osp.join(tmp_dir.name, 'track'))
-    assert len(files) == 1
-    assert files[0] == 'dummy_video.json'
-    tmp_dir.cleanup()
-
-
 def test_mot17_bbox_evaluation():
     classes = ('car', 'person')
     dataset_class = DATASETS.get('MOT17Dataset')
@@ -337,6 +323,7 @@ def test_mot17_track_evaluation(dataset):
 def test_evaluation_hook(EvalHookParam):
     # create dummy data
     dataloader = DataLoader(torch.ones((5, 2)))
+    dataloader.dataset.load_as_video = True
 
     # 0.1. dataloader is not a DataLoader object
     with pytest.raises(TypeError):

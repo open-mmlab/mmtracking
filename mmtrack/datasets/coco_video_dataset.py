@@ -22,11 +22,13 @@ class CocoVideoDataset(CocoDataset):
                      frame_range=1,
                      filter_key_img=True,
                      method='uniform'),
+                 test_load_ann=False,
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
+        self.test_load_ann = test_load_ann
         super().__init__(*args, **kwargs)
         self.logger = get_root_logger()
 
@@ -91,7 +93,7 @@ class CocoVideoDataset(CocoDataset):
             self.ref_img_sampler[
                 'num_ref_imgs'] = frame_range[1] - frame_range[0]
 
-        if img_info.get('frame_id', -1) < 0 \
+        if (not self.load_as_video) or img_info.get('frame_id', -1) < 0 \
                 or (frame_range[0] == 0 and frame_range[1] == 0):
             ref_img_infos = []
             for i in range(num_ref_imgs):
@@ -131,7 +133,7 @@ class CocoVideoDataset(CocoDataset):
                         ref_img_ids.append(img_ids[ref_id])
             elif method == 'test_with_fix_stride':
                 if frame_id == 0:
-                    for i in range(frame_range[0], 0):
+                    for i in range(frame_range[0], 1):
                         ref_img_ids.append(img_ids[0])
                     for i in range(1, frame_range[1] + 1):
                         ref_id = min(round(i * stride), len(img_ids) - 1)
@@ -143,6 +145,7 @@ class CocoVideoDataset(CocoDataset):
                     ref_img_ids.append(img_ids[ref_id])
                 img_info['num_left_ref_imgs'] = abs(frame_range[0]) \
                     if isinstance(frame_range, list) else frame_range
+                img_info['frame_stride'] = stride
             else:
                 raise NotImplementedError
 
@@ -174,15 +177,13 @@ class CocoVideoDataset(CocoDataset):
 
     def prepare_results(self, img_info):
         results = dict(img_info=img_info)
-        if not self.test_mode:
+        if not self.test_mode or self.test_load_ann:
             results['ann_info'] = self.get_ann_info(img_info)
         if self.proposals is not None:
             idx = self.img_ids.index(img_info['id'])
             results['proposals'] = self.proposals[idx]
 
         super().pre_pipeline(results)
-        results['frame_id'] = img_info.get('frame_id', -1)
-        results['num_left_ref_imgs'] = img_info.get('num_left_ref_imgs', -1)
         results['is_video_data'] = self.load_as_video
         return results
 
@@ -344,13 +345,18 @@ class CocoVideoDataset(CocoDataset):
         super_metrics = ['bbox', 'segm']
         super_metrics = [_ for _ in metrics if _ in super_metrics]
         if super_metrics:
-            if 'bbox' in super_metrics and 'segm' in super_metrics:
-                super_results = []
-                for bbox, segm in zip(results['bbox_results'],
-                                      results['segm_results']):
-                    super_results.append((bbox, segm))
+            if isinstance(results, dict):
+                if 'bbox' in super_metrics and 'segm' in super_metrics:
+                    super_results = []
+                    for bbox, segm in zip(results['bbox_results'],
+                                          results['segm_results']):
+                        super_results.append((bbox, segm))
+                else:
+                    super_results = results['bbox_results']
+            elif isinstance(results, list):
+                super_results = results
             else:
-                super_results = results['bbox_results']
+                raise TypeError('Results must be a dict or a list.')
             super_eval_results = super().evaluate(
                 results=super_results,
                 metric=super_metrics,

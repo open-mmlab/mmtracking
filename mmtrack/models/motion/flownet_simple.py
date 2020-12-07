@@ -1,10 +1,7 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
-from mmcv.runner import load_checkpoint
-from mmcv.utils import print_log
 
-from mmtrack.utils import get_root_logger
 from ..builder import MOTION
 
 
@@ -23,14 +20,12 @@ class FlowNetSimple(nn.Module):
     }
 
     def __init__(self,
-                 pretrained,
                  img_scale_factor,
                  out_indices=[2, 3, 4, 5, 6],
                  flow_scale_factor=5.0,
                  flow_img_norm_std=[255.0, 255.0, 255.0],
                  flow_img_norm_mean=[0.411, 0.432, 0.450]):
         super(FlowNetSimple, self).__init__()
-        self.pretrained = pretrained
         self.img_scale_factor = img_scale_factor
         self.out_indices = out_indices
         self.flow_scale_factor = flow_scale_factor
@@ -131,15 +126,8 @@ class FlowNetSimple(nn.Module):
             act_cfg=None)
 
     def init_weights(self):
-        logger = get_root_logger()
-        if self.pretrained is None:
-            print_log(
-                'Warning: The flownet is random initialized!', logger=logger)
-        elif isinstance(self.pretrained, str):
-            print_log(f'load flownet from: {self.pretrained}', logger=logger)
-            load_checkpoint(self, self.pretrained)
-        else:
-            raise TypeError('Pretained must be None or a str')
+        # using the default initialization
+        pass
 
     def prepare_imgs(self, imgs, img_metas):
         if not hasattr(self, 'img_norm_mean'):

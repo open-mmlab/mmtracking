@@ -12,10 +12,13 @@ class MatchInstances(object):
         ins_ids = list(instance_ids)
         ref_ins_ids = list(ref_instance_ids)
         match_indices = np.array([
-            ref_ins_ids.index(i) if i in ref_ins_ids else -1 for i in ins_ids
+            ref_ins_ids.index(i) if (i in ref_ins_ids and i > 0) else -1
+            for i in ins_ids
         ])
-        ref_match_indices = np.array(
-            [ins_ids.index(i) if i in ins_ids else -1 for i in ref_ins_ids])
+        ref_match_indices = np.array([
+            ins_ids.index(i) if (i in ins_ids and i > 0) else -1
+            for i in ref_ins_ids
+        ])
         return match_indices, ref_match_indices
 
     def __call__(self, results):
