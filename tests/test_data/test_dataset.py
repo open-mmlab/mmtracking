@@ -1,5 +1,4 @@
 import logging
-import os
 import os.path as osp
 import tempfile
 from collections import defaultdict
@@ -245,20 +244,6 @@ def test_coco_video_evaluation():
     assert eval_results['MT'] == 1
     assert 'track_OVERALL_copypaste' in eval_results
     assert 'track_AVERAGE_copypaste' in eval_results
-
-
-def test_bdd100k_format():
-    classes = ('car', 'person')
-    dataset_class = DATASETS.get('BDDVideoDataset')
-    dataset = dataset_class(
-        ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
-    results = _create_gt_results(dataset)
-    tmp_dir = tempfile.TemporaryDirectory()
-    dataset.format_bdd100k_results(results, resfile_path=tmp_dir.name)
-    files = os.listdir(osp.join(tmp_dir.name, 'track'))
-    assert len(files) == 1
-    assert files[0] == 'dummy_video.json'
-    tmp_dir.cleanup()
 
 
 def test_mot17_bbox_evaluation():

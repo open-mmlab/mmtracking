@@ -8,7 +8,6 @@ from .motion import *  # noqa: F401,F403
 from .roi_heads import *  # noqa: F401,F403
 from .sot import *  # noqa: F401,F403
 from .track_heads import *  # noqa: F401,F403
-from .trackers import *  # noqa: F401,F403
 from .vid import *  # noqa: F401,F403
 
 __all__ = [
