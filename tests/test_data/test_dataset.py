@@ -27,6 +27,7 @@ MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
 
 def _create_gt_results(dataset):
     from mmdet.core import bbox2result
+
     from mmtrack.core import track2result
     results = defaultdict(list)
     for img_info in dataset.data_infos:
@@ -337,6 +338,7 @@ def test_mot17_track_evaluation(dataset):
 def test_evaluation_hook(EvalHookParam):
     # create dummy data
     dataloader = DataLoader(torch.ones((5, 2)))
+    dataloader.dataset.load_as_video = True
 
     # 0.1. dataloader is not a DataLoader object
     with pytest.raises(TypeError):

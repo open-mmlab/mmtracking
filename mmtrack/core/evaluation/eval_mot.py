@@ -170,7 +170,7 @@ def eval_mot(results,
         formatters=mm.metrics.create().formatters,
         namemap=METRIC_MAPS)
 
-    print_log(strsummary, logger)
+    print_log('\n' + strsummary, logger)
     print_log(f'Evaluation finishes with {(time.time() - t):.2f} s.', logger)
 
     eval_results = eval_results.to_dict()

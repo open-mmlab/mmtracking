@@ -6,9 +6,10 @@
 # use 4. bbox target_stds
 # use 5. 3e2e1e or 25e35e05e
 # use 6. train ref img sample -9--0 or -9--9
-find_unused_parameters = True
 model = dict(
-    type='DffTwoStage',
+    type='FGFA',
+    pretrains=dict(
+        motion='data/imagenet_vid/pretrained_flownet/flownet_simple.pth'),
     detector=dict(
         type='FasterRCNN',
         pretrained='torchvision://resnet101',
@@ -67,67 +68,66 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0)))),
-    motion=dict(
-        type='FlowNetSimple',
-        pretrained='data/imagenet_vid/pretrained_flownet/flownet_simple.pth',
-        flow_img_norm_mean=[0.450, 0.432, 0.411],
-        img_scale_factor=0.5))
-# model training and testing settings
-train_cfg = dict(
-    rpn=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.7,
-            neg_iou_thr=0.3,
-            min_pos_iou=0.3,
-            ignore_iof_thr=-1),
-        sampler=dict(
-            type='RandomSampler',
-            num=256,
-            pos_fraction=0.5,
-            neg_pos_ub=-1,
-            add_gt_as_proposals=False),
-        allowed_border=0,
-        pos_weight=-1,
-        debug=False),
-    rpn_proposal=dict(
-        nms_across_levels=False,
-        nms_pre=2000,
-        nms_post=2000,
-        max_num=2000,
-        nms_thr=0.7,
-        min_bbox_size=0),
-    rcnn=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.5,
-            neg_iou_thr=0.5,
-            min_pos_iou=0.5,
-            ignore_iof_thr=-1),
-        sampler=dict(
-            type='RandomSampler',
-            num=512,
-            pos_fraction=0.25,
-            neg_pos_ub=-1,
-            add_gt_as_proposals=True),
-        pos_weight=-1,
-        debug=False))
-test_cfg = dict(
-    rpn=dict(
-        nms_across_levels=False,
-        nms_pre=1000,
-        nms_post=1000,
-        max_num=1000,
-        nms_thr=0.7,
-        min_bbox_size=0),
-    rcnn=dict(
-        score_thr=0.0001,
-        nms=dict(type='nms', iou_threshold=0.5),
-        max_per_img=100),
-    # soft-nms is also supported for rcnn testing
-    # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
-    key_frame_interval=10)
+                               loss_weight=1.0))),
+        # detector training and testing settings
+        train_cfg=dict(
+            rpn=dict(
+                assigner=dict(
+                    type='MaxIoUAssigner',
+                    pos_iou_thr=0.7,
+                    neg_iou_thr=0.3,
+                    min_pos_iou=0.3,
+                    ignore_iof_thr=-1),
+                sampler=dict(
+                    type='RandomSampler',
+                    num=256,
+                    pos_fraction=0.5,
+                    neg_pos_ub=-1,
+                    add_gt_as_proposals=False),
+                allowed_border=0,
+                pos_weight=-1,
+                debug=False),
+            rpn_proposal=dict(
+                nms_across_levels=False,
+                nms_pre=2000,
+                nms_post=2000,
+                max_num=2000,
+                nms_thr=0.7,
+                min_bbox_size=0),
+            rcnn=dict(
+                assigner=dict(
+                    type='MaxIoUAssigner',
+                    pos_iou_thr=0.5,
+                    neg_iou_thr=0.5,
+                    min_pos_iou=0.5,
+                    ignore_iof_thr=-1),
+                sampler=dict(
+                    type='RandomSampler',
+                    num=512,
+                    pos_fraction=0.25,
+                    neg_pos_ub=-1,
+                    add_gt_as_proposals=True),
+                pos_weight=-1,
+                debug=False)),
+        test_cfg=dict(
+            rpn=dict(
+                nms_across_levels=False,
+                nms_pre=1000,
+                nms_post=1000,
+                max_num=1000,
+                nms_thr=0.7,
+                min_bbox_size=0),
+            rcnn=dict(
+                score_thr=0.0001,
+                nms=dict(type='nms', iou_threshold=0.5),
+                max_per_img=100))
+        # soft-nms is also supported for rcnn testing
+        # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
+    ),
+    motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
+    aggregator=dict(
+        type='EmbedAggregator', num_convs=1, channels=256, kernel_size=3),
+)
 
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
@@ -149,22 +149,18 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadMultiImagesFromFile'),
+    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
+    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
+    dict(type='SeqNormalize', **img_norm_cfg),
+    dict(type='SeqPad', size_divisor=64),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=(1000, 600),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=64),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(
-                type='VideoCollect',
-                keys=['img'],
-                meta_keys=('frame_id', 'is_video_data'))
-        ])
+        type='VideoCollect',
+        keys=['img'],
+        meta_keys=('is_video_data', 'frame_id', 'num_left_ref_imgs',
+                   'frame_stride')),
+    dict(type='ConcatVideoReferences'),
+    dict(type='MultiImagesToTensor', ref_prefix='ref')
 ]
 data = dict(
     samples_per_gpu=1,
@@ -175,10 +171,10 @@ data = dict(
             ann_file=data_root + 'annotations/imagenet_vid_train.json',
             img_prefix=data_root + 'data/VID/',
             ref_img_sampler=dict(
-                num_ref_imgs=1,
-                frame_range=[-9, 0],
-                filter_key_img=False,
-                method='uniform'),
+                num_ref_imgs=2,
+                frame_range=9,
+                filter_key_img=True,
+                method='bilateral_uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,
@@ -186,24 +182,32 @@ data = dict(
             ann_file=data_root + 'annotations/imagenet_det_30cls.json',
             img_prefix=data_root + 'data/DET/',
             ref_img_sampler=dict(
-                num_ref_imgs=1,
+                num_ref_imgs=2,
                 frame_range=0,
-                filter_key_img=False,
-                method='uniform'),
+                filter_key_img=True,
+                method='bilateral_uniform'),
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=None,
+        ref_img_sampler=dict(
+            num_ref_imgs=18,
+            frame_range=[-9, 9],
+            stride=1,
+            method='test_with_fix_stride'),
         pipeline=test_pipeline,
         test_mode=True),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=None,
+        ref_img_sampler=dict(
+            num_ref_imgs=18,
+            frame_range=[-9, 9],
+            stride=1,
+            method='test_with_fix_stride'),
         pipeline=test_pipeline,
         test_mode=True))
 # optimizer
@@ -216,7 +220,7 @@ lr_config = dict(
     by_epoch=False,
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[17140, 37708])
+    step=[int(2.5 * 6856), int(5.5 * 6856)])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable

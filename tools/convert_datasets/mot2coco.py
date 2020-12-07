@@ -38,7 +38,7 @@ import numpy as np
 from tqdm import tqdm
 
 USELESS = [3, 4, 5, 6, 9, 10, 11]
-IGNORES = [2, 7, 8, 12]
+IGNORES = [2, 7, 8, 12, 13]
 
 
 def parse_args():
@@ -47,6 +47,10 @@ def parse_args():
     parser.add_argument('-i', '--input', help='path of MOT data')
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
+    parser.add_argument(
+        '--convert-det',
+        action='store_true',
+        help='convert offical detection results.')
     parser.add_argument(
         '--split-train',
         action='store_true',
@@ -66,18 +70,16 @@ def parse_gts(gts):
         if class_id in USELESS:
             continue
         elif class_id in IGNORES:
-            assert conf == 0
-            ignore = True
-        else:
-            assert class_id == 1
-            ignore = False if conf else True
+            continue
         anns = dict(
             category_id=1,
             bbox=bbox,
             area=bbox[2] * bbox[3],
-            official_id=ins_id,
-            ignore=ignore,
-            visibility=visibility)
+            iscrowd=False,
+            visibility=visibility,
+            mot_instance_id=ins_id,
+            mot_conf=conf,
+            mot_class_id=class_id)
         outputs[frame_id].append(anns)
     return outputs
 
@@ -103,20 +105,21 @@ def main():
     sets = ['train', 'test']
     if args.split_train:
         sets += ['half-train', 'half-val']
-    vid_id, img_id, ann_id, ins_id = 1, 1, 1, 1
+    vid_id, img_id, ann_id = 1, 1, 1
 
     for subset in sets:
+        ins_id = 0
         print(f'Converting MOT17 {subset} set to COCO format')
         if 'half' in subset:
             in_folder = osp.join(args.input, 'train')
         else:
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'mot17_{subset}_cocoformat.json')
-        det_file = osp.join(args.output, f'mot17_{subset}_detections.pkl')
         outputs = defaultdict(list)
         outputs['categories'] = [dict(id=1, name='pedestrian')]
-        detections = dict(bbox_results=dict())
-
+        if args.convert_det:
+            det_file = osp.join(args.output, f'mot17_{subset}_detections.pkl')
+            detections = dict(bbox_results=dict())
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
             # basic params
@@ -125,11 +128,6 @@ def main():
             # load video infos
             video_folder = osp.join(in_folder, video_name)
             infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
-            if parse_gt:
-                gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
-                img2gts = parse_gts(gts)
-            dets = mmcv.list_from_file(f'{video_folder}/det/det.txt')
-            img2dets = parse_dets(dets)
             # video-level infos
             assert video_name == infos[1].strip().split('=')[1]
             img_folder = infos[2].strip().split('=')[1]
@@ -146,6 +144,14 @@ def main():
                 fps=fps,
                 width=width,
                 height=height)
+            # parse annotations
+            if parse_gt:
+                gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
+                img2gts = parse_gts(gts)
+            if args.convert_det:
+                dets = mmcv.list_from_file(f'{video_folder}/det/det.txt')
+                img2dets = parse_dets(dets)
+            # make half sets
             if 'half' in subset:
                 split_frame = num_imgs // 2 + 1
                 if 'train' in subset:
@@ -155,38 +161,50 @@ def main():
                 else:
                     raise ValueError(
                         'subset must be named with `train` or `val`')
+                mot_frame_ids = [str(int(_.split('.')[0])) for _ in img_names]
+                with open(f'{video_folder}/gt/gt_{subset}.txt', 'wt') as f:
+                    for gt in gts:
+                        if gt.split(',')[0] in mot_frame_ids:
+                            f.writelines(f'{gt}\n')
             # image and box level infos
             for frame_id, name in enumerate(img_names):
                 img_name = osp.join(video_name, img_folder, name)
+                mot_frame_id = int(name.split('.')[0])
                 image = dict(
                     id=img_id,
                     video_id=vid_id,
                     file_name=img_name,
                     height=height,
                     width=width,
-                    frame_id=frame_id)
-                _frame_id = int(name.split('.')[0])
+                    frame_id=frame_id,
+                    mot_frame_id=mot_frame_id)
                 if parse_gt:
-                    gts = img2gts[_frame_id]
+                    gts = img2gts[mot_frame_id]
                     for gt in gts:
                         gt.update(id=ann_id, image_id=img_id)
-                        if ins_maps.get(gt['official_id']):
-                            gt['instance_id'] = ins_maps[gt['official_id']]
+                        mot_ins_id = gt['mot_instance_id']
+                        if mot_ins_id in ins_maps:
+                            gt['instance_id'] = ins_maps[mot_ins_id]
                         else:
                             gt['instance_id'] = ins_id
-                            ins_maps[gt['official_id']] = ins_id
+                            ins_maps[mot_ins_id] = ins_id
                             ins_id += 1
                         outputs['annotations'].append(gt)
                         ann_id += 1
-                dets = [np.array(img2dets[_frame_id])]
-                detections['bbox_results'][img_name] = dets
+                if args.convert_det:
+                    dets = [np.array(img2dets[mot_frame_id])]
+                    detections['bbox_results'][img_name] = dets
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)
             vid_id += 1
+        print(f'{subset} has {ins_id} instances.')
         mmcv.dump(outputs, out_file)
-        mmcv.dump(detections, det_file)
-        print(f'Done! Saved as {out_file} and {det_file}')
+        if args.convert_det:
+            mmcv.dump(detections, det_file)
+            print(f'Done! Saved as {out_file} and {det_file}')
+        else:
+            print(f'Done! Saved as {out_file}')
 
 
 if __name__ == '__main__':

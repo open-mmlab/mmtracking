@@ -81,18 +81,20 @@ def main():
     cfg = Config.fromfile(args.config)
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
-        from mmdet.models import build_detector as build_model
         from mmdet.datasets import build_dataloader
+        from mmdet.models import build_detector as build_model
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.models import build_model
         from mmtrack.datasets import build_dataloader
+        from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    cfg.model.pretrained = None
+    cfg.model.pretrains = None
+    if hasattr(cfg.model, 'detector'):
+        cfg.model.detector.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
@@ -112,7 +114,11 @@ def main():
         shuffle=False)
 
     # build the model and load checkpoint
-    model = build_model(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+    if cfg.get('test_cfg', False):
+        model = build_model(
+            cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    else:
+        model = build_model(cfg.model)
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
