@@ -34,9 +34,10 @@ class LinearMotion(object):
             ]
         return torch.stack(vs, dim=0).mean(dim=0)
 
-    def step(self, bboxes):
+    def step(self, bboxes, velocity=None):
         assert isinstance(bboxes, list)
-        vs = self.get_velocity(bboxes)
+        if velocity is None:
+            vs = self.get_velocity(bboxes)
 
         if self.center_motion:
             cx, cy = self.center(bboxes[-1]) + vs
@@ -48,3 +49,11 @@ class LinearMotion(object):
         else:
             bbox = bboxes[-1] + vs
         return bbox
+
+    def track(self, tracks, frame_id):
+        for k, v in tracks.items():
+            if v.frame_id == frame_id - 1:
+                v.velocity = self.get_velocity(v.bboxes)
+            if hasattr(v, 'velocity'):
+                v.bboxes[-1] = self.step(v.bboxes, v.velocity)
+        return tracks

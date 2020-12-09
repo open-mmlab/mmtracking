@@ -44,3 +44,25 @@ class CameraMotionCompensation(object):
         trans_br = torch.mm(warp_matrix, br.t()).t()
         trans_bboxes = torch.cat((trans_tl, trans_br), dim=1)
         return trans_bboxes.to(bboxes.device)
+
+    def track(self, img, ref_img, tracks, num_samples, frame_id):
+        warp_matrix = self.get_warp_matrix(img, ref_img)
+
+        bboxes = []
+        num_bboxes = []
+        for k, v in tracks.items():
+            if v['frame_id'] < frame_id - 1:
+                _num = 1
+            else:
+                _num = min(num_samples, len(v.bboxes))
+            num_bboxes.append(_num)
+            bboxes.extend(v.bboxes[-_num:])
+        bboxes = torch.cat(bboxes, dim=0)
+        warped_bboxes = self.warp_bboxes(bboxes, warp_matrix)
+
+        warped_bboxes = torch.split(warped_bboxes, num_bboxes)
+        for b, (k, v) in zip(warped_bboxes, tracks.items()):
+            _num = b.shape[0]
+            b = torch.split(b, [1] * _num)
+            tracks[k].bboxes[-_num:] = b
+        return tracks

@@ -34,7 +34,15 @@ model = dict(
             stop_eps=0.00001),
         dict(type='LinearMotion', num_samples=2, center_motion=True)
     ],
-    tracker=dict(type='TracktorTracker'))
+    tracker=dict(
+        type='TracktorTracker',
+        obj_score_thr=0.5,
+        nms_thr=0.3,
+        reg_obj_score_thr=0.5,
+        reg_nms_thr=0.6,
+        reid_sim_thr=2.0,
+        reid_iou_thr=0.2,
+        num_frames_retain=10))
 data = dict(samples_per_gpu=1, workers_per_gpu=1)
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)

@@ -1,7 +1,9 @@
 from mmdet.core import bbox2result
 
 from mmtrack.core import track2result
-from ..builder import MODELS, build_detector, build_reid, build_tracker
+from ..builder import (MODELS, build_detector, build_motion, build_reid,
+                       build_tracker)
+from ..motion import CameraMotionCompensation, LinearMotion
 from .base import BaseMultiObjectTracker
 
 
@@ -21,6 +23,22 @@ class Tracktor(BaseMultiObjectTracker):
 
         if reid is not None:
             self.reid = build_reid(reid)
+
+        if motion is not None:
+            self.motion = build_motion(motion)
+            if not isinstance(self.motion, list):
+                self.motion = [self.motion]
+            for m in self.motion:
+                if isinstance(m, CameraMotionCompensation):
+                    self.with_cmc = True
+                    self.cmc = m
+                else:
+                    self.with_cmc = False
+                if isinstance(m, LinearMotion):
+                    self.with_linear_motion = True
+                    self.linear_motion = m
+                else:
+                    self.with_linear_motion = False
 
         if tracker is not None:
             self.tracker = build_tracker(tracker)
@@ -78,10 +96,13 @@ class Tracktor(BaseMultiObjectTracker):
 
         bboxes, labels, ids = self.tracker.track(
             img=img,
+            img_metas=img_metas,
             model=self,
+            feats=x,
             bboxes=det_bboxes,
             labels=det_labels,
             frame_id=frame_id,
+            rescale=rescale,
             **kwargs)
 
         track_result = track2result(bboxes, labels, ids, num_classes)
