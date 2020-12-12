@@ -3,6 +3,32 @@ import torch
 from mmdet.core.bbox.demodata import random_boxes
 
 
+def test_imrenormalize():
+    from mmtrack.core import imrenormalize
+    img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True)
+    new_img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True)
+
+    img = np.random.randn(128, 256, 3).astype(np.float32)
+    new_img = imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
+    assert isinstance(new_img, np.ndarray)
+    assert new_img.shape == (128, 256, 3)
+    diff = np.abs(img - new_img).mean()
+    assert diff < 1e-6
+
+    img = torch.randn(1, 3, 128, 256, dtype=torch.float)
+    new_img = imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
+    assert isinstance(new_img, torch.Tensor)
+    assert new_img.shape == (1, 3, 128, 256)
+    diff = (img - new_img).abs().mean()
+    assert diff < 1e-6
+
+
 def test_track2result():
     from mmtrack.core import track2result
 

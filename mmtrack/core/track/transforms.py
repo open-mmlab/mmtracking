@@ -1,5 +1,33 @@
+import mmcv
 import numpy as np
 import torch
+
+
+def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+    if isinstance(img, torch.Tensor):
+        assert img.ndim == 4 and img.shape[0] == 1
+        new_img = img.squeeze(0).cpu().numpy().transpose(1, 2, 0)
+        new_img = _imrenormalize(new_img, img_norm_cfg, new_img_norm_cfg)
+        new_img = new_img.transpose(2, 0, 1)[None]
+        return torch.from_numpy(new_img).to(img.device)
+    else:
+        return _imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
+
+
+def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+    for k, v in img_norm_cfg.items():
+        if (k == 'mean' or k == 'std') and not isinstance(v, np.ndarray):
+            img_norm_cfg[k] = np.array(v, dtype=np.float32)
+    # reverse cfg
+    if 'to_rgb' in img_norm_cfg:
+        img_norm_cfg['to_bgr'] = img_norm_cfg['to_rgb']
+        img_norm_cfg.pop('to_rgb')
+    for k, v in new_img_norm_cfg.items():
+        if (k == 'mean' or k == 'std') and not isinstance(v, np.ndarray):
+            new_img_norm_cfg[k] = np.array(v, dtype=np.float32)
+    img = mmcv.imdenormalize(img, **img_norm_cfg)
+    img = mmcv.imnormalize(img, **new_img_norm_cfg)
+    return img
 
 
 def track2result(bboxes, labels, ids, num_classes):

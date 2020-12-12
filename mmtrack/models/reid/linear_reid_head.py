@@ -41,15 +41,14 @@ class LinearReIDHead(ClsHead):
         in_channels = self.in_channels if self.num_fcs == 0 else \
             self.fc_channels
         self.fc_out = nn.Linear(in_channels, self.out_channels)
-        if self.num_classes is not None:
-            raise NotImplementedError()
 
     def init_weights(self):
         normal_init(self.fc_out, mean=0, std=0.01, bias=0)
 
-    def simple_test(self, img):
+    def simple_test(self, x):
         """Test without augmentation."""
-        x = self.fcs(img)
+        for m in self.fcs:
+            x = m(x)
         x = self.fc_out(x)
         return x
 

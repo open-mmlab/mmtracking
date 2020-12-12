@@ -11,3 +11,11 @@ class BaseReID(ImageClassifier):
 
     def forward_train(self, *args, **kwargs):
         raise NotImplementedError()
+
+    def simple_test(self, img):
+        """Test without augmentation."""
+        if img.nelement() > 0:
+            x = self.extract_feat(img)
+            return self.head.simple_test(x)
+        else:
+            return img.new_zeros(0, self.head.out_channels)

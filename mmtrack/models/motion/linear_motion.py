@@ -11,6 +11,9 @@ class LinearMotion(object):
         self.center_motion = center_motion
 
     def center(self, bbox):
+        if bbox.ndim == 2:
+            assert bbox.shape[0] == 1
+            bbox = bbox[0]
         x1, x2, y1, y2 = bbox
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
@@ -37,23 +40,27 @@ class LinearMotion(object):
     def step(self, bboxes, velocity=None):
         assert isinstance(bboxes, list)
         if velocity is None:
-            vs = self.get_velocity(bboxes)
+            velocity = self.get_velocity(bboxes)
+        bbox = bboxes[-1]
+        if bbox.ndim == 2:
+            assert bbox.shape[0] == 1
+            bbox = bbox[0]
 
         if self.center_motion:
-            cx, cy = self.center(bboxes[-1]) + vs
-            w = bboxes[-1][2] - bboxes[-1][0]
-            h = bboxes[-1][3] - bboxes[-1][1]
+            cx, cy = self.center(bbox) + velocity
+            w = bbox[2] - bbox[0]
+            h = bbox[3] - bbox[1]
             bbox = torch.Tensor(
                 [cx - w / 2, cy - h / 2, cx + w / 2,
-                 cy + h / 2]).to(bboxes[-1].device)
+                 cy + h / 2]).to(bbox.device)
         else:
-            bbox = bboxes[-1] + vs
+            bbox += velocity
         return bbox
 
     def track(self, tracks, frame_id):
         for k, v in tracks.items():
-            if v.frame_id == frame_id - 1:
+            if int(v.frame_ids[-1]) == frame_id - 1:
                 v.velocity = self.get_velocity(v.bboxes)
             if hasattr(v, 'velocity'):
-                v.bboxes[-1] = self.step(v.bboxes, v.velocity)
+                v.bboxes[-1] = self.step(v.bboxes, v.velocity)[None]
         return tracks

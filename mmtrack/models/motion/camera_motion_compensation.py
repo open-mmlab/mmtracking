@@ -17,14 +17,7 @@ class CameraMotionCompensation(object):
         self.stop_eps = stop_eps
 
     def get_warp_matrix(self, img, ref_img):
-        if isinstance(img, torch.Tensor):
-            img = img.cpu().numpy()
-        if isinstance(ref_img, torch.Tensor):
-            ref_img = ref_img.cpu().numpy()
-
-        img = np.transpose(img, (1, 2, 0))
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        ref_img = np.transpose(ref_img, (1, 2, 0))
         ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2GRAY)
 
         warp_matrix = np.eye(2, 3, dtype=np.float32)
@@ -46,12 +39,14 @@ class CameraMotionCompensation(object):
         return trans_bboxes.to(bboxes.device)
 
     def track(self, img, ref_img, tracks, num_samples, frame_id):
+        img = img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
+        ref_img = ref_img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         warp_matrix = self.get_warp_matrix(img, ref_img)
 
         bboxes = []
         num_bboxes = []
         for k, v in tracks.items():
-            if v['frame_id'] < frame_id - 1:
+            if int(v['frame_ids'][-1]) < frame_id - 1:
                 _num = 1
             else:
                 _num = min(num_samples, len(v.bboxes))

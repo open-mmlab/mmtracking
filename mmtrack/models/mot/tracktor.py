@@ -30,15 +30,9 @@ class Tracktor(BaseMultiObjectTracker):
                 self.motion = [self.motion]
             for m in self.motion:
                 if isinstance(m, CameraMotionCompensation):
-                    self.with_cmc = True
                     self.cmc = m
-                else:
-                    self.with_cmc = False
                 if isinstance(m, LinearMotion):
-                    self.with_linear_motion = True
                     self.linear_motion = m
-                else:
-                    self.with_linear_motion = False
 
         if tracker is not None:
             self.tracker = build_tracker(tracker)
@@ -54,6 +48,16 @@ class Tracktor(BaseMultiObjectTracker):
             self.init_module('detector', pretrain['detector'])
         if self.with_reid and pretrain.get('reid', False):
             self.init_module('reid', pretrain['reid'])
+
+    @property
+    def with_cmc(self):
+        return hasattr(self, 'cmc') and self.cmc is not None
+
+    @property
+    def with_linear_motion(self):
+        """bool: whether the framework has a track_head"""
+        return hasattr(self,
+                       'linear_motion') and self.linear_motion is not None
 
     def forward_train(self, *args, **kwargs):
         raise NotImplementedError(

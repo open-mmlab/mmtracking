@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 import torch
+import torch.nn.functional as F
 from addict import Dict
 
 from mmtrack.models import TRACKERS
@@ -14,7 +15,7 @@ class BaseTracker(metaclass=ABCMeta):
         if momentums is not None:
             assert isinstance(momentums, dict), 'momentums must be a dict'
         self.momentums = momentums
-        self.num_frames_retain
+        self.num_frames_retain = num_frames_retain
 
         self.reset()
 
@@ -28,11 +29,14 @@ class BaseTracker(metaclass=ABCMeta):
 
     @property
     def ids(self):
-        return int(self.tracks.keys())
+        return list(self.tracks.keys())
 
     def update(self, **kwargs):
-        memo_items = list(kwargs.keys())
-        if not hasattr(self, 'items'):
+        memo_items = [k for k, v in kwargs.items() if v is not None]
+        rm_items = [k for k in kwargs.keys() if k not in memo_items]
+        for item in rm_items:
+            kwargs.pop(item)
+        if not hasattr(self, 'memo_items'):
             self.memo_items = memo_items
         else:
             assert memo_items == self.memo_items
@@ -66,9 +70,9 @@ class BaseTracker(metaclass=ABCMeta):
     def update_track(self, id, obj):
         for k, v in zip(self.memo_items, obj):
             v = v[None]
-            if k in self.momentums:
+            if self.momentums is not None and k in self.momentums:
                 m = self.momentums[k]
-                self.tracks[id][k] = (1 - m) * self.self.tracks[id][k] + m * v
+                self.tracks[id][k] = (1 - m) * self.tracks[id][k] + m * v
             else:
                 self.tracks[id][k].append(v)
 
@@ -76,7 +80,7 @@ class BaseTracker(metaclass=ABCMeta):
         self.tracks[id] = Dict()
         for k, v in zip(self.memo_items, obj):
             v = v[None]
-            if k in self.momentums:
+            if self.momentums is not None and k in self.momentums:
                 self.tracks[id][k] = v
             else:
                 self.tracks[id][k] = [v]
@@ -88,27 +92,66 @@ class BaseTracker(metaclass=ABCMeta):
             outs[k] = []
 
         for id, objs in self.tracks.items():
-            for k, v in zip(self.memo_items, objs):
-                v = v[-1] if k not in self.momentums else v
+            for k, v in objs.items():
+                if k not in outs:
+                    continue
+                if self.momentums is not None and k in self.momentums:
+                    v = v
+                else:
+                    v = v[-1]
+                outs[k].append(v)
 
         for k, v in outs.items():
             outs[k] = torch.cat(v, dim=0)
         return outs
 
-    def get(self, item, ids=None, num_samples=None):
+    def get(self, item, ids=None, num_samples=None, behavior=None):
         if ids is None:
             ids = self.ids
 
         outs = []
         for id in ids:
             out = self.tracks[id][item]
-            if num_samples is not None:
-                assert isinstance(out, list)
-                out = out[-num_samples:]
-                out = torch.cat(out, dim=0).mean(dim=0, keepdim=True)
+            if isinstance(out, list):
+                if num_samples is not None:
+                    out = out[-num_samples:]
+                    out = torch.cat(out, dim=0)
+                    if behavior == 'mean':
+                        out = out.mean(dim=0, keepdim=True)
+                    elif behavior is None:
+                        out = out[None]
+                    else:
+                        raise NotImplementedError()
+                else:
+                    out = out[-1]
             outs.append(out)
-        return outs
+        return torch.cat(outs, dim=0)
 
     @abstractmethod
     def track(self, *args, **kwargs):
         pass
+
+    def crop_imgs(self, img, img_metas, bboxes, rescale=False):
+        h, w, _ = img_metas[0]['img_shape']
+        img = img[:, :, :h, :w]
+        if rescale:
+            bboxes *= img_metas[0]['scale_factor']
+        bboxes[:, 0::2] = torch.clamp(bboxes[:, 0::2], min=0, max=w)
+        bboxes[:, 1::2] = torch.clamp(bboxes[:, 1::2], min=0, max=h)
+
+        crop_imgs = []
+        for bbox in bboxes:
+            x1, y1, x2, y2 = map(int, bbox)
+            crop_img = img[:, :, y1:y2, x1:x2]
+            if self.reid.get('img_scale', False):
+                crop_img = F.interpolate(
+                    crop_img,
+                    size=self.reid['img_scale'],
+                    mode='bilinear',
+                    align_corners=False)
+            crop_imgs.append(crop_img)
+
+        if len(crop_imgs) > 0:
+            return torch.cat(crop_imgs, dim=0)
+        else:
+            return img.new_zeros((0, ))
