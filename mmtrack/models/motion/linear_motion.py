@@ -58,7 +58,7 @@ class LinearMotion(object):
         for k, v in tracks.items():
             if int(v.frame_ids[-1]) == frame_id - 1:
                 rids = v.frame_ids[::-1]
-                num_bboxes = v.bboxes.shape[0]
+                num_bboxes = len(v.bboxes)
                 for n, (i, j) in enumerate(zip(rids, rids[1:]), 1):
                     if i != j + 1:
                         num_bboxes = n
