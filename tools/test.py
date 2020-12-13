@@ -92,9 +92,9 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    cfg.model.pretrains = None
-    if hasattr(cfg.model, 'detector'):
-        cfg.model.detector.pretrained = None
+    # cfg.model.pretrains = None
+    # if hasattr(cfg.model, 'detector'):
+    #     cfg.model.detector.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
@@ -122,7 +122,9 @@ def main():
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    if args.checkpoint is not None:
+        checkpoint = load_checkpoint(
+            model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)

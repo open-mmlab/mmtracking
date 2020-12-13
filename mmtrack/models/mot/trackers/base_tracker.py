@@ -45,10 +45,11 @@ class BaseTracker(metaclass=ABCMeta):
         num_objs = len(kwargs['ids'])
         id_indice = memo_items.index('ids')
         assert 'frame_ids' in memo_items
+        cur_frame_id = int(kwargs['frame_ids'])
         if isinstance(kwargs['frame_ids'], int):
             kwargs['frame_ids'] = torch.tensor([kwargs['frame_ids']] *
                                                num_objs)
-        cur_frame_id = int(kwargs['frame_ids'][0])
+        # cur_frame_id = int(kwargs['frame_ids'][0])
         for k, v in kwargs.items():
             if len(v) != num_objs:
                 raise ValueError()
@@ -135,13 +136,18 @@ class BaseTracker(metaclass=ABCMeta):
         h, w, _ = img_metas[0]['img_shape']
         img = img[:, :, :h, :w]
         if rescale:
-            bboxes *= img_metas[0]['scale_factor']
+            bboxes[:, :4] *= torch.tensor(img_metas[0]['scale_factor']).to(
+                bboxes.device)
         bboxes[:, 0::2] = torch.clamp(bboxes[:, 0::2], min=0, max=w)
         bboxes[:, 1::2] = torch.clamp(bboxes[:, 1::2], min=0, max=h)
 
         crop_imgs = []
         for bbox in bboxes:
             x1, y1, x2, y2 = map(int, bbox)
+            if x2 == x1:
+                x2 = x1 + 1
+            if y2 == y1:
+                y2 = y1 + 1
             crop_img = img[:, :, y1:y2, x1:x2]
             if self.reid.get('img_scale', False):
                 crop_img = F.interpolate(

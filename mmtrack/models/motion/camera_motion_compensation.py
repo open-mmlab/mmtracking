@@ -31,8 +31,10 @@ class CameraMotionCompensation(object):
 
     def warp_bboxes(self, bboxes, warp_matrix):
         tl, br = bboxes[:, :2], bboxes[:, 2:]
-        tl = torch.cat((tl, torch.ones(tl.shape[0], 1)), dim=1)
-        br = torch.cat((br, torch.ones(tl.shape[0], 1)), dim=1)
+        tl = torch.cat((tl, torch.ones(tl.shape[0], 1).to(bboxes.device)),
+                       dim=1)
+        br = torch.cat((br, torch.ones(tl.shape[0], 1).to(bboxes.device)),
+                       dim=1)
         trans_tl = torch.mm(warp_matrix, tl.t()).t()
         trans_br = torch.mm(warp_matrix, br.t()).t()
         trans_bboxes = torch.cat((trans_tl, trans_br), dim=1)
@@ -53,7 +55,7 @@ class CameraMotionCompensation(object):
             num_bboxes.append(_num)
             bboxes.extend(v.bboxes[-_num:])
         bboxes = torch.cat(bboxes, dim=0)
-        warped_bboxes = self.warp_bboxes(bboxes, warp_matrix)
+        warped_bboxes = self.warp_bboxes(bboxes, warp_matrix.to(bboxes.device))
 
         warped_bboxes = torch.split(warped_bboxes, num_bboxes)
         for b, (k, v) in zip(warped_bboxes, tracks.items()):

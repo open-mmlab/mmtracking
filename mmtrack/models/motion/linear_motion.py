@@ -14,13 +14,10 @@ class LinearMotion(object):
         if bbox.ndim == 2:
             assert bbox.shape[0] == 1
             bbox = bbox[0]
-        x1, x2, y1, y2 = bbox
+        x1, y1, x2, y2 = bbox
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
-    def get_velocity(self, bboxes):
-        num_bboxes = len(bboxes)
-        num_samples = num_bboxes if self.num_samples > num_bboxes \
-            else self.num_samples
+    def get_velocity(self, bboxes, num_samples):
         if self.center_motion:
             vs = [
                 self.center(b2) - self.center(b1)
@@ -60,7 +57,13 @@ class LinearMotion(object):
     def track(self, tracks, frame_id):
         for k, v in tracks.items():
             if int(v.frame_ids[-1]) == frame_id - 1:
-                v.velocity = self.get_velocity(v.bboxes)
-            if hasattr(v, 'velocity'):
+                rids = v.frame_ids[::-1]
+                num_bboxes = v.bboxes.shape[0]
+                for n, (i, j) in enumerate(zip(rids, rids[1:]), 1):
+                    if i != j + 1:
+                        num_bboxes = n
+                num_samples = min(num_bboxes, self.num_samples)
+                v.velocity = self.get_velocity(v.bboxes, num_samples)
+            if 'velocity' in v:
                 v.bboxes[-1] = self.step(v.bboxes, v.velocity)[None]
         return tracks

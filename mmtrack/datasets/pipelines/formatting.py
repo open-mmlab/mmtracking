@@ -162,7 +162,8 @@ class VideoCollect(object):
                  meta_keys=None,
                  default_meta_keys=('filename', 'ori_filename', 'ori_shape',
                                     'img_shape', 'pad_shape', 'scale_factor',
-                                    'flip', 'flip_direction', 'img_norm_cfg')):
+                                    'flip', 'flip_direction', 'img_norm_cfg',
+                                    'frame_id', 'is_video_data')):
         self.keys = keys
         self.meta_keys = default_meta_keys
         if meta_keys is not None:

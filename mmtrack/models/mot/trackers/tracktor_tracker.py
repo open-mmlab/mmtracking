@@ -33,8 +33,9 @@ class TracktorTracker(BaseTracker):
         bboxes = memo.bboxes[memo.frame_ids == frame_id - 1]
         ids = memo.ids[memo.frame_ids == frame_id - 1]
         if rescale:
-            bboxes *= img_metas[0]['scale_factor']
-        (track_bboxes, track_scores) = detector.roi_head.simple_test_bboxes(
+            bboxes *= torch.tensor(img_metas[0]['scale_factor']).to(
+                bboxes.device)
+        track_bboxes, track_scores = detector.roi_head.simple_test_bboxes(
             x, img_metas, [bboxes], None, rescale=rescale)
         track_bboxes, track_labels, valid_inds = multiclass_nms(
             track_bboxes[0],
@@ -42,7 +43,6 @@ class TracktorTracker(BaseTracker):
             self.regression['obj_score_thr'],
             self.regression['nms'],
             return_inds=True)
-
         ids = ids[valid_inds]
         return track_bboxes, track_labels, ids
 
@@ -76,7 +76,7 @@ class TracktorTracker(BaseTracker):
             self.num_tracks += num_new_tracks
             if model.with_reid:
                 embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1],
+                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1].clone(),
                                    rescale))
         else:
             # motion
@@ -100,50 +100,50 @@ class TracktorTracker(BaseTracker):
             valid_inds = (ious < self.regression['match_iou_thr']).all(dim=1)
             bboxes = bboxes[valid_inds]
             labels = labels[valid_inds]
+            ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
 
             if model.with_reid:
-                ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
                 prop_embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, prop_bboxes[:, :-1],
-                                   rescale))
+                    self.crop_imgs(reid_img, img_metas,
+                                   prop_bboxes[:, :-1].clone(), rescale))
                 embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1],
+                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1].clone(),
                                    rescale))
                 # reid
-                active_ids = [_ not in prop_ids for _ in self.ids]
-                track_embeds = self.get(
-                    'embeds',
-                    active_ids,
-                    self.reid.get('num_samples', None),
-                    behavior='mean')
-                reid_dists = torch.cdist(track_embeds, embeds).cpu().numpy()
+                active_ids = [int(_) for _ in self.ids if _ not in prop_ids]
+                if len(active_ids) > 0:
+                    track_embeds = self.get(
+                        'embeds',
+                        active_ids,
+                        self.reid.get('num_samples', None),
+                        behavior='mean')
+                    reid_dists = torch.cdist(track_embeds,
+                                             embeds).cpu().numpy()
 
-                track_bboxes = self.get('bboxes', active_ids)
-                ious = bbox_overlaps(track_bboxes, bboxes[:, :-1])
-                iou_masks = ious < self.reid['match_iou_thr']
-                reid_dists[iou_masks] = 1e6
+                    track_bboxes = self.get('bboxes', active_ids)
+                    ious = bbox_overlaps(track_bboxes,
+                                         bboxes[:, :-1]).cpu().numpy()
+                    iou_masks = ious < self.reid['match_iou_thr']
+                    reid_dists[iou_masks] = 1e6
 
-                row, col = linear_sum_assignment(reid_dists)
-                for r, c in zip(row, col):
-                    dist = reid_dists[r, c]
-                    if dist <= self.reid['match_score_thr']:
-                        ids[col] = active_ids[row]
-                    else:
-                        ids[col] = self.num_tracks + 1
-                        self.num_tracks += 1
+                    row, col = linear_sum_assignment(reid_dists)
+                    for r, c in zip(row, col):
+                        dist = reid_dists[r, c]
+                        if dist <= self.reid['match_score_thr']:
+                            ids[c] = active_ids[r]
 
-                embeds = torch.cat((prop_embeds, embeds), dim=0)
-            else:
-                num_new_tracks = bboxes.size(0)
-                ids = torch.arange(
-                    self.num_tracks,
-                    self.num_tracks + num_new_tracks,
-                    dtype=torch.long)
-                self.num_tracks += num_new_tracks
+            new_track_inds = ids == -1
+            ids[new_track_inds] = torch.arange(
+                self.num_tracks,
+                self.num_tracks + new_track_inds.sum(),
+                dtype=torch.long)
+            self.num_tracks += new_track_inds.sum()
 
             bboxes = torch.cat((prop_bboxes, bboxes), dim=0)
             labels = torch.cat((prop_labels, labels), dim=0)
             ids = torch.cat((prop_ids, ids), dim=0)
+            if model.with_reid:
+                embeds = torch.cat((prop_embeds, embeds), dim=0)
 
         self.update(
             ids=ids,

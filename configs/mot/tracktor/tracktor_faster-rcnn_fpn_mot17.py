@@ -5,10 +5,13 @@ _base_ = [
 model = dict(
     type='Tracktor',
     pretrains=dict(
-        detector='ckpts/person_detector/' +
-        'faster_rcnn_r50_caffe_fpn_person_ap551.pth',
-        reid='ckpts/tracktor/reid/reid_r50_tracktor_iter25245.pth'),
-    detector=dict(roi_head=dict(bbox_head=dict(num_classes=1))),
+        detector='ckpts/mot17/det.pth',
+        reid='ckpts/mot17/reid_r50_tracktor_iter25245.pth'),
+    detector=dict(
+        rpn_head=dict(bbox_coder=dict(clip_border=False)),
+        roi_head=dict(
+            bbox_head=dict(bbox_coder=dict(
+                clip_border=False), num_classes=1))),
     reid=dict(
         type='BaseReID',
         backbone=dict(

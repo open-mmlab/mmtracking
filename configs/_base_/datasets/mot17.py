@@ -45,7 +45,7 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
-data_root = 'data/mot17/'
+data_root = 'data/mot17det/'
 data = dict(
     samples_per_gpu=1,
     workers_per_gpu=1,
