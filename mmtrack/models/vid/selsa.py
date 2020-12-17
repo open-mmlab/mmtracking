@@ -160,6 +160,10 @@ class SELSA(BaseVideoDetector):
                     ref_proposals=None,
                     rescale=False):
         """Test without augmentation."""
+        if ref_img is not None:
+            ref_img = ref_img[0]
+        if ref_img_metas is not None:
+            ref_img_metas = ref_img_metas[0]
         x, img_metas, ref_x, ref_img_metas = self.extract_feats(
             img, img_metas, ref_img, ref_img_metas)
 

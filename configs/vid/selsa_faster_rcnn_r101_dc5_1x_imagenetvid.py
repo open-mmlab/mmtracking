@@ -144,8 +144,7 @@ train_pipeline = [
     dict(type='SeqPad', size_divisor=16),
     dict(
         type='VideoCollect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids'],
-        meta_keys=('frame_id', 'is_video_data')),
+        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids']),
     dict(type='ConcatVideoReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
@@ -158,10 +157,10 @@ test_pipeline = [
     dict(
         type='VideoCollect',
         keys=['img'],
-        meta_keys=('is_video_data', 'frame_id', 'num_left_ref_imgs',
-                   'frame_stride')),
+        meta_keys=('num_left_ref_imgs', 'frame_stride')),
     dict(type='ConcatVideoReferences'),
-    dict(type='MultiImagesToTensor', ref_prefix='ref')
+    dict(type='MultiImagesToTensor', ref_prefix='ref'),
+    dict(type='ToList')
 ]
 data = dict(
     samples_per_gpu=1,
@@ -180,7 +179,7 @@ data = dict(
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root + 'annotations/imagenet_det_30cls.json',
+            ann_file=data_root + 'annotations/imagenet_det_30plus1cls.json',
             img_prefix=data_root + 'data/DET/',
             ref_img_sampler=dict(
                 num_ref_imgs=2,
@@ -216,10 +215,9 @@ optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(
     policy='step',
     warmup='linear',
-    by_epoch=False,
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[int(2.5 * 6856), int(5.5 * 6856)])
+    step=[2, 5])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
@@ -231,10 +229,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 6
+total_epochs = 7
 dist_params = dict(backend='nccl', port='29500')
 log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox'], interval=6)
+evaluation = dict(metric=['bbox'], interval=7)

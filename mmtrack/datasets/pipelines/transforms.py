@@ -1,7 +1,211 @@
+import cv2
 import mmcv
 import numpy as np
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
+
+
+def crop_region_from_image(image, crop_region, crop_size, padding=(0, 0, 0)):
+    a = crop_size / (crop_region[2] - crop_region[0])
+    b = crop_size / (crop_region[3] - crop_region[1])
+    c = -a * crop_region[0]
+    d = -b * crop_region[1]
+    mapping = np.array([[a, 0, c], [0, b, d]]).astype(np.float32)
+    crop_image = cv2.warpAffine(
+        image,
+        mapping, (crop_size, crop_size),
+        borderMode=cv2.BORDER_CONSTANT,
+        borderValue=padding)
+    return crop_image
+
+
+@PIPELINES.register_module()
+class SeqCropLikeSiamFC(object):
+
+    def __init__(self, context_amount=0.5, exemplar_size=127, crop_size=511):
+        self.context_amount = context_amount
+        self.exemplar_size = exemplar_size
+        self.crop_size = crop_size
+
+    def crop_like_SiamFC(self,
+                         image,
+                         bbox,
+                         context_amount=0.5,
+                         exemplar_size=127,
+                         crop_size=511):
+        padding = np.mean(image, axis=(0, 1)).tolist()
+
+        bbox = np.array([
+            0.5 * (bbox[2] + bbox[0]), 0.5 * (bbox[3] + bbox[1]),
+            bbox[2] - bbox[0], bbox[3] - bbox[1]
+        ])
+        z_width = bbox[2] + context_amount * (bbox[2] + bbox[3])
+        z_height = bbox[3] + context_amount * (bbox[2] + bbox[3])
+        z_size = np.sqrt(z_width * z_height)
+
+        z_scale = exemplar_size / z_size
+        d_search = (crop_size - exemplar_size) / 2
+        pad = d_search / z_scale
+        x_size = z_size + 2 * pad
+        x_bbox = np.array([
+            bbox[0] - 0.5 * x_size, bbox[1] - 0.5 * x_size,
+            bbox[0] + 0.5 * x_size, bbox[1] + 0.5 * x_size
+        ])
+
+        x_crop_img = crop_region_from_image(image, x_bbox, crop_size, padding)
+        return x_crop_img
+
+    def generate_box(self, image, gt_bbox, context_amount, exemplar_size):
+        img_h, img_w = image.shape[:2]
+        w, h = gt_bbox[2] - gt_bbox[0], gt_bbox[3] - gt_bbox[1]
+
+        z_width = w + context_amount * (w + h)
+        z_height = h + context_amount * (w + h)
+        z_scale = np.sqrt(z_width * z_height)
+        z_scale_factor = exemplar_size / z_scale
+        w = w * z_scale_factor
+        h = h * z_scale_factor
+        cx, cy = img_w // 2, img_h // 2
+        bbox = np.array(
+            [cx - 0.5 * w, cy - 0.5 * h, cx + 0.5 * w, cy + 0.5 * h],
+            dtype=np.float32)
+
+        return bbox
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            image = _results['img']
+            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+
+            crop_image = self.crop_like_SiamFC(image, gt_bbox,
+                                               self.context_amount,
+                                               self.exemplar_size,
+                                               self.crop_size)
+            generated_bbox = self.generate_box(crop_image, gt_bbox,
+                                               self.context_amount,
+                                               self.exemplar_size)
+            generated_bbox = generated_bbox[None]
+
+            _results['img'] = crop_image
+            if 'img_shape' in _results:
+                _results['img_shape'] = crop_image.shape
+            _results[_results.get('bbox_fields', [])[0]] = generated_bbox
+
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqShiftScaleAug(object):
+
+    def __init__(self,
+                 target_size=[127, 255],
+                 shift=[4, 64],
+                 scale=[0.05, 0.18]):
+        self.target_size = target_size
+        self.shift = shift
+        self.scale = scale
+
+    def _shift_scale_aug(self, image, bbox, target_size, shift, scale):
+        img_h, img_w = image.shape[:2]
+
+        scale_x = (2 * np.random.random() - 1) * scale + 1
+        scale_y = (2 * np.random.random() - 1) * scale + 1
+        scale_x = min(scale_x, float(img_w) / target_size)
+        scale_y = min(scale_y, float(img_h) / target_size)
+        crop_region = np.array([
+            img_w // 2 - 0.5 * scale_x * target_size,
+            img_h // 2 - 0.5 * scale_y * target_size,
+            img_w // 2 + 0.5 * scale_x * target_size,
+            img_h // 2 + 0.5 * scale_y * target_size
+        ])
+
+        shift_x = (2 * np.random.random() - 1) * shift
+        shift_y = (2 * np.random.random() - 1) * shift
+        shift_x = max(-crop_region[0], min(img_w - crop_region[2], shift_x))
+        shift_y = max(-crop_region[1], min(img_h - crop_region[3], shift_y))
+        shift = np.array([shift_x, shift_y, shift_x, shift_y])
+        crop_region += shift
+
+        crop_image = crop_region_from_image(image, crop_region, target_size)
+        bbox -= np.array(
+            [crop_region[0], crop_region[1], crop_region[0], crop_region[1]])
+        bbox /= np.array([scale_x, scale_y, scale_x, scale_y],
+                         dtype=np.float32)
+        return crop_image, bbox
+
+    def __call__(self, results):
+        outs = []
+        for i, _results in enumerate(results):
+            image = _results['img']
+            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+
+            crop_image, crop_bbox = self._shift_scale_aug(
+                image, gt_bbox, self.target_size[i], self.shift[i],
+                self.scale[i])
+            crop_bbox = crop_bbox[None]
+
+            _results['img'] = crop_image
+            if 'img_shape' in _results:
+                _results['img_shape'] = crop_image.shape
+            _results[_results.get('bbox_fields', [])[0]] = crop_bbox
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqColorAug(object):
+
+    def __init__(self,
+                 color_aug_prob=[1.0, 1.0],
+                 rgbVar=[[-0.55919361, 0.98062831, -0.41940627],
+                         [1.72091413, 0.19879334, -1.82968581],
+                         [4.64467907, 4.73710203, 4.88324118]]):
+        self.color_aug_prob = color_aug_prob
+        self.rgbVar = np.array(rgbVar, dtype=np.float32)
+
+    def __call__(self, results):
+        outs = []
+        for i, _results in enumerate(results):
+            image = _results['img']
+
+            if self.color_aug_prob[i] > np.random.random():
+                offset = np.dot(self.rgbVar, np.random.randn(3, 1))
+                # bgr to rgb
+                offset = offset[::-1]
+                offset = offset.reshape(3)
+                image = (image - offset).astype(np.float32)
+
+            _results['img'] = image
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqBlurAug(object):
+
+    def __init__(self, blur_aug_prob=[0.0, 0.2]):
+        self.blur_aug_prob = blur_aug_prob
+
+    def __call__(self, results):
+        outs = []
+        for i, _results in enumerate(results):
+            image = _results['img']
+
+            if self.blur_aug_prob[i] > np.random.random():
+                sizes = np.arange(5, 46, 2)
+                size = np.random.choice(sizes)
+                kernel = np.zeros((size, size))
+                c = int(size / 2)
+                wx = np.random.random()
+                kernel[:, c] += 1. / size * wx
+                kernel[c, :] += 1. / size * (1 - wx)
+                image = cv2.filter2D(image, -1, kernel)
+
+            _results['img'] = image
+            outs.append(_results)
+        return outs
 
 
 @PIPELINES.register_module()

@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_anchor_generator
-from mmdet.models import HEADS
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.models import HEADS, build_loss
 
 from mmtrack.core.track import depthwise_correlation
 
@@ -63,14 +65,26 @@ class SiameseRPNHead(nn.Module):
                  kernel_size=3,
                  norm_cfg=dict(type='BN'),
                  weighted_sum=False,
+                 bbox_coder=dict(
+                     type='DeltaXYWHBBoxCoder',
+                     target_means=[0., 0., 0., 0.],
+                     target_stds=[1., 1., 1., 1.]),
+                 loss_cls=dict(
+                     type='CrossEntropyLoss', reduction='sum',
+                     loss_weight=1.0),
+                 loss_bbox=dict(
+                     type='L1Loss', reduction='sum', loss_weight=1.2),
                  train_cfg=None,
                  test_cfg=None,
                  *args,
                  **kwargs):
         super(SiameseRPNHead, self).__init__(*args, **kwargs)
         self.anchor_generator = build_anchor_generator(anchor_generator)
+        self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.assigner = build_assigner(self.train_cfg.assigner)
+        self.sampler = build_sampler(self.train_cfg.sampler)
 
         self.cls_heads = nn.ModuleList()
         self.reg_heads = nn.ModuleList()
@@ -88,6 +102,9 @@ class SiameseRPNHead(nn.Module):
         if self.weighted_sum:
             self.cls_weight = nn.Parameter(torch.ones(len(in_channels)))
             self.reg_weight = nn.Parameter(torch.ones(len(in_channels)))
+
+        self.loss_cls = build_loss(loss_cls)
+        self.loss_bbox = build_loss(loss_bbox)
 
     def forward(self, z_feats, x_feats):
         assert isinstance(z_feats, tuple) and isinstance(x_feats, tuple)
@@ -111,6 +128,153 @@ class SiameseRPNHead(nn.Module):
             bbox_pred += reg_weight[i] * bbox_pred_single
 
         return cls_score, bbox_pred
+
+    def _get_init_targets(self, gt_bbox, score_maps_size):
+        num_base_anchors = self.anchor_generator.num_base_anchors[0]
+        labels = torch.zeros((num_base_anchors, score_maps_size[0],
+                              score_maps_size[1])).to(gt_bbox.device).long()
+        labels_weights = torch.zeros((num_base_anchors, score_maps_size[0],
+                                      score_maps_size[1])).to(gt_bbox.device)
+        bbox_targets = torch.zeros((4, num_base_anchors, score_maps_size[0],
+                                    score_maps_size[1])).to(gt_bbox.device)
+        bbox_weights = torch.zeros((num_base_anchors, score_maps_size[0],
+                                    score_maps_size[1])).to(gt_bbox.device)
+        return labels, labels_weights, bbox_targets, bbox_weights
+
+    def _get_positive_pair_targets(self, gt_bbox, score_maps_size):
+        (labels, labels_weights, bbox_targets,
+         bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
+
+        C, H, W = labels.shape
+        if not hasattr(self, 'anchors'):
+            self.anchors = self.anchor_generator.grid_anchors(
+                [score_maps_size], gt_bbox.device)[0]
+        anchors = self.anchors.clone()
+        anchors[:, :2] += self.train_cfg.search_size // 2
+        anchors = bbox_cxcywh_to_xyxy(anchors)
+
+        assign_result = self.assigner.assign(anchors, gt_bbox[:, 1:])
+        sampling_result = self.sampler.sample(assign_result, anchors,
+                                              gt_bbox[:, 1:])
+        pos_inds = sampling_result.pos_inds
+        neg_inds = sampling_result.neg_inds
+        neg_upper_bound = int(self.sampler.num *
+                              (1 - self.sampler.pos_fraction))
+        if len(neg_inds) > neg_upper_bound:
+            neg_inds = neg_inds[:neg_upper_bound]
+
+        labels = labels.view(-1)
+        labels_weights = labels_weights.view(-1)
+        bbox_weights = bbox_weights.view(-1)
+
+        if len(pos_inds) > 0:
+            labels[pos_inds] = 1
+            labels_weights[pos_inds] = 1.0 / len(pos_inds) / 2
+            bbox_weights[pos_inds] = 1.0 / len(pos_inds)
+
+        if len(neg_inds) > 0:
+            labels[neg_inds] = 0
+            labels_weights[neg_inds] = 1.0 / len(neg_inds) / 2
+
+        bbox_targets = self.bbox_coder.encode(
+            anchors, gt_bbox[:, 1:].repeat(anchors.shape[0], 1))
+
+        labels = labels.reshape(C, H, W)
+        labels_weights = labels_weights.reshape(C, H, W)
+        bbox_targets = bbox_targets.T.reshape(4, C, H, W)
+        bbox_weights = bbox_weights.reshape(C, H, W)
+        bbox_weights = bbox_weights[None].repeat(4, 1, 1, 1)
+        return labels, labels_weights, bbox_targets, bbox_weights
+
+    def _get_negative_pair_targets(self, gt_bbox, score_maps_size):
+        (labels, labels_weights, bbox_targets,
+         bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
+        C, H, W = labels.shape
+        target_cx, target_cy, target_w, target_h = bbox_xyxy_to_cxcywh(
+            gt_bbox[:, 1:])[0]
+        anchor_stride = self.anchor_generator.strides[0]
+
+        cx = W // 2
+        cy = H // 2
+        cx += int(
+            torch.ceil((target_cx - self.train_cfg.search_size // 2) /
+                       anchor_stride[0] + 0.5))
+        cy += int(
+            torch.ceil((target_cy - self.train_cfg.search_size // 2) /
+                       anchor_stride[1] + 0.5))
+
+        left = max(0, cx - 3)
+        right = min(W, cx + 4)
+        top = max(0, cy - 3)
+        down = min(H, cy + 4)
+
+        labels[...] = -1
+        labels[:, top:down, left:right] = 0
+
+        labels = labels.view(-1)
+        labels_weights = labels_weights.view(-1)
+        neg_inds = torch.nonzero(labels == 0, as_tuple=False)[:, 0]
+        index = torch.randperm(
+            neg_inds.numel(), device=neg_inds.device)[:self.train_cfg.num_neg]
+        neg_inds = neg_inds[index]
+
+        labels[...] = -1
+        if len(neg_inds) > 0:
+            labels[neg_inds] = 0
+            labels_weights[neg_inds] = 1.0 / len(neg_inds) / 2
+        labels[...] = 0
+
+        labels = labels.reshape(C, H, W)
+        labels_weights = labels_weights.reshape(C, H, W)
+        bbox_weights = bbox_weights[None].repeat(4, 1, 1, 1)
+        return labels, labels_weights, bbox_targets, bbox_weights
+
+    def get_targets(self, gt_bboxes, score_maps_size, is_positive_pairs):
+        (all_labels, all_labels_weights, all_bbox_targets,
+         all_bbox_weights) = [], [], [], []
+
+        for gt_bbox, is_positive_pair in zip(gt_bboxes, is_positive_pairs):
+            if is_positive_pair:
+                (labels, labels_weights, bbox_targets,
+                 bbox_weights) = self._get_positive_pair_targets(
+                     gt_bbox, score_maps_size)
+            else:
+                (labels, labels_weights, bbox_targets,
+                 bbox_weights) = self._get_negative_pair_targets(
+                     gt_bbox, score_maps_size)
+
+            all_labels.append(labels)
+            all_labels_weights.append(labels_weights)
+            all_bbox_targets.append(bbox_targets)
+            all_bbox_weights.append(bbox_weights)
+
+        all_labels = torch.stack(all_labels)
+        all_labels_weights = torch.stack(all_labels_weights) / len(
+            all_labels_weights)
+        all_bbox_targets = torch.stack(all_bbox_targets)
+        all_bbox_weights = torch.stack(all_bbox_weights) / len(
+            all_bbox_weights)
+
+        return (all_labels, all_labels_weights, all_bbox_targets,
+                all_bbox_weights)
+
+    def loss(self, cls_score, bbox_pred, labels, labels_weights, bbox_targets,
+             bbox_weights):
+        losses = {}
+        N, _, H, W = cls_score.shape
+
+        cls_score = cls_score.view(N, 2, -1, H, W)
+        cls_score = cls_score.permute(0, 2, 3, 4, 1).contiguous().view(-1, 2)
+        labels = labels.view(-1)
+        labels_weights = labels_weights.view(-1)
+        losses['loss_rpn_cls'] = self.loss_cls(
+            cls_score, labels, weight=labels_weights)
+
+        bbox_pred = bbox_pred.view(N, 4, -1, H, W)
+        losses['loss_rpn_bbox'] = self.loss_bbox(
+            bbox_pred, bbox_targets, weight=bbox_weights)
+
+        return losses
 
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
         score_maps_size = [(cls_score.shape[2:])]

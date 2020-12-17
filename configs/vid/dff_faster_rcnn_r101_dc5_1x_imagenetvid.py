@@ -7,7 +7,7 @@
 # use 5. 3e2e1e or 25e35e05e
 # use 6. train ref img sample -9--0 or -9--9
 model = dict(
-    type='FGFA',
+    type='DFF',
     pretrains=dict(
         motion='data/imagenet_vid/pretrained_flownet/flownet_simple.pth'),
     detector=dict(
@@ -17,25 +17,27 @@ model = dict(
             type='ResNet',
             depth=101,
             num_stages=4,
-            out_indices=(0, 1, 2, 3),
+            out_indices=(3, ),
+            strides=(1, 2, 2, 1),
+            dilations=(1, 1, 1, 2),
             frozen_stages=1,
             norm_cfg=dict(type='BN', requires_grad=True),
             norm_eval=True,
             style='pytorch'),
         neck=dict(
-            type='FPN',
-            in_channels=[256, 512, 1024, 2048],
-            out_channels=256,
-            num_outs=5),
+            type='ChannelMapper',
+            in_channels=[2048],
+            out_channels=512,
+            kernel_size=3),
         rpn_head=dict(
             type='RPNHead',
-            in_channels=256,
-            feat_channels=256,
+            in_channels=512,
+            feat_channels=512,
             anchor_generator=dict(
                 type='AnchorGenerator',
-                scales=[8],
+                scales=[4, 8, 16, 32],
                 ratios=[0.5, 1.0, 2.0],
-                strides=[4, 8, 16, 32, 64]),
+                strides=[16]),
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[.0, .0, .0, .0],
@@ -50,11 +52,11 @@ model = dict(
                 type='SingleRoIExtractor',
                 roi_layer=dict(
                     type='RoIAlign', output_size=7, sampling_ratio=2),
-                out_channels=256,
-                featmap_strides=[4, 8, 16, 32]),
+                out_channels=512,
+                featmap_strides=[16]),
             bbox_head=dict(
                 type='Shared2FCBBoxHead',
-                in_channels=256,
+                in_channels=512,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=30,
@@ -89,9 +91,9 @@ model = dict(
                 debug=False),
             rpn_proposal=dict(
                 nms_across_levels=False,
-                nms_pre=2000,
-                nms_post=2000,
-                max_num=2000,
+                nms_pre=6000,
+                nms_post=1000,
+                max_num=1000,
                 nms_thr=0.7,
                 min_bbox_size=0),
             rcnn=dict(
@@ -112,9 +114,9 @@ model = dict(
         test_cfg=dict(
             rpn=dict(
                 nms_across_levels=False,
-                nms_pre=1000,
-                nms_post=1000,
-                max_num=1000,
+                nms_pre=6000,
+                nms_post=300,
+                max_num=300,
                 nms_thr=0.7,
                 min_bbox_size=0),
             rcnn=dict(
@@ -125,9 +127,8 @@ model = dict(
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
     ),
     motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
-    aggregator=dict(
-        type='EmbedAggregator', num_convs=1, channels=256, kernel_size=3),
-)
+    train_cfg=None,
+    test_cfg=dict(key_frame_interval=10))
 
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
@@ -140,27 +141,27 @@ train_pipeline = [
     dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
     dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
     dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=64),
+    dict(type='SeqPad', size_divisor=16),
     dict(
         type='VideoCollect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids'],
-        meta_keys=('frame_id', 'is_video_data')),
+        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids']),
     dict(type='ConcatVideoReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadMultiImagesFromFile'),
-    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
-    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
-    dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=64),
+    dict(type='LoadImageFromFile'),
     dict(
-        type='VideoCollect',
-        keys=['img'],
-        meta_keys=('is_video_data', 'frame_id', 'num_left_ref_imgs',
-                   'frame_stride')),
-    dict(type='ConcatVideoReferences'),
-    dict(type='MultiImagesToTensor', ref_prefix='ref')
+        type='MultiScaleFlipAug',
+        img_scale=(1000, 600),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=16),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='VideoCollect', keys=['img'])
+        ])
 ]
 data = dict(
     samples_per_gpu=1,
@@ -171,43 +172,35 @@ data = dict(
             ann_file=data_root + 'annotations/imagenet_vid_train.json',
             img_prefix=data_root + 'data/VID/',
             ref_img_sampler=dict(
-                num_ref_imgs=2,
+                num_ref_imgs=1,
                 frame_range=9,
-                filter_key_img=True,
-                method='bilateral_uniform'),
+                filter_key_img=False,
+                method='uniform'),
             pipeline=train_pipeline),
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root + 'annotations/imagenet_det_30cls.json',
+            ann_file=data_root + 'annotations/imagenet_det_30plus1cls.json',
             img_prefix=data_root + 'data/DET/',
             ref_img_sampler=dict(
-                num_ref_imgs=2,
+                num_ref_imgs=1,
                 frame_range=0,
-                filter_key_img=True,
-                method='bilateral_uniform'),
+                filter_key_img=False,
+                method='uniform'),
             pipeline=train_pipeline)
     ],
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=dict(
-            num_ref_imgs=18,
-            frame_range=[-9, 9],
-            stride=1,
-            method='test_with_fix_stride'),
+        ref_img_sampler=None,
         pipeline=test_pipeline,
         test_mode=True),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/imagenet_vid_val.json',
         img_prefix=data_root + 'data/VID/',
-        ref_img_sampler=dict(
-            num_ref_imgs=18,
-            frame_range=[-9, 9],
-            stride=1,
-            method='test_with_fix_stride'),
+        ref_img_sampler=None,
         pipeline=test_pipeline,
         test_mode=True))
 # optimizer
@@ -217,10 +210,9 @@ optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(
     policy='step',
     warmup='linear',
-    by_epoch=False,
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[int(2.5 * 6856), int(5.5 * 6856)])
+    step=[2, 5])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 # yapf:disable
@@ -232,10 +224,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 6
+total_epochs = 7
 dist_params = dict(backend='nccl', port='29500')
 log_level = 'INFO'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-evaluation = dict(metric=['bbox'], interval=6)
+evaluation = dict(metric=['bbox'], interval=7)
