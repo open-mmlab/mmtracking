@@ -50,9 +50,9 @@ def parse_train_list(ann_dir):
         info = info.split(' ')
         if info[0] not in train_infos:
             train_infos[info[0]] = dict(
-                train_frames=[int(info[2]) - 1], num_frames=int(info[-1]))
+                vid_train_frames=[int(info[2]) - 1], num_frames=int(info[-1]))
         else:
-            train_infos[info[0]]['train_frames'].append(int(info[2]) - 1)
+            train_infos[info[0]]['vid_train_frames'].append(int(info[2]) - 1)
     return train_infos
 
 
@@ -73,7 +73,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         img_id=1,
         ann_id=1,
         global_instance_id=1,
-        num_train_frames=0,
+        num_vid_train_frames=0,
         num_no_objects=0)
     obj_num_classes = dict()
     xml_dir = osp.join(ann_dir, 'Annotations/VID/')
@@ -83,14 +83,17 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         vid_infos = parse_val_list(ann_dir)
     for vid_info in tqdm(vid_infos):
         instance_id_maps = dict()
-        train_frames = vid_infos[vid_info].get('train_frames', [])
-        records['num_train_frames'] += len(train_frames)
+        vid_train_frames = vid_infos[vid_info].get('vid_train_frames', [])
+        records['num_vid_train_frames'] += len(vid_train_frames)
         video = dict(
-            id=records['vid_id'], name=vid_info, train_frames=train_frames)
+            id=records['vid_id'],
+            name=vid_info,
+            vid_train_frames=vid_train_frames)
         VID['videos'].append(video)
         num_frames = vid_infos[vid_info]['num_frames']
         for frame_id in range(num_frames):
-            is_train_frame = True if frame_id in train_frames else False
+            is_vid_train_frame = True if frame_id in vid_train_frames \
+                else False
             img_prefix = osp.join(vid_info, '%06d' % frame_id)
             xml_name = osp.join(xml_dir, f'{img_prefix}.xml')
             # parse XML annotation file
@@ -106,7 +109,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                 id=records['img_id'],
                 frame_id=frame_id,
                 video_id=records['vid_id'],
-                is_train_frame=is_train_frame)
+                is_vid_train_frame=is_vid_train_frame)
             VID['images'].append(image)
             if root.findall('object') == []:
                 print(xml_name, 'has no objects.')
@@ -138,6 +141,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                 generated = obj.find('generated').text
                 ann = dict(
                     id=records['ann_id'],
+                    video_id=records['vid_id'],
                     image_id=records['img_id'],
                     category_id=category_id,
                     instance_id=instance_id,
@@ -158,7 +162,8 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
     print(f'-----ImageNet VID {mode}------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["img_id"]- 1} images')
-    print(f'{records["num_train_frames"]} train frames')
+    print(
+        f'{records["num_vid_train_frames"]} train frames for video detection')
     print(f'{records["num_no_objects"]} images have no objects')
     print(f'{records["ann_id"] - 1} objects')
     print('-----------------------')
