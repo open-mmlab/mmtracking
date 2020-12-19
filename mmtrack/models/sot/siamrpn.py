@@ -169,6 +169,7 @@ class SiamRPN(BaseSingleObjectTracker):
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
+            self.memo.bbox = torch.round(self.memo.bbox)
 
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()

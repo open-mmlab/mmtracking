@@ -6,14 +6,12 @@ from pycocotools.coco import COCO, _isArrayLike
 
 class CocoVID(COCO):
 
-    def __init__(self,
-                 annotation_file=None,
-                 load_img_data_as_video_data=False):
+    def __init__(self, annotation_file=None, load_img_as_vid=False):
         assert annotation_file, 'Annotation file must be provided.'
-        self.load_img_data_as_video_data = load_img_data_as_video_data
+        self.load_img_as_vid = load_img_as_vid
         super(CocoVID, self).__init__(annotation_file=annotation_file)
 
-    def convert_img_data_to_video_data(self, dataset):
+    def convert_img_to_vid(self, dataset):
         if 'images' in self.dataset:
             videos = []
             for i, img in enumerate(self.dataset['images']):
@@ -35,8 +33,8 @@ class CocoVID(COCO):
          instancesToImgs) = defaultdict(list), defaultdict(list), defaultdict(
              list), defaultdict(list), defaultdict(list)
 
-        if 'videos' not in self.dataset and self.load_img_data_as_video_data:
-            self.dataset = self.convert_img_data_to_video_data(self.dataset)
+        if 'videos' not in self.dataset and self.load_img_as_vid:
+            self.dataset = self.convert_img_to_vid(self.dataset)
 
         if 'videos' in self.dataset:
             for video in self.dataset['videos']:

@@ -78,8 +78,8 @@ train_pipeline = [
         target_size=[exemplar_size, search_size],
         shift=[4, 64],
         scale=[0.05, 0.18]),
-    dict(type='SeqColorAug', color_aug_prob=[1.0, 1.0]),
-    dict(type='SeqBlurAug', blur_aug_prob=[0.0, 0.2]),
+    dict(type='SeqColorAug', prob=[1.0, 1.0]),
+    dict(type='SeqBlurAug', prob=[0.0, 0.2]),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pair']),
     dict(type='ConcatVideoReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
@@ -175,9 +175,7 @@ lr_config = dict(
     policy='SiameseRPN',
     lr_configs=[
         dict(type='step', start_lr_factor=0.2, end_lr_factor=1.0, end_epoch=5),
-        dict(
-            type='log10', start_lr_factor=1.0, end_lr_factor=0.1,
-            end_epoch=20),
+        dict(type='log', start_lr_factor=1.0, end_lr_factor=0.1, end_epoch=20),
     ])
 # checkpoint saving
 checkpoint_config = dict(interval=1)

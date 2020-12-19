@@ -291,12 +291,9 @@ class SiameseRPNHead(nn.Module):
 
         bbox_pred = bbox_pred.permute(1, 2, 3, 0).contiguous().view(4, -1)
         bbox_pred = bbox_pred.permute(1, 0)
-        bbox_pred[:, 0] = bbox_pred[:, 0] * self.anchors[:, 2] + \
-            self.anchors[:, 0]
-        bbox_pred[:, 1] = bbox_pred[:, 1] * self.anchors[:, 3] + \
-            self.anchors[:, 1]
-        bbox_pred[:, 2] = torch.exp(bbox_pred[:, 2]) * self.anchors[:, 2]
-        bbox_pred[:, 3] = torch.exp(bbox_pred[:, 3]) * self.anchors[:, 3]
+        anchors = bbox_cxcywh_to_xyxy(self.anchors)
+        bbox_pred = self.bbox_coder.decode(anchors, bbox_pred)
+        bbox_pred = bbox_xyxy_to_cxcywh(bbox_pred)
 
         def change_ratio(ratio):
             return torch.max(ratio, 1. / ratio)
