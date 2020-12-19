@@ -48,9 +48,9 @@ class SOTTrainDataset(CocoVideoDataset):
 
     def get_snippet_of_instance(self, idx):
         vid_id = self.vid_ids[idx]
-        instance_ids = self.coco.get_instance_ids_from_vid(vid_id)
+        instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
         instance_id = np.random.choice(instance_ids)
-        image_ids = self.coco.get_img_ids_from_instance_ids(instance_id)
+        image_ids = self.coco.get_img_ids_from_ins_id(instance_id)
         if len(image_ids) > 1:
             snippets = np.split(
                 image_ids,

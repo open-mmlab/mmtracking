@@ -167,7 +167,7 @@ optimizer = dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
 optimizer_config = dict(
     type='SiameseRPNOptimizerHook',
-    start_train_backbone_epoch=10,
+    backbone_start_train_epoch=10,
     backbone_train_layers=['layer2', 'layer3', 'layer4'],
     grad_clip=dict(max_norm=10.0, norm_type=2))
 # learning policy

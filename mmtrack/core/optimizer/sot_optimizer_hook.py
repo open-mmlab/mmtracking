@@ -5,14 +5,14 @@ from mmcv.runner.hooks import HOOKS, OptimizerHook
 @HOOKS.register_module()
 class SiameseRPNOptimizerHook(OptimizerHook):
 
-    def __init__(self, start_train_backbone_epoch, backbone_train_layers,
+    def __init__(self, backbone_start_train_epoch, backbone_train_layers,
                  **kwargs):
         super(SiameseRPNOptimizerHook, self).__init__(**kwargs)
-        self.start_train_backbone_epoch = start_train_backbone_epoch
+        self.backbone_start_train_epoch = backbone_start_train_epoch
         self.backbone_train_layers = backbone_train_layers
 
     def before_train_epoch(self, runner):
-        if runner.epoch >= self.start_train_backbone_epoch:
+        if runner.epoch >= self.backbone_start_train_epoch:
             for layer in self.backbone_train_layers:
                 for param in getattr(runner.model.module.backbone,
                                      layer).parameters():

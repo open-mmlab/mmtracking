@@ -94,11 +94,11 @@ class CocoVID(COCO):
             ids[img_info['frame_id']] = img_info['id']
         return ids
 
-    def get_instance_ids_from_vid(self, vidId):
+    def get_ins_ids_from_vid(self, vidId):
         return self.vidToInstances[vidId]
 
-    def get_img_ids_from_instance_ids(self, vidId):
-        return self.instancesToImgs[vidId]
+    def get_img_ids_from_ins_id(self, insId):
+        return self.instancesToImgs[insId]
 
     def load_vids(self, ids=[]):
         if _isArrayLike(ids):
