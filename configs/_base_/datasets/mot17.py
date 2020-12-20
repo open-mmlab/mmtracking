@@ -32,6 +32,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='LoadDetections'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1088, 1088),
@@ -42,10 +43,10 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
+            dict(type='VideoCollect', keys=['img', 'public_bboxes'])
         ])
 ]
-data_root = 'data/mot17det/'
+data_root = 'data/mot17/'
 data = dict(
     samples_per_gpu=1,
     workers_per_gpu=1,
@@ -71,4 +72,5 @@ data = dict(
         ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
+        detection_file=data_root + 'annotations/mot17_train_detections.pkl',
         pipeline=test_pipeline))

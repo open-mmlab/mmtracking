@@ -40,11 +40,14 @@ class TracktorTracker(BaseTracker):
         track_bboxes, track_labels, valid_inds = multiclass_nms(
             track_bboxes[0],
             track_scores[0],
-            self.regression['obj_score_thr'],
+            0,
             self.regression['nms'],
             return_inds=True)
         ids = ids[valid_inds]
-        return track_bboxes, track_labels, ids
+
+        valid_inds = track_bboxes[:, -1] > self.regression['obj_score_thr']
+        return track_bboxes[valid_inds], track_labels[valid_inds], ids[
+            valid_inds]
 
     def track(self,
               img,
@@ -76,7 +79,7 @@ class TracktorTracker(BaseTracker):
             self.num_tracks += num_new_tracks
             if model.with_reid:
                 embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1].clone(),
+                    self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
         else:
             # motion
@@ -96,7 +99,7 @@ class TracktorTracker(BaseTracker):
                 feats, img_metas, model.detector, frame_id, rescale)
 
             # filter bboxes with propagated tracks
-            ious = bbox_overlaps(bboxes[:, :-1], prop_bboxes[:, :-1])
+            ious = bbox_overlaps(bboxes[:, :4], prop_bboxes[:, :4])
             valid_inds = (ious < self.regression['match_iou_thr']).all(dim=1)
             bboxes = bboxes[valid_inds]
             labels = labels[valid_inds]
@@ -105,13 +108,16 @@ class TracktorTracker(BaseTracker):
             if model.with_reid:
                 prop_embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas,
-                                   prop_bboxes[:, :-1].clone(), rescale))
-                embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :-1].clone(),
-                                   rescale))
+                                   prop_bboxes[:, :4].clone(), rescale))
+                if bboxes.size(0) > 0:
+                    embeds = model.reid.simple_test(
+                        self.crop_imgs(reid_img, img_metas,
+                                       bboxes[:, :4].clone(), rescale))
+                else:
+                    embeds = prop_embeds.new_zeros((0, prop_embeds.size(1)))
                 # reid
                 active_ids = [int(_) for _ in self.ids if _ not in prop_ids]
-                if len(active_ids) > 0:
+                if len(active_ids) > 0 and bboxes.size(0) > 0:
                     track_embeds = self.get(
                         'embeds',
                         active_ids,
@@ -122,7 +128,7 @@ class TracktorTracker(BaseTracker):
 
                     track_bboxes = self.get('bboxes', active_ids)
                     ious = bbox_overlaps(track_bboxes,
-                                         bboxes[:, :-1]).cpu().numpy()
+                                         bboxes[:, :4]).cpu().numpy()
                     iou_masks = ious < self.reid['match_iou_thr']
                     reid_dists[iou_masks] = 1e6
 
@@ -139,6 +145,8 @@ class TracktorTracker(BaseTracker):
                 dtype=torch.long)
             self.num_tracks += new_track_inds.sum()
 
+            if bboxes.shape[1] == 4:
+                bboxes = bboxes.new_zeros((0, 5))
             bboxes = torch.cat((prop_bboxes, bboxes), dim=0)
             labels = torch.cat((prop_labels, labels), dim=0)
             ids = torch.cat((prop_ids, ids), dim=0)
@@ -147,7 +155,7 @@ class TracktorTracker(BaseTracker):
 
         self.update(
             ids=ids,
-            bboxes=bboxes[:, :-1],
+            bboxes=bboxes[:, :4],
             scores=bboxes[:, -1],
             labels=labels,
             embeds=embeds if model.with_reid else None,

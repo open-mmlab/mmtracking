@@ -15,7 +15,6 @@ class Tracktor(BaseMultiObjectTracker):
                  reid=None,
                  tracker=None,
                  motion=None,
-                 with_public_bboxes=False,
                  pretrains=None):
         super().__init__()
         if detector is not None:
@@ -37,7 +36,6 @@ class Tracktor(BaseMultiObjectTracker):
         if tracker is not None:
             self.tracker = build_tracker(tracker)
 
-        self.with_public_bboxes = with_public_bboxes
         self.init_weights(pretrains)
 
     def init_weights(self, pretrain):
@@ -77,7 +75,8 @@ class Tracktor(BaseMultiObjectTracker):
         x = self.detector.extract_feat(img)
         if hasattr(self.detector, 'roi_head'):
             # TODO: check whether this is the case
-            if self.with_public_bboxes:
+            if public_bboxes is not None:
+                public_bboxes = [_[0] for _ in public_bboxes]
                 proposals = public_bboxes
             else:
                 proposals = self.detector.rpn_head.simple_test_rpn(
