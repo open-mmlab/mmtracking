@@ -22,7 +22,7 @@ PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # 1 ignore, 2 crowd
 DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
 MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
-LASOT_ANN_PATH = f'{PREFIX}/demo_sot_test_data/'
+LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
 def _create_gt_results(dataset):
