@@ -44,7 +44,7 @@ class TestTransforms(object):
     def test_seq_shift_scale_aug(self):
         results = copy.deepcopy(self.results)
         for res in results:
-            res['gt_bboxes'] = random_boxes(1, 256)
+            res['gt_bboxes'] = random_boxes(1, 256).numpy()
             res['bbox_fields'] = ['gt_bboxes']
 
         transform = dict(
