@@ -40,29 +40,29 @@ model = dict(
             target_stds=[1., 1., 1., 1.]),
         loss_cls=dict(
             type='CrossEntropyLoss', reduction='sum', loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', reduction='sum', loss_weight=1.2)))
-train_cfg = dict(
-    rpn=dict(
-        assigner=dict(
-            type='MaxIoUAssigner',
-            pos_iou_thr=0.6,
-            neg_iou_thr=0.3,
-            min_pos_iou=0.6,
-            match_low_quality=False),
-        sampler=dict(
-            type='RandomSampler',
-            num=64,
-            pos_fraction=0.25,
-            add_gt_as_proposals=False),
-        num_neg=16,
+        loss_bbox=dict(type='L1Loss', reduction='sum', loss_weight=1.2)),
+    train_cfg=dict(
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.6,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.6,
+                match_low_quality=False),
+            sampler=dict(
+                type='RandomSampler',
+                num=64,
+                pos_fraction=0.25,
+                add_gt_as_proposals=False),
+            num_neg=16,
+            exemplar_size=exemplar_size,
+            search_size=search_size)),
+    test_cfg=dict(
         exemplar_size=exemplar_size,
-        search_size=search_size))
-test_cfg = dict(
-    exemplar_size=exemplar_size,
-    search_size=search_size,
-    context_amount=0.5,
-    center_size=7,
-    rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38))
+        search_size=search_size,
+        context_amount=0.5,
+        center_size=7,
+        rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
 
 data_root = 'data/sot/'
 train_pipeline = [

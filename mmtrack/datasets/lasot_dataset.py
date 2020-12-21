@@ -57,6 +57,10 @@ class LaSOTDataset(CocoVideoDataset):
             track_eval_results = eval_sot_ope(
                 results=track_results, annotations=ann_infos)
             eval_results.update(track_eval_results)
+
+            for k, v in eval_results.items():
+                if isinstance(v, float):
+                    eval_results[k] = float(f'{(v):.3f}')
             print_log(eval_results, logger=logger)
 
         return eval_results

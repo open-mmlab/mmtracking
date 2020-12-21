@@ -187,7 +187,7 @@ class SiamRPN(BaseSingleObjectTracker):
                       search_img,
                       search_img_metas,
                       search_gt_bboxes,
-                      is_positive_pair=False,
+                      is_positive_pairs=[False],
                       **kwargs):
         search_img = search_img[:, 0]
 
@@ -198,7 +198,7 @@ class SiamRPN(BaseSingleObjectTracker):
         losses = dict()
         bbox_targets = self.head.get_targets(search_gt_bboxes,
                                              cls_score.shape[2:],
-                                             is_positive_pair)
+                                             is_positive_pairs)
         head_losses = self.head.loss(cls_score, bbox_pred, *bbox_targets)
         losses.update(head_losses)
 
