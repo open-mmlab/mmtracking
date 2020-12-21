@@ -17,7 +17,10 @@ class LinearMotion(object):
         x1, y1, x2, y2 = bbox
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
-    def get_velocity(self, bboxes, num_samples):
+    def get_velocity(self, bboxes, num_samples=None):
+        if num_samples is None:
+            num_samples = min(len(bboxes), self.num_samples)
+
         vs = []
         for (b1, b2) in zip(bboxes[-num_samples:], bboxes[-num_samples + 1:]):
             if self.center_motion:
