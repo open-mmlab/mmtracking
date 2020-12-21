@@ -102,6 +102,9 @@ def parse_dets(dets):
 
 def main():
     args = parse_args()
+    if not osp.exists(args.output):
+        os.makedirs(args.output)
+
     sets = ['train', 'test']
     if args.split_train:
         sets += ['half-train', 'half-val']
@@ -109,16 +112,16 @@ def main():
 
     for subset in sets:
         ins_id = 0
-        print(f'Converting MOT17 {subset} set to COCO format')
+        print(f'Converting {subset} set to COCO format')
         if 'half' in subset:
             in_folder = osp.join(args.input, 'train')
         else:
             in_folder = osp.join(args.input, subset)
-        out_file = osp.join(args.output, f'mot17_{subset}_cocoformat.json')
+        out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
         outputs['categories'] = [dict(id=1, name='pedestrian')]
         if args.convert_det:
-            det_file = osp.join(args.output, f'mot17_{subset}_detections.pkl')
+            det_file = osp.join(args.output, f'{subset}_detections.pkl')
             detections = dict(bbox_results=dict())
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
@@ -192,12 +195,16 @@ def main():
                         outputs['annotations'].append(gt)
                         ann_id += 1
                 if args.convert_det:
-                    dets = [np.array(img2dets[mot_frame_id])]
-                    detections['bbox_results'][img_name] = dets
+                    dets = np.array(img2dets[mot_frame_id])
+                    if dets.ndim == 1:
+                        assert len(dets) == 0
+                        dets = np.zeros((0, 5))
+                    detections['bbox_results'][img_name] = [dets]
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)
             vid_id += 1
+            outputs['num_instances'] = ins_id
         print(f'{subset} has {ins_id} instances.')
         mmcv.dump(outputs, out_file)
         if args.convert_det:
