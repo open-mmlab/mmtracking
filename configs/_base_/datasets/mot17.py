@@ -46,14 +46,14 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img', 'public_bboxes'])
         ])
 ]
-data_root = 'data/mot17/'
+data_root = 'data/MOT17/'
 data = dict(
     samples_per_gpu=1,
     workers_per_gpu=1,
     train=dict(
         type=dataset_type,
-        visibility_thr=-1,
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        visibility_thr=0.25,
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=dict(
             num_ref_imgs=1,
@@ -63,14 +63,14 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
-        detection_file=data_root + 'annotations/mot17_train_detections.pkl',
+        detection_file=data_root + 'annotations/train_detections.pkl',
         pipeline=test_pipeline))

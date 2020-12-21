@@ -25,8 +25,7 @@ def test_imrenormalize():
     new_img = imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
     assert isinstance(new_img, torch.Tensor)
     assert new_img.shape == (1, 3, 128, 256)
-    diff = (img - new_img).abs().mean()
-    assert diff < 1e-6
+    assert np.allclose(img, new_img, atol=1e-6)
 
 
 def test_track2result():

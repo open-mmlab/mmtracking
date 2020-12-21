@@ -29,7 +29,7 @@ model = dict(
             type='DeltaXYWHBBoxCoder',
             target_means=[.0, .0, .0, .0],
             target_stds=[1.0, 1.0, 1.0, 1.0],
-            clip_border=False),
+            clip_border=True),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
@@ -50,7 +50,7 @@ model = dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
                 target_stds=[0.1, 0.1, 0.2, 0.2],
-                clip_border=False),
+                clip_border=True),
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
@@ -109,10 +109,10 @@ test_cfg = dict(
         min_bbox_size=0),
     rcnn=dict(
         score_thr=0.05,
-        nms=dict(type='nms', iou_threshold=0.5),
+        nms=dict(type='nms', iou_threshold=0.3),
         max_per_img=100))
 dataset_type = 'CocoDataset'
-data_root = 'data/mot17det/'
+data_root = 'data/MOT17/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -121,11 +121,11 @@ train_pipeline = [
     dict(
         type='Resize',
         img_scale=(1088, 1088),
-        ratio_range=(0.8, 1.2),
+        # ratio_range=(0.8, 1.2),
         keep_ratio=True,
-        bbox_clip_border=False),
-    dict(type='PhotoMetricDistortion'),
-    dict(type='RandomCrop', crop_size=(1088, 1088), bbox_clip_border=False),
+        bbox_clip_border=True),
+    # dict(type='PhotoMetricDistortion'),
+    # dict(type='RandomCrop', crop_size=(1088, 1088), bbox_clip_border=False),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
@@ -153,30 +153,30 @@ data = dict(
     train=dict(
         type=dataset_type,
         classes=('pedestrian', ),
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         classes=('pedestrian', ),
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=('pedestrian', ),
-        ann_file=data_root + 'annotations/mot17_train_cocoformat.json',
+        ann_file=data_root + 'annotations/train_cocoformat.json',
         img_prefix=data_root + 'train/',
         pipeline=test_pipeline))
 evaluation = dict(interval=12, metric='bbox')
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=1e-5, momentum=0.9, weight_decay=0.0001)
 lr_config = dict(
     policy='step',
     # warmup='linear',
     # warmup_iters=100,
     # warmup_ratio=1.0 / 100,
-    step=[9])
-total_epochs = 12
+    step=[4, 7])
+total_epochs = 10
 optimizer_config = dict(grad_clip=None)
 checkpoint_config = dict(interval=1)
 # yapf:disable
@@ -193,3 +193,4 @@ resume_from = None
 workflow = [('train', 1)]
 load_from = ('ckpts/mmdet/faster_rcnn_r50_fpn_2x_coco_bbox_mAP'
              '-0.384_20200504_210434-a5d8aa15.pth')
+work_dir = 'work_dirs/mot16/faster_rcnn_r50_fpn/'

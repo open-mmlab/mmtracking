@@ -5,13 +5,12 @@ _base_ = [
 model = dict(
     type='Tracktor',
     pretrains=dict(
-        detector='ckpts/mot17/det.pth',
+        detector='ckpts/mot17/faster_rcnn_r50_12e-e0434a97.pth',
         reid='ckpts/mot17/reid_r50_tracktor_iter25245.pth'),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(
-                clip_border=False), num_classes=1))),
+            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))),
     reid=dict(
         type='BaseReID',
         backbone=dict(
@@ -29,14 +28,11 @@ model = dict(
             out_channels=128,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU'))),
-    motion=[
-        dict(
-            type='CameraMotionCompensation',
-            warp_mode='cv2.MOTION_EUCLIDEAN',
-            num_iters=100,
-            stop_eps=0.00001),
-        dict(type='LinearMotion', num_samples=2, center_motion=True)
-    ],
+    motion=dict(
+        type='CameraMotionCompensation',
+        warp_mode='cv2.MOTION_EUCLIDEAN',
+        num_iters=100,
+        stop_eps=0.00001),
     tracker=dict(
         type='TracktorTracker',
         obj_score_thr=0.5,
@@ -54,7 +50,7 @@ model = dict(
         num_frames_retain=10))
 data = dict(samples_per_gpu=1, workers_per_gpu=1)
 # optimizer
-optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 # learning policy
 lr_config = dict(
     policy='step',

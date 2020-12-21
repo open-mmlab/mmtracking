@@ -147,6 +147,9 @@ class TracktorTracker(BaseTracker):
 
             if bboxes.shape[1] == 4:
                 bboxes = bboxes.new_zeros((0, 5))
+            if prop_bboxes.shape[1] == 4:
+                prop_bboxes = prop_bboxes.new_zeros((0, 5))
+
             bboxes = torch.cat((prop_bboxes, bboxes), dim=0)
             labels = torch.cat((prop_labels, labels), dim=0)
             ids = torch.cat((prop_ids, ids), dim=0)

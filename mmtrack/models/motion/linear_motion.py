@@ -18,20 +18,13 @@ class LinearMotion(object):
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
     def get_velocity(self, bboxes, num_samples):
-        if self.center_motion:
-            vs = [
-                self.center(b2) - self.center(b1)
-                for (b1,
-                     b2) in zip(bboxes[-num_samples:], bboxes[-num_samples +
-                                                              1:])
-            ]
-        else:
-            vs = [
-                b2 - b1
-                for (b1,
-                     b2) in zip(bboxes[-num_samples:], bboxes[-num_samples +
-                                                              1:])
-            ]
+        vs = []
+        for (b1, b2) in zip(bboxes[-num_samples:], bboxes[-num_samples + 1:]):
+            if self.center_motion:
+                v = self.center(b2) - self.center(b1)
+            else:
+                v = b2 - b1
+            vs.append(v)
         return torch.stack(vs, dim=0).mean(dim=0)
 
     def step(self, bboxes, velocity=None):

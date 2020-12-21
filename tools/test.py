@@ -14,7 +14,7 @@ from mmdet.datasets import build_dataset
 def parse_args():
     parser = argparse.ArgumentParser(description='mmtrack test model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
         '--fuse-conv-bn',
@@ -125,14 +125,13 @@ def main():
     if args.checkpoint is not None:
         checkpoint = load_checkpoint(
             model, args.checkpoint, map_location='cpu')
+        if 'CLASSES' in checkpoint['meta']:
+            model.CLASSES = checkpoint['meta']['CLASSES']
+        else:
+            model.CLASSES = dataset.CLASSES
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
-
-    if 'CLASSES' in checkpoint['meta']:
-        model.CLASSES = checkpoint['meta']['CLASSES']
-    else:
-        model.CLASSES = dataset.CLASSES
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
