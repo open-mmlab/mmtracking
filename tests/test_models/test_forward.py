@@ -266,6 +266,7 @@ def test_tracktor_forward(cfg_file):
 
     from mmtrack.models import build_model
     mot = build_model(model)
+    mot.eval()
 
     input_shape = (1, 3, 256, 256)
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[10], with_track=True)
