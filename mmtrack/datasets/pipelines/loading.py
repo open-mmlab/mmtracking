@@ -54,8 +54,11 @@ class LoadDetections(object):
 
     def __call__(self, results):
         detections = results['detections']
+
         bboxes, labels = restore_result(detections)
-        results['public_bboxes'] = bboxes
+        results['public_bboxes'] = bboxes[:, :4]
+        if bboxes.shape[1] > 4:
+            results['public_scores'] = bboxes[:, -1]
         results['public_labels'] = labels
         results['bbox_fields'].append('public_bboxes')
         return results

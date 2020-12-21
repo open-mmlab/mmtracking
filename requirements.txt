@@ -1,4 +1,5 @@
 coverage
+mmcls
 mmcv>=1.0.0
 mmdet
 motmetrics
