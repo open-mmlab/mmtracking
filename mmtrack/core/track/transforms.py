@@ -15,6 +15,8 @@ def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
 
 
 def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+    img_norm_cfg = img_norm_cfg.copy()
+    new_img_norm_cfg = new_img_norm_cfg.copy()
     for k, v in img_norm_cfg.items():
         if (k == 'mean' or k == 'std') and not isinstance(v, np.ndarray):
             img_norm_cfg[k] = np.array(v, dtype=np.float32)

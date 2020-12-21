@@ -93,8 +93,8 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     # cfg.model.pretrains = None
-    # if hasattr(cfg.model, 'detector'):
-    #     cfg.model.detector.pretrained = None
+    if hasattr(cfg.model, 'detector'):
+        cfg.model.detector.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.

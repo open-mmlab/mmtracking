@@ -18,8 +18,7 @@ def test_imrenormalize():
     new_img = imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
     assert isinstance(new_img, np.ndarray)
     assert new_img.shape == (128, 256, 3)
-    diff = np.abs(img - new_img).mean()
-    assert diff < 1e-6
+    assert np.allclose(img, new_img, atol=1e-6)
 
     img = torch.randn(1, 3, 128, 256, dtype=torch.float)
     new_img = imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
