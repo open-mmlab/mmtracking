@@ -393,9 +393,9 @@ def test_lasot_evaluation():
 
     track_results = dict(bbox=track_results)
     eval_results = dataset.evaluate(track_results, metric=['track'])
-    assert eval_results['success'] == 66.762
-    assert eval_results['norm_precision'] == 75.0
-    assert eval_results['precision'] == 55.0
+    assert eval_results['success'] == 67.524
+    assert eval_results['norm_precision'] == 70.0
+    assert eval_results['precision'] == 50.0
 
 
 @patch('mmtrack.apis.single_gpu_test', MagicMock)
