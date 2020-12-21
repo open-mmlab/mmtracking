@@ -124,7 +124,6 @@ class DFF(BaseVideoDetector):
 
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
-
         x = self.extract_feats(img, img_metas)
 
         # Two stage detector

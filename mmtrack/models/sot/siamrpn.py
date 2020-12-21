@@ -2,6 +2,8 @@ import torch
 from addict import Dict
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head, build_neck
+from torch.nn.modules.batchnorm import _BatchNorm
+from torch.nn.modules.conv import _ConvNd
 
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
@@ -23,7 +25,7 @@ class SiamRPN(BaseSingleObjectTracker):
         if neck is not None:
             self.neck = build_neck(neck)
         head = head.copy()
-        head.update(train_cfg=None, test_cfg=test_cfg.rpn)
+        head.update(train_cfg=train_cfg.rpn, test_cfg=test_cfg.rpn)
         self.head = build_head(head)
 
         self.test_cfg = test_cfg
@@ -39,6 +41,16 @@ class SiamRPN(BaseSingleObjectTracker):
         assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
         if self.with_backbone and pretrain.get('backbone', False):
             self.init_module('backbone', pretrain['backbone'])
+
+        if self.with_neck:
+            for m in self.neck.modules():
+                if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
+                    m.reset_parameters()
+
+        if self.with_head:
+            for m in self.head.modules():
+                if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
+                    m.reset_parameters()
 
     def forward_template(self, z_img):
         z_feat = self.backbone(z_img)
@@ -95,12 +107,11 @@ class SiamRPN(BaseSingleObjectTracker):
             crop_img = img[..., context_ymin:context_ymax + 1,
                            context_xmin:context_xmax + 1]
 
-        if target_size != crop_size:
-            crop_img = torch.nn.functional.interpolate(
-                crop_img,
-                size=(target_size, target_size),
-                mode='bilinear',
-                align_corners=False)
+        crop_img = torch.nn.functional.interpolate(
+            crop_img,
+            size=(target_size, target_size),
+            mode='bilinear',
+            align_corners=False)
         return crop_img
 
     def _bbox_clip(self, bbox, img_h, img_w):
@@ -127,10 +138,9 @@ class SiamRPN(BaseSingleObjectTracker):
         z_size = torch.sqrt(z_width * z_height)
 
         x_size = torch.round(
-            z_size *
-            (self.test_cfg.instance_size / self.test_cfg.exemplar_size))
+            z_size * (self.test_cfg.search_size / self.test_cfg.exemplar_size))
         x_crop = self.get_cropped_img(img, bbox[0:2],
-                                      self.test_cfg.instance_size, x_size,
+                                      self.test_cfg.search_size, x_size,
                                       avg_channel)
 
         x_feat = self.forward_search(x_crop)
@@ -149,7 +159,7 @@ class SiamRPN(BaseSingleObjectTracker):
         assert len(img) == 1, 'only support batch_size=1 when testing'
 
         if frame_id == 0:
-            gt_bboxes = gt_bboxes[0]
+            gt_bboxes = gt_bboxes[0][0]
             self.memo = Dict()
             self.memo.bbox = bbox_xyxy_to_cxcywh(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
@@ -159,6 +169,7 @@ class SiamRPN(BaseSingleObjectTracker):
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
+            self.memo.bbox = torch.round(self.memo.bbox)
 
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()
@@ -169,5 +180,26 @@ class SiamRPN(BaseSingleObjectTracker):
         results['bbox'] = bbox_pred.cpu().numpy()
         return results
 
-    def forward_train(self, **kwargs):
-        pass
+    def forward_train(self,
+                      img,
+                      img_metas,
+                      gt_bboxes,
+                      search_img,
+                      search_img_metas,
+                      search_gt_bboxes,
+                      is_positive_pair=False,
+                      **kwargs):
+        search_img = search_img[:, 0]
+
+        z_feat = self.forward_template(img)
+        x_feat = self.forward_search(search_img)
+        cls_score, bbox_pred = self.head(z_feat, x_feat)
+
+        losses = dict()
+        bbox_targets = self.head.get_targets(search_gt_bboxes,
+                                             cls_score.shape[2:],
+                                             is_positive_pair)
+        head_losses = self.head.loss(cls_score, bbox_pred, *bbox_targets)
+        losses.update(head_losses)
+
+        return losses

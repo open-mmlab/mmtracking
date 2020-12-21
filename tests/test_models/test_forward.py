@@ -46,7 +46,7 @@ def _get_model_cfg(fname):
 
 
 @pytest.mark.parametrize('cfg_file',
-                         ['vid/dff_faster_rcnn_r101_fpn_1x_imagenetvid.py'])
+                         ['vid/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py'])
 def test_vid_dff_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
@@ -145,7 +145,7 @@ def test_vid_dff_style_forward(cfg_file):
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'vid/fgfa_faster_rcnn_r101_fpn_1x_imagenetvid.py',
+    'vid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py',
     'vid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py'
 ])
 def test_vid_fgfa_style_forward(cfg_file):
@@ -249,8 +249,8 @@ def test_vid_fgfa_style_forward(cfg_file):
         for one_img, one_meta, ref_img, ref_img_meta in zip(
                 img_list, img_metas, ref_imgs, ref_img_metas):
             result = detector.forward([one_img], [[one_meta]],
-                                      ref_img=ref_img,
-                                      ref_img_metas=[ref_img_meta],
+                                      ref_img=[ref_img],
+                                      ref_img_metas=[[ref_img_meta]],
                                       return_loss=False)
             for k, v in result.items():
                 results[k].append(v)

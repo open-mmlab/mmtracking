@@ -7,8 +7,10 @@ from .lasot_dataset import LaSOTDataset
 from .mot17_dataset import MOT17Dataset
 from .parsers import CocoVID
 from .pipelines import PIPELINES
+from .sot_train_dataset import SOTTrainDataset
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
-    'CocoVideoDataset', 'ImagenetVIDDataset', 'MOT17Dataset', 'LaSOTDataset'
+    'CocoVideoDataset', 'ImagenetVIDDataset', 'MOT17Dataset', 'LaSOTDataset',
+    'SOTTrainDataset'
 ]

@@ -36,7 +36,9 @@ class ConcatVideoReferences(object):
                 if value.ndim == 1:
                     value = value[:, None]
                 N = value.shape[0]
-                value = np.concatenate((np.full((N, 1), i - 1), value), axis=1)
+                value = np.concatenate((np.full(
+                    (N, 1), i - 1, dtype=np.float32), value),
+                                       axis=1)
                 if i == 1:
                     result[key] = value
                 else:
@@ -226,3 +228,13 @@ class VideoCollect(object):
                 std=np.ones(num_channels, dtype=np.float32),
                 to_rgb=False))
         return results
+
+
+@PIPELINES.register_module()
+class ToList(object):
+
+    def __call__(self, results):
+        out = {}
+        for k, v in results.items():
+            out[k] = [v]
+        return out
