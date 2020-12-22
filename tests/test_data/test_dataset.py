@@ -22,6 +22,7 @@ PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # 1 ignore, 2 crowd
 DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
 MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
+LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
 def _create_gt_results(dataset):
@@ -123,6 +124,40 @@ def test_parse_ann_info(dataset):
     assert ann['bboxes_ignore'].shape == (0, 4)
 
 
+@pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
+def test_sot_train_dataset_parse_ann_info(dataset):
+    dataset_class = DATASETS.get(dataset)
+
+    dataset = dataset_class(ann_file=DEMO_ANN_FILE, pipeline=[])
+
+    # image 5 has 2 objects, we only load the object with instance_id = 1
+    img_id = 5
+    instance_id = 1
+    ann_ids = dataset.coco.get_ann_ids([img_id])
+    ann_info = dataset.coco.loadAnns(ann_ids)
+    ann = dataset._parse_ann_info(instance_id, ann_info)
+    assert ann['bboxes'].shape == (1, 4)
+    assert ann['labels'].shape == (1, ) and ann['labels'][0] == 0
+
+
+@pytest.mark.parametrize('dataset', ['LaSOTDataset'])
+def test_lasot_dataset_parse_ann_info(dataset):
+    dataset_class = DATASETS.get(dataset)
+
+    dataset = dataset_class(
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
+
+    # image 5 has 1 objects
+    img_id = 5
+    img_info = dataset.coco.load_imgs([img_id])[0]
+    ann_ids = dataset.coco.get_ann_ids([img_id])
+    ann_info = dataset.coco.loadAnns(ann_ids)
+    ann = dataset._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape == (4, )
+    assert ann['labels'] == 0
+
+
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_prepare_data(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -174,6 +209,29 @@ def test_prepare_data(dataset):
     results = dataset.prepare_test_img(0)
     assert isinstance(results, dict)
     assert 'ann_info' not in results
+
+
+@pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
+def test_sot_train_dataset_prepare_data(dataset):
+    dataset_class = DATASETS.get(dataset)
+
+    # train
+    dataset = dataset_class(
+        ann_file=DEMO_ANN_FILE,
+        ref_img_sampler=dict(
+            frame_range=100,
+            pos_prob=0.8,
+            filter_key_img=False,
+            return_key_img=True),
+        pipeline=[],
+        test_mode=False)
+    assert len(dataset) == 1
+
+    results = dataset.prepare_train_img(0)
+    assert isinstance(results, list)
+    assert len(results) == 2
+    assert 'ann_info' in results[0]
+    assert results[0].keys() == results[1].keys()
 
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
@@ -315,6 +373,29 @@ def test_mot17_track_evaluation(dataset):
     assert eval_results['IDs'] == 14
 
     tmp_dir.cleanup()
+
+
+def test_lasot_evaluation():
+    dataset_class = DATASETS.get('LaSOTDataset')
+    dataset = dataset_class(
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
+
+    results = []
+    for video_name in ['airplane-1', 'airplane-2']:
+        results.extend(
+            mmcv.list_from_file(
+                osp.join(LASOT_ANN_PATH, video_name, 'track_results.txt')))
+    track_results = []
+    for result in results:
+        x1, y1, x2, y2 = result.split(',')
+        track_results.append(np.array([int(x1), int(y1), int(x2), int(y2)]))
+
+    track_results = dict(bbox=track_results)
+    eval_results = dataset.evaluate(track_results, metric=['track'])
+    assert eval_results['success'] == 67.524
+    assert eval_results['norm_precision'] == 70.0
+    assert eval_results['precision'] == 50.0
 
 
 @patch('mmtrack.apis.single_gpu_test', MagicMock)

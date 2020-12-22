@@ -180,14 +180,8 @@ class SiamRPN(BaseSingleObjectTracker):
         results['bbox'] = bbox_pred.cpu().numpy()
         return results
 
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      gt_bboxes,
-                      search_img,
-                      search_img_metas,
-                      search_gt_bboxes,
-                      is_positive_pair=False,
+    def forward_train(self, img, img_metas, gt_bboxes, search_img,
+                      search_img_metas, search_gt_bboxes, is_positive_pairs,
                       **kwargs):
         search_img = search_img[:, 0]
 
@@ -198,7 +192,7 @@ class SiamRPN(BaseSingleObjectTracker):
         losses = dict()
         bbox_targets = self.head.get_targets(search_gt_bboxes,
                                              cls_score.shape[2:],
-                                             is_positive_pair)
+                                             is_positive_pairs)
         head_losses = self.head.loss(cls_score, bbox_pred, *bbox_targets)
         losses.update(head_losses)
 

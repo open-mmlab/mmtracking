@@ -1,0 +1,1172 @@
+{
+    "categories": [
+        {
+            "id": 0,
+            "name": 0
+        }
+    ],
+    "videos": [
+        {
+            "id": 1,
+            "name": "airplane-1"
+        },
+        {
+            "id": 2,
+            "name": "airplane-2"
+        }
+    ],
+    "images": [
+        {
+            "file_name": "airplane-1/img/00000001.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 1,
+            "frame_id": 0,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000002.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 2,
+            "frame_id": 1,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000003.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 3,
+            "frame_id": 2,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000004.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 4,
+            "frame_id": 3,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000005.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 5,
+            "frame_id": 4,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000006.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 6,
+            "frame_id": 5,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000007.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 7,
+            "frame_id": 6,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000008.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 8,
+            "frame_id": 7,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000009.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 9,
+            "frame_id": 8,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000010.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 10,
+            "frame_id": 9,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000011.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 11,
+            "frame_id": 10,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000012.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 12,
+            "frame_id": 11,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000013.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 13,
+            "frame_id": 12,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000014.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 14,
+            "frame_id": 13,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000015.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 15,
+            "frame_id": 14,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000016.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 16,
+            "frame_id": 15,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000017.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 17,
+            "frame_id": 16,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000018.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 18,
+            "frame_id": 17,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000019.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 19,
+            "frame_id": 18,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000020.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 20,
+            "frame_id": 19,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000021.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 21,
+            "frame_id": 20,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000022.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 22,
+            "frame_id": 21,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000023.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 23,
+            "frame_id": 22,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000024.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 24,
+            "frame_id": 23,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-1/img/00000025.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 25,
+            "frame_id": 24,
+            "video_id": 1
+        },
+        {
+            "file_name": "airplane-2/img/00000001.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 26,
+            "frame_id": 0,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000002.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 27,
+            "frame_id": 1,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000003.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 28,
+            "frame_id": 2,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000004.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 29,
+            "frame_id": 3,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000005.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 30,
+            "frame_id": 4,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000006.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 31,
+            "frame_id": 5,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000007.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 32,
+            "frame_id": 6,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000008.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 33,
+            "frame_id": 7,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000009.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 34,
+            "frame_id": 8,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000010.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 35,
+            "frame_id": 9,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000011.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 36,
+            "frame_id": 10,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000012.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 37,
+            "frame_id": 11,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000013.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 38,
+            "frame_id": 12,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000014.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 39,
+            "frame_id": 13,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000015.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 40,
+            "frame_id": 14,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000016.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 41,
+            "frame_id": 15,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000017.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 42,
+            "frame_id": 16,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000018.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 43,
+            "frame_id": 17,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000019.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 44,
+            "frame_id": 18,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000020.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 45,
+            "frame_id": 19,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000021.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 46,
+            "frame_id": 20,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000022.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 47,
+            "frame_id": 21,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000023.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 48,
+            "frame_id": 22,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000024.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 49,
+            "frame_id": 23,
+            "video_id": 2
+        },
+        {
+            "file_name": "airplane-2/img/00000025.jpg",
+            "height": 360,
+            "width": 640,
+            "id": 50,
+            "frame_id": 24,
+            "video_id": 2
+        }
+    ],
+    "annotations": [
+        {
+            "id": 1,
+            "image_id": 1,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                367,
+                101,
+                41,
+                16
+            ],
+            "area": 656,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 2,
+            "image_id": 2,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                366,
+                103,
+                45,
+                16
+            ],
+            "area": 720,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 3,
+            "image_id": 3,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                364,
+                107,
+                45,
+                15
+            ],
+            "area": 675,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 4,
+            "image_id": 4,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                362,
+                109,
+                46,
+                16
+            ],
+            "area": 736,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 5,
+            "image_id": 5,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                362,
+                111,
+                46,
+                18
+            ],
+            "area": 828,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 6,
+            "image_id": 6,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                362,
+                113,
+                46,
+                18
+            ],
+            "area": 828,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 7,
+            "image_id": 7,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                364,
+                116,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 8,
+            "image_id": 8,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                366,
+                118,
+                45,
+                17
+            ],
+            "area": 765,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 9,
+            "image_id": 9,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                362,
+                119,
+                48,
+                17
+            ],
+            "area": 816,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 10,
+            "image_id": 10,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                359,
+                119,
+                45,
+                17
+            ],
+            "area": 765,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 11,
+            "image_id": 11,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                358,
+                119,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 12,
+            "image_id": 12,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                360,
+                121,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 13,
+            "image_id": 13,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                360,
+                124,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 14,
+            "image_id": 14,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                359,
+                124,
+                47,
+                17
+            ],
+            "area": 799,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 15,
+            "image_id": 15,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                360,
+                126,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 16,
+            "image_id": 16,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                356,
+                127,
+                46,
+                18
+            ],
+            "area": 828,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 17,
+            "image_id": 17,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                354,
+                127,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 18,
+            "image_id": 18,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                352,
+                127,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 19,
+            "image_id": 19,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                352,
+                126,
+                44,
+                17
+            ],
+            "area": 748,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 20,
+            "image_id": 20,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                349,
+                126,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 21,
+            "image_id": 21,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                347,
+                126,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 22,
+            "image_id": 22,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                346,
+                125,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 23,
+            "image_id": 23,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                345,
+                124,
+                47,
+                17
+            ],
+            "area": 799,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 24,
+            "image_id": 24,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                345,
+                124,
+                46,
+                17
+            ],
+            "area": 782,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 25,
+            "image_id": 25,
+            "instance_id": 1,
+            "category_id": 0,
+            "bbox": [
+                344,
+                124,
+                47,
+                17
+            ],
+            "area": 799,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 26,
+            "image_id": 26,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                76,
+                74,
+                367,
+                151
+            ],
+            "area": 55417,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 27,
+            "image_id": 27,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                75,
+                76,
+                369,
+                150
+            ],
+            "area": 55350,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 28,
+            "image_id": 28,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                78,
+                76,
+                368,
+                150
+            ],
+            "area": 55200,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 29,
+            "image_id": 29,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                81,
+                77,
+                366,
+                149
+            ],
+            "area": 54534,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 30,
+            "image_id": 30,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                82,
+                76,
+                367,
+                150
+            ],
+            "area": 55050,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 31,
+            "image_id": 31,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                81,
+                74,
+                370,
+                151
+            ],
+            "area": 55870,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 32,
+            "image_id": 32,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                81,
+                74,
+                370,
+                152
+            ],
+            "area": 56240,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 33,
+            "image_id": 33,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                84,
+                77,
+                370,
+                151
+            ],
+            "area": 55870,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 34,
+            "image_id": 34,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                89,
+                79,
+                371,
+                149
+            ],
+            "area": 55279,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 35,
+            "image_id": 35,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                88,
+                78,
+                372,
+                149
+            ],
+            "area": 55428,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 36,
+            "image_id": 36,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                88,
+                78,
+                372,
+                150
+            ],
+            "area": 55800,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 37,
+            "image_id": 37,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                90,
+                79,
+                374,
+                149
+            ],
+            "area": 55726,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 38,
+            "image_id": 38,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                90,
+                80,
+                374,
+                149
+            ],
+            "area": 55726,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 39,
+            "image_id": 39,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                89,
+                81,
+                374,
+                150
+            ],
+            "area": 56100,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 40,
+            "image_id": 40,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                92,
+                81,
+                375,
+                150
+            ],
+            "area": 56250,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 41,
+            "image_id": 41,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                94,
+                80,
+                378,
+                150
+            ],
+            "area": 56700,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 42,
+            "image_id": 42,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                95,
+                80,
+                379,
+                150
+            ],
+            "area": 56850,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 43,
+            "image_id": 43,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                96,
+                79,
+                376,
+                151
+            ],
+            "area": 56776,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 44,
+            "image_id": 44,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                96,
+                79,
+                375,
+                152
+            ],
+            "area": 57000,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 45,
+            "image_id": 45,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                100,
+                81,
+                377,
+                150
+            ],
+            "area": 56550,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 46,
+            "image_id": 46,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                102,
+                81,
+                377,
+                150
+            ],
+            "area": 56550,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 47,
+            "image_id": 47,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                99,
+                79,
+                376,
+                152
+            ],
+            "area": 57152,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 48,
+            "image_id": 48,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                99,
+                82,
+                379,
+                150
+            ],
+            "area": 56850,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 49,
+            "image_id": 49,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                104,
+                82,
+                375,
+                150
+            ],
+            "area": 56250,
+            "full_occlusion": false,
+            "out_of_view": false
+        },
+        {
+            "id": 50,
+            "image_id": 50,
+            "instance_id": 2,
+            "category_id": 0,
+            "bbox": [
+                100,
+                81,
+                379,
+                152
+            ],
+            "area": 57608,
+            "full_occlusion": false,
+            "out_of_view": false
+        }
+    ]
+}

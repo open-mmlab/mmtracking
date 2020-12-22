@@ -18,7 +18,7 @@ def create_dummy_data():
             ])
     ]
     attrs = dict(occluded=False, truncated=False, iscrowd=False, ignore=False)
-    attrs['is_train_frame'] = False  # ImageNet VID
+    attrs['is_vid_train_frame'] = True  # ImageNet VID
     attrs['visibility'] = 1.0  # MOT17
     # set all corner cases in img_id == 1
     corner_cases = dict(ignore=0, iscrowd=3)
@@ -66,6 +66,7 @@ def create_dummy_data():
                     dict(
                         id=ann_id,
                         image_id=frame2id[frame_id],
+                        video_id=vid_id,
                         category_id=classes.index(ins['category']) + 1,
                         instance_id=ins_id,
                         bbox=bbox,
@@ -98,6 +99,7 @@ def create_dummy_data():
                 dict(
                     id=ann_id,
                     image_id=1,
+                    video_id=1,
                     category_id=1,
                     instance_id=ins_id,
                     bbox=bbox,

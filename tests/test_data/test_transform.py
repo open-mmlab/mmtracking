@@ -24,6 +24,67 @@ class TestTransforms(object):
             dict(type='LoadMultiImagesFromFile', to_float32=True), PIPELINES)
         cls.results = load(results)
 
+    def test_seq_crop_like_siamfc(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256)
+            res['bbox_fields'] = ['gt_bboxes']
+
+        transform = dict(
+            type='SeqCropLikeSiamFC',
+            context_amount=0.5,
+            exemplar_size=127,
+            crop_size=511)
+        seq_crop_like_siamfc = build_from_cfg(transform, PIPELINES)
+
+        results = seq_crop_like_siamfc(results)
+        assert results[0]['img'].shape == (511, 511, 3)
+        assert results[1]['img'].shape == (511, 511, 3)
+
+    def test_seq_shift_scale_aug(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256).numpy()
+            res['bbox_fields'] = ['gt_bboxes']
+
+        transform = dict(
+            type='SeqShiftScaleAug',
+            target_size=[127, 255],
+            shift=[4, 64],
+            scale=[0.05, 0.18])
+        seq_shift_scale_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_shift_scale_aug(results)
+        assert results[0]['img'].shape == (127, 127, 3)
+        assert results[1]['img'].shape == (255, 255, 3)
+
+    def test_seq_color_aug(self):
+        results = copy.deepcopy(self.results)
+        imgs_shape = [result['img'].shape for result in results]
+
+        transform = dict(
+            type='SeqColorAug',
+            prob=[1.0, 1.0],
+            rgb_var=[[-0.55919361, 0.98062831, -0.41940627],
+                     [1.72091413, 0.19879334, -1.82968581],
+                     [4.64467907, 4.73710203, 4.88324118]])
+        seq_color_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_color_aug(results)
+        assert results[0]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[0]
+
+    def test_seq_blur_aug(self):
+        results = copy.deepcopy(self.results)
+        imgs_shape = [result['img'].shape for result in results]
+
+        transform = dict(type='SeqBlurAug', prob=[0.0, 0.2])
+        seq_blur_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_blur_aug(results)
+        assert results[0]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[0]
+
     def test_seq_resize(self):
         results = copy.deepcopy(self.results)
         transform = dict(
