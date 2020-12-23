@@ -45,7 +45,7 @@ class BaseTracker(metaclass=ABCMeta):
         num_objs = len(kwargs['ids'])
         id_indice = memo_items.index('ids')
         assert 'frame_ids' in memo_items
-        cur_frame_id = int(kwargs['frame_ids'])
+        frame_id = int(kwargs['frame_ids'])
         if isinstance(kwargs['frame_ids'], int):
             kwargs['frame_ids'] = torch.tensor([kwargs['frame_ids']] *
                                                num_objs)
@@ -61,9 +61,12 @@ class BaseTracker(metaclass=ABCMeta):
             else:
                 self.init_track(id, obj)
 
+        self.pop_invalid_tracks(frame_id)
+
+    def pop_invalid_tracks(self, frame_id):
         invalid_ids = []
         for k, v in self.tracks.items():
-            if cur_frame_id - v['frame_ids'][-1] >= self.num_frames_retain:
+            if frame_id - v['frame_ids'][-1] >= self.num_frames_retain:
                 invalid_ids.append(k)
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
