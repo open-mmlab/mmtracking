@@ -6,8 +6,17 @@ from mmtrack.models import build_aggregator
 
 @HEADS.register_module()
 class SelsaBBoxHead(ConvFCBBoxHead):
+    """Selsa bbox head.
+
+    `SELSA <https://arxiv.org/abs/1907.06390>`_.
+    """
 
     def __init__(self, aggregator, *args, **kwargs):
+        """Initialization of SelsaBBoxHead.
+
+        Args:
+            aggregator (dict): Configuration of aggregator.
+        """
         super(SelsaBBoxHead, self).__init__(*args, **kwargs)
         self.aggregator = nn.ModuleList()
         for i in range(self.num_shared_fcs):
@@ -15,6 +24,18 @@ class SelsaBBoxHead(ConvFCBBoxHead):
         self.inplace_false_relu = nn.ReLU(inplace=False)
 
     def forward(self, x, ref_x):
+        """Computing the cls_score and bbox_pred of x.
+
+        Args:
+            x (Tensor): of shape [N, C, H, W]. N is the number of target frame
+                proposals.
+            ref_x (Tensor): of shape [M, C, H, W]. M is the number of ref
+                frame proposals.
+
+        Returns:
+            tuple(cls_score, bbox_pred): The predict score of classes and
+                the predict regression offsets.
+        """
         # shared part
         if self.num_shared_convs > 0:
             for conv in self.shared_convs:

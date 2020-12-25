@@ -7,6 +7,7 @@ from .parsers import CocoVID
 
 @DATASETS.register_module()
 class ImagenetVIDDataset(CocoVideoDataset):
+    """ImageNet VID dataset for video object detection."""
 
     CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
                'cattle', 'dog', 'domestic_cat', 'elephant', 'fox',
@@ -19,7 +20,14 @@ class ImagenetVIDDataset(CocoVideoDataset):
         super().__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
-        """Load annotation from annotation file."""
+        """Load annotation from COCO/COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCO/COCOVID api.
+        """
         if self.load_as_video:
             data_infos = self.load_video_anns(ann_file)
         else:
@@ -31,10 +39,10 @@ class ImagenetVIDDataset(CocoVideoDataset):
 
         Args:
             ann_file (str): Path of annotation file.
+
         Returns:
             list[dict]: Annotation info from COCO api.
         """
-
         self.coco = COCO(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
@@ -51,6 +59,14 @@ class ImagenetVIDDataset(CocoVideoDataset):
         return data_infos
 
     def load_video_anns(self, ann_file):
+        """Load annotation from COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCOVID api.
+        """
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}

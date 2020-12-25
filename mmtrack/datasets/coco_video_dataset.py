@@ -11,6 +11,16 @@ from .parsers import CocoVID
 
 @DATASETS.register_module()
 class CocoVideoDataset(CocoDataset):
+    """Base coco video dataset for VID, MOT and SOT tasks.
+
+    Args:
+        load_as_video (bool): If True, using COCOVID class to load dataset,
+            otherwise, using COCO class. Default: True.
+        key_img_sampler (dict): Configuration of sampling key images.
+        ref_img_sampler (dict): Configuration of sampling ref images.
+        test_load_ann (bool): If True, loading annotations during testing,
+            otherwise, not loading. Default: False.
+    """
 
     CLASSES = None
 
@@ -18,10 +28,12 @@ class CocoVideoDataset(CocoDataset):
                  load_as_video=True,
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(
+                     frame_range=10,
+                     stride=1,
                      num_ref_imgs=1,
-                     frame_range=1,
                      filter_key_img=True,
-                     method='uniform'),
+                     method='uniform',
+                     return_key_img=True),
                  test_load_ann=False,
                  *args,
                  **kwargs):
@@ -33,7 +45,14 @@ class CocoVideoDataset(CocoDataset):
         self.logger = get_root_logger()
 
     def load_annotations(self, ann_file):
-        """Load annotation from annotation file."""
+        """Load annotation from COCO/COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCO/COCOVID api.
+        """
         if not self.load_as_video:
             data_infos = super().load_annotations(ann_file)
         else:
@@ -41,6 +60,14 @@ class CocoVideoDataset(CocoDataset):
         return data_infos
 
     def load_video_anns(self, ann_file):
+        """Load annotation from COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCOVID api.
+        """
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
@@ -61,6 +88,7 @@ class CocoVideoDataset(CocoDataset):
         return data_infos
 
     def key_img_sampling(self, img_ids, interval=1):
+        """sampling key images."""
         return img_ids[::interval]
 
     def ref_img_sampling(self,
@@ -71,6 +99,36 @@ class CocoVideoDataset(CocoDataset):
                          filter_key_img=True,
                          method='uniform',
                          return_key_img=True):
+        """Get several ref images from the nearby frames of img_info.
+
+        Args:
+            img_info (dict): The info of an image.
+            frame_range (List(int) | int): The frame range for sampling ref
+                images from the nearby frames of img_info.
+            stride (int): the sampling frame stride when samling ref images.
+                Default: 1.
+            num_ref_imgs (int): The number of sampled ref images. Default: 1.
+            filter_key_img (bool): If False, the ref images id may be equal to
+                image_id, otherwise, the ref image id cann't be equal to
+                image_id. Default: True.
+            method (str): The sampling method. Options are 'uniform',
+                'bilateral_uniform', 'test_with_adaptive_stride',
+                'test_with_fix_stride'. 'uniform' denotes ref images are
+                randomly sampled from the nearby frames of img_info.
+                'bilateral_uniform' denotes ref images are randomly sampled
+                from the two sides of the nearby frames of img_info.
+                'test_with_adaptive_stride' is only used in testing, and
+                denotes the ref image stride is equal to (video length / the
+                number of ref images). test_with_fix_stride is only used in
+                testing, and denotes the ref image stride is set to stride.
+                Default: 'uniform'.
+            return_key_img (bool): If True, the img_info is returned,
+                otherwise, not returned. Default: True.
+
+        Returns:
+            list(dict): The ref images info and img_info or only the ref
+                images info.
+        """
         assert isinstance(img_info, dict)
         if isinstance(frame_range, int):
             assert frame_range >= 0, 'frame_range can not be a negative value.'
@@ -162,13 +220,13 @@ class CocoVideoDataset(CocoDataset):
             return ref_img_infos
 
     def get_ann_info(self, img_info):
-        """Get COCO annotation by index.
+        """Get COCO annotation by img_info.
 
         Args:
-            idx (int): Index of data.
+            img_info (int): Info of image.
 
         Returns:
-            dict: Annotation info of specified index.
+            dict: Annotation info of img_info.
         """
         img_id = img_info['id']
         ann_ids = self.coco.get_ann_ids(img_ids=[img_id], cat_ids=self.cat_ids)
@@ -176,6 +234,7 @@ class CocoVideoDataset(CocoDataset):
         return self._parse_ann_info(img_info, ann_info)
 
     def prepare_results(self, img_info):
+        """Prepare results for img_info (e.g. ann_info and so on)."""
         results = dict(img_info=img_info)
         if not self.test_mode or self.test_load_ann:
             results['ann_info'] = self.get_ann_info(img_info)
@@ -188,6 +247,15 @@ class CocoVideoDataset(CocoDataset):
         return results
 
     def prepare_data(self, idx):
+        """Get data and annotations after pipeline.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Data and annotation after pipeline with new keys introduced
+                by pipeline.
+        """
         img_info = self.data_infos[idx]
         if self.ref_img_sampler is not None:
             img_infos = self.ref_img_sampling(img_info, **self.ref_img_sampler)
@@ -211,7 +279,7 @@ class CocoVideoDataset(CocoDataset):
         return self.prepare_data(idx)
 
     def prepare_test_img(self, idx):
-        """Get testing data  after pipeline.
+        """Get testing data after pipeline.
 
         Args:
             idx (int): Index of data.
@@ -226,13 +294,13 @@ class CocoVideoDataset(CocoDataset):
         """Parse bbox and mask annotation.
 
         Args:
+            img_anfo (dict): Info of an image.
             ann_info (list[dict]): Annotation info of an image.
-            with_mask (bool): Whether to parse mask annotations.
 
         Returns:
-            dict: A dict containing the following keys: bboxes, bboxes_ignore,\
-                labels, masks, seg_map. "masks" are raw annotations and not \
-                decoded into binary masks.
+            dict: A dict containing the following keys: bboxes, bboxes_ignore,
+                labels, instance_ids, masks, seg_map. "masks" are raw
+                annotations and not decoded into binary masks.
         """
         gt_bboxes = []
         gt_labels = []
@@ -305,6 +373,20 @@ class CocoVideoDataset(CocoDataset):
                      ignore_iof_thr=0.5,
                      ignore_by_classes=False,
                      nproc=4)):
+        """Evaluation in COCO protocol and CLEAR MOT metric (e.g. MOTA, IDF1).
+
+        Args:
+            results (dict): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated. Options are
+                'bbox', 'segm', 'track'.
+            logger (logging.Logger | str | None): Logger used for printing
+                related information during evaluation. Default: None.
+            bbox_kwargs (dict): Configuration for COCO styple evaluation.
+            track_kwargs (dict): Configuration for CLEAR MOT evaluation.
+
+        Returns:
+            dict[str, float]: COCO style and CLEAR MOT evaluation metric.
+        """
         if isinstance(metric, list):
             metrics = metric
         elif isinstance(metric, str):

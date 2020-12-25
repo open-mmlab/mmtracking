@@ -7,6 +7,11 @@ from ..builder import MOTION
 
 @MOTION.register_module()
 class FlowNetSimple(nn.Module):
+    """The simple version of FlowNet.
+
+    This FlowNetSimple is the implementation of `FlowNetSimple
+    <https://arxiv.org/abs/1504.06852>`_.
+    """
 
     arch_setting = {
         'conv_layers': {
@@ -25,6 +30,23 @@ class FlowNetSimple(nn.Module):
                  flow_scale_factor=5.0,
                  flow_img_norm_std=[255.0, 255.0, 255.0],
                  flow_img_norm_mean=[0.411, 0.432, 0.450]):
+        """Initialization of FlowNetSimple.
+
+        Args:
+            img_scale_factor (float): Used to upsample/downsample the image.
+
+            out_indices (list): The indices of outputting feature maps after
+                each group of conv_layers. Defaults to [2, 3, 4, 5, 6].
+
+            flow_scale_factor (float): Used to enlarge the values of flow.
+                Defaults to 5.0.
+
+            flow_img_norm_std (list): Used to scale the values of image.
+                Defaults to [255.0, 255.0, 255.0].
+
+            flow_img_norm_mean (list): Used to center the values of image.
+                Defaults to [0.411, 0.432, 0.450].
+        """
         super(FlowNetSimple, self).__init__()
         self.img_scale_factor = img_scale_factor
         self.out_indices = out_indices
@@ -126,10 +148,28 @@ class FlowNetSimple(nn.Module):
             act_cfg=None)
 
     def init_weights(self):
-        # using the default initialization
+        """Initialize the weight FlowNetSimple."""
+        # using the default initialization in ConvModule.
         pass
 
     def prepare_imgs(self, imgs, img_metas):
+        """Preprocess images for computing flow.
+
+        Args:
+            imgs (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+                each imgs contain two images concatenated in dim=1.
+
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+                For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+        Returns:
+            Tensor: of shape (N, C, H, W) encoding the input images of
+                FlowNetSimple.
+        """
         if not hasattr(self, 'img_norm_mean'):
             mean = img_metas[0]['img_norm_cfg']['mean']
             mean = torch.tensor(mean, device=imgs.device)
@@ -160,6 +200,22 @@ class FlowNetSimple(nn.Module):
         return flow_img
 
     def forward(self, imgs, img_metas):
+        """Compute the flow of images.
+
+        Args:
+            imgs (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+                each imgs contain two images concatenated in dim=1.
+
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+                For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+        Returns:
+            Tensor: of shape (N, 2, H, W) encoding flow of imgs.
+        """
         x = self.prepare_imgs(imgs, img_metas)
         conv_outs = []
         for i, conv_name in enumerate(self.conv_layers, 1):
@@ -198,6 +254,7 @@ class FlowNetSimple(nn.Module):
         return flow
 
     def crop_like(self, input, target):
+        """Crop input as the size of target."""
         if input.size()[2:] == target.size()[2:]:
             return input
         else:
