@@ -311,7 +311,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 `img` and corresponding `search_img` is positive pair.
 
         Returns:
-            dict[str, Tensor]: a dictionary of loss components
+            dict[str, Tensor]: a dictionary of loss components.
         """
         search_img = search_img[:, 0]
 
