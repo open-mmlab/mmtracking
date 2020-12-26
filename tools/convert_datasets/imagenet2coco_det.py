@@ -46,7 +46,7 @@ def parse_args():
 
 def parse_xml(img_name, xml_path, is_vid_train_frame, records, DET,
               obj_num_classes):
-    """[summary]
+    """Parse xml annotations and record them.
 
     Args:
         img_name (str): image file path
