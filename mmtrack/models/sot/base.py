@@ -37,6 +37,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             getattr(self, module).init_weights()
 
     def freeze_module(self, module):
+        """Freeze module during training."""
         if isinstance(module, str):
             modules = [module]
         else:
@@ -57,7 +58,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
 
     @property
     def with_neck(self):
-        """bool: whether the framework has a neck model"""
+        """bool: whether the framework has a neck"""
         return hasattr(self, 'neck') and self.neck is not None
 
     @property
@@ -69,14 +70,14 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
     def forward_train(self, imgs, img_metas, **kwargs):
         """
         Args:
-            img (list[Tensor]): List of tensors of shape (1, C, H, W).
+            img (Tensor): of shape (N, C, H, W) encoding input images.
                 Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): List of image info dict where each dict
+
+            img_metas (list[dict]): list of image info dict where each dict
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys, see
-                :class:`mmdet.datasets.pipelines.Collect`.
-            kwargs (keyword arguments): Specific to concrete implementation.
+                For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
         """
         pass
 

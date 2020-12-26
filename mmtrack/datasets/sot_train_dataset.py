@@ -7,12 +7,24 @@ from .parsers import CocoVID
 
 @DATASETS.register_module()
 class SOTTrainDataset(CocoVideoDataset):
+    """Dataset for the training of single object tracking.
+
+    The dataset doesn't support testing mode.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.load_as_video and not self.test_mode
 
     def load_video_anns(self, ann_file):
+        """Load annotation from COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCOVID api.
+        """
         self.coco = CocoVID(ann_file, self.load_as_video)
 
         data_infos = []
@@ -39,14 +51,23 @@ class SOTTrainDataset(CocoVideoDataset):
         return valid_inds
 
     def _set_group_flag(self):
-        """Set flag according to image aspect ratio.
+        """Set flag according to video aspect ratio.
 
-        Images with aspect ratio greater than 1 will be set as group 1,
-        otherwise group 0.
+        It is not useful since all flags are set as 0.
         """
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def get_snippet_of_instance(self, idx):
+        """Get a snippet of an instance in a video.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            tuple: (snippet, image_id, instance_id), snippet is a list
+                containing the successive image ids where the instance
+                appears, image_id is a random sampled id from snippet.
+        """
         vid_id = self.vid_ids[idx]
         instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
         instance_id = np.random.choice(instance_ids)
@@ -74,6 +95,37 @@ class SOTTrainDataset(CocoVideoDataset):
                          filter_key_img=False,
                          return_key_img=True,
                          **kwargs):
+        """Get a search image for an instance in an image.
+
+        If sampling an positive search image, the postive search image is
+        randomly sampled from the nearby frames of image_id, where the sampled
+        scope is decided by frame_range.
+        If sampling an negative search image, the negative search image and
+        negative instance are randomly sampled from the entire dataset.
+
+        Args:
+            snippet (list[int]): The successive image ids where the instance
+                appears.
+            image_id (int): The id of image where the instance appears.
+            instance_id (int): The id of the instance.
+            frame_range (List(int) | int): The frame range for sampling an
+                positive search image from the nearby frames of image_id.
+                Default: 5.
+            pos_prob (float): The probability of sampling an positive search
+                image. Default: 0.8.
+            filter_key_img (bool): If False, the id of positive search image
+                may be equal to image_id, otherwise, the search image id
+                cann't be equal to image_id. Default: False.
+            return_key_img (bool): If True, the image_id and instance_id are
+                returned, otherwise, not returned. Default: True.
+
+        Returns:
+            tuple: (image_ids, instance_ids, is_positive_pair), image_ids is
+                a list that must contain search image id and may contain
+                image_id, instance_ids is a list that must contain search
+                instance id and may contain instance_id, is_positive_pair is a
+                bool which denotes an postive or negative sample pair.
+        """
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
             assert frame_range >= 0, 'frame_range can not be a negative value.'
@@ -114,6 +166,16 @@ class SOTTrainDataset(CocoVideoDataset):
             return ref_image_ids, ref_instance_ids, is_positive_pair
 
     def prepare_results(self, img_id, instance_id, is_positive_pair):
+        """Get training data and annotations.
+
+        Args:
+            img_id (int): The id of image.
+            instance_id (int): The id of instance.
+            is_positive_pair (bool): The postive or negative sample pair.
+
+        Returns:
+            dict: The info of training image and annotation.
+        """
         img_info = self.coco.load_imgs([img_id])[0]
         img_info['filename'] = img_info['file_name']
         ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
@@ -122,7 +184,7 @@ class SOTTrainDataset(CocoVideoDataset):
 
         result = dict(img_info=img_info, ann_info=ann)
         self.pre_pipeline(result)
-        result['is_positive_pair'] = is_positive_pair
+        result['is_positive_pairs'] = is_positive_pair
         return result
 
     def prepare_train_img(self, idx):
@@ -146,6 +208,18 @@ class SOTTrainDataset(CocoVideoDataset):
         return results
 
     def _parse_ann_info(self, instance_id, ann_infos):
+        """Parse bbox annotation.
+
+        Parse a given instance annotation from annotation infos of an image.
+
+        Args:
+            instance_id (int): The instance_id of an image need be parsed.
+            ann_info (list[dict]): Annotation info of an image.
+
+        Returns:
+            dict: A dict containing the following keys: bboxes, labels. labels
+                are set to 0.
+        """
         has_instance_id = 0
         for ann_info in ann_infos:
             if ann_info['instance_id'] == instance_id:

@@ -5,6 +5,20 @@ from mmcv.runner.hooks import HOOKS, LrUpdaterHook
 
 
 def step_lr_interval(start_lr_factor, end_lr_factor, start_epoch, end_epoch):
+    """Exponentially varying lr.
+
+    Generator lr factor exponentially varying from `start_lr_factor` to
+    `end_lr_factor` in total `end_epoch - start_epoch` epochs.
+
+    Args:
+        start_lr_factor (float): Start lr factor.
+        end_lr_factor (float): End lr factor.
+        start_epoch (int): Start epoch.
+        end_epoch (int): End epoch.
+
+    Returns:
+        ndarray: The exponentially varying lr.
+    """
     epochs = end_epoch - start_epoch
     mult = math.pow(end_lr_factor / start_lr_factor, 1. / (epochs))
     lr_intervals = start_lr_factor * (mult**np.arange(epochs))
@@ -12,6 +26,20 @@ def step_lr_interval(start_lr_factor, end_lr_factor, start_epoch, end_epoch):
 
 
 def log_lr_interval(start_lr_factor, end_lr_factor, start_epoch, end_epoch):
+    """Logarithmically varying lr.
+
+    Generator lr factor logarithmically varying from `start_lr_factor` to
+    `end_lr_factor` in total `end_epoch - start_epoch` epochs.
+
+    Args:
+        start_lr_factor (float): Start lr factor.
+        end_lr_factor (float): End lr factor.
+        start_epoch (int): Start epoch.
+        end_epoch (int): End epoch.
+
+    Returns:
+        ndarray: The logarithmically varying lr.
+    """
     epochs = end_epoch - start_epoch
     lr_intervals = np.logspace(
         math.log10(start_lr_factor), math.log10(end_lr_factor), epochs)
@@ -20,6 +48,12 @@ def log_lr_interval(start_lr_factor, end_lr_factor, start_epoch, end_epoch):
 
 @HOOKS.register_module()
 class SiameseRPNLrUpdaterHook(LrUpdaterHook):
+    """Lr updater for siamese rpn.
+
+    Args:
+        lr_configs (list[dict]): List of dict where each dict denotes the
+            configuration of specifical lr updater and must have 'type'.
+    """
 
     lr_types = {'step': step_lr_interval, 'log': log_lr_interval}
 
@@ -53,4 +87,5 @@ class SiameseRPNLrUpdaterHook(LrUpdaterHook):
         self.lr_intervals = np.concatenate(self.lr_intervals)
 
     def get_lr(self, runner, base_lr):
+        """Get a specifical lr for each epoch."""
         return base_lr * self.lr_intervals[runner.epoch]

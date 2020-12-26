@@ -3,6 +3,20 @@ from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 
 
 def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
+    """Evaluation based on iou.
+
+    Args:
+        gt_bboxes (ndarray): of shape (video_length, 4) in
+            [tl_x, tl_y, br_x, br_y] format.
+        pred_bboxes (ndarray): of shape (video_length, 4) in
+            [tl_x, tl_y, br_x, br_y] format.
+        iou_th (ndarray): Different threshold of iou. Typically equals to
+            `np.arange(0, 1.05, 0.05)`.
+        video_length (int): Video length.
+
+    Returns:
+        ndarray: The evaluation results.
+    """
     success = np.zeros(len(iou_th))
     iou = np.ones(len(gt_bboxes)) * (-1)
     valid = (gt_bboxes[:, 2] > gt_bboxes[:, 0]) & (
@@ -18,6 +32,17 @@ def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
 
 def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
                   video_length):
+    """Evaluation based on pixel offset.
+
+    Args:
+        gt_bboxes (ndarray): of shape (video_length, 2) in [cx, cy] format.
+        pred_bboxes (ndarray): of shape (video_length, 2) in [cx, cy] format.
+        pixel_offset_th (ndarray): Different threshold of pixel offset.
+        video_length (int): Video length.
+
+    Returns:
+        ndarray: The evaluation results.
+    """
     success = np.zeros(len(pixel_offset_th))
     dist = np.ones(len(gt_bboxes_center)) * (-1)
     valid = (gt_bboxes_center[:, 0] > 0) & (gt_bboxes_center[:, 1] > 0)
@@ -30,6 +55,22 @@ def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
 
 
 def eval_sot_ope(results, annotations):
+    """Evaluation in OPE protocol.
+
+    Args:
+        results (list[list[ndarray]]): The first list contains the tracking
+            results of each video. The second list contains the tracking
+            results of each frame in one video. The ndarray denotes the
+            tracking box in [tl_x, tl_y, br_x, br_y] format.
+        annotations (list[list[dict]]): The first list contains the annotations
+            of each video. The second list contains the annotations of each
+            frame in one video. The dict denotes the annotation info of one
+            frame.
+
+    Returns:
+        dict[str, float]: OPE style evaluation metric (i.e. success,
+                norm precision and precision).
+    """
     success_results = []
     precision_results = []
     norm_precision_results = []
