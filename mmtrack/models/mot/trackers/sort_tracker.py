@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from mmdet.core import bbox_overlaps
-from scipy.optimize import linear_sum_assignment
+from motmetrics.lap import linear_sum_assignment
 
 from mmtrack.core import imrenormalize
 from mmtrack.models import TRACKERS
@@ -43,7 +43,9 @@ class SortTracker(BaseTracker):
     def init_track(self, id, obj):
         super().init_track(id, obj)
         self.tracks[id].tentative = True
-        bbox = self.xyxy2xyah(obj['bboxes'])  # size = (5, )
+        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        assert bbox.ndim == 2 and bbox.shape[0] == 1
+        bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
 
@@ -52,14 +54,18 @@ class SortTracker(BaseTracker):
         if self.tracks[id].tentative:
             if len(self.tracks[id]['bboxes']) >= self.num_tentatives:
                 self.tracks[id].tentative = False
-        bbox = self.xyxy2xyah(obj['bboxes'])  # size = (5, )
+        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        assert bbox.ndim == 2 and bbox.shape[0] == 1
+        bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
     def pop_invalid_tracks(self, frame_id):
         invalid_ids = []
         for k, v in self.tracks.items():
+            # case1: disappeared frames >= self.num_frames_retrain
             case1 = frame_id - v['frame_ids'][-1] >= self.num_frames_retain
+            # case2: tentative tracks but not matched in this frame
             case2 = v.tentative and v['frame_ids'][-1] != frame_id
             if case1 or case2:
                 invalid_ids.append(k)
@@ -106,12 +112,12 @@ class SortTracker(BaseTracker):
                 self.tracks, costs = model.motion.track(
                     self.tracks, self.xyxy2xyah(bboxes))
 
+            active_ids = self.confirmed_ids
             if model.with_reid:
                 embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
                 # reid
-                active_ids = self.confirmed_ids
                 if len(active_ids) > 0:
                     track_embeds = self.get(
                         'embeds',
@@ -120,27 +126,33 @@ class SortTracker(BaseTracker):
                         behavior='mean')
                     reid_dists = torch.cdist(track_embeds,
                                              embeds).cpu().numpy()
-                    gating_inds = costs == np.nan
-                    reid_dists[gating_inds] = np.nan
+
+                    valid_inds = [list(self.ids).index(_) for _ in active_ids]
+                    reid_dists[~np.isfinite(costs[valid_inds, :])] = np.nan
 
                     row, col = linear_sum_assignment(reid_dists)
                     for r, c in zip(row, col):
                         dist = reid_dists[r, c]
+                        if not np.isfinite(dist):
+                            continue
                         if dist <= self.reid['match_score_thr']:
                             ids[c] = active_ids[r]
 
-            active_ids = [id for id in self.ids if id not in ids]
-            active_inds = torch.nonzero(ids == -1).squeeze(0)
-            track_bboxes = self.get('bboxes', active_ids)
-            ious = bbox_overlaps(track_bboxes, bboxes[active_inds][:, :-1])
-            dists = 1 - ious
-            dists[dists > 1 - self.match_iou_thr] = np.nan
-            row, col = linear_sum_assignment(dists)
-            for r, c in zip(row, col):
-                dist = dists[r, c]
-                if not np.isfinite(dist):
-                    continue
-                ids[active_inds[c]] = active_ids[r]
+            active_ids = [
+                id for id in self.ids if id not in ids
+                and self.tracks[id].frame_ids[-1] == frame_id - 1
+            ]
+            if len(active_ids) > 0:
+                active_dets = torch.nonzero(ids == -1).squeeze(1)
+                track_bboxes = self.get('bboxes', active_ids)
+                ious = bbox_overlaps(
+                    track_bboxes, bboxes[active_dets][:, :-1]).cpu().numpy()
+                dists = 1 - ious
+                row, col = linear_sum_assignment(dists)
+                for r, c in zip(row, col):
+                    dist = dists[r, c]
+                    if dist < 1 - self.match_iou_thr:
+                        ids[active_dets[c]] = active_ids[r]
 
             new_track_inds = ids == -1
             ids[new_track_inds] = torch.arange(

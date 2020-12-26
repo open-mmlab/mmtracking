@@ -28,7 +28,7 @@ model = dict(
             out_channels=128,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU'))),
-    motion=dict(type='KalmanFilter', gating_dim=4),
+    motion=dict(type='KalmanFilter', center_only=False),
     tracker=dict(
         type='SortTracker',
         obj_score_thr=0.3,
@@ -36,11 +36,11 @@ model = dict(
             num_samples=100,
             img_scale=(256, 128),
             img_norm_cfg=None,
-            match_score_thr=2.0,
-            match_iou_thr=0.7),
+            match_score_thr=2.0),
+        match_iou_thr=0.7,
         momentums=None,
-        num_frames_retain=70,
-        num_tentatives=2))
+        num_tentatives=2,
+        num_frames_retain=70))
 data = dict(samples_per_gpu=1, workers_per_gpu=1)
 # optimizer
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)

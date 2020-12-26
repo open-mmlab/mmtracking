@@ -1,7 +1,6 @@
 # vim: expandtab:ts=4:sw=4
 import numpy as np
 import scipy.linalg
-import torch
 
 from ..builder import MOTION
 
@@ -33,7 +32,7 @@ class KalmanFilter(object):
         9: 16.919
     }
 
-    def __init__(self, center_only=4):
+    def __init__(self, center_only=False):
         self.center_only = center_only
         if self.center_only:
             self.gating_threshold = self.chi2inv95[2]
@@ -234,11 +233,14 @@ class KalmanFilter(object):
     def track(self, tracks, bboxes):
         costs = []
         for id, track in tracks.items():
-            track.mean, track.std = self.predict(track.mean, track.std)
-            gating_distance = self.gating_distance(track.mean, track.std,
-                                                   bboxes, self.center_only)
+            track.mean, track.covariance = self.predict(
+                track.mean, track.covariance)
+            gating_distance = self.gating_distance(track.mean,
+                                                   track.covariance,
+                                                   bboxes.cpu().numpy(),
+                                                   self.center_only)
             costs.append(gating_distance)
-        costs = torch.stack(costs, -1)
-        costs[costs > self.gating_threshold] = np.nan
 
+        costs = np.stack(costs, 0)
+        costs[costs > self.gating_threshold] = np.nan
         return tracks, costs
