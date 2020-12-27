@@ -20,13 +20,13 @@ class ImagenetVIDDataset(CocoVideoDataset):
         super().__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
-        """Load annotation from COCO/COCOVID style annotation file.
+        """Load annotations from COCO/COCOVID style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCO/COCOVID api.
+            list[dict]: Annotation information from COCO/COCOVID api.
         """
         if self.load_as_video:
             data_infos = self.load_video_anns(ann_file)
@@ -35,13 +35,13 @@ class ImagenetVIDDataset(CocoVideoDataset):
         return data_infos
 
     def load_image_anns(self, ann_file):
-        """Load annotation from COCO style annotation file.
+        """Load annotations from COCO style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCO api.
+            list[dict]: Annotation information from COCO api.
         """
         self.coco = COCO(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
@@ -59,13 +59,13 @@ class ImagenetVIDDataset(CocoVideoDataset):
         return data_infos
 
     def load_video_anns(self, ann_file):
-        """Load annotation from COCOVID style annotation file.
+        """Load annotations from COCOVID style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCOVID api.
+            list[dict]: Annotation information from COCOVID api.
         """
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)

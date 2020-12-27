@@ -35,7 +35,7 @@ class FGFA(BaseVideoDetector):
             self.freeze_module(frozen_modules)
 
     def init_weights(self, pretrain):
-        """Initialize the weights of modules in video detector.
+        """Initialize the weights of modules in video object detector.
 
         Args:
             pretrained (dict): Path to pre-trained weights.
@@ -84,27 +84,29 @@ class FGFA(BaseVideoDetector):
 
             ref_img (Tensor): of shape (N, 2, C, H, W) encoding input images.
                 Typically these should be mean centered and std scaled.
-                2 denotes there is two ref images for each img.
+                2 denotes there is two reference images for each input image.
 
             ref_img_metas (list[list[dict]]): The first list only has one
-                element. The second list contains ref image info dict where
-                each dict has: 'img_shape', 'scale_factor', 'flip', and may
-                also contain 'filename', 'ori_shape', 'pad_shape', and
+                element. The second list contains reference image information
+                dict where each dict has: 'img_shape', 'scale_factor', 'flip',
+                and may also contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
             ref_gt_bboxes (list[Tensor]): The list only has one Tensor. The
-                Tensor contains ground truth bboxes for each ref image with
-                shape (num_all_ref_gts, 5) in
+                Tensor contains ground truth bboxes for each reference image
+                with shape (num_all_ref_gts, 5) in
                 [ref_img_id, tl_x, tl_y, br_x, br_y] format. The ref_img_id
-                start from 0.
+                start from 0, and denotes the id of reference image for each
+                key image.
 
             ref_gt_labels (list[Tensor]): The list only has one Tensor. The
-                Tensor contains class indices corresponding to each ref box
-                with shape (num_all_ref_gts, 2) in [ref_img_id, class_indice].
+                Tensor contains class indices corresponding to each reference
+                box with shape (num_all_ref_gts, 2) in
+                [ref_img_id, class_indice].
 
             gt_instance_ids (None | list[Tensor]): specify the instance id for
-                each ground truth bboxes.
+                each ground truth bbox.
 
             gt_bboxes_ignore (None | list[Tensor]): specify which bounding
                 boxes can be ignored when computing the loss.
@@ -116,17 +118,18 @@ class FGFA(BaseVideoDetector):
                 proposals. Use when `with_rpn` is False.
 
             ref_gt_instance_ids (None | list[Tensor]): specify the instance id
-                for each ground truth bboxes of ref images.
+                for each ground truth bboxes of reference images.
 
             ref_gt_bboxes_ignore (None | list[Tensor]): specify which bounding
-                boxes of ref images can be ignored when computing the loss.
+                boxes of reference images can be ignored when computing the
+                loss.
 
-            ref_gt_masks (None | Tensor) : true segmentation masks for each
-                box of ref image used if the architecture supports a
+            ref_gt_masks (None | Tensor) : True segmentation masks for each
+                box of reference image used if the architecture supports a
                 segmentation task.
 
             ref_proposals (None | Tensor) : override rpn proposals with custom
-                proposals of ref image. Use when `with_rpn` is False.
+                proposals of reference images. Use when `with_rpn` is False.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
@@ -183,33 +186,33 @@ class FGFA(BaseVideoDetector):
         return losses
 
     def extract_feats(self, img, img_metas, ref_img, ref_img_metas):
-        """Extract features for img during testing.
+        """Extract features for `img` during testing.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding input images.
+            img (Tensor): of shape (1, C, H, W) encoding input image.
                 Typically these should be mean centered and std scaled.
 
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
             ref_img (Tensor | None): of shape (1, N, C, H, W) encoding input
-                images. Typically these should be mean centered and std
-                scaled. N denotes the number for ref images. There may be no
-                ref_img in some cases.
+                reference images. Typically these should be mean centered and
+                std scaled. N denotes the number of reference images. There
+                may be no reference images in some cases.
 
             ref_img_metas (list[list[dict]] | None): The first list only has
-                one element. The second list contains image info dict where
-                each dict has: 'img_shape', 'scale_factor', 'flip', and may
-                also contain 'filename', 'ori_shape', 'pad_shape', and
+                one element. The second list contains image information dict
+                where each dict has: 'img_shape', 'scale_factor', 'flip', and
+                may also contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`. There
-                may be no ref_img in some cases.
+                may be no reference images in some cases.
 
         Returns:
-            list[Tensor]: Each level feature map of all images.
+            list[Tensor]: Multi level feature maps of `img`.
         """
         frame_id = img_metas[0].get('frame_id', -1)
         assert frame_id >= 0
@@ -282,28 +285,29 @@ class FGFA(BaseVideoDetector):
         """Test without augmentation.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding input images.
+            img (Tensor): of shape (1, C, H, W) encoding input image.
                 Typically these should be mean centered and std scaled.
 
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
             ref_img (list[Tensor] | None): The list only contains one Tensor
-                of shape (1, N, C, H, W) encoding input images. Typically
-                these should be mean centered and std scaled. N denotes the
-                number for ref images. There may be no ref_img in some cases.
+                of shape (1, N, C, H, W) encoding input reference images.
+                Typically these should be mean centered and std scaled. N
+                denotes the number for reference images. There may be no
+                reference images in some cases.
 
             ref_img_metas (list[list[list[dict]]] | None): The first and
                 second list only has one element. The third list contains
-                image info dict where each dict has: 'img_shape',
+                image information dict where each dict has: 'img_shape',
                 'scale_factor', 'flip', and may also contain 'filename',
                 'ori_shape', 'pad_shape', and 'img_norm_cfg'. For details on
                 the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`. There
-                may be no ref_img in some cases.
+                may be no reference images in some cases.
 
             proposals (None | Tensor): Override rpn proposals with custom
                 proposals. Use when `with_rpn` is False. Defaults to None.

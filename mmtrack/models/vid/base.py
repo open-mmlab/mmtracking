@@ -13,18 +13,18 @@ from mmtrack.utils import get_root_logger
 
 
 class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
-    """Base class for video detectors."""
+    """Base class for video object detector."""
 
     def __init__(self):
         super(BaseVideoDetector, self).__init__()
         self.logger = get_root_logger()
 
     def init_module(self, module, pretrain=None):
-        """Initialize the weights in video detector.
+        """Initialize the weights of modules in video detector.
 
         Args:
             pretrained (str, optional): Path to pre-trained weights.
-                Default: None.
+                Defaults to None.
         """
         if pretrain is not None:
             print_log(f'load {module} from: {pretrain}', logger=self.logger)

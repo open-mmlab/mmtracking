@@ -8,15 +8,14 @@ from mmtrack.models import build_aggregator
 class SelsaBBoxHead(ConvFCBBoxHead):
     """Selsa bbox head.
 
-    `SELSA <https://arxiv.org/abs/1907.06390>`_.
+    This module is proposed in "Sequence Level Semantics Aggregation for Video
+    Object Detection". `SELSA <https://arxiv.org/abs/1907.06390>`_.
+
+    Args:
+        aggregator (dict): Configuration of aggregator.
     """
 
     def __init__(self, aggregator, *args, **kwargs):
-        """Initialization of SelsaBBoxHead.
-
-        Args:
-            aggregator (dict): Configuration of aggregator.
-        """
         super(SelsaBBoxHead, self).__init__(*args, **kwargs)
         self.aggregator = nn.ModuleList()
         for i in range(self.num_shared_fcs):
@@ -24,17 +23,18 @@ class SelsaBBoxHead(ConvFCBBoxHead):
         self.inplace_false_relu = nn.ReLU(inplace=False)
 
     def forward(self, x, ref_x):
-        """Computing the cls_score and bbox_pred of x.
+        """Computing the `cls_score` and `bbox_pred` of the features `x` of key
+        frame proposals.
 
         Args:
-            x (Tensor): of shape [N, C, H, W]. N is the number of target frame
+            x (Tensor): of shape [N, C, H, W]. N is the number of key frame
                 proposals.
-            ref_x (Tensor): of shape [M, C, H, W]. M is the number of ref
+            ref_x (Tensor): of shape [M, C, H, W]. M is the number of reference
                 frame proposals.
 
         Returns:
-            tuple(cls_score, bbox_pred): The predict score of classes and
-                the predict regression offsets.
+            tuple(cls_score, bbox_pred): The predicted score of classes and
+                the predicted regression offsets.
         """
         # shared part
         if self.num_shared_convs > 0:

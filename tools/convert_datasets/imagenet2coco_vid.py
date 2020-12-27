@@ -69,13 +69,13 @@ def parse_val_list(ann_dir):
 
 
 def convert_vid(VID, ann_dir, save_dir, mode='train'):
-    """convert vid dataset in COCO style.
+    """Convert ImageNet VID dataset in COCO style.
 
     Args:
         VID (dict): The converted COCO style annotations.
-        ann_dir (str): The path of ImageNet DET/ImageNet VID dataset
-        save_dir (str): The path of saving VID.
-        mode (str): Convert train dataset or test dataset. Options are
+        ann_dir (str): The path of ImageNet VID dataset.
+        save_dir (str): The path to save `VID`.
+        mode (str): Convert train dataset or validation dataset. Options are
             'train', 'val'. Default: 'train'.
     """
     assert mode in ['train', 'val']

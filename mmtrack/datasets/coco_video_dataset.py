@@ -45,13 +45,13 @@ class CocoVideoDataset(CocoDataset):
         self.logger = get_root_logger()
 
     def load_annotations(self, ann_file):
-        """Load annotation from COCO/COCOVID style annotation file.
+        """Load annotations from COCO/COCOVID style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCO/COCOVID api.
+            list[dict]: Annotation information from COCO/COCOVID api.
         """
         if not self.load_as_video:
             data_infos = super().load_annotations(ann_file)
@@ -60,13 +60,13 @@ class CocoVideoDataset(CocoDataset):
         return data_infos
 
     def load_video_anns(self, ann_file):
-        """Load annotation from COCOVID style annotation file.
+        """Load annotations from COCOVID style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCOVID api.
+            list[dict]: Annotation information from COCOVID api.
         """
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
@@ -88,7 +88,7 @@ class CocoVideoDataset(CocoDataset):
         return data_infos
 
     def key_img_sampling(self, img_ids, interval=1):
-        """sampling key images."""
+        """Sampling key images."""
         return img_ids[::interval]
 
     def ref_img_sampling(self,
@@ -99,35 +99,36 @@ class CocoVideoDataset(CocoDataset):
                          filter_key_img=True,
                          method='uniform',
                          return_key_img=True):
-        """Get several ref images from the nearby frames of img_info.
+        """Sampling reference frames in the same video for key frame.
 
         Args:
-            img_info (dict): The info of an image.
-            frame_range (List(int) | int): The frame range for sampling ref
-                images from the nearby frames of img_info.
-            stride (int): the sampling frame stride when samling ref images.
+            img_info (dict): The information of key frame.
+            frame_range (List(int) | int): The sampling range of reference
+                frames in the same video for key frame.
+            stride (int): The sampling frame stride when sampling reference
+                images. Default: 1.
+            num_ref_imgs (int): The number of sampled reference images.
                 Default: 1.
-            num_ref_imgs (int): The number of sampled ref images. Default: 1.
-            filter_key_img (bool): If False, the ref images id may be equal to
-                image_id, otherwise, the ref image id cann't be equal to
-                image_id. Default: True.
+            filter_key_img (bool): If False, the key image will be in the
+                sampling reference candidates, otherwise, it is exclude.
+                Default: True.
             method (str): The sampling method. Options are 'uniform',
                 'bilateral_uniform', 'test_with_adaptive_stride',
-                'test_with_fix_stride'. 'uniform' denotes ref images are
-                randomly sampled from the nearby frames of img_info.
-                'bilateral_uniform' denotes ref images are randomly sampled
-                from the two sides of the nearby frames of img_info.
+                'test_with_fix_stride'. 'uniform' denotes reference images are
+                randomly sampled from the nearby frames of key frame.
+                'bilateral_uniform' denotes reference images are randomly
+                sampled from the two sides of the nearby frames of key frame.
                 'test_with_adaptive_stride' is only used in testing, and
-                denotes the ref image stride is equal to (video length / the
-                number of ref images). test_with_fix_stride is only used in
-                testing, and denotes the ref image stride is set to stride.
-                Default: 'uniform'.
-            return_key_img (bool): If True, the img_info is returned,
-                otherwise, not returned. Default: True.
+                denotes the sampling frame stride is equal to (video length /
+                the number of reference images). test_with_fix_stride is only
+                used in testing with sampling frame stride equalling to
+                `stride`. Default: 'uniform'.
+            return_key_img (bool): If True, the information of key frame is
+                returned, otherwise, not returned. Default: True.
 
         Returns:
-            list(dict): The ref images info and img_info or only the ref
-                images info.
+            list(dict): `img_info` and the reference images informations or
+                only the reference images informations.
         """
         assert isinstance(img_info, dict)
         if isinstance(frame_range, int):
@@ -220,13 +221,13 @@ class CocoVideoDataset(CocoDataset):
             return ref_img_infos
 
     def get_ann_info(self, img_info):
-        """Get COCO annotation by img_info.
+        """Get COCO annotations by the information of image.
 
         Args:
-            img_info (int): Info of image.
+            img_info (int): Information of image.
 
         Returns:
-            dict: Annotation info of img_info.
+            dict: Annotation information of `img_info`.
         """
         img_id = img_info['id']
         ann_ids = self.coco.get_ann_ids(img_ids=[img_id], cat_ids=self.cat_ids)
@@ -234,7 +235,7 @@ class CocoVideoDataset(CocoDataset):
         return self._parse_ann_info(img_info, ann_info)
 
     def prepare_results(self, img_info):
-        """Prepare results for img_info (e.g. ann_info and so on)."""
+        """Prepare results for image (e.g. the annotation information, ...)."""
         results = dict(img_info=img_info)
         if not self.test_mode or self.test_load_ann:
             results['ann_info'] = self.get_ann_info(img_info)
@@ -253,7 +254,7 @@ class CocoVideoDataset(CocoDataset):
             idx (int): Index of data.
 
         Returns:
-            dict: Data and annotation after pipeline with new keys introduced
+            dict: Data and annotations after pipeline with new keys introduced
                 by pipeline.
         """
         img_info = self.data_infos[idx]
@@ -273,7 +274,7 @@ class CocoVideoDataset(CocoDataset):
             idx (int): Index of data.
 
         Returns:
-            dict: Training data and annotation after pipeline with new keys \
+            dict: Training data and annotations after pipeline with new keys
                 introduced by pipeline.
         """
         return self.prepare_data(idx)
@@ -285,17 +286,17 @@ class CocoVideoDataset(CocoDataset):
             idx (int): Index of data.
 
         Returns:
-            dict: Testing data after pipeline with new keys intorduced by \
-                piepline.
+            dict: Testing data after pipeline with new keys intorduced by
+                pipeline.
         """
         return self.prepare_data(idx)
 
     def _parse_ann_info(self, img_info, ann_info):
-        """Parse bbox and mask annotation.
+        """Parse bbox and mask annotations.
 
         Args:
-            img_anfo (dict): Info of an image.
-            ann_info (list[dict]): Annotation info of an image.
+            img_anfo (dict): Information of image.
+            ann_info (list[dict]): Annotation information of image.
 
         Returns:
             dict: A dict containing the following keys: bboxes, bboxes_ignore,
