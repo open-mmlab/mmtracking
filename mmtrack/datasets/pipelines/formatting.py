@@ -6,6 +6,22 @@ from mmdet.datasets.pipelines import to_tensor
 
 @PIPELINES.register_module()
 class ConcatVideoReferences(object):
+    """Concat video references.
+
+    Concat the input list of dict to one dict from 2-nd dict of the input list,
+    if the inputs have at least two dicts.
+
+    Args:
+        results (list[dict]): List of dict that contain keys such as 'img',
+            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
+            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
+            'gt_instance_ids'.
+
+    Returns:
+        list[dict]: The first dict of outputs is the same as the first
+            dict of `results`. The second dict of outputs concats the
+            dicts in `results[1:]`.
+    """
 
     def __call__(self, results):
         assert (isinstance(results, list)), 'results must be list'
@@ -61,11 +77,35 @@ class ConcatVideoReferences(object):
 
 @PIPELINES.register_module()
 class MultiImagesToTensor(object):
+    """Multi images to tensor.
+
+    1. Transpose and convert image/multi-images to Tensor.
+    2. Add prefix to every key in the second dict of the inputs. Then, add
+    these keys and corresponding values into the outputs.
+
+    Args:
+        ref_prefix (str): The prefix of key added to the second dict of inputs.
+            Defaults to 'ref'.
+    """
 
     def __init__(self, ref_prefix='ref'):
         self.ref_prefix = ref_prefix
 
     def __call__(self, results):
+        """Multi images to tensor.
+
+        1. Transpose and convert image/multi-images to Tensor.
+        2. Add prefix to every key in the second dict of the inputs. Then, add
+        these keys and corresponding values into the outputs.
+
+        Args:
+            results (list[dict]): List of two dicts.
+
+        Returns:
+            dict: Each key in the first dict of `results` remains unchanged.
+                Each key in the second dict of `results` adds `self.ref_prefix`
+                as prefix.
+        """
         outs = []
         for _results in results:
             _results = self.images_to_tensor(_results)
@@ -80,6 +120,7 @@ class MultiImagesToTensor(object):
         return data
 
     def images_to_tensor(self, results):
+        """Transpose and Convert images to Tensor."""
         if 'img' in results:
             img = results['img']
             if len(img.shape) == 3:
@@ -96,11 +137,40 @@ class MultiImagesToTensor(object):
 
 @PIPELINES.register_module()
 class SeqDefaultFormatBundle(object):
+    """Sequence Default formatting bundle.
+
+    It simplifies the pipeline of formatting common fields, including "img",
+    "proposals", "gt_bboxes", "gt_labels", "gt_masks" and "gt_semantic_seg".
+    These fields are formatted as follows.
+
+    - img: (1)transpose, (2)to tensor, (3)to DataContainer (stack=True)
+    - proposals: (1)to tensor, (2)to DataContainer
+    - gt_bboxes: (1)to tensor, (2)to DataContainer
+    - gt_bboxes_ignore: (1)to tensor, (2)to DataContainer
+    - gt_labels: (1)to tensor, (2)to DataContainer
+    - gt_masks: (1)to tensor, (2)to DataContainer (cpu_only=True)
+    - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor, \
+                       (3)to DataContainer (stack=True)
+
+    Args:
+        ref_prefix (str): The prefix of key added to the second dict of inputs.
+            Defaults to 'ref'.
+    """
 
     def __init__(self, ref_prefix='ref'):
         self.ref_prefix = ref_prefix
 
     def __call__(self, results):
+        """Sequence Default formatting bundle.
+
+        Args:
+            results (list[dict]): List of two dicts.
+
+        Returns:
+            dict: The result dict contains the data that is formatted with
+                default bundle. Each key in the second dict of `results` adds
+                `self.ref_prefix` as prefix.
+        """
         outs = []
         for _results in results:
             _results = self.default_format_bundle(_results)
@@ -120,10 +190,9 @@ class SeqDefaultFormatBundle(object):
             results (dict): Result dict contains the data to convert.
 
         Returns:
-            dict: The result dict contains the data that is formatted with \
+            dict: The result dict contains the data that is formatted with
                 default bundle.
         """
-
         if 'img' in results:
             img = results['img']
             if len(img.shape) == 3:
@@ -158,6 +227,18 @@ class SeqDefaultFormatBundle(object):
 
 @PIPELINES.register_module()
 class VideoCollect(object):
+    """Collect data from the loader relevant to the specific task.
+
+    Args:
+        keys (Sequence[str]): Keys of results to be collected in ``data``.
+        meta_keys (Sequence[str], optional): Meta keys to be converted to
+            ``mmcv.DataContainer`` and collected in ``data[img_metas]``.
+            Defaults to None.
+        default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
+            'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
+            'scale_factor', 'flip', 'flip_direction', 'img_norm_cfg',
+            'frame_id', 'is_video_data').
+    """
 
     def __init__(self,
                  keys,
@@ -177,6 +258,20 @@ class VideoCollect(object):
             self.meta_keys += meta_keys
 
     def __call__(self, results):
+        """Call function to collect keys in results. The keys in ``meta_keys``
+        and ``default_meta_keys`` will be converted to :obj:mmcv.DataContainer.
+
+        Args:
+            results (list[dict] | dict): List of dict or dict which contains
+                the data to collect.
+
+        Returns:
+            list[dict] | dict: List of dict or dict that contains the
+                following keys:
+
+                - keys in``self.keys``
+                - ``img_metas``
+        """
         results_is_dict = isinstance(results, dict)
         if results_is_dict:
             results = [results]
@@ -192,6 +287,7 @@ class VideoCollect(object):
         return outs[0] if results_is_dict else outs
 
     def _collect_meta_keys(self, results):
+        """Collect `self.keys` and `self.meta_keys` from results (dict)."""
         data = {}
         img_meta = {}
         for key in self.meta_keys:
@@ -232,6 +328,14 @@ class VideoCollect(object):
 
 @PIPELINES.register_module()
 class ToList(object):
+    """Use list to warp each value of the input dict.
+
+    Args:
+        results (dict): Result dict contains the data to convert.
+
+    Returns:
+        dict: Updated result dict contains the data to convert.
+    """
 
     def __call__(self, results):
         out = {}

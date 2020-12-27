@@ -18,6 +18,19 @@ def train_model(model,
                 validate=False,
                 timestamp=None,
                 meta=None):
+    """Train model entry function.
+
+    Args:
+        model (nn.Module): The model to be trained.
+        dataset (:obj:`Dataset`): Train dataset.
+        cfg (dict): The config dict for training.
+        distributed (bool): Whether to use distributed training.
+            Default: False.
+        validate (bool): Whether to do evaluation. Default: False.
+        timestamp (str | None): Local time for runner. Default: None.
+        meta (dict | None): Meta dict to record some important information.
+            Default: None
+    """
     logger = get_root_logger(cfg.log_level)
 
     # prepare data loaders

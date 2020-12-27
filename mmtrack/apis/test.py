@@ -15,6 +15,21 @@ def single_gpu_test(model,
                     show=False,
                     out_dir=None,
                     show_score_thr=0.3):
+    """Test model with single gpu.
+
+    Args:
+        model (nn.Module): Model to be tested.
+        data_loader (nn.Dataloader): Pytorch data loader.
+        show (bool): If True, visualize the prediction results (Not supported
+            for now).  Defaults to False.
+        out_dir (str): Path of directory to save the visualization results (Not
+            supported for now). Defaults to None.
+        show_score_thr (float): The score threthold for visualization (Not
+            supported for now). Defaults to 0.3.
+
+    Returns:
+        dict[list]: The prediction results.
+    """
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
@@ -41,17 +56,19 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     under two different modes: gpu and cpu modes. By setting 'gpu_collect=True'
     it encodes results to gpu tensors and use gpu communication for results
     collection. On cpu mode it saves the results on different gpus to 'tmpdir'
-    and collects them by the rank 0 worker.
+    and collects them by the rank 0 worker. 'gpu_collect=True' is not
+    supported for now.
 
     Args:
         model (nn.Module): Model to be tested.
         data_loader (nn.Dataloader): Pytorch data loader.
         tmpdir (str): Path of directory to save the temporary results from
-            different gpus under cpu mode.
+            different gpus under cpu mode. Defaults to None.
         gpu_collect (bool): Option to use either gpu or cpu to collect results.
+            Defaults to False.
 
     Returns:
-        list: The prediction results.
+        dict[list]: The prediction results.
     """
     model.eval()
     results = defaultdict(list)
@@ -79,7 +96,21 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     return results
 
 
-def collect_results_cpu(result_part, size, tmpdir=None):
+def collect_results_cpu(result_part, tmpdir=None):
+    """Collect results on cpu mode.
+
+    Saves the results on different gpus to 'tmpdir' and collects them by the
+    rank 0 worker.
+
+    Args:
+        result_part (dict[list]): The part of prediction results.
+        tmpdir (str): Path of directory to save the temporary results from
+            different gpus under cpu mode. If is None, use `tempfile.mkdtemp()`
+            to make a temporary path. Defaults to None.
+
+    Returns:
+        dict[list]: The prediction results.
+    """
     rank, world_size = get_dist_info()
     # create a tmp dir if it is not specified
     if tmpdir is None:
