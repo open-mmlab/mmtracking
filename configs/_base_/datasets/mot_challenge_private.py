@@ -1,5 +1,5 @@
 # dataset settings
-dataset_type = 'MOT17Dataset'
+dataset_type = 'MOTChallengeDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -32,7 +32,6 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadDetections'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1088, 1088),
@@ -43,17 +42,17 @@ test_pipeline = [
             dict(type='Normalize', **img_norm_cfg),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img', 'public_bboxes'])
+            dict(type='VideoCollect', keys=['img'])
         ])
 ]
 data_root = 'data/MOT17/'
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        visibility_thr=0.25,
-        ann_file=data_root + 'annotations/train_cocoformat.json',
+        visibility_thr=-1,
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=dict(
             num_ref_imgs=1,
@@ -63,14 +62,13 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/train_cocoformat.json',
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/train_cocoformat.json',
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
-        detection_file=data_root + 'annotations/train_detections.pkl',
         pipeline=test_pipeline))

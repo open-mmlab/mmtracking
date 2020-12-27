@@ -68,7 +68,9 @@ def main():
 
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import train_detector as train_model
-        from mmdet.models import build_detector as build_model
+        from mmtrack.models import build_detector as build_model
+        if 'detector' in cfg.model:
+            cfg.model = cfg.model.detector
     else:
         from mmtrack.apis import train_model
         from mmtrack.models import build_model

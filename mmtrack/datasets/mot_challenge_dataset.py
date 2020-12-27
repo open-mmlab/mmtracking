@@ -14,7 +14,7 @@ from .coco_video_dataset import CocoVideoDataset
 
 
 @DATASETS.register_module()
-class MOT17Dataset(CocoVideoDataset):
+class MOTChallengeDataset(CocoVideoDataset):
 
     CLASSES = ('pedestrian', )
 

@@ -1,6 +1,6 @@
 _base_ = [
     '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/mot17.py', '../../_base_/default_runtime.py'
+    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 model = dict(
     type='Tracktor',
@@ -50,7 +50,7 @@ model = dict(
         num_frames_retain=10))
 data = dict(samples_per_gpu=1, workers_per_gpu=1)
 # optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 # learning policy
 lr_config = dict(
     policy='step',
@@ -61,5 +61,4 @@ lr_config = dict(
 # runtime settings
 total_epochs = 4
 evaluation = dict(metric=['bbox', 'track'], interval=1)
-log_config = dict(interval=50)
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
