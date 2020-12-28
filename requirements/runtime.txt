@@ -1,0 +1,7 @@
+matplotlib
+mmcls
+mmpycocotools
+motmetrics
+numpy
+six
+terminaltables
