@@ -4,7 +4,7 @@ from itertools import product
 
 import mmcv
 import torch
-from dotted_dict import DottedDict
+from dotty_dict import dotty
 from mmcv import Config, DictAction, get_logger, print_log
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
@@ -142,10 +142,10 @@ def main():
     combinations = [p for p in product(*search_params.values())]
     search_cfgs = []
     for c in combinations:
-        search_cfg = DottedDict(cfg.model.tracker.copy())
+        search_cfg = dotty(cfg.model.tracker.copy())
         for i, k in enumerate(search_params.keys()):
             search_cfg[k] = c[i]
-        search_cfgs.append(search_cfg)
+        search_cfgs.append(dict(search_cfg))
     print_log(f'Totally {len(search_cfgs)} cases.', logger)
     # init with the first one
     cfg.model.tracker = search_cfgs[0].copy()
