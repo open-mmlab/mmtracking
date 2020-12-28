@@ -43,6 +43,7 @@ def parse_args():
 
 
 def parse_train_list(ann_dir):
+    """Parse the txt file of ImageNet VID train dataset."""
     img_list = osp.join(ann_dir, 'Lists/VID_train_15frames.txt')
     img_list = mmcv.list_from_file(img_list)
     train_infos = defaultdict(list)
@@ -57,6 +58,7 @@ def parse_train_list(ann_dir):
 
 
 def parse_val_list(ann_dir):
+    """Parse the txt file of ImageNet VID val dataset."""
     img_list = osp.join(ann_dir, 'Lists/VID_val_videos.txt')
     img_list = mmcv.list_from_file(img_list)
     val_infos = defaultdict(list)
@@ -67,6 +69,15 @@ def parse_val_list(ann_dir):
 
 
 def convert_vid(VID, ann_dir, save_dir, mode='train'):
+    """Convert ImageNet VID dataset in COCO style.
+
+    Args:
+        VID (dict): The converted COCO style annotations.
+        ann_dir (str): The path of ImageNet VID dataset.
+        save_dir (str): The path to save `VID`.
+        mode (str): Convert train dataset or validation dataset. Options are
+            'train', 'val'. Default: 'train'.
+    """
     assert mode in ['train', 'val']
     records = dict(
         vid_id=1,

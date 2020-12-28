@@ -2,6 +2,15 @@ import torch
 
 
 def flow_warp_feats(x, flow):
+    """Use flow to warp feature map.
+
+    Args:
+        x (Tensor): of shape (N, C, H_x, W_x).
+        flow (Tensor): of shape (N, C, H_f, W_f).
+
+    Returns:
+        Tensor: The warpped feature map with shape (N, C, H_x, W_x).
+    """
     assert len(x.shape) == 4
     assert len(flow.shape) == 4 and flow.shape[1] == 2
     # 1. resize the resolution of flow to be the same as x.

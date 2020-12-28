@@ -8,26 +8,14 @@ from ..builder import AGGREGATORS
 class SelsaAggregator(nn.Module):
     """Selsa aggregator module.
 
-    This module is proposed in
-    "Sequence Level Semantics Aggregation for Video Object Detection".
-    Link: https://arxiv.org/abs/1907.06390
+    This module is proposed in "Sequence Level Semantics Aggregation for Video
+    Object Detection". `SELSA <https://arxiv.org/abs/1907.06390>`_.
 
     Args:
-        in_channels (int): The number of channels of the features of proposal.
+        in_channels (int): The number of channels of the features of
+            proposal.
         num_attention_blocks (int): The number of attention blocks used in
-            SELSA module. Default: 16.
-
-    Attributes:
-        fc_embed (nn.Linear): Fc layer used to embed the features of target
-            proposals.
-        ref_fc_embed (nn.Linear): Fc layer used to embed the features of
-            support proposals.
-        fc (nn.Linear): Fc layer used to transform the final features of
-            target proposals.
-        ref_fc (nn.Linear): Fc layer used to transform the features of support
-            proposals.
-        num_attention_blocks (int): The number of attention blocks used in
-            SELSA module. Default: 16.
+            selsa aggregator module. Defaults to 16.
     """
 
     def __init__(self, in_channels, num_attention_blocks=16):
@@ -39,6 +27,23 @@ class SelsaAggregator(nn.Module):
         self.num_attention_blocks = num_attention_blocks
 
     def forward(self, x, ref_x):
+        """Aggregate the features `ref_x` of reference proposals.
+
+        The aggregation mainly contains two steps:
+        1. Use multi-head attention to computing the weight between `x` and
+        `ref_x`.
+        2. Use the normlized (i.e. softmax) weight to weightedly sum `ref_x`.
+
+        Args:
+            x (Tensor): of shape [N, C]. N is the number of key frame
+                proposals.
+            ref_x (Tensor): of shape [M, C]. M is the number of reference frame
+                proposals.
+
+        Returns:
+            Tensor: The aggregated features of key frame proposals with shape
+                [N, C].
+        """
         roi_n = x.shape[0]
         ref_roi_n = ref_x.shape[0]
 
