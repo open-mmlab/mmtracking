@@ -7,6 +7,21 @@ def embed_similarity(key_embeds,
                      method='dot_product',
                      temperature=-1,
                      transpose=True):
+    """Calculate feature similarity from embeddings.
+
+    Args:
+        key_embeds (Tensor): Shape (N1, C).
+        ref_embeds (Tensor): Shape (N2, C) or (C, N2).
+        method (str, optional): Method to calculate the similarity,
+            options are 'dot_product' and 'cosine'. Defaults to
+            'dot_product'.
+        temperature (int, optional): Softmax temperature. Defaults to -1.
+        transpose (bool, optional): Whether transpose `ref_embeds`.
+            Defaults to True.
+
+    Returns:
+        Tensor: Similarity matrix of shape (N1, N2).
+    """
     assert method in ['dot_product', 'cosine']
 
     if key_embeds.size(0) == 0 or ref_embeds.size(0) == 0:

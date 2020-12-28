@@ -4,6 +4,19 @@ import torch
 
 
 def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+    """Re-normalize the image.
+
+    Args:
+        img (Tensor | ndarray): Input image. If the input is a Tensor, the
+            shape is (1, C, H, W). If the input is a ndarray, the shape
+            is (H, W, C).
+        img_norm_cfg (dict): Original configuration for the normalization.
+        new_img_norm_cfg (dict): New configuration for the normalization.
+
+    Returns:
+        Tensor | ndarray: Output image with the same type and shape of
+            the input.
+    """
     if isinstance(img, torch.Tensor):
         assert img.ndim == 4 and img.shape[0] == 1
         new_img = img.squeeze(0).cpu().numpy().transpose(1, 2, 0)
@@ -15,6 +28,7 @@ def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
 
 
 def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+    """Re-normalize the image."""
     img_norm_cfg = img_norm_cfg.copy()
     new_img_norm_cfg = new_img_norm_cfg.copy()
     for k, v in img_norm_cfg.items():
@@ -33,6 +47,17 @@ def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
 
 
 def track2result(bboxes, labels, ids, num_classes):
+    """Convert tracking results to a list of numpy arrays.
+
+    Args:
+        bboxes (torch.Tensor | np.ndarray): shape (n, 5)
+        labels (torch.Tensor | np.ndarray): shape (n, )
+        ids (torch.Tensor | np.ndarray): shape (n, )
+        num_classes (int): class number, including background class
+
+    Returns:
+        list(ndarray): tracking results of each class.
+    """
     valid_inds = ids > -1
     bboxes = bboxes[valid_inds]
     labels = labels[valid_inds]
@@ -52,6 +77,17 @@ def track2result(bboxes, labels, ids, num_classes):
 
 
 def restore_result(result, return_ids=False):
+    """Restore the results (list of results of each category) into the results
+    of the model forward.
+
+    Args:
+        result (list[ndarray]): shape (n, 5) or (n, 6)
+        return_ids (bool, optional): Whether the input has tracking
+            result. Default to False.
+
+    Returns:
+        tuple: tracking results of each class.
+    """
     labels = []
     for i, bbox in enumerate(result):
         labels.extend([i] * bbox.shape[0])
