@@ -24,11 +24,11 @@ def single_gpu_test(model,
             for now).  Defaults to False.
         out_dir (str): Path of directory to save the visualization results (Not
             supported for now). Defaults to None.
-        show_score_thr (float): The score threthold for visualization (Not
+        show_score_thr (float): The score threthold of visualization (Not
             supported for now). Defaults to 0.3.
 
     Returns:
-        dict[list]: The prediction results.
+        dict[str, list]: The prediction results.
     """
     model.eval()
     results = defaultdict(list)
@@ -68,7 +68,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
             Defaults to False.
 
     Returns:
-        dict[list]: The prediction results.
+        dict[str, list]: The prediction results.
     """
     model.eval()
     results = defaultdict(list)
@@ -109,7 +109,7 @@ def collect_results_cpu(result_part, tmpdir=None):
             to make a temporary path. Defaults to None.
 
     Returns:
-        dict[list]: The prediction results.
+        dict[str, list]: The prediction results.
     """
     rank, world_size = get_dist_info()
     # create a tmp dir if it is not specified

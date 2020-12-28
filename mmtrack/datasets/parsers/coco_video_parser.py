@@ -11,7 +11,7 @@ class CocoVID(COCO):
     Args:
         annotation_file (str): location of annotation file. Defaults to None.
         load_img_as_vid (bool): If True, convert image data to video data,
-            which means each image is a video. Defaults to False.
+            which means each image is converted to a video. Defaults to False.
     """
 
     def __init__(self, annotation_file=None, load_img_as_vid=False):
@@ -20,7 +20,7 @@ class CocoVID(COCO):
         super(CocoVID, self).__init__(annotation_file=annotation_file)
 
     def convert_img_to_vid(self, dataset):
-        """convert image data to video data."""
+        """Convert image data to video data."""
         if 'images' in self.dataset:
             videos = []
             for i, img in enumerate(self.dataset['images']):
@@ -88,14 +88,15 @@ class CocoVID(COCO):
         self.instancesToImgs = instancesToImgs
 
     def get_vid_ids(self, vidIds=[]):
-        """Get video ids that satisfy given filter conditions. Default return
-        all video ids.
+        """Get video ids that satisfy given filter conditions.
+
+        Default return all video ids.
 
         Args:
             vidIds (list[int]): The given video ids. Defaults to [].
 
         Returns:
-            list[int]: video ids.
+            list[int]: Video ids.
         """
         vidIds = vidIds if _isArrayLike(vidIds) else [vidIds]
 
@@ -113,7 +114,7 @@ class CocoVID(COCO):
             vidId (int): The given video id.
 
         Returns:
-            list[int]: image ids of given video id.
+            list[int]: Image ids of given video id.
         """
         img_infos = self.vidToImgs[vidId]
         ids = list(np.zeros([len(img_infos)], dtype=np.int))
@@ -128,7 +129,7 @@ class CocoVID(COCO):
             vidId (int): The given video id.
 
         Returns:
-            list[int]: instance ids of given video id.
+            list[int]: Instance ids of given video id.
         """
         return self.vidToInstances[vidId]
 
@@ -139,18 +140,20 @@ class CocoVID(COCO):
             insId (int): The given instance id.
 
         Returns:
-            list[int]: image ids of given instance id.
+            list[int]: Image ids of given instance id.
         """
         return self.instancesToImgs[insId]
 
     def load_vids(self, ids=[]):
-        """Get video info of given video ids. Default return all videos info.
+        """Get video information of given video ids.
+
+        Default return all videos information.
 
         Args:
             ids (list[int]): The given video ids. Defaults to [].
 
         Returns:
-            list[dict]: List of video info.
+            list[dict]: List of video information.
         """
         if _isArrayLike(ids):
             return [self.videos[id] for id in ids]

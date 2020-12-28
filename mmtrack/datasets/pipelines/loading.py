@@ -6,17 +6,23 @@ from mmtrack.core import restore_result
 
 @PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):
-    """Please refer to `mmdet.datasets.pipelines.loading.py:LoadImageFromFile`
-    for detailed docstring."""
+    """Load multi images from file.
+
+    Please refer to `mmdet.datasets.pipelines.loading.py:LoadImageFromFile`
+    for detailed docstring.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __call__(self, results):
-        """For each dict in results, call `LoadImageFromFile` to load image.
+        """Call function.
+
+        For each dict in `results`, call the call function of
+        `LoadImageFromFile` to load image.
 
         Args:
-            results (list[dict]): List of dict that from
+            results (list[dict]): List of dict from
                 :obj:`mmtrack.CocoVideoDataset`.
 
         Returns:
@@ -31,7 +37,9 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
 
 @PIPELINES.register_module()
 class SeqLoadAnnotations(LoadAnnotations):
-    """Please refer to `mmdet.datasets.pipelines.loading.py:LoadAnnotations`
+    """Sequence load annotations.
+
+    Please refer to `mmdet.datasets.pipelines.loading.py:LoadAnnotations`
     for detailed docstring.
 
     Args:
@@ -57,7 +65,10 @@ class SeqLoadAnnotations(LoadAnnotations):
         return results
 
     def __call__(self, results):
-        """For each dict in results, call `LoadAnnotations` to load annotation.
+        """Call function.
+
+        For each dict in results, call the call function of `LoadAnnotations`
+        to load annotation.
 
         Args:
             results (list[dict]): List of dict that from
@@ -65,7 +76,7 @@ class SeqLoadAnnotations(LoadAnnotations):
 
         Returns:
             list[dict]: List of dict that contains loaded annotations, such as
-                bounding box, label, instance ids, mask and semantic
+                bounding boxes, labels, instance ids, masks and semantic
                 segmentation annotations.
         """
         outs = []

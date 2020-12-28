@@ -8,8 +8,8 @@ from mmdet.datasets.pipelines import to_tensor
 class ConcatVideoReferences(object):
     """Concat video references.
 
-    Concat the input list of dict to one dict from 2-nd dict of the input list,
-    if the inputs have at least two dicts.
+    If the input list contains at least two dicts, concat the input list of
+    dict to one dict from 2-nd dict of the input list.
 
     Args:
         results (list[dict]): List of dict that contain keys such as 'img',
@@ -96,7 +96,7 @@ class MultiImagesToTensor(object):
 
         1. Transpose and convert image/multi-images to Tensor.
         2. Add prefix to every key in the second dict of the inputs. Then, add
-        these keys and corresponding values into the outputs.
+        these keys and corresponding values into the output dict.
 
         Args:
             results (list[dict]): List of two dicts.
@@ -120,12 +120,14 @@ class MultiImagesToTensor(object):
         return data
 
     def images_to_tensor(self, results):
-        """Transpose and Convert images to Tensor."""
+        """Transpose and convert images/multi-images to Tensor."""
         if 'img' in results:
             img = results['img']
             if len(img.shape) == 3:
+                # (H, W, 3) to (3, H, W)
                 img = np.ascontiguousarray(img.transpose(2, 0, 1))
             else:
+                # (H, W, 3, N) to (N, 3, H, W)
                 img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
             results['img'] = to_tensor(img)
         if 'proposals' in results:
@@ -140,36 +142,40 @@ class SeqDefaultFormatBundle(object):
     """Sequence Default formatting bundle.
 
     It simplifies the pipeline of formatting common fields, including "img",
-    "proposals", "gt_bboxes", "gt_labels", "gt_masks" and "gt_semantic_seg".
-    These fields are formatted as follows.
+    "img_metas", "proposals", "gt_bboxes", "gt_instance_ids",
+    "gt_match_indices", "gt_bboxes_ignore", "gt_labels", "gt_masks" and
+    "gt_semantic_seg". These fields are formatted as follows.
 
     - img: (1)transpose, (2)to tensor, (3)to DataContainer (stack=True)
+    - img_metas: (1)to DataContainer (cpu_only=True)
     - proposals: (1)to tensor, (2)to DataContainer
     - gt_bboxes: (1)to tensor, (2)to DataContainer
+    - gt_instance_ids: (1)to tensor, (2)to DataContainer
+    - gt_match_indices: (1)to tensor, (2)to DataContainer
     - gt_bboxes_ignore: (1)to tensor, (2)to DataContainer
     - gt_labels: (1)to tensor, (2)to DataContainer
-    - gt_masks: (1)to tensor, (2)to DataContainer (cpu_only=True)
+    - gt_masks: (1)to DataContainer (cpu_only=True)
     - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor, \
                        (3)to DataContainer (stack=True)
 
     Args:
-        ref_prefix (str): The prefix of key added to the second dict of inputs.
-            Defaults to 'ref'.
+        ref_prefix (str): The prefix of key added to the second dict of input
+            list. Defaults to 'ref'.
     """
 
     def __init__(self, ref_prefix='ref'):
         self.ref_prefix = ref_prefix
 
     def __call__(self, results):
-        """Sequence Default formatting bundle.
+        """Sequence Default formatting bundle call function.
 
         Args:
             results (list[dict]): List of two dicts.
 
         Returns:
             dict: The result dict contains the data that is formatted with
-                default bundle. Each key in the second dict of `results` adds
-                `self.ref_prefix` as prefix.
+                default bundle. Each key in the second dict of the input list
+                adds `self.ref_prefix` as prefix.
         """
         outs = []
         for _results in results:
@@ -184,7 +190,7 @@ class SeqDefaultFormatBundle(object):
         return data
 
     def default_format_bundle(self, results):
-        """Call function to transform and format common fields in results.
+        """Transform and format common fields in results.
 
         Args:
             results (dict): Result dict contains the data to convert.
@@ -231,7 +237,7 @@ class VideoCollect(object):
 
     Args:
         keys (Sequence[str]): Keys of results to be collected in ``data``.
-        meta_keys (Sequence[str], optional): Meta keys to be converted to
+        meta_keys (Sequence[str]): Meta keys to be converted to
             ``mmcv.DataContainer`` and collected in ``data[img_metas]``.
             Defaults to None.
         default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
@@ -258,8 +264,10 @@ class VideoCollect(object):
             self.meta_keys += meta_keys
 
     def __call__(self, results):
-        """Call function to collect keys in results. The keys in ``meta_keys``
-        and ``default_meta_keys`` will be converted to :obj:mmcv.DataContainer.
+        """Call function to collect keys in results.
+
+        The keys in ``meta_keys`` and ``default_meta_keys`` will be converted
+        to :obj:mmcv.DataContainer.
 
         Args:
             results (list[dict] | dict): List of dict or dict which contains
@@ -269,7 +277,7 @@ class VideoCollect(object):
             list[dict] | dict: List of dict or dict that contains the
                 following keys:
 
-                - keys in``self.keys``
+                - keys in ``self.keys``
                 - ``img_metas``
         """
         results_is_dict = isinstance(results, dict)
@@ -287,7 +295,7 @@ class VideoCollect(object):
         return outs[0] if results_is_dict else outs
 
     def _collect_meta_keys(self, results):
-        """Collect `self.keys` and `self.meta_keys` from results (dict)."""
+        """Collect `self.keys` and `self.meta_keys` from `results` (dict)."""
         data = {}
         img_meta = {}
         for key in self.meta_keys:

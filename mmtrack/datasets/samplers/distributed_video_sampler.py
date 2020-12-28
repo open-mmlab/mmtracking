@@ -3,7 +3,7 @@ from torch.utils.data import DistributedSampler as _DistributedSampler
 
 
 class DistributedVideoSampler(_DistributedSampler):
-    """Used to put videos to multi gpus during testing.
+    """Put videos to multi gpus during testing.
 
     Args:
         dataset (Dataset): Test dataset that must has `data_infos` attribute.
@@ -40,6 +40,6 @@ class DistributedVideoSampler(_DistributedSampler):
         ]
 
     def __iter__(self):
-        """Allocate videos to gpu."""
+        """Put videos to specify gpu."""
         indices = self.indices[self.rank]
         return iter(indices)

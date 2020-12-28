@@ -98,7 +98,9 @@ class SeqCropLikeSiamFC(object):
         return bbox
 
     def __call__(self, results):
-        """For each dict in results, crop image like SiamFC did.
+        """Call function.
+
+        For each dict in results, crop image like SiamFC did.
 
         Args:
             results (list[dict]): List of dict that from
@@ -153,7 +155,7 @@ class SeqShiftScaleAug(object):
         self.scale = scale
 
     def _shift_scale_aug(self, image, bbox, target_size, shift, scale):
-        """Shift and rescale an image and a bounding box.
+        """Shift and rescale an image and corresponding bounding box.
 
         Args:
             image (ndarray): of shape (H, W, 3). Typically H and W equal to
@@ -196,8 +198,10 @@ class SeqShiftScaleAug(object):
         return crop_img, bbox
 
     def __call__(self, results):
-        """For each dict in results, Shift and rescale the image and the
-        bounding box in the dict.
+        """Call function.
+
+        For each dict in results, shift and rescale the image and the bounding
+        box in the dict.
 
         Args:
             results (list[dict]): List of dict that from
@@ -227,7 +231,7 @@ class SeqShiftScaleAug(object):
 
 @PIPELINES.register_module()
 class SeqColorAug(object):
-    """Perform color augmention for images.
+    """Color augmention for images.
 
     Args:
         prob (list[float]): The probability to perform color augmention for
@@ -247,7 +251,9 @@ class SeqColorAug(object):
         self.rgb_var = np.array(rgb_var, dtype=np.float32)
 
     def __call__(self, results):
-        """For each dict in results, perform color augmention for image in the
+        """Call function.
+
+        For each dict in results, perform color augmention for image in the
         dict.
 
         Args:
@@ -275,7 +281,7 @@ class SeqColorAug(object):
 
 @PIPELINES.register_module()
 class SeqBlurAug(object):
-    """Perform blur augmention for images.
+    """Blur augmention for images.
 
     Args:
         prob (list[float]): The probability to perform blur augmention for
@@ -286,7 +292,9 @@ class SeqBlurAug(object):
         self.prob = prob
 
     def __call__(self, results):
-        """For each dict in results, perform blur augmention for image in the
+        """Call function.
+
+        For each dict in results, perform blur augmention for image in the
         dict.
 
         Args:
@@ -317,7 +325,9 @@ class SeqBlurAug(object):
 
 @PIPELINES.register_module()
 class SeqResize(Resize):
-    """Please refer to `mmdet.datasets.pipelines.transfroms.py:Resize` for
+    """Resize images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Resize` for
     detailed docstring.
 
     Args:
@@ -330,8 +340,10 @@ class SeqResize(Resize):
         self.share_params = share_params
 
     def __call__(self, results):
-        """For each dict in results, call `Resize` to resize image and
-        corresponding annotations.
+        """Call function.
+
+        For each dict in results, call the call function of `Resize` to resize
+        image and corresponding annotations.
 
         Args:
             results (list[dict]): List of dict that from
@@ -355,14 +367,20 @@ class SeqResize(Resize):
 
 @PIPELINES.register_module()
 class SeqNormalize(Normalize):
-    """Please refer to `mmdet.datasets.pipelines.transfroms.py:Normalize` for
-    detailed docstring."""
+    """Normalize images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Normalize` for
+    detailed docstring.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __call__(self, results):
-        """For each dict in results, call `Normalize` to normalize image.
+        """Call function.
+
+        For each dict in results, call the call function of `Normalize` to
+        normalize image.
 
         Args:
             results (list[dict]): List of dict that from
@@ -381,7 +399,9 @@ class SeqNormalize(Normalize):
 
 @PIPELINES.register_module()
 class SeqRandomFlip(RandomFlip):
-    """Please refer to `mmdet.datasets.pipelines.transfroms.py:RandomFlip` for
+    """Randomly flip for images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:RandomFlip` for
     detailed docstring.
 
     Args:
@@ -394,7 +414,9 @@ class SeqRandomFlip(RandomFlip):
         self.share_params = share_params
 
     def __call__(self, results):
-        """For each dict in results, call `RandomFlip` to randomly flip image.
+        """Call function.
+
+        For each dict in results, call `RandomFlip` to randomly flip image.
 
         Args:
             results (list[dict]): List of dict that from
@@ -439,14 +461,19 @@ class SeqRandomFlip(RandomFlip):
 
 @PIPELINES.register_module()
 class SeqPad(Pad):
-    """Please refer to `mmdet.datasets.pipelines.transfroms.py:Pad` for
-    detailed docstring."""
+    """Pad images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Pad` for detailed
+    docstring.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __call__(self, results):
-        """For each dict in results, call `Pad` to pad image.
+        """Call function.
+
+        For each dict in results, call the call function of `Pad` to pad image.
 
         Args:
             results (list[dict]): List of dict that from
