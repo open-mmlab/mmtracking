@@ -9,6 +9,18 @@ from mmtrack.core import crop_image
 
 @PIPELINES.register_module()
 class SeqCropLikeSiamFC(object):
+    """Crop images as SiamFC did.
+
+    The way of cropping an image is proposed in
+    "Fully-Convolutional Siamese Networks for Object Tracking."
+    `SiamFC <https://arxiv.org/abs/1606.09549>`_.
+
+    Args:
+        context_amount (float): The context amount around a bounding box.
+            Defaults to 0.5.
+        exemplar_size (int): Exemplar size. Defaults to 127.
+        crop_size (int): Crop size. Defaults to 511.
+    """
 
     def __init__(self, context_amount=0.5, exemplar_size=127, crop_size=511):
         self.context_amount = context_amount
@@ -21,6 +33,19 @@ class SeqCropLikeSiamFC(object):
                          context_amount=0.5,
                          exemplar_size=127,
                          crop_size=511):
+        """Crop an image as SiamFC did.
+
+        Args:
+            image (ndarray): of shape (H, W, 3).
+            bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            context_amount (float): The context amount around a bounding box.
+                Defaults to 0.5.
+            exemplar_size (int): Exemplar size. Defaults to 127.
+            crop_size (int): Crop size. Defaults to 511.
+
+        Returns:
+            ndarray: The cropped image of shape (crop_size, crop_size, 3).
+        """
         padding = np.mean(image, axis=(0, 1)).tolist()
 
         bbox = np.array([
@@ -44,6 +69,18 @@ class SeqCropLikeSiamFC(object):
         return x_crop_img
 
     def generate_box(self, image, gt_bbox, context_amount, exemplar_size):
+        """Generate box based on cropped image.
+
+        Args:
+            image (ndarray): The cropped image of shape
+                (self.crop_size, self.crop_size, 3).
+            gt_bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            context_amount (float): The context amount around a bounding box.
+            exemplar_size (int): Exemplar size. Defaults to 127.
+
+        Returns:
+            ndarray: Generated box of shape (4, ) in [x1, y1, x2, y2] format.
+        """
         img_h, img_w = image.shape[:2]
         w, h = gt_bbox[2] - gt_bbox[0], gt_bbox[3] - gt_bbox[1]
 
@@ -61,6 +98,18 @@ class SeqCropLikeSiamFC(object):
         return bbox
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, crop image like SiamFC did.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains cropped image and
+                corresponding ground truth box.
+        """
         outs = []
         for _results in results:
             image = _results['img']
@@ -86,6 +135,16 @@ class SeqCropLikeSiamFC(object):
 
 @PIPELINES.register_module()
 class SeqShiftScaleAug(object):
+    """Shift and rescale images and bounding boxes.
+
+    Args:
+        target_size (list[int]): list of int denoting exemplar size and search
+            size, respectively. Defaults to [127, 255].
+        shift (list[int]): list of int denoting the max shift offset. Defaults
+            to [4, 64].
+        scale (list[float]): list of float denoting the max rescale factor.
+            Defaults to [0.05, 0.18].
+    """
 
     def __init__(self,
                  target_size=[127, 255],
@@ -96,6 +155,21 @@ class SeqShiftScaleAug(object):
         self.scale = scale
 
     def _shift_scale_aug(self, image, bbox, target_size, shift, scale):
+        """Shift and rescale an image and corresponding bounding box.
+
+        Args:
+            image (ndarray): of shape (H, W, 3). Typically H and W equal to
+                511.
+            bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            target_size (int): Exemplar size or search size.
+            shift (int): The max shift offset.
+            scale (float): The max rescale factor.
+
+        Returns:
+            tuple(crop_img, bbox): crop_img is a ndarray of shape
+                (target_size, target_size, 3), bbox is the corrsponding ground
+                truth box in [x1, y1, x2, y2] format.
+        """
         img_h, img_w = image.shape[:2]
 
         scale_x = (2 * np.random.random() - 1) * scale + 1
@@ -124,6 +198,19 @@ class SeqShiftScaleAug(object):
         return crop_img, bbox
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, shift and rescale the image and the bounding
+        box in the dict.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains cropped image and
+                corresponding ground truth box.
+        """
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
@@ -144,6 +231,16 @@ class SeqShiftScaleAug(object):
 
 @PIPELINES.register_module()
 class SeqColorAug(object):
+    """Color augmention for images.
+
+    Args:
+        prob (list[float]): The probability to perform color augmention for
+            each image. Defaults to [1.0, 1.0].
+        rgb_var (list[list]]): The values of color augmentaion. Defaults to
+            [[-0.55919361, 0.98062831, -0.41940627],
+            [1.72091413, 0.19879334, -1.82968581],
+            [4.64467907, 4.73710203, 4.88324118]].
+    """
 
     def __init__(self,
                  prob=[1.0, 1.0],
@@ -154,6 +251,18 @@ class SeqColorAug(object):
         self.rgb_var = np.array(rgb_var, dtype=np.float32)
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, perform color augmention for image in the
+        dict.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains augmented color image.
+        """
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
@@ -172,11 +281,29 @@ class SeqColorAug(object):
 
 @PIPELINES.register_module()
 class SeqBlurAug(object):
+    """Blur augmention for images.
+
+    Args:
+        prob (list[float]): The probability to perform blur augmention for
+            each image. Defaults to [0.0, 0.2].
+    """
 
     def __init__(self, prob=[0.0, 0.2]):
         self.prob = prob
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, perform blur augmention for image in the
+        dict.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains augmented blur image.
+        """
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
@@ -198,12 +325,35 @@ class SeqBlurAug(object):
 
 @PIPELINES.register_module()
 class SeqResize(Resize):
+    """Resize images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Resize` for
+    detailed docstring.
+
+    Args:
+        share_params (bool): If True, share the resize parameters for all
+            images. Defaults to True.
+    """
 
     def __init__(self, share_params=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.share_params = share_params
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, call the call function of `Resize` to resize
+        image and corresponding annotations.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains resized results,
+                'img_shape', 'pad_shape', 'scale_factor', 'keep_ratio' keys
+                are added into result dict.
+        """
         outs, scale = [], None
         for i, _results in enumerate(results):
             if self.share_params and i > 0:
@@ -217,11 +367,29 @@ class SeqResize(Resize):
 
 @PIPELINES.register_module()
 class SeqNormalize(Normalize):
+    """Normalize images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Normalize` for
+    detailed docstring.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, call the call function of `Normalize` to
+        normalize image.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains normalized results,
+            'img_norm_cfg' key is added into result dict.
+        """
         outs = []
         for _results in results:
             _results = super().__call__(_results)
@@ -231,12 +399,33 @@ class SeqNormalize(Normalize):
 
 @PIPELINES.register_module()
 class SeqRandomFlip(RandomFlip):
+    """Randomly flip for images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:RandomFlip` for
+    detailed docstring.
+
+    Args:
+        share_params (bool): If True, share the flip parameters for all images.
+            Defaults to True.
+    """
 
     def __init__(self, share_params, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.share_params = share_params
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, call `RandomFlip` to randomly flip image.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains flipped results, 'flip',
+                'flip_direction' keys are added into the dict.
+        """
         if self.share_params:
             if isinstance(self.direction, list):
                 # None means non-flip
@@ -272,11 +461,29 @@ class SeqRandomFlip(RandomFlip):
 
 @PIPELINES.register_module()
 class SeqPad(Pad):
+    """Pad images.
+
+    Please refer to `mmdet.datasets.pipelines.transfroms.py:Pad` for detailed
+    docstring.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __call__(self, results):
+        """Call function.
+
+        For each dict in results, call the call function of `Pad` to pad image.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains padding results,
+                'pad_shape', 'pad_fixed_size' and 'pad_size_divisor' keys are
+                added into the dict.
+        """
         outs = []
         for _results in results:
             _results = super().__call__(_results)

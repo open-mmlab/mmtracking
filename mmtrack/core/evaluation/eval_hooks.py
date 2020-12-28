@@ -5,6 +5,8 @@ from mmdet.core import EvalHook as _EvalHook
 
 
 class EvalHook(_EvalHook):
+    """Please refer to `mmdet.core.evaluation.eval_hooks.py:EvalHook` for
+    detailed docstring."""
 
     def after_train_epoch(self, runner):
         if not self.evaluation_flag(runner):
@@ -18,6 +20,8 @@ class EvalHook(_EvalHook):
 
 
 class DistEvalHook(_DistEvalHook):
+    """Please refer to `mmdet.core.evaluation.eval_hooks.py:DistEvalHook` for
+    detailed docstring."""
 
     def after_train_epoch(self, runner):
         if not self.evaluation_flag(runner):

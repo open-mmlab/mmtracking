@@ -46,6 +46,23 @@ def parse_args():
 
 def parse_xml(img_name, xml_path, is_vid_train_frame, records, DET,
               obj_num_classes):
+    """Parse xml annotations and record them.
+
+    Args:
+        img_name (str): image file path.
+        xml_path (str): annotation file path.
+        is_vid_train_frame (bool): If True, the image is used for the training
+            of video object detection task, otherwise, not used.
+        records (dict): The record information like image id, annotation id.
+        DET (dict): The converted COCO style annotations.
+        obj_num_classes (dict): The number of objects per class.
+
+    Returns:
+        tuple: (records, DET, obj_num_classes), records is the updated record
+            information like image id, annotation id, DET is the updated
+            COCO style annotations, obj_num_classes is the updated number of
+            objects per class.
+    """
     tree = ET.parse(xml_path)
     root = tree.getroot()
     size = root.find('size')
@@ -100,6 +117,13 @@ def parse_xml(img_name, xml_path, is_vid_train_frame, records, DET,
 
 
 def convert_det(DET, ann_dir, save_dir):
+    """Convert ImageNet DET dataset in COCO style.
+
+    Args:
+        DET (dict): The converted COCO style annotations.
+        ann_dir (str): The path of ImageNet DET dataset
+        save_dir (str): The path to save `DET`.
+    """
     dataset_sets = ('train/ILSVRC2013_train', 'train/ILSVRC2014_train_0000',
                     'train/ILSVRC2014_train_0001',
                     'train/ILSVRC2014_train_0002',

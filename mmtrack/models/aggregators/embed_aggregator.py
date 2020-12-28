@@ -7,6 +7,20 @@ from ..builder import AGGREGATORS
 
 @AGGREGATORS.register_module()
 class EmbedAggregator(nn.Module):
+    """Embedding convs to aggregate multi feature maps.
+
+    This module is proposed in "Flow-Guided Feature Aggregation for Video
+    Object Detection". `FGFA <https://arxiv.org/abs/1703.10025>`_.
+
+    Args:
+        num_convs (int): Number of embedding convs.
+        channels (int): Channels of embedding convs. Defaults to 256.
+        kernel_size (int): Kernel size of embedding convs, Defaults to 3.
+        norm_cfg (dict): Configuration of normlization method after each
+            conv. Defaults to None.
+        act_cfg (dict): Configuration of activation method after each
+            conv. Defaults to dict(type='ReLU').
+    """
 
     def __init__(self,
                  num_convs=1,
@@ -34,6 +48,21 @@ class EmbedAggregator(nn.Module):
                     act_cfg=new_act_cfg))
 
     def forward(self, x, ref_x):
+        """Aggregate reference feature maps `ref_x`.
+
+        The aggregation mainly contains two steps:
+        1. Computing the cos similarity between `x` and `ref_x`.
+        2. Use the normlized (i.e. softmax) cos similarity to weightedly sum
+        `ref_x`.
+
+        Args:
+            x (Tensor): of shape [1, C, H, W]
+            ref_x (Tensor): of shape [N, C, H, W]. N is the number of reference
+                feature maps.
+
+        Returns:
+            Tensor: The aggregated feature map with shape [1, C, H, W].
+        """
         assert len(x.shape) == 4 and len(x) == 1, \
             "Only support 'batch_size == 1' for x"
         x_embed = x

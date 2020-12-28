@@ -6,6 +6,14 @@ from mmtrack.models import build_aggregator
 
 @HEADS.register_module()
 class SelsaBBoxHead(ConvFCBBoxHead):
+    """Selsa bbox head.
+
+    This module is proposed in "Sequence Level Semantics Aggregation for Video
+    Object Detection". `SELSA <https://arxiv.org/abs/1907.06390>`_.
+
+    Args:
+        aggregator (dict): Configuration of aggregator.
+    """
 
     def __init__(self, aggregator, *args, **kwargs):
         super(SelsaBBoxHead, self).__init__(*args, **kwargs)
@@ -15,6 +23,19 @@ class SelsaBBoxHead(ConvFCBBoxHead):
         self.inplace_false_relu = nn.ReLU(inplace=False)
 
     def forward(self, x, ref_x):
+        """Computing the `cls_score` and `bbox_pred` of the features `x` of key
+        frame proposals.
+
+        Args:
+            x (Tensor): of shape [N, C, H, W]. N is the number of key frame
+                proposals.
+            ref_x (Tensor): of shape [M, C, H, W]. M is the number of reference
+                frame proposals.
+
+        Returns:
+            tuple(cls_score, bbox_pred): The predicted score of classes and
+                the predicted regression offsets.
+        """
         # shared part
         if self.num_shared_convs > 0:
             for conv in self.shared_convs:
