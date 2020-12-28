@@ -1,4 +1,4 @@
-dotted
+dotted_dict
 matplotlib
 mmcls
 mmpycocotools
