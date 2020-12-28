@@ -3,10 +3,12 @@ _base_ = [
     '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 model = dict(
-    type='SORT',
+    type='DeepSORT',
     pretrains=dict(
         detector=  # noqa: E251
         'https://download.openmmlab.com/mmtracking/v0.5/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth',  # noqa: E501
+        reid=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/v0.5/tracktor_reid_r50_iter25245-a452f51f.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
@@ -14,21 +16,35 @@ model = dict(
             bbox_head=dict(bbox_coder=dict(
                 clip_border=False), num_classes=1))),
     motion=dict(type='KalmanFilter', center_only=False),
+    reid=dict(
+        type='BaseReID',
+        backbone=dict(
+            type='ResNet',
+            depth=50,
+            num_stages=4,
+            out_indices=(3, ),
+            style='pytorch'),
+        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
+        head=dict(
+            type='LinearReIDHead',
+            num_fcs=1,
+            in_channels=2048,
+            fc_channels=1024,
+            out_channels=128,
+            norm_cfg=dict(type='BN1d'),
+            act_cfg=dict(type='ReLU'))),
     tracker=dict(
         type='SortTracker',
-        obj_score_thr=0.3,
+        obj_score_thr=0.5,
         reid=dict(
-            num_samples=100,
+            num_samples=10,
             img_scale=(256, 128),
             img_norm_cfg=None,
             match_score_thr=2.0),
-        match_iou_thr=0.7,
+        match_iou_thr=0.5,
         momentums=None,
         num_tentatives=2,
-        num_frames_retain=70))
-data = dict(samples_per_gpu=1, workers_per_gpu=1)
-# optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+        num_frames_retain=100))
 # learning policy
 lr_config = dict(
     policy='step',
@@ -39,5 +55,4 @@ lr_config = dict(
 # runtime settings
 total_epochs = 4
 evaluation = dict(metric=['bbox', 'track'], interval=1)
-log_config = dict(interval=50)
 search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']

@@ -13,11 +13,7 @@ class SortTracker(BaseTracker):
 
     def __init__(self,
                  obj_score_thr=0.3,
-                 reid=dict(
-                     num_samples=100,
-                     img_scale=(256, 128),
-                     img_norm_cfg=None,
-                     match_score_thr=2.0),
+                 reid=None,
                  match_iou_thr=0.7,
                  num_tentatives=3,
                  **kwargs):
@@ -82,7 +78,10 @@ class SortTracker(BaseTracker):
               frame_id,
               rescale=False,
               **kwargs):
-        if model.with_reid:
+        if not hasattr(self, 'kf'):
+            self.kf = model.motion
+
+        if self.with_reid:
             if self.reid.get('img_norm_cfg', False):
                 reid_img = imrenormalize(img, img_metas[0]['img_norm_cfg'],
                                          self.reid['img_norm_cfg'])
@@ -100,7 +99,7 @@ class SortTracker(BaseTracker):
                 self.num_tracks + num_new_tracks,
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
-            if model.with_reid:
+            if self.with_reid:
                 embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
@@ -113,7 +112,7 @@ class SortTracker(BaseTracker):
                     self.tracks, self.xyxy2xyah(bboxes))
 
             active_ids = self.confirmed_ids
-            if model.with_reid:
+            if self.with_reid:
                 embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
@@ -166,7 +165,7 @@ class SortTracker(BaseTracker):
             bboxes=bboxes[:, :4],
             scores=bboxes[:, -1],
             labels=labels,
-            embeds=embeds if model.with_reid else None,
+            embeds=embeds if self.with_reid else None,
             frame_ids=frame_id)
 
         return bboxes, labels, ids

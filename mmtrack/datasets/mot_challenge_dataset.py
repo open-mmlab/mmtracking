@@ -120,7 +120,7 @@ class MOTChallengeDataset(CocoVideoDataset):
 
         return ann
 
-    def format_results(self, results, resfile_path=None, metrics=None):
+    def format_results(self, results, resfile_path=None, metrics=['track']):
         assert isinstance(results, dict), 'results must be a dict.'
         if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
