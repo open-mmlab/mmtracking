@@ -16,12 +16,7 @@ class TracktorTracker(BaseTracker):
                      obj_score_thr=0.5,
                      nms=dict(type='nms', iou_threshold=0.6),
                      match_iou_thr=0.3),
-                 reid=dict(
-                     num_samples=10,
-                     img_scale=(256, 128),
-                     img_norm_cfg=None,
-                     match_score_thr=2.0,
-                     match_iou_thr=0.2),
+                 reid=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.obj_score_thr = obj_score_thr
@@ -59,7 +54,7 @@ class TracktorTracker(BaseTracker):
               frame_id,
               rescale=False,
               **kwargs):
-        if model.with_reid:
+        if self.with_reid:
             if self.reid.get('img_norm_cfg', False):
                 reid_img = imrenormalize(img, img_metas[0]['img_norm_cfg'],
                                          self.reid['img_norm_cfg'])
@@ -77,7 +72,7 @@ class TracktorTracker(BaseTracker):
                 self.num_tracks + num_new_tracks,
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
-            if model.with_reid:
+            if self.with_reid:
                 embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
@@ -105,7 +100,7 @@ class TracktorTracker(BaseTracker):
             labels = labels[valid_inds]
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
 
-            if model.with_reid:
+            if self.with_reid:
                 prop_embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas,
                                    prop_bboxes[:, :4].clone(), rescale))
@@ -153,7 +148,7 @@ class TracktorTracker(BaseTracker):
             bboxes = torch.cat((prop_bboxes, bboxes), dim=0)
             labels = torch.cat((prop_labels, labels), dim=0)
             ids = torch.cat((prop_ids, ids), dim=0)
-            if model.with_reid:
+            if self.with_reid:
                 embeds = torch.cat((prop_embeds, embeds), dim=0)
 
         self.update(
@@ -161,7 +156,7 @@ class TracktorTracker(BaseTracker):
             bboxes=bboxes[:, :4],
             scores=bboxes[:, -1],
             labels=labels,
-            embeds=embeds if model.with_reid else None,
+            embeds=embeds if self.with_reid else None,
             frame_ids=frame_id)
         self.last_img = img
         return bboxes, labels, ids

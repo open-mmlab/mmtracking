@@ -1,14 +1,18 @@
 import argparse
 import os
+from itertools import product
 
 import mmcv
 import torch
-from mmcv import Config, DictAction
+from dotty_dict import dotty
+from mmcv import Config, DictAction, get_logger, print_log
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 from mmdet.core import wrap_fp16_model
 from mmdet.datasets import build_dataset
+
+from mmtrack.models import build_tracker
 
 
 def parse_args():
@@ -16,6 +20,7 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
+    parser.add_argument('--log', help='log file')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -63,7 +68,25 @@ def parse_args():
     return args
 
 
+def get_search_params(cfg, search_params=None, prefix=None, logger=None):
+    if search_params is None:
+        search_params = dict()
+    for k, v in cfg.items():
+        if prefix is not None:
+            entire_k = prefix + '.' + k
+        else:
+            entire_k = k
+        if isinstance(v, list):
+            print_log(f'search `{entire_k}` in {v}.', logger)
+            search_params[entire_k] = v
+        if isinstance(v, dict):
+            search_params = get_search_params(v, search_params, entire_k,
+                                              logger)
+    return search_params
+
+
 def main():
+
     args = parse_args()
 
     assert args.out or args.eval or args.format_only or args.show \
@@ -81,12 +104,12 @@ def main():
     cfg = Config.fromfile(args.config)
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
-        from mmdet.datasets import build_dataloader
         from mmdet.models import build_detector as build_model
+        from mmdet.datasets import build_dataloader
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.datasets import build_dataloader
         from mmtrack.models import build_model
+        from mmtrack.datasets import build_dataloader
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
@@ -113,6 +136,20 @@ def main():
         dist=distributed,
         shuffle=False)
 
+    logger = get_logger('ParamsSearcher', log_file=args.log)
+    # get all cases
+    search_params = get_search_params(cfg.model.tracker, logger=logger)
+    combinations = [p for p in product(*search_params.values())]
+    search_cfgs = []
+    for c in combinations:
+        search_cfg = dotty(cfg.model.tracker.copy())
+        for i, k in enumerate(search_params.keys()):
+            search_cfg[k] = c[i]
+        search_cfgs.append(dict(search_cfg))
+    print_log(f'Totally {len(search_cfgs)} cases.', logger)
+    # init with the first one
+    cfg.model.tracker = search_cfgs[0].copy()
+
     # build the model and load checkpoint
     if cfg.get('test_cfg', False):
         model = build_model(
@@ -122,6 +159,7 @@ def main():
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
+
     if args.checkpoint is not None:
         checkpoint = load_checkpoint(
             model, args.checkpoint, map_location='cpu')
@@ -135,31 +173,44 @@ def main():
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
-        outputs = multi_gpu_test(model, data_loader, args.tmpdir,
-                                 args.gpu_collect)
 
-    rank, _ = get_dist_info()
-    if rank == 0:
-        if args.out:
-            print(f'\nwriting results to {args.out}')
-            mmcv.dump(outputs, args.out)
-        kwargs = {} if args.eval_options is None else args.eval_options
-        if args.format_only:
-            dataset.format_results(outputs, **kwargs)
-        if args.eval:
-            eval_kwargs = cfg.get('evaluation', {}).copy()
-            # hard-code way to remove EvalHook args
-            for key in ['interval', 'tmpdir', 'start', 'gpu_collect']:
-                eval_kwargs.pop(key, None)
-            eval_kwargs.update(dict(metric=args.eval, **kwargs))
-            print(dataset.evaluate(outputs, **eval_kwargs))
+    print_log(f'Record {cfg.search_metrics}.', logger)
+    for i, search_cfg in enumerate(search_cfgs):
+        if not distributed:
+            model.tracker = build_tracker(search_cfg)
+            outputs = single_gpu_test(model, data_loader, args.show,
+                                      args.show_dir, args.show_score_thr)
+        else:
+            model.module.tracker = build_tracker(search_cfg)
+            outputs = multi_gpu_test(model, data_loader, args.tmpdir,
+                                     args.gpu_collect)
+        rank, _ = get_dist_info()
+        if rank == 0:
+            if args.out:
+                print(f'\nwriting results to {args.out}')
+                mmcv.dump(outputs, args.out)
+            kwargs = {} if args.eval_options is None else args.eval_options
+            if args.format_only:
+                dataset.format_results(outputs, **kwargs)
+            if args.eval:
+                eval_kwargs = cfg.get('evaluation', {}).copy()
+                # hard-code way to remove EvalHook args
+                for key in ['interval', 'tmpdir', 'start', 'gpu_collect']:
+                    eval_kwargs.pop(key, None)
+                eval_kwargs.update(dict(metric=args.eval, **kwargs))
+                results = dataset.evaluate(outputs, **eval_kwargs)
+                _records = []
+                for k in cfg.search_metrics:
+                    if isinstance(results[k], float):
+                        _records.append(f'{(results[k]):.3f}')
+                    else:
+                        _records.append(f'{(results[k])}')
+                print_log(f'{combinations[i]}: {_records}', logger)
 
 
 if __name__ == '__main__':

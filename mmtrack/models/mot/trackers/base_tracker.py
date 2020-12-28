@@ -31,6 +31,11 @@ class BaseTracker(metaclass=ABCMeta):
     def ids(self):
         return list(self.tracks.keys())
 
+    @property
+    def with_reid(self):
+        """bool: whether the framework has a reid model"""
+        return hasattr(self, 'reid') and self.reid is not None
+
     def update(self, **kwargs):
         memo_items = [k for k, v in kwargs.items() if v is not None]
         rm_items = [k for k in kwargs.keys() if k not in memo_items]

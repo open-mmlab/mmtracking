@@ -7,7 +7,7 @@ from .base import BaseMultiObjectTracker
 
 
 @MODELS.register_module()
-class SORT(BaseMultiObjectTracker):
+class DeepSORT(BaseMultiObjectTracker):
 
     def __init__(self,
                  detector=None,
@@ -22,12 +22,11 @@ class SORT(BaseMultiObjectTracker):
         if reid is not None:
             self.reid = build_reid(reid)
 
-        if tracker is not None:
-            self.tracker = build_tracker(tracker)
-
         if motion is not None:
             self.motion = build_motion(motion)
-            self.tracker.kf = self.motion
+
+        if tracker is not None:
+            self.tracker = build_tracker(tracker)
 
         self.init_weights(pretrains)
 

@@ -1,3 +1,4 @@
+dotty_dict
 matplotlib
 mmcls
 mmpycocotools

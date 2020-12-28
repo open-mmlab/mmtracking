@@ -54,9 +54,13 @@ def build_aggregator(cfg):
     return build(cfg, AGGREGATORS)
 
 
-def build_detector(cfg):
+def build_detector(cfg, train_cfg=None, test_cfg=None):
     """Build detector."""
-    return build(cfg, DETECTORS)
+    if train_cfg is None and test_cfg is None:
+        return build(cfg, DETECTORS)
+    else:
+        return build(cfg, DETECTORS,
+                     dict(train_cfg=train_cfg, test_cfg=test_cfg))
 
 
 def build_model(cfg, train_cfg=None, test_cfg=None):
