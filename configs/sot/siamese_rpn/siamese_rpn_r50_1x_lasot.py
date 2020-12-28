@@ -179,7 +179,7 @@ lr_config = dict(
     ])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
-evaluation = dict(interval=20)
+evaluation = dict(metric=['track'], interval=20)
 # yapf:disable
 log_config = dict(
     interval=50,
