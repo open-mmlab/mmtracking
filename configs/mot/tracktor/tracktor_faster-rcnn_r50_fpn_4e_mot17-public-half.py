@@ -2,10 +2,10 @@ _base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 model = dict(
     tracker=dict(
         type='TracktorTracker',
-        obj_score_thr=[0.5, 0.6, 0.7],
+        obj_score_thr=0.5,
         regression=dict(
-            obj_score_thr=[0.5, 0.6, 0.7],
-            nms=dict(type='nms', iou_threshold=[0.5, 0.6, 0.7]),
+            obj_score_thr=0.5,
+            nms=dict(type='nms', iou_threshold=0.6),
             match_iou_thr=0.3),
         reid=dict(
             num_samples=10,
