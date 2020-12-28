@@ -8,10 +8,10 @@ class SiameseRPNOptimizerHook(OptimizerHook):
 
     Args:
         backbone_start_train_epoch (int): Start to train the backbone at
-            `backbone_start_train_epoch`-th epoch. Note the epoch in the class
-            counts from 0, while the epoch in the log counts from 1.
-        backbone_train_layers (list(str)): List of str denoting the stages in
-            backbone needed be trained.
+            `backbone_start_train_epoch`-th epoch. Note the epoch in this
+            class counts from 0, while the epoch in the log file counts from 1.
+        backbone_train_layers (list(str)): List of str denoting the stages
+            needed be trained in backbone.
     """
 
     def __init__(self, backbone_start_train_epoch, backbone_train_layers,

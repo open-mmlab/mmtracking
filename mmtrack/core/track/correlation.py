@@ -4,7 +4,8 @@ import torch.nn.functional as F
 def depthwise_correlation(x, kernel):
     """Depthwise cross correlation.
 
-    This module is proposed in `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_.
+    This function is proposed in
+    `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_.
 
     Args:
         x (Tensor): of shape (N, C, H_x, W_x).

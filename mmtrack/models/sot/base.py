@@ -13,7 +13,7 @@ from mmtrack.utils import get_root_logger
 
 
 class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
-    """Base class for single object trackers."""
+    """Base class for single object tracker."""
 
     def __init__(self):
         super(BaseSingleObjectTracker, self).__init__()
@@ -73,10 +73,10 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             img (Tensor): of shape (N, C, H, W) encoding input images.
                 Typically these should be mean centered and std scaled.
 
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
         """
         pass

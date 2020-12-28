@@ -219,16 +219,16 @@ class SOTResLayer(nn.Sequential):
     """SOTResLayer to build ResNet style backbone for SOT.
 
     Args:
-        block (nn.Module): block used to build SOTResLayer.
-        inplanes (int): inplanes of block.
-        planes (int): planes of block.
-        num_blocks (int): number of blocks.
-        stride (int): stride of the first block. Default: 1
+        block (nn.Module): Block used to build SOTResLayer.
+        inplanes (int): Inplanes of block.
+        planes (int): Planes of block.
+        num_blocks (int): Number of blocks.
+        stride (int): Stride of the first block. Default: 1
         avg_down (bool): Use AvgPool instead of stride conv when
             downsampling in the bottleneck. Default: False
-        conv_cfg (dict): dictionary to construct and config conv layer.
+        conv_cfg (dict): Dictionary to construct and config conv layer.
             Default: None
-        norm_cfg (dict): dictionary to construct and config norm layer.
+        norm_cfg (dict): Dictionary to construct and config norm layer.
             Default: dict(type='BN')
         downsample_first (bool): Downsample at the first block or last block.
             False for Hourglass, True for ResNet. Default: True

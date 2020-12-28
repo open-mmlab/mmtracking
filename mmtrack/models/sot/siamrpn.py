@@ -41,7 +41,7 @@ class SiamRPN(BaseSingleObjectTracker):
             self.freeze_module(frozen_modules)
 
     def init_weights(self, pretrain):
-        """Initialize the weights of modules in video detector.
+        """Initialize the weights of modules in single object tracker.
 
         Args:
             pretrained (dict): Path to pre-trained weights.
@@ -67,10 +67,10 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             z_img (Tensor): of shape (N, C, H, W) encoding input exemplar
-                images. Typically `H` and `W` equal to 127.
+                images. Typically H and W equal to 127.
 
         Returns:
-            tuple(Tensor): Each level feature map of exemplar images.
+            tuple(Tensor): Multi level feature map of exemplar images.
         """
         z_feat = self.backbone(z_img)
         if self.with_neck:
@@ -91,7 +91,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 images. Typically H and W equal to 255.
 
         Returns:
-            tuple(Tensor): Each level feature map of search images.
+            tuple(Tensor): Multi level feature map of search images.
         """
         x_feat = self.backbone(x_img)
         if self.with_neck:
@@ -100,7 +100,9 @@ class SiamRPN(BaseSingleObjectTracker):
 
     def get_cropped_img(self, img, center_xy, target_size, crop_size,
                         avg_channel):
-        """Crop image. Only used during testing.
+        """Crop image.
+
+        Only used during testing.
 
         This function mainly contains two steps:
         1. Crop `img` based on center `center_xy` and size `crop_size`. If the
@@ -109,11 +111,11 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
-                images.
+                image.
             center_xy (Tensor): of shape (2, ) denoting the center point for
                 cropping image.
             target_size (int): The output size of cropped image.
-            crop_size (Tensor): The size of cropping image.
+            crop_size (Tensor): The size for cropping image.
             avg_channel (Tensor): of shape (3, ) denoting the padding values.
 
         Returns:
@@ -163,7 +165,7 @@ class SiamRPN(BaseSingleObjectTracker):
         return crop_img
 
     def _bbox_clip(self, bbox, img_h, img_w):
-        """Clip the bbox in [cx, cy, w, h] format."""
+        """Clip the bbox with [cx, cy, w, h] format."""
         bbox[0] = bbox[0].clamp(0., img_w)
         bbox[1] = bbox[1].clamp(0., img_h)
         bbox[2] = bbox[2].clamp(10., img_w)
@@ -175,15 +177,16 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
-                images.
+                image.
             bbox (Tensor): The given instance bbox of first frame that need be
                 tracked in the following frames. The shape of the box is (4, )
                 with [cx, cy, w, h] format.
 
         Returns:
             tuple(z_feat, avg_channel): z_feat is a tuple[Tensor] that
-                contains the feature maps of exemplar image, avg_channel is
-                Tensor ope (3, ) denoting the padding values.
+                contains the multi level feature maps of exemplar image,
+                avg_channel is Tensor with shape (3, ), and denotes the padding
+                values.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
@@ -200,18 +203,18 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
-                images.
+                image.
             bbox (Tensor): The bbox in previous frame. The shape of the box is
-                (4, ) with [cx, cy, w, h] format.
-            z_feat (tuple[Tensor]): The feature maps of exemplar image from
-                the first frame.
+                (4, ) in [cx, cy, w, h] format.
+            z_feat (tuple[Tensor]): The multi level feature maps of exemplar
+                image in the first frame.
             avg_channel (Tensor): of shape (3, ) denoting the padding values.
 
         Returns:
             tuple(best_score, best_bbox): best_score is a Tensor denoting the
-                score of `best_bbox`, best_bbox is a Tensor of shape (4, )
-                with [cx, cy, w, h] format, which denotes the best tracked
-                bbox in current frame.
+                score of best_bbox, best_bbox is a Tensor of shape (4, ) in
+                [cx, cy, w, h] format, and denotes the best tracked bbox in
+                current frame.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
@@ -237,11 +240,11 @@ class SiamRPN(BaseSingleObjectTracker):
         """Test without augmentation.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding input images.
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
+            img (Tensor): of shape (1, C, H, W) encoding input image.
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
             gt_bboxes (list[Tensor]): list of ground truth bboxes for each
                 image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
@@ -280,26 +283,26 @@ class SiamRPN(BaseSingleObjectTracker):
                       **kwargs):
         """
         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
+            img (Tensor): of shape (N, C, H, W) encoding input exemplar images.
                 Typically H and W equal to 127.
 
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
-                shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
+            gt_bboxes (list[Tensor]): Ground truth bboxes for each exemplar
+                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
 
-            search_img (Tensor): of shape (N, 1, C, H, W) encoding input
-                images. 1 denotes there is only one search image for each img.
-                Typically H and W equal to 255.
+            search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
+                images. 1 denotes there is only one search image for each
+                exemplar image. Typically H and W equal to 255.
 
             search_img_metas (list[list[dict]]): The second list only has one
-                element. The first list contains search image info dict where
-                each dict has: 'img_shape', 'scale_factor', 'flip', and may
-                also contain 'filename', 'ori_shape', 'pad_shape', and
+                element. The first list contains search image information dict
+                where each dict has: 'img_shape', 'scale_factor', 'flip', and
+                may also contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
@@ -308,7 +311,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 format.
 
             is_positive_pairs (list[bool]): list of bool denoting whether each
-                `img` and corresponding `search_img` is positive pair.
+                exemplar image and corresponding seach image is positive pair.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.

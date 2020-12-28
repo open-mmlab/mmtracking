@@ -19,12 +19,12 @@ class LaSOTDataset(CocoVideoDataset):
         super().__init__(*args, **kwargs)
 
     def _parse_ann_info(self, img_info, ann_info):
-        """Parse bbox annotation.
+        """Parse bbox annotations.
 
         Args:
-            img_info (dict): image info.
-            ann_info (list[dict]): Annotation info of an image. Each image
-                only has one bbox annotation.
+            img_info (dict): image information.
+            ann_info (list[dict]): Annotation information of an image. Each
+                image only has one bbox annotation.
 
         Returns:
             dict: A dict containing the following keys: bboxes, labels,

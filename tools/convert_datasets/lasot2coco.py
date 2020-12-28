@@ -23,12 +23,12 @@ def parse_args():
 
 
 def convert_lasot_test(lasot_test, ann_dir, save_dir):
-    """convert lasot dataset in COCO style.
+    """Convert lasot dataset to COCO style.
 
     Args:
         lasot_test (dict): The converted COCO style annotations.
         ann_dir (str): The path of lasot test dataset
-        save_dir (str): The path of saving lasot_test.
+        save_dir (str): The path to save `lasot_test`.
     """
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     videos_list = osp.join(ann_dir, 'testing_set.txt')

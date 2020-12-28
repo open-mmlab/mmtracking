@@ -76,7 +76,7 @@ class CorrelationHead(nn.Module):
 class SiameseRPNHead(nn.Module):
     """Siamese RPN head.
 
-    This head is proposed in
+    This module is proposed in
     "SiamRPN++: Evolution of Siamese Visual Tracking with Very Deep Networks.
     `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_.
 
@@ -92,8 +92,8 @@ class SiameseRPNHead(nn.Module):
             Defaults to dict(type='BN').
 
         weighted_sum (bool): If True, use learnable weights to weightedly sum
-            the output of multi siamese rpn heads, otherwise, use averaging.
-            Defaults to False.
+            the output of multi heads in siamese rpn , otherwise, use
+            averaging. Defaults to False.
 
         bbox_coder (dict): Configuration to build bbox coder. Defaults to
             dict(type='DeltaXYWHBBoxCoder', target_means=[0., 0., 0., 0.],
@@ -158,16 +158,16 @@ class SiameseRPNHead(nn.Module):
         self.loss_bbox = build_loss(loss_bbox)
 
     def forward(self, z_feats, x_feats):
-        """Forward with features of exemplar images (`z_feats`) and features of
-        search images (`x_feats`).
+        """Forward with features `z_feats` of exemplar images and features
+        `x_feats` of search images.
 
         Args:
             z_feats (tuple[Tensor]): Tuple of Tensor with shape (N, C, H, W)
-                denoting the feature map of exemplar images. Typically H and W
-                equal to 7.
+                denoting the multi level feature maps of exemplar images.
+                Typically H and W equal to 7.
             x_feats (tuple[Tensor]): Tuple of Tensor with shape (N, C, H, W)
-                denoting the feature map of search images. Typically H and W
-                equal to 31.
+                denoting the multi level feature maps of search images.
+                Typically H and W equal to 31.
 
         Returns:
             tuple(cls_score, bbox_pred): cls_score is a Tensor with shape
@@ -215,10 +215,10 @@ class SiameseRPNHead(nn.Module):
         image pair.
 
         Args:
-            gt_bbox (Tensor): Ground truth bboxes for an search image with
+            gt_bbox (Tensor): Ground truth bboxes of an search image with
                 shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y] format.
-            score_maps_size (torch.size): denoting the output size (h, w) of
-                the network.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
 
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
@@ -275,10 +275,10 @@ class SiameseRPNHead(nn.Module):
         image pair.
 
         Args:
-            gt_bbox (Tensor): Ground truth bboxes for an search image with
+            gt_bbox (Tensor): Ground truth bboxes of an search image with
                 shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y] format.
-            score_maps_size (torch.size): denoting the output size (h, w) of
-                the network.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
 
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
@@ -333,11 +333,11 @@ class SiameseRPNHead(nn.Module):
         pairs.
 
         Args:
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each
+            gt_bboxes (list[Tensor]): Ground truth bboxes of each
                 search image with shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y]
                 format.
-            score_maps_size (torch.size): denoting the output size (h, w) of
-                the network.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
             is_positive_pairs (bool): list of bool denoting whether each ground
                 truth bbox in `gt_bboxes` is positive.
 

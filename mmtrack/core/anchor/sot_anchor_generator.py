@@ -21,7 +21,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Args:
             featmap_sizes (list[torch.size]): List of torch.size recording the
-                resolution of the multi-level feature maps
+                resolution (height, width) of the multi-level feature maps.
             device (str): Device the tensor will be put on. Defaults to 'cuda'.
 
         Returns:
@@ -44,7 +44,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                                       scales,
                                       ratios,
                                       center=None):
-        """Generate base anchors of a single level.
+        """Generate base anchors of a single level feature map.
 
         Args:
             base_size (int | float): Basic size of an anchor.
@@ -55,8 +55,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                 related to a single feature grid. Defaults to None.
 
         Returns:
-            torch.Tensor: Anchors of one spatial location in a single-level
-                feature maps in [cx, cy, w, h] format.
+            torch.Tensor: Anchors of one spatial location in a single level
+                feature map in [cx, cy, w, h] format.
         """
         w = base_size
         h = base_size
@@ -88,7 +88,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                                   featmap_size,
                                   stride=(16, 16),
                                   device='cuda'):
-        """Generate grid anchors of a single level.
+        """Generate grid anchors of a single level feature map.
 
         Note:
             This function is usually called by method ``self.grid_anchors``.

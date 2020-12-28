@@ -17,13 +17,13 @@ class SOTTrainDataset(CocoVideoDataset):
         assert self.load_as_video and not self.test_mode
 
     def load_video_anns(self, ann_file):
-        """Load annotation from COCOVID style annotation file.
+        """Load annotations from COCOVID style annotation file.
 
         Args:
             ann_file (str): Path of annotation file.
 
         Returns:
-            list[dict]: Annotation info from COCOVID api.
+            list[dict]: Annotation information from COCOVID api.
         """
         self.coco = CocoVID(ann_file, self.load_as_video)
 
@@ -66,7 +66,8 @@ class SOTTrainDataset(CocoVideoDataset):
         Returns:
             tuple: (snippet, image_id, instance_id), snippet is a list
                 containing the successive image ids where the instance
-                appears, image_id is a random sampled id from snippet.
+                appears, image_id is a random sampled image id from the
+                snippet.
         """
         vid_id = self.vid_ids[idx]
         instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
@@ -95,36 +96,35 @@ class SOTTrainDataset(CocoVideoDataset):
                          filter_key_img=False,
                          return_key_img=True,
                          **kwargs):
-        """Get a search image for an instance in an image.
+        """Get a search image for an instance in an exemplar image.
 
-        If sampling an positive search image, the postive search image is
-        randomly sampled from the nearby frames of image_id, where the sampled
-        scope is decided by frame_range.
-        If sampling an negative search image, the negative search image and
+        If sampling a positive search image, the positive search image is
+        randomly sampled from the exemplar image, where the sampled range is
+        decided by `frame_range`.
+        If sampling a negative search image, the negative search image and
         negative instance are randomly sampled from the entire dataset.
 
         Args:
             snippet (list[int]): The successive image ids where the instance
                 appears.
-            image_id (int): The id of image where the instance appears.
+            image_id (int): The id of exemplar image where the instance
+                appears.
             instance_id (int): The id of the instance.
-            frame_range (List(int) | int): The frame range for sampling an
-                positive search image from the nearby frames of image_id.
-                Default: 5.
-            pos_prob (float): The probability of sampling an positive search
+            frame_range (List(int) | int): The frame range of sampling a
+                positive search image for the exemplar image. Default: 5.
+            pos_prob (float): The probability of sampling a positive search
                 image. Default: 0.8.
-            filter_key_img (bool): If False, the id of positive search image
-                may be equal to image_id, otherwise, the search image id
-                cann't be equal to image_id. Default: False.
-            return_key_img (bool): If True, the image_id and instance_id are
-                returned, otherwise, not returned. Default: True.
+            filter_key_img (bool): If False, the exemplar image will be in the
+                sampling candidates, otherwise, it is exclude. Default: False.
+            return_key_img (bool): If True, the `image_id` and `instance_id`
+                are returned, otherwise, not returned. Default: True.
 
         Returns:
             tuple: (image_ids, instance_ids, is_positive_pair), image_ids is
                 a list that must contain search image id and may contain
-                image_id, instance_ids is a list that must contain search
-                instance id and may contain instance_id, is_positive_pair is a
-                bool which denotes an postive or negative sample pair.
+                `image_id`, instance_ids is a list that must contain search
+                instance id and may contain `instance_id`, is_positive_pair is
+                a bool denoting postive or negative sample pair.
         """
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
@@ -171,10 +171,10 @@ class SOTTrainDataset(CocoVideoDataset):
         Args:
             img_id (int): The id of image.
             instance_id (int): The id of instance.
-            is_positive_pair (bool): The postive or negative sample pair.
+            is_positive_pair (bool): denoting postive or negative sample pair.
 
         Returns:
-            dict: The info of training image and annotation.
+            dict: The information of training image and annotation.
         """
         img_info = self.coco.load_imgs([img_id])[0]
         img_info['filename'] = img_info['file_name']
@@ -214,11 +214,11 @@ class SOTTrainDataset(CocoVideoDataset):
 
         Args:
             instance_id (int): The instance_id of an image need be parsed.
-            ann_info (list[dict]): Annotation info of an image.
+            ann_info (list[dict]): Annotation information of an image.
 
         Returns:
             dict: A dict containing the following keys: bboxes, labels. labels
-                are set to 0.
+                is set to `np.array([0])`.
         """
         has_instance_id = 0
         for ann_info in ann_infos:
