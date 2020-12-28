@@ -1,45 +1,11 @@
-_base_ = [
-    '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/mot_challenge_public.py',
-    '../../_base_/default_runtime.py'
-]
+_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 model = dict(
-    type='Tracktor',
-    pretrains=dict(
-        detector='ckpts/mot17/faster_rcnn_r50_12e-e0434a97.pth',
-        reid='ckpts/mot17/reid_r50_tracktor_iter25245.pth'),
-    detector=dict(
-        rpn_head=dict(bbox_coder=dict(clip_border=False)),
-        roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))),
-    reid=dict(
-        type='BaseReID',
-        backbone=dict(
-            type='ResNet',
-            depth=50,
-            num_stages=4,
-            out_indices=(3, ),
-            style='pytorch'),
-        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
-        head=dict(
-            type='LinearReIDHead',
-            num_fcs=1,
-            in_channels=2048,
-            fc_channels=1024,
-            out_channels=128,
-            norm_cfg=dict(type='BN1d'),
-            act_cfg=dict(type='ReLU'))),
-    motion=dict(
-        type='CameraMotionCompensation',
-        warp_mode='cv2.MOTION_EUCLIDEAN',
-        num_iters=100,
-        stop_eps=0.00001),
     tracker=dict(
         type='TracktorTracker',
-        obj_score_thr=0.5,
+        obj_score_thr=[0.5, 0.6, 0.7],
         regression=dict(
-            obj_score_thr=0.5,
-            nms=dict(type='nms', iou_threshold=0.6),
+            obj_score_thr=[0.5, 0.6, 0.7],
+            nms=dict(type='nms', iou_threshold=[0.5, 0.6, 0.7]),
             match_iou_thr=0.3),
         reid=dict(
             num_samples=10,
@@ -49,14 +15,29 @@ model = dict(
             match_iou_thr=0.2),
         momentums=None,
         num_frames_retain=10))
-# learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=100,
-    warmup_ratio=1.0 / 100,
-    step=[3])
-# runtime settings
-total_epochs = 4
-evaluation = dict(metric=['bbox', 'track'], interval=1)
-search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+data_root = 'data/MOT17/'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadDetections'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1088, 1088),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='VideoCollect', keys=['img', 'public_bboxes'])
+        ])
+]
+data = dict(
+    val=dict(
+        detection_file=data_root + 'annotations/half-val_detections.pkl',
+        pipeline=test_pipeline),
+    test=dict(
+        detection_file=data_root + 'annotations/half-val_detections.pkl',
+        pipeline=test_pipeline))

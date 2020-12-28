@@ -12,7 +12,7 @@ except ImportError:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Train a detector')
+    parser = argparse.ArgumentParser(description='Get flops of a model')
     parser.add_argument('config', help='train config file path')
     parser.add_argument(
         '--shape',
