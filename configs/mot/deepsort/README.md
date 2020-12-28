@@ -25,10 +25,9 @@
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Mem (GB) | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
-| R50-FasterRCNN-FPN | -  | half-train | half-val | Y     |   |   |
-| R50-FasterRCNN-FPN | -  | half-train | half-val | N     |   |   |
-| R50-FasterRCNN-FPN | R50 | half-train | half-val | Y     |   |   |
-| R50-FasterRCNN-FPN | R50 | half-train | half-val | N     |   |   |
-| R50-FasterRCNN-FPN | - | train | train | Y     |   |   |
-| R50-FasterRCNN-FPN | - | train | train | N     |   |   |
-| R50-FasterRCNN-FPN | - | train | test  | Y     |   |   |
+| R50-FasterRCNN-FPN | -  | half-train | half-val | Y     |   |   |   46.0 | 46.6 | 289 | 82451 | 4581 |
+| R50-FasterRCNN-FPN | -  | half-train | half-val | N     |   |   |   62.0 | 57.8 | 15171 | 40437 | 5841 |
+| R50-FasterRCNN-FPN | R50 | half-train | half-val | Y     |   |   |  48.1 | 60.8 | 283   | 82445 | 1199 |
+| R50-FasterRCNN-FPN | R50 | half-train | half-val | N     |   |   |  63.8 | 69.6 | 15060 | 40326 | 3183 |
+| R50-FasterRCNN-FPN | - | train | train | Y     |   |   | 50.9 | 44.5 | 1108 | 153950 | 10522 |
+| R50-FasterRCNN-FPN | - | train | train | N     |   |   | 80.8 | 61.3 | 21537 | 29280 | 13947 |

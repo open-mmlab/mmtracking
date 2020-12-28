@@ -5,7 +5,7 @@ model = dict(
         'https://download.openmmlab.com/mmtracking/v0.5/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
     ))
 data_root = 'data/MOT17/'
-test_set = 'test'
+test_set = 'train'
 data = dict(
     train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
     val=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
