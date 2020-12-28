@@ -13,7 +13,8 @@ model = dict(
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))),
+            bbox_head=dict(bbox_coder=dict(
+                clip_border=False), num_classes=1))),
     reid=dict(
         type='BaseReID',
         backbone=dict(

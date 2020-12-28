@@ -1,33 +1,18 @@
 _base_ = [
     '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/mot17.py', '../../_base_/default_runtime.py'
+    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 model = dict(
     type='SORT',
     pretrains=dict(
-        detector='ckpts/mot17/faster_rcnn_r50_12e-e0434a97.pth',
-        reid='ckpts/mot17/reid_r50_tracktor_iter25245.pth'),
+        detector=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/v0.5/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth',  # noqa: E501
+    ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))),
-    reid=dict(
-        type='BaseReID',
-        backbone=dict(
-            type='ResNet',
-            depth=50,
-            num_stages=4,
-            out_indices=(3, ),
-            style='pytorch'),
-        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
-        head=dict(
-            type='LinearReIDHead',
-            num_fcs=1,
-            in_channels=2048,
-            fc_channels=1024,
-            out_channels=128,
-            norm_cfg=dict(type='BN1d'),
-            act_cfg=dict(type='ReLU'))),
+            bbox_head=dict(bbox_coder=dict(
+                clip_border=False), num_classes=1))),
     motion=dict(type='KalmanFilter', center_only=False),
     tracker=dict(
         type='SortTracker',
