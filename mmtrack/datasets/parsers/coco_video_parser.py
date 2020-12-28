@@ -5,6 +5,14 @@ from pycocotools.coco import COCO, _isArrayLike
 
 
 class CocoVID(COCO):
+    """Inherit official COCO class in order to parse the annotations of bbox-
+    related video tasks.
+
+    Args:
+        annotation_file (str): location of annotation file. Defaults to None.
+        load_img_as_vid (bool): If True, convert image data to video data,
+            which means each image is converted to a video. Defaults to False.
+    """
 
     def __init__(self, annotation_file=None, load_img_as_vid=False):
         assert annotation_file, 'Annotation file must be provided.'
@@ -12,6 +20,7 @@ class CocoVID(COCO):
         super(CocoVID, self).__init__(annotation_file=annotation_file)
 
     def convert_img_to_vid(self, dataset):
+        """Convert image data to video data."""
         if 'images' in self.dataset:
             videos = []
             for i, img in enumerate(self.dataset['images']):
@@ -27,6 +36,7 @@ class CocoVID(COCO):
         return dataset
 
     def createIndex(self):
+        """Create index."""
         print('creating index...')
         anns, cats, imgs, vids = {}, {}, {}, {}
         (imgToAnns, catToImgs, vidToImgs, vidToInstances,
@@ -78,6 +88,16 @@ class CocoVID(COCO):
         self.instancesToImgs = instancesToImgs
 
     def get_vid_ids(self, vidIds=[]):
+        """Get video ids that satisfy given filter conditions.
+
+        Default return all video ids.
+
+        Args:
+            vidIds (list[int]): The given video ids. Defaults to [].
+
+        Returns:
+            list[int]: Video ids.
+        """
         vidIds = vidIds if _isArrayLike(vidIds) else [vidIds]
 
         if len(vidIds) == 0:
@@ -88,6 +108,14 @@ class CocoVID(COCO):
         return list(ids)
 
     def get_img_ids_from_vid(self, vidId):
+        """Get image ids from given video id.
+
+        Args:
+            vidId (int): The given video id.
+
+        Returns:
+            list[int]: Image ids of given video id.
+        """
         img_infos = self.vidToImgs[vidId]
         ids = list(np.zeros([len(img_infos)], dtype=np.int))
         for img_info in img_infos:
@@ -95,12 +123,38 @@ class CocoVID(COCO):
         return ids
 
     def get_ins_ids_from_vid(self, vidId):
+        """Get instance ids from given video id.
+
+        Args:
+            vidId (int): The given video id.
+
+        Returns:
+            list[int]: Instance ids of given video id.
+        """
         return self.vidToInstances[vidId]
 
     def get_img_ids_from_ins_id(self, insId):
+        """Get image ids from given instance id.
+
+        Args:
+            insId (int): The given instance id.
+
+        Returns:
+            list[int]: Image ids of given instance id.
+        """
         return self.instancesToImgs[insId]
 
     def load_vids(self, ids=[]):
+        """Get video information of given video ids.
+
+        Default return all videos information.
+
+        Args:
+            ids (list[int]): The given video ids. Defaults to [].
+
+        Returns:
+            list[dict]: List of video information.
+        """
         if _isArrayLike(ids):
             return [self.videos[id] for id in ids]
         elif type(ids) == int:

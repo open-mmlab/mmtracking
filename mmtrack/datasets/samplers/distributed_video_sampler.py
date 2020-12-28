@@ -3,6 +3,17 @@ from torch.utils.data import DistributedSampler as _DistributedSampler
 
 
 class DistributedVideoSampler(_DistributedSampler):
+    """Put videos to multi gpus during testing.
+
+    Args:
+        dataset (Dataset): Test dataset that must has `data_infos` attribute.
+            Each data_info in `data_infos` record information of one frame,
+            and each video must has one data_info that includes
+            `data_info['frame_id'] == 0`.
+        num_replicas (int): The number of gpus. Defaults to None.
+        rank (int): Gpu rank id. Defaults to None.
+        shuffle (bool): If True, shuffle the dataset. Defaults to False.
+    """
 
     def __init__(self, dataset, num_replicas=None, rank=None, shuffle=False):
         super().__init__(dataset, num_replicas=num_replicas, rank=rank)
@@ -29,5 +40,6 @@ class DistributedVideoSampler(_DistributedSampler):
         ]
 
     def __iter__(self):
+        """Put videos to specify gpu."""
         indices = self.indices[self.rank]
         return iter(indices)
