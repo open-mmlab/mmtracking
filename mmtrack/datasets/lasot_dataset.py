@@ -8,6 +8,10 @@ from .coco_video_dataset import CocoVideoDataset
 
 @DATASETS.register_module()
 class LaSOTDataset(CocoVideoDataset):
+    """LaSOT dataset for the testing of single object tracking.
+
+    The dataset doesn't support training mode.
+    """
 
     CLASSES = (0, )
 
@@ -15,6 +19,17 @@ class LaSOTDataset(CocoVideoDataset):
         super().__init__(*args, **kwargs)
 
     def _parse_ann_info(self, img_info, ann_info):
+        """Parse bbox annotations.
+
+        Args:
+            img_info (dict): image information.
+            ann_info (list[dict]): Annotation information of an image. Each
+                image only has one bbox annotation.
+
+        Returns:
+            dict: A dict containing the following keys: bboxes, labels,
+                ignore. labels are not useful in SOT.
+        """
         gt_bboxes = np.array(ann_info[0]['bbox'], dtype=np.float32)
         # convert [x1, y1, w, h] to [x1, y1, x2, y2]
         gt_bboxes[2] += gt_bboxes[0]
@@ -25,6 +40,19 @@ class LaSOTDataset(CocoVideoDataset):
         return ann
 
     def evaluate(self, results, metric=['track'], logger=None):
+        """Evaluation in OPE protocol.
+
+        Args:
+            results (dict): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated. Options are
+                'track'.
+            logger (logging.Logger | str | None): Logger used for printing
+                related information during evaluation. Default: None.
+
+        Returns:
+            dict[str, float]: OPE style evaluation metric (i.e. success,
+                norm precision and precision).
+        """
         if isinstance(metric, list):
             metrics = metric
         elif isinstance(metric, str):

@@ -146,6 +146,16 @@ class SOTBottleneck(Bottleneck):
 
 @BACKBONES.register_module()
 class SOTResNet(ResNet):
+    """ResNet backbone for SOT.
+
+    The main difference between ResNet in torch and the SOTResNet is the
+    padding and dilation in the convs of SOTResNet. Please refer to
+    `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_ for detailed analysis.
+
+    Args:
+        depth (int): Depth of resnet, from {50, }.
+    """
+
     arch_settings = {50: (SOTBottleneck, (3, 4, 6, 3))}
 
     def __init__(self, depth, *args, **kwargs):
@@ -206,6 +216,23 @@ class SOTResNet(ResNet):
 
 
 class SOTResLayer(nn.Sequential):
+    """SOTResLayer to build ResNet style backbone for SOT.
+
+    Args:
+        block (nn.Module): Block used to build SOTResLayer.
+        inplanes (int): Inplanes of block.
+        planes (int): Planes of block.
+        num_blocks (int): Number of blocks.
+        stride (int): Stride of the first block. Default: 1
+        avg_down (bool): Use AvgPool instead of stride conv when
+            downsampling in the bottleneck. Default: False
+        conv_cfg (dict): Dictionary to construct and config conv layer.
+            Default: None
+        norm_cfg (dict): Dictionary to construct and config norm layer.
+            Default: dict(type='BN')
+        downsample_first (bool): Downsample at the first block or last block.
+            False for Hourglass, True for ResNet. Default: True
+    """
 
     def __init__(self,
                  block,

@@ -11,6 +11,22 @@ from mmtrack.core.track import depthwise_correlation
 
 @HEADS.register_module()
 class CorrelationHead(nn.Module):
+    """Correlation head module.
+
+    This module is proposed in
+    "SiamRPN++: Evolution of Siamese Visual Tracking with Very Deep Networks.
+    `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_.
+
+    Args:
+        in_channels (int): Input channels.
+        mid_channels (int): Middle channels.
+        out_channels (int): Output channels.
+        kernel_size (int): Kernel size of convs. Defaults to 3.
+        norm_cfg (dict): Configuration of normlization method after each conv.
+            Defaults to dict(type='BN').
+        act_cfg (dict): Configuration of activation method after each conv.
+            Defaults to dict(type='ReLU').
+    """
 
     def __init__(self,
                  in_channels,
@@ -58,6 +74,41 @@ class CorrelationHead(nn.Module):
 
 @HEADS.register_module()
 class SiameseRPNHead(nn.Module):
+    """Siamese RPN head.
+
+    This module is proposed in
+    "SiamRPN++: Evolution of Siamese Visual Tracking with Very Deep Networks.
+    `SiamRPN++ <https://arxiv.org/abs/1812.11703>`_.
+
+    Args:
+        anchor_generator (dict): Configuration to build anchor generator
+            module.
+
+        in_channels (int): Input channels.
+
+        kernel_size (int): Kernel size of convs. Defaults to 3.
+
+        norm_cfg (dict): Configuration of normlization method after each conv.
+            Defaults to dict(type='BN').
+
+        weighted_sum (bool): If True, use learnable weights to weightedly sum
+            the output of multi heads in siamese rpn , otherwise, use
+            averaging. Defaults to False.
+
+        bbox_coder (dict): Configuration to build bbox coder. Defaults to
+            dict(type='DeltaXYWHBBoxCoder', target_means=[0., 0., 0., 0.],
+            target_stds=[1., 1., 1., 1.]).
+
+        loss_cls (dict): Configuration to build classification loss. Defaults
+            to dict( type='CrossEntropyLoss', reduction='sum', loss_weight=1.0)
+
+        loss_bbox (dict): Configuration to build bbox regression loss. Defaults
+            to dict( type='L1Loss', reduction='sum', loss_weight=1.2).
+
+        train_cfg (Dict): Training setting. Defaults to None.
+
+        test_cfg (Dict): Testing setting. Defaults to None.
+    """
 
     def __init__(self,
                  anchor_generator,
@@ -107,6 +158,22 @@ class SiameseRPNHead(nn.Module):
         self.loss_bbox = build_loss(loss_bbox)
 
     def forward(self, z_feats, x_feats):
+        """Forward with features `z_feats` of exemplar images and features
+        `x_feats` of search images.
+
+        Args:
+            z_feats (tuple[Tensor]): Tuple of Tensor with shape (N, C, H, W)
+                denoting the multi level feature maps of exemplar images.
+                Typically H and W equal to 7.
+            x_feats (tuple[Tensor]): Tuple of Tensor with shape (N, C, H, W)
+                denoting the multi level feature maps of search images.
+                Typically H and W equal to 31.
+
+        Returns:
+            tuple(cls_score, bbox_pred): cls_score is a Tensor with shape
+            (N, 2 * num_base_anchors, H, W), bbox_pred is a Tensor with shape
+            (N, 4 * num_base_anchors, H, W), Typically H and W equal to 25.
+        """
         assert isinstance(z_feats, tuple) and isinstance(x_feats, tuple)
         assert len(z_feats) == len(x_feats) and len(z_feats) == len(
             self.cls_heads)
@@ -130,6 +197,8 @@ class SiameseRPNHead(nn.Module):
         return cls_score, bbox_pred
 
     def _get_init_targets(self, gt_bbox, score_maps_size):
+        """Initialize the training targets based on the output size
+        `score_maps_size` of network."""
         num_base_anchors = self.anchor_generator.num_base_anchors[0]
         labels = torch.zeros((num_base_anchors, score_maps_size[0],
                               score_maps_size[1])).to(gt_bbox.device).long()
@@ -142,6 +211,21 @@ class SiameseRPNHead(nn.Module):
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_positive_pair_targets(self, gt_bbox, score_maps_size):
+        """Generate the training targets for positive exemplar image and search
+        image pair.
+
+        Args:
+            gt_bbox (Tensor): Ground truth bboxes of an search image with
+                shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y] format.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
+
+        Returns:
+            tuple(labels, labels_weights, bbox_targets, bbox_weights): the
+                shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
+                (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
+                respectively. All of them are Tensor.
+        """
         (labels, labels_weights, bbox_targets,
          bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
 
@@ -187,6 +271,21 @@ class SiameseRPNHead(nn.Module):
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_negative_pair_targets(self, gt_bbox, score_maps_size):
+        """Generate the training targets for negative exemplar image and search
+        image pair.
+
+        Args:
+            gt_bbox (Tensor): Ground truth bboxes of an search image with
+                shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y] format.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
+
+        Returns:
+            tuple(labels, labels_weights, bbox_targets, bbox_weights): the
+                shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
+                (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
+                respectively. All of them are Tensor.
+        """
         (labels, labels_weights, bbox_targets,
          bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
         C, H, W = labels.shape
@@ -230,6 +329,25 @@ class SiameseRPNHead(nn.Module):
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def get_targets(self, gt_bboxes, score_maps_size, is_positive_pairs):
+        """Generate the training targets for exemplar image and search image
+        pairs.
+
+        Args:
+            gt_bboxes (list[Tensor]): Ground truth bboxes of each
+                search image with shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y]
+                format.
+            score_maps_size (torch.size): denoting the output size
+                (height, width) of the network.
+            is_positive_pairs (bool): list of bool denoting whether each ground
+                truth bbox in `gt_bboxes` is positive.
+
+        Returns:
+            tuple(all_labels, all_labels_weights, all_bbox_targets,
+                all_bbox_weights): the shape is (N, num_base_anchors, H, W),
+                (N, num_base_anchors, H, W), (N, 4, num_base_anchors, H, W),
+                (N, 4, num_base_anchors, H, W), respectively. All of them are
+                Tensor.
+        """
         (all_labels, all_labels_weights, all_bbox_targets,
          all_bbox_weights) = [], [], [], []
 
@@ -260,6 +378,19 @@ class SiameseRPNHead(nn.Module):
 
     def loss(self, cls_score, bbox_pred, labels, labels_weights, bbox_targets,
              bbox_weights):
+        """Compute loss.
+
+        Args:
+            cls_score (Tensor): of shape (N, 2 * num_base_anchors, H, W).
+            bbox_pred (Tensor): of shape (N, 4 * num_base_anchors, H, W).
+            labels (Tensor): of shape (N, num_base_anchors, H, W).
+            labels_weights (Tensor): of shape (N, num_base_anchors, H, W).
+            bbox_targets (Tensor): of shape (N, 4, num_base_anchors, H, W).
+            bbox_weights (Tensor): of shape (N, 4, num_base_anchors, H, W).
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components
+        """
         losses = {}
         N, _, H, W = cls_score.shape
 
@@ -277,6 +408,20 @@ class SiameseRPNHead(nn.Module):
         return losses
 
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
+        """Track `prev_bbox` to current frame based on the output of network.
+
+        Args:
+            cls_score (Tensor): of shape (1, 2 * num_base_anchors, H, W).
+            bbox_pred (Tensor): of shape (1, 4 * num_base_anchors, H, W).
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensr): scale factor.
+
+        Returns:
+            tuple(best_score, best_bbox): best_score is a Tensor denoting the
+                score of `best_bbox`, best_bbox is a Tensor of shape (4, )
+                with [cx, cy, w, h] format, which denotes the best tracked
+                bbox in current frame.
+        """
         score_maps_size = [(cls_score.shape[2:])]
         if not hasattr(self, 'anchors'):
             self.anchors = self.anchor_generator.grid_anchors(
