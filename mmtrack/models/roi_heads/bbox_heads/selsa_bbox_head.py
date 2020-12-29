@@ -34,7 +34,7 @@ class SelsaBBoxHead(ConvFCBBoxHead):
 
         Returns:
             tuple(cls_score, bbox_pred): The predicted score of classes and
-                the predicted regression offsets.
+            the predicted regression offsets.
         """
         # shared part
         if self.num_shared_convs > 0:

@@ -19,8 +19,8 @@ class ConcatVideoReferences(object):
 
     Returns:
         list[dict]: The first dict of outputs is the same as the first
-            dict of `results`. The second dict of outputs concats the
-            dicts in `results[1:]`.
+        dict of `results`. The second dict of outputs concats the
+        dicts in `results[1:]`.
     """
 
     def __call__(self, results):
@@ -103,8 +103,8 @@ class MultiImagesToTensor(object):
 
         Returns:
             dict: Each key in the first dict of `results` remains unchanged.
-                Each key in the second dict of `results` adds `self.ref_prefix`
-                as prefix.
+            Each key in the second dict of `results` adds `self.ref_prefix`
+            as prefix.
         """
         outs = []
         for _results in results:
@@ -174,8 +174,8 @@ class SeqDefaultFormatBundle(object):
 
         Returns:
             dict: The result dict contains the data that is formatted with
-                default bundle. Each key in the second dict of the input list
-                adds `self.ref_prefix` as prefix.
+            default bundle. Each key in the second dict of the input list
+            adds `self.ref_prefix` as prefix.
         """
         outs = []
         for _results in results:
@@ -197,7 +197,7 @@ class SeqDefaultFormatBundle(object):
 
         Returns:
             dict: The result dict contains the data that is formatted with
-                default bundle.
+            default bundle.
         """
         if 'img' in results:
             img = results['img']
@@ -275,10 +275,10 @@ class VideoCollect(object):
 
         Returns:
             list[dict] | dict: List of dict or dict that contains the
-                following keys:
+            following keys:
 
-                - keys in ``self.keys``
-                - ``img_metas``
+            - keys in ``self.keys``
+            - ``img_metas``
         """
         results_is_dict = isinstance(results, dict)
         if results_is_dict:

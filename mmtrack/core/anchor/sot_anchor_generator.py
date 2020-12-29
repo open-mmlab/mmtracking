@@ -26,8 +26,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Returns:
             list[Tensor]: List of 2D hanning window with shape
-                (num_base_anchors[i] * featmap_sizes[i][0] * \
-                    featmap_sizes[i][1], ).
+            (num_base_anchors[i] * featmap_sizes[i][0] * featmap_sizes[i][1]).
         """
         assert self.num_levels == len(featmap_sizes)
         multi_level_windows = []
@@ -56,7 +55,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Returns:
             torch.Tensor: Anchors of one spatial location in a single level
-                feature map in [cx, cy, w, h] format.
+            feature map in [cx, cy, w, h] format.
         """
         w = base_size
         h = base_size
@@ -104,7 +103,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Returns:
             torch.Tensor: Anchors of all spatial locations with [cx, cy, w, h]
-                format in the feature map.
+            format in the feature map.
         """
         feat_h, feat_w = featmap_size
         # convert Tensor to int, so that we can covert to ONNX correctlly

@@ -78,8 +78,8 @@ class MOTChallengeDataset(CocoVideoDataset):
 
         Returns:
             dict: A dict containing the following keys: bboxes, bboxes_ignore,\
-                labels, masks, seg_map. "masks" are raw annotations and not \
-                decoded into binary masks.
+            labels, masks, seg_map. "masks" are raw annotations and not \
+            decoded into binary masks.
         """
         gt_bboxes = []
         gt_labels = []
@@ -142,9 +142,9 @@ class MOTChallengeDataset(CocoVideoDataset):
 
         Returns:
             tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
-                the filepaths, names is a list containing the name of the
-                videos, tmp_dir is the temporal directory created for saving
-                files.
+            the filepaths, names is a list containing the name of the
+            videos, tmp_dir is the temporal directory created for saving
+            files.
         """
         assert isinstance(results, dict), 'results must be a dict.'
         if resfile_path is None:

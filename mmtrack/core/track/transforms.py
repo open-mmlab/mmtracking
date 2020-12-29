@@ -15,7 +15,7 @@ def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
 
     Returns:
         Tensor | ndarray: Output image with the same type and shape of
-            the input.
+        the input.
     """
     if isinstance(img, torch.Tensor):
         assert img.ndim == 4 and img.shape[0] == 1

@@ -128,7 +128,7 @@ class CocoVideoDataset(CocoDataset):
 
         Returns:
             list(dict): `img_info` and the reference images informations or
-                only the reference images informations.
+            only the reference images informations.
         """
         assert isinstance(img_info, dict)
         if isinstance(frame_range, int):
@@ -255,7 +255,7 @@ class CocoVideoDataset(CocoDataset):
 
         Returns:
             dict: Data and annotations after pipeline with new keys introduced
-                by pipeline.
+            by pipeline.
         """
         img_info = self.data_infos[idx]
         if self.ref_img_sampler is not None:
@@ -275,7 +275,7 @@ class CocoVideoDataset(CocoDataset):
 
         Returns:
             dict: Training data and annotations after pipeline with new keys
-                introduced by pipeline.
+            introduced by pipeline.
         """
         return self.prepare_data(idx)
 
@@ -287,7 +287,7 @@ class CocoVideoDataset(CocoDataset):
 
         Returns:
             dict: Testing data after pipeline with new keys intorduced by
-                pipeline.
+            pipeline.
         """
         return self.prepare_data(idx)
 
@@ -300,8 +300,8 @@ class CocoVideoDataset(CocoDataset):
 
         Returns:
             dict: A dict containing the following keys: bboxes, bboxes_ignore,
-                labels, instance_ids, masks, seg_map. "masks" are raw
-                annotations and not decoded into binary masks.
+            labels, instance_ids, masks, seg_map. "masks" are raw
+            annotations and not decoded into binary masks.
         """
         gt_bboxes = []
         gt_labels = []

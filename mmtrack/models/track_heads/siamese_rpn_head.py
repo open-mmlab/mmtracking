@@ -222,9 +222,9 @@ class SiameseRPNHead(nn.Module):
 
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
-                shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
-                (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
-                respectively. All of them are Tensor.
+            shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
+            (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
+            respectively. All of them are Tensor.
         """
         (labels, labels_weights, bbox_targets,
          bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
@@ -282,9 +282,9 @@ class SiameseRPNHead(nn.Module):
 
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
-                shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
-                (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
-                respectively. All of them are Tensor.
+            shape is (num_base_anchors, H, W), (num_base_anchors, H, W),
+            (4, num_base_anchors, H, W), (4, num_base_anchors, H, W),
+            respectively. All of them are Tensor.
         """
         (labels, labels_weights, bbox_targets,
          bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
@@ -343,10 +343,10 @@ class SiameseRPNHead(nn.Module):
 
         Returns:
             tuple(all_labels, all_labels_weights, all_bbox_targets,
-                all_bbox_weights): the shape is (N, num_base_anchors, H, W),
-                (N, num_base_anchors, H, W), (N, 4, num_base_anchors, H, W),
-                (N, 4, num_base_anchors, H, W), respectively. All of them are
-                Tensor.
+            all_bbox_weights): the shape is (N, num_base_anchors, H, W),
+            (N, num_base_anchors, H, W), (N, 4, num_base_anchors, H, W),
+            (N, 4, num_base_anchors, H, W), respectively. All of them are
+            Tensor.
         """
         (all_labels, all_labels_weights, all_bbox_targets,
          all_bbox_weights) = [], [], [], []
@@ -418,9 +418,9 @@ class SiameseRPNHead(nn.Module):
 
         Returns:
             tuple(best_score, best_bbox): best_score is a Tensor denoting the
-                score of `best_bbox`, best_bbox is a Tensor of shape (4, )
-                with [cx, cy, w, h] format, which denotes the best tracked
-                bbox in current frame.
+            score of `best_bbox`, best_bbox is a Tensor of shape (4, )
+            with [cx, cy, w, h] format, which denotes the best tracked
+            bbox in current frame.
         """
         score_maps_size = [(cls_score.shape[2:])]
         if not hasattr(self, 'anchors'):

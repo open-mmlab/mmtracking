@@ -76,8 +76,8 @@ class SeqLoadAnnotations(LoadAnnotations):
 
         Returns:
             list[dict]: List of dict that contains loaded annotations, such as
-                bounding boxes, labels, instance ids, masks and semantic
-                segmentation annotations.
+            bounding boxes, labels, instance ids, masks and semantic
+            segmentation annotations.
         """
         outs = []
         for _results in results:
