@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
-data_root = 'data/imagenet_vid/'
+data_root = 'data/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -37,8 +37,9 @@ data = dict(
     train=[
         dict(
             type=dataset_type,
-            ann_file=data_root + 'annotations/imagenet_vid_train.json',
-            img_prefix=data_root + 'data/VID/',
+            ann_file=data_root +
+            'imagenet_vid/annotations/imagenet_vid_train.json',
+            img_prefix=data_root + 'imagenet_vid/data/',
             ref_img_sampler=dict(
                 num_ref_imgs=1,
                 frame_range=9,
@@ -48,8 +49,9 @@ data = dict(
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root + 'annotations/imagenet_det_30plus1cls.json',
-            img_prefix=data_root + 'data/DET/',
+            ann_file=data_root +
+            'imagenet_det/annotations/imagenet_det_30plus1cls.json',
+            img_prefix=data_root + 'imagenet_det/data/',
             ref_img_sampler=dict(
                 num_ref_imgs=1,
                 frame_range=0,
@@ -59,15 +61,15 @@ data = dict(
     ],
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/imagenet_vid_val.json',
-        img_prefix=data_root + 'data/VID/',
+        ann_file=data_root + 'imagenet_vid/annotations/imagenet_vid_val.json',
+        img_prefix=data_root + 'imagenet_vid/data/',
         ref_img_sampler=None,
         pipeline=test_pipeline,
         test_mode=True),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/imagenet_vid_val.json',
-        img_prefix=data_root + 'data/VID/',
+        ann_file=data_root + 'imagenet_vid/annotations/imagenet_vid_val.json',
+        img_prefix=data_root + 'imagenet_vid/data/',
         ref_img_sampler=None,
         pipeline=test_pipeline,
         test_mode=True))

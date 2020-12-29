@@ -8,8 +8,10 @@ search_size = 255
 # model settings
 model = dict(
     type='SiamRPN',
-    pretrains=dict(backbone='/mnt/lustre/gongtao/Tracking_Code/MMTRACK/'
-                   'pretrained_models/resnet50.model'),
+    pretrains=dict(
+        backbone=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/sot_resnet50.model'  # noqa: E501
+    ),
     backbone=dict(
         type='SOTResNet',
         depth=50,
@@ -64,7 +66,7 @@ model = dict(
         center_size=7,
         rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
 
-data_root = 'data/sot/'
+data_root = 'data/'
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True),
@@ -107,8 +109,8 @@ data = dict(
             dataset=dict(
                 type='SOTTrainDataset',
                 ann_file=data_root +
-                'train/annotations/imagenet_vid/imagenet_vid_train.json',
-                img_prefix=data_root + 'train/data/imagenet_vid',
+                'imagenet_vid/annotations/imagenet_vid_train.json',
+                img_prefix=data_root + 'imagenet_vid/data',
                 pipeline=train_pipeline,
                 ref_img_sampler=dict(
                     frame_range=100,
@@ -118,9 +120,8 @@ data = dict(
             )),
         dict(
             type='SOTTrainDataset',
-            ann_file=data_root +
-            'train/annotations/coco2017_train/instances_train2017.json',
-            img_prefix=data_root + 'train/data/coco2017_train',
+            ann_file=data_root + 'coco/annotations/instances_train2017.json',
+            img_prefix=data_root + 'coco/data/train2017',
             pipeline=train_pipeline,
             ref_img_sampler=dict(
                 frame_range=0,
@@ -131,8 +132,8 @@ data = dict(
         dict(
             type='SOTTrainDataset',
             ann_file=data_root +
-            'train/annotations/imagenet_det/imagenet_det_30plus1cls.json',
-            img_prefix=data_root + 'train/data/imagenet_det',
+            'imagenet_det/annotations/imagenet_det_30plus1cls.json',
+            img_prefix=data_root + 'imagenet_det/data',
             pipeline=train_pipeline,
             ref_img_sampler=dict(
                 frame_range=0,
@@ -144,16 +145,16 @@ data = dict(
     val=dict(
         type='LaSOTDataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot_test/lasot_test.json',
-        img_prefix=data_root + 'lasot_test/',
+        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        img_prefix=data_root + 'lasot/data',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True),
     test=dict(
         type='LaSOTDataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot_test/lasot_test.json',
-        img_prefix=data_root + 'lasot_test/',
+        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        img_prefix=data_root + 'lasot/data',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))
