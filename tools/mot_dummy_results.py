@@ -7,9 +7,9 @@ import mmcv
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Make dummy results for MOT Challenge')
-    parser.add_argument('json_file', help='input checkpoint filename')
-    parser.add_argument('out_folder', help='output checkpoint filename')
+        description='Make dummy results for MOT Challenge.')
+    parser.add_argument('json_file', help='Input JSON file.')
+    parser.add_argument('out_folder', help='Output folder.')
     args = parser.parse_args()
     return args
 

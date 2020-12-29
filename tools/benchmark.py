@@ -6,15 +6,16 @@ from mmcv import Config
 from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel
 from mmcv.runner import load_checkpoint, wrap_fp16_model
-from mmdet.datasets import (build_dataloader, build_dataset,
-                            replace_ImageToTensor)
-from mmdet.models import build_detector
+from mmdet.datasets import replace_ImageToTensor
+
+from mmtrack.datasets import build_dataloader, build_dataset
+from mmtrack.models import build_model
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='MMDet benchmark a model')
+    parser = argparse.ArgumentParser(description='MMTrack benchmark a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument(
         '--log-interval', default=50, help='interval of logging')
     parser.add_argument(
@@ -37,7 +38,8 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    cfg.model.pretrained = None
+    if hasattr(cfg.model, 'detector'):
+        cfg.model.detector.pretrained = None
     cfg.data.test.test_mode = True
 
     # build the dataloader
@@ -54,11 +56,12 @@ def main():
         shuffle=False)
 
     # build the model and load checkpoint
-    model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+    model = build_model(cfg.model)
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    load_checkpoint(model, args.checkpoint, map_location='cpu')
+    if args.checkpoint is not None:
+        load_checkpoint(model, args.checkpoint, map_location='cpu')
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
 
