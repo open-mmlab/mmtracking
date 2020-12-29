@@ -19,4 +19,4 @@ Note that all of checkpoints from 11-th to 20-th epoch need to be evaluated in o
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-|    R-50    |  ???  |   20e    | -        | -              | 49.8? | 58.6? | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
+|    R-50    |  -  |   20e    | -        | -              | 49.9 | 57.9 | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |

@@ -92,7 +92,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     if gpu_collect:
         raise NotImplementedError
     else:
-        results = collect_results_cpu(results, len(dataset), tmpdir)
+        results = collect_results_cpu(results, tmpdir)
     return results
 
 

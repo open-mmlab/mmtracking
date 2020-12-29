@@ -17,5 +17,5 @@ We observe around 1 mAP fluctuations in performance, and provide the best model.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :------: | :--------: |
-|    R-50-DC5     |  pytorch  |   7e    | -        | -              | ??? | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
-|    R-101-DC5     |  pytorch  |   7e    | -        | -              | 73.3? | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
+|    R-50-DC5     |  pytorch  |   7e    | -        | -              | 70.3 | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
+|    R-101-DC5     |  pytorch  |   7e    | -        | -              | 73.5 | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
