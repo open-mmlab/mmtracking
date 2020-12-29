@@ -103,7 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-mmtrack/version.py
 data
 ckpts
 .vscode
