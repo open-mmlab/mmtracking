@@ -6,3 +6,14 @@ Welcome to MMTracking's documentation!
    :caption: Get Started
 
    get_started.md
+
+.. toctree::
+   :caption: API Reference
+
+   api.rst
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
