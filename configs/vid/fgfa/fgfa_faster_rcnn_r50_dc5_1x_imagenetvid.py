@@ -6,7 +6,9 @@ _base_ = [
 model = dict(
     type='FGFA',
     pretrains=dict(
-        motion='data/imagenet_vid/pretrained_flownet/flownet_simple.pth'),
+        motion=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/flownet_simple.pth'  # noqa: E501
+    ),
     motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
     aggregator=dict(
         type='EmbedAggregator', num_convs=1, channels=512, kernel_size=3))
