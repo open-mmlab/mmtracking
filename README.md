@@ -21,7 +21,7 @@ The master branch works with PyTorch 1.3 to 1.6.
 
 ### Major features
 
-- **First Unified Video Perception Platform**
+- **The First Unified Video Perception Platform**
 
   We are the first open source toolbox that unifies versatile video perception tasks include video object detection, single object tracking, and multiple object tracking.
 
@@ -45,7 +45,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
-v0.5.0 was released in -.
+v0.5.0 was released in 30/12/2020.
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
 ## Benchmark and model zoo
@@ -58,7 +58,7 @@ Please refer to [install.md](docs/install.md) for installation and dataset prepa
 
 ## Get Started
 
-Please see [getting_started.md](docs/getting_started.md) for the basic usage of MMTracking.
+Please see [get_started.md](docs/get_started.md) for the basic usage of MMTracking.
 There are also tutorials.
 
 
