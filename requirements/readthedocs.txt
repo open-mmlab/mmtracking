@@ -1,3 +1,5 @@
+mmcls
 mmcv
+mmdet
 torch
 torchvision
