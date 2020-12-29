@@ -15,6 +15,14 @@ from .coco_video_dataset import CocoVideoDataset
 
 @DATASETS.register_module()
 class MOTChallengeDataset(CocoVideoDataset):
+    """Dataset for MOTChallenge.
+
+    Args:
+        visibility_thr (float, optional): The minimum visibility
+            for the objects during training. Default to -1.
+        detection_file (str, optional): The path of the public
+            detection file. Default to None.
+    """
 
     CLASSES = ('pedestrian', )
 
@@ -28,6 +36,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         self.detections = self.load_detections(detection_file)
 
     def load_detections(self, detection_file=None):
+        """Load public detections."""
         # support detections in three formats
         # 1. MMDet: [img_1, img_2, ...]
         # 2. MMTrack: dict(bbox_results=[img_1, img_2, ...])
@@ -50,6 +59,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             return None
 
     def prepare_results(self, img_info):
+        """Prepare results for image (e.g. the annotation information, ...)."""
         results = super().prepare_results(img_info)
         if self.detections is not None:
             if isinstance(self.detections, dict):
@@ -121,6 +131,21 @@ class MOTChallengeDataset(CocoVideoDataset):
         return ann
 
     def format_results(self, results, resfile_path=None, metrics=['track']):
+        """Format the results to txts (standard format for MOT Challenge).
+
+        Args:
+            results (dict(list[ndarray])): Testing results of the dataset.
+            resfile_path (str, optional): Path to save the formatted results.
+                Defaults to None.
+            metrics (list[str], optional): The results of the specifc metrics
+                will be formatted.. Defaults to ['track'].
+
+        Returns:
+            tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
+                the filepaths, names is a list containing the name of the
+                videos, tmp_dir is the temporal directory created for saving
+                files.
+        """
         assert isinstance(results, dict), 'results must be a dict.'
         if resfile_path is None:
             tmp_dir = tempfile.TemporaryDirectory()
@@ -154,6 +179,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         return resfiles, names, tmp_dir
 
     def format_track_results(self, results, infos, resfile):
+        """Format tracking results."""
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
                 if 'mot_frame_id' in info:
@@ -168,6 +194,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                         f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
 
     def format_bbox_results(self, results, infos, resfile):
+        """Format detection results."""
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
                 if 'mot_frame_id' in info:
@@ -189,6 +216,24 @@ class MOTChallengeDataset(CocoVideoDataset):
                  resfile_path=None,
                  bbox_iou_thr=0.5,
                  track_iou_thr=0.5):
+        """Evaluation in MOT Challenge.
+
+        Args:
+            results (list[list | tuple]): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated. Options are
+                'bbox', 'track'. Defaults to 'track'.
+            logger (logging.Logger | str | None): Logger used for printing
+                related information during evaluation. Default: None.
+            resfile_path (str, optional): Path to save the formatted results.
+                Defaults to None.
+            bbox_iou_thr (float, optional): IoU threshold for detection
+                evaluation. Defaults to 0.5.
+            track_iou_thr (float, optional): IoU threshold for tracking
+                evaluation.. Defaults to 0.5.
+
+        Returns:
+            dict[str, float]: MOTChallenge style evaluation metric.
+        """
         eval_results = dict()
         if isinstance(metric, list):
             metrics = metric

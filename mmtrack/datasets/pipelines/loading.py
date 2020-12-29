@@ -90,6 +90,11 @@ class SeqLoadAnnotations(LoadAnnotations):
 
 @PIPELINES.register_module()
 class LoadDetections(object):
+    """Load public detections from MOT benchmark.
+
+    Args:
+        results (dict): Result dict from :obj:`mmtrack.CocoVideoDataset`.
+    """
 
     def __call__(self, results):
         detections = results['detections']
