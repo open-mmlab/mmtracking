@@ -1,4 +1,4 @@
-# Contributing to mmdetection
+# Contributing to mmtracking
 
 All kinds of contributions are welcome, including but not limited to the following.
 
@@ -7,7 +7,7 @@ All kinds of contributions are welcome, including but not limited to the followi
 
 ## Workflow
 
-1. fork and pull the latest mmdetection
+1. fork and pull the latest mmtracking
 2. checkout a new branch (do not use master branch for PRs)
 3. commit your changes
 4. create a PR
@@ -15,7 +15,7 @@ All kinds of contributions are welcome, including but not limited to the followi
 Note
 
 - If you plan to add some new features that involve large changes, it is encouraged to open an issue for discussion first.
-- If you are the author of some papers and would like to include your method to mmdetection, please let us know (open an issue or contact the maintainers). We will much appreciate your contribution.
+- If you are the author of some papers and would like to include your method to mmtracking, please let us know (open an issue or contact the maintainers). We will much appreciate your contribution.
 - For new features and new modules, unit tests are required to improve the code's robustness.
 
 ## Code style
