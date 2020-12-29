@@ -9,6 +9,10 @@ from .base import BaseMultiObjectTracker
 
 @MODELS.register_module()
 class Tracktor(BaseMultiObjectTracker):
+    """Tracking without bells and whistles.
+
+    Details can be found at `Tracktor<https://arxiv.org/abs/1903.05625>`_.
+    """
 
     def __init__(self,
                  detector=None,
@@ -39,6 +43,11 @@ class Tracktor(BaseMultiObjectTracker):
         self.init_weights(pretrains)
 
     def init_weights(self, pretrain):
+        """Initialize the weights of the modules.
+
+        Args:
+            pretrained (dict): Path to pre-trained weights.
+        """
         if pretrain is None:
             pretrain = dict()
         assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
@@ -49,15 +58,19 @@ class Tracktor(BaseMultiObjectTracker):
 
     @property
     def with_cmc(self):
+        """bool: whether the framework has a camera model compensation
+                model.
+        """
         return hasattr(self, 'cmc') and self.cmc is not None
 
     @property
     def with_linear_motion(self):
-        """bool: whether the framework has a track_head"""
+        """bool: whether the framework has a linear motion model."""
         return hasattr(self,
                        'linear_motion') and self.linear_motion is not None
 
     def forward_train(self, *args, **kwargs):
+        """Forward function during training."""
         raise NotImplementedError(
             'Please train `detector` and `reid` models first and \
                 inference with Tracktor.')
@@ -68,6 +81,23 @@ class Tracktor(BaseMultiObjectTracker):
                     rescale=False,
                     public_bboxes=None,
                     **kwargs):
+        """Test without augmentations.
+
+        Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            rescale (bool, optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to False.
+            public_bboxes (list[Tensor], optional): Public bounding boxes from
+                the benchmark. Defaults to None.
+
+        Returns:
+            dict[str : list(ndarray)]: The tracking results.
+        """
         frame_id = img_metas[0].get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()

@@ -5,11 +5,13 @@ from ..builder import REID
 
 @REID.register_module()
 class BaseReID(ImageClassifier):
+    """Base class for re-identification."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def forward_train(self, *args, **kwargs):
+        """"Training forward function."""
         raise NotImplementedError()
 
     def simple_test(self, img):

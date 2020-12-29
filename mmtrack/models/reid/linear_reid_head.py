@@ -8,6 +8,21 @@ from .fc_module import FcModule
 
 @HEADS.register_module()
 class LinearReIDHead(ClsHead):
+    """Linear head for re-identification.
+
+    Args:
+        num_fcs (int): Number of fcs.
+        in_channels (int): Number of channels in the input.
+        fc_channels (int): Number of channels in the fcs.
+        out_channels (int): Number of channels in the output.
+        norm_cfg (dict, optional): Configuration of normlization method
+            after fc. Defaults to None.
+        act_cfg (dict, optional): Configuration of activation method after fc.
+            Defaults to None.
+        num_classes (int, optional): Number of the identities. Default to None.
+        loss (dict, optional): Loss to train the re-identificaiton module.
+        topk (int, optional): Calculate topk accuracy.
+    """
 
     def __init__(self,
                  num_fcs,
@@ -32,6 +47,7 @@ class LinearReIDHead(ClsHead):
         self._init_layers()
 
     def _init_layers(self):
+        """Initialize fc layers."""
         self.fcs = nn.ModuleList()
         for i in range(self.num_fcs):
             in_channels = self.in_channels if i == 0 else self.fc_channels
@@ -43,6 +59,7 @@ class LinearReIDHead(ClsHead):
         self.fc_out = nn.Linear(in_channels, self.out_channels)
 
     def init_weights(self):
+        """Initalize model weights."""
         normal_init(self.fc_out, mean=0, std=0.01, bias=0)
 
     def simple_test(self, x):
@@ -53,6 +70,7 @@ class LinearReIDHead(ClsHead):
         return x
 
     def forward_train(self, x, gt_label):
+        """Model forward."""
         x = self.fcs(x)
         x = self.fc_out(x)
         if self.num_classes is not None:

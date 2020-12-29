@@ -9,6 +9,15 @@ from mmtrack.models import TRACKERS
 
 @TRACKERS.register_module()
 class BaseTracker(metaclass=ABCMeta):
+    """Base tracker model.
+
+    Args:
+        momentums (dict[str:float], optional): Momentums to update the buffers.
+            The `str` indicates the name of the buffer while the `float`
+            indicates the momentum. Default to None.
+        num_frames_retain (int, optional). If a track is disappeared more than
+            `num_frames_retain` frames, it will be deleted in the memo.
+    """
 
     def __init__(self, momentums=None, num_frames_retain=10):
         super().__init__()
@@ -20,15 +29,18 @@ class BaseTracker(metaclass=ABCMeta):
         self.reset()
 
     def reset(self):
+        """Reset the buffer of the tracker."""
         self.num_tracks = 0
         self.tracks = dict()
 
     @property
     def empty(self):
+        """Whether the buffer is empty or not."""
         return False if self.tracks else True
 
     @property
     def ids(self):
+        """All ids in the tracker."""
         return list(self.tracks.keys())
 
     @property
@@ -37,6 +49,13 @@ class BaseTracker(metaclass=ABCMeta):
         return hasattr(self, 'reid') and self.reid is not None
 
     def update(self, **kwargs):
+        """Update the tracker.
+
+        Args:
+            kwargs (dict[str: Tensor | int]): The `str` indicates the
+                name of the input variable. `ids` and `frame_ids` are
+                obligatory in the keys.
+        """
         memo_items = [k for k, v in kwargs.items() if v is not None]
         rm_items = [k for k in kwargs.keys() if k not in memo_items]
         for item in rm_items:
@@ -69,6 +88,7 @@ class BaseTracker(metaclass=ABCMeta):
         self.pop_invalid_tracks(frame_id)
 
     def pop_invalid_tracks(self, frame_id):
+        """Pop out invalid tracks."""
         invalid_ids = []
         for k, v in self.tracks.items():
             if frame_id - v['frame_ids'][-1] >= self.num_frames_retain:
@@ -77,6 +97,7 @@ class BaseTracker(metaclass=ABCMeta):
             self.tracks.pop(invalid_id)
 
     def update_track(self, id, obj):
+        """Update a track."""
         for k, v in zip(self.memo_items, obj):
             v = v[None]
             if self.momentums is not None and k in self.momentums:
@@ -86,6 +107,7 @@ class BaseTracker(metaclass=ABCMeta):
                 self.tracks[id][k].append(v)
 
     def init_track(self, id, obj):
+        """Initialize a track."""
         self.tracks[id] = Dict()
         for k, v in zip(self.memo_items, obj):
             v = v[None]
@@ -96,6 +118,7 @@ class BaseTracker(metaclass=ABCMeta):
 
     @property
     def memo(self):
+        """Return all buffers in the tracker."""
         outs = Dict()
         for k in self.memo_items:
             outs[k] = []
@@ -115,6 +138,19 @@ class BaseTracker(metaclass=ABCMeta):
         return outs
 
     def get(self, item, ids=None, num_samples=None, behavior=None):
+        """Get the buffer of a specific item.
+
+        Args:
+            item (str): The demanded item.
+            ids (list[int]): The demaned ids.
+            num_samples (int, optional): Number of samples to calculate the
+                results. Defaults to None.
+            behavior (str, optional): Behavior to calculate the results.
+                Options are `mean` | None. Defaults to None.
+
+        Returns:
+            Tensor: The results of the demanded item.
+        """
         if ids is None:
             ids = self.ids
 
@@ -138,9 +174,26 @@ class BaseTracker(metaclass=ABCMeta):
 
     @abstractmethod
     def track(self, *args, **kwargs):
+        """Tracking forward function."""
         pass
 
     def crop_imgs(self, img, img_metas, bboxes, rescale=False):
+        """Crop the images according to some bounding boxes. Typically for re-
+        identification sub-module.
+
+        Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            bboxes (Tensor): of shape (N, 4) or (N, 5).
+            rescale (bool, optional): If True, the bounding boxes should be
+                rescaled to fit the scale of the image. Defaults to False.
+
+        Returns:
+            Tensor: Image tensor of shape (N, C, H, W).
+        """
         h, w, _ = img_metas[0]['img_shape']
         img = img[:, :, :h, :w]
         if rescale:

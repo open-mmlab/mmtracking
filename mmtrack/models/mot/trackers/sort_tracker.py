@@ -10,10 +10,34 @@ from .base_tracker import BaseTracker
 
 @TRACKERS.register_module()
 class SortTracker(BaseTracker):
+    """Tracker for DeepSORT.
+
+    Args:
+        obj_score_thr (float, optional): Threshold to filter the objects.
+            Defaults to 0.3.
+        reid (dict, optional): Configuration for the ReID model.
+
+            - num_samples (int, optional): Number of samples to calculate the
+                feature embeddings of a track. Default to 10.
+            - image_scale (tuple, optional): Input scale of the ReID model.
+                Default to (256, 128).
+            - img_norm_cfg (dict, optional): Configuration to normalize the
+                input. Default to None.
+            - match_score_thr (float, optional): Similarity threshold for the
+                matching process. Default to 2.0.
+        match_iou_thr (float, optional): Threshold of the IoU matching process.
+            Defaults to 0.7.
+        num_tentatives (int, optional): Number of continuous frames to confirm
+            a track. Defaults to 3.
+    """
 
     def __init__(self,
                  obj_score_thr=0.3,
-                 reid=None,
+                 reid=dict(
+                     num_samples=10,
+                     img_scale=(256, 128),
+                     img_norm_cfg=None,
+                     match_score_thr=2.0),
                  match_iou_thr=0.7,
                  num_tentatives=3,
                  **kwargs):
@@ -24,6 +48,7 @@ class SortTracker(BaseTracker):
         self.num_tentatives = num_tentatives
 
     def xyxy2xyah(self, bboxes):
+        """Transform bounding boxes."""
         cx = (bboxes[:, 2] + bboxes[:, 0]) / 2
         cy = (bboxes[:, 3] + bboxes[:, 1]) / 2
         w = bboxes[:, 2] - bboxes[:, 0]
@@ -33,10 +58,12 @@ class SortTracker(BaseTracker):
 
     @property
     def confirmed_ids(self):
+        """Confirmed ids in the tracker."""
         ids = [id for id, track in self.tracks.items() if not track.tentative]
         return ids
 
     def init_track(self, id, obj):
+        """Initialize a track."""
         super().init_track(id, obj)
         self.tracks[id].tentative = True
         bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
@@ -46,6 +73,7 @@ class SortTracker(BaseTracker):
             bbox)
 
     def update_track(self, id, obj):
+        """Update a track."""
         super().update_track(id, obj)
         if self.tracks[id].tentative:
             if len(self.tracks[id]['bboxes']) >= self.num_tentatives:
@@ -57,6 +85,7 @@ class SortTracker(BaseTracker):
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
     def pop_invalid_tracks(self, frame_id):
+        """Pop out invalid tracks."""
         invalid_ids = []
         for k, v in self.tracks.items():
             # case1: disappeared frames >= self.num_frames_retrain
@@ -72,12 +101,30 @@ class SortTracker(BaseTracker):
               img,
               img_metas,
               model,
-              feats,
               bboxes,
               labels,
               frame_id,
               rescale=False,
               **kwargs):
+        """Tracking forward function.
+
+        Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            model (nn.Module): MOT model.
+            bboxes (Tensor): of shape (N, 5).
+            labels (Tensor): of shape (N, ).
+            frame_id (int): The id of current frame, 0-index.
+            rescale (bool, optional): If True, the bounding boxes should be
+                rescaled to fit the original scale of the image. Defaults to
+                False.
+
+        Returns:
+            tuple: Tracking results.
+        """
         if not hasattr(self, 'kf'):
             self.kf = model.motion
 

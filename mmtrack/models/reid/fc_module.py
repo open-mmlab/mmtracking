@@ -4,6 +4,17 @@ from mmcv.cnn import (build_activation_layer, build_norm_layer, constant_init,
 
 
 class FcModule(nn.Module):
+    """Fully-connected layer module.
+
+    Args:
+        in_channels (int): Input channels.
+        out_channels (int): Ourput channels.
+        norm_cfg (dict, optional): Configuration of normlization method
+            after fc. Defaults to None.
+        act_cfg (dict, optional): Configuration of activation method after fc.
+            Defaults to dict(type='ReLU').
+        inplace (bool, optional): Whether inplace the activatation module.
+    """
 
     def __init__(self,
                  in_channels,
@@ -42,14 +53,17 @@ class FcModule(nn.Module):
 
     @property
     def norm(self):
+        """Normalization."""
         return getattr(self, self.norm_name)
 
     def init_weights(self):
+        """Initialize weights."""
         kaiming_init(self.fc)
         if self.with_norm:
             constant_init(self.norm, 1, bias=0)
 
     def forward(self, x, activate=True, norm=True):
+        """Model forward."""
         x = self.fc(x)
         if norm and self.with_norm:
             x = self.norm(x)
