@@ -58,7 +58,7 @@ Please refer to [install.md](docs/install.md) for installation and dataset prepa
 
 ## Get Started
 
-Please see [getting_started.md](docs/getting_started.md) for the basic usage of MMTracking.
+Please see [get_started.md](docs/get_started.md) for the basic usage of MMTracking.
 There are also tutorials.
 
 
