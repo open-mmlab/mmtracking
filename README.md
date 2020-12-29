@@ -23,9 +23,20 @@ The master branch works with PyTorch 1.3 to 1.6.
 
 - **First Unified Video Perception Platform**
 
+  We are the first open source toolbox that unifies versatile video perception tasks include video object detection, single object tracking, and multiple object tracking.
+
 - **Modular Design**
 
-- **Better, Faster, Stronger**
+  We decompose the video perception framework into different components and one can easily construct a customized method by combining different modules.
+
+- **Simpler, Faster and Stronger**
+
+  **Simpler**: MMTracking is built upon [MMDetection](https://github.com/open-mmlab/mmdetection) that we can capitalize any detector only through modifying the configs.
+
+  **Faster**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
+
+  **Stronger**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
+
 
 ## License
 
