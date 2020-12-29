@@ -27,7 +27,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
         Returns:
             list[Tensor]: List of 2D hanning window with shape
                 (num_base_anchors[i] * featmap_sizes[i][0] * \
-                    featmap_sizes[i][1], ).
+                    featmap_sizes[i][1]).
         """
         assert self.num_levels == len(featmap_sizes)
         multi_level_windows = []
