@@ -1,0 +1,21 @@
+# Deep Feature Flow for Video Recognition
+
+## Introduction
+
+```latex
+@inproceedings{zhu2017deep,
+  title={Deep feature flow for video recognition},
+  author={Zhu, Xizhou and Xiong, Yuwen and Dai, Jifeng and Yuan, Lu and Wei, Yichen},
+  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+  pages={2349--2358},
+  year={2017}
+}
+```
+
+## Results and models on ImageNet VID dataset
+We observe around 1 mAP fluctuations in performance, and provide the best model.
+
+|    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 | Config | Download |
+| :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :------: | :--------: |
+|    R-50-DC5     |  pytorch  |   7e    | -        | -              | 70.3 | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
+|    R-101-DC5     |  pytorch  |   7e    | -        | -              | 73.5 | [config](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py) | [model](MODEL_LINK) &#124; [log](LOG_LINK) |
