@@ -108,7 +108,7 @@ class SeqCropLikeSiamFC(object):
 
         Returns:
             list[dict]: List of dict that contains cropped image and
-                corresponding ground truth box.
+            corresponding ground truth box.
         """
         outs = []
         for _results in results:
@@ -167,8 +167,8 @@ class SeqShiftScaleAug(object):
 
         Returns:
             tuple(crop_img, bbox): crop_img is a ndarray of shape
-                (target_size, target_size, 3), bbox is the corrsponding ground
-                truth box in [x1, y1, x2, y2] format.
+            (target_size, target_size, 3), bbox is the corrsponding ground
+            truth box in [x1, y1, x2, y2] format.
         """
         img_h, img_w = image.shape[:2]
 
@@ -209,7 +209,7 @@ class SeqShiftScaleAug(object):
 
         Returns:
             list[dict]: List of dict that contains cropped image and
-                corresponding ground truth box.
+            corresponding ground truth box.
         """
         outs = []
         for i, _results in enumerate(results):
@@ -351,8 +351,8 @@ class SeqResize(Resize):
 
         Returns:
             list[dict]: List of dict that contains resized results,
-                'img_shape', 'pad_shape', 'scale_factor', 'keep_ratio' keys
-                are added into result dict.
+            'img_shape', 'pad_shape', 'scale_factor', 'keep_ratio' keys
+            are added into result dict.
         """
         outs, scale = [], None
         for i, _results in enumerate(results):
@@ -424,7 +424,7 @@ class SeqRandomFlip(RandomFlip):
 
         Returns:
             list[dict]: List of dict that contains flipped results, 'flip',
-                'flip_direction' keys are added into the dict.
+            'flip_direction' keys are added into the dict.
         """
         if self.share_params:
             if isinstance(self.direction, list):
@@ -481,8 +481,8 @@ class SeqPad(Pad):
 
         Returns:
             list[dict]: List of dict that contains padding results,
-                'pad_shape', 'pad_fixed_size' and 'pad_size_divisor' keys are
-                added into the dict.
+            'pad_shape', 'pad_fixed_size' and 'pad_size_divisor' keys are
+            added into the dict.
         """
         outs = []
         for _results in results:
@@ -558,7 +558,7 @@ class SeqRandomCrop(object):
 
         Returns:
             dict: Randomly cropped results, 'img_shape' key in result dict is
-                updated according to crop size.
+            updated according to crop size.
         """
 
         for key in results.get('img_fields', ['img']):
@@ -621,7 +621,7 @@ class SeqRandomCrop(object):
 
         Returns:
             dict: Randomly cropped results, 'img_shape' key in result dict is
-                updated according to crop size.
+            updated according to crop size.
         """
         if self.share_params:
             offsets = self.get_offsets(results[0]['img'])

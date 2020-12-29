@@ -160,7 +160,7 @@ class FlowNetSimple(nn.Module):
 
         Returns:
             Tensor: of shape (N, 6, H, W) encoding the input images pairs for
-                FlowNetSimple.
+            FlowNetSimple.
         """
         if not hasattr(self, 'img_norm_mean'):
             mean = img_metas[0]['img_norm_cfg']['mean']

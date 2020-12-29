@@ -65,9 +65,9 @@ class SOTTrainDataset(CocoVideoDataset):
 
         Returns:
             tuple: (snippet, image_id, instance_id), snippet is a list
-                containing the successive image ids where the instance
-                appears, image_id is a random sampled image id from the
-                snippet.
+            containing the successive image ids where the instance
+            appears, image_id is a random sampled image id from the
+            snippet.
         """
         vid_id = self.vid_ids[idx]
         instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
@@ -121,10 +121,10 @@ class SOTTrainDataset(CocoVideoDataset):
 
         Returns:
             tuple: (image_ids, instance_ids, is_positive_pair), image_ids is
-                a list that must contain search image id and may contain
-                `image_id`, instance_ids is a list that must contain search
-                instance id and may contain `instance_id`, is_positive_pair is
-                a bool denoting postive or negative sample pair.
+            a list that must contain search image id and may contain
+            `image_id`, instance_ids is a list that must contain search
+            instance id and may contain `instance_id`, is_positive_pair is
+            a bool denoting postive or negative sample pair.
         """
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
@@ -195,7 +195,7 @@ class SOTTrainDataset(CocoVideoDataset):
 
         Returns:
             dict: Training data and annotation after pipeline with new keys
-                introduced by pipeline.
+            introduced by pipeline.
         """
         snippet, image_id, instance_id = self.get_snippet_of_instance(idx)
         image_ids, instance_ids, is_positive_pair = self.ref_img_sampling(
@@ -218,7 +218,7 @@ class SOTTrainDataset(CocoVideoDataset):
 
         Returns:
             dict: A dict containing the following keys: bboxes, labels. labels
-                is set to `np.array([0])`.
+            is set to `np.array([0])`.
         """
         has_instance_id = 0
         for ann_info in ann_infos:

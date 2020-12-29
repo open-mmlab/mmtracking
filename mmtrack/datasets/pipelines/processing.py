@@ -8,8 +8,8 @@ class MatchInstances(object):
 
     Args:
         skip_nomatch (bool, optional): Whether skip the pair of image
-            during training when there are no matched objects. Default
-            to True.
+        during training when there are no matched objects. Default
+        to True.
     """
 
     def __init__(self, skip_nomatch=True):
@@ -24,7 +24,7 @@ class MatchInstances(object):
 
         Returns:
             tuple: Matching results which contain the indices of the
-                matched target.
+            matched target.
         """
         ins_ids = list(instance_ids)
         ref_ins_ids = list(ref_instance_ids)

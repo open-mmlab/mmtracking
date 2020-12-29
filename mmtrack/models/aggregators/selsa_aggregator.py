@@ -42,7 +42,7 @@ class SelsaAggregator(nn.Module):
 
         Returns:
             Tensor: The aggregated features of key frame proposals with shape
-                [N, C].
+            [N, C].
         """
         roi_n = x.shape[0]
         ref_roi_n = ref_x.shape[0]

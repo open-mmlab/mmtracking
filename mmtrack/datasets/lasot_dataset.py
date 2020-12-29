@@ -28,7 +28,7 @@ class LaSOTDataset(CocoVideoDataset):
 
         Returns:
             dict: A dict containing the following keys: bboxes, labels,
-                ignore. labels are not useful in SOT.
+            ignore. labels are not useful in SOT.
         """
         gt_bboxes = np.array(ann_info[0]['bbox'], dtype=np.float32)
         # convert [x1, y1, w, h] to [x1, y1, x2, y2]
@@ -51,7 +51,7 @@ class LaSOTDataset(CocoVideoDataset):
 
         Returns:
             dict[str, float]: OPE style evaluation metric (i.e. success,
-                norm precision and precision).
+            norm precision and precision).
         """
         if isinstance(metric, list):
             metrics = metric

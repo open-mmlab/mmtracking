@@ -120,7 +120,7 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Returns:
             Tensor: of shape (1, C, target_size, target_size) encoding the
-                resized cropped image.
+            resized cropped image.
         """
         N, C, H, W = img.shape
         context_xmin = int(center_xy[0] - crop_size / 2)
@@ -184,9 +184,9 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Returns:
             tuple(z_feat, avg_channel): z_feat is a tuple[Tensor] that
-                contains the multi level feature maps of exemplar image,
-                avg_channel is Tensor with shape (3, ), and denotes the padding
-                values.
+            contains the multi level feature maps of exemplar image,
+            avg_channel is Tensor with shape (3, ), and denotes the padding
+            values.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
@@ -212,9 +212,9 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Returns:
             tuple(best_score, best_bbox): best_score is a Tensor denoting the
-                score of best_bbox, best_bbox is a Tensor of shape (4, ) in
-                [cx, cy, w, h] format, and denotes the best tracked bbox in
-                current frame.
+            score of best_bbox, best_bbox is a Tensor of shape (4, ) in
+            [cx, cy, w, h] format, and denotes the best tracked bbox in
+            current frame.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])

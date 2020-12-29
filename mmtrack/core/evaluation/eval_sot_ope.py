@@ -69,7 +69,7 @@ def eval_sot_ope(results, annotations):
 
     Returns:
         dict[str, float]: OPE style evaluation metric (i.e. success,
-                norm precision and precision).
+        norm precision and precision).
     """
     success_results = []
     precision_results = []
