@@ -13,16 +13,17 @@ from mmtrack.utils import get_root_logger
 
 
 class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
-    """Base class for detectors."""
+    """Base class for multiple object tracking."""
 
     def __init__(self):
         super(BaseMultiObjectTracker, self).__init__()
         self.logger = get_root_logger()
 
     def init_module(self, module, pretrain=None):
-        """Initialize the weights in detector.
+        """Initialize the weights of a sub-module.
 
         Args:
+            module (nn.Module): A sub-module of the model.
             pretrained (str, optional): Path to pre-trained weights.
                 Defaults to None.
         """
@@ -37,6 +38,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
             getattr(self, module).init_weights()
 
     def freeze_module(self, module):
+        """Freeze module during training."""
         if isinstance(module, str):
             modules = [module]
         else:
@@ -52,27 +54,27 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
 
     @property
     def with_detector(self):
-        """bool: whether the framework has a detector"""
+        """bool: whether the framework has a detector."""
         return hasattr(self, 'detector') and self.detector is not None
 
     @property
     def with_reid(self):
-        """bool: whether the framework has a reid model"""
+        """bool: whether the framework has a reid model."""
         return hasattr(self, 'reid') and self.reid is not None
 
     @property
     def with_motion(self):
-        """bool: whether the framework has a reid model"""
+        """bool: whether the framework has a motion model."""
         return hasattr(self, 'reid') and self.reid is not None
 
     @property
     def with_track_head(self):
-        """bool: whether the framework has a track_head"""
+        """bool: whether the framework has a track_head."""
         return hasattr(self, 'track_head') and self.track_head is not None
 
     @property
     def with_tracker(self):
-        """bool: whether the framework has a track_head"""
+        """bool: whether the framework has a tracker."""
         return hasattr(self, 'tracker') and self.tracker is not None
 
     @abstractmethod
@@ -92,6 +94,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def simple_test(self, img, img_metas, **kwargs):
+        """Test function with a single scale."""
         pass
 
     def aug_test(self, imgs, img_metas, **kwargs):

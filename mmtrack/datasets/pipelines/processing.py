@@ -4,11 +4,28 @@ from mmdet.datasets.builder import PIPELINES
 
 @PIPELINES.register_module()
 class MatchInstances(object):
+    """Matching objects on a pair of images.
+
+    Args:
+        skip_nomatch (bool, optional): Whether skip the pair of image
+            during training when there are no matched objects. Default
+            to True.
+    """
 
     def __init__(self, skip_nomatch=True):
         self.skip_nomatch = skip_nomatch
 
     def _match_gts(self, instance_ids, ref_instance_ids):
+        """Matching objects according to ground truth `instance_ids`.
+
+        Args:
+            instance_ids (ndarray): of shape (N1, ).
+            ref_instance_ids (ndarray): of shape (N2, ).
+
+        Returns:
+            tuple: Matching results which contain the indices of the
+                matched target.
+        """
         ins_ids = list(instance_ids)
         ref_ins_ids = list(ref_instance_ids)
         match_indices = np.array([

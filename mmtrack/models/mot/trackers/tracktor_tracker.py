@@ -9,6 +9,32 @@ from .base_tracker import BaseTracker
 
 @TRACKERS.register_module()
 class TracktorTracker(BaseTracker):
+    """Tracker for Tracktor.
+
+    Args:
+        obj_score_thr (float, optional): Threshold to filter the objects.
+            Defaults to 0.3.
+        reid (dict, optional): Configuration for the ReID model.
+
+            - obj_score_thr (float, optional): Threshold to filter the
+                regressed objects. Default to 0.5.
+            - nms (dict, optional): NMS configuration to filter the regressed
+                objects. Default to `dict(type='nms', iou_threshold=0.6)`.
+            - match_iou_thr (float, optional): Minimum IoU when matching
+                objects with IoU. Default to 0.3.
+        reid (dict, optional): Configuration for the ReID model.
+
+            - num_samples (int, optional): Number of samples to calculate the
+                feature embeddings of a track. Default to 10.
+            - image_scale (tuple, optional): Input scale of the ReID model.
+                Default to (256, 128).
+            - img_norm_cfg (dict, optional): Configuration to normalize the
+                input. Default to None.
+            - match_score_thr (float, optional): Similarity threshold for the
+                matching process. Default to 2.0.
+            - match_iou_thr (float, optional): Minimum IoU when matching
+                objects with embedding similarity. Default to 0.2.
+    """
 
     def __init__(self,
                  obj_score_thr=0.5,
@@ -16,7 +42,12 @@ class TracktorTracker(BaseTracker):
                      obj_score_thr=0.5,
                      nms=dict(type='nms', iou_threshold=0.6),
                      match_iou_thr=0.3),
-                 reid=None,
+                 reid=dict(
+                     num_samples=10,
+                     img_scale=(256, 128),
+                     img_norm_cfg=None,
+                     match_score_thr=2.0,
+                     match_iou_thr=0.2),
                  **kwargs):
         super().__init__(**kwargs)
         self.obj_score_thr = obj_score_thr
@@ -24,6 +55,7 @@ class TracktorTracker(BaseTracker):
         self.reid = reid
 
     def regress_tracks(self, x, img_metas, detector, frame_id, rescale=False):
+        """Regress the tracks to current frame."""
         memo = self.memo
         bboxes = memo.bboxes[memo.frame_ids == frame_id - 1]
         ids = memo.ids[memo.frame_ids == frame_id - 1]
@@ -54,6 +86,26 @@ class TracktorTracker(BaseTracker):
               frame_id,
               rescale=False,
               **kwargs):
+        """Tracking forward function.
+
+        Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            model (nn.Module): MOT model.
+            feats (tuple): Backbone features of the input image.
+            bboxes (Tensor): of shape (N, 5).
+            labels (Tensor): of shape (N, ).
+            frame_id (int): The id of current frame, 0-index.
+            rescale (bool, optional): If True, the bounding boxes should be
+                rescaled to fit the original scale of the image. Defaults to
+                False.
+
+        Returns:
+            tuple: Tracking results.
+        """
         if self.with_reid:
             if self.reid.get('img_norm_cfg', False):
                 reid_img = imrenormalize(img, img_metas[0]['img_norm_cfg'],

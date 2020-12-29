@@ -74,6 +74,7 @@ class L2Loss(nn.Module):
         return loss_bbox
 
     def update_weight(self, pred, target, weight, avg_factor):
+        """Update the weight according to targets."""
         if weight is None:
             weight = target.new_ones(target.size())
 

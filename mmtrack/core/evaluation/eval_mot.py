@@ -29,6 +29,7 @@ METRIC_MAPS = {
 
 
 def bbox_distances(bboxes1, bboxes2, iou_thr=0.5):
+    """Calculate the IoU distances of two sets of boxes."""
     ious = bbox_overlaps(bboxes1, bboxes2, mode='iou')
     distances = 1 - ious
     distances = np.where(distances > iou_thr, np.nan, distances)
@@ -40,6 +41,7 @@ def acc_single_video(results,
                      iou_thr=0.5,
                      ignore_iof_thr=0.5,
                      ignore_by_classes=False):
+    """Accumulate results in a single video."""
     num_classes = len(results[0])
     accumulators = [
         mm.MOTAccumulator(auto_id=True) for i in range(num_classes)
@@ -78,6 +80,7 @@ def acc_single_video(results,
 
 
 def aggregate_accs(accumulators, classes):
+    """Aggregate results from each class."""
     # accs for each class
     items = list(classes)
     names, accs = [[] for c in classes], [[] for c in classes]
@@ -98,6 +101,7 @@ def aggregate_accs(accumulators, classes):
 
 
 def eval_single_class(names, accs):
+    """Evaluate CLEAR MOT results for each class."""
     mh = mm.metrics.create()
     summary = mh.compute_many(
         accs, names=names, metrics=METRIC_MAPS.keys(), generate_overall=True)
@@ -123,6 +127,35 @@ def eval_mot(results,
              ignore_iof_thr=0.5,
              ignore_by_classes=False,
              nproc=4):
+    """Evaluation CLEAR MOT metrics.
+
+    Args:
+        results (list[list[list[ndarray]]]): The first list indicates videos,
+            The second list indicates images. The third list indicates
+            categories. The ndarray indicates the tracking results.
+        annotations (list[list[dict]]): The first list indicates videos,
+            The second list indicates images. The third list indicates
+            the annotations of each video. Keys of annotations are
+
+            - `bboxes`: numpy array of shape (n, 4)
+            - `labels`: numpy array of shape (n, )
+            - `instance_ids`: numpy array of shape (n, )
+            - `bboxes_ignore` (optional): numpy array of shape (k, 4)
+            - `labels_ignore` (optional): numpy array of shape (k, )
+        logger (logging.Logger | str | None, optional): The way to print the
+            evaluation results. Defaults to None.
+        classes (list, optional): Classes in the dataset. Defaults to None.
+        iou_thr (float, optional): IoU threshold for evaluation.
+            Defaults to 0.5.
+        ignore_iof_thr (float, optional): Iof threshold to ignore results.
+            Defaults to 0.5.
+        ignore_by_classes (bool, optional): Whether ignore the results by
+            classes or not. Defaults to False.
+        nproc (int, optional): Number of the processes. Defaults to 4.
+
+    Returns:
+        dict[str, float]: Evaluation results.
+    """
     print_log('---CLEAR MOT Evaluation---', logger)
     t = time.time()
     gts = annotations.copy()

@@ -7,6 +7,13 @@ from ..builder import MOTION
 
 @MOTION.register_module()
 class CameraMotionCompensation(object):
+    """Camera motion compensation.
+
+    Args:
+        warp_mode (str): Warp mode in opencv.
+        num_iters (int): Number of the iterations.
+        stop_eps (float): Terminate threshold.
+    """
 
     def __init__(self,
                  warp_mode='cv2.MOTION_EUCLIDEAN',
@@ -17,6 +24,7 @@ class CameraMotionCompensation(object):
         self.stop_eps = stop_eps
 
     def get_warp_matrix(self, img, ref_img):
+        """Calculate warping matrix between two images."""
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2GRAY)
 
@@ -30,6 +38,7 @@ class CameraMotionCompensation(object):
         return warp_matrix
 
     def warp_bboxes(self, bboxes, warp_matrix):
+        """Warp bounding boxes according to the warping matrix."""
         tl, br = bboxes[:, :2], bboxes[:, 2:]
         tl = torch.cat((tl, torch.ones(tl.shape[0], 1).to(bboxes.device)),
                        dim=1)
@@ -41,6 +50,7 @@ class CameraMotionCompensation(object):
         return trans_bboxes.to(bboxes.device)
 
     def track(self, img, ref_img, tracks, num_samples, frame_id):
+        """Tracking forward."""
         img = img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         ref_img = ref_img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         warp_matrix = self.get_warp_matrix(img, ref_img)

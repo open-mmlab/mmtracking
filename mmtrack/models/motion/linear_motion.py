@@ -5,12 +5,21 @@ from ..builder import MOTION
 
 @MOTION.register_module()
 class LinearMotion(object):
+    """Linear motion while tracking.
+
+    Args:
+        num_samples (int, optional): Number of samples to calculate the
+            velocity. Default to 2.
+        center_motion (bool, optional): Whether use center location or
+            bounding box location to estimate the velocity. Default to False.
+    """
 
     def __init__(self, num_samples=2, center_motion=False):
         self.num_samples = num_samples
         self.center_motion = center_motion
 
     def center(self, bbox):
+        """Get the center of the box."""
         if bbox.ndim == 2:
             assert bbox.shape[0] == 1
             bbox = bbox[0]
@@ -18,6 +27,7 @@ class LinearMotion(object):
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
     def get_velocity(self, bboxes, num_samples=None):
+        """Get velocities of the input objects."""
         if num_samples is None:
             num_samples = min(len(bboxes), self.num_samples)
 
@@ -31,6 +41,7 @@ class LinearMotion(object):
         return torch.stack(vs, dim=0).mean(dim=0)
 
     def step(self, bboxes, velocity=None):
+        """Step forward with the velocity."""
         assert isinstance(bboxes, list)
         if velocity is None:
             velocity = self.get_velocity(bboxes)
@@ -51,6 +62,7 @@ class LinearMotion(object):
         return bbox
 
     def track(self, tracks, frame_id):
+        """Tracking forward."""
         for k, v in tracks.items():
             if int(v.frame_ids[-1]) == frame_id - 1:
                 rids = v.frame_ids[::-1]

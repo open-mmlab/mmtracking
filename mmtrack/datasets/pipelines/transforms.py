@@ -493,6 +493,31 @@ class SeqPad(Pad):
 
 @PIPELINES.register_module()
 class SeqRandomCrop(object):
+    """Sequentially random crop the images & bboxes & masks.
+
+    The absolute `crop_size` is sampled based on `crop_type` and `image_size`,
+    then the cropped results are generated.
+
+    Args:
+        crop_size (tuple): The relative ratio or absolute pixels of
+            height and width.
+        allow_negative_crop (bool, optional): Whether to allow a crop that does
+            not contain any bbox area. Default False.
+        share_params (bool, optional): Whether share the cropping parameters
+            for the images.
+        bbox_clip_border (bool, optional): Whether clip the objects outside
+            the border of the image. Defaults to True.
+
+    Note:
+        - If the image is smaller than the absolute crop size, return the
+            original image.
+        - The keys for bboxes, labels and masks must be aligned. That is,
+          `gt_bboxes` corresponds to `gt_labels` and `gt_masks`, and
+          `gt_bboxes_ignore` corresponds to `gt_labels_ignore` and
+          `gt_masks_ignore`.
+        - If the crop does not contain any gt-bbox region and
+          `allow_negative_crop` is set to False, skip this image.
+    """
 
     def __init__(self,
                  crop_size,
@@ -515,6 +540,7 @@ class SeqRandomCrop(object):
         }
 
     def get_offsets(self, img):
+        """Random generate the offsets for cropping."""
         margin_h = max(img.shape[0] - self.crop_size[0], 0)
         margin_w = max(img.shape[1] - self.crop_size[1], 0)
         offset_h = np.random.randint(0, margin_h + 1)
@@ -527,6 +553,8 @@ class SeqRandomCrop(object):
 
         Args:
             results (dict): Result dict from loading pipeline.
+            offsets (tuple, optional): Pre-defined offsets for cropping.
+                Default to None.
 
         Returns:
             dict: Randomly cropped results, 'img_shape' key in result dict is
@@ -585,6 +613,16 @@ class SeqRandomCrop(object):
         return results
 
     def __call__(self, results):
+        """Call function to sequentially randomly crop images, bounding boxes,
+        masks, semantic segmentation maps.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+
+        Returns:
+            dict: Randomly cropped results, 'img_shape' key in result dict is
+                updated according to crop size.
+        """
         if self.share_params:
             offsets = self.get_offsets(results[0]['img'])
         else:
@@ -635,6 +673,7 @@ class SeqPhotoMetricDistortion(object):
         self.hue_delta = hue_delta
 
     def get_params(self):
+        """Generate parameters."""
         params = dict()
         # delta
         if np.random.randint(2):
@@ -674,6 +713,7 @@ class SeqPhotoMetricDistortion(object):
 
         Args:
             results (dict): Result dict from loading pipeline.
+            params (dict, optional): Pre-defined parameters. Default to None.
 
         Returns:
             dict: Result dict with images distorted.
@@ -728,6 +768,14 @@ class SeqPhotoMetricDistortion(object):
         return results
 
     def __call__(self, results):
+        """Call function to perform photometric distortion on images.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+
+        Returns:
+            dict: Result dict with images distorted.
+        """
         if self.share_params:
             params = self.get_params()
         else:

@@ -14,7 +14,8 @@ model = dict(
             bbox_head=dict(bbox_coder=dict(
                 clip_border=False), num_classes=1))),
     motion=dict(type='KalmanFilter', center_only=False),
-    tracker=dict(type='SortTracker', obj_score_thr=0.5, match_iou_thr=0.5))
+    tracker=dict(
+        type='SortTracker', obj_score_thr=0.5, match_iou_thr=0.5, reid=None))
 # learning policy
 lr_config = dict(
     policy='step',
