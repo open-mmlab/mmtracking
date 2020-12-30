@@ -7,7 +7,7 @@
 - GCC 5+
 - [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
 - [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
-- [MMClassification](https://mmclassification.readthedocs.io/en/latest/#installation)
+<!-- - [MMClassification](https://mmclassification.readthedocs.io/en/latest/#installation) -->
 
 The compatible MMDetection and MMCV versions are as below. Please install the correct version of MMCV to avoid installation issues.
 
@@ -100,7 +100,7 @@ If mmcv and mmcv-full are both installed, there will be `ModuleNotFoundError`.
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-5. Install MMClassification.
+<!-- 5. Install MMClassification.
 
     ```shell
     pip install git+https://github.com/open-mmlab/mmclassification.git
@@ -111,16 +111,16 @@ If mmcv and mmcv-full are both installed, there will be `ModuleNotFoundError`.
     git clone https://github.com/open-mmlab/mmclassification.git
     cd mmclassification
     pip install -v -e .  # or "python setup.py develop"
-    ```
+    ``` -->
 
-6. Clone the MMTracking repository.
+5. Clone the MMTracking repository.
 
     ```shell
     git clone https://github.com/open-mmlab/mmtracking.git
     cd mmtracking
     ```
 
-7. Install build requirements and then install MMTracking.
+6. Install build requirements and then install MMTracking.
 
     ```shell
     pip install -r requirements/build.txt

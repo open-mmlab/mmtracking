@@ -23,6 +23,11 @@
 
 ## Results and models on MOT17
 
+We implement DeepSORT following the offical practices.
+
+We train the detector with MMDetection. However, currently we do not support training ReID models.
+We directly use the model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw) for inference. These missed features will be supported in the future.
+
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
 | R50-FasterRCNN-FPN | -  | half-train | half-val | Y     | 28.3 |   46.0 | 46.6 | 289 | 82451 | 4581 | [config](sort_faster-rcnn_fpn_4e_mot17-public-half.py) |  [detector](https://download.openmmlab.com/mmtracking/v0.5/mot/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/v0.5/mot/tracktor_reid_r50_iter25245-a452f51f.pth) |
