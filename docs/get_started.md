@@ -9,17 +9,17 @@ For installation instructions, please see [install.md](install.md).
     ```
     mkdir data
 
-    # Object Detection: symlink MS COCO
+    # object detection: symlink MS COCO
     ln -s $MSCOCO_ROOT/images data/coco/source_data
     ln -s $MSCOCO_ROOT/annotations data/coco/json_annotations
 
-    # symlink ImageNet DET and ImageNet VID
+    # video object detection: symlink ImageNet DET and ImageNet VID
     ln -s $IMAGENETDET_IMAGENETVID_ROOT data/imagenetdet_imagenetvid/source_data
 
-    # symlink LaSOT
+    # single object tracking: symlink LaSOT
     ln -s $LASOT_ROOT data/lasot/source_data
 
-    # symlink MOT17
+    # multiple object tracking: symlink MOT17
     ln -s $MOT17 data/MOT17
     ```
      Download the [txt files](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets) for the training of video object detection, and put these txt files into `data/imagenetdet_imagenetvid/data/Lists/`.
