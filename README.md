@@ -18,7 +18,7 @@ It is a part of the OpenMMLab project.
 The master branch works with PyTorch 1.3 to 1.6.
 
 <div align="left">
-  <img src="https://user-images.githubusercontent.com/24663779/103334402-232e4f80-4aac-11eb-870b-68050f808046.gif" width="800"/>
+  <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
 </div>
 
 ### Major features
