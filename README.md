@@ -52,6 +52,21 @@ Please refer to [changelog.md](docs/changelog.md) for details and release histor
 
 Results and models are available in the [model zoo](docs/model_zoo.md).
 
+Supported methods of video object detection:
+
+- [x] [DFF](configs/vid/dff)
+- [x] [FGFA](configs/vid/fgfa)
+- [x] [SELSA](configs/vid/selsa)
+
+Supported methods of multi object tracking:
+
+- [x] [SORT/DeepSORT](configs/mot/deepsort)
+- [x] [Tracktor](configs/mot/tracktor)
+
+Supported methods of single object tracking:
+
+- [x] [SiameseRPN++](configs/sot/siamese_rpn)
+
 ## Installation
 
 Please refer to [install.md](docs/install.md) for installation and dataset preparation.
