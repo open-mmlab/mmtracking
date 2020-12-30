@@ -10,11 +10,11 @@ Note that this value is usually less than what `nvidia-smi` shows.
 Results are obtained with the script `tools/benchmark.py` which computes the average time on 2000 images.
 - Speed benchmark environments
 
-    **HardWare**
+    HardWare
     - 8 NVIDIA Tesla V100 (32G) GPUs
     - Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
 
-    **Software environment**
+    Software environment
     - Python 3.7
     - PyTorch 1.5
     - CUDA 10.1
