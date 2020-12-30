@@ -5,7 +5,15 @@ Welcome to MMTracking's documentation!
    :maxdepth: 2
    :caption: Get Started
 
+   install.md
    get_started.md
+   model_zoo.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Notes
+
+   changelog.md
 
 .. toctree::
    :caption: API Reference
