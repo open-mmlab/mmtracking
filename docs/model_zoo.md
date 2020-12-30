@@ -46,7 +46,7 @@ Please refer to [SiameseRPN++](../configs/sot/siamese_rpn/README.md) for details
 - CUDNN 7.6.03
 - NCCL 2.4.08
 
-### Training speed and memory on video object detection
+### Training speed and memory of video object detection
 
 For fair comparison, we benchmark all implementations with ResNet-101.
 
@@ -58,7 +58,7 @@ The training speed is reported as followed, in terms of second per iter (s/iter)
 | FGFA         | 0.310      | 5935        |
 | SELSA        | 0.300      | 5305        |
 
-### Inference speed on video object detection
+### Inference speed of video object detection
 
 For fair comparison, we benchmark all implementations with ResNet-101.
 
@@ -70,16 +70,16 @@ The inference speed is measured with fps (img/s) on a single GPU, the higher, th
 | FGFA         | 6.4        |
 | SELSA        | 7.2        |
 
-### Training speed and memory on multi object tracking
+### Training speed and memory of multi object tracking
 
 
 
-### Inference speed on video object detection
+### Inference speed of multi object tracking
 
 
 
-### Training speed and memory on single object tracking
+### Training speed and memory of single object tracking
 
 
 
-### Inference speed on single object tracking
+### Inference speed of single object tracking
