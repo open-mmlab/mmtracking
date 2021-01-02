@@ -3,7 +3,7 @@
 This page provides basic tutorials about the usage of MMTracking.
 For installation instructions, please see [install.md](install.md).
 
-## Prepare datasets
+## Dataset preparation
 
 1. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. For example,
     ```
