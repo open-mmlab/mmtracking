@@ -66,6 +66,8 @@ def main():
                 out_file = osp.join(out_path, f'{i:06d}.jpg')
             else:
                 out_file = osp.join(out_path, img.rsplit('/', 1)[-1])
+        else:
+            out_file = None
         model.show_result(
             img,
             result,
