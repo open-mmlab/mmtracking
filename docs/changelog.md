@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0 (30/12/2020)
+## v0.5.0 (04/01/2021)
 ### Highlights
 - MMTracking is released!
 
