@@ -214,5 +214,4 @@ class SortTracker(BaseTracker):
             labels=labels,
             embeds=embeds if self.with_reid else None,
             frame_ids=frame_id)
-
         return bboxes, labels, ids
