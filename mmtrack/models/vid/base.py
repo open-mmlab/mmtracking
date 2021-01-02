@@ -273,12 +273,11 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
         # TODO: make it support tracking
         img = mmcv.imread(img)
         img = img.copy()
-        if isinstance(result, tuple):
-            bbox_result, segm_result = result
-            if isinstance(segm_result, tuple):
-                segm_result = segm_result[0]  # ms rcnn
-        else:
-            bbox_result, segm_result = result, None
+        assert isinstance(result, dict)
+        bbox_result = result.get('bbox_results', None)
+        segm_result = result.get('segm_results', None)
+        if isinstance(segm_result, tuple):
+            segm_result = segm_result[0]  # ms rcnn
         bboxes = np.vstack(bbox_result)
         labels = [
             np.full(bbox.shape[0], i, dtype=np.int32)
