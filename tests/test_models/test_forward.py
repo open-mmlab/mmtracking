@@ -45,7 +45,8 @@ def _get_model_cfg(fname):
     return model, train_cfg, test_cfg
 
 
-@pytest.mark.parametrize('cfg_file', ['sot/siamese_rpn_r50_1x_lasot.py'])
+@pytest.mark.parametrize('cfg_file',
+                         ['sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py'])
 def test_sot_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
@@ -118,8 +119,8 @@ def test_sot_forward(cfg_file):
                 results[k].append(v)
 
 
-@pytest.mark.parametrize('cfg_file',
-                         ['vid/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py'])
+@pytest.mark.parametrize(
+    'cfg_file', ['vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py'])
 def test_vid_dff_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
@@ -218,8 +219,8 @@ def test_vid_dff_style_forward(cfg_file):
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'vid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py',
-    'vid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py'
+    'vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py',
+    'vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py'
 ])
 def test_vid_fgfa_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
@@ -330,8 +331,8 @@ def test_vid_fgfa_style_forward(cfg_file):
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'mot/tracktor/tracktor_faster-rcnn_fpn_mot17.py',
-    'mot/sort/sort_faster-rcnn_fpn_mot17.py'
+    'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private',
+    'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'
 ])
 def test_tracktor_forward(cfg_file):
     config = _get_config_module(cfg_file)
