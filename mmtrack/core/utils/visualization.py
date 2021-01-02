@@ -10,6 +10,7 @@ from matplotlib.patches import Rectangle
 
 
 def random_color(seed):
+    """Random a color according to the input seed."""
     random.seed(seed)
     colors = sns.color_palette()
     color = random.choice(colors)
@@ -17,6 +18,7 @@ def random_color(seed):
 
 
 def imshow_tracks(*args, backend='cv2', **kwargs):
+    """Show the tracks on the input image."""
     if backend == 'cv2':
         return _cv2_show_tracks(*args, **kwargs)
     elif backend == 'plt':
@@ -34,6 +36,7 @@ def _cv2_show_tracks(img,
                      font_scale=0.4,
                      show=False,
                      out_file=None):
+    """Show the tracks with opencv."""
     assert bboxes.ndim == 2
     assert labels.ndim == 1
     assert ids.ndim == 1
@@ -95,6 +98,7 @@ def _plt_show_tracks(img,
                      font_scale=0.5,
                      show=False,
                      out_file=None):
+    """Show the tracks with matplotlib."""
     assert bboxes.ndim == 2
     assert labels.ndim == 1
     assert ids.ndim == 1

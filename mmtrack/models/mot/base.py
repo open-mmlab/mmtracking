@@ -246,6 +246,23 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                     show=False,
                     out_file=None,
                     backend='cv2'):
+        """Visualize tracking results.
+
+        Args:
+            img (str | ndarray): Filename of loaded image.
+            result (list[ndarray]): Tracking results.
+            thickness (int, optional): Thickness of lines. Defaults to 1.
+            font_scale (float, optional): Font scales of texts. Defaults
+                to 0.5.
+            show (bool, optional): Whether show the visualizations on the
+                fly. Defaults to False.
+            out_file (str | None, optional): Output filename. Defaults to None.
+            backend (str, optional): Backend to draw the bounding boxes,
+                options are `cv2` and `plt`. Defaults to 'cv2'.
+
+        Returns:
+            ndarray: Visualized image.
+        """
         bboxes, labels, ids = restore_result(result, return_ids=True)
         img = imshow_tracks(
             img,
