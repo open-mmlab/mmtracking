@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 import cv2
 
-from mmtrack.apis import init_model, sot_inference
+from mmtrack.apis import inference_sot, init_model
 
 
 def main():
@@ -61,7 +61,7 @@ def main():
             init_bbox[3] += init_bbox[1]
 
         # test a single image
-        result = sot_inference(model, frame, init_bbox, frame_id)
+        result = inference_sot(model, frame, init_bbox, frame_id)
 
         track_bbox = result['bbox']
         cv2.rectangle(

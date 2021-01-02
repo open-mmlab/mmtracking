@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 import cv2
 
-from mmtrack.apis import init_model, vid_inference
+from mmtrack.apis import inference_vid, init_model
 
 
 def main():
@@ -53,7 +53,7 @@ def main():
             break
 
         # test a single image
-        result = vid_inference(model, frame, frame_id)
+        result = inference_vid(model, frame, frame_id)
         vis_frame = model.show_result(
             frame, result, score_thr=args.score_thr, show=False)
 

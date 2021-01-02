@@ -49,16 +49,15 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
 
 
 def inference_mot(model, img, frame_id):
-    """Inference image(s) with the detector.
+    """Inference image(s) with the mot model.
 
     Args:
-        model (nn.Module): The loaded detector.
-        imgs (str/ndarray or list[str/ndarray]): Either image files or loaded
-            images.
+        model (nn.Module): The loaded mot model.
+        img (str | ndarray): Either image name or loaded image.
+        frame_id (int): frame id.
 
     Returns:
-        If imgs is a str, a generator will be returned, otherwise return the
-        detection results directly.
+        dict[str : ndarray]: The tracking results.
     """
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
