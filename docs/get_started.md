@@ -267,25 +267,3 @@ If you use launch training jobs with Slurm, there are two ways to specify the po
    CUDA_VISIBLE_DEVICES=0,1,2,3 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config1.py ${WORK_DIR}
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
-
-## Useful tools
-
-We provide lots of useful tools under `tools/` directory.
-
-### Publish a model
-
-Before you upload a model to AWS, you may want to
-(1) convert model weights to CPU tensors, (2) delete the optimizer states and
-(3) compute the hash of the checkpoint file and append the hash id to the filename.
-
-```shell
-python tools/publish_model.py ${INPUT_FILENAME} ${OUTPUT_FILENAME}
-```
-
-E.g.,
-
-```shell
-python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/latest.pth dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230.pth
-```
-
-The final output filename will be `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`.
