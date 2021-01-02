@@ -43,7 +43,7 @@ def _create_gt_results(dataset):
     return results
 
 
-@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
+@pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
 def test_load_detections(dataset):
     dataset_class = DATASETS.get(dataset)
     dataset = dataset_class(
@@ -89,7 +89,8 @@ def test_load_detections(dataset):
     tmp_dir.cleanup()
 
 
-@pytest.mark.parametrize('dataset', ['CocoVideoDataset', 'MOT17Dataset'])
+@pytest.mark.parametrize('dataset',
+                         ['CocoVideoDataset', 'MOTChallengeDataset'])
 def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
@@ -306,7 +307,7 @@ def test_coco_video_evaluation():
 
 def test_mot17_bbox_evaluation():
     classes = ('car', 'person')
-    dataset_class = DATASETS.get('MOT17Dataset')
+    dataset_class = DATASETS.get('MOTChallengeDataset')
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
@@ -317,9 +318,9 @@ def test_mot17_bbox_evaluation():
     assert eval_results['mAP'] == 1.0
 
 
-@patch('mmtrack.datasets.MOT17Dataset.load_annotations', MagicMock)
-@patch('mmtrack.datasets.MOT17Dataset._filter_imgs', MagicMock)
-@pytest.mark.parametrize('dataset', ['MOT17Dataset'])
+@patch('mmtrack.datasets.MOTChallengeDataset.load_annotations', MagicMock)
+@patch('mmtrack.datasets.MOTChallengeDataset._filter_imgs', MagicMock)
+@pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
 def test_mot17_track_evaluation(dataset):
     tmp_dir = tempfile.TemporaryDirectory()
     videos = ['TUD-Campus', 'TUD-Stadtmitte']

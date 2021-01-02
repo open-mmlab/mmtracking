@@ -88,4 +88,4 @@ We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBU
 MMTracking is an open source project that welcome any contribution and feedback.
 We wish that the toolbox and benchmark could serve the growing research
 community by providing a flexible as well as standardized toolkit to reimplement existing methods
-and develop their own new semantic segmentation methods.
+and develop their own new video perception methods.
