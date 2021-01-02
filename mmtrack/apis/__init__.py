@@ -1,9 +1,8 @@
-from .sot_inference import init_sot_model, sot_inference
+from .inference import inference_mot, inference_sot, inference_vid, init_model
 from .test import multi_gpu_test, single_gpu_test
 from .train import train_model
-from .vid_inference import init_vid_model, vid_inference
 
 __all__ = [
-    'multi_gpu_test', 'single_gpu_test', 'train_model', 'init_sot_model',
-    'sot_inference', 'init_vid_model', 'vid_inference'
+    'init_model', 'multi_gpu_test', 'single_gpu_test', 'train_model',
+    'inference_mot', 'inference_sot', 'inference_vid'
 ]

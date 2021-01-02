@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 import cv2
 
-from mmtrack.apis import init_sot_model, sot_inference
+from mmtrack.apis import inference_sot, init_model
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
     args = parser.parse_args()
 
     # build the model from a config file and a checkpoint file
-    model = init_sot_model(args.config, args.checkpoint, device=args.device)
+    model = init_model(args.config, args.checkpoint, device=args.device)
 
     cap = cv2.VideoCapture(args.video)
 
@@ -61,7 +61,7 @@ def main():
             init_bbox[3] += init_bbox[1]
 
         # test a single image
-        result = sot_inference(model, frame, init_bbox, frame_id)
+        result = inference_sot(model, frame, init_bbox, frame_id)
 
         track_bbox = result['bbox']
         cv2.rectangle(

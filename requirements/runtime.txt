@@ -4,5 +4,6 @@ mmcls
 mmpycocotools
 motmetrics
 numpy
+seaborn
 six
 terminaltables

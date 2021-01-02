@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 import cv2
 
-from mmtrack.apis import init_vid_model, vid_inference
+from mmtrack.apis import inference_vid, init_model
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
 
     # build the model from a config file and a checkpoint file
-    model = init_vid_model(args.config, args.checkpoint, device=args.device)
+    model = init_model(args.config, args.checkpoint, device=args.device)
 
     cap = cv2.VideoCapture(args.video)
 
@@ -53,7 +53,7 @@ def main():
             break
 
         # test a single image
-        result = vid_inference(model, frame, frame_id)
+        result = inference_vid(model, frame, frame_id)
         vis_frame = model.show_result(
             frame, result, score_thr=args.score_thr, show=False)
 
