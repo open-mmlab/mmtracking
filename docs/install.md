@@ -5,28 +5,8 @@
 - PyTorch 1.3+
 - CUDA 9.2+ (If you build PyTorch from source, CUDA 9.0 is also compatible)
 - GCC 5+
-- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
-- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
-<!-- - [MMClassification](https://mmclassification.readthedocs.io/en/latest/#installation) -->
-
-The compatible MMDetection and MMCV versions are as below. Please install the correct version of MMCV to avoid installation issues.
-
-| MMDetection version |    MMCV version     |
-|:-------------------:|:-------------------:|
-| master              | mmcv-full>=1.1.5, <1.3|
-| 2.7.0               | mmcv-full>=1.1.5, <1.3|
-| 2.6.0               | mmcv-full>=1.1.5, <1.3|
-| 2.5.0               | mmcv-full>=1.1.5, <1.3|
-| 2.4.0               | mmcv-full>=1.1.1, <1.3|
-| 2.3.0               | mmcv-full==1.0.5|
-| 2.3.0rc0            | mmcv-full>=1.0.2    |
-| 2.2.1               | mmcv==0.6.2         |
-| 2.2.0               | mmcv==0.6.2         |
-| 2.1.0               | mmcv>=0.5.9, <=0.6.1|
-| 2.0.0               | mmcv>=0.5.1, <=0.5.8|
-
-Note: You need to run `pip uninstall mmcv` first if you have mmcv installed.
-If mmcv and mmcv-full are both installed, there will be `ModuleNotFoundError`.
+- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation) 2.7.0
+- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation) 1.2.4
 
 ## Installation
 
@@ -91,7 +71,7 @@ If mmcv and mmcv-full are both installed, there will be `ModuleNotFoundError`.
     pip install git+https://github.com/open-mmlab/mmdetection.git
     ```
 
-    Optionally, you could also build MMDetection from source in case you want to modify the code:
+    Optionally, you can also build MMDetection from source in case you want to modify the code:
 
     ```shell
     git clone https://github.com/open-mmlab/mmdetection.git
@@ -99,19 +79,6 @@ If mmcv and mmcv-full are both installed, there will be `ModuleNotFoundError`.
     pip install -r requirements/build.txt
     pip install -v -e .  # or "python setup.py develop"
     ```
-
-<!-- 5. Install MMClassification.
-
-    ```shell
-    pip install git+https://github.com/open-mmlab/mmclassification.git
-    ```
-    Optionally, you could also build MMClassification from source in case you want to modify the code:
-
-    ```shell
-    git clone https://github.com/open-mmlab/mmclassification.git
-    cd mmclassification
-    pip install -v -e .  # or "python setup.py develop"
-    ``` -->
 
 5. Clone the MMTracking repository.
 
@@ -132,31 +99,12 @@ Note:
 a. Following the above instructions, MMTracking is installed on `dev` mode
 , any local modifications made to the code will take effect without the need to reinstall it.
 
-b. If you would like to use `opencv-python-headless` instead of `opencv
--python`,
+b. If you would like to use `opencv-python-headless` instead of `opencv-python`,
 you can install it before installing MMCV.
-
-c. Some dependencies are optional. Simply running `pip install -v -e .` will
- only install the minimum runtime requirements. To use optional dependencies like `albumentations` and `imagecorruptions` either install them manually with `pip install -r requirements/optional.txt` or specify desired extras when calling `pip` (e.g. `pip install -v -e .[optional]`). Valid keys for the extras field are: `all`, `tests`, `build`, and `optional`.
-
-### Install with CPU only
-
-The code can be built for CPU only environment (where CUDA isn't available).
-
-In CPU mode you can run the demo/webcam_demo.py for example.
-However some functionality is gone in this mode:
-
-- Deformable Convolution
-- Deformable ROI pooling
-- CARAFE: Content-Aware ReAssembly of FEatures
-- nms_cuda
-- sigmoid_focal_loss_cuda
-
-So if you try to run inference with a model containing deformable convolution you will get an error.
 
 ### A from-scratch setup script
 
-Assuming that you already have CUDA 10.1 installed, here is a full script for setting up MMTra with conda.
+Assuming that you already have CUDA 10.1 installed, here is a full script for setting up MMTracking with conda.
 
 ```shell
 conda create -n open-mmlab python=3.7 -y
@@ -169,9 +117,6 @@ pip install mmcv-full==latest+torch1.6.0+cu101 -f https://download.openmmlab.com
 
 # install mmdetection
 pip install git+https://github.com/open-mmlab/mmdetection.git
-
-# install mmclassification
-pip install git+https://github.com/open-mmlab/mmclassification.git
 
 # install mmtracking
 git clone https://github.com/open-mmlab/mmtracking.git
