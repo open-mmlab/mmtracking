@@ -107,10 +107,8 @@ data = dict(
             dataset=dict(
                 type='SOTTrainDataset',
                 ann_file=data_root +
-                'imagenetdet_imagenetvid/json_annotations/'
-                'imagenet_vid_train.json',
-                img_prefix=data_root +
-                'imagenetdet_imagenetvid/source_data/Data/VID',
+                'ILSVRC/annotations/imagenet_vid_train.json',
+                img_prefix=data_root + 'ILSVRC/Data/VID',
                 pipeline=train_pipeline,
                 ref_img_sampler=dict(
                     frame_range=100,
@@ -120,9 +118,8 @@ data = dict(
             )),
         dict(
             type='SOTTrainDataset',
-            ann_file=data_root +
-            'coco/json_annotations/instances_train2017.json',
-            img_prefix=data_root + 'coco/source_data/train2017',
+            ann_file=data_root + 'coco/annotations/instances_train2017.json',
+            img_prefix=data_root + 'coco/train2017',
             pipeline=train_pipeline,
             ref_img_sampler=dict(
                 frame_range=0,
@@ -132,10 +129,9 @@ data = dict(
         ),
         dict(
             type='SOTTrainDataset',
-            ann_file=data_root + 'imagenetdet_imagenetvid/json_annotations/'
-            'imagenet_det_30plus1cls.json',
-            img_prefix=data_root +
-            'imagenetdet_imagenetvid/source_data/Data/DET',
+            ann_file=data_root +
+            'ILSVRC/annotations/imagenet_det_30plus1cls.json',
+            img_prefix=data_root + 'ILSVRC/Data/DET',
             pipeline=train_pipeline,
             ref_img_sampler=dict(
                 frame_range=0,
@@ -147,16 +143,16 @@ data = dict(
     val=dict(
         type='LaSOTDataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot/json_annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/source_data',
+        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        img_prefix=data_root + 'lasot/LaSOTTesting',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True),
     test=dict(
         type='LaSOTDataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot/json_annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/source_data',
+        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        img_prefix=data_root + 'lasot/LaSOTTesting',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))
