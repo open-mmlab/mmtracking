@@ -1,30 +1,13 @@
 # Getting Started
 
-This page provides basic tutorials about the usage of MMTracking.
+This page provides basic tutorials about the usage of MMTracking, include dataset preparation, quick training, testing, and inference.
 For installation instructions, please see [install.md](install.md).
 
 ## Dataset preparation
 
-1. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. For example,
-    ```
-    mkdir data
+1.  Please download the datasets from the offical websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
-    # object detection: symlink MS COCO
-    ln -s $MSCOCO_ROOT/images data/coco/source_data
-    ln -s $MSCOCO_ROOT/annotations data/coco/json_annotations
-
-    # video object detection: symlink ImageNet DET and ImageNet VID
-    ln -s $IMAGENETDET_IMAGENETVID_ROOT data/imagenetdet_imagenetvid/source_data
-
-    # single object tracking: symlink LaSOT
-    ln -s $LASOT_ROOT data/lasot/source_data
-
-    # multiple object tracking: symlink MOT17
-    ln -s $MOT17 data/MOT17
-    ```
-     Download the [txt files](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets) for the training of video object detection, and put these txt files into `data/imagenetdet_imagenetvid/data/Lists/`.
-
-2. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
+    Note that the `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
 
     ```
     mmtracking
@@ -32,11 +15,13 @@ For installation instructions, please see [install.md](install.md).
     ├── tools
     ├── configs
     ├── data
+    |   |   # object detection
     │   ├── coco
     │   │   ├── train2017
     │   │   ├── val2017
     │   │   ├── test2017
     │   │   ├── annotations
+    |   |   # video object detection
     │   ├── ILSVRC
     │   │   ├── Data
     │   │   │   ├── DET
@@ -56,9 +41,11 @@ For installation instructions, please see [install.md](install.md).
     |   │   │   │   ├── val
     │   │   ├── Lists
     │   │   ├── annotations (the converted annotation files)
+    |   |   # single object tracking
     │   ├── lasot
     │   │   ├── images
     │   │   ├── annotations
+    |   |   # multiple object tracking
     |   ├── MOT17
     |   |   ├── train
     |   |   ├── test
