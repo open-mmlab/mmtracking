@@ -7,4 +7,4 @@
    customize_mot_model.md
    customize_sot_model.md
    customize_vid_model.md
-   runtime.md
+   customize_runtime.md
