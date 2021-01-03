@@ -52,29 +52,21 @@ For installation instructions, please see [install.md](install.md).
     |   |   ├── annotations
     ```
 
-3. Generate the json annotations of MS COCO dataset, LaSOT dataset, ImageNet DET and ImageNet VID dataset.
+2. We use [CocoVID](../mmtrack/datasets/parsers/coco_video_parser.py) to maintain all datasets in this codebase.
+In this case, you need to convert the offical annotations to this style. We provide scripts and the usages as follow
 
-    ```
-    # Generate imagenet_det_30plus1cls.json
-    python ./tools/convert_datasets/imagenet2coco_det.py \
-        -i ./data/imagenetdet_imagenetvid/source_data \
-        -o ./data/imagenetdet_imagenetvid/json_annotations
+    ```shell
+    # ImageNet DET
+    python ./tools/convert_datasets/imagenet2coco_det.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
-    # Generate imagenet_vid_train.json and imagenet_vid_val.json
-    python ./tools/convert_datasets/imagenet2coco_vid.py \
-        -i ./data/imagenetdet_imagenetvid/source_data \
-        -o ./data/imagenetdet_imagenetvid/json_annotations
+    # ImageNet VID
+    python ./tools/convert_datasets/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
-    # Generate lasot_test.json
-    python ./tools/convert_datasets/lasot2coco.py \
-        -i ./data/lasot/source_data \
-        -o ./data/lasot/json_annotations
+    # LaSOT
+    python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/ -o ./data/lasot/annotations
 
-    # Generate annotations files for MOT17
-    python ./tools/convert_datasets/mot2coco.py \
-        -i ./data/MOT17/ \
-        -o ./data/MOT17/annotations \
-        --split-train --convert-det
+    # MOT17
+    python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
     ```
 
 ## Inference with pretrained models
