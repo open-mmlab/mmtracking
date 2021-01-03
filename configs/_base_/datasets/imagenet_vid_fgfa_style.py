@@ -36,10 +36,8 @@ data = dict(
     train=[
         dict(
             type=dataset_type,
-            ann_file=data_root + 'imagenetdet_imagenetvid/json_annotations/'
-            'imagenet_vid_train.json',
-            img_prefix=data_root +
-            'imagenetdet_imagenetvid/source_data/Data/VID',
+            ann_file=data_root + 'annotations/imagenet_vid_train.json',
+            img_prefix=data_root + 'Data/VID',
             ref_img_sampler=dict(
                 num_ref_imgs=2,
                 frame_range=9,
@@ -49,10 +47,8 @@ data = dict(
         dict(
             type=dataset_type,
             load_as_video=False,
-            ann_file=data_root + 'imagenetdet_imagenetvid/json_annotations/'
-            'imagenet_det_30plus1cls.json',
-            img_prefix=data_root +
-            'imagenetdet_imagenetvid/source_data/Data/DET',
+            ann_file=data_root + 'annotations/imagenet_det_30plus1cls.json',
+            img_prefix=data_root + 'Data/DET',
             ref_img_sampler=dict(
                 num_ref_imgs=2,
                 frame_range=0,
@@ -62,9 +58,8 @@ data = dict(
     ],
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'imagenetdet_imagenetvid/json_annotations/'
-        'imagenet_vid_val.json',
-        img_prefix=data_root + 'imagenetdet_imagenetvid/source_data/Data/VID',
+        ann_file=data_root + 'annotations/imagenet_vid_val.json',
+        img_prefix=data_root + 'Data/VID',
         ref_img_sampler=dict(
             num_ref_imgs=30,
             frame_range=[-15, 15],
@@ -74,9 +69,8 @@ data = dict(
         test_mode=True),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'imagenetdet_imagenetvid/json_annotations/'
-        'imagenet_vid_val.json',
-        img_prefix=data_root + 'imagenetdet_imagenetvid/source_data/Data/VID',
+        ann_file=data_root + 'annotations/imagenet_vid_val.json',
+        img_prefix=data_root + 'Data/VID',
         ref_img_sampler=dict(
             num_ref_imgs=30,
             frame_range=[-15, 15],
