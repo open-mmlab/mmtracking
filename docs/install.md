@@ -10,6 +10,8 @@
 
 ## Installation
 
+### Detailed Instructions
+
 1. Create a conda virtual environment and activate it.
 
     ```shell
