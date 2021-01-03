@@ -10,7 +10,7 @@ This page provides the instructions for dataset preparation on existing benchmar
 - Single Object Tracking
     - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
 
-### Download Datasets
+### 1. Download Datasets
 
 Please download the datasets from the offical websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
@@ -60,7 +60,7 @@ mmtracking
 ```
 
 
-### Convert Annotations
+### 2. Convert Annotations
 
 We use [CocoVID](../mmtrack/datasets/parsers/coco_video_parser.py) to maintain all datasets in this codebase.
 In this case, you need to convert the offical annotations to this style. We provide scripts and the usages as follow
