@@ -7,13 +7,13 @@ We basically categorize model components into 4 types.
 - head: the component for specific tasks, e.g., tracking bbox prediction.
 - loss: the component in head for calculating losses, e.g., FocalLoss, L1Loss.
 
-## Develop new components
+### Develop new components
 
-### Add a new backbone
+#### Add a new backbone
 
 Here we show how to develop new components with an example of MobileNet.
 
-#### 1. Define a new backbone (e.g. MobileNet)
+##### 1. Define a new backbone (e.g. MobileNet)
 
 Create a new file `mmtrack/models/backbones/mobilenet.py`.
 
@@ -36,7 +36,7 @@ class MobileNet(nn.Module):
         pass
 ```
 
-#### 2. Import the module
+##### 2. Import the module
 
 You can either add the following line to `mmtrack/models/backbones/__init__.py`
 
@@ -54,7 +54,7 @@ custom_imports = dict(
 
 to the config file to avoid modifying the original code.
 
-#### 3. Use the backbone in your config file
+##### 3. Use the backbone in your config file
 
 ```python
 model = dict(
@@ -66,9 +66,9 @@ model = dict(
     ...
 ```
 
-### Add new necks
+#### Add new necks
 
-#### 1. Define a neck (e.g. MyFPN)
+##### 1. Define a neck (e.g. MyFPN)
 
 Create a new file `mmtrack/models/necks/my_fpn.py`.
 
@@ -92,7 +92,7 @@ class MyFPN(nn.Module):
         pass
 ```
 
-#### 2. Import the module
+##### 2. Import the module
 
 You can either add the following line to `mmtrack/models/necks/__init__.py`,
 
@@ -110,7 +110,7 @@ custom_imports = dict(
 
 to the config file and avoid modifying the original code.
 
-#### 3. Modify the config file
+##### 3. Modify the config file
 
 ```python
 neck=dict(
@@ -120,9 +120,9 @@ neck=dict(
     num_outs=5)
 ```
 
-### Add new heads
+#### Add new heads
 
-#### 1. Define a head (e.g. MyHead)
+##### 1. Define a head (e.g. MyHead)
 
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
@@ -142,7 +142,7 @@ class MyHead(nn.Module):
         pass
 ```
 
-#### 2. Import the module
+##### 2. Import the module
 
 You can either add the following line to `mmtrack/models/track_heads/__init__.py`,
 
@@ -160,16 +160,16 @@ custom_imports = dict(
 
 to the config file and avoid modifying the original code.
 
-#### 3. Modify the config file
+##### 3. Modify the config file
 
 ```python
-neck=dict(
+head=dict(
     type='MyHead',
     arg1=xxx,
     arg2=xxx)
 ```
 
-### Add new loss
+#### Add new loss
 
 Assume you want to add a new loss as `MyLoss`, for bounding box regression.
 To add a new loss function, the users need implement it in `mmtrack/models/losses/my_loss.py`.
