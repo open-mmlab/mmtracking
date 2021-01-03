@@ -146,26 +146,3 @@ Run MOT demo and you will see a output video named `mot.mp4`:
 ```shell
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py -i demo/demo.mp4 -o mot.mp4
 ```
-
-Run VID demo:
-
-```shell
-python ./demo/demo_vid.py \
-    ${VIDEO_FILE} \
-    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
-    ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
-    --out-video-root ${OUT-VIDEO-ROOT} \
-    --show
-```
-
-
-Run SOT demo:
-
-```shell
-python ./demo/demo_sot.py \
-    ${VIDEO_FILE} \
-    ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
-    ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
-    --out-video-root ${OUT-VIDEO-ROOT} \
-    --show
-```
