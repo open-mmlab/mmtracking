@@ -1,6 +1,43 @@
-We provide lots of useful tools under `tools/` directory.
+We provide lots of useful tools under the `tools/` directory.
 
 ## MOT Test-time Parameter Search
+
+`tools/search.py` can search the parameters of the `tracker` in MOT models.
+It is used as the same manner with `tools/test.py` but different in the configs.
+
+Here is an example that shows how to modify the configs:
+1. Define the desirable evaluation metrics to record.
+
+    For example, you can define the search metrics as
+    ```python
+    search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+    ```
+
+2. Define the parameters and the values to search.
+
+    Assume you have a tracker like
+    ```python
+    model = dict(
+        tracker=dict(
+            type='BaseTracker',
+            obj_score_thr=0.5,
+            match_iou_thr=0.5
+        )
+    )
+    ```
+
+    If you want to search the parameters of the tracker, just change the value to a list as follow
+    ```python
+    model = dict(
+        tracker=dict(
+            type='BaseTracker',
+            obj_score_thr=[0.4, 0.5, 0.6],
+            match_iou_thr=[0.4, 0.5, 0.6, 0.7]
+        )
+    )
+    ```
+
+    Then the script will test the totally 12 cases and log the results.
 
 ## Log Analysis
 
@@ -9,8 +46,6 @@ We provide lots of useful tools under `tools/` directory.
  ```shell
 python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--legend ${LEGEND}] [--backend ${BACKEND}] [--style ${STYLE}] [--out ${OUT_FILE}]
 ```
-
-![loss curve image](../resources/loss_curve.png)
 
 Examples:
 
