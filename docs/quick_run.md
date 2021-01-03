@@ -34,7 +34,7 @@ The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
 Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
-- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config.
+- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `pretrains`.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
 - `--show`: Whether show the video on the fly.
