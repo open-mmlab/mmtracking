@@ -1,14 +1,67 @@
 ## Run with Existing Datasets and Models
 
-We provide testing scripts to evaluate a whole dataset,
-and also some high-level apis for easier integration to other projects.
+MMTracking provides various methods on existing benchmarks.
+Details about these methods and benchmarks are presented in [model_zoo.md](model_zoo.md) and [dataset.md](dataset.md) respectively.
+This note will show how to perform common tasks on existing models and standard datasets, including:
 
-### Test a dataset
+- Inference existing models on a given video or image folder.
+- Test (inference and evaluate) existing models on standard datasets.
+- Train exisitng models on standard datasets.
+
+### Inference
+
+We provide demo scripts to inference a given video or a folder that contains continuous images.
+The source codes are available [here](../demo/).
+
+
+Note that if you use a folder as the input, there should be only images in this folder and the image names must be **sortable**, which means we can re-order the images according to the filenames.
+
+#### Inference MOT models
+
+This script can inference a input video / images with a multiple object tracking model.
+
+```shell
+python demo/demo_mot.py ${CONFIG_FILE} -i ${INPUT} \
+    [-o ${OUTPUT}] \
+    [--checkpoint ${CHECKPOINT_FILE}] \
+    [--device ${DEVICE}] \
+    [--backend ${BACKEND}] \
+    [--show]
+```
+
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
+Optional arguments:
+
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
+- `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
+- `--show`: Whether show the video on the fly.
+
+Examples:
+
+```shell
+python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py -i demo/demo.mp4 -o mot.mp4
+```
+
+#### Inference SOT models
+
+
+#### Inference VID models
+
+### Testing
+
+This section will show how to test existing models on supported datasets.
+The following testing environments are supported:
 
 - single GPU
 - single node multiple GPU
+- multiple nodes
 
-You can use the following commands to test a dataset.
+During testing, different tasks share the same API and we only support `samples_per_gpu = 1`.
+
+You can use the following commands for testing:
 
 ```shell
 # single-gpu testing
@@ -19,9 +72,12 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
 ```
 
 Optional arguments:
-- `CHECKPOINT_FILE`: Filename of the checkpoint. You do not need to define it when applying MOT tasks but specify the checkpoints in the config.
+- `CHECKPOINT_FILE`: Filename of the checkpoint. You do not need to define it when applying some MOT methods but specify the checkpoints in the config.
 - `RESULT_FILE`: Filename of the output results in pickle format. If not specified, the results will not be saved to a file.
-- `EVAL_METRICS`: Items to be evaluated on the results. Allowed values depend on the dataset, e.g., `bbox` is available for ImageNet VID, `track` is available for LaSOT and MOT17.
+- `EVAL_METRICS`: Items to be evaluated on the results. Allowed values depend on the dataset, e.g., `bbox` is available for ImageNet VID, `track` is available for LaSOT, `bbox` and `track` are both suitable for MOT17.
+- `--cfg-options`: If specified, the key-value pair optional cfg will be merged into config file
+- `--eval-options`: If specified, the key-value pair optional eval cfg will be kwargs for dataset.evaluate() function, it’s only for evaluation
+- `--format-only`: If specified, the results will be formated to the offical format.
 
 Examples:
 
@@ -78,13 +134,11 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval track
    ```
 
-### Train a model
+### Training
 
-MMDetection implements distributed training and non-distributed training,
-which uses `MMDistributedDataParallel` and `MMDataParallel` respectively.
+MMTracking also provides out-of-the-box tools for training models.
+This section will show how to train _predefined_ models (under [configs](https://github.com/open-mmlab/mmtracking/tree/master/configs)) on standard datasets i.e. MOT17.
 
-All outputs (log files and checkpoints) will be saved to the working directory,
-which is specified by `work_dir` in the config file.
 
 By default we evaluate the model on the validation set after each epoch, you can change the evaluation interval by adding the interval argument in the training config.
 ```python
@@ -94,54 +148,29 @@ evaluation = dict(interval=12)  # This evaluate the model per 12 epoch.
 **Important**: The default learning rate in config files is for 8 GPUs.
 According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., lr=0.01 for 8 GPUs * 1 img/gpu and lr=0.04 for 16 GPUs * 2 img/gpu.
 
-### Train with a single GPU
+#### Training on a single GPU
 
 ```shell
 python tools/train.py ${CONFIG_FILE} [optional arguments]
 ```
 
-If you want to specify the working directory in the command, you can add an argument `--work_dir ${YOUR_WORK_DIR}`.
+During training, log files and checkpoints will be saved to the working directory, which is specified by `work_dir` in the config file or via CLI argument `--work-dir`.
 
-### Train with multiple GPUs
+#### Training on multiple GPUs
 
-```shell
-./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
-```
-
-Optional arguments are:
-
-- `--no-validate` (**not suggested**): By default, the codebase will perform evaluation at every k (default value is 1, which can be modified like [this](https://github.com/open-mmlab/mmdetection/blob/master/configs/mask_rcnn/mask_rcnn_r50_fpn_1x_coco.py#L174)) epochs during the training. To disable this behavior, use `--no-validate`.
-- `--work-dir ${WORK_DIR}`: Override the working directory specified in the config file.
-- `--resume-from ${CHECKPOINT_FILE}`: Resume from a previous checkpoint file.
-- `--options 'Key=value'`: Overide some settings in the used config.
-
-Difference between `resume-from` and `load-from`:
-`resume-from` loads both the model weights and optimizer status, and the epoch is also inherited from the specified checkpoint. It is usually used for resuming the training process that is interrupted accidentally.
-`load-from` only loads the model weights and the training epoch starts from 0. It is usually used for finetuning.
-
-### Train with multiple machines
-
-If you run MMTracking on a cluster managed with [slurm](https://slurm.schedmd.com/), you can use the script `slurm_train.sh`. (This script also supports single machine training.)
+We provide `tools/dist_train.sh` to launch training on multiple GPUs.
+The basic usage is as follows.
 
 ```shell
-[GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
+bash ./tools/dist_train.sh \
+    ${CONFIG_FILE} \
+    ${GPU_NUM} \
+    [optional arguments]
 ```
 
-Here is an example of using 16 GPUs to train DFF on the dev partition.
+Optional arguments remain the same as stated above.
 
-```shell
-GPUS=16 ./tools/slurm_train.sh dev dff_r101_1x configs/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py /nfs/xxxx/dff_faster_rcnn_r101_dc5_1x_imagenetvid
-```
-
-You can check [slurm_train.sh](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh) for full arguments and environment variables.
-
-If you have just multiple machines connected with ethernet, you can refer to
-PyTorch [launch utility](https://pytorch.org/docs/stable/distributed_deprecated.html#launch-utility).
-Usually it is slow if you do not have high speed networking like InfiniBand.
-
-### Launch multiple jobs on a single machine
-
-If you launch multiple jobs on a single machine, e.g., 2 jobs of 4-GPU training on a machine with 8 GPUs,
+If you would like to launch multiple jobs on a single machine, e.g., 2 jobs of 4-GPU training on a machine with 8 GPUs,
 you need to specify different ports (29500 by default) for each job to avoid communication conflict.
 
 If you use `dist_train.sh` to launch training jobs, you can set the port in commands.
@@ -151,7 +180,25 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-If you use launch training jobs with Slurm, there are two ways to specify the ports.
+#### Training on multiple nodes
+
+MMTracking relies on `torch.distributed` package for distributed training.
+Thus, as a basic usage, one can launch distributed training via PyTorch's [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility).
+
+#### Manage jobs with Slurm
+
+[Slurm](https://slurm.schedmd.com/) is a good job scheduling system for computing clusters.
+On a cluster managed by Slurm, you can use `slurm_train.sh` to spawn training jobs. It supports both single-node and multi-node training.
+
+The basic usage is as follows.
+
+```shell
+[GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
+```
+
+You can check [the source code](https://github.com/open-mmlab/mmdetection/blob/master/tools/slurm_train.sh) to review full arguments and environment variables.
+
+When using Slurm, the port option need to be set in one of the following ways:
 
 1. Set the port through `--options`. This is more recommended since it does not change the original configs.
 
@@ -160,26 +207,79 @@ If you use launch training jobs with Slurm, there are two ways to specify the po
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR} --options 'dist_params.port=29501'
    ```
 
-2. Modify the config files (usually the 6th line from the bottom in config files) to set different communication ports.
+2. Modify the config files to set different communication ports.
 
-   In `config1.py`,
+   In `config1.py`, set
 
    ```python
    dist_params = dict(backend='nccl', port=29500)
    ```
 
-   In `config2.py`,
+   In `config2.py`, set
 
    ```python
    dist_params = dict(backend='nccl', port=29501)
    ```
 
-   Then you can launch two jobs with `config1.py` ang `config2.py`.
+   Then you can launch two jobs with `config1.py` and `config2.py`.
 
    ```shell
    CUDA_VISIBLE_DEVICES=0,1,2,3 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config1.py ${WORK_DIR}
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
 
-
 ## Run with Customized Datasets and Models
+
+In this note, you will know how to inference, test, and train with customized datasets and models.
+
+The basic steps are as below:
+
+1. Prepare the customized dataset (if applicable)
+2. Prepare the customized model (if applicable)
+3. Prepare a config
+4. Train, test, inference the new models.
+
+### Prepare the customized dataset
+
+There are three ways to support a new dataset in MMTracking:
+
+1. Reorganize the dataset into CocoVID format.
+2. Implement a new dataset.
+
+Usually we recommend to use the first method which is usually easier than the second.
+
+Details for customizing datasets are provided in [tutorials/customize_dataset.md](tutorials/customize_dataset.md).
+
+### Prepare the customized model
+
+We provide instructions for cutomizing models of different tasks.
+
+- [tutorials/customize_mot_model](tutorials/customize_mot_model.md)
+- [tutorials/customize_sot_model](tutorials/customize_sot_model.md)
+- [tutorials/customize_vid_model](tutorials/customize_vid_model.md)
+
+### Prepare a config
+
+The next step is to prepare a config thus the dataset or the model can be successfully loaded.
+More details about the config system are provided at [tutorials/config](tutorials/config.md).
+
+
+### Train a new model
+
+To train a model with the new config, you can simply run
+
+```shell
+python tools/train.py ${NEW_CONFIG_FILE}
+```
+
+For more detailed usages, please refer to the training instructions above.
+
+### Test and inference
+
+To test the trained model, you can simply run
+
+```shell
+python tools/test.py ${NEW_CONFIG_FILE} ${TRAINED_MODEL} --eval bbox track
+```
+
+For more detailed usages, please refer to the testing or inference instructions above.
