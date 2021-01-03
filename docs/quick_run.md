@@ -18,7 +18,7 @@ Note that if you use a folder as the input, there should be only images in this 
 
 #### Inference MOT models
 
-This script can inference a input video / images with a multiple object tracking model.
+This script can inference an input video / images with a multiple object tracking model.
 
 ```shell
 python demo/demo_mot.py ${CONFIG_FILE} -i ${INPUT} \
@@ -47,8 +47,61 @@ python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-priva
 
 #### Inference SOT models
 
+This script can inference an input video with a single object tracking model.
+
+```shell
+python demo/demo_sot.py \
+    ${VIDEO_FILE} \
+    ${CONFIG_FILE} \
+    ${CHECKPOINT_FILE}] \
+    [--out-video-root ${OUT-VIDEO-ROOT}] \
+    [--show]
+```
+
+Optional arguments:
+
+- `OUT-VIDEO-ROOT`: Output root of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `--show`: Whether show the video on the fly.
+
+Examples:
+
+```shell
+python ./demo/demo_sot.py \
+    ${VIDEO_FILE} \
+    ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
+    ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+    --out-video-root ${OUT-VIDEO-ROOT} \
+    --show
+```
 
 #### Inference VID models
+
+This script can inference an input video with a video object detection model.
+
+```shell
+python demo/demo_vid.py \
+    ${VIDEO_FILE} \
+    ${CONFIG_FILE} \
+    ${CHECKPOINT_FILE}] \
+    [--out-video-root ${OUT-VIDEO-ROOT}] \
+    [--show]
+```
+
+Optional arguments:
+
+- `OUT-VIDEO-ROOT`: Output root of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `--show`: Whether show the video on the fly.
+
+Examples:
+
+```shell
+python ./demo/demo_vid.py \
+    ${VIDEO_FILE} \
+    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+    ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+    --out-video-root ${OUT-VIDEO-ROOT} \
+    --show
+```
 
 ### Testing
 
