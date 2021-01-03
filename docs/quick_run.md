@@ -1,4 +1,4 @@
-## Inference with pretrained models
+## Run with Existing Datasets and Models
 
 We provide testing scripts to evaluate a whole dataset,
 and also some high-level apis for easier integration to other projects.
@@ -78,7 +78,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval track
    ```
 
-## Train a model
+### Train a model
 
 MMDetection implements distributed training and non-distributed training,
 which uses `MMDistributedDataParallel` and `MMDataParallel` respectively.
@@ -180,3 +180,6 @@ If you use launch training jobs with Slurm, there are two ways to specify the po
    CUDA_VISIBLE_DEVICES=0,1,2,3 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config1.py ${WORK_DIR}
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
+
+
+## Run with Customized Datasets and Models

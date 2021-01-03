@@ -1,8 +1,6 @@
-## Useful tools
-
 We provide lots of useful tools under `tools/` directory.
 
-### Publish a model
+## Publish a model
 
 Before you upload a model to AWS, you may want to
 (1) convert model weights to CPU tensors, (2) delete the optimizer states and
