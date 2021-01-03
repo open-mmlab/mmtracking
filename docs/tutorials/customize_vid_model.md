@@ -6,15 +6,13 @@ We basically categorize model components into 3 types.
 - motion: the component to compute motion information between two images, e.g., FlowNetSimple.
 - aggregator: the component for aggregating features from multi images, e.g., EmbedAggregator.
 
-### Develop new components
-
-#### Add new detectors
+### Add a new detector
 
 Please refer to [tutorial in mmdetection](https://mmdetection.readthedocs.io/en/latest/tutorials/customize_models.html) for developping a new detector.
 
-#### Add new motion models
+### Add a new motion model
 
-##### 1. Define a motion model (e.g. MyFlowNet)
+#### 1. Define a motion model (e.g. MyFlowNet)
 
 Create a new file `mmtrack/models/motion/my_flownet.py`.
 
@@ -34,7 +32,7 @@ class MyFlowNet(nn.Module):
         pass
 ```
 
-##### 2. Import the module
+#### 2. Import the module
 
 You can either add the following line to `mmtrack/models/motion/__init__.py`,
 
@@ -52,7 +50,7 @@ custom_imports = dict(
 
 to the config file and avoid modifying the original code.
 
-##### 3. Modify the config file
+#### 3. Modify the config file
 
 ```python
 motion=dict(
@@ -61,9 +59,9 @@ motion=dict(
     arg2=xxx)
 ```
 
-#### Add new aggregators
+### Add a new aggregator
 
-##### 1. Define a aggregator (e.g. MyAggregator)
+#### 1. Define a aggregator (e.g. MyAggregator)
 
 Create a new file `mmtrack/models/aggregators/my_aggregator.py`.
 
@@ -83,7 +81,7 @@ class MyAggregator(nn.Module):
         pass
 ```
 
-##### 2. Import the module
+#### 2. Import the module
 
 You can either add the following line to `mmtrack/models/aggregators/__init__.py`,
 
@@ -101,7 +99,7 @@ custom_imports = dict(
 
 to the config file and avoid modifying the original code.
 
-##### 3. Modify the config file
+#### 3. Modify the config file
 
 ```python
 aggregator=dict(
