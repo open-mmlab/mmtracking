@@ -254,14 +254,14 @@ Details for customizing datasets are provided in [tutorials/customize_dataset.md
 
 We provide instructions for cutomizing models of different tasks.
 
-- [tutorials/customize_mot_model](tutorials/customize_mot_model.md)
-- [tutorials/customize_sot_model](tutorials/customize_sot_model.md)
-- [tutorials/customize_vid_model](tutorials/customize_vid_model.md)
+- [tutorials/customize_mot_model.md](tutorials/customize_mot_model.md)
+- [tutorials/customize_sot_model.md](tutorials/customize_sot_model.md)
+- [tutorials/customize_vid_model.md](tutorials/customize_vid_model.md)
 
 ### Prepare a config
 
 The next step is to prepare a config thus the dataset or the model can be successfully loaded.
-More details about the config system are provided at [tutorials/config](tutorials/config.md).
+More details about the config system are provided at [tutorials/config.md](tutorials/config.md).
 
 
 ### Train a new model
