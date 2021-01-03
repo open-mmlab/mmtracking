@@ -163,7 +163,7 @@ to the config file and avoid modifying the original code.
 ##### 3. Modify the config file
 
 ```python
-neck=dict(
+head=dict(
     type='MyHead',
     arg1=xxx,
     arg2=xxx)
