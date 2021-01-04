@@ -148,7 +148,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 2. Test DFF with 8 GPUs, and evaluate the bbox mAP.
 
    ```shell
-   ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+   ./tools/dist_test.sh configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
        --checkpoint checkpoints/dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172720-ad732e17.pth \
        --out results.pkl \
        --eval bbox
@@ -166,7 +166,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 4. Test SiameseRPN++ with 8 GPUs, and evaluate the success and normed precision.
 
    ```shell
-   ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
+   ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
        --eval bbox
@@ -182,8 +182,8 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 6. Test Tracktor with 8 GPUs, and evaluate CLEAR MOT metrics.
 
    ```shell
-   ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} \
-       configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py \
+   ./tools/dist_test.sh  \
+       configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
        --eval track
    ```
 
