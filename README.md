@@ -31,13 +31,13 @@ The master branch works with PyTorch 1.3 to 1.6.
 
   We decompose the video perception framework into different components and one can easily construct a customized method by combining different modules.
 
-- **Simpler, Faster and Stronger**
+- **Simple, Fast and Strong**
 
-  **Simpler**: MMTracking is built upon [MMDetection](https://github.com/open-mmlab/mmdetection) that we can capitalize any detector only through modifying the configs.
+  **Simple**: MMTracking interacts with other OpenMMLab projects. It is built upon [MMDetection](https://github.com/open-mmlab/mmdetection) that we can capitalize any detector only through modifying the configs.
 
-  **Faster**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
+  **Fast**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
 
-  **Stronger**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
+  **Stronge**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
 
 
 ## License
@@ -47,7 +47,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
-v0.5.0 was released in 30/12/2020.
+v0.5.0 was released in 04/01/2021.
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
 ## Benchmark and model zoo
@@ -75,8 +75,8 @@ Please refer to [install.md](docs/install.md) for installation and dataset prepa
 
 ## Get Started
 
-Please see [get_started.md](docs/get_started.md) for the basic usage of MMTracking.
-There are also tutorials.
+Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
+We also provide usage [tutorials](docs/tutorials/).
 
 
 ## Contributing

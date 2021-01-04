@@ -1,4 +1,3 @@
-mmcls
 mmcv
 mmdet
 torch

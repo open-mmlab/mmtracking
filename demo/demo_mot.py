@@ -45,7 +45,9 @@ def main():
             fps = args.fps if args.fps else imgs.fps
             out_dir = tempfile.TemporaryDirectory()
             out_path = out_dir.name
-            os.makedirs(args.output.rsplit('/', 1)[0], exist_ok=True)
+            _out = args.output.rsplit('/', 1)
+            if len(_out) > 1:
+                os.makedirs(_out[0], exist_ok=True)
         else:
             OUT_VIDEO = False
             out_path = args.output
@@ -66,6 +68,8 @@ def main():
                 out_file = osp.join(out_path, f'{i:06d}.jpg')
             else:
                 out_file = osp.join(out_path, img.rsplit('/', 1)[-1])
+        else:
+            out_file = None
         model.show_result(
             img,
             result,
