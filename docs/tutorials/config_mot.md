@@ -2,14 +2,14 @@
 
 ```python
 model = dict(
-    type='Tracktor',
+    type='Tracktor',  # The name of the multiple object tracker
     pretrains=dict(
         detector=
         'https://download.openmmlab.com/mmtracking/v0.5/mot/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth',
         reid=
         'https://download.openmmlab.com/mmtracking/v0.5/mot/tracktor_reid_r50_iter25245-a452f51f.pth'
-    ),
-    detector=dict(
+    ),  # The pretrained weights of modules. It may also used for testing.
+    detector=dict(  # Please refer to https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/config.md#an-example-of-mask-r-cnn for detailed comments of detector.
         type='FasterRCNN',
         pretrained='torchvision://resnet50',
         backbone=dict(
@@ -123,43 +123,44 @@ model = dict(
                 score_thr=0.05,
                 nms=dict(type='nms', iou_threshold=0.5),
                 max_per_img=100))),
-    reid=dict(
-        type='BaseReID',
-        backbone=dict(
-            type='ResNet',
-            depth=50,
-            num_stages=4,
-            out_indices=(3, ),
-            style='pytorch'),
-        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
-        head=dict(
-            type='LinearReIDHead',
-            num_fcs=1,
-            in_channels=2048,
-            fc_channels=1024,
-            out_channels=128,
-            norm_cfg=dict(type='BN1d'),
-            act_cfg=dict(type='ReLU'))),
-    motion=dict(
-        type='CameraMotionCompensation',
-        warp_mode='cv2.MOTION_EUCLIDEAN',
-        num_iters=100,
-        stop_eps=1e-05),
-    tracker=dict(
-        type='TracktorTracker',
-        obj_score_thr=0.5,
-        regression=dict(
-            obj_score_thr=0.5,
-            nms=dict(type='nms', iou_threshold=0.6),
-            match_iou_thr=0.3),
-        reid=dict(
-            num_samples=10,
-            img_scale=(256, 128),
-            img_norm_cfg=None,
-            match_score_thr=2.0,
-            match_iou_thr=0.2),
-        momentums=None,
-        num_frames_retain=10))
+    reid=dict(  # The config of the ReID model
+        type='BaseReID',  # The name of the motion model
+        backbone=dict(  # The config of the backbone of the ReID model
+            type='ResNet', # The type of the backbone, refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/backbones/resnet.py#L288 for more details.
+            depth=50,  # The depth of backbone, usually it is 50 or 101 for ResNet and ResNext backbones.
+            num_stages=4,  # Number of stages of the backbone.
+            out_indices=(3, ),  # The index of output feature maps produced in each stages
+            style='pytorch'),  # The style of backbone, 'pytorch' means that stride 2 layers are in 3x3 conv, 'caffe' means stride 2 layers are in 1x1 convs.
+        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),  # The config of the neck of the ReID model. Generally it is a global average pooling module.
+        head=dict(  # The config of the head of the ReID model.
+            type='LinearReIDHead',  # The nead of the classification head
+            num_fcs=1,  # Number of the fully-connected layers in the head
+            in_channels=2048,  # The number of the input channels
+            fc_channels=1024,  # The number of channels of fc layers
+            out_channels=128,  # The number of the output channels
+            norm_cfg=dict(type='BN1d'),  # The config of the normalization modules
+            act_cfg=dict(type='ReLU'))),  # The config of the activation modules
+    motion=dict(  # The config of the motion model
+        type='CameraMotionCompensation',  # The name of the motion model
+        warp_mode='cv2.MOTION_EUCLIDEAN',  # The warping mode
+        num_iters=100, # The number of the iterations
+        stop_eps=1e-05),  # The threshold of termination
+    tracker=dict(  # The config of the tracker
+        type='TracktorTracker',  # The name of the tracker
+        obj_score_thr=0.5,  # The score threshold to filter the detected objects
+        regression=dict(  # The config of the regression part in Tracktor
+            obj_score_thr=0.5,  # The score threshold to filter the regressed objects
+            nms=dict(type='nms', iou_threshold=0.6),  # The nms config to filter the regressed objects
+            match_iou_thr=0.3),  # The IoU threshold to filter the detected objects
+        reid=dict(  # The config about the testing process of the ReID model
+            num_samples=10,  # The maximum number of samples to calculate the feature embeddings
+            img_scale=(256, 128),  # The input scale of the ReID model
+            img_norm_cfg=None,  # The normalization config of the input of the ReID model. None means consistent with the backbone
+            match_score_thr=2.0,  # The threshold for feature similarity
+            match_iou_thr=0.2),  # The threshold for IoU matching
+        momentums=None,  # The momentums to update the buffers
+        num_frames_retain=10))  # The maximum number of frames to retain disappeared tracks
+# The configs below are consistent with video object tracking. Please refer to `config_vid.md` for details.
 dataset_type = 'MOTChallengeDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
