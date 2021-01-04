@@ -40,7 +40,7 @@ utils
     :members:
 
 mmtrack.datasets
---------------
+----------------
 
 datasets
 ^^^^^^^^^^
@@ -82,7 +82,7 @@ vid
     :members:
 
 aggregators
-^^^^^^^^^^
+^^^^^^^^^^^
 .. automodule:: mmtrack.models.aggregators
     :members:
 
@@ -112,7 +112,7 @@ roi_heads
     :members:
 
 track_heads
-^^^^^^^^^^
+^^^^^^^^^^^
 .. automodule:: mmtrack.models.track_heads
     :members:
 
