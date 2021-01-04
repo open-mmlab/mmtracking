@@ -29,10 +29,6 @@ The configs in this folder are basiclly for inference.
 Currently we do not support training ReID models.
 We directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw). These missed features will be supported in the future.
 
-The implementations of Tracktor follow the offical practices.
-In the table below, the result marked with * (the last line) is the offical one.
-Our implementations outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
-
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
