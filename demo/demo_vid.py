@@ -1,4 +1,3 @@
-import os
 from argparse import ArgumentParser
 
 import cv2
@@ -8,14 +7,13 @@ from mmtrack.apis import inference_vid, init_model
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('video', help='Video file')
     parser.add_argument('config', help='Config file')
-    parser.add_argument('checkpoint', help='Checkpoint file')
+    parser.add_argument('-i', '--input', help='input video file')
     parser.add_argument(
-        '--out-video-root',
-        default='',
-        help='Root of the output video file. '
-        'Default not saving the visualization video.')
+        '-o', '--output', help='output video file (mp4 format)')
+    parser.add_argument('--checkpoint', help='Checkpoint file')
+    parser.add_argument(
+        '--device', default='cuda:0', help='Device used for inference')
     parser.add_argument(
         '--show',
         action='store_true',
@@ -23,8 +21,6 @@ def main():
         help='whether to show visualizations.')
     parser.add_argument(
         '--score-thr', type=float, default=0.8, help='bbox score threshold')
-    parser.add_argument(
-        '--device', default='cuda:0', help='Device used for inference')
     args = parser.parse_args()
 
     # build the model from a config file and a checkpoint file
@@ -32,19 +28,14 @@ def main():
 
     cap = cv2.VideoCapture(args.video)
 
-    if args.out_video_root == '':
-        save_out_video = False
-    else:
-        os.makedirs(args.out_video_root, exist_ok=True)
+    if args.output is not None:
         save_out_video = True
 
         fps = cap.get(cv2.CAP_PROP_FPS)
         size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out_video_path = os.path.join(args.out_video_root,
-                                      f'vis_{os.path.basename(args.video)}')
-        videoWriter = cv2.VideoWriter(out_video_path, fourcc, fps, size)
+        videoWriter = cv2.VideoWriter(args.output, fourcc, fps, size)
 
     frame_id = 0
     while (cap.isOpened()):
