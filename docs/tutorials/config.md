@@ -51,7 +51,7 @@ We follow the below style to name config files. Contributors are advised to foll
 
 `{xxx}` is required field and `[yyy]` is optional.
 
-- `{model}`: model type like `DFF`, `Tracktor`, `Siamese_rpn`, etc.
+- `{model}`: model type like `dff`, `tracktor`, `siamese_rpn`, etc.
 - `[model setting]`: specific setting for some model, like `faster_rcnn` for `DFF`,`Tracktor`, etc.
 - `{backbone}`: backbone type like `r50` (ResNet-50), `x101` (ResNeXt-101).
 - `{neck}`: neck type like `fpn`, `c5`.

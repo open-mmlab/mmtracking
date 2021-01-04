@@ -48,7 +48,7 @@
 3. Install mmcv-full, we recommend you to install the pre-build package as below.
 
     ```shell
-    pip install mmcv-full==latest+torch1.6.0+cu101 -f https://download.openmmlab.com/mmcv/dist/index.html
+    pip install mmcv-full==2.7.0 -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
     ```
 
     See [here](https://github.com/open-mmlab/mmcv#install-with-pip) for different versions of MMCV compatible to different PyTorch and CUDA versions.
