@@ -5,8 +5,8 @@
 - PyTorch 1.3+
 - CUDA 9.2+ (If you build PyTorch from source, CUDA 9.0 is also compatible)
 - GCC 5+
-- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation) 2.8.0
-- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation) 1.2.4
+- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation) 1.2.4
+- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation) 2.8.0
 
 ## Installation
 
