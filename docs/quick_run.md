@@ -43,7 +43,7 @@ Optional arguments:
 Examples:
 
 ```shell
-python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py -i demo/demo.mp4 -o mot.mp4
+python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
 #### Inference SOT models
