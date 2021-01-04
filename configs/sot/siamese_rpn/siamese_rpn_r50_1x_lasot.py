@@ -8,7 +8,7 @@ model = dict(
     type='SiamRPN',
     pretrains=dict(
         backbone=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/sot_resnet50.model'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/pretrained_weights/sot_resnet50.model'  # noqa: E501
     ),
     backbone=dict(
         type='SOTResNet',
