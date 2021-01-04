@@ -2,7 +2,7 @@ _base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/v0.5/mot/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
     ))
 data_root = 'data/MOT17/'
 test_set = 'test'

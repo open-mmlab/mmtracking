@@ -6,7 +6,7 @@ model = dict(
     type='DeepSORT',
     pretrains=dict(
         detector=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/v0.5/mot/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
