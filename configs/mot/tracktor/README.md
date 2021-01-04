@@ -14,12 +14,15 @@
 
 ## Results and models on MOT17
 
-We implement Tracktor following the offical practices.
+We implement Tracktor with independent detector and ReID models. To train a model by yourself, you need to train a detector following [here](../../det/) and also train a ReID model.
+The configs in this folder are basiclly for inference.
 
-We train the detector with MMDetection. However, currently we do not support training ReID models.
-We directly use the model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw) for inference. These missed features will be supported in the future.
+Currently we do not support training ReID models.
+We directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw). These missed features will be supported in the future.
 
-The results marked with * (the last line) is the offical implementations. Our implementations outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
+The implementations of Tracktor follow the offical practices.
+In the table below, the result marked with * (the last line) is the offical one.
+Our implementation outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |

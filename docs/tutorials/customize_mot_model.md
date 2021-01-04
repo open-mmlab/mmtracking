@@ -272,7 +272,7 @@ Alternatively, you can add
 
 ```python
 custom_imports=dict(
-    imports=['mmdet.models.losses.my_loss'])
+    imports=['mmtrack.models.losses.my_loss'])
 ```
 
 to the config file and achieve the same goal.
