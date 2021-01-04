@@ -37,7 +37,7 @@ The master branch works with PyTorch 1.3 to 1.6.
 
   **Fast**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
 
-  **Stronge**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
+  **Strong**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
 
 
 ## License
@@ -71,7 +71,7 @@ Supported methods of single object tracking:
 
 ## Installation
 
-Please refer to [install.md](docs/install.md) for installation and dataset preparation.
+Please refer to [install.md](docs/install.md) for install instructions.
 
 ## Get Started
 
