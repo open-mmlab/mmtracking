@@ -38,10 +38,11 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
         if 'CLASSES' in checkpoint['meta']:
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
-        if hasattr(model.detector, 'CLASSES'):
+        if hasattr(model, 'detector') and hasattr(model.detector, 'CLASSES'):
             model.CLASSES = model.detector.CLASSES
         else:
-            raise KeyError('The classes must be defined.')
+            print("Warning: The model doesn't have classes")
+            model.CLASSES = None
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
     model.eval()

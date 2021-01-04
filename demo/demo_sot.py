@@ -46,7 +46,7 @@ def main():
             break
 
         if frame_id == 0:
-            init_bbox = list(cv2.selectROI(args.video, frame, False, False))
+            init_bbox = list(cv2.selectROI(args.input, frame, False, False))
             # convert (x1, y1, w, h) to (x1, y1, x2, y2)
             init_bbox[2] += init_bbox[0]
             init_bbox[3] += init_bbox[1]
@@ -65,7 +65,7 @@ def main():
             videoWriter.write(frame)
 
         if args.show:
-            cv2.imshow(args.video, frame)
+            cv2.imshow(args.input, frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

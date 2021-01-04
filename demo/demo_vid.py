@@ -26,7 +26,7 @@ def main():
     # build the model from a config file and a checkpoint file
     model = init_model(args.config, args.checkpoint, device=args.device)
 
-    cap = cv2.VideoCapture(args.video)
+    cap = cv2.VideoCapture(args.input)
 
     if args.output is not None:
         save_out_video = True
@@ -52,7 +52,7 @@ def main():
             videoWriter.write(vis_frame)
 
         if args.show:
-            cv2.imshow(args.video, vis_frame)
+            cv2.imshow(args.input, vis_frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
