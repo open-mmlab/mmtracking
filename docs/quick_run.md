@@ -13,7 +13,6 @@ This note will show how to perform common tasks on existing models and standard 
 We provide demo scripts to inference a given video or a folder that contains continuous images.
 The source codes are available [here](../demo/).
 
-
 Note that if you use a folder as the input, there should be only images in this folder and the image names must be **sortable**, which means we can re-order the images according to the filenames.
 
 #### Inference MOT models
@@ -21,8 +20,10 @@ Note that if you use a folder as the input, there should be only images in this 
 This script can inference an input video / images with a multiple object tracking model.
 
 ```shell
-python demo/demo_mot.py ${CONFIG_FILE} -i ${INPUT} \
-    [-o ${OUTPUT}] \
+python demo/demo_mot.py \
+    ${CONFIG_FILE} \
+    --input ${INPUT} \
+    [--output ${OUTPUT}] \
     [--checkpoint ${CHECKPOINT_FILE}] \
     [--device ${DEVICE}] \
     [--backend ${BACKEND}] \
@@ -51,26 +52,28 @@ This script can inference an input video with a single object tracking model.
 
 ```shell
 python demo/demo_sot.py \
-    ${VIDEO_FILE} \
-    ${CONFIG_FILE} \
-    ${CHECKPOINT_FILE}] \
-    [--out-video-root ${OUT-VIDEO-ROOT}] \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
     [--show]
 ```
 
 Optional arguments:
 
-- `OUT-VIDEO-ROOT`: Output root of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `--show`: Whether show the video on the fly.
 
 Examples:
 
 ```shell
 python ./demo/demo_sot.py \
-    ${VIDEO_FILE} \
     ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
-    ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
-    --out-video-root ${OUT-VIDEO-ROOT} \
+    --input ${VIDEO_FILE} \
+    --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+    --output ${OUTPUT} \
     --show
 ```
 
@@ -78,28 +81,30 @@ python ./demo/demo_sot.py \
 
 This script can inference an input video with a video object detection model.
 
-```shell
+```
 python demo/demo_vid.py \
-    ${VIDEO_FILE} \
-    ${CONFIG_FILE} \
-    ${CHECKPOINT_FILE}] \
-    [--out-video-root ${OUT-VIDEO-ROOT}] \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
     [--show]
 ```
 
 Optional arguments:
 
-- `OUT-VIDEO-ROOT`: Output root of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `--show`: Whether show the video on the fly.
 
 Examples:
 
 ```shell
 python ./demo/demo_vid.py \
-    ${VIDEO_FILE} \
-    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
-    ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
-    --out-video-root ${OUT-VIDEO-ROOT} \
+    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+    --output ${OUTPUT} \
     --show
 ```
 
@@ -125,6 +130,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
 ```
 
 Optional arguments:
+
 - `CHECKPOINT_FILE`: Filename of the checkpoint. You do not need to define it when applying some MOT methods but specify the checkpoints in the config.
 - `RESULT_FILE`: Filename of the output results in pickle format. If not specified, the results will not be saved to a file.
 - `EVAL_METRICS`: Items to be evaluated on the results. Allowed values depend on the dataset, e.g., `bbox` is available for ImageNet VID, `track` is available for LaSOT, `bbox` and `track` are both suitable for MOT17.
@@ -192,14 +198,14 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 MMTracking also provides out-of-the-box tools for training models.
 This section will show how to train _predefined_ models (under [configs](https://github.com/open-mmlab/mmtracking/tree/master/configs)) on standard datasets i.e. MOT17.
 
-
 By default we evaluate the model on the validation set after each epoch, you can change the evaluation interval by adding the interval argument in the training config.
+
 ```python
 evaluation = dict(interval=12)  # This evaluate the model per 12 epoch.
 ```
 
 **Important**: The default learning rate in config files is for 8 GPUs.
-According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., lr=0.01 for 8 GPUs * 1 img/gpu and lr=0.04 for 16 GPUs * 2 img/gpu.
+According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., `lr=0.01` for 8 GPUs \* 1 img/gpu and `lr=0.04` for 16 GPUs \* 2 imgs/gpu.
 
 #### Training on a single GPU
 
@@ -315,7 +321,6 @@ We provide instructions for cutomizing models of different tasks.
 
 The next step is to prepare a config thus the dataset or the model can be successfully loaded.
 More details about the config system are provided at [tutorials/config.md](tutorials/config.md).
-
 
 ### Train a new model
 

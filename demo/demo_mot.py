@@ -11,9 +11,9 @@ from mmtrack.apis import inference_mot, init_model
 def main():
     parser = ArgumentParser()
     parser.add_argument('config', help='config file')
-    parser.add_argument('-i', '--input', help='input video file or folder')
+    parser.add_argument('--input', help='input video file or folder')
     parser.add_argument(
-        '-o', '--output', help='output video file (mp4 format) or folder')
+        '--output', help='output video file (mp4 format) or folder')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='device used for inference')
