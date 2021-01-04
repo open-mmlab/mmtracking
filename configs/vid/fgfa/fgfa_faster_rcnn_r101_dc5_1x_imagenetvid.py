@@ -7,7 +7,7 @@ model = dict(
     type='FGFA',
     pretrains=dict(
         motion=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/flownet_simple.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
     ),
     detector=dict(
         pretrained='torchvision://resnet101', backbone=dict(depth=101)),
