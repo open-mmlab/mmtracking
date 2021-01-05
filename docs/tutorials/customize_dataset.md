@@ -3,8 +3,8 @@
 To customize a new dataset, you can convert them to the existing CocoVID style or implement a totally new dataset.
 In MMTracking, we recommand to convert the data into CocoVID style and do the conversion offline, thus you can use the `CocoVideoDataset` directly. In this case, you only need to modify the config's data annotation pathes and the `classes`.
 
-
 ### Convert the dataset into CocoVID style
+
 #### The CocoVID annotation file
 
 The annotation json files in CocoVID style has the following necessary keys:
@@ -17,7 +17,6 @@ The annotation json files in CocoVID style has the following necessary keys:
 A simple example is presented at [here](../../tests/assets/demo_cocovid_data/ann.json).
 
 The examples of converting existing datasets is presented at [here](../../tools/convert_datasets/).
-
 
 #### Modify the config
 
@@ -206,8 +205,6 @@ data = dict(
 )
 
 ```
-
-
 
 ### Subset of existing datasets
 

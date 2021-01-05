@@ -11,6 +11,7 @@ Please NOTE that there are some differences between the base config in MMTrackin
 1. `detector` is only a submodule of the `model`.
 
     For example, the config of Faster R-CNN in MMDetection follows
+
     ```python
     model = dict(
         type='FasterRCNN',
@@ -19,6 +20,7 @@ Please NOTE that there are some differences between the base config in MMTrackin
     ```
 
     But in MMTracking, the config follows
+
     ```python
     model = dict(
         detector=dict(
@@ -31,6 +33,7 @@ Please NOTE that there are some differences between the base config in MMTrackin
 2. `train_cfg` and `test_cfg` are merged into `model` / `detector`.
 
     In MMDetection, the configs follows
+
     ```python
     model = dict()
     train_cfg = dict()
@@ -38,6 +41,7 @@ Please NOTE that there are some differences between the base config in MMTrackin
     ```
 
     While in MMTracking, the config follows
+
     ```python
     model = dict(
         detector=dict(
