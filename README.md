@@ -2,7 +2,7 @@
   <img src="resources/mmtrack-logo.png" width="600"/>
 </div>
 
-[![PyPI](https://img.shields.io/pypi/v/mmtracking)](https://pypi.org/project/mmtracking)
+[![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
 [![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/en/latest/)
 [![badge](https://github.com/open-mmlab/mmtracking/workflows/build/badge.svg)](https://github.com/open-mmlab/mmtracking/actions)
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
