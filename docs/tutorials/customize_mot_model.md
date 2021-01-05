@@ -8,9 +8,7 @@ We basically categorize model components into 5 types.
 - reid: usually an independent ReID model to extract the feature embeddings from the cropped image, e.g., BaseReID.
 - track_head: the component to extract tracking cues but share the same backbone with the detector, e.g., a embedding head or a regression head.
 
-
 ### Add a new tracker
-
 
 #### 1. Define a tracker (e.g. MyTracker)
 
@@ -172,6 +170,7 @@ reid=dict(
 ```
 
 ### Add a new track head
+
 #### 1. Define a head (e.g. MyHead)
 
 Create a new file `mmtrack/models/track_heads/my_head.py`.
@@ -218,7 +217,6 @@ track_head=dict(
     arg1=xxx,
     arg2=xxx)
 ```
-
 
 ### Add a new loss
 

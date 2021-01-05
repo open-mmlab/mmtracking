@@ -39,11 +39,9 @@ The master branch works with PyTorch 1.3 to 1.7.
 
   **Strong**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
 
-
 ## License
 
 This project is released under the [Apache 2.0 license](LICENSE).
-
 
 ## Changelog
 
@@ -77,7 +75,6 @@ Please refer to [install.md](docs/install.md) for install instructions.
 
 Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
 We also provide usage [tutorials](docs/tutorials/).
-
 
 ## Contributing
 

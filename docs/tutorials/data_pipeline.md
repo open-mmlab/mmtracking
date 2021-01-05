@@ -5,14 +5,13 @@ There are two types of data pipelines in MMTracking:
 - Single image, which is consistent with MMDetection in most cases.
 - Pair-wise / multiple images.
 
-
 ### Data pipeline for a single image
 
 For a single image, you may refer to the [tutorial in MMDetection](https://mmdetection.readthedocs.io/en/latest/tutorials/data_pipeline.html).
 
 There are several differences in MMTracking:
-- We implement `VideoCollect` which is similar to `Collect` in MMDetection but is more comptabile with the video perception tasks.
-For example, the meta keys `frame_id` and `is_video_data` are collected by default.
+
+- We implement `VideoCollect` which is similar to `Collect` in MMDetection but is more comptabile with the video perception tasks. For example, the meta keys `frame_id` and `is_video_data` are collected by default.
 
 ### Data pipeline for multiple images
 
@@ -50,6 +49,7 @@ class CocoVideoDataset(CocoDataset):
             img_infos = self.ref_img_sampling(img_info, **self.ref_img_sampler)
         ...
 ```
+
 In this case, the loaded annotations is no longer a `dict` but `list[dict]` that contains the annotations for the key and reference images.
 The first item of the list indicates the annotations of the key image.
 
@@ -78,8 +78,8 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
             outs.append(_results)
         return outs
 ```
-Sometimes you may need to add a parameter `share_params` to decide whether share the random seed of the transformation on these images.
 
+Sometimes you may need to add a parameter `share_params` to decide whether share the random seed of the transformation on these images.
 
 #### 3. Concat the reference images (if applicable)
 
@@ -90,8 +90,8 @@ The length of the list is 2 after the process.
 
 In the end, we implement `SeqDefaultFormatBundle` to convert the list to a dictionary as the input of the model forward.
 
-
 Here is an example of the data pipeline:
+
 ```python
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile'),

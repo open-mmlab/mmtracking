@@ -6,9 +6,11 @@ We provide lots of useful tools under the `tools/` directory.
 It is used as the same manner with `tools/test.py` but different in the configs.
 
 Here is an example that shows how to modify the configs:
+
 1. Define the desirable evaluation metrics to record.
 
     For example, you can define the search metrics as
+
     ```python
     search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
     ```
@@ -16,6 +18,7 @@ Here is an example that shows how to modify the configs:
 2. Define the parameters and the values to search.
 
     Assume you have a tracker like
+
     ```python
     model = dict(
         tracker=dict(
@@ -27,6 +30,7 @@ Here is an example that shows how to modify the configs:
     ```
 
     If you want to search the parameters of the tracker, just change the value to a list as follow
+
     ```python
     model = dict(
         tracker=dict(

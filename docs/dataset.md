@@ -1,14 +1,13 @@
 ## Dataset Preparation
 
-
 This page provides the instructions for dataset preparation on existing benchmarks, include
 
 - Video Object Detection
-    - [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
+  - [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
 - Multiple Object Tracking
-    - [MOT Challenge](https://motchallenge.net/)
+  - [MOT Challenge](https://motchallenge.net/)
 - Single Object Tracking
-    - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+  - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
 
 ### 1. Download Datasets
 
@@ -23,7 +22,6 @@ Notes:
 - For the training and testing of multi object tracking task, only MOT17 dataset is needed.
 
 - For the training and testing of single object tracking task, the MSCOCO, ILSVRC and LaSOT datasets are needed.
-
 
 ```
 mmtracking
@@ -63,7 +61,6 @@ mmtracking
 |   |   ├── test
 |   |   ├── annotations
 ```
-
 
 ### 2. Convert Annotations
 
