@@ -32,7 +32,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                 f'load {module_name} from: {pretrain}', logger=self.logger)
             checkpoint = load_checkpoint(
                 module, pretrain, strict=False, logger=self.logger)
-            if 'CLASSES' in checkpoint['meta']:
+            if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
                 module.CLASSES = checkpoint['meta']['CLASSES']
         else:
             module.init_weights()
