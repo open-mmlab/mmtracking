@@ -30,7 +30,10 @@ def parse_args():
     parser.add_argument('--eval', type=str, nargs='+', help='eval types')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
-        '--show-score-thr', default=0.3, help='minimum score of bboxes to be shown')
+        '--show-score-thr',
+        type=float,
+        default=0.3,
+        help='score threshold (default: 0.3)')
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
