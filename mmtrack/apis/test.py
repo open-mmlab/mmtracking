@@ -10,7 +10,11 @@ import torch.distributed as dist
 from mmcv.runner import get_dist_info
 
 
-def single_gpu_test(model, data_loader, show=False, out_dir=None):
+def single_gpu_test(model,
+                    data_loader,
+                    show=False,
+                    out_dir=None,
+                    show_score_thr=0.3):
     """Test model with single gpu.
 
     Args:
@@ -20,6 +24,8 @@ def single_gpu_test(model, data_loader, show=False, out_dir=None):
             for now).  Defaults to False.
         out_dir (str): Path of directory to save the visualization results (Not
             supported for now). Defaults to None.
+        show_score_thr (float): The score threthold of visualization (Not
+            supported for now). Defaults to 0.3.
 
     Returns:
         dict[str, list]: The prediction results.
