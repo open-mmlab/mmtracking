@@ -21,7 +21,7 @@ def main():
     parser.add_argument(
         '--color', default=(0, 255, 0), help='Color of tracked bbox lines.')
     parser.add_argument(
-        '--thickness', default=3, help='Thickness of bbox lines.')
+        '--thickness', default=3, type=int, help='Thickness of bbox lines.')
     args = parser.parse_args()
 
     # build the model from a config file and a checkpoint file
