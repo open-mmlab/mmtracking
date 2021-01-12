@@ -2,6 +2,8 @@
 
 ## Introduction
 
+[ALGORITHM]
+
 ```latex
 @inproceedings{wu2019sequence,
   title={Sequence level semantics aggregation for video object detection},

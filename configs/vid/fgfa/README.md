@@ -2,6 +2,8 @@
 
 ## Introduction
 
+[ALGORITHM]
+
 ```latex
 @inproceedings{zhu2017flow,
   title={Flow-guided feature aggregation for video object detection},
