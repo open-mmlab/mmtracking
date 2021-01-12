@@ -111,7 +111,7 @@ class TestTransforms(object):
         transform = dict(
             type='SeqRandomFlip', share_params=False, flip_ratio=0.5)
         flip_module = build_from_cfg(transform, PIPELINES)
-        for i in range(8):
+        for i in range(20):
             results = copy.deepcopy(self.results)
             results = flip_module(results)
             if results[0]['flip'] == results[1]['flip']:
