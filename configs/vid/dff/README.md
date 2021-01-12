@@ -2,6 +2,8 @@
 
 ## Introduction
 
+[ALGORITHM]
+
 ```latex
 @inproceedings{zhu2017deep,
   title={Deep feature flow for video recognition},

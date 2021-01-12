@@ -2,6 +2,8 @@
 
 ## Introduction
 
+[ALGORITHM]
+
 ```latex
 @inproceedings{bewley2016simple,
   title={Simple online and realtime tracking},
