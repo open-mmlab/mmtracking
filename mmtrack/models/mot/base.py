@@ -65,7 +65,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
     @property
     def with_motion(self):
         """bool: whether the framework has a motion model."""
-        return hasattr(self, 'reid') and self.reid is not None
+        return hasattr(self, 'motion') and self.motion is not None
 
     @property
     def with_track_head(self):
