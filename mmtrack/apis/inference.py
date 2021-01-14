@@ -31,6 +31,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
         config.merge_from_dict(cfg_options)
     if 'detector' in config.model:
         config.model.detector.pretrained = None
+    config.model.pretrains = {}
     model = build_model(config.model)
     if checkpoint is not None:
         map_loc = 'cpu' if device == 'cpu' else None
