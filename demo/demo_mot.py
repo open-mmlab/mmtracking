@@ -49,7 +49,7 @@ def main():
             OUT_VIDEO = False
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
-    
+
     fps = args.fps
     if args.show or OUT_VIDEO:
         if fps is None and IN_VIDEO:
@@ -79,7 +79,7 @@ def main():
             img,
             result,
             show=args.show,
-            wait_time=1000./fps if fps else 0,
+            wait_time=1000. / fps if fps else 0,
             out_file=out_file,
             backend=args.backend)
         prog_bar.update()
