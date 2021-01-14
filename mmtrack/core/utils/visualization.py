@@ -158,7 +158,7 @@ def _plt_show_tracks(img,
 
     if show:
         plt.draw()
-        plt.pause(wait_time/1000.)
+        plt.pause(wait_time / 1000.)
     else:
         plt.show()
     plt.clf()
