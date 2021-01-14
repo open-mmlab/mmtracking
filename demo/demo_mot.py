@@ -22,11 +22,6 @@ def main():
         action='store_true',
         help='whether show the results on the fly')
     parser.add_argument(
-        '--show-wait-time',
-        type=int,
-        default=10,
-        help='milliseconds to pause after show an image')
-    parser.add_argument(
         '--backend',
         choices=['cv2', 'plt'],
         default='cv2',
@@ -45,9 +40,6 @@ def main():
     if args.output is not None:
         if args.output.endswith('.mp4'):
             OUT_VIDEO = True
-            if (not IN_VIDEO) and (not args.fps):
-                raise ValueError('Please set the FPS for the output video.')
-            fps = args.fps if args.fps else imgs.fps
             out_dir = tempfile.TemporaryDirectory()
             out_path = out_dir.name
             _out = args.output.rsplit('/', 1)
@@ -57,6 +49,14 @@ def main():
             OUT_VIDEO = False
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
+    
+    fps = args.fps
+    if args.show or OUT_VIDEO:
+        if fps is None and IN_VIDEO:
+            fps = imgs.fps
+        if not fps:
+            raise ValueError('Please set the FPS for the output video.')
+        fps = int(fps)
 
     # build the model from a config file and a checkpoint file
     model = init_model(args.config, args.checkpoint, device=args.device)
@@ -79,14 +79,14 @@ def main():
             img,
             result,
             show=args.show,
-            wait_time=args.show_wait_time,
+            wait_time=1000./fps if fps else 0,
             out_file=out_file,
             backend=args.backend)
         prog_bar.update()
 
     if OUT_VIDEO:
         print(f'making the output video at {args.output} with a FPS of {fps}')
-        mmcv.frames2video(out_path, args.output, fps=int(fps))
+        mmcv.frames2video(out_path, args.output, fps=fps)
         out_dir.cleanup()
 
 
