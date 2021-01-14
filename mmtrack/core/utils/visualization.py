@@ -35,6 +35,7 @@ def _cv2_show_tracks(img,
                      thickness=2,
                      font_scale=0.4,
                      show=False,
+                     wait_time=0,
                      out_file=None):
     """Show the tracks with opencv."""
     assert bboxes.ndim == 2
@@ -82,7 +83,7 @@ def _cv2_show_tracks(img,
             color=(0, 0, 0))
 
     if show:
-        mmcv.imshow(img)
+        mmcv.imshow(img, wait_time=wait_time)
     if out_file is not None:
         mmcv.imwrite(img, out_file)
 
@@ -97,6 +98,7 @@ def _plt_show_tracks(img,
                      thickness=1,
                      font_scale=0.5,
                      show=False,
+                     wait_time=0,
                      out_file=None):
     """Show the tracks with matplotlib."""
     assert bboxes.ndim == 2
@@ -153,6 +155,11 @@ def _plt_show_tracks(img,
 
     if out_file is not None:
         plt.savefig(out_file, dpi=300, bbox_inches='tight', pad_inches=0.0)
-    plt.show()
+
+    if show:
+        plt.draw()
+        plt.pause(wait_time/1000.)
+    else:
+        plt.show()
     plt.clf()
     return img

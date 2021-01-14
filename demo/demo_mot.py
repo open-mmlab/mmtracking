@@ -22,6 +22,11 @@ def main():
         action='store_true',
         help='whether show the results on the fly')
     parser.add_argument(
+        '--show-wait-time',
+        type=int,
+        default=10,
+        help='milliseconds to pause after show an image')
+    parser.add_argument(
         '--backend',
         choices=['cv2', 'plt'],
         default='cv2',
@@ -74,6 +79,7 @@ def main():
             img,
             result,
             show=args.show,
+            wait_time=args.show_wait_time,
             out_file=out_file,
             backend=args.backend)
         prog_bar.update()
