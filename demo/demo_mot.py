@@ -79,7 +79,7 @@ def main():
             img,
             result,
             show=args.show,
-            wait_time=1000. / fps if fps else 0,
+            wait_time=int(1000. / fps) if fps else 0,
             out_file=out_file,
             backend=args.backend)
         prog_bar.update()
