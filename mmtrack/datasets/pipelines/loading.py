@@ -5,6 +5,13 @@ from mmtrack.core import restore_result
 
 
 @PIPELINES.register_module()
+class LoadImageFromFileAndLog(LoadImageFromFile):
+    def __call__(self, results):
+        print()
+        print(results['img_info']['filename'])
+        return super().__call__(results)
+
+@PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):
     """Load multi images from file.
 
@@ -34,6 +41,13 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
             outs.append(_results)
         return outs
 
+
+@PIPELINES.register_module()
+class LoadMultiImagesFromFileAndLog(LoadMultiImagesFromFile):
+    def __call__(self, results):
+        print()
+        print(results['img_info']['filename'])
+        return super().__call__(results)
 
 @PIPELINES.register_module()
 class SeqLoadAnnotations(LoadAnnotations):

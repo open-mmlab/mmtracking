@@ -17,7 +17,8 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    # dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFileAndLog'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1000, 600),
