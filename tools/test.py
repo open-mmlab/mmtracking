@@ -67,7 +67,6 @@ def parse_args():
         os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
-
 def main():
     args = parse_args()
 
@@ -84,6 +83,7 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+    cfg.model.pretrains = {}
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
         from mmdet.datasets import build_dataloader
@@ -111,6 +111,10 @@ def main():
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test)
+    limit = cfg.data.get('limit_eval')
+    if limit is not None:
+        dataset.reduce_to_subset(range(limit))
+
     data_loader = build_dataloader(
         dataset,
         samples_per_gpu=1,
@@ -164,6 +168,7 @@ def main():
             for key in ['interval', 'tmpdir', 'start', 'gpu_collect']:
                 eval_kwargs.pop(key, None)
             eval_kwargs.update(dict(metric=args.eval, **kwargs))
+            eval_kwargs['bbox_kwargs'] = {'classwise': True}
             print(dataset.evaluate(outputs, **eval_kwargs))
 
 

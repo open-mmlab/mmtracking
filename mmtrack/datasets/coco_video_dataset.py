@@ -448,3 +448,10 @@ class CocoVideoDataset(CocoDataset):
             eval_results.update(super_eval_results)
 
         return eval_results
+
+    def reduce_to_subset(self, indexes):
+        self.data_infos = [self.data_infos[i] for i in indexes]
+        if self.proposals is not None:
+            self.proposals = [self.proposals[i] for i in indexes]
+        self._set_group_flag()
+
