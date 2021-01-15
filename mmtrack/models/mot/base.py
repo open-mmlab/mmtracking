@@ -245,6 +245,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                     font_scale=0.5,
                     show=False,
                     out_file=None,
+                    wait_time=0,
                     backend='cv2'):
         """Visualize tracking results.
 
@@ -274,5 +275,6 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
             font_scale=font_scale,
             show=show,
             out_file=out_file,
+            wait_time=wait_time,
             backend=backend)
         return img
