@@ -101,8 +101,13 @@ class DeepSORT(BaseMultiObjectTracker):
             det_labels = det_labels[0]
             num_classes = self.detector.roi_head.bbox_head.num_classes
         elif hasattr(self.detector, 'bbox_head'):
+            outs = self.detector.bbox_head(x)
+            result_list = self.detector.bbox_head.get_bboxes(
+                *outs, img_metas=img_metas, rescale=rescale)
+            # TODO: support batch inference
+            det_bboxes = result_list[0][0]
+            det_labels = result_list[0][1]
             num_classes = self.detector.bbox_head.num_classes
-            raise NotImplementedError()
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 
