@@ -4,7 +4,7 @@
 
 #### Bug Fixes
 
-- Fixed ReID checkpoint loading ([#80](https://github.com/open-mmlab/mmtracking/pull/80)
+- Fixed ReID checkpoint loading ([#80](https://github.com/open-mmlab/mmtracking/pull/80))
 - Fixed empty tensor in `track_result` ([#86](https://github.com/open-mmlab/mmtracking/pull/86))
 - Fixed `wait_time` in MOT demo script ([#92](https://github.com/open-mmlab/mmtracking/pull/92))
 
