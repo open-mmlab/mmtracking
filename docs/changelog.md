@@ -1,5 +1,17 @@
 ## Changelog
 
+### v0.5.1 (01/02/2021)
+
+#### Bug Fixes
+
+- Fixed ReID checkpoint loading ([#80](https://github.com/open-mmlab/mmtracking/pull/80)
+- Fixed empty tensor in `track_result` ([#86](https://github.com/open-mmlab/mmtracking/pull/86))
+- Fixed `wait_time` in MOT demo script ([#92](https://github.com/open-mmlab/mmtracking/pull/92))
+
+#### Improvements
+
+- Support single-stage detector for DeepSORT ([#100](https://github.com/open-mmlab/mmtracking/pull/100))
+
 ### v0.5.0 (04/01/2021)
 
 #### Highlights
