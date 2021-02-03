@@ -166,7 +166,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
    python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
-       --eval bbox
+       --eval track
    ```
 
 4. Test SiameseRPN++ with 8 GPUs, and evaluate the success and normed precision.
@@ -175,7 +175,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
    ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
-       --eval bbox
+       --eval track
    ```
 
 5. Test Tracktor on MOT17, and evaluate CLEAR MOT metrics.
