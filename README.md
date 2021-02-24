@@ -54,18 +54,18 @@ Results and models are available in the [model zoo](docs/model_zoo.md).
 
 Supported methods of video object detection:
 
-- [x] [DFF](configs/vid/dff)
-- [x] [FGFA](configs/vid/fgfa)
-- [x] [SELSA](configs/vid/selsa)
+- [x] [DFF](configs/vid/dff) (CVPR 2017)
+- [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
+- [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 
 Supported methods of multi object tracking:
 
-- [x] [SORT/DeepSORT](configs/mot/deepsort)
-- [x] [Tracktor](configs/mot/tracktor)
+- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
+- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 
 Supported methods of single object tracking:
 
-- [x] [SiameseRPN++](configs/sot/siamese_rpn)
+- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 
 ## Installation
 

@@ -21,30 +21,30 @@
 
 ## Baselines of video object detection
 
-### DFF
+### DFF (CVPR 2017)
 
 Please refer to [DFF](../configs/vid/dff/README.md) for details.
 
-### FGFA
+### FGFA (ICCV 2017)
 
 Please refer to [FGFA](../configs/vid/fgfa/README.md) for details.
 
-### SELSA
+### SELSA (ICCV 2019)
 
 Please refer to [SELSA](../configs/vid/selsa/README.md) for details.
 
 ## Baselines of multiple object tracking
 
-### SORT/DeepSORT
+### SORT/DeepSORT (ICIP 2016/2017)
 
 Please refer to [SORT/DeepSORT](../configs/mot/deepsort/README.md) for details.
 
-### Tracktor
+### Tracktor (ICCV 2019)
 
 Please refer to [Tracktor](../configs/mot/tracktor/README.md) for details.
 
 ## Baselines of single object tracking
 
-### SiameseRPN++
+### SiameseRPN++ (CVPR 2019)
 
 Please refer to [SiameseRPN++](../configs/sot/siamese_rpn/README.md) for details.
