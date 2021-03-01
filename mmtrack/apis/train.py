@@ -1,9 +1,8 @@
 import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
-                         OptimizerHook, build_optimizer)
+                         OptimizerHook, build_optimizer, Fp16OptimizerHook)
 from mmcv.utils import build_from_cfg
-from mmdet.core import Fp16OptimizerHook
 from mmdet.datasets import build_dataset
 
 from mmtrack.core import DistEvalHook, EvalHook
