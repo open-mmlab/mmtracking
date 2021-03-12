@@ -1,6 +1,5 @@
-from argparse import ArgumentParser
-
 import cv2
+from argparse import ArgumentParser
 
 from mmtrack.apis import inference_sot, init_model
 
@@ -8,8 +7,9 @@ from mmtrack.apis import inference_sot, init_model
 def main():
     parser = ArgumentParser()
     parser.add_argument('config', help='Config file')
-    parser.add_argument('--input', help='input video file')
-    parser.add_argument('--output', help='output video file (mp4 format)')
+    parser.add_argument('--input', '-i', help='input video file')
+    parser.add_argument(
+        '--output', '-o', help='output video file (mp4 format)')
     parser.add_argument('--checkpoint', help='Checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
