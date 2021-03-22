@@ -76,6 +76,19 @@ Please refer to [install.md](docs/install.md) for install instructions.
 Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
 We also provide usage [tutorials](docs/tutorials/).
 
+## Citation
+
+If you find this project useful in your research, please consider cite:
+
+```latex
+@misc{mmtrack2020,
+    title={{MMTracking: OpenMMLab} video perception toolbox and benchmark},
+    author={MMTracking Contributors},
+    howpublished = {\url{https://github.com/open-mmlab/mmtracking}},
+    year={2020}
+}
+```
+
 ## Contributing
 
 We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
@@ -86,3 +99,15 @@ MMTracking is an open source project that welcome any contribution and feedback.
 We wish that the toolbox and benchmark could serve the growing research
 community by providing a flexible as well as standardized toolkit to reimplement existing methods
 and develop their own new video perception methods.
+
+## Projects in OpenMMLab
+
+- [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
+- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
+- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
+- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab next-generation platform for general 3D object detection.
+- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
+- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
+- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
+- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
+- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
