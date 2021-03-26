@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build 
     && rm -rf /var/lib/apt/lists/*
 
 # Install MMCV
-#RUN pip install mmcv-full==latest+torch1.6.0+cu101 -f https://openmmlab.oss-accelerate.aliyuncs.com/mmcv/dist/index.html
 RUN pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
 RUN pip install mmdet
 
@@ -23,6 +22,5 @@ ENV FORCE_CUDA="1"
 
 RUN git clone https://github.com/open-mmlab/mmtracking.git /mmtracking
 WORKDIR /mmtracking
-#RUN ls 
 RUN pip install -r requirements/build.txt
 RUN pip install -v -e .
