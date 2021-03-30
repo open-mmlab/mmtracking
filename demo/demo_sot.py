@@ -1,6 +1,6 @@
-from argparse import ArgumentParser
-
 import cv2
+import time
+from argparse import ArgumentParser
 
 from mmtrack.apis import inference_sot, init_model
 
@@ -8,8 +8,9 @@ from mmtrack.apis import inference_sot, init_model
 def main():
     parser = ArgumentParser()
     parser.add_argument('config', help='Config file')
-    parser.add_argument('--input', help='input video file')
-    parser.add_argument('--output', help='output video file (mp4 format)')
+    parser.add_argument('--input', '-i', help='input video file')
+    parser.add_argument(
+        '--output', '-o', help='output video file (mp4 format)')
     parser.add_argument('--checkpoint', help='Checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
@@ -51,7 +52,9 @@ def main():
             init_bbox[3] += init_bbox[1]
 
         # test a single image
+        start = time.time()
         result = inference_sot(model, frame, init_bbox, frame_id)
+        end = time.time()
 
         track_bbox = result['bbox']
         cv2.rectangle(
@@ -59,6 +62,8 @@ def main():
             (track_bbox[2], track_bbox[3]),
             args.color,
             thickness=args.thickness)
+        cv2.putText(frame, 'fps: {}'.format(1.0 / (end - start)), (50, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), thickness=2)
 
         if save_out_video:
             videoWriter.write(frame)
