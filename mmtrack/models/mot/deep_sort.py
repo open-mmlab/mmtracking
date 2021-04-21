@@ -4,7 +4,7 @@ from mmtrack.core import track2result
 from ..builder import (MODELS, build_detector, build_motion, build_reid,
                        build_tracker)
 from .base import BaseMultiObjectTracker
-
+import torch
 
 @MODELS.register_module()
 class DeepSORT(BaseMultiObjectTracker):
@@ -82,34 +82,45 @@ class DeepSORT(BaseMultiObjectTracker):
             self.tracker.reset()
 
         x = self.detector.extract_feat(img)
-        if hasattr(self.detector, 'roi_head'):
-            # TODO: check whether this is the case
-            if public_bboxes is not None:
-                public_bboxes = [_[0] for _ in public_bboxes]
-                proposals = public_bboxes
+        try:
+            if hasattr(self.detector, 'roi_head'):
+                # TODO: check whether this is the case
+                if public_bboxes is not None:
+                    public_bboxes = [_[0] for _ in public_bboxes]
+                    proposals = public_bboxes
+                else:
+                    proposals = self.detector.rpn_head.simple_test_rpn(
+                        x, img_metas)
+                if (proposals[0].size(0) != 0):
+                    det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
+                        x,
+                        img_metas,
+                        proposals,
+                        self.detector.roi_head.test_cfg,
+                        rescale=rescale)
+                    # TODO: support batch inference
+                    det_bboxes = det_bboxes[0]
+                    det_labels = det_labels[0]
+                    num_classes = self.detector.roi_head.bbox_head.num_classes
+                else:
+                    det_bboxes = torch.empty((0, 5))
+                    det_labels = torch.empty((0))
+                    num_classes = self.detector.roi_head.bbox_head.num_classes
+
+            elif hasattr(self.detector, 'bbox_head'):
+                outs = self.detector.bbox_head(x)
+                result_list = self.detector.bbox_head.get_bboxes(
+                    *outs, img_metas=img_metas, rescale=rescale)
+                # TODO: support batch inference
+                det_bboxes = result_list[0][0]
+                det_labels = result_list[0][1]
+                num_classes = self.detector.bbox_head.num_classes
             else:
-                proposals = self.detector.rpn_head.simple_test_rpn(
-                    x, img_metas)
-            det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
-                x,
-                img_metas,
-                proposals,
-                self.detector.roi_head.test_cfg,
-                rescale=rescale)
-            # TODO: support batch inference
-            det_bboxes = det_bboxes[0]
-            det_labels = det_labels[0]
-            num_classes = self.detector.roi_head.bbox_head.num_classes
-        elif hasattr(self.detector, 'bbox_head'):
-            outs = self.detector.bbox_head(x)
-            result_list = self.detector.bbox_head.get_bboxes(
-                *outs, img_metas=img_metas, rescale=rescale)
-            # TODO: support batch inference
-            det_bboxes = result_list[0][0]
-            det_labels = result_list[0][1]
-            num_classes = self.detector.bbox_head.num_classes
-        else:
-            raise TypeError('detector must has roi_head or bbox_head.')
+                raise TypeError('detector must has roi_head or bbox_head.')
+        except:
+            print('error!')
+            print('public_bboxes=',  public_bboxes)
+            print('img_info=', img_metas)
 
         bboxes, labels, ids = self.tracker.track(
             img=img,
