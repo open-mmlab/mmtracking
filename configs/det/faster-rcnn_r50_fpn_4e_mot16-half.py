@@ -10,6 +10,16 @@ model = dict(
             bbox_head=dict(bbox_coder=dict(
                 clip_border=False), num_classes=1))))
 data_root = 'data/MOT16/'
+data = dict(
+    train=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'),
+    val=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'),
+    test=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'))
 # learning policy
 lr_config = dict(
     policy='step',

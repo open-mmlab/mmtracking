@@ -14,6 +14,16 @@ model = dict(
             norm_cfg=dict(type='BN', requires_grad=True),
             style='pytorch')))
 data_root = 'data/MOT20/'
+data = dict(
+    train=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'),
+    val=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'),
+    test=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        img_prefix=data_root + 'train'))
 load_from = (
     'http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/'
     'faster_rcnn_x101_32x4d_fpn_2x_coco/faster_rcnn_x101_32x4d_fpn_2x_coco_'
