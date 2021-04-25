@@ -8,7 +8,7 @@ model = dict(
         detector=  # noqa: E251
         'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot17-half/latest.pth',  # noqa: E501
         reid=  # noqa: E251
-        'work_dirs/reid/mot17/reid_mot17_latest.pth'  # noqa: E501
+        'work_dirs/reid/mot17/release_reid_mot17.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
