@@ -6,7 +6,7 @@ model = dict(
     type='DeepSORT',
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot17-half/latest.pth'  # noqa: E501
+        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot17-half/epoch_4.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
