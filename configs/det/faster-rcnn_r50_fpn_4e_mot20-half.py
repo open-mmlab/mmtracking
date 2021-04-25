@@ -15,10 +15,10 @@ data = dict(
         ann_file=data_root + 'annotations/half-train_cocoformat.json',
         img_prefix=data_root + 'train'),
     val=dict(
-        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train'),
     test=dict(
-        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train'))
 # learning policy
 lr_config = dict(
