@@ -2,7 +2,7 @@ _base_ = ['./sort_faster-rcnn_fpn_4e_mot17-private-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot17-half/latest.pth'  # noqa: E501
+        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot17/latest.pth'  # noqa: E501
     ))
 data_root = 'data/MOT17/'
 test_set = 'train'
