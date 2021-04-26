@@ -108,3 +108,4 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 - [MMPose](https://github.com/open-mmlab/mmpose):OpenMMLab姿态估计工具箱与测试基准
 - [MMEditing](https://github.com/open-mmlab/mmediting):OpenMMLab图像视频编辑工具箱
 - [MMOCR](https://github.com/open-mmlab/mmocr):OpenMMLab全流程文字检测识别理解工具包
+- [MMGeneration](https://github.com/open-mmlab/mmgeneration): OpenMMLab 生成模型工具箱
