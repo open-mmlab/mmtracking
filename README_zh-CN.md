@@ -100,12 +100,12 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 
 - [MMCV](https：//github.com/open-mmlab/mmcv)：OpenMMLab计算机视觉基础库
 - [MMClassification](https：//github.com/open-mmlab/mmclassification)：OpenMMLab图像分类工具箱与测试基准
-- [MMDetection](https：//github.com/open-mmlab/mmdetection)：OpenMMLab检测工具箱与测试基准
+- [MMDetection](https：//github.com/open-mmlab/mmdetection)：OpenMMLab目标检测工具箱与测试基准
 - [MMDetection3D](https：//github.com/open-mmlab/mmdetection3d)：OpenMMLab新一代通用3D目标检测平台
 - [MMSegmentation](https：//github.com/open-mmlab/mmsegmentation)：OpenMMLab语义分割工具箱与测试基准
 - [MMAction2](https：//github.com/open-mmlab/mmaction2)：OpenMMLab新一代视频理解工具箱与测试基准
 - [MMTracking](https：//github.com/open-mmlab/mmtracking)：OpenMMLab一体化视频目标感知平台
 - [MMPose](https：//github.com/open-mmlab/mmpose)：OpenMMLab姿态估计工具箱与测试基准
 - [MMEditing](https：//github.com/open-mmlab/mmediting)：OpenMMLab图像视频编辑工具箱
-- [MMOCR](https：//github.com/open-mmlab/mmocr)：OpenMMLab全流程文字检测识别理解工具包
-- [MMGeneration](https：//github.com/open-mmlab/mmgeneration)：OpenMMLab 生成模型工具箱
+- [MMOCR](https：//github.com/open-mmlab/mmocr)：OpenMMLab全流程文字检测识别理解工具箱
+- [MMGeneration](https：//github.com/open-mmlab/mmgeneration)：OpenMMLab生成模型工具箱
