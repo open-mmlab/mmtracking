@@ -10,7 +10,7 @@
 
 [English](/README.md) | 简体中文
 
-文档: https://mmtracking.readthedocs.io/
+文档：https://mmtracking.readthedocs.io/
 
 ## 简介
 
@@ -52,18 +52,18 @@ v0.5.1版本已于2021年2月1日发布，可通过查阅[更新日志](/docs/ch
 
 本工具箱支持的各个模型的结果和设置都可以在[模型库](docs/model_zoo.md)页面中查看。
 
-支持的视频目标检测算法：
+支持的视频目标检测算法:
 
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 
-支持的多目标跟踪算法：
+支持的多目标跟踪算法:
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 
-支持的单目标跟踪算法：
+支持的单目标跟踪算法:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 
@@ -77,7 +77,7 @@ v0.5.1版本已于2021年2月1日发布，可通过查阅[更新日志](/docs/ch
 
 ## 引用
 
-如果你觉得MMTracking对你的研究有所帮助，可以考虑引用它：
+如果你觉得MMTracking对你的研究有所帮助，可以考虑引用它:
 
 ```latex
 @misc{mmtrack2020,
@@ -98,14 +98,14 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 
 ## OpenMMLab 的其他项目
 
-- [MMCV](https://github.com/open-mmlab/mmcv):OpenMMLab计算机视觉基础库
-- [MMClassification](https://github.com/open-mmlab/mmclassification):OpenMMLab图像分类工具箱与测试基准
-- [MMDetection](https://github.com/open-mmlab/mmdetection):OpenMMLab检测工具箱与测试基准
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d):OpenMMLab新一代通用3D目标检测平台
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation):OpenMMLab语义分割工具箱与测试基准
-- [MMAction2](https://github.com/open-mmlab/mmaction2):OpenMMLab新一代视频理解工具箱与测试基准
-- [MMTracking](https://github.com/open-mmlab/mmtracking):OpenMMLab一体化视频目标感知平台
-- [MMPose](https://github.com/open-mmlab/mmpose):OpenMMLab姿态估计工具箱与测试基准
-- [MMEditing](https://github.com/open-mmlab/mmediting):OpenMMLab图像视频编辑工具箱
-- [MMOCR](https://github.com/open-mmlab/mmocr):OpenMMLab全流程文字检测识别理解工具包
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration): OpenMMLab 生成模型工具箱
+- [MMCV](https://github.com/open-mmlab/mmcv)：OpenMMLab计算机视觉基础库
+- [MMClassification](https://github.com/open-mmlab/mmclassification)：OpenMMLab图像分类工具箱与测试基准
+- [MMDetection](https://github.com/open-mmlab/mmdetection)：OpenMMLab目标检测工具箱与测试基准
+- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d)：OpenMMLab新一代通用3D目标检测平台
+- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation)：OpenMMLab语义分割工具箱与测试基准
+- [MMAction2](https://github.com/open-mmlab/mmaction2)：OpenMMLab新一代视频理解工具箱与测试基准
+- [MMTracking](https://github.com/open-mmlab/mmtracking)：OpenMMLab一体化视频目标感知平台
+- [MMPose](https://github.com/open-mmlab/mmpose)：OpenMMLab姿态估计工具箱与测试基准
+- [MMEditing](https://github.com/open-mmlab/mmediting)：OpenMMLab图像视频编辑工具箱
+- [MMOCR](https://github.com/open-mmlab/mmocr)：OpenMMLab全流程文字检测识别理解工具箱
+- [MMGeneration](https://github.com/open-mmlab/mmgeneration)：OpenMMLab生成模型工具箱
