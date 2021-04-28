@@ -4,7 +4,7 @@ model = dict(
         detector=  # noqa: E251
         'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot20/latest.pth'  # noqa: E501
     ))
-data_root = 'data/MOT17/'
+data_root = 'data/MOT20/'
 test_set = 'test'
 data = dict(
     train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),

@@ -4,7 +4,7 @@ model = dict(
         detector=  # noqa: E251
         'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot15-half/latest.pth'  # noqa: E501
     ))
-data_root = 'data/MOT17/'
+data_root = 'data/MOT20/'
 data = dict(
     val=dict(
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
