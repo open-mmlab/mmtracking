@@ -1,8 +1,10 @@
-_base_ = ['./sort_faster-rcnn_fpn_4e_mot17-public-half.py']
+_base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-private-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot15-half/latest.pth'  # noqa: E501
+        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot15-half/latest.pth',  # noqa: E501
+        reid=  # noqa: E251
+        'work_dirs/reid/mot15/myself_best_reid_mot15.pth'  # noqa: E501
     ))
 data_root = 'data/MOT15/'
 data = dict(
