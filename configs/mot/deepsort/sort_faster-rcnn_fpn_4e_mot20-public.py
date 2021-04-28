@@ -10,6 +10,7 @@ data = dict(
     train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
     val=dict(
         ann_file=data_root + 'annotations/train_cocoformat.json',
+        img_prefix=data_root + test_set,
         detection_file=data_root + 'annotations/train_detections.pkl'),
     test=dict(
         ann_file=data_root + f'annotations/{test_set}_cocoformat.json',

@@ -62,8 +62,11 @@ class TracktorTracker(BaseTracker):
         if rescale:
             bboxes *= torch.tensor(img_metas[0]['scale_factor']).to(
                 bboxes.device)
-        track_bboxes, track_scores = detector.roi_head.simple_test_bboxes(
-            x, img_metas, [bboxes], None, rescale=rescale)
+        if bboxes.size(0) != 0:
+            track_bboxes, track_scores = detector.roi_head.simple_test_bboxes(
+                x, img_metas, [bboxes], None, rescale=rescale)
+        else:
+            track_bboxes, track_scores = torch.empty((0, 5)), torch.empty((0))
         track_bboxes, track_labels, valid_inds = multiclass_nms(
             track_bboxes[0],
             track_scores[0],
