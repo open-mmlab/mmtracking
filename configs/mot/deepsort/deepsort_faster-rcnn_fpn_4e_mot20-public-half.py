@@ -2,7 +2,7 @@ _base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-public-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot20-half/faster-rcnn_r50_fpn_4e_mot20-half.pth',  # noqa: E501
+        'work_dirs/detector/faster-rcnn_r50_fpn_8e_mot20-half_clip_border_interval8/faster-rcnn_r50_fpn_8e_mot20-half_clip_border_interval8.pth',  # noqa: E501
         reid=  # noqa: E251
         'work_dirs/reid/mot20/tracktor_reid_r50_69e_mot20.pth'  # noqa: E501
     ),
