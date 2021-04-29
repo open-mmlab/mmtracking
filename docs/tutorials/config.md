@@ -78,7 +78,7 @@ Please refer to the corresponding page for config file structure for different t
 #### Ignore some fields in the base configs
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
-You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#inherit-from-base-config-with-ignored-fields) for simple inllustration.
+You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#inherit-from-base-config-with-ignored-fields) for simple illustration.
 
 #### Use intermediate variables in configs
 
