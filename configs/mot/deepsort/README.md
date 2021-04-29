@@ -27,7 +27,8 @@ We implement SORT and DeepSORT with independent detector and ReID models. To tra
 The configs in this folder are basiclly for inference.
 
 Currently we do not support training ReID models.
-We directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw). These missed features will be supported in the future.
+For MOT15, MOT16, and MOT20, we train the ReID model following by [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw).
+For MOT17, we directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/tracking_wo_bnw). These missed features will be supported in the future.
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
@@ -62,9 +63,9 @@ We directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/
 ## Results and models on MOT20
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
-| R50-FasterRCNN-FPN | -  | half-train | half-val | Y     |  |   44.3 | 26.8 | 345 | 319355 | 23125 | [config](sort_faster-rcnn_fpn_4e_mot20-public-half.py) |  [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) |
-| R50-FasterRCNN-FPN | -  | half-train | half-val | N     |  |   62.4 | 59.2 | 4252 | 3138 | 701 | [config](sort_faster-rcnn_fpn_4e_mot20-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) |
-| R50-FasterRCNN-FPN | R50 | half-train | half-val | Y     |   |  49.7 | 49.2 | 704   | 9968 | 157 | [config](deepsort_faster-rcnn_fpn_4e_mot20-public-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth) |
-| R50-FasterRCNN-FPN | R50 | half-train | half-val | N     |   |  64.1 | 60.8 | 4250 | 3136 | 334 | [config](deepsort_faster-rcnn_fpn_4e_mot20-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth) |
+| R50-FasterRCNN-FPN | -  | half-train | half-val | Y     |  |   44.5 | 27.1 | 344 | 318027 | 23382 | [config](sort_faster-rcnn_fpn_4e_mot20-public-half.py) |  [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) |
+| R50-FasterRCNN-FPN | -  | half-train | half-val | N     |  |   55.0 | 33.7 | 3906 | 253066 | 19758 | [config](sort_faster-rcnn_fpn_4e_mot20-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) |
+| R50-FasterRCNN-FPN | R50 | half-train | half-val | Y     |   |  47.7 | 43.6 | 344   | 318027 | 3365 | [config](deepsort_faster-rcnn_fpn_4e_mot20-public-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth) |
+| R50-FasterRCNN-FPN | R50 | half-train | half-val | N     |   |  57.7 | 50.7 | 3835 | 252995 | 3609 | [config](deepsort_faster-rcnn_fpn_4e_mot20-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth) |
 | R50-FasterRCNN-FPN | - | train | train | Y               |   | 45.9 | 34.8 | 519 | 20444 | 2375 | [config](sort_faster-rcnn_fpn_4e_mot20-public.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth) |
 | R50-FasterRCNN-FPN | - | train | train | N               |   | 76.1 | 59.8 | 5797 | 2791 | 1722 | [config](sort_faster-rcnn_fpn_4e_mot20-private.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth) |
