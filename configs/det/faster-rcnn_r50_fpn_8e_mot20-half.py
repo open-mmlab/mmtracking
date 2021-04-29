@@ -26,3 +26,4 @@ lr_config = dict(
     step=[6])
 # runtime settings
 total_epochs = 8
+checkpoint_config = dict(interval=8)
