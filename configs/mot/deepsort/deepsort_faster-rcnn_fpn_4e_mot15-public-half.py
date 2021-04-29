@@ -2,9 +2,9 @@ _base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-public-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_4e_mot15-half/latest.pth',  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half-f48f6578.pth',  # noqa: E501
         reid=  # noqa: E251
-        'work_dirs/reid/mot15/myself_best_reid_mot15.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_69e_mot15-f7980743.pth'  # noqa: E501
     ))
 data_root = 'data/MOT15/'
 data = dict(

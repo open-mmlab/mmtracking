@@ -2,7 +2,7 @@ _base_ = ['./sort_faster-rcnn_fpn_4e_mot17-private.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/detector/faster-rcnn_r50_fpn_8e_mot20_clip_border_interval8/faster-rcnn_r50_fpn_8e_mot20_clip_border_interval8.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-ef875499.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=True)),
