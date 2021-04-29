@@ -7,9 +7,12 @@ model = dict(
 data_root = 'data/MOT16/'
 test_set = 'train'
 data = dict(
-    train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
+    train=dict(
+        ann_file=data_root + 'annotations/train_cocoformat.json',
+        img_prefix=data_root + 'train'),
     val=dict(
         ann_file=data_root + 'annotations/train_cocoformat.json',
+        img_prefix=data_root + 'train',
         detection_file=data_root + 'annotations/train_detections.pkl'),
     test=dict(
         ann_file=data_root + f'annotations/{test_set}_cocoformat.json',

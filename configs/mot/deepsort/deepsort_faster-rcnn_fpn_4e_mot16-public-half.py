@@ -1,4 +1,4 @@
-_base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-private-half.py']
+_base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-public-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
