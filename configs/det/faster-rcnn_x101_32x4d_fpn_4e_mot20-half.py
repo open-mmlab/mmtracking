@@ -12,7 +12,11 @@ model = dict(
             out_indices=(0, 1, 2, 3),
             frozen_stages=1,
             norm_cfg=dict(type='BN', requires_grad=True),
-            style='pytorch')))
+            style='pytorch'),
+        rpn_head=dict(bbox_coder=dict(clip_border=True)),
+        roi_head=dict(
+            bbox_head=dict(bbox_coder=dict(
+                clip_border=True), num_classes=1))))
 data_root = 'data/MOT20/'
 data = dict(
     train=dict(
