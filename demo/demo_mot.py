@@ -1,9 +1,8 @@
+import mmcv
 import os
 import os.path as osp
 import tempfile
 from argparse import ArgumentParser
-
-import mmcv
 
 from mmtrack.apis import inference_mot, init_model
 
@@ -11,9 +10,9 @@ from mmtrack.apis import inference_mot, init_model
 def main():
     parser = ArgumentParser()
     parser.add_argument('config', help='config file')
-    parser.add_argument('--input', help='input video file or folder')
+    parser.add_argument('--input', '-i', help='input video file or folder')
     parser.add_argument(
-        '--output', help='output video file (mp4 format) or folder')
+        '--output', '-o', help='output video file (mp4 format) or folder')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='device used for inference')
