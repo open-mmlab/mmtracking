@@ -121,6 +121,7 @@ class Tracktor(BaseMultiObjectTracker):
             det_bboxes = det_bboxes[0]
             det_labels = det_labels[0]
             num_classes = self.detector.roi_head.bbox_head.num_classes
+
         elif hasattr(self.detector, 'bbox_head'):
             outs = self.detector.bbox_head(x)
             result_list = self.detector.bbox_head.get_bboxes(
