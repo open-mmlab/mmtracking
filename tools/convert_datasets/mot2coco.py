@@ -112,7 +112,7 @@ def main():
 
     sets = ['train', 'test']
     if args.split_train:
-       sets += ['half-train', 'half-val']
+        sets += ['half-train', 'half-val']
     vid_id, img_id, ann_id = 1, 1, 1
 
     for subset in sets:

@@ -4,7 +4,7 @@ from mmtrack.core import track2result
 from ..builder import (MODELS, build_detector, build_motion, build_reid,
                        build_tracker)
 from .base import BaseMultiObjectTracker
-import torch
+
 
 @MODELS.register_module()
 class DeepSORT(BaseMultiObjectTracker):
@@ -90,21 +90,16 @@ class DeepSORT(BaseMultiObjectTracker):
             else:
                 proposals = self.detector.rpn_head.simple_test_rpn(
                     x, img_metas)
-            if (proposals[0].size(0) != 0):
-                det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
-                    x,
-                    img_metas,
-                    proposals,
-                    self.detector.roi_head.test_cfg,
-                    rescale=rescale)
-                # TODO: support batch inference
-                det_bboxes = det_bboxes[0]
-                det_labels = det_labels[0]
-                num_classes = self.detector.roi_head.bbox_head.num_classes
-            else:
-                det_bboxes = torch.empty((0, 5))
-                det_labels = torch.empty((0))
-                num_classes = self.detector.roi_head.bbox_head.num_classes
+            det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
+                x,
+                img_metas,
+                proposals,
+                self.detector.roi_head.test_cfg,
+                rescale=rescale)
+            # TODO: support batch inference
+            det_bboxes = det_bboxes[0]
+            det_labels = det_labels[0]
+            num_classes = self.detector.roi_head.bbox_head.num_classes
 
         elif hasattr(self.detector, 'bbox_head'):
             outs = self.detector.bbox_head(x)

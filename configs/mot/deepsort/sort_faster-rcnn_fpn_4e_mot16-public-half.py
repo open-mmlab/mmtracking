@@ -17,4 +17,3 @@ data = dict(
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         detection_file=data_root + 'annotations/half-val_detections.pkl'))
-

@@ -7,8 +7,7 @@ model = dict(
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=True)),
         roi_head=dict(
-            bbox_head=dict(bbox_coder=dict(
-                clip_border=True), num_classes=1))))
+            bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))))
 data_root = 'data/MOT20/'
 data = dict(
     train=dict(
