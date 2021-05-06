@@ -1,4 +1,4 @@
-_base_ = ['./sort_faster-rcnn_fpn_4e_mot17-public-half.py']
+_base_ = ['./sort_faster-rcnn_fpn_4e_mot17-public.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
