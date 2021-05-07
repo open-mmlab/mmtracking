@@ -1,4 +1,4 @@
-_base_ = ['./tracktor_faster-rcnn_fpn_4e_mot17-private.py']
+_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
