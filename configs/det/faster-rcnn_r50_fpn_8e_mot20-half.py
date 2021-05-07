@@ -23,6 +23,6 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=100,
     warmup_ratio=1.0 / 100,
-    step=[6])
+    step=[7])
 # runtime settings
 total_epochs = 8
