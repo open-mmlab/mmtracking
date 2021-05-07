@@ -23,6 +23,7 @@ lr_config = dict(
     warmup='linear',
     warmup_iters=100,
     warmup_ratio=1.0 / 100,
-    step=[8])
+    step=[10])
 # runtime settings
 total_epochs = 10
+evaluation = dict(interval=total_epochs)
