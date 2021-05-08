@@ -2,7 +2,8 @@ _base_ = ['./sort_faster-rcnn_fpn_4e_mot17-private-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half-4c1b09ac.pth'  # noqa: E501
+        # 'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half-4c1b09ac.pth'  # noqa: E501
+        '/mnt/lustre/share_data/shensanjing/model/sort/publish_model/faster-rcnn_r50_fpn_4e_mot16-half-4c1b09ac.pth'
     ))
 data_root = 'data/MOT16/'
 data = dict(
