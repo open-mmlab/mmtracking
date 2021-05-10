@@ -1,7 +1,15 @@
-USE_MMDET = True
-_base_ = ['./faster-rcnn_r50_fpn_4e_mot17-half.py']
+_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 model = dict(
+    pretrains=dict(
+        detector=  # noqa: E251
+        # 'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half-860a6c6f.pth',  # noqa: E501
+        'work_dirs/faster-rcnn_r101_fpn_20e_mot20-half/epoch_4.pth',
+        reid=  # noqa: E251
+        # 'https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_69e_mot20-367af9dd.pth'  # noqa: E501
+        '/mnt/lustre/share/shensanjing/model/sort/publish_model/tracktor_reid_r50_69e_mot20-367af9dd.pth'
+    ),
     detector=dict(
+        backbone=dict(depth=101),
         rpn_head=dict(bbox_coder=dict(clip_border=True)),
         roi_head=dict(
             bbox_head=dict(bbox_coder=dict(
@@ -17,12 +25,3 @@ data = dict(
     test=dict(
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train'))
-# learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=100,
-    warmup_ratio=1.0 / 100,
-    step=[7])
-# runtime settings
-total_epochs = 8
