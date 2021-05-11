@@ -13,6 +13,7 @@
   year={2019}
 }
 ```
+
 ## Results and models on MOT15
 
 We implement Tracktor with independent detector and ReID models. To train a model by yourself, you need to train a detector following [here](../../det/) and also train a ReID model.
@@ -39,7 +40,6 @@ The implementations of Tracktor follow the offical practices.
 | R50-FasterRCNN-FPN | R50 | half-train | half-val | N     |   | 62.9 | 64.1 | 4389 | 14905 | 817 | [config](tracktor_faster-rcnn_r50_fpn_4e_mot16-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half-4c1b09ac.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_69e_mot16-a2e459b3.pth) |
 | R50-FasterRCNN-FPN | R50 | train      | train    | Y     |   | 61.5 | 62.4 | 1162 | 40896 | 423 |  [config](tracktor_faster-rcnn_r50_fpn_4e_mot16-public.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-ccb2ff52.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_69e_mot16-a2e459b3.pth) |
 | R50-FasterRCNN-FPN | R50 | train      | train    | N     |   | 74.9 | 65.7 | 7767 | 18517 | 1469 | [config](tracktor_faster-rcnn_r50_fpn_4e_mot16-private.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-ccb2ff52.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_69e_mot16-a2e459b3.pth) |
-
 
 ## Results and models on MOT17
 

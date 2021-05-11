@@ -5,7 +5,7 @@ from ..builder import (MODELS, build_detector, build_motion, build_reid,
                        build_tracker)
 from ..motion import CameraMotionCompensation, LinearMotion
 from .base import BaseMultiObjectTracker
-import torch
+
 
 @MODELS.register_module()
 class Tracktor(BaseMultiObjectTracker):

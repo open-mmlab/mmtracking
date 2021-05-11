@@ -4,7 +4,7 @@ from mmtrack.core import track2result
 from ..builder import (MODELS, build_detector, build_motion, build_reid,
                        build_tracker)
 from .base import BaseMultiObjectTracker
-import torch
+
 
 @MODELS.register_module()
 class DeepSORT(BaseMultiObjectTracker):
