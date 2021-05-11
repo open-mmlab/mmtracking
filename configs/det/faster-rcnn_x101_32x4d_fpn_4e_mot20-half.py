@@ -32,3 +32,12 @@ load_from = (
     'http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/'
     'faster_rcnn_x101_32x4d_fpn_2x_coco/faster_rcnn_x101_32x4d_fpn_2x_coco_'
     'bbox_mAP-0.412_20200506_041400-64a12c0b.pth')
+# learning policy
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=100,
+    warmup_ratio=1.0 / 100,
+    step=[6])
+# runtime settings
+total_epochs = 8
