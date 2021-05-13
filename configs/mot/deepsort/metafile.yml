@@ -1,0 +1,102 @@
+Collections:
+  - Name: SORT
+    Metadata:
+      Training Techniques:
+        - SGD with Momentum
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+        - FPN
+    Paper: https://arxiv.org/abs/1602.00763
+    README: configs/mot/deepsort/README.md
+
+Models:
+  - Name: sort_faster-rcnn_fpn_4e_mot17-public-half
+    In Collection: SORT
+    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-public-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 28.3
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 46.0
+          IDF1: 46.6
+    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+
+  - Name: sort_faster-rcnn_fpn_4e_mot17-private-half
+    In Collection: SORT
+    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 18.6
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 62.0
+          IDF1: 57.8
+    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+
+  - Name: deepsort_faster-rcnn_fpn_4e_mot17-public-half
+    In Collection: SORT
+    Config: configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
+    Paper: https://arxiv.org/abs/1703.07402
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 20.4
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 48.1
+          IDF1: 60.8
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: deepsort_faster-rcnn_fpn_4e_mot17-private-half
+    In Collection: SORT
+    Config: configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py
+    Paper: https://arxiv.org/abs/1703.07402
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 13.8
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 63.8
+          IDF1: 69.6
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: sort_faster-rcnn_fpn_4e_mot17-public
+    In Collection: SORT
+    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-public.py
+    Metadata:
+      Training Data: MOT17-train
+      FPS: 28.3
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-train
+        Metrics:
+          MOTA: 50.9
+          IDF1: 44.5
+    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth
+
+  - Name: sort_faster-rcnn_fpn_4e_mot17-private
+    In Collection: SORT
+    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py
+    Metadata:
+      Training Data: MOT17-train
+      FPS: 18.6
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-train
+        Metrics:
+          MOTA: 80.8
+          IDF1: 61.3
+    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth

@@ -1,0 +1,76 @@
+Collections:
+  - Name: Tracktor
+    Metadata:
+      Training Techniques:
+        - SGD with Momentum
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+        - FPN
+    Paper: https://arxiv.org/abs/1903.05625
+    README: configs/mot/tracktor/README.md
+
+Models:
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 3.2
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 57.3
+          IDF1: 63.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py
+    Metadata:
+      Training Data: MOT17-half-train
+      FPS: 3.1
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 64.1
+          IDF1: 66.5
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-public
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public.py
+    Metadata:
+      Training Data: MOT17-train
+      FPS: 3.2
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-test
+        Metrics:
+          MOTA: 61.2
+          IDF1: 58.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-private
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py
+    Metadata:
+      Training Data: MOT17-train
+      FPS: 3.1
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-train
+        Metrics:
+          MOTA: 82.1
+          IDF1: 73.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
