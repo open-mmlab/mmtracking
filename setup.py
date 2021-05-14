@@ -135,7 +135,7 @@ if __name__ == '__main__':
         author_email='openmmlab@gmail.com',
         keywords='computer vision, object tracking, video object detection',
         url='https://github.com/open-mmlab/mmtracking',
-        packages=find_packages(exclude=('configs', 'tools', 'demo')),
+        packages=find_packages(),
         include_package_data=True,
         classifiers=[
             'Development Status :: 4 - Beta',
