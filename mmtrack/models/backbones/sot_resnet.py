@@ -18,7 +18,8 @@ class SOTBottleneck(Bottleneck):
                  conv_cfg=None,
                  norm_cfg=dict(type='BN'),
                  dcn=None,
-                 plugins=None):
+                 plugins=None,
+                 init_cfg=None):
         """Bottleneck block for ResNet.
 
         If style is "pytorch", the stride-two layer is the 3x3 conv layer, if
@@ -35,7 +36,8 @@ class SOTBottleneck(Bottleneck):
             conv_cfg=None,
             norm_cfg=dict(type='BN'),
             dcn=None,
-            plugins=None)
+            plugins=None,
+            init_cfg=init_cfg)
         assert style in ['pytorch', 'caffe']
         assert dcn is None or isinstance(dcn, dict)
         assert plugins is None or isinstance(plugins, list)
