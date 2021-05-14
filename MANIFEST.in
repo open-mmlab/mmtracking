@@ -1,11 +1,6 @@
 include requirements/*.txt
 include mmtrack/VERSION
 include mmtrack/model_zoo.yml
-include mmtrack/configs/*/*.py
-include mmtrack/configs/*/*.yml
-include mmtrack/configs/*/*/*.py
-include mmtrack/configs/*/*/*.yml
-include mmtrack/tools/*.py
-include mmtrack/tools/*.sh
-include mmtrack/tools/*/*.py
 include mmtrack/demo/*
+recursive-include mmtrack/configs *.py *.yml
+recursive-include mmtrack/tools *.sh *.py
