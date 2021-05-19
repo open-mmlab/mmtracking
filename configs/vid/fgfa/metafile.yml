@@ -1,0 +1,36 @@
+Collections:
+  - Name: FGFA
+    Metadata:
+      Training Data: ILSVRC
+      Training Techniques:
+        - SGD with Momentum
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+    Paper: https://arxiv.org/abs/1703.10025
+    README: configs/vid/fgfa/README.md
+
+Models:
+  - Name: fgfa_faster_rcnn_r50_dc5_1x_imagenetvid
+    In Collection: FGFA
+    Config: configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 4.10
+    Results:
+      - Task: Video Object Detection
+        Dataset: ILSVRC
+        Metrics:
+          box AP@50: 74.7
+    Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth
+
+  - Name: fgfa_faster_rcnn_r101_dc5_1x_imagenetvid
+    In Collection: FGFA
+    Config: configs/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 5.80
+    Results:
+      - Task: Video Object Detection
+        Dataset: ILSVRC
+        Metrics:
+          box AP@50: 77.8
+    Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth

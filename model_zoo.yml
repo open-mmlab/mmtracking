@@ -1,0 +1,7 @@
+Import:
+  - configs/mot/deepsort/metafile.yml
+  - configs/mot/tracktor/metafile.yml
+  - configs/sot/siamese_rpn/metafile.yml
+  - configs/vid/dff/metafile.yml
+  - configs/vid/fgfa/metafile.yml
+  - configs/vid/selsa/metafile.yml

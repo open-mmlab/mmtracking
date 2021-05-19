@@ -1,0 +1,25 @@
+Collections:
+  - Name: SiameseRPN++
+    Metadata:
+      Training Data: LaSOT
+      Training Techniques:
+        - SGD with Momentum
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+    Paper: https://arxiv.org/abs/1812.11703
+    README: configs/sot/siamese_rpn/README.md
+
+Models:
+  - Name: siamese_rpn_r50_1x_lasot
+    In Collection: SiameseRPN++
+    Config: configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py
+    Metadata:
+      Training Memory (GB): 7.54
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 49.9
+          Norm precision: 57.9
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth
