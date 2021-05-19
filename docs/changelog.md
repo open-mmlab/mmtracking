@@ -1,5 +1,15 @@
 ## Changelog
 
+### v0.5.2 (19/05/2021)
+
+#### Highlights
+
+#### Bug Fixes
+
+#### New Features
+
+#### Improvements
+
 ### v0.5.1 (01/02/2021)
 
 #### Bug Fixes
