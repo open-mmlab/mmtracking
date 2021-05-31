@@ -13,7 +13,7 @@ model = dict(
         pretrained='torchvision://resnet101',
         backbone=dict(depth=101),
         train_cfg=dict(
-            rpn_proposal=dict(nms_post=1000, max_num=1000),
+            rpn_proposal=dict(max_per_img=1000),
             rcnn=dict(sampler=dict(num=512)))),
     motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
     train_cfg=None,
