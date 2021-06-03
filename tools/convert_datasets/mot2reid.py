@@ -1,4 +1,4 @@
-# This script converts MOT labels into COCO style.
+# This script converts MOT dataset into ReID dataset.
 # Offical website of the MOT dataset: https://motchallenge.net/
 #
 # Label format of MOT dataset:
@@ -46,6 +46,7 @@ def parse_args():
     parser.add_argument('-i', '--input', help='path of MOT data')
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
+    parser.add_argument('--val-split', type=float, default=0.2, help='path of MOT data')
     return parser.parse_args()
 
 
@@ -59,20 +60,21 @@ def main():
     in_folder = osp.join(args.input, 'train')
     video_names = os.listdir(in_folder)
     sorted(video_names)
+    if 'MOT17' in in_folder:
+        video_names = [video_name for video_name in video_names if 'FRCNN' in video_name]
     for video_name in tqdm(video_names):
         # load video infos
         video_folder = osp.join(in_folder, video_name)
         infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
         # video-level infos
         assert video_name == infos[1].strip().split('=')[1]
-        # img1
         raw_img_folder = infos[2].strip().split('=')[1]
         raw_img_names = os.listdir(f'{video_folder}/{raw_img_folder}')
         raw_img_names = sorted(raw_img_names)
         num_raw_imgs = int(infos[4].strip().split('=')[1])
         assert num_raw_imgs == len(raw_img_names)
 
-        reid_train_folder = osp.join(args.output, 'train')
+        reid_train_folder = osp.join(args.output, 'img')
         if not osp.exists(reid_train_folder):
             os.makedirs(reid_train_folder)
         gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
@@ -99,22 +101,35 @@ def main():
             reid_img = mmcv.imcrop(raw_img, xyxy)
             mmcv.imwrite(reid_img, f'{reid_img_folder}/{reid_img_name}')
 
+
     # meta
     reid_meta_folder = osp.join(args.output, 'meta')
     if not osp.exists(reid_meta_folder):
         os.makedirs(reid_meta_folder)
+    reid_train_list = []
     reid_val_list = []
     reid_img_folder_names = os.listdir(reid_train_folder)
     sorted(reid_img_folder_names)
-    label = 0
-    for reid_img_folder_name in reid_img_folder_names:
+    ids_num = len(reid_img_folder_names)
+    train_ids_num = int(ids_num * (1 - args.val_split))
+    train_label, val_label = 0, 0
+    for reid_img_folder_name in reid_img_folder_names[:train_ids_num]:
         reid_img_names = os.listdir(
             f'{reid_train_folder}/{reid_img_folder_name}')
         sorted(reid_img_names)
         for reid_img_name in reid_img_names:
-            reid_val_list.append(
-                f'{reid_img_folder_name}/{reid_img_name} {label}\n')
-        label += 1
+            reid_train_list.append(
+                f'{reid_img_folder_name}/{reid_img_name} {train_label}\n')
+        train_label += 1
+    for reid_img_folder_name in reid_img_folder_names[train_ids_num:]:
+        reid_img_names = os.listdir(
+            f'{reid_train_folder}/{reid_img_folder_name}')
+        sorted(reid_img_names)
+        for reid_img_name in reid_img_names:
+            reid_val_list.append(f'{reid_img_folder_name}/{reid_img_name} {val_label}\n')
+        val_label += 1
+    with open(osp.join(reid_meta_folder, 'train.txt'), 'w') as f:
+        f.writelines(reid_train_list)
     with open(osp.join(reid_meta_folder, 'val.txt'), 'w') as f:
         f.writelines(reid_val_list)
 
