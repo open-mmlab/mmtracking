@@ -2,13 +2,16 @@
 
 ### v0.5.2 (19/05/2021)
 
-#### Highlights
-
-#### Bug Fixes
-
-#### New Features
-
 #### Improvements
+
+- Added docker files ([#124](https://github.com/open-mmlab/mmtracking/commit/a01c3e8fff97a2b8eebc8d28e3e9d9a360ffbc3c))
+- Fixed typos ([#104](https://github.com/open-mmlab/mmtracking/commit/3ccc9b79ce6e14e013268d0dbb53462c0432f357), [#121](https://github.com/open-mmlab/mmtracking/commit/fadcd811df095781fbbdc7c47f8dac1305555461), [#145](https://github.com/open-mmlab/mmtracking/commit/48a47868abd9a0d96c010fc3f85cba1bd2854a9b))
+- Added conference reference ([#111](https://github.com/open-mmlab/mmtracking/commit/9a3c463b087cdee201a9345f270f6c01e116cf2c))
+- Updated the link of CONTRIBUTING to mmcv ([#112](https://github.com/open-mmlab/mmtracking/commit/b725e63463b1bd795fd3c3000b30ef37832a844d))
+- Adapt updates in mmcv (FP16Hook) ([#114](https://github.com/open-mmlab/mmtracking/commit/49f910878345250d22fd5da1104f1fb227244939), [#119](https://github.com/open-mmlab/mmtracking/commit/f1df53dd8e571f4674867919d1886b9fb2024bf9))
+- Added bibtex and links to other codebases ([#122](https://github.com/open-mmlab/mmtracking/commit/1b456423e0aeddb52e7c29e5b0ec3d48e058c615))
+- Used `collect_env` in mmcv ([#129](https://github.com/open-mmlab/mmtracking/commit/0055947c4d19c8921c32ce128ae0314d61e593d2))
+- Added and updated Chinese README ([#135](https://github.com/open-mmlab/mmtracking/commit/ecc83b5e6523582b92196095eb21d72d654322f2), [#147](https://github.com/open-mmlab/mmtracking/commit/19004b6eeca594a2179d8b3a3622764e1753aa4d), [#148](https://github.com/open-mmlab/mmtracking/commit/dc367868453fdcb528041176a59ede368f0e2053))
 
 ### v0.5.1 (01/02/2021)
 
