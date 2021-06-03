@@ -46,6 +46,7 @@ def build_motion(cfg):
 
 def build_reid(cfg):
     """Build motion model."""
+    # 这儿用mmcls.models.CLASSIFIERS
     return build(cfg, REID)
 
 
