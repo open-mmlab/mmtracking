@@ -3,7 +3,6 @@ from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          Fp16OptimizerHook, OptimizerHook, build_optimizer)
 from mmcv.utils import build_from_cfg
-from mmdet.datasets import build_dataset
 
 from mmtrack.core import DistEvalHook, EvalHook
 from mmtrack.datasets import build_dataloader
@@ -31,6 +30,11 @@ def train_model(model,
             Default: None
     """
     logger = get_root_logger(cfg.log_level)
+
+    if cfg.get('USE_MMDET', False):
+        from mmdet.datasets import build_dataset
+    elif cfg.get('USE_MMCLS', False):
+        from mmcls.datasets import build_dataset
 
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]

@@ -13,7 +13,7 @@ def build(cfg, registry, default_args=None):
     """Build a module.
 
     Args:
-        cfg (dict, list[dict]): The config of modules, is is either a dict
+        cfg (dict, list[dict]): The config of modules, it is either a dict
             or a list of configs.
         registry (:obj:`Registry`): A registry the module belongs to.
         default_args (dict, optional): Default arguments to build the module.
@@ -45,8 +45,7 @@ def build_motion(cfg):
 
 
 def build_reid(cfg):
-    """Build motion model."""
-    # 这儿用mmcls.models.CLASSIFIERS
+    """Build reid model."""
     return build(cfg, REID)
 
 

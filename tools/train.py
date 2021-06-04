@@ -71,10 +71,12 @@ def main():
         from mmdet.datasets import build_dataset
         if 'detector' in cfg.model:
             cfg.model = cfg.model.detector
-    if cfg.get('USE_MMCLS', False):
+    elif cfg.get('USE_MMCLS', False):
         from mmtrack.apis import train_model
-        from mmtrack.models import build_model
+        from mmtrack.models import build_reid as build_model
         from mmcls.datasets import build_dataset
+        if 'reid' in cfg.model:
+            cfg.model = cfg.model.reid
     else:
         from mmtrack.apis import train_model
         from mmtrack.models import build_model

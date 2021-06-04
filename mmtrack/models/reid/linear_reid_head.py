@@ -57,10 +57,14 @@ class LinearReIDHead(ClsHead):
         in_channels = self.in_channels if self.num_fcs == 0 else \
             self.fc_channels
         self.fc_out = nn.Linear(in_channels, self.out_channels)
+        if self.num_classes:
+            self.classifier = nn.Linear(self.out_channels, self.num_classes)
 
     def init_weights(self):
         """Initalize model weights."""
         normal_init(self.fc_out, mean=0, std=0.01, bias=0)
+        if self.num_classes:
+            normal_init(self.classifier, mean=0, std=0.01, bias=0)
 
     def simple_test(self, x):
         """Test without augmentation."""
@@ -71,9 +75,9 @@ class LinearReIDHead(ClsHead):
 
     def forward_train(self, x, gt_label):
         """Model forward."""
-        x = self.fcs(x)
+        for m in self.fcs:
+            x = m(x)
         x = self.fc_out(x)
-        if self.num_classes is not None:
-            raise NotImplementedError()
+        x = self.classifier(x)
         losses = self.loss(x, gt_label)
         return losses
