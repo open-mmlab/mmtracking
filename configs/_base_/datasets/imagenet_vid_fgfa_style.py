@@ -52,7 +52,7 @@ data = dict(
             ref_img_sampler=dict(
                 num_ref_imgs=2,
                 frame_range=0,
-                filter_key_img=True,
+                filter_key_img=False,
                 method='bilateral_uniform'),
             pipeline=train_pipeline)
     ],
