@@ -1,6 +1,7 @@
 import torch
 import mmcv
 import numpy as np
+import tqdm
 
 from mmcls.datasets import DATASETS
 from mmcls.datasets import BaseDataset
@@ -46,8 +47,10 @@ class ReIDDataset(BaseDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # distance
-        features = torch.stack(results).data.cpu()
+        results = [result.data.cpu() for result in results]
+        features = torch.stack(results) if len(results[0].size()) == 1 else torch.cat(results)
         n, c = features.size()
+        print(features.size())
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()
         distmat.addmm_(features, features.t(), beta=1, alpha=-2)
@@ -61,7 +64,8 @@ class ReIDDataset(BaseDataset):
         all_cmc = []
         all_AP = []
         num_valid_q = 0.
-        for q_idx in range(len(results)):
+        for q_idx in range(n):
+            print(q_idx)
             # compute cmc curve remove self
             raw_cmc = matches[q_idx][1:]  # binary vector, positions with value 1 are correct matches
             if not np.any(raw_cmc):

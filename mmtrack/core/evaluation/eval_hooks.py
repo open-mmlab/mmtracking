@@ -26,9 +26,11 @@ class DistEvalHook(_DistEvalHook):
     detailed docstring."""
 
     def after_train_epoch(self, runner):
-        if not self.evaluation_flag(runner):
-            return
-        if self.dataloader.dataset.load_as_video:
+        # if not self.evaluation_flag(runner):
+        #     return
+        if 'MOT' in self.dataloader.dataset.data_prefix:
+            from mmcls.apis import multi_gpu_test
+        elif self.dataloader.dataset.load_as_video:
             from mmtrack.apis import multi_gpu_test
         else:
             from mmdet.apis import multi_gpu_test

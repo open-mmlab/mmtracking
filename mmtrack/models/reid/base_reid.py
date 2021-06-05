@@ -13,12 +13,6 @@ class BaseReID(ImageClassifier):
 
     def forward_train(self,img, gt_label, **kwargs):
         """"Training forward function."""
-        if self.mixup is not None:
-            img, gt_label = self.mixup(img, gt_label)
-
-        if self.cutmix is not None:
-            img, gt_label = self.cutmix(img, gt_label)
-
         x = self.extract_feat(img)
 
         losses = dict()
