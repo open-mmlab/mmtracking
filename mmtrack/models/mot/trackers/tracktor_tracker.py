@@ -136,7 +136,7 @@ class TracktorTracker(BaseTracker):
                 else:
                     num_samples = 1
                 self.tracks = model.cmc.track(self.last_img, img, self.tracks,
-                                              num_samples, frame_id)
+                                                  num_samples, frame_id)
 
             if model.with_linear_motion:
                 self.tracks = model.linear_motion.track(self.tracks, frame_id)
@@ -211,4 +211,5 @@ class TracktorTracker(BaseTracker):
             embeds=embeds if self.with_reid else None,
             frame_ids=frame_id)
         self.last_img = img
+        self.last_frame_id = frame_id
         return bboxes, labels, ids

@@ -8,7 +8,7 @@ from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
 
-from .samplers import DistributedVideoSampler
+from .samplers import DistributedVideoSampler, IdentitySampler, DistributedIdentitySampler
 
 
 def build_dataloader(dataset,
@@ -39,13 +39,14 @@ def build_dataloader(dataset,
     Returns:
         DataLoader: A PyTorch dataloader.
     """
+
     rank, world_size = get_dist_info()
     if dist:
         if shuffle:
             sampler = DistributedGroupSampler(dataset, samples_per_gpu,
                                               world_size, rank)
         else:
-            if 'MOT' not in dataset.ann_file and dataset.load_as_video:
+            if dataset.load_as_video:
                 sampler = DistributedVideoSampler(
                     dataset, world_size, rank, shuffle=False)
             else:

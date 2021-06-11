@@ -47,6 +47,7 @@ def parse_args():
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
     parser.add_argument('--val-split', type=float, default=0.2, help='path of MOT data')
+    parser.add_argument('--vis-threshold', type=float, default=0.3, help='Threshold of visibility of persons above which they are selected')
     return parser.parse_args()
 
 
@@ -83,9 +84,12 @@ def main():
             frame_id, ins_id = map(int, gt[:2])
             ltwh = list(map(float, gt[2:6]))
             class_id = int(gt[7])
+            visibility = float(gt[8])
             if class_id in USELESS:
                 continue
             elif class_id in IGNORES:
+                continue
+            elif visibility < args.vis_threshold:
                 continue
             reid_img_folder = osp.join(reid_train_folder,
                                        f'{video_name}_{ins_id:06d}')

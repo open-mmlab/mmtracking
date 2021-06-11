@@ -26,6 +26,7 @@ class CocoVideoDataset(CocoDataset):
 
     def __init__(self,
                  load_as_video=True,
+                 load_as_reid=False,
                  key_img_sampler=dict(interval=1),
                  ref_img_sampler=dict(
                      frame_range=10,
@@ -37,6 +38,8 @@ class CocoVideoDataset(CocoDataset):
                  test_load_ann=False,
                  *args,
                  **kwargs):
+        assert not load_as_reid, 'COCO dataset can not be loaded as reid style.'
+
         self.load_as_video = load_as_video
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler

@@ -1,5 +1,5 @@
 USE_MMCLS = True
-_base_ = ['../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py']
+_base_ = ['../_base_/datasets/mot_challenge_reid_seq.py', '../_base_/default_runtime.py']
 model = dict(
     reid=dict(
         type='BaseReID',
@@ -16,12 +16,14 @@ model = dict(
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
-            num_classes=5,
+            num_classes=68,
+            losses=[dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
+                    dict(type='CrossEntropyLoss', loss_weight=1.0)],
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU')))
 )
 data = dict(
-    samples_per_gpu=32,
+    samples_per_gpu=1,
     workers_per_gpu=2,
     train=dict(
         data_prefix='data/MOT17/reid/img',
@@ -32,7 +34,7 @@ data = dict(
     test=dict(
         data_prefix='data/MOT17/reid/img',
         ann_file='data/MOT17/reid/meta/debug_val.txt'))
-# optimizer
+# optimizerZ
 optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy

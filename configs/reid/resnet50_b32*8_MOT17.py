@@ -1,9 +1,6 @@
 USE_MMCLS = True
 _base_ = ['../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py']
 model = dict(
-    # pretrains=dict(
-    #     reid=
-    # ),
     reid=dict(
         type='BaseReID',
         backbone=dict(
@@ -19,12 +16,16 @@ model = dict(
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
-            num_classes=436,
+            num_classes=409,
+            # losses=[dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
+            #         dict(type='CrossEntropyLoss', loss_weight=1.0)],
+            losses=[dict(type='CrossEntropyLoss', loss_weight=1.0)],
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU')))
 )
 # optimizer
 optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
+# optimizer = dict(type='Adam', lr=0.0003, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(

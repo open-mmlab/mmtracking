@@ -1,7 +1,8 @@
+import copy
+from collections import defaultdict
+
 import torch
-import mmcv
 import numpy as np
-import tqdm
 
 from mmcls.datasets import DATASETS
 from mmcls.datasets import BaseDataset
@@ -10,8 +11,20 @@ from mmcls.datasets import BaseDataset
 @DATASETS.register_module()
 class ReIDDataset(BaseDataset):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self,
+                 load_as_video=False,
+                 load_as_reid=True,
+                 triplet_sampler=dict(
+                     num_ids=1,
+                     ins_per_id=1),
+                 *args,
+                 **kwargs):
         super().__init__(*args, **kwargs)
+        assert not load_as_video, 'reid dataset can not be loaded as COCO style.'
+
+        self.load_as_reid = load_as_reid
+        self.load_as_video = load_as_video
+        self.triplet_sampler = triplet_sampler
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def load_annotations(self):
@@ -25,7 +38,52 @@ class ReIDDataset(BaseDataset):
                 info['img_info'] = {'filename': filename}
                 info['gt_label'] = np.array(gt_label, dtype=np.int64)
                 data_infos.append(info)
-            return data_infos
+        self.parse_annotations(data_infos)
+        return data_infos
+
+    def parse_annotations(self, data_infos):
+        index_tmp_dic = defaultdict(list)
+        self.index_dic = dict()
+        for idx, info in enumerate(data_infos):
+            pid = info['gt_label']
+            index_tmp_dic[int(pid)].append(idx)
+        for pid, idxs in index_tmp_dic.items():
+            self.index_dic[pid] = np.asarray(idxs, dtype=np.int64)
+
+        self.pids = np.asarray(list(self.index_dic.keys()), dtype=np.int64)
+
+    def triplet_sampling(self,
+                         img_info,
+                         num_ids=8,
+                         ins_per_id=4):
+        pos_pid = img_info['gt_label']
+        pos_idxs = self.index_dic[int(pos_pid)]
+        idxs_list = []
+        # select positive samplers
+        idxs_list.extend(pos_idxs[np.random.choice(pos_idxs.shape[0], ins_per_id, replace=False)])
+
+        # select negative ids
+        neg_pids = np.random.choice([i for i, _ in enumerate(self.pids) if i != pos_pid], num_ids - 1, replace=False)
+
+        # select negative samplers for each negative id
+        for neg_pid in neg_pids:
+            neg_idxs = self.index_dic[neg_pid]
+            idxs_list.extend(neg_idxs[np.random.choice(neg_idxs.shape[0], ins_per_id, replace=True)])
+
+        triplet_img_infos = []
+        for idx in idxs_list:
+            triplet_img_infos.append(self.data_infos[idx])
+
+        return triplet_img_infos
+
+    def prepare_data(self, idx):
+        img_info = self.data_infos[idx]
+        if self.triplet_sampler is not None:
+            img_infos = self.triplet_sampling(img_info, **self.triplet_sampler)
+            results = copy.deepcopy(img_infos)
+        else:
+            results = copy.deepcopy(img_info)
+        return self.pipeline(results)
 
 
     def evaluate(self,
@@ -34,7 +92,6 @@ class ReIDDataset(BaseDataset):
                  metric_options=None,
                  logger=None,
                  max_rank=20):
-        eval_results = dict()
         if isinstance(metric, list):
             metrics = metric
         elif isinstance(metric, str):
@@ -58,7 +115,6 @@ class ReIDDataset(BaseDataset):
 
         pids = np.asarray([data_info['gt_label'] for data_info in self.data_infos])
         indices = np.argsort(distmat, axis=1)
-        # matches 第i个query相似的第j张图是否id相同
         matches = (pids[indices] == pids[:, np.newaxis]).astype(np.int32)
 
         all_cmc = []
@@ -93,5 +149,6 @@ class ReIDDataset(BaseDataset):
         all_cmc = all_cmc.sum(0) / num_valid_q
         mAP = np.mean(all_AP)
 
-        eval_results = {'mAP':float(f'{(mAP):.3f}')}
+        eval_results = {'mAP':float(f'{(mAP):.3f}'), 'R1':float(f'{(all_cmc[0]):.3f}'),
+                        'R5':float(f'{(all_cmc[4]):.3f}'), 'R10':float(f'{(all_cmc[9]):.3f}')}
         return eval_results

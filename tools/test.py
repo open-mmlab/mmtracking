@@ -1,6 +1,6 @@
 import argparse
 import os
-
+import mmtrack.datasets
 import mmcv
 import torch
 from mmcv import Config, DictAction
@@ -8,7 +8,6 @@ from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
-from mmdet.datasets import build_dataset
 
 
 def parse_args():
@@ -86,11 +85,19 @@ def main():
     cfg = Config.fromfile(args.config)
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
-        from mmdet.datasets import build_dataloader
+        from mmdet.datasets import build_dataset, build_dataloader
         from mmdet.models import build_detector as build_model
+        if 'detector' in cfg.model:
+            cfg.model = cfg.model.detector
+    elif cfg.get('USE_MMCLS', False):
+        from mmcls.apis import multi_gpu_test, single_gpu_test
+        from mmcls.datasets import build_dataset, build_dataloader
+        from mmtrack.models import build_reid as build_model
+        if 'reid' in cfg.model:
+            cfg.model = cfg.model.reid
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.datasets import build_dataloader
+        from mmtrack.datasets import build_dataset, build_dataloader
         from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
@@ -141,7 +148,7 @@ def main():
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  args.show_score_thr)
+                                  show_score_thr=args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
