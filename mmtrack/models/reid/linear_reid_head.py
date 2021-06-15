@@ -79,8 +79,7 @@ class LinearReIDHead(ClsHead):
         for m in self.fcs:
             x = m(x)
         fea = self.fc_out(x)
-        fea_bn = self.bn(fea)
-        return fea_bn
+        return fea
 
     def forward_train(self, x, gt_label):
         """Model forward."""
