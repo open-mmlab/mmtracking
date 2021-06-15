@@ -60,7 +60,7 @@ class ReIDDataset(BaseDataset):
         pos_idxs = self.index_dic[int(pos_pid)]
         idxs_list = []
         # select positive samplers
-        idxs_list.extend(pos_idxs[np.random.choice(pos_idxs.shape[0], ins_per_id, replace=False)])
+        idxs_list.extend(pos_idxs[np.random.choice(pos_idxs.shape[0], ins_per_id, replace=True)])
 
         # select negative ids
         neg_pids = np.random.choice([i for i, _ in enumerate(self.pids) if i != pos_pid], num_ids - 1, replace=False)
@@ -72,7 +72,7 @@ class ReIDDataset(BaseDataset):
 
         triplet_img_infos = []
         for idx in idxs_list:
-            triplet_img_infos.append(self.data_infos[idx])
+            triplet_img_infos.append(copy.deepcopy(self.data_infos[idx]))
 
         return triplet_img_infos
 
@@ -107,7 +107,6 @@ class ReIDDataset(BaseDataset):
         results = [result.data.cpu() for result in results]
         features = torch.stack(results) if len(results[0].size()) == 1 else torch.cat(results)
         n, c = features.size()
-        print(features.size())
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()
         distmat.addmm_(features, features.t(), beta=1, alpha=-2)
@@ -121,7 +120,6 @@ class ReIDDataset(BaseDataset):
         all_AP = []
         num_valid_q = 0.
         for q_idx in range(n):
-            print(q_idx)
             # compute cmc curve remove self
             raw_cmc = matches[q_idx][1:]  # binary vector, positions with value 1 are correct matches
             if not np.any(raw_cmc):

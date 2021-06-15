@@ -3,6 +3,7 @@ from functools import partial
 
 import numpy as np
 from mmcv.parallel import collate
+from mmtrack.core.collate.collate_triplet import collate_triplet
 from mmcv.runner import get_dist_info
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
@@ -68,7 +69,7 @@ def build_dataloader(dataset,
         batch_size=batch_size,
         sampler=sampler,
         num_workers=num_workers,
-        collate_fn=partial(collate, samples_per_gpu=samples_per_gpu),
+        collate_fn=partial(collate_triplet, samples_per_gpu=samples_per_gpu),
         pin_memory=False,
         worker_init_fn=init_fn,
         **kwargs)

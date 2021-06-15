@@ -10,7 +10,7 @@ from .transforms import (SeqBlurAug, SeqColorAug, SeqCropLikeSiamFC,
                          SeqRandomCrop, SeqRandomFlip, SeqResize,
                          SeqShiftScaleAug)
 
-from .pipeline_reid import (SeqImageToTensor, SeqToTensor)
+from .pipeline_reid import (SeqImageToTensor, SeqToTensor, SeqCollect, SeqReIDFormatBundle)
 
 __all__ = [
     'PIPELINES', 'LoadMultiImagesFromFile', 'SeqLoadAnnotations', 'SeqResize',
@@ -18,5 +18,5 @@ __all__ = [
     'VideoCollect', 'ConcatVideoReferences', 'LoadDetections',
     'MatchInstances', 'SeqRandomCrop', 'SeqPhotoMetricDistortion',
     'SeqCropLikeSiamFC', 'SeqShiftScaleAug', 'SeqBlurAug', 'SeqColorAug',
-    'ToList', 'SeqImageToTensor', 'SeqToTensor'
+    'ToList', 'SeqImageToTensor', 'SeqToTensor', 'SeqCollect', 'SeqReIDFormatBundle'
 ]

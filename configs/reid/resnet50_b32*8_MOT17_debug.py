@@ -24,7 +24,7 @@ model = dict(
 )
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=2,
+    workers_per_gpu=0,
     train=dict(
         data_prefix='data/MOT17/reid/img',
         ann_file='data/MOT17/reid/meta/debug_train.txt'),
@@ -34,7 +34,7 @@ data = dict(
     test=dict(
         data_prefix='data/MOT17/reid/img',
         ann_file='data/MOT17/reid/meta/debug_val.txt'))
-# optimizerZ
+# optimizer
 optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 # learning policy

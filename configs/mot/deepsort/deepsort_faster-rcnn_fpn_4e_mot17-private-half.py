@@ -31,6 +31,7 @@ model = dict(
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
+            num_classes=378,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU'))),
     tracker=dict(

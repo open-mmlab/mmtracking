@@ -31,6 +31,7 @@
 import argparse
 import os
 import os.path as osp
+import random
 
 import mmcv
 import numpy as np
@@ -47,7 +48,9 @@ def parse_args():
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
     parser.add_argument('--val-split', type=float, default=0.2, help='path of MOT data')
-    parser.add_argument('--vis-threshold', type=float, default=0.3, help='Threshold of visibility of persons above which they are selected')
+    parser.add_argument('--vis-threshold', type=float, default=0.3, help='threshold of visibility for each person')
+    parser.add_argument('--min-per-person', type=int, default=8, help='minimum number of images for each person')
+    parser.add_argument('--max-per-person', type=int, default=1000, help='minimum number of images for each person')
     return parser.parse_args()
 
 
@@ -117,9 +120,14 @@ def main():
     ids_num = len(reid_img_folder_names)
     train_ids_num = int(ids_num * (1 - args.val_split))
     train_label, val_label = 0, 0
+    random.seed(0)
     for reid_img_folder_name in reid_img_folder_names[:train_ids_num]:
         reid_img_names = os.listdir(
             f'{reid_train_folder}/{reid_img_folder_name}')
+        if (len(reid_img_names) < args.min_per_person):
+            continue
+        if (len(reid_img_names) > args.max_per_person):
+            reid_img_names = random.sample(reid_img_names, args.max_per_person)
         sorted(reid_img_names)
         for reid_img_name in reid_img_names:
             reid_train_list.append(

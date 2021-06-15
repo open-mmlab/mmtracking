@@ -34,7 +34,7 @@ class LinearReIDHead(ClsHead):
                  act_cfg=None,
                  num_classes=None,
                  losses=[dict(type='CrossEntropyLoss', loss_weight=1.0)],
-                 cal_acc=True,
+                 cal_acc=False,
                  topk=(1, )):
         super(LinearReIDHead, self).__init__(loss=losses[0], topk=topk)
         self.num_fcs = num_fcs
@@ -78,8 +78,9 @@ class LinearReIDHead(ClsHead):
         """Test without augmentation."""
         for m in self.fcs:
             x = m(x)
-        x = self.fc_out(x)
-        return x
+        fea = self.fc_out(x)
+        fea_bn = self.bn(fea)
+        return fea_bn
 
     def forward_train(self, x, gt_label):
         """Model forward."""
