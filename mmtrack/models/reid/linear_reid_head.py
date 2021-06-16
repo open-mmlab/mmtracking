@@ -33,10 +33,11 @@ class LinearReIDHead(ClsHead):
                  norm_cfg=None,
                  act_cfg=None,
                  num_classes=None,
-                 losses=[dict(type='CrossEntropyLoss', loss_weight=1.0)],
+                 loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
+                 loss_triplet=dict(dict(type='TripletLoss', margin=1.0, loss_weight=1.0)),
                  cal_acc=False,
                  topk=(1, )):
-        super(LinearReIDHead, self).__init__(loss=losses[0], topk=topk)
+        super(LinearReIDHead, self).__init__(loss=dict(type='CrossEntropyLoss', loss_weight=1.0), topk=topk)
         self.num_fcs = num_fcs
         self.in_channels = in_channels
         self.fc_channels = fc_channels
@@ -45,9 +46,14 @@ class LinearReIDHead(ClsHead):
         self.act_cfg = act_cfg
         self.num_classes = num_classes
         self.compute_accuracy = Accuracy(topk=self.topk)
-        if not isinstance(losses, list):
-            raise TypeError('losses must be a list.')
-        self.losses = {loss['type'] : build_loss(loss) for loss in losses}
+        if not loss_cls and num_classes is not None:
+            raise ValueError('The num_classes must be None, if there is no cross entropy loss.')
+        if loss_cls and num_classes is None:
+            raise ValueError('The num_classes must be a current number, if there is cross entropy loss.')
+        if not loss_cls and not loss_triplet:
+            raise ValueError('There must be a loss.')
+        self.compute_loss_cls = build_loss(loss_cls) if loss_cls else None
+        self.compute_loss_triplet = build_loss(loss_triplet) if loss_triplet else None
         self.cal_acc = cal_acc
 
         self._init_layers()
@@ -86,23 +92,24 @@ class LinearReIDHead(ClsHead):
         for m in self.fcs:
             x = m(x)
         fea = self.fc_out(x)
-        fea_bn = self.bn(fea)
-        out = self.classifier(fea_bn)
         losses = dict()
-        for t, loss in self.losses.items():
-            if t == 'TripletLoss':
-                losses['triplet_loss'] = loss(fea, gt_label)
-            elif t == 'CrossEntropyLoss':
-                losses['ce_loss'] = loss(out, gt_label)
+        if not self.compute_loss_cls:
+            losses['loss'] = self.compute_loss_triplet(fea, gt_label)
+        else:
+            fea_bn = self.bn(fea)
+            out = self.classifier(fea_bn)
+            if not self.compute_loss_triplet:
+                losses['loss'] = self.compute_loss_cls(out, gt_label)
             else:
-                raise NotImplementedError
-        if self.cal_acc:
-            # compute accuracy
-            acc = self.compute_accuracy(out, gt_label)
-            assert len(acc) == len(self.topk)
-            losses['accuracy'] = {
-                f'top-{k}': a
-                for k, a in zip(self.topk, acc)
-            }
+                losses['triplet_loss'] = self.compute_loss_triplet(fea, gt_label)
+                losses['ce_loss'] = self.compute_loss_cls(out, gt_label)
+            if self.cal_acc:
+                # compute accuracy
+                acc = self.compute_accuracy(out, gt_label)
+                assert len(acc) == len(self.topk)
+                losses['accuracy'] = {
+                    f'top-{k}': a
+                    for k, a in zip(self.topk, acc)
+                }
         return losses
 

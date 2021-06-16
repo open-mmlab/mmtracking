@@ -1,5 +1,5 @@
-USE_MMCLS = True
-_base_ = ['../_base_/datasets/mot_challenge_reid_seq.py', '../_base_/default_runtime.py']
+_base_ = ['./resnet50_b32*8_MOT17.py']
+
 model = dict(
     reid=dict(
         type='BaseReID',
@@ -19,21 +19,7 @@ model = dict(
             num_classes=None,
             loss_cls=None,
             loss_triplet=dict(type='TripletLoss', margin=1.0, loss_weight=1.0),
-            cal_acc=True,
+            cal_acc=False,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU')))
 )
-# optimizer
-optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
-# optimizer_config = dict(_delete_=True, grad_clip=dict(max_norm=10, norm_type=2))
-optimizer_config = dict(grad_clip=None)
-# learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=1000,
-    warmup_ratio=1.0 / 1000,
-    step=[3, 6, 9])
-total_epochs = 10
-
-load_from = 'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_batch256_imagenet_20200708-cfb998bf.pth'

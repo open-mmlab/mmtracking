@@ -41,6 +41,7 @@ class CocoVideoDataset(CocoDataset):
         assert not load_as_reid, 'COCO dataset can not be loaded as reid style.'
 
         self.load_as_video = load_as_video
+        self.load_as_reid = load_as_reid
         self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
         self.test_load_ann = test_load_ann

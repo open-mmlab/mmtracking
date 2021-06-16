@@ -56,6 +56,8 @@ class ReIDDataset(BaseDataset):
                          img_info,
                          num_ids=8,
                          ins_per_id=4):
+        assert len(self.pids) >= num_ids, 'The number of pedestrian ids in the training set must be greater than the number of pedestrian ids in the sample.'
+
         pos_pid = img_info['gt_label']
         pos_idxs = self.index_dic[int(pos_pid)]
         idxs_list = []

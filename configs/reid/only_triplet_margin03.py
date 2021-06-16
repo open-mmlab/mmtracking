@@ -16,10 +16,10 @@ model = dict(
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
-            num_classes=378,
-            losses=[dict(type='TripletLoss', margin=1.0, loss_weight=1.0),
-                    dict(type='CrossEntropyLoss', loss_weight=1.0)],
-            cal_acc=True,
+            num_classes=None,
+            loss_cls=None,
+            loss_triplet=dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
+            cal_acc=False,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU')))
 )
