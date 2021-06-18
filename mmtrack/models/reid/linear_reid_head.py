@@ -1,8 +1,10 @@
+import warnings
+
 import torch.nn as nn
 from mmcls.models import ClsHead
 from mmcls.models.builder import HEADS, build_loss
-from mmcv.cnn import normal_init, constant_init
 from mmcls.models.losses import Accuracy
+from mmcv.cnn import constant_init, normal_init
 
 from .fc_module import FcModule
 
@@ -21,8 +23,11 @@ class LinearReIDHead(ClsHead):
         act_cfg (dict, optional): Configuration of activation method after fc.
             Defaults to None.
         num_classes (int, optional): Number of the identities. Default to None.
-        loss (dict, optional): Loss to train the re-identificaiton module.
-        topk (int, optional): Calculate topk accuracy.
+        loss_cls (dict, optional): Cross entropy loss to train the
+            re-identificaiton module.
+        loss_triplet (dict, optional): Triplet loss to train the
+            re-identificaiton module.
+        topk (int, optional): Calculate topk accuracy. Default to False.
     """
 
     def __init__(self,
@@ -34,10 +39,12 @@ class LinearReIDHead(ClsHead):
                  act_cfg=None,
                  num_classes=None,
                  loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
-                 loss_triplet=dict(dict(type='TripletLoss', margin=1.0, loss_weight=1.0)),
+                 loss_triplet=dict(
+                     type='TripletLoss', margin=1.0, loss_weight=1.0),
                  cal_acc=False,
                  topk=(1, )):
-        super(LinearReIDHead, self).__init__(loss=dict(type='CrossEntropyLoss', loss_weight=1.0), topk=topk)
+        super(LinearReIDHead, self).__init__(
+            loss=dict(type='CrossEntropyLoss', loss_weight=1.0), topk=topk)
         self.num_fcs = num_fcs
         self.in_channels = in_channels
         self.fc_channels = fc_channels
@@ -46,14 +53,22 @@ class LinearReIDHead(ClsHead):
         self.act_cfg = act_cfg
         self.num_classes = num_classes
         self.compute_accuracy = Accuracy(topk=self.topk)
-        if not loss_cls and num_classes is not None:
-            raise ValueError('The num_classes must be None, if there is no cross entropy loss.')
-        if loss_cls and num_classes is None:
-            raise ValueError('The num_classes must be a current number, if there is cross entropy loss.')
-        if not loss_cls and not loss_triplet:
-            raise ValueError('There must be a loss.')
+        if not loss_cls:
+            if isinstance(num_classes, int):
+                warnings.warn('Since cross entropy is not set, '
+                              'the num_classes will be ignored.')
+            if cal_acc:
+                warnings.warn('Since cross entropy is not set, '
+                              'the cal_acc will be ignored.')
+            if not loss_triplet:
+                raise ValueError('Please choose at least one loss in '
+                                 'triplet loss and cross entropy loss.')
+        elif not isinstance(num_classes, int):
+            raise ValueError('The num_classes must be a current number, '
+                             'if there is cross entropy loss.')
         self.compute_loss_cls = build_loss(loss_cls) if loss_cls else None
-        self.compute_loss_triplet = build_loss(loss_triplet) if loss_triplet else None
+        self.compute_loss_triplet = build_loss(
+            loss_triplet) if loss_triplet else None
         self.cal_acc = cal_acc
 
         self._init_layers()
@@ -98,11 +113,12 @@ class LinearReIDHead(ClsHead):
         else:
             fea_bn = self.bn(fea)
             out = self.classifier(fea_bn)
-            if not self.compute_loss_triplet:
-                losses['loss'] = self.compute_loss_cls(out, gt_label)
-            else:
-                losses['triplet_loss'] = self.compute_loss_triplet(fea, gt_label)
+            if self.compute_loss_triplet:
+                losses['triplet_loss'] = self.compute_loss_triplet(
+                    fea, gt_label)
                 losses['ce_loss'] = self.compute_loss_cls(out, gt_label)
+            else:
+                losses['loss'] = self.compute_loss_cls(out, gt_label)
             if self.cal_acc:
                 # compute accuracy
                 acc = self.compute_accuracy(out, gt_label)
@@ -112,4 +128,3 @@ class LinearReIDHead(ClsHead):
                     for k, a in zip(self.topk, acc)
                 }
         return losses
-

@@ -1,6 +1,6 @@
 import argparse
 import os
-import mmtrack.datasets
+
 import mmcv
 import torch
 from mmcv import Config, DictAction
@@ -147,8 +147,12 @@ def main():
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  show_score_thr=args.show_score_thr)
+        outputs = single_gpu_test(
+            model,
+            data_loader,
+            args.show,
+            args.show_dir,
+            show_score_thr=args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),

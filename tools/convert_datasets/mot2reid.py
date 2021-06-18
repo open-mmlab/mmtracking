@@ -26,8 +26,8 @@
 #   11: 'occluder full'
 #   12: 'reflection'
 #
-#   USELESS classes are not included into the json file.
-#   IGNORES classes are included with `ignore=True`.
+#   USELESS classes and IGNORES classes will not be selected
+#   into the dataset for reid model training.
 import argparse
 import os
 import os.path as osp
@@ -47,10 +47,23 @@ def parse_args():
     parser.add_argument('-i', '--input', help='path of MOT data')
     parser.add_argument(
         '-o', '--output', help='path to save coco formatted label file')
-    parser.add_argument('--val-split', type=float, default=0.2, help='path of MOT data')
-    parser.add_argument('--vis-threshold', type=float, default=0.3, help='threshold of visibility for each person')
-    parser.add_argument('--min-per-person', type=int, default=8, help='minimum number of images for each person')
-    parser.add_argument('--max-per-person', type=int, default=1000, help='minimum number of images for each person')
+    parser.add_argument(
+        '--val-split', type=float, default=0.2, help='path of MOT data')
+    parser.add_argument(
+        '--vis-threshold',
+        type=float,
+        default=0.3,
+        help='threshold of visibility for each person')
+    parser.add_argument(
+        '--min-per-person',
+        type=int,
+        default=8,
+        help='minimum number of images for each person')
+    parser.add_argument(
+        '--max-per-person',
+        type=int,
+        default=1000,
+        help='maxmum number of images for each person')
     return parser.parse_args()
 
 
@@ -65,7 +78,9 @@ def main():
     video_names = os.listdir(in_folder)
     sorted(video_names)
     if 'MOT17' in in_folder:
-        video_names = [video_name for video_name in video_names if 'FRCNN' in video_name]
+        video_names = [
+            video_name for video_name in video_names if 'FRCNN' in video_name
+        ]
     for video_name in tqdm(video_names):
         # load video infos
         video_folder = osp.join(in_folder, video_name)
@@ -108,8 +123,6 @@ def main():
             reid_img = mmcv.imcrop(raw_img, xyxy)
             mmcv.imwrite(reid_img, f'{reid_img_folder}/{reid_img_name}')
 
-
-    # meta
     reid_meta_folder = osp.join(args.output, 'meta')
     if not osp.exists(reid_meta_folder):
         os.makedirs(reid_meta_folder)
@@ -138,7 +151,8 @@ def main():
             f'{reid_train_folder}/{reid_img_folder_name}')
         sorted(reid_img_names)
         for reid_img_name in reid_img_names:
-            reid_val_list.append(f'{reid_img_folder_name}/{reid_img_name} {val_label}\n')
+            reid_val_list.append(
+                f'{reid_img_folder_name}/{reid_img_name} {val_label}\n')
         val_label += 1
     with open(osp.join(reid_meta_folder, 'train.txt'), 'w') as f:
         f.writelines(reid_train_list)

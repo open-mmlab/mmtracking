@@ -2,14 +2,13 @@ import random
 from functools import partial
 
 import numpy as np
-from mmcv.parallel import collate
-from mmtrack.core.collate.collate_enhance import collate_enhance
 from mmcv.runner import get_dist_info
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
 
-from .samplers import DistributedVideoSampler, IdentitySampler, DistributedIdentitySampler
+from mmtrack.core.collate.collate_enhance import collate_enhance
+from .samplers import DistributedVideoSampler
 
 
 def build_dataloader(dataset,
