@@ -1,5 +1,6 @@
-from mmcv.parallel import collate
 from collections.abc import Mapping, Sequence
+
+from mmcv.parallel import collate
 
 
 def collate_enhance(batch, samples_per_gpu=1):

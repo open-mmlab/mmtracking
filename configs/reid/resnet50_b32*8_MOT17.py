@@ -1,7 +1,6 @@
 USE_MMCLS = True
 _base_ = [
-    '../_base_/datasets/mot_challenge_reid_seq.py',
-    '../_base_/default_runtime.py'
+    '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]
 model = dict(
     reid=dict(
