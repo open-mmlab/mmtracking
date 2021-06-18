@@ -2,17 +2,21 @@ import torch
 import torch.nn as nn
 from mmcls.models import LOSSES
 
+
 @LOSSES.register_module()
 class TripletLoss(nn.Module):
     """Triplet loss with hard positive/negative mining.
-    
+
     Reference:
-        Hermans et al. In Defense of the Triplet Loss for Person Re-Identification. arXiv:1703.07737.
-    
-    Imported from `<https://github.com/Cysu/open-reid/blob/master/reid/loss/triplet.py>`_.
-    
+        Hermans et al. In Defense of the Triplet Loss for
+            Person Re-Identification. arXiv:1703.07737.
+
+    Imported from `<https://github.com/KaiyangZhou/deep-person-reid/blob/
+        master/torchreid/losses/hard_mine_triplet_loss.py>`_.
+
     Args:
         margin (float, optional): margin for triplet. Default is 0.3.
+        loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
     """
 
     def __init__(self, margin=0.3, loss_weight=1.0):
@@ -24,21 +28,26 @@ class TripletLoss(nn.Module):
     def forward(self, inputs, targets, **kwargs):
         """
         Args:
-            inputs (torch.Tensor): feature matrix with shape (batch_size, feat_dim).
-            targets (torch.LongTensor): ground truth labels with shape (num_classes).
+            inputs (torch.Tensor): feature matrix with shape
+                (batch_size, feat_dim).
+            targets (torch.LongTensor): ground truth labels with shape
+                (num_classes).
         """
-        n = inputs.size(0)
+        batch_size = inputs.size(0)
 
-        # Compute pairwise distance, replace by the official when merged
-        dist = torch.pow(inputs, 2).sum(dim=1, keepdim=True).expand(n, n)
+        # Compute Euclidean distance
+        dist = torch.pow(inputs, 2).sum(
+            dim=1, keepdim=True).expand(batch_size, batch_size)
         dist = dist + dist.t()
         dist.addmm_(inputs, inputs.t(), beta=1, alpha=-2)
-        dist = dist.clamp(min=1e-12).sqrt() # for numerical stability
+        dist = dist.clamp(min=1e-12).sqrt()  # for numerical stability
 
-        # For each anchor, find the hardest positive and negative
-        mask = targets.expand(n, n).eq(targets.expand(n, n).t())
+        # For each anchor, find the furthest positive sample
+        # and nearest negative sample in the embedding space
+        mask = targets.expand(batch_size, batch_size).eq(
+            targets.expand(batch_size, batch_size).t())
         dist_ap, dist_an = [], []
-        for i in range(n):
+        for i in range(batch_size):
             dist_ap.append(dist[i][mask[i]].max().unsqueeze(0))
             dist_an.append(dist[i][mask[i] == 0].min().unsqueeze(0))
         dist_ap = torch.cat(dist_ap)
