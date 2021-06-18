@@ -21,6 +21,10 @@ def test_load_detections(model):
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
+            num_classes=378,
+            loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
+            loss_triplet=dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
+            cal_acc=True,
             norm_cfg=dict(type='BN1d'),
             act_cfg=dict(type='ReLU')))
     model.eval()
