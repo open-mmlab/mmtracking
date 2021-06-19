@@ -1,16 +1,14 @@
-import cv2
-import mmcv
-import numpy as np
 from mmcls.datasets.builder import PIPELINES
-from mmcls.datasets.pipelines import ImageToTensor, ToTensor, Collect
-from .formatting import SeqDefaultFormatBundle
-from mmdet.datasets.pipelines import to_tensor
+from mmcls.datasets.pipelines import Collect, ImageToTensor, ToTensor
 from mmcv.parallel import DataContainer as DC
+from mmdet.datasets.pipelines import to_tensor
 
-from mmtrack.core import crop_image
+from .formatting import SeqDefaultFormatBundle
+
 
 @PIPELINES.register_module()
 class SeqImageToTensor(ImageToTensor):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -20,9 +18,11 @@ class SeqImageToTensor(ImageToTensor):
             _results = super().__call__(_results)
             outs.append(_results)
         return outs
+
 
 @PIPELINES.register_module()
 class SeqToTensor(ToTensor):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,9 +32,11 @@ class SeqToTensor(ToTensor):
             _results = super().__call__(_results)
             outs.append(_results)
         return outs
+
 
 @PIPELINES.register_module()
 class SeqCollect(Collect):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -45,8 +47,10 @@ class SeqCollect(Collect):
             outs.append(_results)
         return outs
 
+
 @PIPELINES.register_module()
 class SeqReIDFormatBundle(SeqDefaultFormatBundle):
+
     def __init__(self, *args, **kwargs):
         super().__init__(None)
 

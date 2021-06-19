@@ -1,5 +1,5 @@
-from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
 from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
+from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
 from mmtrack.core import restore_result

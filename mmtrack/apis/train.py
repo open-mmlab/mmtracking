@@ -61,7 +61,7 @@ def train_model(model,
             len(cfg.gpu_ids),
             dist=distributed,
             seed=cfg.seed,
-            ) for ds in dataset
+        ) for ds in dataset
     ]
 
     # put model on gpus

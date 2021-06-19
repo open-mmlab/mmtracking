@@ -4,13 +4,13 @@ from .formatting import (ConcatVideoReferences, SeqDefaultFormatBundle, ToList,
                          VideoCollect)
 from .loading import (LoadDetections, LoadMultiImagesFromFile,
                       SeqLoadAnnotations)
+from .pipeline_reid import (SeqCollect, SeqImageToTensor, SeqReIDFormatBundle,
+                            SeqToTensor)
 from .processing import MatchInstances
 from .transforms import (SeqBlurAug, SeqColorAug, SeqCropLikeSiamFC,
                          SeqNormalize, SeqPad, SeqPhotoMetricDistortion,
                          SeqRandomCrop, SeqRandomFlip, SeqResize,
                          SeqShiftScaleAug)
-
-from .pipeline_reid import (SeqImageToTensor, SeqToTensor, SeqCollect, SeqReIDFormatBundle)
 
 __all__ = [
     'PIPELINES', 'LoadMultiImagesFromFile', 'SeqLoadAnnotations', 'SeqResize',
@@ -18,5 +18,6 @@ __all__ = [
     'VideoCollect', 'ConcatVideoReferences', 'LoadDetections',
     'MatchInstances', 'SeqRandomCrop', 'SeqPhotoMetricDistortion',
     'SeqCropLikeSiamFC', 'SeqShiftScaleAug', 'SeqBlurAug', 'SeqColorAug',
-    'ToList', 'SeqImageToTensor', 'SeqToTensor', 'SeqCollect', 'SeqReIDFormatBundle'
+    'ToList', 'SeqImageToTensor', 'SeqToTensor', 'SeqCollect',
+    'SeqReIDFormatBundle'
 ]

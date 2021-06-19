@@ -1,7 +1,7 @@
 import numpy as np
+from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
-from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
 from mmdet.datasets.pipelines import to_tensor
 
 
