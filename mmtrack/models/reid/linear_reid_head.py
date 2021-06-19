@@ -40,10 +40,11 @@ class LinearReIDHead(ClsHead):
                  num_classes=None,
                  loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
                  loss_triplet=dict(
-                     type='TripletLoss', margin=1.0, loss_weight=1.0),
+                     type='TripletLoss', margin=0.3, loss_weight=1.0),
                  cal_acc=False,
                  topk=(1, )):
-        super(LinearReIDHead, self).__init__(loss=loss_cls, topk=topk)
+        super(LinearReIDHead, self).__init__(
+            loss=dict(type='CrossEntropyLoss'), topk=topk)
         self.num_fcs = num_fcs
         self.in_channels = in_channels
         self.fc_channels = fc_channels

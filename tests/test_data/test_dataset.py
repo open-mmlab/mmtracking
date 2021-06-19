@@ -16,8 +16,6 @@ from torch.utils.data import DataLoader
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
 from mmtrack.datasets import DATASETS as TRACK_DATASETS
 
-# from mmtrack.datasets import ReIDDataset
-
 PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
 # 1 videos, 2 categories ('car', 'person')
