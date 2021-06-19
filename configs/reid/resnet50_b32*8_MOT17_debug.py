@@ -42,6 +42,7 @@ optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(policy='step', step=[3, 6, 9])
 total_epochs = 10
+evaluation = dict(interval=1, metric=['mAP', 'CMC'])
 
 load_from = 'https://download.openmmlab.com/mmclassification/v0/resnet/' \
             'resnet50_batch256_imagenet_20200708-cfb998bf.pth'

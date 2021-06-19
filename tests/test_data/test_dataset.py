@@ -9,11 +9,14 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
+from mmcls.datasets import DATASETS as CLS_DATASETS
 from mmcv.runner import EpochBasedRunner
 from torch.utils.data import DataLoader
 
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
-from mmtrack.datasets import DATASETS
+from mmtrack.datasets import DATASETS as TRACK_DATASETS
+
+# from mmtrack.datasets import ReIDDataset
 
 PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
@@ -23,6 +26,8 @@ PREFIX = osp.join(osp.dirname(__file__), '../assets')
 DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
 MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
+# This is a demo annotation file for ReIDDataset
+REID_ANN_FILE = f'{PREFIX}/demo_reid_data/mot17_reid/ann.txt'
 
 
 def _create_gt_results(dataset):
@@ -43,9 +48,20 @@ def _create_gt_results(dataset):
     return results
 
 
+def _create_reid_gt_results(dataset):
+    results = []
+    dataset_infos = dataset.load_annotations()
+    for dataset_info in dataset_infos:
+        result = torch.full((1, 128),
+                            float(dataset_info['gt_label']),
+                            dtype=torch.float32)
+        results.append(result)
+    return results
+
+
 @pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
 def test_load_detections(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE,
         classes=('car', 'person'),
@@ -92,7 +108,7 @@ def test_load_detections(dataset):
 @pytest.mark.parametrize('dataset',
                          ['CocoVideoDataset', 'MOTChallengeDataset'])
 def test_parse_ann_info(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=('car', 'person'), pipeline=[])
@@ -127,7 +143,7 @@ def test_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
 def test_sot_train_dataset_parse_ann_info(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     dataset = dataset_class(ann_file=DEMO_ANN_FILE, pipeline=[])
 
@@ -143,7 +159,7 @@ def test_sot_train_dataset_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['LaSOTDataset'])
 def test_lasot_dataset_parse_ann_info(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
@@ -159,9 +175,30 @@ def test_lasot_dataset_parse_ann_info(dataset):
     assert ann['labels'] == 0
 
 
+@pytest.mark.parametrize('dataset', ['ReIDDataset'])
+def test_reid_dataset_parse_ann_info(dataset):
+    dataset_class = CLS_DATASETS.get(dataset)
+
+    dataset = dataset_class(
+        data_prefix='reid', ann_file=REID_ANN_FILE, pipeline=[])
+    data_infos = dataset.load_annotations()
+    img_id = 0
+    # image 0 has 21 objects
+    assert len([
+        data_info for data_info in data_infos
+        if data_info['gt_label'] == img_id
+    ]) == 21
+    img_id = 11
+    # image 11 doesn't have objects
+    assert len([
+        data_info for data_info in data_infos
+        if data_info['gt_label'] == img_id
+    ]) == 0
+
+
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_prepare_data(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     # train
     dataset = dataset_class(
@@ -214,7 +251,7 @@ def test_prepare_data(dataset):
 
 @pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
 def test_sot_train_dataset_prepare_data(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     # train
     dataset = dataset_class(
@@ -237,7 +274,7 @@ def test_sot_train_dataset_prepare_data(dataset):
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_video_data_sampling(dataset):
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
 
     # key image sampling
     for interval in [4, 2, 1]:
@@ -272,9 +309,35 @@ def test_video_data_sampling(dataset):
     assert ref_data[1]['frame_id'] - data['frame_id'] <= sampler['frame_range']
 
 
+@pytest.mark.parametrize('dataset', ['ReIDDataset'])
+def test_reid_dataset_prepare_data(dataset):
+    dataset_class = CLS_DATASETS.get(dataset)
+
+    num_ids = 8
+    ins_per_id = 4
+    dataset = dataset_class(
+        data_prefix='reid',
+        ann_file=REID_ANN_FILE,
+        triplet_sampler=dict(num_ids=num_ids, ins_per_id=ins_per_id),
+        pipeline=[],
+        test_mode=False)
+    assert len(dataset) == 704
+
+    results = dataset.prepare_data(0)
+    assert isinstance(results, list)
+    assert len(results) == 32
+    assert 'img_info' in results[0]
+    assert 'gt_label' in results[0]
+    assert results[0].keys() == results[1].keys()
+    # triplet sampling
+    for idx in range(len(results) - 1):
+        if (idx + 1) % ins_per_id != 0:
+            assert results[idx]['gt_label'] == results[idx + 1]['gt_label']
+
+
 def test_coco_video_evaluation():
     classes = ('car', 'person')
-    dataset_class = DATASETS.get('CocoVideoDataset')
+    dataset_class = TRACK_DATASETS.get('CocoVideoDataset')
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
@@ -307,7 +370,7 @@ def test_coco_video_evaluation():
 
 def test_mot17_bbox_evaluation():
     classes = ('car', 'person')
-    dataset_class = DATASETS.get('MOTChallengeDataset')
+    dataset_class = TRACK_DATASETS.get('MOTChallengeDataset')
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_gt_results(dataset)
@@ -325,7 +388,7 @@ def test_mot17_track_evaluation(dataset):
     tmp_dir = tempfile.TemporaryDirectory()
     videos = ['TUD-Campus', 'TUD-Stadtmitte']
 
-    dataset_class = DATASETS.get(dataset)
+    dataset_class = TRACK_DATASETS.get(dataset)
     dataset_class.cat_ids = MagicMock()
     dataset_class.coco = MagicMock()
 
@@ -377,7 +440,7 @@ def test_mot17_track_evaluation(dataset):
 
 
 def test_lasot_evaluation():
-    dataset_class = DATASETS.get('LaSOTDataset')
+    dataset_class = TRACK_DATASETS.get('LaSOTDataset')
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
         pipeline=[])
@@ -397,6 +460,21 @@ def test_lasot_evaluation():
     assert eval_results['success'] == 67.524
     assert eval_results['norm_precision'] == 70.0
     assert eval_results['precision'] == 50.0
+
+
+@pytest.mark.parametrize('dataset', ['ReIDDataset'])
+def test_reid_evaluation(dataset):
+    dataset_class = CLS_DATASETS.get(dataset)
+
+    dataset = dataset_class(
+        data_prefix='reid', ann_file=REID_ANN_FILE, pipeline=[])
+    results = _create_reid_gt_results(dataset)
+    eval_results = dataset.evaluate(results, metric=['mAP', 'CMC'])
+    assert eval_results['mAP'] == 1
+    assert eval_results['R1'] == 1
+    assert eval_results['R5'] == 1
+    assert eval_results['R10'] == 1
+    assert eval_results['R20'] == 1
 
 
 @patch('mmtrack.apis.single_gpu_test', MagicMock)

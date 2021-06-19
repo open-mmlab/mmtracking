@@ -353,3 +353,24 @@ class ToList(object):
         for k, v in results.items():
             out[k] = [v]
         return out
+
+
+@CLS_PIPELINES.register_module()
+class SeqReIDFormatBundle(SeqDefaultFormatBundle):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(None)
+
+    def __call__(self, results):
+        outs = []
+        for _results in results:
+            _results = self.default_format_bundle(_results)
+            _results = self.reid_format_bundle(_results)
+            outs.append(_results)
+
+        return outs
+
+    def reid_format_bundle(self, results):
+        key = 'gt_label'
+        results[key] = DC(to_tensor(results[key]), stack=True, pad_dims=None)
+        return results
