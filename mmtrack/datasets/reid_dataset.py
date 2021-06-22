@@ -31,6 +31,7 @@ class ReIDDataset(BaseDataset):
         self.load_as_reid = load_as_reid
         self.load_as_video = load_as_video
         self.triplet_sampler = triplet_sampler
+        # for DistributedGroupSampler and GroupSampler
         self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def load_annotations(self):
@@ -66,7 +67,7 @@ class ReIDDataset(BaseDataset):
 
     def triplet_sampling(self, pos_pid, num_ids=8, ins_per_id=4):
         """Triplet sampler for hard mining triplet loss. First, for one
-        pos_pid, random sample ins_per_id images.
+        pos_pid, random sample ins_per_id images with same person id.
 
         Then, random sample num_ids - 1 negative ids.
         Finally, random sample ins_per_id images for each negative id.
@@ -122,8 +123,25 @@ class ReIDDataset(BaseDataset):
                  results,
                  metric='mAP',
                  metric_options=None,
-                 logger=None,
-                 max_rank=20):
+                 logger=None):
+        """Evaluate the ReID dataset.
+
+        Args:
+            results (list): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated.
+                Default value is `mAP`.
+            metric_options: (dict, optional): Options for calculating metrics.
+                Allowed keys are 'rank_list' and 'max_rank'. Defaults to None.
+            logger (logging.Logger | str, optional): Logger used for printing
+                related information during evaluation. Defaults to None.
+
+        Returns:
+            dict: evaluation results
+        """
+        if metric_options is None:
+            metric_options = dict(rank_list=[1, 5, 10, 20], max_rank=20)
+        for rank in metric_options['rank_list']:
+            assert rank >= 1 and rank <= metric_options['max_rank']
         if isinstance(metric, list):
             metrics = metric
         elif isinstance(metric, str):
@@ -147,14 +165,13 @@ class ReIDDataset(BaseDataset):
 
         pids = self.get_gt_labels()
         indices = np.argsort(distmat, axis=1)
-        matches = (pids[indices] == pids[:, np.newaxis])\
-            .astype(np.int32)
+        matches = (pids[indices] == pids[:, np.newaxis]).astype(np.int32)
 
         all_cmc = []
         all_AP = []
         num_valid_q = 0.
         for q_idx in range(n):
-            # compute cmc curve remove self
+            # remove self
             raw_cmc = matches[q_idx][1:]
             if not np.any(raw_cmc):
                 # this condition is true when query identity
@@ -164,7 +181,7 @@ class ReIDDataset(BaseDataset):
             cmc = raw_cmc.cumsum()
             cmc[cmc > 1] = 1
 
-            all_cmc.append(cmc[:max_rank])
+            all_cmc.append(cmc[:metric_options['max_rank']])
             num_valid_q += 1.
 
             # compute average precision
@@ -184,13 +201,12 @@ class ReIDDataset(BaseDataset):
         all_cmc = all_cmc.sum(0) / num_valid_q
         mAP = np.mean(all_AP)
 
-        eval_results = {}
+        eval_results = dict()
         if 'mAP' in metrics:
             eval_results['mAP'] = np.around(mAP, decimals=3)
         if 'CMC' in metrics:
-            eval_results['R1'] = np.around(all_cmc[0], decimals=3)
-            eval_results['R5'] = np.around(all_cmc[4], decimals=3)
-            eval_results['R10'] = np.around(all_cmc[9], decimals=3)
-            eval_results['R20'] = np.around(all_cmc[19], decimals=3)
+            for rank in metric_options['rank_list']:
+                eval_results[f'R{rank}'] = np.around(
+                    all_cmc[rank - 1], decimals=3)
 
         return eval_results
