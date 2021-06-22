@@ -1,13 +1,14 @@
 import cv2
 import mmcv
 import numpy as np
-from mmdet.datasets.builder import PIPELINES
+from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
+from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
 from mmtrack.core import crop_image
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqCropLikeSiamFC(object):
     """Crop images as SiamFC did.
 
@@ -133,7 +134,7 @@ class SeqCropLikeSiamFC(object):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqShiftScaleAug(object):
     """Shift and rescale images and bounding boxes.
 
@@ -229,7 +230,7 @@ class SeqShiftScaleAug(object):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqColorAug(object):
     """Color augmention for images.
 
@@ -279,7 +280,7 @@ class SeqColorAug(object):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqBlurAug(object):
     """Blur augmention for images.
 
@@ -323,7 +324,8 @@ class SeqBlurAug(object):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
+@CLS_PIPELINES.register_module()
 class SeqResize(Resize):
     """Resize images.
 
@@ -365,7 +367,8 @@ class SeqResize(Resize):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
+@CLS_PIPELINES.register_module()
 class SeqNormalize(Normalize):
     """Normalize images.
 
@@ -397,7 +400,8 @@ class SeqNormalize(Normalize):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
+@CLS_PIPELINES.register_module()
 class SeqRandomFlip(RandomFlip):
     """Randomly flip for images.
 
@@ -459,7 +463,7 @@ class SeqRandomFlip(RandomFlip):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqPad(Pad):
     """Pad images.
 
@@ -491,7 +495,7 @@ class SeqPad(Pad):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqRandomCrop(object):
     """Sequentially random crop the images & bboxes & masks.
 
@@ -638,7 +642,7 @@ class SeqRandomCrop(object):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqPhotoMetricDistortion(object):
     """Apply photometric distortion to image sequentially, every transformation
     is applied with a probability of 0.5. The position of random contrast is in

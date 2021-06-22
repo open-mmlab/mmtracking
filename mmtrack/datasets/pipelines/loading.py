@@ -1,10 +1,12 @@
-from mmdet.datasets.builder import PIPELINES
+from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
+from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
 from mmtrack.core import restore_result
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
+@CLS_PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):
     """Load multi images from file.
 
@@ -35,7 +37,7 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class SeqLoadAnnotations(LoadAnnotations):
     """Sequence load annotations.
 
@@ -88,7 +90,7 @@ class SeqLoadAnnotations(LoadAnnotations):
         return outs
 
 
-@PIPELINES.register_module()
+@DET_PIPELINES.register_module()
 class LoadDetections(object):
     """Load public detections from MOT benchmark.
 
