@@ -140,8 +140,10 @@ def main():
     for reid_img_folder_name in reid_img_folder_names[:train_ids_num]:
         reid_img_names = os.listdir(
             f'{reid_train_folder}/{reid_img_folder_name}')
+        # ignore ids whose number of image is less than min_per_person
         if (len(reid_img_names) < args.min_per_person):
             continue
+        # downsampling when there are too many images owned by one id
         if (len(reid_img_names) > args.max_per_person):
             reid_img_names = random.sample(reid_img_names, args.max_per_person)
         sorted(reid_img_names)
