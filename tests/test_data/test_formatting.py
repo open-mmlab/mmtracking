@@ -1,9 +1,11 @@
+import copy
 import os.path as osp
 
 import numpy as np
+from mmcls.datasets import PIPELINES as CLS_PIPELINES
 from mmcv.utils import build_from_cfg
 
-from mmtrack.datasets import PIPELINES
+from mmtrack.datasets import PIPELINES as TRACK_PIPELINES
 
 
 class TestFormatting(object):
@@ -14,7 +16,7 @@ class TestFormatting(object):
 
     def test_formatting(self):
         img_names = ['image_1.jpg', 'image_2.jpg', 'image_3.jpg']
-        collect_keys = ['img', 'gt_bboxes']
+        collect_keys = ['img', 'gt_bboxes', 'gt_label']
         num_objects = 4
         num_ref_imgs = len(img_names) - 1
 
@@ -24,15 +26,16 @@ class TestFormatting(object):
         ]
 
         load = dict(type='LoadMultiImagesFromFile')
-        load = build_from_cfg(load, PIPELINES)
+        load = build_from_cfg(load, TRACK_PIPELINES)
         results = load(results)
         assert len(results) == len(img_names)
 
         for result in results:
             result['gt_bboxes'] = np.random.randn(num_objects, 4)
+            result['gt_label'] = np.random.randint(0, 10)
 
         collect = dict(type='VideoCollect', keys=collect_keys)
-        collect = build_from_cfg(collect, PIPELINES)
+        collect = build_from_cfg(collect, TRACK_PIPELINES)
         results = collect(results)
         assert len(results) == len(img_names)
         for key in collect_keys:
@@ -44,8 +47,18 @@ class TestFormatting(object):
         assert 'img_metas' in results[2]
         key_results = results[0]
 
+        reid_results = copy.deepcopy(results)
+        bundle = dict(type='SeqReIDFormatBundle')
+        bundle = build_from_cfg(bundle, CLS_PIPELINES)
+        reid_results = bundle(reid_results)
+        assert len(reid_results) == len(img_names)
+        assert not reid_results[0]['img'].cpu_only
+        assert reid_results[0]['img'].stack
+        assert not reid_results[0]['gt_label'].cpu_only
+        assert reid_results[0]['gt_label'].stack
+
         concat_ref = dict(type='ConcatVideoReferences')
-        concat_ref = build_from_cfg(concat_ref, PIPELINES)
+        concat_ref = build_from_cfg(concat_ref, TRACK_PIPELINES)
         results = concat_ref(results)
         assert len(results) == 2
         assert results[0] == key_results
@@ -58,7 +71,7 @@ class TestFormatting(object):
 
         ref_prefix = 'ref'
         bundle = dict(type='SeqDefaultFormatBundle', ref_prefix=ref_prefix)
-        bundle = build_from_cfg(bundle, PIPELINES)
+        bundle = build_from_cfg(bundle, TRACK_PIPELINES)
         results = bundle(results)
         for key in results:
             if ref_prefix not in key:
