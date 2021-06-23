@@ -356,7 +356,7 @@ class ToList(object):
 
 @CLS_PIPELINES.register_module()
 class SeqReIDFormatBundle(SeqDefaultFormatBundle):
-    """Sequence Default formatting bundle.
+    """Sequence ReID formatting bundle.
 
     It simplifies the pipeline of formatting common fields, including "img",
     "img_metas" and "gt_label". These fields are formatted as follows.
