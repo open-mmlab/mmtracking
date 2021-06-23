@@ -1,7 +1,7 @@
 from mmdet.datasets.builder import PIPELINES
 
-from .formatting import (ConcatVideoReferences, SeqDefaultFormatBundle, ToList,
-                         VideoCollect)
+from .formatting import (ConcatVideoReferences, SeqDefaultFormatBundle,
+                         SeqReIDFormatBundle, ToList, VideoCollect)
 from .loading import (LoadDetections, LoadMultiImagesFromFile,
                       SeqLoadAnnotations)
 from .processing import MatchInstances
@@ -16,5 +16,5 @@ __all__ = [
     'VideoCollect', 'ConcatVideoReferences', 'LoadDetections',
     'MatchInstances', 'SeqRandomCrop', 'SeqPhotoMetricDistortion',
     'SeqCropLikeSiamFC', 'SeqShiftScaleAug', 'SeqBlurAug', 'SeqColorAug',
-    'ToList'
+    'ToList', 'SeqReIDFormatBundle'
 ]
