@@ -184,10 +184,7 @@ class SortTracker(BaseTracker):
                         if dist <= self.reid['match_score_thr']:
                             ids[c] = active_ids[r]
 
-            active_ids = [
-                id for id in self.ids if id not in ids
-                and self.tracks[id].frame_ids[-1] == frame_id - 1
-            ]
+            active_ids = [id for id in self.ids if id not in ids]
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)
