@@ -4,6 +4,7 @@ from mmdet.core import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 
 from mmtrack.core import imrenormalize
+from mmtrack.core.track import compute_distance_matrix
 from mmtrack.models import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -37,7 +38,8 @@ class SortTracker(BaseTracker):
                      num_samples=10,
                      img_scale=(256, 128),
                      img_norm_cfg=None,
-                     match_score_thr=2.0),
+                     metric='cosine',
+                     match_score_thr=0.2),
                  match_iou_thr=0.7,
                  num_tentatives=3,
                  **kwargs):
@@ -170,8 +172,9 @@ class SortTracker(BaseTracker):
                         active_ids,
                         self.reid.get('num_samples', None),
                         behavior='mean')
-                    reid_dists = torch.cdist(track_embeds,
-                                             embeds).cpu().numpy()
+                    reid_dists = compute_distance_matrix(
+                        track_embeds, embeds,
+                        metric=self.reid['metric']).cpu().numpy()
 
                     valid_inds = [list(self.ids).index(_) for _ in active_ids]
                     reid_dists[~np.isfinite(costs[valid_inds, :])] = np.nan
