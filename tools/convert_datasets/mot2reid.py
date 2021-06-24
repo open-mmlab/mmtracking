@@ -127,7 +127,6 @@ def main():
             reid_img = mmcv.imcrop(raw_img, xyxy)
             mmcv.imwrite(reid_img, f'{reid_img_folder}/{reid_img_name}')
 
-    reid_train_folder = './data/MOT17/reid/imgs/'
     reid_meta_folder = osp.join(args.output, 'meta')
     if not osp.exists(reid_meta_folder):
         os.makedirs(reid_meta_folder)
@@ -152,7 +151,7 @@ def main():
             reid_train_list.append(
                 f'{reid_img_folder_name}/{reid_img_name} {train_label}\n')
         train_label += 1
-    reid_research_list = reid_train_list.copy()
+    reid_entire_dataset_list = reid_train_list.copy()
     for reid_img_folder_name in reid_img_folder_names[num_train_ids:]:
         reid_img_names = os.listdir(
             f'{reid_train_folder}/{reid_img_folder_name}')
@@ -166,17 +165,21 @@ def main():
             # validation set
             reid_val_list.append(
                 f'{reid_img_folder_name}/{reid_img_name} {val_label}\n')
-            # for research
-            reid_research_list.append(
+            reid_entire_dataset_list.append(
                 f'{reid_img_folder_name}/{reid_img_name} '
                 f'{train_label + val_label}\n')
         val_label += 1
-    with open(osp.join(reid_meta_folder, 'train.txt'), 'w') as f:
+    with open(
+            osp.join(reid_meta_folder,
+                     f'train_{int(100 * (1 - args.val_split))}.txt'),
+            'w') as f:
         f.writelines(reid_train_list)
-    with open(osp.join(reid_meta_folder, 'val.txt'), 'w') as f:
+    with open(
+            osp.join(reid_meta_folder, f'val_{int(100 * args.val_split)}.txt'),
+            'w') as f:
         f.writelines(reid_val_list)
-    with open(osp.join(reid_meta_folder, 'research.txt'), 'w') as f:
-        f.writelines(reid_research_list)
+    with open(osp.join(reid_meta_folder, 'train.txt'), 'w') as f:
+        f.writelines(reid_entire_dataset_list)
 
 
 if __name__ == '__main__':
