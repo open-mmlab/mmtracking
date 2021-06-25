@@ -52,7 +52,7 @@ class LinearReIDHead(ClsHead):
         self.norm_cfg = norm_cfg
         self.act_cfg = act_cfg
         self.num_classes = num_classes
-        self.compute_accuracy = Accuracy(topk=self.topk)
+        self.accuracy = Accuracy(topk=self.topk)
         if not loss_cls:
             if isinstance(num_classes, int):
                 warnings.warn('Since cross entropy is not set, '

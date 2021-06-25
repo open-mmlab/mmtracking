@@ -17,13 +17,15 @@ class TripletLoss(nn.Module):
         loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
     """
 
-    def __init__(self, margin=0.3, loss_weight=1.0):
+    def __init__(self, margin=0.3, loss_weight=1.0, method='hard_mining'):
         super(TripletLoss, self).__init__()
+        assert isinstance(method, str), 'method must be a str.'
         self.margin = margin
         self.ranking_loss = nn.MarginRankingLoss(margin=margin)
         self.loss_weight = loss_weight
+        self.method = method
 
-    def forward(self, inputs, targets, **kwargs):
+    def hard_mining_triplet_loss_forward(self, inputs, targets):
         """
         Args:
             inputs (torch.Tensor): feature matrix with shape
@@ -31,6 +33,7 @@ class TripletLoss(nn.Module):
             targets (torch.LongTensor): ground truth labels with shape
                 (num_classes).
         """
+
         batch_size = inputs.size(0)
 
         # Compute Euclidean distance
@@ -54,3 +57,9 @@ class TripletLoss(nn.Module):
         # Compute ranking hinge loss
         y = torch.ones_like(dist_an)
         return self.loss_weight * self.ranking_loss(dist_an, dist_ap, y)
+
+    def forward(self, inputs, targets, **kwargs):
+        if self.method == 'hard_mining':
+            return self.hard_mining_triplet_loss_forward(inputs, targets)
+        else:
+            raise NotImplementedError()
