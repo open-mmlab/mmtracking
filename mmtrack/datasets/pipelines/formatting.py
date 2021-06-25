@@ -1,11 +1,10 @@
 import numpy as np
-from mmcls.datasets.builder import PIPELINES as CLS_PIPELINES
 from mmcv.parallel import DataContainer as DC
-from mmdet.datasets.builder import PIPELINES as DET_PIPELINES
+from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor
 
 
-@DET_PIPELINES.register_module()
+@PIPELINES.register_module()
 class ConcatVideoReferences(object):
     """Concat video references.
 
@@ -76,8 +75,7 @@ class ConcatVideoReferences(object):
         return outs
 
 
-@DET_PIPELINES.register_module()
-@CLS_PIPELINES.register_module()
+@PIPELINES.register_module()
 class MultiImagesToTensor(object):
     """Multi images to tensor.
 
@@ -139,7 +137,7 @@ class MultiImagesToTensor(object):
         return results
 
 
-@DET_PIPELINES.register_module()
+@PIPELINES.register_module()
 class SeqDefaultFormatBundle(object):
     """Sequence Default formatting bundle.
 
@@ -233,7 +231,7 @@ class SeqDefaultFormatBundle(object):
         return self.__class__.__name__
 
 
-@DET_PIPELINES.register_module()
+@PIPELINES.register_module()
 class VideoCollect(object):
     """Collect data from the loader relevant to the specific task.
 
@@ -336,7 +334,7 @@ class VideoCollect(object):
         return results
 
 
-@DET_PIPELINES.register_module()
+@PIPELINES.register_module()
 class ToList(object):
     """Use list to warp each value of the input dict.
 
@@ -354,7 +352,7 @@ class ToList(object):
         return out
 
 
-@CLS_PIPELINES.register_module()
+@PIPELINES.register_module()
 class SeqReIDFormatBundle(SeqDefaultFormatBundle):
     """Sequence ReID formatting bundle.
 
