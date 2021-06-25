@@ -2,10 +2,9 @@ import copy
 import os.path as osp
 
 import numpy as np
-from mmcls.datasets import PIPELINES as CLS_PIPELINES
 from mmcv.utils import build_from_cfg
 
-from mmtrack.datasets import PIPELINES as TRACK_PIPELINES
+from mmtrack.datasets import PIPELINES
 
 
 class TestFormatting(object):
@@ -26,7 +25,7 @@ class TestFormatting(object):
         ]
 
         load = dict(type='LoadMultiImagesFromFile')
-        load = build_from_cfg(load, TRACK_PIPELINES)
+        load = build_from_cfg(load, PIPELINES)
         results = load(results)
         assert len(results) == len(img_names)
 
@@ -35,7 +34,7 @@ class TestFormatting(object):
             result['gt_label'] = np.random.randint(0, 10)
 
         collect = dict(type='VideoCollect', keys=collect_keys)
-        collect = build_from_cfg(collect, TRACK_PIPELINES)
+        collect = build_from_cfg(collect, PIPELINES)
         results = collect(results)
         assert len(results) == len(img_names)
         for key in collect_keys:
@@ -49,7 +48,7 @@ class TestFormatting(object):
 
         reid_results = copy.deepcopy(results)
         bundle = dict(type='SeqReIDFormatBundle')
-        bundle = build_from_cfg(bundle, CLS_PIPELINES)
+        bundle = build_from_cfg(bundle, PIPELINES)
         reid_results = bundle(reid_results)
         assert len(reid_results) == len(img_names)
         assert not reid_results[0]['img'].cpu_only
@@ -58,7 +57,7 @@ class TestFormatting(object):
         assert reid_results[0]['gt_label'].stack
 
         concat_ref = dict(type='ConcatVideoReferences')
-        concat_ref = build_from_cfg(concat_ref, TRACK_PIPELINES)
+        concat_ref = build_from_cfg(concat_ref, PIPELINES)
         results = concat_ref(results)
         assert len(results) == 2
         assert results[0] == key_results
@@ -71,7 +70,7 @@ class TestFormatting(object):
 
         ref_prefix = 'ref'
         bundle = dict(type='SeqDefaultFormatBundle', ref_prefix=ref_prefix)
-        bundle = build_from_cfg(bundle, TRACK_PIPELINES)
+        bundle = build_from_cfg(bundle, PIPELINES)
         results = bundle(results)
         for key in results:
             if ref_prefix not in key:

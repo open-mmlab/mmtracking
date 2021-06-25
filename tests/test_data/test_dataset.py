@@ -9,12 +9,11 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-from mmcls.datasets import DATASETS as CLS_DATASETS
 from mmcv.runner import EpochBasedRunner
 from torch.utils.data import DataLoader
 
 from mmtrack.core.evaluation import DistEvalHook, EvalHook
-from mmtrack.datasets import DATASETS as TRACK_DATASETS
+from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../assets')
 # This is a demo annotation file for CocoVideoDataset
@@ -59,7 +58,7 @@ def _create_reid_gt_results(dataset):
 
 @pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
 def test_load_detections(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE,
         classes=('car', 'person'),
@@ -106,7 +105,7 @@ def test_load_detections(dataset):
 @pytest.mark.parametrize('dataset',
                          ['CocoVideoDataset', 'MOTChallengeDataset'])
 def test_parse_ann_info(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=('car', 'person'), pipeline=[])
@@ -141,7 +140,7 @@ def test_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
 def test_sot_train_dataset_parse_ann_info(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(ann_file=DEMO_ANN_FILE, pipeline=[])
 
@@ -157,7 +156,7 @@ def test_sot_train_dataset_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['LaSOTDataset'])
 def test_lasot_dataset_parse_ann_info(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
@@ -175,7 +174,7 @@ def test_lasot_dataset_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['ReIDDataset'])
 def test_reid_dataset_parse_ann_info(dataset):
-    dataset_class = CLS_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
         data_prefix='reid', ann_file=REID_ANN_FILE, pipeline=[])
@@ -196,7 +195,7 @@ def test_reid_dataset_parse_ann_info(dataset):
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_prepare_data(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     # train
     dataset = dataset_class(
@@ -249,7 +248,7 @@ def test_prepare_data(dataset):
 
 @pytest.mark.parametrize('dataset', ['SOTTrainDataset'])
 def test_sot_train_dataset_prepare_data(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     # train
     dataset = dataset_class(
@@ -272,7 +271,7 @@ def test_sot_train_dataset_prepare_data(dataset):
 
 @pytest.mark.parametrize('dataset', ['CocoVideoDataset'])
 def test_video_data_sampling(dataset):
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     # key image sampling
     for interval in [4, 2, 1]:
@@ -309,7 +308,7 @@ def test_video_data_sampling(dataset):
 
 @pytest.mark.parametrize('dataset', ['ReIDDataset'])
 def test_reid_dataset_prepare_data(dataset):
-    dataset_class = CLS_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     num_ids = 8
     ins_per_id = 4
@@ -335,7 +334,7 @@ def test_reid_dataset_prepare_data(dataset):
 
 def test_coco_video_evaluation():
     classes = ('car', 'person')
-    dataset_class = TRACK_DATASETS.get('CocoVideoDataset')
+    dataset_class = DATASETS.get('CocoVideoDataset')
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_coco_gt_results(dataset)
@@ -368,7 +367,7 @@ def test_coco_video_evaluation():
 
 def test_mot17_bbox_evaluation():
     classes = ('car', 'person')
-    dataset_class = TRACK_DATASETS.get('MOTChallengeDataset')
+    dataset_class = DATASETS.get('MOTChallengeDataset')
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_coco_gt_results(dataset)
@@ -386,7 +385,7 @@ def test_mot17_track_evaluation(dataset):
     tmp_dir = tempfile.TemporaryDirectory()
     videos = ['TUD-Campus', 'TUD-Stadtmitte']
 
-    dataset_class = TRACK_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
     dataset_class.cat_ids = MagicMock()
     dataset_class.coco = MagicMock()
 
@@ -438,7 +437,7 @@ def test_mot17_track_evaluation(dataset):
 
 
 def test_lasot_evaluation():
-    dataset_class = TRACK_DATASETS.get('LaSOTDataset')
+    dataset_class = DATASETS.get('LaSOTDataset')
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
         pipeline=[])
@@ -462,7 +461,7 @@ def test_lasot_evaluation():
 
 @pytest.mark.parametrize('dataset', ['ReIDDataset'])
 def test_reid_evaluation(dataset):
-    dataset_class = CLS_DATASETS.get(dataset)
+    dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
         data_prefix='reid', ann_file=REID_ANN_FILE, pipeline=[])

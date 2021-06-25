@@ -13,26 +13,17 @@ class ReIDDataset(BaseDataset):
     """Dataset for ReID Dataset.
 
     Args:
-        load_as_video (bool): If True, using COCOVID class
-            to load dataset, Default: False.
-        load_as_reid (bool): If True, using ReID class
-            to load dataset, Default: True.
+        pipeline (list): a list of dict, where each element represents
+            a operation defined in `mmtrack.datasets.pipelines`
         triplet_sampler (dict): The sampler for hard mining triplet loss.
     """
 
     def __init__(self,
                  pipeline,
-                 load_as_video=False,
-                 load_as_reid=True,
                  triplet_sampler=dict(num_ids=1, ins_per_id=1),
                  *args,
                  **kwargs):
         super().__init__(pipeline=[], *args, **kwargs)
-        assert not load_as_video, \
-            'reid dataset can not be loaded as COCO style.'
-
-        self.load_as_reid = load_as_reid
-        self.load_as_video = load_as_video
         self.triplet_sampler = triplet_sampler
         # for DistributedGroupSampler and GroupSampler
         self.flag = np.zeros(len(self), dtype=np.uint8)
