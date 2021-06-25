@@ -25,8 +25,6 @@ class ReIDDataset(BaseDataset):
                  **kwargs):
         super().__init__(pipeline=[], *args, **kwargs)
         self.triplet_sampler = triplet_sampler
-        # for DistributedGroupSampler and GroupSampler
-        self.flag = np.zeros(len(self), dtype=np.uint8)
         self.pipeline = Compose(pipeline)
 
     def load_annotations(self):

@@ -146,17 +146,17 @@ class SeqDefaultFormatBundle(object):
     "gt_match_indices", "gt_bboxes_ignore", "gt_labels", "gt_masks" and
     "gt_semantic_seg". These fields are formatted as follows.
 
-    - img: (1)transpose, (2)to tensor, (3)to DataContainer (stack=True)
-    - img_metas: (1)to DataContainer (cpu_only=True)
-    - proposals: (1)to tensor, (2)to DataContainer
-    - gt_bboxes: (1)to tensor, (2)to DataContainer
-    - gt_instance_ids: (1)to tensor, (2)to DataContainer
-    - gt_match_indices: (1)to tensor, (2)to DataContainer
-    - gt_bboxes_ignore: (1)to tensor, (2)to DataContainer
-    - gt_labels: (1)to tensor, (2)to DataContainer
-    - gt_masks: (1)to DataContainer (cpu_only=True)
-    - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor, \
-                       (3)to DataContainer (stack=True)
+    - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
+    - img_metas: (1) to DataContainer (cpu_only=True)
+    - proposals: (1) to tensor, (2) to DataContainer
+    - gt_bboxes: (1) to tensor, (2) to DataContainer
+    - gt_instance_ids: (1) to tensor, (2) to DataContainer
+    - gt_match_indices: (1) to tensor, (2) to DataContainer
+    - gt_bboxes_ignore: (1) to tensor, (2) to DataContainer
+    - gt_labels: (1) to tensor, (2) to DataContainer
+    - gt_masks: (1) to DataContainer (cpu_only=True)
+    - gt_semantic_seg: (1) unsqueeze dim-0 (2) to tensor, \
+                       (3) to DataContainer (stack=True)
 
     Args:
         ref_prefix (str): The prefix of key added to the second dict of input
@@ -359,9 +359,9 @@ class SeqReIDFormatBundle(SeqDefaultFormatBundle):
     It simplifies the pipeline of formatting common fields, including "img",
     "img_metas" and "gt_label". These fields are formatted as follows.
 
-    - img: (1)transpose, (2)to tensor, (3)to DataContainer (stack=True)
-    - img_metas: (1)to DataContainer (cpu_only=True)
-    - gt_labels: (1)to tensor, (2)to DataContainer
+    - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
+    - img_metas: (1) to DataContainer (cpu_only=True)
+    - gt_labels: (1) to tensor, (2) to DataContainer
     """
 
     def __init__(self, *args, **kwargs):
