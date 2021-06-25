@@ -3,7 +3,9 @@ from collections import defaultdict
 
 import numpy as np
 import torch
-from mmcls.datasets import DATASETS, BaseDataset
+from mmcls.datasets import BaseDataset
+from mmdet.datasets import DATASETS
+from mmdet.datasets.pipelines import Compose
 
 
 @DATASETS.register_module()
@@ -19,12 +21,13 @@ class ReIDDataset(BaseDataset):
     """
 
     def __init__(self,
+                 pipeline,
                  load_as_video=False,
                  load_as_reid=True,
                  triplet_sampler=dict(num_ids=1, ins_per_id=1),
                  *args,
                  **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(pipeline=[], *args, **kwargs)
         assert not load_as_video, \
             'reid dataset can not be loaded as COCO style.'
 
@@ -33,6 +36,7 @@ class ReIDDataset(BaseDataset):
         self.triplet_sampler = triplet_sampler
         # for DistributedGroupSampler and GroupSampler
         self.flag = np.zeros(len(self), dtype=np.uint8)
+        self.pipeline = Compose(pipeline)
 
     def load_annotations(self):
         """Load annotations from ImageNet style annotation file.
