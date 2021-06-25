@@ -21,9 +21,8 @@ def test_load_detections(model_type):
         fc_channels=1024,
         out_channels=128,
         num_classes=378,
-        loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
-        loss_triplet=dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
-        cal_acc=True,
+        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        loss_pairwise=dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
         norm_cfg=dict(type='BN1d'),
         act_cfg=dict(type='ReLU'))
     model = model_class(backbone=backbone, neck=neck, head=head)
@@ -42,11 +41,11 @@ def test_load_detections(model_type):
     assert outputs.shape == (1, 128)
 
     head['num_classes'] = None
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         # The num_classes must be a current number
         model = model_class(backbone=backbone, neck=neck, head=head)
 
-    head['loss_cls'], head['loss_triplet'] = None, None
+    head['loss'], head['loss_pairwise'] = None, None
     with pytest.raises(ValueError):
         # Two losses cannot be none at the same time
         model = model_class(backbone=backbone, neck=neck, head=head)

@@ -1,8 +1,8 @@
 import warnings
 
 import torch.nn as nn
-from mmcls.models import ClsHead
 from mmcls.models.builder import HEADS, build_loss
+from mmcls.models.heads.base_head import BaseHead
 from mmcls.models.losses import Accuracy
 from mmcv.cnn import constant_init, normal_init
 
@@ -10,7 +10,7 @@ from .fc_module import FcModule
 
 
 @HEADS.register_module()
-class LinearReIDHead(ClsHead):
+class LinearReIDHead(BaseHead):
     """Linear head for re-identification.
 
     Args:
@@ -27,7 +27,7 @@ class LinearReIDHead(ClsHead):
             re-identificaiton module.
         loss_triplet (dict, optional): Triplet loss to train the
             re-identificaiton module.
-        topk (int, optional): Calculate topk accuracy.
+        topk (int, optional): Calculate topk accuracy. Default to False.
     """
 
     def __init__(self,
@@ -38,13 +38,32 @@ class LinearReIDHead(ClsHead):
                  norm_cfg=None,
                  act_cfg=None,
                  num_classes=None,
-                 loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
-                 loss_triplet=dict(
+                 loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+                 loss_pairwise=dict(
                      type='TripletLoss', margin=0.3, loss_weight=1.0),
-                 cal_acc=False,
                  topk=(1, )):
-        super(LinearReIDHead, self).__init__(
-            loss=dict(type='CrossEntropyLoss'), topk=topk)
+        super(LinearReIDHead, self).__init__()
+        assert isinstance(topk, (int, tuple))
+        if isinstance(topk, int):
+            topk = (topk, )
+        for _topk in topk:
+            assert _topk > 0, 'Top-k should be larger than 0'
+        self.topk = topk
+
+        if not loss:
+            if isinstance(num_classes, int):
+                warnings.warn('Since cross entropy is not set, '
+                              'the num_classes will be ignored.')
+            if not loss_pairwise:
+                raise ValueError('Please choose at least one loss in '
+                                 'triplet loss and cross entropy loss.')
+        elif not isinstance(num_classes, int):
+            raise TypeError('The num_classes must be a current number, '
+                            'if there is cross entropy loss.')
+        self.loss_cls = build_loss(loss) if loss else None
+        self.loss_triplet = build_loss(
+            loss_pairwise) if loss_pairwise else None
+
         self.num_fcs = num_fcs
         self.in_channels = in_channels
         self.fc_channels = fc_channels
@@ -53,23 +72,6 @@ class LinearReIDHead(ClsHead):
         self.act_cfg = act_cfg
         self.num_classes = num_classes
         self.accuracy = Accuracy(topk=self.topk)
-        if not loss_cls:
-            if isinstance(num_classes, int):
-                warnings.warn('Since cross entropy is not set, '
-                              'the num_classes will be ignored.')
-            if cal_acc:
-                warnings.warn('Since cross entropy is not set, '
-                              'the cal_acc will be ignored.')
-            if not loss_triplet:
-                raise ValueError('Please choose at least one loss in '
-                                 'triplet loss and cross entropy loss.')
-        elif not isinstance(num_classes, int):
-            raise ValueError('The num_classes must be a current number, '
-                             'if there is cross entropy loss.')
-        self.compute_loss_cls = build_loss(loss_cls) if loss_cls else None
-        self.compute_loss_triplet = build_loss(
-            loss_triplet) if loss_triplet else None
-        self.cal_acc = cal_acc
 
         self._init_layers()
 
@@ -99,32 +101,30 @@ class LinearReIDHead(ClsHead):
         """Test without augmentation."""
         for m in self.fcs:
             x = m(x)
-        fea = self.fc_out(x)
-        return fea
+        feats = self.fc_out(x)
+        return feats
 
     def forward_train(self, x, gt_label):
         """Model forward."""
         for m in self.fcs:
             x = m(x)
-        fea = self.fc_out(x)
+        feats = self.fc_out(x)
         losses = dict()
-        if not self.compute_loss_cls:
-            losses['loss'] = self.compute_loss_triplet(fea, gt_label)
+        if not self.loss_cls:
+            losses['loss'] = self.loss_triplet(feats, gt_label)
         else:
-            fea_bn = self.bn(fea)
+            fea_bn = self.bn(feats)
             out = self.classifier(fea_bn)
-            if self.compute_loss_triplet:
-                losses['triplet_loss'] = self.compute_loss_triplet(
-                    fea, gt_label)
-                losses['ce_loss'] = self.compute_loss_cls(out, gt_label)
+            if self.loss_triplet:
+                losses['triplet_loss'] = self.loss_triplet(feats, gt_label)
+                losses['ce_loss'] = self.loss_cls(out, gt_label)
             else:
-                losses['loss'] = self.compute_loss_cls(out, gt_label)
-            if self.cal_acc:
-                # compute accuracy
-                acc = self.compute_accuracy(out, gt_label)
-                assert len(acc) == len(self.topk)
-                losses['accuracy'] = {
-                    f'top-{k}': a
-                    for k, a in zip(self.topk, acc)
-                }
+                losses['loss'] = self.loss_cls(out, gt_label)
+            # compute accuracy
+            acc = self.accuracy(out, gt_label)
+            assert len(acc) == len(self.topk)
+            losses['accuracy'] = {
+                f'top-{k}': a
+                for k, a in zip(self.topk, acc)
+            }
         return losses
