@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from mmcls.models import LOSSES
+from mmdet.models import LOSSES
 
 
 @LOSSES.register_module()
@@ -17,13 +17,12 @@ class TripletLoss(nn.Module):
         loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
     """
 
-    def __init__(self, margin=0.3, loss_weight=1.0, method='hard_mining'):
+    def __init__(self, margin=0.3, loss_weight=1.0, hard_mining=True):
         super(TripletLoss, self).__init__()
-        assert isinstance(method, str), 'method must be a str.'
         self.margin = margin
         self.ranking_loss = nn.MarginRankingLoss(margin=margin)
         self.loss_weight = loss_weight
-        self.method = method
+        self.hard_mining = hard_mining
 
     def hard_mining_triplet_loss_forward(self, inputs, targets):
         """
@@ -59,7 +58,7 @@ class TripletLoss(nn.Module):
         return self.loss_weight * self.ranking_loss(dist_an, dist_ap, y)
 
     def forward(self, inputs, targets, **kwargs):
-        if self.method == 'hard_mining':
+        if self.hard_mining:
             return self.hard_mining_triplet_loss_forward(inputs, targets)
         else:
             raise NotImplementedError()

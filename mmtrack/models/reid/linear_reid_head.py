@@ -23,9 +23,9 @@ class LinearReIDHead(BaseHead):
         act_cfg (dict, optional): Configuration of activation method after fc.
             Defaults to None.
         num_classes (int, optional): Number of the identities. Default to None.
-        loss_cls (dict, optional): Cross entropy loss to train the
+        loss (dict, optional): Cross entropy loss to train the
             re-identificaiton module.
-        loss_triplet (dict, optional): Triplet loss to train the
+        loss_pairwise (dict, optional): Triplet loss to train the
             re-identificaiton module.
         topk (int, optional): Calculate topk accuracy. Default to False.
     """
@@ -110,16 +110,12 @@ class LinearReIDHead(BaseHead):
             x = m(x)
         feats = self.fc_out(x)
         losses = dict()
-        if not self.loss_cls:
-            losses['loss'] = self.loss_triplet(feats, gt_label)
-        else:
-            fea_bn = self.bn(feats)
-            out = self.classifier(fea_bn)
-            if self.loss_triplet:
-                losses['triplet_loss'] = self.loss_triplet(feats, gt_label)
-                losses['ce_loss'] = self.loss_cls(out, gt_label)
-            else:
-                losses['loss'] = self.loss_cls(out, gt_label)
+        if self.loss_triplet:
+            losses['triplet_loss'] = self.loss_triplet(feats, gt_label)
+        if self.loss_cls:
+            feats_bn = self.bn(feats)
+            out = self.classifier(feats_bn)
+            losses['ce_loss'] = self.loss_cls(out, gt_label)
             # compute accuracy
             acc = self.accuracy(out, gt_label)
             assert len(acc) == len(self.topk)
