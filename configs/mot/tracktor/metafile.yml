@@ -16,7 +16,13 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 3.2
+      inference time (ms/im):
+        - value: 3.2
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -32,7 +38,13 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 3.1
+      inference time (ms/im):
+        - value: 3.1
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -48,7 +60,13 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public.py
     Metadata:
       Training Data: MOT17-train
-      FPS: 3.2
+      inference time (ms/im):
+        - value: 3.2
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-test
@@ -64,7 +82,13 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py
     Metadata:
       Training Data: MOT17-train
-      FPS: 3.1
+      inference time (ms/im):
+        - value: 3.1
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-train

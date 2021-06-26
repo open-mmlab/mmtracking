@@ -16,7 +16,13 @@ Models:
     Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-public-half.py
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 28.3
+      inference time (ms/im):
+        - value: 28.3
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -30,7 +36,13 @@ Models:
     Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private-half.py
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 18.6
+      inference time (ms/im):
+        - value: 18.6
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -45,7 +57,13 @@ Models:
     Paper: https://arxiv.org/abs/1703.07402
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 20.4
+      inference time (ms/im):
+        - value: 20.4
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -62,7 +80,13 @@ Models:
     Paper: https://arxiv.org/abs/1703.07402
     Metadata:
       Training Data: MOT17-half-train
-      FPS: 13.8
+      inference time (ms/im):
+        - value: 13.8
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -78,7 +102,13 @@ Models:
     Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-public.py
     Metadata:
       Training Data: MOT17-train
-      FPS: 28.3
+      inference time (ms/im):
+        - value: 28.3
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-train
@@ -92,7 +122,13 @@ Models:
     Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py
     Metadata:
       Training Data: MOT17-train
-      FPS: 18.6
+      inference time (ms/im):
+        - value: 18.6
+          hardware: 1x V100 GPU
+          backend: Pytorch
+          batch size: 2
+          mode: FP32
+          resolution: (1088, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-train
