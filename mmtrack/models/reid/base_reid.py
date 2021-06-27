@@ -10,8 +10,11 @@ class BaseReID(ImageClassifier):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def forward_train(self, img, gt_label):
+    def forward_train(self, img, gt_label, **kwargs):
         """"Training forward function."""
+        if img.ndim == 5:
+            img = img.view(-1, *img.shape[2:])
+            gt_label = gt_label.view(-1)
         x = self.extract_feat(img)
 
         losses = dict()
@@ -19,7 +22,7 @@ class BaseReID(ImageClassifier):
         losses.update(loss)
         return loss
 
-    def simple_test(self, img):
+    def simple_test(self, img, **kwargs):
         """Test without augmentation."""
         if img.nelement() > 0:
             x = self.extract_feat(img)
