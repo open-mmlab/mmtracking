@@ -88,6 +88,14 @@ def main():
         from mmdet.apis import multi_gpu_test, single_gpu_test
         from mmdet.datasets import build_dataloader
         from mmdet.models import build_detector as build_model
+        if 'detector' in cfg.model:
+            cfg.model = cfg.model.detector
+    elif cfg.get('USE_MMCLS', False):
+        from mmtrack.apis import multi_gpu_test, single_gpu_test
+        from mmtrack.datasets import build_dataloader
+        from mmtrack.models import build_reid as build_model
+        if 'reid' in cfg.model:
+            cfg.model = cfg.model.reid
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
         from mmtrack.datasets import build_dataloader
@@ -140,8 +148,12 @@ def main():
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  args.show_score_thr)
+        outputs = single_gpu_test(
+            model,
+            data_loader,
+            args.show,
+            args.show_dir,
+            show_score_thr=args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
