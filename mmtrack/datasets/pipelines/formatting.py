@@ -356,23 +356,29 @@ class ToList(object):
 class SeqReIDFormatBundle(SeqDefaultFormatBundle):
     """Sequence ReID formatting bundle.
 
-    It simplifies the pipeline of formatting common fields, including "img",
-    "img_metas" and "gt_label". These fields are formatted as follows.
+    It first concatenates common fields, then simplifies the pipeline of
+    formatting common fields, including "img", and "gt_label".
+    These fields are formatted as follows.
 
     - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
-    - img_metas: (1) to DataContainer (cpu_only=True)
     - gt_labels: (1) to tensor, (2) to DataContainer
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(None)
+        super().__init__()
 
     def __call__(self, results):
-        outs = []
-        for _results in results:
-            _results = self.default_format_bundle(_results)
-            _results = self.reid_format_bundle(_results)
-            outs.append(_results)
+        inputs = dict()
+        if len(results) != 1:
+            inputs['img'] = np.stack((_results['img'] for _results in results),
+                                     axis=3)
+            inputs['gt_label'] = np.stack(
+                (_results['gt_label'] for _results in results), axis=0)
+        else:
+            inputs['img'] = results[0]['img']
+            inputs['gt_label'] = results[0]['gt_label']
+        outs = self.default_format_bundle(inputs)
+        outs = self.reid_format_bundle(outs)
 
         return outs
 
