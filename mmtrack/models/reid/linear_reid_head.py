@@ -38,9 +38,8 @@ class LinearReIDHead(BaseHead):
                  norm_cfg=None,
                  act_cfg=None,
                  num_classes=None,
-                 loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
-                 loss_pairwise=dict(
-                     type='TripletLoss', margin=0.3, loss_weight=1.0),
+                 loss=None,
+                 loss_pairwise=None,
                  topk=(1, )):
         super(LinearReIDHead, self).__init__()
         assert isinstance(topk, (int, tuple))

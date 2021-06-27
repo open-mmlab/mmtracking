@@ -13,7 +13,7 @@ class TripletLoss(nn.Module):
     Imported from `<https://github.com/KaiyangZhou/deep-person-reid/blob/
         master/torchreid/losses/hard_mine_triplet_loss.py>`_.
     Args:
-        margin (float, optional): margin for triplet. Default is 0.3.
+        margin (float, optional): Margin for triplet loss. Default to 0.3.
         loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
     """
 

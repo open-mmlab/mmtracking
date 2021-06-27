@@ -10,7 +10,7 @@ class BaseReID(ImageClassifier):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def forward_train(self, img, gt_label, **kwargs):
+    def forward_train(self, img, gt_label):
         """"Training forward function."""
         x = self.extract_feat(img)
 
