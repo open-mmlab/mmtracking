@@ -11,7 +11,8 @@ class EvalHook(_EvalHook):
     def after_train_epoch(self, runner):
         if not self._should_evaluate(runner):
             return
-        if self.dataloader.dataset.load_as_video:
+        if hasattr(self.dataloader.dataset,
+                   'load_as_video') and self.dataloader.dataset.load_as_video:
             from mmtrack.apis import single_gpu_test
         else:
             from mmdet.apis import single_gpu_test
@@ -26,7 +27,8 @@ class DistEvalHook(_DistEvalHook):
     def after_train_epoch(self, runner):
         if not self._should_evaluate(runner):
             return
-        if self.dataloader.dataset.load_as_video:
+        if hasattr(self.dataloader.dataset,
+                   'load_as_video') and self.dataloader.dataset.load_as_video:
             from mmtrack.apis import multi_gpu_test
         else:
             from mmdet.apis import multi_gpu_test

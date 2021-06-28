@@ -382,10 +382,10 @@ class ReIDFormatBundle(object):
             assert len(results) > 1, \
                 'the \'results\' only have one item, ' \
                 'please directly use normal pipeline not \'Seq\' pipeline.'
-            inputs['img'] = np.stack((_results['img'] for _results in results),
+            inputs['img'] = np.stack([_results['img'] for _results in results],
                                      axis=3)
             inputs['gt_label'] = np.stack(
-                (_results['gt_label'] for _results in results), axis=0)
+                [_results['gt_label'] for _results in results], axis=0)
         elif isinstance(results, dict):
             inputs['img'] = results['img']
             inputs['gt_label'] = results['gt_label']
