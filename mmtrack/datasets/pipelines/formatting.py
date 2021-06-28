@@ -353,30 +353,69 @@ class ToList(object):
 
 
 @PIPELINES.register_module()
-class SeqReIDFormatBundle(SeqDefaultFormatBundle):
-    """Sequence ReID formatting bundle.
+class ReIDFormatBundle(object):
+    """ReID formatting bundle.
 
-    It simplifies the pipeline of formatting common fields, including "img",
-    "img_metas" and "gt_label". These fields are formatted as follows.
+    It first concatenates common fields, then simplifies the pipeline of
+    formatting common fields, including "img", and "gt_label".
+    These fields are formatted as follows.
 
     - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
-    - img_metas: (1) to DataContainer (cpu_only=True)
     - gt_labels: (1) to tensor, (2) to DataContainer
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(None)
+        super().__init__()
 
     def __call__(self, results):
-        outs = []
-        for _results in results:
-            _results = self.default_format_bundle(_results)
-            _results = self.reid_format_bundle(_results)
-            outs.append(_results)
+        """ReID formatting bundle call function.
+
+        Args:
+            results (list[dict] or dict): List of dicts or dict.
+
+        Returns:
+            dict: The result dict contains the data that is formatted with
+            ReID bundle.
+        """
+        inputs = dict()
+        if isinstance(results, list):
+            assert len(results) > 1, \
+                'the \'results\' only have one item, ' \
+                'please directly use normal pipeline not \'Seq\' pipeline.'
+            inputs['img'] = np.stack((_results['img'] for _results in results),
+                                     axis=3)
+            inputs['gt_label'] = np.stack(
+                (_results['gt_label'] for _results in results), axis=0)
+        elif isinstance(results, dict):
+            inputs['img'] = results['img']
+            inputs['gt_label'] = results['gt_label']
+        else:
+            raise TypeError('results must be a list or a dict.')
+        outs = self.reid_format_bundle(inputs)
 
         return outs
 
     def reid_format_bundle(self, results):
-        key = 'gt_label'
-        results[key] = DC(to_tensor(results[key]), stack=True, pad_dims=None)
+        """Transform and format gt_label fields in results.
+
+        Args:
+            results (dict): Result dict contains the data to convert.
+
+        Returns:
+            dict: The result dict contains the data that is formatted with
+            ReID bundle.
+        """
+        for key in results:
+            if key == 'img':
+                img = results[key]
+                if img.ndim == 3:
+                    img = np.ascontiguousarray(img.transpose(2, 0, 1))
+                else:
+                    img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+                results['img'] = DC(to_tensor(img), stack=True)
+            elif key == 'gt_label':
+                results[key] = DC(
+                    to_tensor(results[key]), stack=True, pad_dims=None)
+            else:
+                raise KeyError(f'key {key} is not supported')
         return results

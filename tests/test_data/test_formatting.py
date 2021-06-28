@@ -2,6 +2,7 @@ import copy
 import os.path as osp
 
 import numpy as np
+import pytest
 from mmcv.utils import build_from_cfg
 
 from mmtrack.datasets import PIPELINES
@@ -46,15 +47,46 @@ class TestFormatting(object):
         assert 'img_metas' in results[2]
         key_results = results[0]
 
+        # the type of results is a list
+        # the length of results is greater than 1
         reid_results = copy.deepcopy(results)
-        bundle = dict(type='SeqReIDFormatBundle')
+        bundle = dict(type='ReIDFormatBundle')
         bundle = build_from_cfg(bundle, PIPELINES)
         reid_results = bundle(reid_results)
-        assert len(reid_results) == len(img_names)
-        assert not reid_results[0]['img'].cpu_only
-        assert reid_results[0]['img'].stack
-        assert not reid_results[0]['gt_label'].cpu_only
-        assert reid_results[0]['gt_label'].stack
+        assert isinstance(reid_results, dict)
+        assert 'img' in reid_results
+        assert not reid_results['img'].cpu_only
+        assert reid_results['img'].stack
+        assert reid_results['img'].data.ndim == 4
+        assert reid_results['img'].data.size(0) == 3
+        assert 'gt_label' in reid_results
+        assert not reid_results['gt_label'].cpu_only
+        assert reid_results['gt_label'].stack
+        assert reid_results['gt_label'].data.ndim == 1
+        assert reid_results['img'].data.size(0) == 3
+
+        # the type of results is a dict
+        reid_results = copy.deepcopy(results[0])
+        reid_results = bundle(reid_results)
+        assert isinstance(reid_results, dict)
+        assert 'img' in reid_results
+        assert not reid_results['img'].cpu_only
+        assert reid_results['img'].stack
+        assert reid_results['img'].data.ndim == 3
+        assert 'gt_label' in reid_results
+        assert not reid_results['gt_label'].cpu_only
+        assert reid_results['gt_label'].stack
+        assert reid_results['gt_label'].data.ndim == 1
+
+        # the type of results is a tuple
+        with pytest.raises(TypeError):
+            reid_results = (copy.deepcopy(results[0]), )
+            reid_results = bundle(reid_results)
+
+        # the type of results is a list but it only has one item
+        with pytest.raises(AssertionError):
+            reid_results = [copy.deepcopy(results[0])]
+            reid_results = bundle(reid_results)
 
         concat_ref = dict(type='ConcatVideoReferences')
         concat_ref = build_from_cfg(concat_ref, PIPELINES)
