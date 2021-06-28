@@ -353,8 +353,8 @@ class ToList(object):
 
 
 @PIPELINES.register_module()
-class SeqReIDFormatBundle(SeqDefaultFormatBundle):
-    """Sequence ReID formatting bundle.
+class ReIDFormatBundle(SeqDefaultFormatBundle):
+    """ReID formatting bundle.
 
     It first concatenates common fields, then simplifies the pipeline of
     formatting common fields, including "img", and "gt_label".
@@ -375,8 +375,8 @@ class SeqReIDFormatBundle(SeqDefaultFormatBundle):
             inputs['gt_label'] = np.stack(
                 (_results['gt_label'] for _results in results), axis=0)
         else:
-            inputs['img'] = results[0]['img']
-            inputs['gt_label'] = results[0]['gt_label']
+            inputs['img'] = results['img']
+            inputs['gt_label'] = results['gt_label']
         outs = self.default_format_bundle(inputs)
         outs = self.reid_format_bundle(outs)
 
