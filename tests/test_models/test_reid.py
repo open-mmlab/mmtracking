@@ -5,7 +5,7 @@ from mmtrack.models import REID
 
 
 @pytest.mark.parametrize('model_type', ['BaseReID'])
-def test_load_detections(model_type):
+def test_base_reid(model_type):
     model_class = REID.get(model_type)
     backbone = dict(
         type='ResNet',
@@ -41,11 +41,17 @@ def test_load_detections(model_type):
     assert outputs.shape == (1, 128)
 
     head['num_classes'] = None
+    # when loss_pairwise is set, num_classes must be a current number
     with pytest.raises(TypeError):
-        # The num_classes must be a current number
         model = model_class(backbone=backbone, neck=neck, head=head)
 
-    head['loss'], head['loss_pairwise'] = None, None
+    head['num_classes'] = 378
+    head['loss'] = None
+    # when loss_pairwise is set, num_classes will be ignored.
+    with pytest.warns(UserWarning):
+        model = model_class(backbone=backbone, neck=neck, head=head)
+
+    head['loss_pairwise'] = None
+    # two losses cannot be none at the same time
     with pytest.raises(ValueError):
-        # Two losses cannot be none at the same time
         model = model_class(backbone=backbone, neck=neck, head=head)
