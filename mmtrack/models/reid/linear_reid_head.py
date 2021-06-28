@@ -1,10 +1,11 @@
 import warnings
 
 import torch.nn as nn
-from mmcls.models.builder import HEADS, build_loss
+from mmcls.models.builder import HEADS
 from mmcls.models.heads.base_head import BaseHead
 from mmcls.models.losses import Accuracy
 from mmcv.cnn import constant_init, normal_init
+from mmdet.models.builder import build_loss
 
 from .fc_module import FcModule
 

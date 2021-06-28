@@ -5,7 +5,7 @@ from mmtrack.models import REID
 
 
 @pytest.mark.parametrize('model_type', ['BaseReID'])
-def test_load_detections(model_type):
+def test_base_reid(model_type):
     model_class = REID.get(model_type)
     backbone = dict(
         type='ResNet',
