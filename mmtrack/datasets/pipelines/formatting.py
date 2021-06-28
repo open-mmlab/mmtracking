@@ -353,7 +353,7 @@ class ToList(object):
 
 
 @PIPELINES.register_module()
-class ReIDFormatBundle(SeqDefaultFormatBundle):
+class ReIDFormatBundle(object):
     """ReID formatting bundle.
 
     It first concatenates common fields, then simplifies the pipeline of
@@ -391,8 +391,7 @@ class ReIDFormatBundle(SeqDefaultFormatBundle):
             inputs['gt_label'] = results['gt_label']
         else:
             raise TypeError('results must be a list or a dict.')
-        outs = self.default_format_bundle(inputs)
-        outs = self.reid_format_bundle(outs)
+        outs = self.reid_format_bundle(inputs)
 
         return outs
 
@@ -406,6 +405,17 @@ class ReIDFormatBundle(SeqDefaultFormatBundle):
             dict: The result dict contains the data that is formatted with
             ReID bundle.
         """
-        key = 'gt_label'
-        results[key] = DC(to_tensor(results[key]), stack=True, pad_dims=None)
+        for key in results:
+            if key == 'img':
+                img = results[key]
+                if img.ndim == 3:
+                    img = np.ascontiguousarray(img.transpose(2, 0, 1))
+                else:
+                    img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+                results['img'] = DC(to_tensor(img), stack=True)
+            elif key == 'gt_label':
+                results[key] = DC(
+                    to_tensor(results[key]), stack=True, pad_dims=None)
+            else:
+                raise KeyError(f'key {key} is not supported')
         return results
