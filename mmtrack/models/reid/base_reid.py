@@ -13,7 +13,10 @@ class BaseReID(ImageClassifier):
     def forward_train(self, img, gt_label, **kwargs):
         """"Training forward function."""
         if img.ndim == 5:
+            # change the shape of image tensor from NxSxCxHxW to NSxCxHxW
+            # where S is the number of samples by triplet sampling
             img = img.view(-1, *img.shape[2:])
+            # change the shape of label tensor from NxS to NS
             gt_label = gt_label.view(-1)
         x = self.extract_feat(img)
 

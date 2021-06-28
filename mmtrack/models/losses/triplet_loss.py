@@ -14,7 +14,7 @@ class TripletLoss(nn.Module):
         master/torchreid/losses/hard_mine_triplet_loss.py>`_.
     Args:
         margin (float, optional): Margin for triplet loss. Default to 0.3.
-        loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
+        loss_weight (float, optional): Weight of the loss. Default to 1.0.
     """
 
     def __init__(self, margin=0.3, loss_weight=1.0, hard_mining=True):
