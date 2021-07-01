@@ -20,7 +20,7 @@ Models:
       - Task: Video Object Detection
         Dataset: ILSVRC
         Metrics:
-          box AP@50: 78.4
+          box AP@0.5: 78.4
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth
 
   - Name: selsa_faster_rcnn_r101_dc5_1x_imagenetvid
@@ -32,5 +32,5 @@ Models:
       - Task: Video Object Detection
         Dataset: ILSVRC
         Metrics:
-          box AP@50: 81.5
+          box AP@0.5: 81.5
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth
