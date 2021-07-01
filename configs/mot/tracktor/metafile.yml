@@ -19,7 +19,7 @@ Models:
       inference time (ms/im):
         - value: 312.5
           hardware: 1x V100 GPU
-          backend: Pytorch
+          backend: PyTorch
           batch size: 2
           mode: FP32
           resolution: (640, 1088)
@@ -41,7 +41,7 @@ Models:
       inference time (ms/im):
         - value: 322.6
           hardware: 1x V100 GPU
-          backend: Pytorch
+          backend: PyTorch
           batch size: 2
           mode: FP32
           resolution: (640, 1088)
@@ -63,7 +63,7 @@ Models:
       inference time (ms/im):
         - value: 312.5
           hardware: 1x V100 GPU
-          backend: Pytorch
+          backend: PyTorch
           batch size: 2
           mode: FP32
           resolution: (640, 1088)
@@ -85,7 +85,7 @@ Models:
       inference time (ms/im):
         - value: 322.6
           hardware: 1x V100 GPU
-          backend: Pytorch
+          backend: PyTorch
           batch size: 2
           mode: FP32
           resolution: (640, 1088)
