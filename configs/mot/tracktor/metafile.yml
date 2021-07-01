@@ -17,7 +17,7 @@ Models:
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):
-        - value: 3.2
+        - value: 312.5
           hardware: 1x V100 GPU
           backend: Pytorch
           batch size: 2
@@ -39,7 +39,7 @@ Models:
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):
-        - value: 3.1
+        - value: 322.6
           hardware: 1x V100 GPU
           backend: Pytorch
           batch size: 2
@@ -61,7 +61,7 @@ Models:
     Metadata:
       Training Data: MOT17-train
       inference time (ms/im):
-        - value: 3.2
+        - value: 312.5
           hardware: 1x V100 GPU
           backend: Pytorch
           batch size: 2
@@ -83,7 +83,7 @@ Models:
     Metadata:
       Training Data: MOT17-train
       inference time (ms/im):
-        - value: 3.1
+        - value: 322.6
           hardware: 1x V100 GPU
           backend: Pytorch
           batch size: 2
