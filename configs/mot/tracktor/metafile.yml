@@ -18,9 +18,9 @@ Models:
       Training Data: MOT17-half-train
       inference time (ms/im):
         - value: 312.5
-          hardware: 1x V100 GPU
+          hardware: V100
           backend: PyTorch
-          batch size: 2
+          batch size: 1
           mode: FP32
           resolution: (640, 1088)
     Results:
@@ -40,9 +40,9 @@ Models:
       Training Data: MOT17-half-train
       inference time (ms/im):
         - value: 322.6
-          hardware: 1x V100 GPU
+          hardware: V100
           backend: PyTorch
-          batch size: 2
+          batch size: 1
           mode: FP32
           resolution: (640, 1088)
     Results:
@@ -62,9 +62,9 @@ Models:
       Training Data: MOT17-train
       inference time (ms/im):
         - value: 312.5
-          hardware: 1x V100 GPU
+          hardware: V100
           backend: PyTorch
-          batch size: 2
+          batch size: 1
           mode: FP32
           resolution: (640, 1088)
     Results:
@@ -84,9 +84,9 @@ Models:
       Training Data: MOT17-train
       inference time (ms/im):
         - value: 322.6
-          hardware: 1x V100 GPU
+          hardware: V100
           backend: PyTorch
-          batch size: 2
+          batch size: 1
           mode: FP32
           resolution: (640, 1088)
     Results:
