@@ -18,14 +18,12 @@ class ReIDDataset(BaseDataset):
         triplet_sampler (dict): The sampler for hard mining triplet loss.
     """
 
-    def __init__(self,
-                 pipeline,
-                 triplet_sampler=dict(num_ids=1, ins_per_id=1),
-                 *args,
-                 **kwargs):
+    def __init__(self, pipeline, triplet_sampler=None, *args, **kwargs):
         super().__init__(pipeline=[], *args, **kwargs)
         self.triplet_sampler = triplet_sampler
         self.pipeline = Compose(pipeline)
+        # for DistributedGroupSampler and GroupSampler
+        self.flag = np.zeros(len(self), dtype=np.uint8)
 
     def load_annotations(self):
         """Load annotations from ImageNet style annotation file.
