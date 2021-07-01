@@ -1,5 +1,21 @@
 ## Changelog
 
+### v0.5.3 (01/07/2021)
+
+#### New Features
+
+- Support ReID training ([#177](https://github.com/open-mmlab/mmtracking/pull/177)), ([#179](https://github.com/open-mmlab/mmtracking/pull/179)), ([#180](https://github.com/open-mmlab/mmtracking/pull/180)), ([#181](https://github.com/open-mmlab/mmtracking/pull/181)),
+- Support MIM ([#158](https://github.com/open-mmlab/mmtracking/pull/158))
+
+#### Bug Fixes
+
+- Fix evaluation hook ([#176](https://github.com/open-mmlab/mmtracking/pull/176))
+- Fix a typo in vid config ([#171](https://github.com/open-mmlab/mmtracking/pull/171))
+
+#### Improvements
+
+- Refactor nms config ([#167](https://github.com/open-mmlab/mmtracking/pull/167))
+
 ### v0.5.2 (03/06/2021)
 
 #### Improvements
