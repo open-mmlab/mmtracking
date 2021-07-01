@@ -22,7 +22,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -42,7 +42,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -63,7 +63,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -86,7 +86,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
@@ -108,7 +108,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-train
@@ -128,7 +128,7 @@ Models:
           backend: Pytorch
           batch size: 2
           mode: FP32
-          resolution: (1088, 1088)
+          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT17-train
