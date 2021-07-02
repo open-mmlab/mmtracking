@@ -12,10 +12,9 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
-|    0.6.0 (master)   | mmcv-full>=1.3.3, <1.4.0 |  MMDetection=2.14.0 (master)  |
+|        master       | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0      |
+|        0.6.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 |        0.5.2        | mmcv-full>=1.3.3, <1.4.0 |       MMDetection=2.12.0      |
-
-NOTE: The versions denoted with master will be released at the end of June, 2021.
 
 ## Installation
 
