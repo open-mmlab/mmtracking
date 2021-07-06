@@ -20,7 +20,7 @@ Models:
       - Task: Video Object Detection
         Dataset: ILSVRC
         Metrics:
-          box AP@50: 74.7
+          box AP@0.5: 74.7
     Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth
 
   - Name: fgfa_faster_rcnn_r101_dc5_1x_imagenetvid
@@ -32,5 +32,5 @@ Models:
       - Task: Video Object Detection
         Dataset: ILSVRC
         Metrics:
-          box AP@50: 77.8
+          box AP@0.5: 77.8
     Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth

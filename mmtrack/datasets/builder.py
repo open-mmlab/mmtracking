@@ -45,7 +45,7 @@ def build_dataloader(dataset,
             sampler = DistributedGroupSampler(dataset, samples_per_gpu,
                                               world_size, rank)
         else:
-            if dataset.load_as_video:
+            if hasattr(dataset, 'load_as_video') and dataset.load_as_video:
                 sampler = DistributedVideoSampler(
                     dataset, world_size, rank, shuffle=False)
             else:

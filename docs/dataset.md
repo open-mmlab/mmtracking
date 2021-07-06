@@ -60,6 +60,7 @@ mmtracking
 |   |   ├── train
 |   |   ├── test
 |   |   ├── annotations
+|   |   ├── reid
 ```
 
 ### 2. Convert Annotations
@@ -79,4 +80,5 @@ python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./
 
 # MOT17
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
+python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```

@@ -71,6 +71,11 @@ def main():
         from mmtrack.models import build_detector as build_model
         if 'detector' in cfg.model:
             cfg.model = cfg.model.detector
+    elif cfg.get('USE_MMCLS', False):
+        from mmtrack.apis import train_model
+        from mmtrack.models import build_reid as build_model
+        if 'reid' in cfg.model:
+            cfg.model = cfg.model.reid
     else:
         from mmtrack.apis import train_model
         from mmtrack.models import build_model

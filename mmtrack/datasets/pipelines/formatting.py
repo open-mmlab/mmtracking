@@ -146,17 +146,17 @@ class SeqDefaultFormatBundle(object):
     "gt_match_indices", "gt_bboxes_ignore", "gt_labels", "gt_masks" and
     "gt_semantic_seg". These fields are formatted as follows.
 
-    - img: (1)transpose, (2)to tensor, (3)to DataContainer (stack=True)
-    - img_metas: (1)to DataContainer (cpu_only=True)
-    - proposals: (1)to tensor, (2)to DataContainer
-    - gt_bboxes: (1)to tensor, (2)to DataContainer
-    - gt_instance_ids: (1)to tensor, (2)to DataContainer
-    - gt_match_indices: (1)to tensor, (2)to DataContainer
-    - gt_bboxes_ignore: (1)to tensor, (2)to DataContainer
-    - gt_labels: (1)to tensor, (2)to DataContainer
-    - gt_masks: (1)to DataContainer (cpu_only=True)
-    - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor, \
-                       (3)to DataContainer (stack=True)
+    - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
+    - img_metas: (1) to DataContainer (cpu_only=True)
+    - proposals: (1) to tensor, (2) to DataContainer
+    - gt_bboxes: (1) to tensor, (2) to DataContainer
+    - gt_instance_ids: (1) to tensor, (2) to DataContainer
+    - gt_match_indices: (1) to tensor, (2) to DataContainer
+    - gt_bboxes_ignore: (1) to tensor, (2) to DataContainer
+    - gt_labels: (1) to tensor, (2) to DataContainer
+    - gt_masks: (1) to DataContainer (cpu_only=True)
+    - gt_semantic_seg: (1) unsqueeze dim-0 (2) to tensor, \
+                       (3) to DataContainer (stack=True)
 
     Args:
         ref_prefix (str): The prefix of key added to the second dict of input
@@ -350,3 +350,72 @@ class ToList(object):
         for k, v in results.items():
             out[k] = [v]
         return out
+
+
+@PIPELINES.register_module()
+class ReIDFormatBundle(object):
+    """ReID formatting bundle.
+
+    It first concatenates common fields, then simplifies the pipeline of
+    formatting common fields, including "img", and "gt_label".
+    These fields are formatted as follows.
+
+    - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
+    - gt_labels: (1) to tensor, (2) to DataContainer
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+    def __call__(self, results):
+        """ReID formatting bundle call function.
+
+        Args:
+            results (list[dict] or dict): List of dicts or dict.
+
+        Returns:
+            dict: The result dict contains the data that is formatted with
+            ReID bundle.
+        """
+        inputs = dict()
+        if isinstance(results, list):
+            assert len(results) > 1, \
+                'the \'results\' only have one item, ' \
+                'please directly use normal pipeline not \'Seq\' pipeline.'
+            inputs['img'] = np.stack([_results['img'] for _results in results],
+                                     axis=3)
+            inputs['gt_label'] = np.stack(
+                [_results['gt_label'] for _results in results], axis=0)
+        elif isinstance(results, dict):
+            inputs['img'] = results['img']
+            inputs['gt_label'] = results['gt_label']
+        else:
+            raise TypeError('results must be a list or a dict.')
+        outs = self.reid_format_bundle(inputs)
+
+        return outs
+
+    def reid_format_bundle(self, results):
+        """Transform and format gt_label fields in results.
+
+        Args:
+            results (dict): Result dict contains the data to convert.
+
+        Returns:
+            dict: The result dict contains the data that is formatted with
+            ReID bundle.
+        """
+        for key in results:
+            if key == 'img':
+                img = results[key]
+                if img.ndim == 3:
+                    img = np.ascontiguousarray(img.transpose(2, 0, 1))
+                else:
+                    img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+                results['img'] = DC(to_tensor(img), stack=True)
+            elif key == 'gt_label':
+                results[key] = DC(
+                    to_tensor(results[key]), stack=True, pad_dims=None)
+            else:
+                raise KeyError(f'key {key} is not supported')
+        return results
