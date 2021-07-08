@@ -9,6 +9,8 @@ import torch
 import torch.distributed as dist
 from mmcv.runner import get_dist_info
 
+from mmtrack.datasets import MOTChallengeDataset
+
 
 def single_gpu_test(model,
                     data_loader,
@@ -20,12 +22,12 @@ def single_gpu_test(model,
     Args:
         model (nn.Module): Model to be tested.
         data_loader (nn.Dataloader): Pytorch data loader.
-        show (bool): If True, visualize the prediction results (Not supported
-            for now).  Defaults to False.
-        out_dir (str): Path of directory to save the visualization results (Not
-            supported for now). Defaults to None.
-        show_score_thr (float): The score threthold of visualization (Not
-            supported for now). Defaults to 0.3.
+        show (bool): If True, visualize the prediction results.
+            Defaults to False.
+        out_dir (str): Path of directory to save the visualization results.
+            Defaults to None.
+        show_score_thr (float): The score threthold of visualization.
+            Defaults to 0.3.
 
     Returns:
         dict[str, list]: The prediction results.
@@ -41,7 +43,14 @@ def single_gpu_test(model,
             results[k].append(v)
 
         if show or out_dir:
-            pass  # TODO
+            img_meta = data['img_metas'][0]
+            img = img_meta.data[0][0]['filename']
+            out_file = osp.join(out_dir, f'{i:06d}.jpg') if out_dir else None
+            # TODO: support SOT and VOD visualization
+            if isinstance(dataset, MOTChallengeDataset):
+                result = result['track_results']
+                model.module.show_result(
+                    img, result, show=show, out_file=out_file)
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
