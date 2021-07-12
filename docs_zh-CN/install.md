@@ -8,7 +8,7 @@
 - [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
 - [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
 
-兼容的 MMTracking， MMCV 和 MMDetection 版本如下，请安装正确的版本以避免安装问题。
+兼容的 MMTracking，MMCV 和 MMDetection 版本如下，请安装正确的版本以避免安装问题。
 
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
@@ -27,19 +27,19 @@
     conda activate open-mmlab
     ```
 
-2. 按照[PyTorch官网](https://pytorch.org/)安装 PyTorch 和 torchvision， 例如：
+2. 按照 [PyTorch 官网](https://pytorch.org/)安装 PyTorch 和 torchvision，例如：
 
     ```shell
     conda install pytorch torchvision -c pytorch
     ```
 
-    注意：请确保您编译的 CUDA 版本和运行时 CUDA 版本匹配，您可以在[PyTorch官网](https://pytorch.org/)查看支持 CUDA 版本的预编译包。
+    注意：请确保 CUDA 编译版本和运行版本匹配。可以在 [PyTorch 官网](https://pytorch.org/)查看预编译包所支持的 CUDA 版本。
 
     `例 1` 例如在 `/usr/local/cuda` 安装了 CUDA 10.1，并想安装 PyTorch 1.5，则需要安装支持 CUDA 10.1 的预构建 PyTorch：
 
-       ```shell
+    ```shell
     conda install pytorch==1.5 cudatoolkit=10.1 torchvision -c pytorch
-       ```
+    ```
     
     `例 2` 例如在 `/usr/local/cuda` 安装了 CUDA 9.2，并想安装 PyTorch 1.3.1，则需要安装支持 CUDA 9.2 的预构建 PyTorch：
 
@@ -76,7 +76,7 @@
     pip install mmdet
     ```
 
-    如果您想修改代码，您也可以从源码构建 MMDetection：
+    如果您想修改代码，也可以从源码构建 MMDetection：
 
     ```shell
     git clone https://github.com/open-mmlab/mmdetection.git
@@ -103,7 +103,7 @@
 
 (1) 按照上述说明，MMTracking 将以 `dev` 模式安装，因此在本地对代码做的任何修改都会生效，无需重新安装；
 
-(2) 如果希望使用`opencv-python-headless`而不是`opencv-python`，可以在安装MMCV之前安装；
+(2) 如果希望使用 `opencv-python-headless` 而不是 `opencv-python`，可以在安装 MMCV 之前安装；
 
 ### 从零开始设置脚本
 
@@ -140,9 +140,9 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 ### 验证
 
-为了验证是否正确安装了 MMTracking 和所需的环境，我们可以运行MOT、VID、SOT的示例脚本。
+为了验证是否正确安装了 MMTracking 和所需的环境，我们可以运行 MOT、VID、SOT 的示例脚本。
 
-运行 MOT 演示脚本您可以看到输出一个命名为`mot.mp4`的视频文件：
+运行 MOT 演示脚本您可以看到输出一个命名为 `mot.mp4` 的视频文件：
 
 ```shell
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
