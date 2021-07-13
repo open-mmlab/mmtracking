@@ -163,3 +163,78 @@ def _plt_show_tracks(img,
         plt.show()
     plt.clf()
     return img
+
+
+def imshow_wrong_tracks(*args, backend='cv2', **kwargs):
+    """Show the wrong tracks on the input image."""
+    if backend == 'cv2':
+        return _cv2_show_wrong_tracks(*args, **kwargs)
+    else:
+        raise NotImplementedError()
+
+
+def _cv2_show_wrong_tracks(img,
+                           bboxes,
+                           ids,
+                           wrong_types,
+                           bbox_colors=[(0, 0, 255), (0, 255, 255),
+                                        (255, 0, 0)],
+                           thickness=2,
+                           font_scale=0.4,
+                           show=False,
+                           wait_time=0,
+                           out_file=None):
+    """Show the wrong tracks with opencv."""
+    assert bboxes.ndim == 2
+    assert ids.ndim == 1
+    assert wrong_types.ndim == 1
+    assert bboxes.shape[1] == 5
+    assert len(bbox_colors) == 3
+    if isinstance(img, str):
+        img = mmcv.imread(img)
+
+    img_shape = img.shape
+    bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
+    bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
+
+    text_width, text_height = 10, 15
+    for bbox, wrong_type, id in zip(bboxes, wrong_types, ids):
+        x1, y1, x2, y2 = bbox[:4].astype(np.int32)
+        score = float(bbox[-1])
+
+        # bbox
+        bbox_color = bbox_colors[wrong_type]
+        cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=thickness)
+
+        # FN and IDSW do not need id and score
+        if wrong_type == 1 or wrong_type == 2:
+            continue
+
+        # id
+        text = str(id)
+        width = len(text) * text_width
+        img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
+        cv2.putText(
+            img,
+            str(id), (x1, y1 + text_height - 2),
+            cv2.FONT_HERSHEY_COMPLEX,
+            font_scale,
+            color=(0, 0, 0))
+
+        # score
+        text = '{:.02f}'.format(score)
+        width = len(text) * text_width
+        img[y1 - text_height:y1, x1:x1 + width, :] = bbox_color
+        cv2.putText(
+            img,
+            text, (x1, y1 - 2),
+            cv2.FONT_HERSHEY_COMPLEX,
+            font_scale,
+            color=(0, 0, 0))
+
+    if show:
+        mmcv.imshow(img, wait_time=wait_time)
+    if out_file is not None:
+        mmcv.imwrite(img, out_file)
+
+    return img

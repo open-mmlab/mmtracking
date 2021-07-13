@@ -9,7 +9,7 @@ from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import restore_result
+from mmtrack.core import imshow_wrong_tracks, restore_result
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -215,7 +215,9 @@ class MOTChallengeDataset(CocoVideoDataset):
                  logger=None,
                  resfile_path=None,
                  bbox_iou_thr=0.5,
-                 track_iou_thr=0.5):
+                 track_iou_thr=0.5,
+                 show_wrong_track=False,
+                 out_dir=None):
         """Evaluation in MOT Challenge.
 
         Args:
@@ -272,9 +274,68 @@ class MOTChallengeDataset(CocoVideoDataset):
                 else:
                     acc = mm.utils.compare_to_groundtruth(
                         gt, res, distth=distth)
+                if show_wrong_track or out_dir:
+                    first_frame_id = acc.mot_events.index[0][0]
+                    last_frame_id = acc.mot_events.index[-1][0]
+                    for frame_id in range(first_frame_id, last_frame_id + 1):
+                        # events in the current frame
+                        events = acc.mot_events.xs(frame_id)
+                        cur_res = res.loc[frame_id]
+                        cur_gt = gt.loc[frame_id]
+                        # path of img
+                        img = osp.join(self.img_prefix,
+                                       f'{name}/img1/{frame_id:06d}.jpg')
+                        fps = events[events.Type == 'FP']
+                        fns = events[events.Type == 'MISS']
+                        idsws = events[events.Type == 'SWITCH']
+
+                        bboxes, ids, wrong_types = [], [], []
+                        for fp_index in fps.index:
+                            hid = events.loc[fp_index].HId
+                            bboxes.append([
+                                cur_res.loc[hid].X, cur_res.loc[hid].Y,
+                                cur_res.loc[hid].X + cur_res.loc[hid].Width,
+                                cur_res.loc[hid].Y + cur_res.loc[hid].Height,
+                                cur_res.loc[hid].Confidence
+                            ])
+                            ids.append(hid)
+                            wrong_types.append(0)
+                        for fn_index in fns.index:
+                            oid = events.loc[fn_index].OId
+                            bboxes.append([
+                                cur_gt.loc[oid].X, cur_gt.loc[oid].Y,
+                                cur_gt.loc[oid].X + cur_gt.loc[oid].Width,
+                                cur_gt.loc[oid].Y + cur_gt.loc[oid].Height,
+                                cur_gt.loc[oid].Confidence
+                            ])
+                            ids.append(-1)
+                            wrong_types.append(1)
+                        for idsw_index in idsws.index:
+                            hid = events.loc[idsw_index].HId
+                            bboxes.append([
+                                cur_res.loc[hid].X, cur_res.loc[hid].Y,
+                                cur_res.loc[hid].X + cur_res.loc[hid].Width,
+                                cur_res.loc[hid].Y + cur_res.loc[hid].Height,
+                                cur_res.loc[hid].Confidence
+                            ])
+                            ids.append(-1)
+                            wrong_types.append(2)
+                        bboxes = np.asarray(bboxes, dtype=np.float32)
+                        ids = np.asarray(ids, dtype=np.int32)
+                        wrong_types = np.asarray(wrong_types, dtype=np.int32)
+                        img = imshow_wrong_tracks(
+                            img,
+                            bboxes,
+                            ids,
+                            wrong_types,
+                            show=show_wrong_track,
+                            out_file=osp.join(out_dir,
+                                              f'{name}/{frame_id:06d}.jpg'))
+
                 accs.append(acc)
 
             mh = mm.metrics.create()
+
             summary = mh.compute_many(
                 accs,
                 names=names,
