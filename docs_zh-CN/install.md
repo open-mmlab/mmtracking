@@ -55,7 +55,7 @@
     pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
     ```
 
-    请参阅 [MMCV](https://github.com/open-mmlab/mmcv#install-with-pip) 了解不同版本的 MMCV 与不同版本的 PyTorch 和 CUDA 的兼容情况。同时，您可以使用一下命令从源码编译 MMCV：
+    请参阅 [MMCV](https://github.com/open-mmlab/mmcv#install-with-pip) 了解不同版本的 MMCV 与不同版本的 PyTorch 和 CUDA 的兼容情况。同时，您可以使用以下命令从源码编译 MMCV：
 
     ```shell
     git clone https://github.com/open-mmlab/mmcv.git
