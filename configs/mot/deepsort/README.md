@@ -25,7 +25,7 @@
 
 ## Results and models on MOT17
 
-We implement SORT and DeepSORT with independent detector and ReID models. To train a model by yourself, you need to train a detector following [here](../../det/) and also train a ReID model.
+We implement SORT and DeepSORT with independent detector and ReID models. To train a model by yourself, you need to train a detector following [here](../../det/) and also train a ReID model following [here](../../reid).
 The configs in this folder are basically for inference.
 
 Currently we do not support training ReID models.

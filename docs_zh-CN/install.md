@@ -40,7 +40,7 @@
     ```shell
     conda install pytorch==1.5 cudatoolkit=10.1 torchvision -c pytorch
     ```
-    
+
     `例 2` 例如在 `/usr/local/cuda` 安装了 CUDA 9.2，并想安装 PyTorch 1.3.1，则需要安装支持 CUDA 9.2 的预构建 PyTorch：
 
     ```shell
@@ -69,7 +69,7 @@
     ```shell
     pip install mmcv-full
     ```
-    
+
 4. 安装 MMDetection：
 
     ```shell
@@ -84,14 +84,14 @@
     pip install -r requirements/build.txt
     pip install -v -e .  # or "python setup.py develop"
     ```
-    
+
 5. 将 MMTracking 仓库克隆到本地：
 
     ```shell
     git clone https://github.com/open-mmlab/mmtracking.git
     cd mmtracking
     ```
-    
+
 6. 首先安装依赖，然后安装 MMTracking：
 
     ```shell
