@@ -8,7 +8,7 @@ This section will show how to train a ReID model on standard datasets i.e. MOT17
 
 ### Dataset Preparation
 
-We need to download datasets following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/dataset.md). We use [BaseDataset](https://github.com/open-mmlab/mmclassification/blob/master/mmcls/datasets/base_dataset.py) to maintain standard datasets. In this case, you need to convert the official dataset to this style. We provide scripts and the usages as follow:
+We need to download datasets following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/dataset.md). We use [ReIDDataset](https://github.com/open-mmlab/mmtracking/blob/master/mmtrack/datasets/reid_dataset.py) inherited from [BaseDataset](https://github.com/open-mmlab/mmclassification/blob/master/mmcls/datasets/base_dataset.py) to maintain standard datasets. In this case, you need to convert the official dataset to this style. We provide scripts and the usages as follow:
 
 ```python
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
