@@ -2,7 +2,7 @@
 
 You may want to train a ReID model for multiple object tracking or other applications. We support ReID model training in MMTracking, which is built upon [MMClassification](https://github.com/open-mmlab/mmclassification).
 
-## Standard Dataset
+## 1.Standard Dataset
 
 This section will show how to train a ReID model on standard datasets i.e. MOT17.
 
@@ -13,6 +13,11 @@ We need to download datasets following [here](https://github.com/open-mmlab/mmtr
 ```python
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```
+
+Arguments:
+
+- `--val-split`: Proportion of the validation dataset to the whole ReID dataset.
+- `--vis-threshold`: Threshold of visibility for each person.
 
 The directory of the converted datasets is as follows:
 
@@ -34,6 +39,8 @@ MOT17
 │   │   ├── train_80.txt
 │   │   ├── val_20.txt
 ```
+
+Note: `80` in `train_80.txt` means the proportion of the training dataset to the whole ReID dataset is eighty percent. While the proportion of the validation dataset is twenty percent.
 
 For training, we provide a annotation list `train_80.txt`. Each line of the list contrains a filename and its corresponding ground-truth labels. The format is as follows:
 
@@ -74,7 +81,7 @@ Optional arguments remain the same as stated above.
 
 For more training details, please refer to [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/quick_run.md).
 
-### Customize Dataset
+## 2.Customize Dataset
 
 This section will show how to train a ReID model on customize datasets.
 
@@ -126,7 +133,7 @@ data = dict(
         data_prefix='data/Filelist/imgs',
         ann_file='data/Filelist/meta/val.txt'),
 )
-# modify number of classes, assume your training set has 100 classes
+# modify the number of classes, assume your training set has 100 classes
 model = dict(reid=dict(head=dict(num_classes=100)))
 ```
 
