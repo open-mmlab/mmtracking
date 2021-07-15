@@ -8,7 +8,8 @@ import mmcv
 import motmetrics as mm
 import numpy as np
 from mmcv import Config
-from mmdet.datasets import build_dataset
+
+from mmtrack.datasets import build_dataset
 
 
 def parse_args():
@@ -20,8 +21,13 @@ def parse_args():
     parser.add_argument(
         '--output', help='directory where painted images will be saved')
     parser.add_argument(
-        '--show', action='store_true', help='show visualization results')
-    parser.add_argument('--fps', help='FPS of the output video')
+        '--out-video', action='store_true', help='whether output video')
+    parser.add_argument(
+        '--show',
+        action='store_true',
+        help='whether show the results on the fly')
+    parser.add_argument(
+        '--fps', type=int, default=30, help='FPS of the output video')
     args = parser.parse_args()
     return args
 
@@ -36,7 +42,10 @@ def show_wrong_tracks(img,
                       show=False,
                       wait_time=0,
                       out_file=None):
-    """Show the wrong tracks with opencv."""
+    """Show the wrong tracks with opencv.
+
+    red bbox means FP, yellow bbox means FN and blue bbox means IDSW
+    """
     assert bboxes.ndim == 2
     assert ids.ndim == 1
     assert wrong_types.ndim == 1
@@ -104,15 +113,13 @@ def main():
 
     # define output
     if args.output is not None:
-        if args.output.endswith('.mp4'):
-            OUT_VIDEO = True
+        if args.out_video:
             out_dir = tempfile.TemporaryDirectory()
             out_path = out_dir.name
             _out = args.output.rsplit('/', 1)
             if len(_out) > 1:
                 os.makedirs(_out[0], exist_ok=True)
         else:
-            OUT_VIDEO = False
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
 
@@ -120,9 +127,11 @@ def main():
     dataset = build_dataset(cfg.data.val, dict(test_mode=True))
     results = mmcv.load(args.result_file)
 
+    # format the results to txts
     resfiles, names, tmp_dir = dataset.format_results(results, None, ['track'])
 
-    for name in ['MOT17-05-DPM']:
+    for name in names:
+        print(f'Start processing video {name}')
         if 'half-train' in dataset.ann_file:
             gt_file = osp.join(dataset.img_prefix,
                                f'{name}/gt/gt_half-train.txt')
@@ -139,13 +148,13 @@ def main():
             acc, ana = mm.utils.CLEAR_MOT_M(gt, res, ini_file)
         else:
             acc = mm.utils.compare_to_groundtruth(gt, res)
-        first_frame_id = acc.mot_events.index[0][0]
-        last_frame_id = acc.mot_events.index[-1][0]
-        for frame_id in range(first_frame_id, last_frame_id + 1):
+
+        frame_id_list = list(set(acc.mot_events.index.get_level_values(0)))
+        for frame_id in frame_id_list:
             # events in the current frame
             events = acc.mot_events.xs(frame_id)
-            cur_res = res.loc[frame_id]
-            cur_gt = gt.loc[frame_id]
+            cur_res = res.loc[frame_id] if frame_id in res.index else None
+            cur_gt = gt.loc[frame_id] if frame_id in gt.index else None
             # path of img
             img = osp.join(dataset.img_prefix,
                            f'{name}/img1/{frame_id:06d}.jpg')
@@ -185,8 +194,9 @@ def main():
                 ids.append(-1)
                 wrong_types.append(2)
             if len(bboxes) == 0:
-                bboxes = np.zeros(())
-            bboxes = np.asarray(bboxes, dtype=np.float32)
+                bboxes = np.zeros((0, 5), dtype=np.float32)
+            else:
+                bboxes = np.asarray(bboxes, dtype=np.float32)
             ids = np.asarray(ids, dtype=np.int32)
             wrong_types = np.asarray(wrong_types, dtype=np.int32)
             show_wrong_tracks(
@@ -197,12 +207,20 @@ def main():
                 show=args.show,
                 out_file=osp.join(out_path, f'{name}/{frame_id:06d}.jpg'))
 
-        if OUT_VIDEO:
-            print(
-                f'making the output video at {args.output} with a FPS of {fps}'
-            )
-            mmcv.frames2video(out_path, args.output, fps=fps)
+        if args.out_video:
+            mmcv.frames2video(
+                f'{out_path}/{name}',
+                osp.join(args.output, f'{name}.mp4'),
+                fps=args.fps,
+                start=min(frame_id_list),
+                end=max(frame_id_list),
+                fourcc='mp4v')
+            print(f'Done! Visualization video is saved as '
+                  f'\'{args.output}/{name}\' with a FPS of {args.fps}')
             out_dir.cleanup()
+        else:
+            print(f'Done! Visualization images are saved in '
+                  f'\'{args.output}/{name}\'')
 
 
 if __name__ == '__main__':
