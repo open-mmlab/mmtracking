@@ -60,7 +60,7 @@ Note: Images in `MOT17/reid/imgs` are cropped from raw images in `MOT17/train` b
 #### Training on a single GPU
 
 ```shell
-python tools/train.py configs/reid/resnet50_b32*8_MOT17.py [optional arguments]
+python tools/train.py configs/reid/resnet50_b32x8_MOT17.py [optional arguments]
 ```
 
 During training, log files and checkpoints will be saved to the working directory, which is specified by `work_dir` in the config file or via CLI argument `--work-dir`.
@@ -72,7 +72,7 @@ The basic usage is as follows.
 
 ```shell
 bash ./tools/dist_train.sh \
-    configs/reid/resnet50_b32*8_MOT17.py \
+    configs/reid/resnet50_b32x8_MOT17.py \
     ${GPU_NUM} \
     [optional arguments]
 ```
