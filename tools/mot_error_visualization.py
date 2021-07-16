@@ -1,12 +1,12 @@
 import argparse
 import os
 import os.path as osp
-import tempfile
 
 import cv2
 import mmcv
 import motmetrics as mm
 import numpy as np
+import seaborn as sns
 from mmcv import Config
 
 from mmtrack.datasets import build_dataset
@@ -19,15 +19,18 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--result-file', help='path of inference result')
     parser.add_argument(
-        '--output', help='directory where painted images will be saved')
+        '--out-dir',
+        help='directory where painted images or videos will be saved')
     parser.add_argument(
-        '--out-video', action='store_true', help='whether output video')
+        '--out-video', action='store_true', help='whether to output video')
+    parser.add_argument(
+        '--out-image', action='store_true', help='whether to output image')
     parser.add_argument(
         '--show',
         action='store_true',
-        help='whether show the results on the fly')
+        help='whether to show the results on the fly')
     parser.add_argument(
-        '--fps', type=int, default=30, help='FPS of the output video')
+        '--fps', type=int, default=3, help='FPS of the output video')
     args = parser.parse_args()
     return args
 
@@ -36,21 +39,42 @@ def show_wrong_tracks(img,
                       bboxes,
                       ids,
                       wrong_types,
-                      bbox_colors=[(0, 0, 255), (0, 255, 255), (255, 0, 0)],
+                      bbox_colors=None,
                       thickness=2,
                       font_scale=0.4,
+                      text_width=10,
+                      text_height=15,
                       show=False,
                       wait_time=0,
                       out_file=None):
     """Show the wrong tracks with opencv.
 
-    red bbox means FP, yellow bbox means FN and blue bbox means IDSW
+    Args:
+        img (str or ndarray): The image to be displayed.
+        bboxes (ndarray): A ndarray of shape (k, 5).
+        ids (ndarray): A ndarray of shape (k, ).
+        wrong_types (ndarray): A ndarray of shape (k, ),
+            where 0 denotes FP, 1 denotes FN and 2 denotes IDSW.
+        bbox_colors (list[tuple], optional): A list of colors.
+        thickness (int): Thickness of lines.
+        font_scale (float): the font scale of id and score.
+        text_width (int): the width of id and score.
+        text_height (int): the height of id and score.
+        show (bool): Whether to show the image on the fly.
+        wait_time (int): Value of waitKey param.
+        out_file (str, optional): The filename to write the image.
     """
     assert bboxes.ndim == 2
     assert ids.ndim == 1
     assert wrong_types.ndim == 1
     assert bboxes.shape[1] == 5
-    assert len(bbox_colors) == 3
+
+    if bbox_colors:
+        assert len(bbox_colors) == 3
+    else:
+        bbox_colors = sns.color_palette(n_colors=3)
+        bbox_colors = [[int(255 * _c) for _c in bbox_color][::-1]
+                       for bbox_color in bbox_colors]
     if isinstance(img, str):
         img = mmcv.imread(img)
 
@@ -58,7 +82,6 @@ def show_wrong_tracks(img,
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
     bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
 
-    text_width, text_height = 10, 15
     for bbox, wrong_type, id in zip(bboxes, wrong_types, ids):
         x1, y1, x2, y2 = bbox[:4].astype(np.int32)
         score = float(bbox[-1])
@@ -67,8 +90,8 @@ def show_wrong_tracks(img,
         bbox_color = bbox_colors[wrong_type]
         cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=thickness)
 
-        # FN and IDSW do not need id and score
-        if wrong_type == 1 or wrong_type == 2:
+        # FN does not have id and score
+        if wrong_type == 1:
             continue
 
         # id
@@ -104,24 +127,20 @@ def show_wrong_tracks(img,
 def main():
     args = parse_args()
 
-    assert args.output or args.show, \
+    assert args.out_dir or args.show, \
         ('Please specify at least one operation (show the results '
          '/ save the results) with the argument "--out-dir" or "--show"')
 
-    if not args.result_file.endswith(('.pkl', 'pickle')):
-        raise ValueError('The result file must be a txt file.')
+    if args.out_dir:
+        assert args.out_image or args.out_video, \
+            ('Please specify at least one type (save as videos save as images)'
+             ' with the argument "--out-image" or "--out-video"')
 
-    # define output
-    if args.output is not None:
-        if args.out_video:
-            out_dir = tempfile.TemporaryDirectory()
-            out_path = out_dir.name
-            _out = args.output.rsplit('/', 1)
-            if len(_out) > 1:
-                os.makedirs(_out[0], exist_ok=True)
-        else:
-            out_path = args.output
-            os.makedirs(out_path, exist_ok=True)
+    if not args.result_file.endswith(('.pkl', 'pickle')):
+        raise ValueError('The result file must be a pkl file.')
+
+    if args.out_dir is not None:
+        os.makedirs(args.out_dir, exist_ok=True)
 
     cfg = Config.fromfile(args.config)
     dataset = build_dataset(cfg.data.val, dict(test_mode=True))
@@ -149,13 +168,21 @@ def main():
         else:
             acc = mm.utils.compare_to_groundtruth(gt, res)
 
+        infos = mmcv.list_from_file(ini_file)
+        width = int(infos[5].strip().split('=')[1])
+        height = int(infos[6].strip().split('=')[1])
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        if args.out_video:
+            video_writer = cv2.VideoWriter(
+                osp.join(args.out_dir, f'{name}.mp4'), fourcc, args.fps,
+                (width, height))
         frame_id_list = list(set(acc.mot_events.index.get_level_values(0)))
         for frame_id in frame_id_list:
             # events in the current frame
             events = acc.mot_events.xs(frame_id)
             cur_res = res.loc[frame_id] if frame_id in res.index else None
             cur_gt = gt.loc[frame_id] if frame_id in gt.index else None
-            # path of img
+            # path of image
             img = osp.join(dataset.img_prefix,
                            f'{name}/img1/{frame_id:06d}.jpg')
             fps = events[events.Type == 'FP']
@@ -172,6 +199,7 @@ def main():
                     cur_res.loc[hid].Confidence
                 ])
                 ids.append(hid)
+                # wrong_type = 0 denotes false positive error
                 wrong_types.append(0)
             for fn_index in fns.index:
                 oid = events.loc[fn_index].OId
@@ -182,6 +210,7 @@ def main():
                     cur_gt.loc[oid].Confidence
                 ])
                 ids.append(-1)
+                # wrong_type = 1 denotes false negative error
                 wrong_types.append(1)
             for idsw_index in idsws.index:
                 hid = events.loc[idsw_index].HId
@@ -191,7 +220,8 @@ def main():
                     cur_res.loc[hid].Y + cur_res.loc[hid].Height,
                     cur_res.loc[hid].Confidence
                 ])
-                ids.append(-1)
+                ids.append(hid)
+                # wrong_type = 2 denotes id switch
                 wrong_types.append(2)
             if len(bboxes) == 0:
                 bboxes = np.zeros((0, 5), dtype=np.float32)
@@ -199,28 +229,24 @@ def main():
                 bboxes = np.asarray(bboxes, dtype=np.float32)
             ids = np.asarray(ids, dtype=np.int32)
             wrong_types = np.asarray(wrong_types, dtype=np.int32)
-            show_wrong_tracks(
+            vis_frame = show_wrong_tracks(
                 img,
                 bboxes,
                 ids,
                 wrong_types,
                 show=args.show,
-                out_file=osp.join(out_path, f'{name}/{frame_id:06d}.jpg'))
+                out_file=osp.join(args.out_dir, f'{name}/{frame_id:06d}.jpg')
+                if args.out_image else None)
+            if args.out_video:
+                video_writer.write(vis_frame)
 
         if args.out_video:
-            mmcv.frames2video(
-                f'{out_path}/{name}',
-                osp.join(args.output, f'{name}.mp4'),
-                fps=args.fps,
-                start=min(frame_id_list),
-                end=max(frame_id_list),
-                fourcc='mp4v')
             print(f'Done! Visualization video is saved as '
-                  f'\'{args.output}/{name}\' with a FPS of {args.fps}')
-            out_dir.cleanup()
-        else:
+                  f'\'{args.out_dir}/{name}.mp4\' with a FPS of {args.fps}')
+            video_writer.release()
+        if args.out_image:
             print(f'Done! Visualization images are saved in '
-                  f'\'{args.output}/{name}\'')
+                  f'\'{args.out_dir}/{name}\'')
 
 
 if __name__ == '__main__':
