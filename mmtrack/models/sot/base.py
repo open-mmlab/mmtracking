@@ -248,7 +248,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
 
         Args:
             img (str or ndarray): The image to be displayed.
-            result (ndarray): A list of ndarray of shape (4. ).
+            result (ndarray): ndarray of shape (4. ).
             color (str or tuple or Color): color of bbox.
             thickness (int): Thickness of lines.
             show (bool): Whether to show the image.
@@ -263,7 +263,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
         mmcv.imshow_bboxes(
             img,
             result[np.newaxis, :],
-            colors=[color],
+            colors=color,
             thickness=thickness,
             show=show,
             win_name=win_name,
