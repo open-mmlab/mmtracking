@@ -248,7 +248,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
 
         Args:
             img (str or ndarray): The image to be displayed.
-            result (ndarray): ndarray of shape (4. ).
+            result (ndarray): ndarray of shape (4, ).
             color (str or tuple or Color, optional): color of bbox.
                 Defaults to green.
             thickness (int, optional): Thickness of lines.
