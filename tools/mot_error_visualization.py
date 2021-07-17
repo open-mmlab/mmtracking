@@ -1,3 +1,8 @@
+# This script visualizes the error for multiple object tracking.
+#
+# In painted images or videos, The yellow bounding box denotes false negative,
+# the bounding box denotes the false positive and the green bounding box
+# denotes ID switch.
 import argparse
 import os
 import os.path as osp
@@ -14,9 +19,8 @@ from mmtrack.datasets import build_dataset
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='visualize the situation of false positive, '
-        'false negative and ID switch for multiple object tracking')
-    parser.add_argument('config', help='test config file path')
+        description='visualize the error for multiple object tracking')
+    parser.add_argument('config', help='path of the config file')
     parser.add_argument('--result-file', help='path of inference result')
     parser.add_argument(
         '--out-dir',
@@ -53,16 +57,24 @@ def show_wrong_tracks(img,
         img (str or ndarray): The image to be displayed.
         bboxes (ndarray): A ndarray of shape (k, 5).
         ids (ndarray): A ndarray of shape (k, ).
-        wrong_types (ndarray): A ndarray of shape (k, ),
-            where 0 denotes FP, 1 denotes FN and 2 denotes IDSW.
-        bbox_colors (list[tuple], optional): A list of colors.
-        thickness (int): Thickness of lines.
-        font_scale (float): the font scale of id and score.
-        text_width (int): the width of id and score.
-        text_height (int): the height of id and score.
-        show (bool): Whether to show the image on the fly.
-        wait_time (int): Value of waitKey param.
+        wrong_types (ndarray): A ndarray of shape (k, ), where 0 denotes
+            false positives, 1 denotes false negative and 2 denotes ID switch.
+        bbox_colors (list[tuple], optional): A list of colors to
+            draw boxes with different wrong type. Defaults to None.
+        thickness (int, optional): Thickness of lines.
+            Defaults to 2.
+        font_scale (float, optional): Font scale to draw id and score.
+            Defaults to 0.4.
+        text_width (int, optional): Width to draw id and score.
+            Defaults to 10.
+        text_height (int, optional): Height to draw id and score.
+            Defaults to 15.
+        show (bool, optional): Whether to show the image on the fly.
+            Defaults to False.
+        wait_time (int, optional): Value of waitKey param.
+            Defaults to 0.
         out_file (str, optional): The filename to write the image.
+            Defaults to None.
     """
     assert bboxes.ndim == 2
     assert ids.ndim == 1
@@ -129,11 +141,11 @@ def main():
 
     assert args.out_dir or args.show, \
         ('Please specify at least one operation (show the results '
-         '/ save the results) with the argument "--out-dir" or "--show"')
+         '/ save the results) with the argument "--show" or "--out-dir"')
 
     if args.out_dir:
         assert args.out_image or args.out_video, \
-            ('Please specify at least one type (save as videos save as images)'
+            ('Please specify at least one type (save as images save as videos)'
              ' with the argument "--out-image" or "--out-video"')
 
     if not args.result_file.endswith(('.pkl', 'pickle')):
