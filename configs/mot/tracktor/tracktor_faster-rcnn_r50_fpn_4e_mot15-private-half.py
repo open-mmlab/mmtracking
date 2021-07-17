@@ -6,9 +6,9 @@ model = dict(
     type='Tracktor',
     pretrains=dict(
         detector=  # noqa: E251
-        'work_dirs/publish_model/faster-rcnn_r50_fpn_4e_mot15-half-f48f6578.pth',  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half-f48f6578.pth',  # noqa: E501
         reid=  # noqa: E251
-        'work_dirs/resnet50_b32*8_MOT15_07081857/latest.pth'  # noqa: E501
+        'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15-30ba14d3.pth'  # noqa: E501
     ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
