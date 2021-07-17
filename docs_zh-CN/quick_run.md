@@ -1,7 +1,7 @@
 ## 运行现有的数据集与模型
 
 MMTracking 为现有基准测试提供了多种算法。
-这些算法和基准测试的细节分别在 [model_zoo.md](model_zoo.md) 和 [dataset.md](dataset.md) 中说明。
+这些算法和基准测试的详情分别在 [model_zoo.md](model_zoo.md) 和 [dataset.md](dataset.md) 中说明。
 以下将展示如何在现有模型和标准数据集上执行常见任务，包括：
 
 - 使用已有模型对给定的视频或者图像文件夹进行推理。
@@ -15,9 +15,9 @@ MMTracking 为现有基准测试提供了多种算法。
 
 请注意，如果您使用文件夹作为输入，则该文件夹中应该只有图像，并且图像名称必须是 **可排序的**，这意味着我们可以根据文件名重新排序图像。
 
-### 对 MOT 模型进行推理
+### 使用 MOT 模型进行推理
 
-以下脚本可以使用多目标追踪模型对一个输入视频或者图像进行推理。
+以下脚本可以使用多目标跟踪模型对一个输入视频或者图像进行推理。
 
 ```shell
 python demo/demo_mot.py \
@@ -46,9 +46,9 @@ python demo/demo_mot.py \
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
-### 对 SOT 模型进行推理
+### 使用 SOT 模型进行推理
 
-以下脚本可以使用单目标追踪模型对一个输入视频进行推理。
+以下脚本可以使用单目标跟踪模型对一个输入视频进行推理。
 
 ```shell
 python demo/demo_sot.py \
@@ -77,9 +77,9 @@ python ./demo/demo_sot.py \
     --show
 ```
 
-### 对 VID 模型进行推理
+### 使用 VID 模型进行推理
 
-以下脚本可以使用视频目标追踪模型对一个输入视频进行推理。
+以下脚本可以使用视频目标跟踪模型对一个输入视频进行推理。
 
 ```
 python demo/demo_vid.py \
@@ -131,7 +131,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
 
 可选参数:
 
-- `CHECKPOINT_FILE`：检查点文件名. 在应用某些 MOT 方法时不需要定义它，而是在配置中指定检查点。
+- `CHECKPOINT_FILE`：检查点文件名。在应用某些 MOT 方法时不需要定义它，而是在配置中指定检查点。
 - `RESULT_FILE`：pickle 格式的输出结果的文件名，如果不专门指定，结果将不会被专门保存成文件。
 - `EVAL_METRICS`：用于评估结果的指标。允许的值取决于数据集，例如, `bbox` 适用于 ImageNet VID, `track` 适用于 LaSOT, `bbox` and `track` 都适用于 MOT17。
 - `--cfg-options`：如果指定，可选配置的键值对将被合并进配置文件中。
@@ -201,7 +201,7 @@ MMTracking 也为训练模型提供了开箱即用的工具。
 默认情况下，我们在每个 epoch 之后在验证集上评估模型，您可以通过在训练配置中添加 interval 参数来更改评估间隔。
 
 ```python
-evaluation = dict(interval=12)  # This evaluate the model per 12 epoch.
+evaluation = dict(interval=12)  # 每 12 个 epoch 评估一次模型。
 ```
 
 **重要**：配置文件中的默认学习率是针对使用 8 个 GPU 的。
@@ -242,11 +242,11 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ### 多节点训练
 
 MMTracking 依赖 `torch.distributed` 包进行分布式训练。
-因此，作为一种基本用法，可以通过 PyTorch 的 [启动实用程序](https://pytorch.org/docs/stable/distributed.html#launch-utility) 启动分布式训练。
+因此，作为一种基本用法，可以通过 PyTorch 的 [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility) 启动分布式训练。
 
 ### 使用 Slurm 管理任务
 
-[Slurm](https://slurm.schedmd.com/) 是一个优秀的计算集群任务调度系统。
+[Slurm](https://slurm.schedmd.com/) 是一款优秀的计算集群任务调度系统。
 在 Slurm 管理的集群上，您可以使用 `slurm_train.sh` 来生成训练任务并且同时支持单节点和多节点训练。
 
 基本用法如下：
@@ -255,7 +255,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 [GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
 ```
 
-您可以查看[源代码](https://github.com/open-mmlab/mmdetection/blob/master/tools/slurm_train.sh)以查看完整的参数和环境变量。
+您可以查看[源代码](https://github.com/open-mmlab/mmdetection/blob/master/tools/slurm_train.sh)以了解完整的参数和环境变量。
 
 使用Slurm时，需要通过以下方式之一设置端口选项：
 
@@ -289,14 +289,14 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 
 ## 使用自定义数据集和模型运行
 
-在本节，您将了解如何使用自定义数据集和模型进行推理、测试和训练：
+在本节中，您将了解如何使用自定义数据集和模型进行推理、测试和训练：
 
 基本步骤如下：
 
 1. 准备自定义数据集（如果适用）
 2. 准备定制模型（如果适用）
 3. 准备配置
-4. 训练、测试、推断新模型。
+4. 训练、测试、推断新模型
 
 ### 准备自定义数据集
 
