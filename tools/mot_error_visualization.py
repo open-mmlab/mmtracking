@@ -140,7 +140,7 @@ def show_wrong_tracks(img,
 def main():
     args = parse_args()
 
-    assert args.out_dir or args.show, \
+    assert args.show or args.out_dir, \
         ('Please specify at least one operation (show the results '
          '/ save the results) with the argument "--show" or "--out-dir"')
 
