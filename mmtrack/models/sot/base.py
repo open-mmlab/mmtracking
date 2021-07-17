@@ -249,12 +249,19 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
         Args:
             img (str or ndarray): The image to be displayed.
             result (ndarray): ndarray of shape (4. ).
-            color (str or tuple or Color): color of bbox.
-            thickness (int): Thickness of lines.
-            show (bool): Whether to show the image.
-            win_name (str): The window name.
-            wait_time (int): Value of waitKey param.
+            color (str or tuple or Color, optional): color of bbox.
+                Defaults to green.
+            thickness (int, optional): Thickness of lines.
+                Defaults to 1.
+            show (bool, optional): Whether to show the image.
+                Defaults to False.
+            win_name (str, optional): The window name.
+                Defaults to ''.
+            wait_time (int, optional): Value of waitKey param.
+                Defaults to 0.
             out_file (str, optional): The filename to write the image.
+                Defaults to None.
+
         Returns:
             ndarray: Visualized image.
         """
