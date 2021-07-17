@@ -4,14 +4,14 @@
 
 - 视频目标检测
   - [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
-- 多目标追踪
+- 多目标跟踪
   - [MOT Challenge](https://motchallenge.net/)
-- 单目标追踪
+- 单目标跟踪
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
 
 ### 1. 下载数据集
 
-请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
+请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相对路径。
 
 注意：
 
@@ -66,6 +66,7 @@ mmtracking
 ### 2. 转换标注格式
 
 我们使用 [CocoVID](../mmtrack/datasets/parsers/coco_video_parser.py) 来维护代码库中所有的数据集。
+
 基于此，您需要将官方的标注转换为此种格式。我们提供的脚本以及用法如下：
 
 ```shell
