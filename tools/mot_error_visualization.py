@@ -1,7 +1,7 @@
 # This script visualizes the error for multiple object tracking.
 #
 # In painted images or videos, The yellow bounding box denotes false negative,
-# the bounding box denotes the false positive and the green bounding box
+# the blue bounding box denotes the false positive and the green bounding box
 # denotes ID switch.
 import argparse
 import os
@@ -109,21 +109,22 @@ def show_wrong_tracks(img,
         # id
         text = str(id)
         width = len(text) * text_width
-        img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
+        img[y1 + text_height:y1 + text_height * 2,
+            x1:x1 + width, :] = bbox_color
         cv2.putText(
             img,
-            str(id), (x1, y1 + text_height - 2),
+            str(id), (x1, y1 + text_height * 2 - 2),
             cv2.FONT_HERSHEY_COMPLEX,
             font_scale,
             color=(0, 0, 0))
 
         # score
         text = '{:.02f}'.format(score)
-        width = len(text) * text_width
-        img[y1 - text_height:y1, x1:x1 + width, :] = bbox_color
+        width = (len(text) - 1) * text_width
+        img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
         cv2.putText(
             img,
-            text, (x1, y1 - 2),
+            text, (x1, y1 + text_height - 2),
             cv2.FONT_HERSHEY_COMPLEX,
             font_scale,
             color=(0, 0, 0))
@@ -145,8 +146,8 @@ def main():
 
     if args.out_dir:
         assert args.out_image or args.out_video, \
-            ('Please specify at least one type (save as images save as videos)'
-             ' with the argument "--out-image" or "--out-video"')
+            ('Please specify at least one type (save as images / save '
+             'as videos) with the argument "--out-image" or "--out-video"')
 
     if not args.result_file.endswith(('.pkl', 'pickle')):
         raise ValueError('The result file must be a pkl file.')
@@ -181,13 +182,13 @@ def main():
             acc = mm.utils.compare_to_groundtruth(gt, res)
 
         infos = mmcv.list_from_file(ini_file)
-        width = int(infos[5].strip().split('=')[1])
-        height = int(infos[6].strip().split('=')[1])
+        img_width = int(infos[5].strip().split('=')[1])
+        img_height = int(infos[6].strip().split('=')[1])
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         if args.out_video:
             video_writer = cv2.VideoWriter(
                 osp.join(args.out_dir, f'{name}.mp4'), fourcc, args.fps,
-                (width, height))
+                (img_width, img_height))
         frame_id_list = list(set(acc.mot_events.index.get_level_values(0)))
         for frame_id in frame_id_list:
             # events in the current frame
