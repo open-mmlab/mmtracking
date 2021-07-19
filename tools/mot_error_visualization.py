@@ -155,6 +155,12 @@ def main():
     if args.out_dir is not None:
         os.makedirs(args.out_dir, exist_ok=True)
 
+    #
+    print('This script visualizes the error for multiple object tracking. '
+          'By Default, the yellow bounding box denotes false negative, '
+          'the blue bounding box denotes the false positive '
+          'and the green bounding box denotes ID switch.')
+
     cfg = Config.fromfile(args.config)
     dataset = build_dataset(cfg.data.val, dict(test_mode=True))
     results = mmcv.load(args.result_file)
