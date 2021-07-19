@@ -31,9 +31,9 @@ def single_gpu_test(model,
             Defaults to False.
         out_dir (str, optional): Path of directory to save the
             visualization results. Defaults to None.
-        out_video (bool, optional): whether to output video.
+        out_video (bool, optional): Whether to output video.
             Defaults to False.
-        out_image (bool, optional): whether to output image.
+        out_image (bool, optional): Whether to output image.
             Defaults to False.
         fps (int, optional): FPS of the output video.
             Defaults to 3.
@@ -193,14 +193,14 @@ def mot_visualization(img_path,
         result (ndarray): Testing result of the image.
         out_dir (str): Path of directory to save the visualization results.
         model (nn.Module): Model to be tested.
-        idx (int, optional): index of the image. Defaults to 0.
-        last_video_name (str, optional): video name of the last image.
+        idx (int, optional): Index of the image. Defaults to 0.
+        last_video_name (str, optional): Video name of the last image.
             Defaults to None.
         dataset_len (int, optional): Length of dataset. Defaults to 0.
         show (bool, optional):
-        out_video (bool, optional): whether to output video.
+        out_video (bool, optional): Whether to output video.
             Defaults to False.
-        out_image (bool, optional): whether to output image.
+        out_image (bool, optional): Whether to output image.
             Defaults to False.
         fps (int, optional): FPS of the output video.
             Defaults to 3.
