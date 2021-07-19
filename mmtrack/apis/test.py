@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 import shutil
 import tempfile
@@ -8,6 +9,7 @@ import mmcv
 import torch
 import torch.distributed as dist
 from mmcv.runner import get_dist_info
+from mmcv.utils import print_log
 
 from mmtrack.datasets import MOTChallengeDataset
 
@@ -16,18 +18,27 @@ def single_gpu_test(model,
                     data_loader,
                     show=False,
                     out_dir=None,
+                    out_video=False,
+                    out_image=False,
+                    fps=3,
                     show_score_thr=0.3):
     """Test model with single gpu.
 
     Args:
         model (nn.Module): Model to be tested.
         data_loader (nn.Dataloader): Pytorch data loader.
-        show (bool): If True, visualize the prediction results.
-             Defaults to False.
-        out_dir (str): Path of directory to save the visualization results.
-             Defaults to None.
-        show_score_thr (float): The score threthold of visualization.
-             (Not supported for now). Defaults to 0.3.
+        show (bool, optional): If True, visualize the prediction results.
+            Defaults to False.
+        out_dir (str, optional): Path of directory to save the
+            visualization results. Defaults to None.
+        out_video (bool, optional): whether to output video.
+            Defaults to False.
+        out_image (bool, optional): whether to output image.
+            Defaults to False.
+        fps (int, optional): FPS of the output video.
+            Defaults to 3.
+        show_score_thr (float, optional): The score threshold of visualization.
+            (Not supported for now). Defaults to 0.3.
 
     Returns:
         dict[str, list]: The prediction results.
@@ -35,6 +46,7 @@ def single_gpu_test(model,
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
+    last_video_name = None
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -43,14 +55,19 @@ def single_gpu_test(model,
             results[k].append(v)
 
         if show or out_dir:
-            img_meta = data['img_metas'][0]
-            img = img_meta.data[0][0]['filename']
-            out_file = osp.join(out_dir, f'{i:06d}.jpg') if out_dir else None
             # TODO: support SOT and VOD visualization
             if isinstance(dataset, MOTChallengeDataset):
-                result = result['track_results']
-                model.module.show_result(
-                    img, result, show=show, out_file=out_file)
+                img_path = data['img_metas'][0].data[0][0]['filename']
+                video_name = img_path.split('/')[-3]
+                mot_visualization(img_path, video_name,
+                                  result['track_results'],
+                                  out_dir, model, i, last_video_name,
+                                  len(dataset), show, out_video, out_image,
+                                  fps)
+                last_video_name = video_name
+            else:
+                raise NotImplementedError(
+                    'Only support multiple object tracking visualization now.')
 
         batch_size = data['img'][0].size(0)
         for _ in range(batch_size):
@@ -154,3 +171,62 @@ def collect_results_cpu(result_part, tmpdir=None):
                 part_list[k].extend(v)
         shutil.rmtree(tmpdir)
         return part_list
+
+
+def mot_visualization(img_path,
+                      video_name,
+                      result,
+                      out_dir,
+                      model,
+                      idx=0,
+                      last_video_name=None,
+                      dataset_len=0,
+                      show=False,
+                      out_video=False,
+                      out_image=False,
+                      fps=3):
+    """Visualize multiple object tracking results.
+
+    Args:
+        img_path (str): Path of image to be displayed.
+        video_name (str): Video name of the image.
+        result (ndarray): Testing result of the image.
+        out_dir (str): Path of directory to save the visualization results.
+        model (nn.Module): Model to be tested.
+        idx (int, optional): index of the image. Defaults to 0.
+        last_video_name (str, optional): video name of the last image.
+            Defaults to None.
+        dataset_len (int, optional): Length of dataset. Defaults to 0.
+        show (bool, optional):
+        out_video (bool, optional): whether to output video.
+            Defaults to False.
+        out_image (bool, optional): whether to output image.
+            Defaults to False.
+        fps (int, optional): FPS of the output video.
+            Defaults to 3.
+
+    Returns:
+        vis_frame (ndarray): Visualized image.
+    """
+    assert isinstance(img_path, str)
+    frame_id = int(img_path.split('/')[-1].split('.')[0])
+    out_file = osp.join(
+        out_dir, f'{video_name}/{frame_id:06d}.jpg') if out_dir else None
+    vis_frame = model.module.show_result(
+        img_path, result, show=show, out_file=out_file)
+    if last_video_name != video_name and idx or idx == dataset_len - 1:
+        if out_video:
+            imgs_dir = osp.join(out_dir, last_video_name)
+            start_frame_id = int(sorted(os.listdir(imgs_dir))[0].split('.')[0])
+            end_frame_id = int(sorted(os.listdir(imgs_dir))[-1].split('.')[0])
+            print_log(f'Start processing video {last_video_name}')
+            mmcv.frames2video(
+                imgs_dir,
+                f'{imgs_dir}.mp4',
+                fps=fps,
+                fourcc='mp4v',
+                start=start_frame_id,
+                end=end_frame_id)
+        if not out_image:
+            shutil.rmtree(osp.join(out_dir, last_video_name))
+    return vis_frame
