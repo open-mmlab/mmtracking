@@ -37,10 +37,6 @@ def parse_args():
     parser.add_argument(
         '--show-dir', help='directory where painted images will be saved')
     parser.add_argument(
-        '--out-video', action='store_true', help='whether to output video')
-    parser.add_argument(
-        '--out-image', action='store_true', help='whether to output image')
-    parser.add_argument(
         '--gpu-collect',
         action='store_true',
         help='whether to use gpu to collect results.')
@@ -86,11 +82,6 @@ def main():
 
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
-
-    if args.show_dir:
-        assert args.out_image or args.out_video, \
-            ('Please specify at least one type (save as images / save '
-             'as videos) with the argument "--out-image" or "--out-video"')
 
     cfg = Config.fromfile(args.config)
     if cfg.get('USE_MMDET', False):
@@ -162,8 +153,6 @@ def main():
             data_loader,
             args.show,
             args.show_dir,
-            args.out_video,
-            args.out_image,
             show_score_thr=args.show_score_thr)
     else:
         model = MMDistributedDataParallel(

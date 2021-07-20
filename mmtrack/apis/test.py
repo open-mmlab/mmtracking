@@ -8,18 +8,14 @@ from collections import defaultdict
 import mmcv
 import torch
 import torch.distributed as dist
+from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
-from mmcv.utils import print_log
-
-from mmtrack.datasets import MOTChallengeDataset
 
 
 def single_gpu_test(model,
                     data_loader,
                     show=False,
                     out_dir=None,
-                    out_video=False,
-                    out_image=False,
                     fps=3,
                     show_score_thr=0.3):
     """Test model with single gpu.
@@ -31,10 +27,6 @@ def single_gpu_test(model,
             Defaults to False.
         out_dir (str, optional): Path of directory to save the
             visualization results. Defaults to None.
-        out_video (bool, optional): Whether to output video.
-            Defaults to False.
-        out_image (bool, optional): Whether to output image.
-            Defaults to False.
         fps (int, optional): FPS of the output video.
             Defaults to 3.
         show_score_thr (float, optional): The score threshold of visualization.
@@ -46,32 +38,62 @@ def single_gpu_test(model,
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
-    last_video_name = None
+    img_dir_list = []
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
+        if i == 298:
+            break
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
         for k, v in result.items():
             results[k].append(v)
 
-        if show or out_dir:
-            # TODO: support SOT and VOD visualization
-            if isinstance(dataset, MOTChallengeDataset):
-                img_path = data['img_metas'][0].data[0][0]['filename']
-                video_name = img_path.split('/')[-3]
-                mot_visualization(img_path, video_name,
-                                  result['track_results'],
-                                  out_dir, model, i, last_video_name,
-                                  len(dataset), show, out_video, out_image,
-                                  fps)
-                last_video_name = video_name
-            else:
-                raise NotImplementedError(
-                    'Only support multiple object tracking visualization now.')
-
         batch_size = data['img'][0].size(0)
+        if show or out_dir:
+            if batch_size == 1 and isinstance(data['img'][0], torch.Tensor):
+                img_tensor = data['img'][0]
+            else:
+                img_tensor = data['img'][0].data[0]
+            img_metas = data['img_metas'][0].data[0]
+            imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
+            assert len(img_metas) == len(imgs)
+
+            for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
+                h, w, _ = img_meta['img_shape']
+                img_show = img[:h, :w, :]
+
+                ori_h, ori_w = img_meta['ori_shape'][:-1]
+                img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+
+                if out_dir:
+                    out_file = osp.join(out_dir, img_meta['ori_filename'])
+                    img_dir = osp.dirname(out_file)
+                    if img_dir not in img_dir_list:
+                        img_dir_list.append(img_dir)
+                else:
+                    out_file = None
+
+                model.module.show_result(
+                    img_show, [result['track_results'][i]],
+                    show=show,
+                    out_file=out_file)
+
         for _ in range(batch_size):
             prog_bar.update()
+
+    if out_dir:
+        for img_dir in img_dir_list:
+            video_name = osp.basename(img_dir)
+            start_frame_id = int(sorted(os.listdir(img_dir))[0].split('.')[0])
+            end_frame_id = int(sorted(os.listdir(img_dir))[-1].split('.')[0])
+            mmcv.frames2video(
+                img_dir,
+                f'{out_dir}/{video_name}.mp4',
+                fps=fps,
+                fourcc='mp4v',
+                start=start_frame_id,
+                end=end_frame_id,
+                show_progress=False)
     return results
 
 
@@ -171,62 +193,3 @@ def collect_results_cpu(result_part, tmpdir=None):
                 part_list[k].extend(v)
         shutil.rmtree(tmpdir)
         return part_list
-
-
-def mot_visualization(img_path,
-                      video_name,
-                      result,
-                      out_dir,
-                      model,
-                      idx=0,
-                      last_video_name=None,
-                      dataset_len=0,
-                      show=False,
-                      out_video=False,
-                      out_image=False,
-                      fps=3):
-    """Visualize multiple object tracking results.
-
-    Args:
-        img_path (str): Path of image to be displayed.
-        video_name (str): Video name of the image.
-        result (ndarray): Testing result of the image.
-        out_dir (str): Path of directory to save the visualization results.
-        model (nn.Module): Model to be tested.
-        idx (int, optional): Index of the image. Defaults to 0.
-        last_video_name (str, optional): Video name of the last image.
-            Defaults to None.
-        dataset_len (int, optional): Length of dataset. Defaults to 0.
-        show (bool, optional):
-        out_video (bool, optional): Whether to output video.
-            Defaults to False.
-        out_image (bool, optional): Whether to output image.
-            Defaults to False.
-        fps (int, optional): FPS of the output video.
-            Defaults to 3.
-
-    Returns:
-        vis_frame (ndarray): Visualized image.
-    """
-    assert isinstance(img_path, str)
-    frame_id = int(img_path.split('/')[-1].split('.')[0])
-    out_file = osp.join(
-        out_dir, f'{video_name}/{frame_id:06d}.jpg') if out_dir else None
-    vis_frame = model.module.show_result(
-        img_path, result, show=show, out_file=out_file)
-    if last_video_name != video_name and idx or idx == dataset_len - 1:
-        if out_video:
-            imgs_dir = osp.join(out_dir, last_video_name)
-            start_frame_id = int(sorted(os.listdir(imgs_dir))[0].split('.')[0])
-            end_frame_id = int(sorted(os.listdir(imgs_dir))[-1].split('.')[0])
-            print_log(f'Start processing video {last_video_name}')
-            mmcv.frames2video(
-                imgs_dir,
-                f'{imgs_dir}.mp4',
-                fps=fps,
-                fourcc='mp4v',
-                start=start_frame_id,
-                end=end_frame_id)
-        if not out_image:
-            shutil.rmtree(osp.join(out_dir, last_video_name))
-    return vis_frame
