@@ -41,7 +41,7 @@ def single_gpu_test(model,
     img_dir_list = []
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
-        if i == 298:
+        if i > 50:
             break
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
@@ -50,47 +50,62 @@ def single_gpu_test(model,
 
         batch_size = data['img'][0].size(0)
         if show or out_dir:
-            if batch_size == 1 and isinstance(data['img'][0], torch.Tensor):
-                img_tensor = data['img'][0]
-            else:
-                img_tensor = data['img'][0].data[0]
-            img_metas = data['img_metas'][0].data[0]
-            imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
-            assert len(img_metas) == len(imgs)
+            assert batch_size == 1, 'Only support batch_size=1 when testing.'
+            img_tensor = data['img'][0]
+            img_meta = data['img_metas'][0].data[0][0]
+            img = tensor2imgs(img_tensor, **img_meta['img_norm_cfg'])[0]
 
-            for i, (img, img_meta) in enumerate(zip(imgs, img_metas)):
-                h, w, _ = img_meta['img_shape']
-                img_show = img[:h, :w, :]
+            h, w, _ = img_meta['img_shape']
+            img_show = img[:h, :w, :]
 
-                ori_h, ori_w = img_meta['ori_shape'][:-1]
-                img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+            ori_h, ori_w = img_meta['ori_shape'][:-1]
+            img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
-                if out_dir:
+            if out_dir:
+                if 'track_results' in result or 'bbox' in result:
                     out_file = osp.join(out_dir, img_meta['ori_filename'])
-                    img_dir = osp.dirname(out_file)
-                    if img_dir not in img_dir_list:
-                        img_dir_list.append(img_dir)
                 else:
-                    out_file = None
+                    out_file = osp.join(
+                        out_dir, img_meta['ori_filename'].split('/', 1)[1])
+                print(f'out_file = {out_file}')
+                img_dir = osp.dirname(out_file)
+                if img_dir not in img_dir_list:
+                    img_dir_list.append(img_dir)
+            else:
+                out_file = None
 
-                model.module.show_result(
-                    img_show, [result['track_results'][i]],
-                    show=show,
-                    out_file=out_file)
+            if 'track_results' in result:
+                result_show = result['track_results']
+            elif 'bbox' in result:
+                result_show = result['bbox']
+            else:
+                result_show = result
+            model.module.show_result(
+                img_show, result_show, show=show, out_file=out_file)
 
         for _ in range(batch_size):
             prog_bar.update()
 
     if out_dir:
         for img_dir in img_dir_list:
-            video_name = osp.basename(img_dir)
+            if 'track_results' in result or 'bbox' in result:
+                video_name = img_dir.rsplit('/', 2)[1]
+            else:
+                video_name = osp.basename(img_dir)
             start_frame_id = int(sorted(os.listdir(img_dir))[0].split('.')[0])
             end_frame_id = int(sorted(os.listdir(img_dir))[-1].split('.')[0])
+            if 'track_results' in result:
+                filename_tmpl = '{:06d}.jpg'
+            elif 'bbox' in result:
+                filename_tmpl = '{:08d}.jpg'
+            else:
+                filename_tmpl = '{:06d}.JPEG'
             mmcv.frames2video(
                 img_dir,
                 f'{out_dir}/{video_name}.mp4',
                 fps=fps,
                 fourcc='mp4v',
+                filename_tmpl=filename_tmpl,
                 start=start_frame_id,
                 end=end_frame_id,
                 show_progress=False)
