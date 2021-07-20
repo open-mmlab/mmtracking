@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 
+import mmcv
+import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -232,3 +234,46 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
 
         return outputs
+
+    def show_result(self,
+                    img,
+                    result,
+                    color='green',
+                    thickness=1,
+                    show=False,
+                    win_name='',
+                    wait_time=0,
+                    out_file=None):
+        """Visualize tracking results.
+
+        Args:
+            img (str or ndarray): The image to be displayed.
+            result (ndarray): ndarray of shape (4, ).
+            color (str or tuple or Color, optional): color of bbox.
+                Defaults to green.
+            thickness (int, optional): Thickness of lines.
+                Defaults to 1.
+            show (bool, optional): Whether to show the image.
+                Defaults to False.
+            win_name (str, optional): The window name.
+                Defaults to ''.
+            wait_time (int, optional): Value of waitKey param.
+                Defaults to 0.
+            out_file (str, optional): The filename to write the image.
+                Defaults to None.
+
+        Returns:
+            ndarray: Visualized image.
+        """
+        assert result.ndim == 1
+        assert result.shape[0] == 4
+        mmcv.imshow_bboxes(
+            img,
+            result[np.newaxis, :],
+            colors=color,
+            thickness=thickness,
+            show=show,
+            win_name=win_name,
+            wait_time=wait_time,
+            out_file=out_file)
+        return img

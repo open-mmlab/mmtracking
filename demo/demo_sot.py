@@ -54,17 +54,18 @@ def main():
         result = inference_sot(model, frame, init_bbox, frame_id)
 
         track_bbox = result['bbox']
-        cv2.rectangle(
-            frame, (track_bbox[0], track_bbox[1]),
-            (track_bbox[2], track_bbox[3]),
-            args.color,
-            thickness=args.thickness)
+        vis_frame = model.show_result(
+            frame,
+            track_bbox,
+            color=args.color,
+            thickness=args.thickness,
+            show=False)
 
         if save_out_video:
-            videoWriter.write(frame)
+            videoWriter.write(vis_frame)
 
         if args.show:
-            cv2.imshow(args.input, frame)
+            cv2.imshow(args.input, vis_frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
