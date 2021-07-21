@@ -82,9 +82,9 @@ def main():
         os.makedirs(args.out_dir, exist_ok=True)
 
     print_log('This script visualizes the error for multiple object tracking. '
-              'By Default, the yellow bounding box denotes false negative, '
-              'the blue bounding box denotes the false positive '
-              'and the green bounding box denotes ID switch.')
+              'By Default, the red bounding box denotes false negative, '
+              'the yellow bounding box denotes the false positive '
+              'and the blue bounding box denotes ID switch.')
 
     cfg = Config.fromfile(args.config)
     dataset = build_dataset(cfg.data.val, dict(test_mode=True))
