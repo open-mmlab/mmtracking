@@ -64,7 +64,7 @@ def cal_mot_metrics(resfiles, dataset, video_name):
     else:
         acc = mm.utils.compare_to_groundtruth(gt, res)
 
-    return acc
+    return acc, res, gt
 
 
 def main():
@@ -104,23 +104,7 @@ def main():
     for name in names:
         print_log(f'Start processing video {name}')
 
-        acc = cal_mot_metrics(resfiles, dataset, name)
-        if 'half-train' in dataset.ann_file:
-            gt_file = osp.join(dataset.img_prefix,
-                               f'{name}/gt/gt_half-train.txt')
-        elif 'half-val' in dataset.ann_file:
-            gt_file = osp.join(dataset.img_prefix,
-                               f'{name}/gt/gt_half-val.txt')
-        else:
-            gt_file = osp.join(dataset.img_prefix, f'{name}/gt/gt.txt')
-        res_file = osp.join(resfiles['track'], f'{name}.txt')
-        gt = mm.io.loadtxt(gt_file)
-        res = mm.io.loadtxt(res_file)
-        ini_file = osp.join(dataset.img_prefix, f'{name}/seqinfo.ini')
-        if osp.exists(ini_file):
-            acc, ana = mm.utils.CLEAR_MOT_M(gt, res, ini_file)
-        else:
-            acc = mm.utils.compare_to_groundtruth(gt, res)
+        acc, res, gt = cal_mot_metrics(resfiles, dataset, name)
 
         frame_id_list = sorted(
             list(set(acc.mot_events.index.get_level_values(0))))
