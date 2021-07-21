@@ -167,8 +167,8 @@ def _plt_show_tracks(img,
     return img
 
 
-def imshow_wrong_tracks(*args, backend='cv2', **kwargs):
-    """Show the tracks on the input image.
+def imshow_mot_errors(*args, backend='cv2', **kwargs):
+    """Show the wrong tracks on the input image.
 
     Args:
         backend (str, optional): Backend of visualization.
@@ -185,8 +185,7 @@ def imshow_wrong_tracks(*args, backend='cv2', **kwargs):
 def _cv2_show_wrong_tracks(img,
                            bboxes,
                            ids,
-                           wrong_types,
-                           bbox_colors=None,
+                           error_types,
                            thickness=2,
                            font_scale=0.4,
                            text_width=10,
@@ -200,10 +199,8 @@ def _cv2_show_wrong_tracks(img,
         img (str or ndarray): The image to be displayed.
         bboxes (ndarray): A ndarray of shape (k, 5).
         ids (ndarray): A ndarray of shape (k, ).
-        wrong_types (ndarray): A ndarray of shape (k, ), where 0 denotes
+        error_types (ndarray): A ndarray of shape (k, ), where 0 denotes
             false positives, 1 denotes false negative and 2 denotes ID switch.
-        bbox_colors (list[tuple], optional): A list of colors to
-            draw boxes with different wrong type. Defaults to None.
         thickness (int, optional): Thickness of lines.
             Defaults to 2.
         font_scale (float, optional): Font scale to draw id and score.
@@ -220,19 +217,19 @@ def _cv2_show_wrong_tracks(img,
             Defaults to None.
 
     Returns:
-        img (ndarray): Visualized image.
+        ndarray: Visualized image.
     """
     assert bboxes.ndim == 2
     assert ids.ndim == 1
-    assert wrong_types.ndim == 1
+    assert error_types.ndim == 1
     assert bboxes.shape[1] == 5
 
-    if bbox_colors:
-        assert len(bbox_colors) == 3
-    else:
-        bbox_colors = sns.color_palette(n_colors=3)
-        bbox_colors = [[int(255 * _c) for _c in bbox_color][::-1]
-                       for bbox_color in bbox_colors]
+    bbox_colors = sns.color_palette()
+    # red, yellow, blue
+    bbox_colors = [bbox_colors[3], bbox_colors[1], bbox_colors[0]]
+    bbox_colors = [[int(255 * _c) for _c in bbox_color][::-1]
+                   for bbox_color in bbox_colors]
+
     if isinstance(img, str):
         img = mmcv.imread(img)
 
@@ -240,16 +237,16 @@ def _cv2_show_wrong_tracks(img,
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
     bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
 
-    for bbox, wrong_type, id in zip(bboxes, wrong_types, ids):
+    for bbox, error_type, id in zip(bboxes, error_types, ids):
         x1, y1, x2, y2 = bbox[:4].astype(np.int32)
         score = float(bbox[-1])
 
         # bbox
-        bbox_color = bbox_colors[wrong_type]
+        bbox_color = bbox_colors[error_type]
         cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=thickness)
 
         # FN does not have id and score
-        if wrong_type == 1:
+        if error_type == 1:
             continue
 
         # id
@@ -286,8 +283,7 @@ def _cv2_show_wrong_tracks(img,
 def _plt_show_wrong_tracks(img,
                            bboxes,
                            ids,
-                           wrong_types,
-                           bbox_colors=None,
+                           error_types,
                            thickness=0.1,
                            font_scale=3,
                            text_width=8,
@@ -301,10 +297,8 @@ def _plt_show_wrong_tracks(img,
         img (str or ndarray): The image to be displayed.
         bboxes (ndarray): A ndarray of shape (k, 5).
         ids (ndarray): A ndarray of shape (k, ).
-        wrong_types (ndarray): A ndarray of shape (k, ), where 0 denotes
+        error_types (ndarray): A ndarray of shape (k, ), where 0 denotes
             false positives, 1 denotes false negative and 2 denotes ID switch.
-        bbox_colors (list[tuple], optional): A list of colors to
-            draw boxes with different wrong type. Defaults to None.
         thickness (float, optional): Thickness of lines.
             Defaults to 0.1.
         font_scale (float, optional): Font scale to draw id and score.
@@ -321,17 +315,16 @@ def _plt_show_wrong_tracks(img,
             Defaults to None.
 
     Returns:
-        img (ndarray): Original image.
+        ndarray: Original image.
     """
     assert bboxes.ndim == 2
     assert ids.ndim == 1
-    assert wrong_types.ndim == 1
+    assert error_types.ndim == 1
     assert bboxes.shape[1] == 5
 
-    if bbox_colors:
-        assert len(bbox_colors) == 3
-    else:
-        bbox_colors = sns.color_palette(n_colors=3)
+    bbox_colors = sns.color_palette()
+    # red, yellow, blue
+    bbox_colors = [bbox_colors[3], bbox_colors[1], bbox_colors[0]]
 
     if isinstance(img, str):
         img = plt.imread(img)
@@ -355,7 +348,7 @@ def _plt_show_wrong_tracks(img,
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.rcParams['figure.figsize'] = img_shape[1], img_shape[0]
 
-    for bbox, wrong_type, id in zip(bboxes, wrong_types, ids):
+    for bbox, error_type, id in zip(bboxes, error_types, ids):
         x1, y1, x2, y2, score = bbox
         w, h = int(x2 - x1), int(y2 - y1)
         left_top = (int(x1), int(y1))
@@ -367,11 +360,11 @@ def _plt_show_wrong_tracks(img,
                 w,
                 h,
                 thickness,
-                edgecolor=bbox_colors[wrong_type],
+                edgecolor=bbox_colors[error_type],
                 facecolor='none'))
 
         # FN does not have id and score
-        if wrong_type == 1:
+        if error_type == 1:
             continue
 
         # id
@@ -382,8 +375,8 @@ def _plt_show_wrong_tracks(img,
                       width,
                       text_height,
                       thickness,
-                      edgecolor=bbox_colors[wrong_type],
-                      facecolor=bbox_colors[wrong_type]))
+                      edgecolor=bbox_colors[error_type],
+                      facecolor=bbox_colors[error_type]))
         plt.text(
             left_top[0],
             left_top[1] + 2 * (text_height + 1),
@@ -398,8 +391,8 @@ def _plt_show_wrong_tracks(img,
                       width,
                       text_height,
                       thickness,
-                      edgecolor=bbox_colors[wrong_type],
-                      facecolor=bbox_colors[wrong_type]))
+                      edgecolor=bbox_colors[error_type],
+                      facecolor=bbox_colors[error_type]))
         plt.text(
             left_top[0],
             left_top[1] + text_height + 2,

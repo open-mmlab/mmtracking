@@ -8,7 +8,7 @@ import numpy as np
 from mmcv import Config
 from mmcv.utils import print_log
 
-from mmtrack.core.utils import imshow_wrong_tracks
+from mmtrack.core.utils import imshow_mot_errors
 from mmtrack.datasets import build_dataset
 
 
@@ -36,7 +36,7 @@ def parse_args():
     return args
 
 
-def cal_mot_metrics(resfiles, dataset, video_name):
+def compare_res_gts(resfiles, dataset, video_name):
     """Evaluation in MOT.
 
     Args:
@@ -45,7 +45,8 @@ def cal_mot_metrics(resfiles, dataset, video_name):
         video_name (str): Video name.
 
     Returns:
-        acc (MOTAccumulator): Results of MOT metrics.
+        tuple: (acc, res, gt), acc contains the results of MOT metrics,
+        res is the results of inference and gt is the ground truth.
     """
     if 'half-train' in dataset.ann_file:
         gt_file = osp.join(dataset.img_prefix,
@@ -104,7 +105,7 @@ def main():
     for name in names:
         print_log(f'Start processing video {name}')
 
-        acc, res, gt = cal_mot_metrics(resfiles, dataset, name)
+        acc, res, gt = compare_res_gts(resfiles, dataset, name)
 
         frame_id_list = sorted(
             list(set(acc.mot_events.index.get_level_values(0))))
@@ -119,7 +120,7 @@ def main():
             fns = events[events.Type == 'MISS']
             idsws = events[events.Type == 'SWITCH']
 
-            bboxes, ids, wrong_types = [], [], []
+            bboxes, ids, error_types = [], [], []
             for fp_index in fps.index:
                 hid = events.loc[fp_index].HId
                 bboxes.append([
@@ -129,8 +130,8 @@ def main():
                     cur_res.loc[hid].Confidence
                 ])
                 ids.append(hid)
-                # wrong_type = 0 denotes false positive error
-                wrong_types.append(0)
+                # error_type = 0 denotes false positive error
+                error_types.append(0)
             for fn_index in fns.index:
                 oid = events.loc[fn_index].OId
                 bboxes.append([
@@ -140,8 +141,8 @@ def main():
                     cur_gt.loc[oid].Confidence
                 ])
                 ids.append(-1)
-                # wrong_type = 1 denotes false negative error
-                wrong_types.append(1)
+                # error_type = 1 denotes false negative error
+                error_types.append(1)
             for idsw_index in idsws.index:
                 hid = events.loc[idsw_index].HId
                 bboxes.append([
@@ -151,19 +152,19 @@ def main():
                     cur_res.loc[hid].Confidence
                 ])
                 ids.append(hid)
-                # wrong_type = 2 denotes id switch
-                wrong_types.append(2)
+                # error_type = 2 denotes id switch
+                error_types.append(2)
             if len(bboxes) == 0:
                 bboxes = np.zeros((0, 5), dtype=np.float32)
             else:
                 bboxes = np.asarray(bboxes, dtype=np.float32)
             ids = np.asarray(ids, dtype=np.int32)
-            wrong_types = np.asarray(wrong_types, dtype=np.int32)
-            imshow_wrong_tracks(
+            error_types = np.asarray(error_types, dtype=np.int32)
+            imshow_mot_errors(
                 img,
                 bboxes,
                 ids,
-                wrong_types,
+                error_types,
                 show=args.show,
                 out_file=osp.join(args.out_dir, f'{name}/{frame_id:06d}.jpg')
                 if args.out_dir else None,
