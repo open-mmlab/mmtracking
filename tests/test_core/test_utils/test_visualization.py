@@ -32,40 +32,54 @@ def test_cv2_show_wrong_tracks():
         image = np.ones((100, 100), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1])
+        error_types = np.array([0, 1])
         out_image = vis._cv2_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
     # bboxes.ndim should be 2
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([30, 40, 60, 60, 0.5])
         ids = np.array([0, 1])
+        error_types = np.array([0, 1])
         out_image = vis._cv2_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
-    # ids.ndim should be 2
+    # ids.ndim should be 1
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([[0], [1]])
+        error_types = np.array([0, 1])
         out_image = vis._cv2_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
-    # bboxes.shape[0] should have 5
+    # error_types.ndim should be 1
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
-        bboxes = np.array([[20, 10, 30, 30], [30, 40, 60, 60]])
+        bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1])
-        out_image = vis._cv2_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+        error_types = np.array([[0], [1]])
+        out_image = vis._plt_show_wrong_tracks(
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
     # bboxes.shape[0] and ids.shape[0] should have the same length
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1, 2])
+        error_types = np.array([0, 1])
         out_image = vis._cv2_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
+
+    # bboxes.shape[0] should have 5
+    with pytest.raises(AssertionError):
+        image = np.ones((100, 100, 3), np.uint8)
+        bboxes = np.array([[20, 10, 30, 30], [30, 40, 60, 60]])
+        ids = np.array([0, 1])
+        error_types = np.array([0, 1])
+        out_image = vis._cv2_show_wrong_tracks(
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
 
 def test_plt_show_wrong_tracks():
@@ -86,37 +100,51 @@ def test_plt_show_wrong_tracks():
         image = np.ones((100, 100), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1])
+        error_types = np.array([0, 1])
         out_image = vis._plt_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
     # bboxes.ndim should be 2
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([30, 40, 60, 60, 0.5])
         ids = np.array([0, 1])
+        error_types = np.array([0, 1])
         out_image = vis._plt_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
-    # ids.ndim should be 2
+    # ids.ndim should be 1
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([[0], [1]])
+        error_types = np.array([0, 1])
         out_image = vis._plt_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
-    # bboxes.shape[0] should have 5
+    # error_types.ndim should be 1
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
-        bboxes = np.array([[20, 10, 30, 30], [30, 40, 60, 60, 0.5]])
+        bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1])
+        error_types = np.array([[0], [1]])
         out_image = vis._plt_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
 
     # bboxes.shape[0] and ids.shape[0] should have the same length
     with pytest.raises(AssertionError):
         image = np.ones((100, 100, 3), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
         ids = np.array([0, 1, 2])
+        error_types = np.array([0, 1])
         out_image = vis._plt_show_wrong_tracks(
-            image, bboxes, ids, error_types, out_file=tmp_filename, show=False)
+            image, bboxes, ids, error_types, out_file=None, show=False)
+
+    # bboxes.shape[0] should have 5
+    with pytest.raises(AssertionError):
+        image = np.ones((100, 100, 3), np.uint8)
+        bboxes = np.array([[20, 10, 30, 30], [30, 40, 60, 60, 0.5]])
+        ids = np.array([0, 1])
+        error_types = np.array([0, 1])
+        out_image = vis._plt_show_wrong_tracks(
+            image, bboxes, ids, error_types, out_file=None, show=False)
