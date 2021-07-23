@@ -37,12 +37,12 @@ def parse_args():
 
 
 def compare_res_gts(resfiles, dataset, video_name):
-    """Evaluation in MOT.
+    """Evaluate the results of the video.
 
     Args:
-        resfiles (List[str]): A dict containing the filepaths.
-        dataset (Dataset): MOT dataset.
-        video_name (str): Video name.
+        resfiles (dict): A dict containing the directory of the MOT results.
+        dataset (Dataset): MOT dataset of the video to be evaluated.
+        video_name (str): Name of the video to be evaluated.
 
     Returns:
         tuple: (acc, res, gt), acc contains the results of MOT metrics,
@@ -82,8 +82,8 @@ def main():
         os.makedirs(args.out_dir, exist_ok=True)
 
     print_log('This script visualizes the error for multiple object tracking. '
-              'By Default, the red bounding box denotes false negative, '
-              'the yellow bounding box denotes the false positive '
+              'By Default, the red bounding box denotes false positive, '
+              'the yellow bounding box denotes the false negative '
               'and the blue bounding box denotes ID switch.')
 
     cfg = Config.fromfile(args.config)
@@ -91,31 +91,33 @@ def main():
     results = mmcv.load(args.result_file)
 
     # create index from frame_id to filename
-    filename_dict = dict()
+    filenames_dict = dict()
     for data_info in dataset.data_infos:
         video_name = data_info['filename'].split('/', 1)[0]
         frame_id = int(data_info['filename'].rsplit('/', 1)[-1].split('.')[0])
-        if video_name not in filename_dict:
-            filename_dict[video_name] = dict()
-        filename_dict[video_name][frame_id] = data_info['filename']
+        if video_name not in filenames_dict:
+            filenames_dict[video_name] = dict()
+        filenames_dict[video_name][frame_id] = data_info['filename']
 
     # format the results to txts
-    resfiles, names, tmp_dir = dataset.format_results(results, None, ['track'])
+    resfiles, video_names, tmp_dir = dataset.format_results(
+        results, None, ['track'])
 
-    for name in names:
-        print_log(f'Start processing video {name}')
+    for video_name in video_names:
+        print_log(f'Start processing video {video_name}')
 
-        acc, res, gt = compare_res_gts(resfiles, dataset, name)
+        acc, res, gt = compare_res_gts(resfiles, dataset, video_name)
 
-        frame_id_list = sorted(
+        frames_id_list = sorted(
             list(set(acc.mot_events.index.get_level_values(0))))
-        for frame_id in frame_id_list:
+        for frame_id in frames_id_list:
             # events in the current frame
             events = acc.mot_events.xs(frame_id)
             cur_res = res.loc[frame_id] if frame_id in res.index else None
             cur_gt = gt.loc[frame_id] if frame_id in gt.index else None
             # path of image
-            img = osp.join(dataset.img_prefix, filename_dict[name][frame_id])
+            img = osp.join(dataset.img_prefix,
+                           filenames_dict[video_name][frame_id])
             fps = events[events.Type == 'FP']
             fns = events[events.Type == 'MISS']
             idsws = events[events.Type == 'SWITCH']
@@ -166,23 +168,25 @@ def main():
                 ids,
                 error_types,
                 show=args.show,
-                out_file=osp.join(args.out_dir, f'{name}/{frame_id:06d}.jpg')
+                out_file=osp.join(args.out_dir,
+                                  f'{video_name}/{frame_id:06d}.jpg')
                 if args.out_dir else None,
                 backend=args.backend)
 
         print_log(f'Done! Visualization images are saved in '
-                  f'\'{args.out_dir}/{name}\'')
+                  f'\'{args.out_dir}/{video_name}\'')
 
         mmcv.frames2video(
-            f'{args.out_dir}/{name}',
-            f'{args.out_dir}/{name}.mp4',
+            f'{args.out_dir}/{video_name}',
+            f'{args.out_dir}/{video_name}.mp4',
             fps=args.fps,
             fourcc='mp4v',
-            start=frame_id_list[0],
-            end=frame_id_list[-1],
+            start=frames_id_list[0],
+            end=frames_id_list[-1],
             show_progress=False)
-        print_log(f'Done! Visualization video is saved as '
-                  f'\'{args.out_dir}/{name}.mp4\' with a FPS of {args.fps}')
+        print_log(
+            f'Done! Visualization video is saved as '
+            f'\'{args.out_dir}/{video_name}.mp4\' with a FPS of {args.fps}')
 
 
 if __name__ == '__main__':

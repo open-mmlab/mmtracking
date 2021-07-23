@@ -172,7 +172,7 @@ def imshow_mot_errors(*args, backend='cv2', **kwargs):
 
     Args:
         backend (str, optional): Backend of visualization.
-            Defaults to cv2.
+            Defaults to 'cv2'.
     """
     if backend == 'cv2':
         return _cv2_show_wrong_tracks(*args, **kwargs)
@@ -191,7 +191,7 @@ def _cv2_show_wrong_tracks(img,
                            text_width=10,
                            text_height=15,
                            show=False,
-                           wait_time=0,
+                           wait_time=100,
                            out_file=None):
     """Show the wrong tracks with opencv.
 
@@ -219,10 +219,16 @@ def _cv2_show_wrong_tracks(img,
     Returns:
         ndarray: Visualized image.
     """
-    assert bboxes.ndim == 2
-    assert ids.ndim == 1
-    assert error_types.ndim == 1
-    assert bboxes.shape[1] == 5
+    assert bboxes.ndim == 2, \
+        f' bboxes ndim should be 2, but its ndim is {bboxes.ndim}.'
+    assert ids.ndim == 1, \
+        f' ids ndim should be 1, but its ndim is {ids.ndim}.'
+    assert error_types.ndim == 1, \
+        f' error_types ndim should be 1, but its ndim is {error_types.ndim}.'
+    assert bboxes.shape[0] == ids.shape[0], \
+        'bboxes.shape[0] and ids.shape[0] should have the same length.'
+    assert bboxes.shape[1] == 5, \
+        f' bboxes.shape[1] should be 5, but its {bboxes.shape[1]}.'
 
     bbox_colors = sns.color_palette()
     # red, yellow, blue
@@ -232,6 +238,8 @@ def _cv2_show_wrong_tracks(img,
 
     if isinstance(img, str):
         img = mmcv.imread(img)
+    else:
+        assert img.ndim == 3
 
     img_shape = img.shape
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
@@ -249,6 +257,17 @@ def _cv2_show_wrong_tracks(img,
         if error_type == 1:
             continue
 
+        # score
+        text = '{:.02f}'.format(score)
+        width = (len(text) - 1) * text_width
+        img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
+        cv2.putText(
+            img,
+            text, (x1, y1 + text_height - 2),
+            cv2.FONT_HERSHEY_COMPLEX,
+            font_scale,
+            color=(0, 0, 0))
+
         # id
         text = str(id)
         width = len(text) * text_width
@@ -257,17 +276,6 @@ def _cv2_show_wrong_tracks(img,
         cv2.putText(
             img,
             str(id), (x1, y1 + text_height * 2 - 2),
-            cv2.FONT_HERSHEY_COMPLEX,
-            font_scale,
-            color=(0, 0, 0))
-
-        # score
-        text = '{:.02f}'.format(score)
-        width = (len(text) - 1) * text_width
-        img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
-        cv2.putText(
-            img,
-            text, (x1, y1 + text_height - 2),
             cv2.FONT_HERSHEY_COMPLEX,
             font_scale,
             color=(0, 0, 0))
@@ -289,7 +297,7 @@ def _plt_show_wrong_tracks(img,
                            text_width=8,
                            text_height=13,
                            show=False,
-                           wait_time=0,
+                           wait_time=100,
                            out_file=None):
     """Show the wrong tracks with matplotlib.
 
@@ -317,10 +325,16 @@ def _plt_show_wrong_tracks(img,
     Returns:
         ndarray: Original image.
     """
-    assert bboxes.ndim == 2
-    assert ids.ndim == 1
-    assert error_types.ndim == 1
-    assert bboxes.shape[1] == 5
+    assert bboxes.ndim == 2, \
+        f' bboxes ndim should be 2, but its ndim is {bboxes.ndim}.'
+    assert ids.ndim == 1, \
+        f' ids ndim should be 1, but its ndim is {ids.ndim}.'
+    assert error_types.ndim == 1, \
+        f' error_types ndim should be 1, but its ndim is {error_types.ndim}.'
+    assert bboxes.shape[0] == ids.shape[0], \
+        'bboxes.shape[0] and ids.shape[0] should have the same length.'
+    assert bboxes.shape[1] == 5, \
+        f' bboxes.shape[1] should be 5, but its {bboxes.shape[1]}.'
 
     bbox_colors = sns.color_palette()
     # red, yellow, blue
@@ -329,14 +343,12 @@ def _plt_show_wrong_tracks(img,
     if isinstance(img, str):
         img = plt.imread(img)
     else:
+        assert img.ndim == 3
         img = mmcv.bgr2rgb(img)
 
     img_shape = img.shape
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
     bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
-
-    if not show:
-        matplotlib.use('Agg')
 
     plt.imshow(img)
     plt.gca().set_axis_off()
@@ -367,6 +379,23 @@ def _plt_show_wrong_tracks(img,
         if error_type == 1:
             continue
 
+        # score
+        text = '{:.02f}'.format(score)
+        width = len(text) * text_width
+        plt.gca().add_patch(
+            Rectangle((left_top[0], left_top[1]),
+                      width,
+                      text_height,
+                      thickness,
+                      edgecolor=bbox_colors[error_type],
+                      facecolor=bbox_colors[error_type]))
+
+        plt.text(
+            left_top[0],
+            left_top[1] + text_height + 2,
+            text,
+            fontsize=font_scale)
+
         # id
         text = str(id)
         width = len(text) * text_width
@@ -383,22 +412,6 @@ def _plt_show_wrong_tracks(img,
             text,
             fontsize=font_scale)
 
-        # score
-        text = '{:.02f}'.format(score)
-        width = len(text) * text_width
-        plt.gca().add_patch(
-            Rectangle((left_top[0], left_top[1]),
-                      width,
-                      text_height,
-                      thickness,
-                      edgecolor=bbox_colors[error_type],
-                      facecolor=bbox_colors[error_type]))
-        plt.text(
-            left_top[0],
-            left_top[1] + text_height + 2,
-            text,
-            fontsize=font_scale)
-
     if out_file is not None:
         mkdir_or_exist(osp.abspath(osp.dirname(out_file)))
         plt.savefig(out_file, dpi=300, bbox_inches='tight', pad_inches=0.0)
@@ -406,7 +419,6 @@ def _plt_show_wrong_tracks(img,
     if show:
         plt.draw()
         plt.pause(wait_time / 1000.)
-    else:
-        plt.show()
+
     plt.clf()
     return img
