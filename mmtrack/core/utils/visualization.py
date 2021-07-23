@@ -212,7 +212,7 @@ def _cv2_show_wrong_tracks(img,
         show (bool, optional): Whether to show the image on the fly.
             Defaults to False.
         wait_time (int, optional): Value of waitKey param.
-            Defaults to 0.
+            Defaults to 100.
         out_file (str, optional): The filename to write the image.
             Defaults to None.
 
@@ -312,13 +312,13 @@ def _plt_show_wrong_tracks(img,
         font_scale (float, optional): Font scale to draw id and score.
             Defaults to 3.
         text_width (int, optional): Width to draw id and score.
-            Defaults to 10.
+            Defaults to 8.
         text_height (int, optional): Height to draw id and score.
-            Defaults to 15.
+            Defaults to 13.
         show (bool, optional): Whether to show the image on the fly.
             Defaults to False.
         wait_time (int, optional): Value of waitKey param.
-            Defaults to 0.
+            Defaults to 100.
         out_file (str, optional): The filename to write the image.
             Defaults to None.
 

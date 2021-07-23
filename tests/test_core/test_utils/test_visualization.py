@@ -27,7 +27,7 @@ def test_cv2_show_wrong_tracks():
     assert image.shape == out_image.shape
     os.remove(tmp_filename)
 
-    # Not support gray image
+    # not support gray image
     with pytest.raises(AssertionError):
         image = np.ones((100, 100), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
@@ -95,7 +95,7 @@ def test_plt_show_wrong_tracks():
     assert image.shape == out_image.shape
     os.remove(tmp_filename)
 
-    # Not support gray image
+    # not support gray image
     with pytest.raises(AssertionError):
         image = np.ones((100, 100), np.uint8)
         bboxes = np.array([[20, 10, 30, 30, 0.5], [30, 40, 60, 60, 0.5]])
