@@ -144,6 +144,8 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
+    if 'detector' in cfg.model:
+        model.detector.init_weights()
 
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:
