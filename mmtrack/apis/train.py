@@ -31,7 +31,7 @@ def train_model(model,
     """
     logger = get_root_logger(cfg.log_level)
 
-    if cfg.get('USE_MMDET', False) or cfg.get('USE_MMCLS', False) or 1:
+    if cfg.get('USE_MMDET', False) or cfg.get('USE_MMCLS', False):
         from mmdet.datasets import build_dataset
 
     # prepare data loaders
