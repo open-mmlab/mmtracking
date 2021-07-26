@@ -1,7 +1,8 @@
 import torch
 from addict import Dict
+from mmdet.models import build_detector
 
-from ..builder import MODELS, build_detector
+from ..builder import MODELS
 from .base import BaseVideoDetector
 
 
