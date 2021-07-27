@@ -49,7 +49,6 @@ def main():
             # convert (x1, y1, w, h) to (x1, y1, x2, y2)
             init_bbox[2] += init_bbox[0]
             init_bbox[3] += init_bbox[1]
-
         # test a single image
         result = inference_sot(model, frame, init_bbox, frame_id)
 
