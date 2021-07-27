@@ -99,6 +99,7 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 ## OpenMMLab 的其他项目
 
 - [MMCV](https://github.com/open-mmlab/mmcv)：OpenMMLab计算机视觉基础库
+- [MIM](https://github.com/open-mmlab/mim): MIM 是 OpenMMlab 项目、算法、模型的统一入口
 - [MMClassification](https://github.com/open-mmlab/mmclassification)：OpenMMLab图像分类工具箱与测试基准
 - [MMDetection](https://github.com/open-mmlab/mmdetection)：OpenMMLab目标检测工具箱与测试基准
 - [MMDetection3D](https://github.com/open-mmlab/mmdetection3d)：OpenMMLab新一代通用3D目标检测平台
