@@ -28,7 +28,8 @@ def main():
     model = init_model(args.config, args.checkpoint, device=args.device)
 
     cap = cv2.VideoCapture(args.input)
-
+    
+    save_out_video = False
     if args.output is not None:
         save_out_video = True
 
@@ -49,7 +50,6 @@ def main():
             # convert (x1, y1, w, h) to (x1, y1, x2, y2)
             init_bbox[2] += init_bbox[0]
             init_bbox[3] += init_bbox[1]
-
         # test a single image
         result = inference_sot(model, frame, init_bbox, frame_id)
 
