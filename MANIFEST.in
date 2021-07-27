@@ -1,6 +1,4 @@
 include requirements/*.txt
-include mmtrack/VERSION
-include mmtrack/model-index.yml
-include mmtrack/demo/*
-recursive-include mmtrack/configs *.py *.yml
-recursive-include mmtrack/tools *.sh *.py
+include mmtrack/.mim/model-index.yml
+recursive-include mmtrack/.mim/configs *.py *.yml
+recursive-include mmtrack/.mim/tools *.sh *.py
