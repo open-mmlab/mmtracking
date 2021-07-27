@@ -66,7 +66,7 @@ class LaSOTDataset(CocoVideoDataset):
 
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['bbox'])
+            assert len(self.data_infos) == len(results['track_results'])
             print_log('Evaluate OPE Benchmark...', logger=logger)
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
@@ -75,7 +75,8 @@ class LaSOTDataset(CocoVideoDataset):
             inds.append(len(self.data_infos))
 
             track_results = [
-                results['bbox'][inds[i]:inds[i + 1]] for i in range(num_vids)
+                results['track_results'][inds[i]:inds[i + 1]][1:]
+                for i in range(num_vids)
             ]
 
             ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
