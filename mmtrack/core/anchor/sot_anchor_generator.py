@@ -55,7 +55,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Returns:
             torch.Tensor: Anchors of one spatial location in a single level
-            feature map in [cx, cy, w, h] format.
+            feature map in [tl_x, tl_y, br_x, br_y] format.
         """
         w = base_size
         h = base_size
@@ -75,8 +75,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             hs = (h * scales[:, None] * h_ratios[None, :]).view(-1)
 
         base_anchors = [
-            torch.ones_like(ws) * x_center,
-            torch.ones_like(hs) * y_center, ws, hs
+            x_center - 0.5 * ws, y_center - 0.5 * hs, x_center + 0.5 * ws,
+            y_center + 0.5 * hs
         ]
         base_anchors = torch.stack(base_anchors, dim=-1)
 
@@ -113,18 +113,15 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
         shift_y = torch.arange(0, feat_h, device=device) * stride[1]
 
         shift_xx, shift_yy = self._meshgrid(shift_x, shift_y)
-        shifts = torch.stack([
-            shift_xx, shift_yy,
-            torch.zeros_like(shift_xx),
-            torch.zeros_like(shift_yy)
-        ],
-                             dim=-1)
+        shifts = torch.stack([shift_xx, shift_yy, shift_xx, shift_yy], dim=-1)
         shifts = shifts.type_as(base_anchors)
 
-        all_anchors = base_anchors[:, None, :] + shifts[None, :, :]
+        # first feat_w elements correspond to the first row of shifts
+        # add A anchors (1, A, 4) to K shifts (K, 1, 4) to get
+        # shifted anchors (K, A, 4), reshape to (K*A, 4)
+        all_anchors = base_anchors[None, :, :] + shifts[:, None, :]
         all_anchors = all_anchors.view(-1, 4)
-
-        all_anchors[:, 0] += -(feat_w // 2) * stride[0]
-        all_anchors[:, 1] += -(feat_h // 2) * stride[1]
+        # first A rows correspond to A anchors of (0, 0) in feature map,
+        # then (0, 1), (0, 2), ...
 
         return all_anchors
