@@ -75,7 +75,7 @@ class LaSOTDataset(CocoVideoDataset):
             inds.append(len(self.data_infos))
 
             track_results = [
-                results['track_results'][inds[i]:inds[i + 1]][1:]
+                results['track_results'][inds[i]:inds[i + 1]][:4]
                 for i in range(num_vids)
             ]
 
