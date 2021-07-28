@@ -26,25 +26,26 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['img']),
     dict(type='Collect', keys=['img'], meta_keys=[])
 ]
+data_root = 'data/MOT17/'
 data = dict(
     samples_per_gpu=1,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
         triplet_sampler=dict(num_ids=8, ins_per_id=4),
-        data_prefix='data/MOT17/reid/img',
-        ann_file='data/MOT17/reid/meta/train_80.txt',
+        data_prefix=data_root + 'reid/imgs',
+        ann_file=data_root + 'reid/meta/train_80.txt',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         triplet_sampler=None,
-        data_prefix='data/MOT17/reid/img',
-        ann_file='data/MOT17/reid/meta/val_20.txt',
+        data_prefix=data_root + 'reid/imgs',
+        ann_file=data_root + 'reid/meta/val_20.txt',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         triplet_sampler=None,
-        data_prefix='data/MOT17/reid/img',
-        ann_file='data/MOT17/reid/meta/val_20.txt',
+        data_prefix=data_root + 'reid/imgs',
+        ann_file=data_root + 'reid/meta/val_20.txt',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='mAP')
