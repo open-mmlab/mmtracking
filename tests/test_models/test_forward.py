@@ -331,7 +331,6 @@ def test_vid_fgfa_style_forward(cfg_file):
 
 
 @pytest.mark.parametrize(
-    'cfg_file',
     ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
 def test_tracktor_forward(cfg_file):
     config = _get_config_module(cfg_file)
