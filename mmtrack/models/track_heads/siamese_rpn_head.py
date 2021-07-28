@@ -3,7 +3,7 @@ import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_anchor_generator
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.models import HEADS, build_loss
 
 from mmtrack.core.track import depthwise_correlation
@@ -234,8 +234,6 @@ class SiameseRPNHead(nn.Module):
             self.anchors = self.anchor_generator.grid_anchors(
                 [score_maps_size], gt_bbox.device)[0]
         anchors = self.anchors.clone()
-        anchors[:, :2] += self.train_cfg.search_size // 2
-        anchors = bbox_cxcywh_to_xyxy(anchors)
 
         assign_result = self.assigner.assign(anchors, gt_bbox[:, 1:])
         sampling_result = self.sampler.sample(assign_result, anchors,
@@ -436,8 +434,7 @@ class SiameseRPNHead(nn.Module):
 
         bbox_pred = bbox_pred.permute(1, 2, 3, 0).contiguous().view(4, -1)
         bbox_pred = bbox_pred.permute(1, 0)
-        anchors = bbox_cxcywh_to_xyxy(self.anchors)
-        bbox_pred = self.bbox_coder.decode(anchors, bbox_pred)
+        bbox_pred = self.bbox_coder.decode(self.anchors, bbox_pred)
         bbox_pred = bbox_xyxy_to_cxcywh(bbox_pred)
 
         def change_ratio(ratio):

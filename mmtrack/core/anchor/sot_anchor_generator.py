@@ -102,8 +102,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                 Defaults to 'cuda'.
 
         Returns:
-            torch.Tensor: Anchors of all spatial locations with [cx, cy, w, h]
-            format in the feature map.
+            torch.Tensor: Anchors of all spatial locations with [tl_x, tl_y,
+            br_x, br_y] format in the feature map.
         """
         feat_h, feat_w = featmap_size
         # convert Tensor to int, so that we can covert to ONNX correctlly
