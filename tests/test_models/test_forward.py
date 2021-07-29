@@ -334,7 +334,7 @@ def test_vid_fgfa_style_forward(cfg_file):
     'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
     'mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-public.py'
 ])
-def test_mot_tracker_forward(cfg_file):
+def test_mot_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
     model.pretrains = None

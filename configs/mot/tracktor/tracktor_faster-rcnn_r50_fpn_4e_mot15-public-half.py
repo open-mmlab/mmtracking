@@ -1,4 +1,13 @@
-_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot15-private-half.py']
+_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
+model = dict(
+    pretrains=dict(
+        detector=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half-f48f6578.pth',  # noqa: E501
+        reid=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15-30ba14d3.pth'  # noqa: E501
+    ),
+    reid=dict(head=dict(num_classes=375)))
+# data
 data_root = 'data/MOT15/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
