@@ -86,13 +86,15 @@ def train_model(model,
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
+    if fp16_cfg is not None and 'type' not in cfg.optimizer_config:
         optimizer_config = Fp16OptimizerHook(
             **cfg.optimizer_config, **fp16_cfg, distributed=distributed)
     elif distributed and 'type' not in cfg.optimizer_config:
         optimizer_config = OptimizerHook(**cfg.optimizer_config)
     else:
         optimizer_config = cfg.optimizer_config
+        if fp16_cfg is not None:
+            optimizer_config.update(fp16_cfg, distributed=distributed)
 
     # register hooks
     runner.register_training_hooks(cfg.lr_config, optimizer_config,

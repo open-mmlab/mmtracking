@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import auto_fp16, force_fp32
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_anchor_generator
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
@@ -136,6 +137,7 @@ class SiameseRPNHead(nn.Module):
         self.test_cfg = test_cfg
         self.assigner = build_assigner(self.train_cfg.assigner)
         self.sampler = build_sampler(self.train_cfg.sampler)
+        self.fp16_enabled = False
 
         self.cls_heads = nn.ModuleList()
         self.reg_heads = nn.ModuleList()
@@ -157,6 +159,7 @@ class SiameseRPNHead(nn.Module):
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox = build_loss(loss_bbox)
 
+    @auto_fp16()
     def forward(self, z_feats, x_feats):
         """Forward with features `z_feats` of exemplar images and features
         `x_feats` of search images.
@@ -376,6 +379,7 @@ class SiameseRPNHead(nn.Module):
         return (all_labels, all_labels_weights, all_bbox_targets,
                 all_bbox_weights)
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss(self, cls_score, bbox_pred, labels, labels_weights, bbox_targets,
              bbox_weights):
         """Compute loss.
@@ -407,6 +411,7 @@ class SiameseRPNHead(nn.Module):
 
         return losses
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
         """Track `prev_bbox` to current frame based on the output of network.
 
