@@ -19,16 +19,19 @@ class BaseReID(ImageClassifier):
             # change the shape of label tensor from NxS to NS
             gt_label = gt_label.view(-1)
         x = self.extract_feat(img)
+        head_outputs = self.head.forward_train(x)
 
         losses = dict()
-        loss = self.head.forward_train(x, gt_label)
-        losses.update(loss)
-        return loss
+        reid_loss = self.head.loss(gt_label, *head_outputs)
+        losses.update(reid_loss)
+        return losses
 
     def simple_test(self, img, **kwargs):
         """Test without augmentation."""
         if img.nelement() > 0:
             x = self.extract_feat(img)
-            return self.head.simple_test(x)
+            head_outputs = self.head.forward_train(x)
+            feats = head_outputs[0]
+            return feats
         else:
             return img.new_zeros(0, self.head.out_channels)
