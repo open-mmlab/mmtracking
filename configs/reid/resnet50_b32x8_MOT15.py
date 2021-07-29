@@ -2,7 +2,7 @@ USE_MMCLS = True
 _base_ = ['./resnet50_b32x8_MOT17.py']
 model = dict(reid=dict(head=dict(num_classes=375)))
 # data
-data_root = 'data/MOT16/'
+data_root = 'data/MOT15/'
 data = dict(
     train=dict(
         data_prefix=data_root + 'reid/imgs',
