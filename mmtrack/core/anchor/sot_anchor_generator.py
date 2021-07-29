@@ -103,7 +103,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         Returns:
             torch.Tensor: Anchors of all spatial locations with [tl_x, tl_y,
-            br_x, br_y] format in the feature map.
+            br_x, br_y] format in the feature map. The coordinate origin is the
+            top left corner.
         """
         feat_h, feat_w = featmap_size
         # convert Tensor to int, so that we can covert to ONNX correctlly
