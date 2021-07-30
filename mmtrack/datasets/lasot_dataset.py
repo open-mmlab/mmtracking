@@ -74,8 +74,10 @@ class LaSOTDataset(CocoVideoDataset):
             num_vids = len(inds)
             inds.append(len(self.data_infos))
 
-            track_results = [
-                results['track_results'][inds[i]:inds[i + 1]][1:]
+            track_bboxes = [
+                list(
+                    map(lambda x: x[:4],
+                        results['track_results'][inds[i]:inds[i + 1]]))
                 for i in range(num_vids)
             ]
 
@@ -84,7 +86,7 @@ class LaSOTDataset(CocoVideoDataset):
                 ann_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
             ]
             track_eval_results = eval_sot_ope(
-                results=track_results, annotations=ann_infos)
+                results=track_bboxes, annotations=ann_infos)
             eval_results.update(track_eval_results)
 
             for k, v in eval_results.items():

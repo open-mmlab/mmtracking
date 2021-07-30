@@ -451,10 +451,12 @@ def test_lasot_evaluation():
     for result in results:
         x1, y1, x2, y2 = result.split(',')
         track_results.append(
-            np.array([float(x1), float(y1),
-                      float(x2), float(y2)]))
+            np.array([float(x1),
+                      float(y1),
+                      float(x2),
+                      float(y2), 0.]))
 
-    track_results = dict(bbox=track_results)
+    track_results = dict(track_results=track_results)
     eval_results = dataset.evaluate(track_results, metric=['track'])
     assert eval_results['success'] == 67.524
     assert eval_results['norm_precision'] == 70.0

@@ -28,7 +28,6 @@ def main():
     model = init_model(args.config, args.checkpoint, device=args.device)
 
     cap = cv2.VideoCapture(args.input)
-    
     save_out_video = False
     if args.output is not None:
         save_out_video = True
@@ -53,7 +52,7 @@ def main():
         # test a single image
         result = inference_sot(model, frame, init_bbox, frame_id)
 
-        track_bbox = result['track_results'][1:]
+        track_bbox = result['track_results'][:4]
         vis_frame = model.show_result(
             frame,
             track_bbox,
