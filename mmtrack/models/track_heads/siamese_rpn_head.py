@@ -235,6 +235,14 @@ class SiameseRPNHead(nn.Module):
                 [score_maps_size], gt_bbox.device)[0]
         anchors = self.anchors.clone()
 
+        # map the anchors in score map to search image
+        shift_x = (self.cfg.train.search_size - W) // 2
+        shift_y = (self.cfg.train.search_size - H) // 2
+        anchors[:, 0] += shift_x
+        anchors[:, 1] += shift_y
+        anchors[:, 2] += shift_x
+        anchors[:, 3] += shift_y
+
         assign_result = self.assigner.assign(anchors, gt_bbox[:, 1:])
         sampling_result = self.sampler.sample(assign_result, anchors,
                                               gt_bbox[:, 1:])
