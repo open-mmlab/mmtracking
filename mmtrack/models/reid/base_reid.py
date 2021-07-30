@@ -1,4 +1,5 @@
 from mmcls.models import ImageClassifier
+from mmcv.runner import auto_fp16
 
 from ..builder import REID
 
@@ -26,6 +27,7 @@ class BaseReID(ImageClassifier):
         losses.update(reid_loss)
         return losses
 
+    @auto_fp16(apply_to=('img', ), out_fp32=True)
     def simple_test(self, img, **kwargs):
         """Test without augmentation."""
         if img.nelement() > 0:
