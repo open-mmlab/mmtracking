@@ -1,5 +1,26 @@
 ## Changelog
 
+### v0.6.0 (30/07/2021)
+
+#### Highlights
+
+- Fix training bugs of all three tasks ([#219](https://github.com/open-mmlab/mmtracking/pull/219)), ([#221](https://github.com/open-mmlab/mmtracking/pull/221))
+
+#### New Features
+
+- Support error visualization for mot task ([#212](https://github.com/open-mmlab/mmtracking/pull/212))
+
+#### Bug Fixes
+
+- Fix a bug in SOT demo ([#213](https://github.com/open-mmlab/mmtracking/pull/213))
+
+#### Improvements
+
+- Use MMCV registry ([#220](https://github.com/open-mmlab/mmtracking/pull/220))
+- Add README.md for reid training ([#210](https://github.com/open-mmlab/mmtracking/pull/210))
+- Modify dict keys of the outputs of SOT ([#223](https://github.com/open-mmlab/mmtracking/pull/223))
+- Add Chinese docs including install.md, quick_run.md, model_zoo.md, dataset.md ([#205](https://github.com/open-mmlab/mmtracking/pull/205)), ([#214](https://github.com/open-mmlab/mmtracking/pull/214))
+
 ### v0.5.3 (01/07/2021)
 
 #### New Features
