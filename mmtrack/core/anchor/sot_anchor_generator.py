@@ -104,7 +104,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
         Returns:
             torch.Tensor: Anchors of all spatial locations with [tl_x, tl_y,
             br_x, br_y] format in the feature map. The coordinate origin is the
-            top left corner.
+            center of scaled feature map.
         """
         feat_h, feat_w = featmap_size
         # convert Tensor to int, so that we can covert to ONNX correctlly
@@ -120,9 +120,17 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
         # first feat_w elements correspond to the first row of shifts
         # add A anchors (1, A, 4) to K shifts (K, 1, 4) to get
         # shifted anchors (K, A, 4), reshape to (K*A, 4)
-        all_anchors = base_anchors[None, :, :] + shifts[:, None, :]
+        # all_anchors = base_anchors[None, :, :] + shifts[:, None, :]
+        all_anchors = base_anchors[:, None, :] + shifts[None, :, :]
         all_anchors = all_anchors.view(-1, 4)
         # first A rows correspond to A anchors of (0, 0) in feature map,
         # then (0, 1), (0, 2), ...
+
+        # transform the coordinate origin from the top left corner to the
+        # center in the scaled featurs map.
+        all_anchors[:, 0] += -(feat_w // 2) * stride[0]
+        all_anchors[:, 1] += -(feat_h // 2) * stride[1]
+        all_anchors[:, 2] += -(feat_w // 2) * stride[0]
+        all_anchors[:, 3] += -(feat_h // 2) * stride[1]
 
         return all_anchors

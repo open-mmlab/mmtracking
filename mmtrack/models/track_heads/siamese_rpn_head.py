@@ -235,13 +235,10 @@ class SiameseRPNHead(nn.Module):
                 [score_maps_size], gt_bbox.device)[0]
         anchors = self.anchors.clone()
 
-        # map the anchors in score map to search image
-        shift_x = (self.cfg.train.search_size - W) // 2
-        shift_y = (self.cfg.train.search_size - H) // 2
-        anchors[:, 0] += shift_x
-        anchors[:, 1] += shift_y
-        anchors[:, 2] += shift_x
-        anchors[:, 3] += shift_y
+        # the scaled feature map and the searched image have the same center.
+        # transform coordinate origin from the center to the top left corner in
+        # the searched image.
+        anchors += self.train_cfg.search_size // 2
 
         assign_result = self.assigner.assign(anchors, gt_bbox[:, 1:])
         sampling_result = self.sampler.sample(assign_result, anchors,
@@ -475,11 +472,14 @@ class SiameseRPNHead(nn.Module):
         best_score = cls_score[best_idx]
         best_bbox = bbox_pred[best_idx, :] / scale_factor
 
-        # smooth bbox
         final_bbox = torch.zeros_like(best_bbox)
-        lr = penalty[best_idx] * cls_score[best_idx] * self.test_cfg.lr
+
+        # map the bbox center from the searched image to the original image.
         final_bbox[0] = best_bbox[0] + prev_bbox[0]
         final_bbox[1] = best_bbox[1] + prev_bbox[1]
+
+        # smooth bbox
+        lr = penalty[best_idx] * cls_score[best_idx] * self.test_cfg.lr
         final_bbox[2] = prev_bbox[2] * (1 - lr) + best_bbox[2] * lr
         final_bbox[3] = prev_bbox[3] * (1 - lr) + best_bbox[3] * lr
 
