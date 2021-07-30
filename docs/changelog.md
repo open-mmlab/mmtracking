@@ -2,13 +2,16 @@
 
 ### v0.6.0 (30/07/2021)
 
+#### Highlights
+
+- Fix training bugs of all three tasks ([#219](https://github.com/open-mmlab/mmtracking/pull/219)), ([#221](https://github.com/open-mmlab/mmtracking/pull/221))
+
 #### New Features
 
 - Support error visualization for mot task ([#212](https://github.com/open-mmlab/mmtracking/pull/212))
 
 #### Bug Fixes
 
-- **Important** Fix the training bug of all three tasks ([#219](https://github.com/open-mmlab/mmtracking/pull/219)), ([#221](https://github.com/open-mmlab/mmtracking/pull/221))
 - Fix a bug in SOT demo ([#213](https://github.com/open-mmlab/mmtracking/pull/213))
 
 #### Improvements
