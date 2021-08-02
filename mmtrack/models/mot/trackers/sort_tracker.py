@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 
@@ -97,6 +98,7 @@ class SortTracker(BaseTracker):
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
 
+    @force_fp32(apply_to=('img', ))
     def track(self,
               img,
               img_metas,
