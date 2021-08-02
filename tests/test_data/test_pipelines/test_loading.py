@@ -10,7 +10,7 @@ class TestLoading(object):
 
     @classmethod
     def setup_class(cls):
-        cls.data_prefix = osp.join(osp.dirname(__file__), '../assets')
+        cls.data_prefix = osp.join(osp.dirname(__file__), '../../data')
 
     def test_load_seq_imgs(self):
         img_names = ['image_1.jpg', 'image_2.jpg', 'image_3.jpg']
