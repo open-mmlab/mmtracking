@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from addict import Dict
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
@@ -262,7 +263,7 @@ class SiamRPN(BaseSingleObjectTracker):
             self.memo.bbox = bbox_xyxy_to_cxcywh(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
                 img, self.memo.bbox)
-            best_score = None
+            best_score = -1.
         else:
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
@@ -271,11 +272,12 @@ class SiamRPN(BaseSingleObjectTracker):
 
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()
-        if best_score is None:
-            results['score'] = best_score
+        if best_score == -1.:
+            results['track_results'] = np.concatenate(
+                (bbox_pred.cpu().numpy(), np.array([best_score])))
         else:
-            results['score'] = best_score.cpu().numpy()
-        results['bbox'] = bbox_pred.cpu().numpy()
+            results['track_results'] = np.concatenate(
+                (bbox_pred.cpu().numpy(), best_score.cpu().numpy()[None]))
         return results
 
     def forward_train(self, img, img_metas, gt_bboxes, search_img,
