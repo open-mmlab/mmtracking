@@ -38,23 +38,16 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             multi_level_windows.append(torch.from_numpy(window).to(device))
         return multi_level_windows
 
-    def single_level_grid_anchors(self,
-                                  base_anchors,
-                                  featmap_size,
-                                  stride=(16, 16),
-                                  device='cuda'):
-        """Generate grid anchors of a single level feature map.
+    def single_level_grid_priors(self, featmap_size, level_idx, device='cuda'):
+        """Generate grid anchors of a single level.
 
         Note:
-            This function is usually called by method ``self.grid_anchors``.
+            This function is usually called by method ``self.grid_priors``.
 
         Args:
-            base_anchors (torch.Tensor): The base anchors of a feature grid.
-            featmap_size (tuple[int]): Size of the feature maps in order
-                (h, w).
-            stride (tuple[int], optional): Stride of the feature map in order
-                (w, h). Defaults to (16, 16).
-            device (str, optional): Device the tensor will be put on.
+            featmap_size (tuple[int]): Size of the feature maps.
+            level_idx (int): The index of corresponding feature map level.
+            device (str, optional): The device the tensor will be put on.
                 Defaults to 'cuda'.
 
         Returns:
@@ -62,18 +55,16 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             br_x, br_y] format in the feature map. The coordinate origin is the
             center of scaled feature map.
         """
+        base_anchors = self.base_anchors[level_idx].to(device)
         feat_h, feat_w = featmap_size
-        # Convert Tensor to int, so that we can covert to ONNX correctlly
-        feat_h = int(feat_h)
-        feat_w = int(feat_w)
-        shift_x = torch.arange(0, feat_w, device=device) * stride[0]
-        shift_y = torch.arange(0, feat_h, device=device) * stride[1]
+        stride_w, stride_h = self.strides[level_idx]
+        shift_x = torch.arange(0, feat_w, device=device) * stride_w
+        shift_y = torch.arange(0, feat_h, device=device) * stride_h
 
         shift_xx, shift_yy = self._meshgrid(shift_x, shift_y)
         shifts = torch.stack([shift_xx, shift_yy, shift_xx, shift_yy], dim=-1)
         shifts = shifts.type_as(base_anchors)
-
-        # First feat_w elements correspond to the first row of shifts
+        # first feat_w elements correspond to the first row of shifts
         # add A anchors (1, A, 4) to K shifts (K, 1, 4) to get
         # shifted anchors (K, A, 4), reshape to (K*A, 4)
 
@@ -87,7 +78,6 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         # Transform the coordinate origin from the top left corner to the
         # center in the scaled featurs map.
-        all_anchors[:, 0:4:2] += -(feat_w // 2) * stride[0]
-        all_anchors[:, 1:4:2] += -(feat_h // 2) * stride[1]
-
+        all_anchors[:, 0:4:2] += -(feat_w // 2) * stride_w
+        all_anchors[:, 1:4:2] += -(feat_h // 2) * stride_h
         return all_anchors

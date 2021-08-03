@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
-from mmdet.core.anchor import build_anchor_generator
+from mmdet.core.anchor import build_prior_generator
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.models import HEADS, build_loss
 
@@ -130,7 +130,7 @@ class SiameseRPNHead(nn.Module):
                  *args,
                  **kwargs):
         super(SiameseRPNHead, self).__init__(*args, **kwargs)
-        self.anchor_generator = build_anchor_generator(anchor_generator)
+        self.anchor_generator = build_prior_generator(anchor_generator)
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
@@ -231,8 +231,8 @@ class SiameseRPNHead(nn.Module):
 
         C, H, W = labels.shape
         if not hasattr(self, 'anchors'):
-            self.anchors = self.anchor_generator.grid_anchors(
-                [score_maps_size], gt_bbox.device)[0]
+            self.anchors = self.anchor_generator.grid_priors([score_maps_size],
+                                                             gt_bbox.device)[0]
         anchors = self.anchors.clone()
 
         # The scaled feature map and the searched image have the same center.
@@ -427,7 +427,7 @@ class SiameseRPNHead(nn.Module):
         """
         score_maps_size = [(cls_score.shape[2:])]
         if not hasattr(self, 'anchors'):
-            self.anchors = self.anchor_generator.grid_anchors(
+            self.anchors = self.anchor_generator.grid_priors(
                 score_maps_size, cls_score.device)[0]
         if not hasattr(self, 'windows'):
             self.windows = self.anchor_generator.gen_2d_hanning_windows(
