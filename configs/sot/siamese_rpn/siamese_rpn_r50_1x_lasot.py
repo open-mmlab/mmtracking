@@ -62,7 +62,7 @@ model = dict(
         search_size=search_size,
         context_amount=0.5,
         center_size=7,
-        rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
+        rpn=dict(penalty_k=0.24, window_influence=0.5, lr=0.25)))
 
 data_root = 'data/'
 train_pipeline = [
@@ -141,18 +141,18 @@ data = dict(
         ),
     ],
     val=dict(
-        type='LaSOTDataset',
+        type='OTB2015Dataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTTesting',
+        ann_file=data_root + 'OTB2015/annotations/otb2015.json',
+        img_prefix=data_root + 'OTB2015/data',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True),
     test=dict(
-        type='LaSOTDataset',
+        type='OTB2015Dataset',
         test_load_ann=True,
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTTesting',
+        ann_file=data_root + 'OTB2015/annotations/otb2015.json',
+        img_prefix=data_root + 'OTB2015/data',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))
