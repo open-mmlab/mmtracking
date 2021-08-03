@@ -81,6 +81,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
         # all_anchors = all_anchors.view(-1, 4)
         # first A rows correspond to A anchors of (0, 0) in feature map,
         # then (0, 1), (0, 2), ...
+
         all_anchors = base_anchors[:, None, :] + shifts[None, :, :]
         all_anchors = all_anchors.view(-1, 4)
 
