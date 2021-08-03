@@ -1,4 +1,6 @@
 import argparse
+import glob
+import os.path as osp
 import subprocess
 
 import torch
@@ -14,6 +16,11 @@ def parse_args():
 
 
 def process_checkpoint(in_file, out_file):
+    exp_dir = osp.dirname(in_file)
+    log_json_path = list(sorted(glob.glob(osp.join(exp_dir,
+                                                   '*.log.json'))))[-1]
+    model_time = osp.split(log_json_path)[-1].split('.')[0]
+
     checkpoint = torch.load(in_file, map_location='cpu')
     # remove optimizer for smaller file size
     if 'optimizer' in checkpoint:
@@ -26,8 +33,10 @@ def process_checkpoint(in_file, out_file):
         out_file_name = out_file[:-4]
     else:
         out_file_name = out_file
-    final_file = out_file_name + f'-{sha[:8]}.pth'
+    final_file = out_file_name + f'_{model_time}' + f'-{sha[:8]}.pth'
     subprocess.Popen(['mv', out_file, final_file])
+    cp_log_json_path = out_file_name + f'_{osp.basename(log_json_path)}'
+    subprocess.Popen(['cp', log_json_path, cp_log_json_path])
 
 
 def main():
