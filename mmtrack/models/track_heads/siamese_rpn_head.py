@@ -235,8 +235,8 @@ class SiameseRPNHead(nn.Module):
                 [score_maps_size], gt_bbox.device)[0]
         anchors = self.anchors.clone()
 
-        # the scaled feature map and the searched image have the same center.
-        # transform coordinate origin from the center to the top left corner in
+        # The scaled feature map and the searched image have the same center.
+        # Transform coordinate origin from the center to the top left corner in
         # the searched image.
         anchors += self.train_cfg.search_size // 2
 
