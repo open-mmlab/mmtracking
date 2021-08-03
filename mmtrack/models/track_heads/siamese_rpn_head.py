@@ -233,6 +233,12 @@ class SiameseRPNHead(nn.Module):
         if not hasattr(self, 'anchors'):
             self.anchors = self.anchor_generator.grid_priors([score_maps_size],
                                                              gt_bbox.device)[0]
+            # Transform the coordinate origin from the top left corner to the
+            # center in the scaled featurs map.
+            stride_w, stride_h = self.anchor_generator.strides[0]
+            self.anchors[:, 0:4:2] -= (W // 2) * stride_w
+            self.anchors[:, 1:4:2] -= (H // 2) * stride_h
+
         anchors = self.anchors.clone()
 
         # The scaled feature map and the searched image have the same center.
@@ -429,6 +435,13 @@ class SiameseRPNHead(nn.Module):
         if not hasattr(self, 'anchors'):
             self.anchors = self.anchor_generator.grid_priors(
                 score_maps_size, cls_score.device)[0]
+            # Transform the coordinate origin from the top left corner to the
+            # center in the scaled featurs map.
+            feat_h, feat_w = score_maps_size[0]
+            stride_w, stride_h = self.anchor_generator.strides[0]
+            self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w
+            self.anchors[:, 1:4:2] -= (feat_h // 2) * stride_h
+
         if not hasattr(self, 'windows'):
             self.windows = self.anchor_generator.gen_2d_hanning_windows(
                 score_maps_size, cls_score.device)[0]
