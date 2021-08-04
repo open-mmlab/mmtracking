@@ -17,8 +17,7 @@
 
 |    Method     |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 | Config | Download |
 |    :-------:    | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :------: | :--------: |
-|    SELSA    |    R-50-DC5     |  pytorch  |   7e    | 2.71        | -            | 78.7 | [config](selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid) | [model](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/
-selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846.log.json) |
+|    SELSA    |    R-50-DC5     |  pytorch  |   7e    | 2.71        | -            | 78.7 | [config](selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid) | [model](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846.log.json) |
 
 ## Results and Models on MOT task
 
