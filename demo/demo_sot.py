@@ -53,7 +53,7 @@ def main():
         # test a single image
         result = inference_sot(model, frame, init_bbox, frame_id)
 
-        track_bbox = result['track_results'][:4]
+        track_bbox = result['track_results']
         vis_frame = model.show_result(
             frame,
             track_bbox,

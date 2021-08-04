@@ -11,7 +11,7 @@ import torch.distributed as dist
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
-from mmtrack.datasets import MOTChallengeDataset
+from mmtrack.datasets import ImagenetVIDDataset
 
 
 def single_gpu_test(model,
@@ -42,6 +42,8 @@ def single_gpu_test(model,
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
+        if i == 200:
+            break
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
         for k, v in result.items():
@@ -61,12 +63,7 @@ def single_gpu_test(model,
             img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
             if out_dir:
-                if 'track_results' in result:
-                    out_file = osp.join(out_dir, img_meta['ori_filename'])
-                else:
-                    out_file = osp.join(
-                        out_dir, img_meta['ori_filename'].split('/', 1)[1])
-                print(out_file)
+                out_file = osp.join(out_dir, img_meta['ori_filename'])
             else:
                 out_file = None
 
@@ -83,17 +80,19 @@ def single_gpu_test(model,
             prog_bar.update()
 
     if out_dir:
+        img_name = img_meta['ori_filename'].rsplit('/', 1)[1]
+        img_idx, img_fmt = img_name.split('.')
+        filename_tmpl = '{:0' + str(len(img_idx)) + 'd}.' + img_fmt
+        if isinstance(dataset, ImagenetVIDDataset):
+            out_dir = osp.join(out_dir, os.listdir(out_dir)[0])
         video_names = os.listdir(out_dir)
         for video_name in video_names:
-            if isinstance(dataset, MOTChallengeDataset):
-                img_dirs = osp.join(out_dir, f'{video_name}/img1')
-            else:
-                img_dirs = osp.join(out_dir, video_name)
+            img_dirs = osp.join(out_dir, video_name)
+            if not os.listdir(img_dirs)[0].endswith(f'.{img_fmt}'):
+                img_dirs = f'{img_dirs}/{os.listdir(img_dirs)[0]}'
             img_names = sorted(os.listdir(img_dirs))
             start_frame_id = int(img_names[0].split('.')[0])
             end_frame_id = int(img_names[-1].split('.')[0])
-            idx, fmt = img_names[-1].split('.')
-            filename_tmpl = '{:0' + str(len(idx)) + 'd}.' + fmt
 
             mmcv.frames2video(
                 img_dirs,
