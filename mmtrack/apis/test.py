@@ -11,6 +11,8 @@ import torch.distributed as dist
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
+from mmtrack.datasets import MOTChallengeDataset
+
 
 def single_gpu_test(model,
                     data_loader,
@@ -30,7 +32,7 @@ def single_gpu_test(model,
         fps (int, optional): FPS of the output video.
             Defaults to 3.
         show_score_thr (float, optional): The score threshold of visualization.
-            (Not supported for now). Defaults to 0.3.
+            Defaults to 0.3.
 
     Returns:
         dict[str, list]: The prediction results.
@@ -38,7 +40,6 @@ def single_gpu_test(model,
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
-    img_dir_list = []
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -60,46 +61,42 @@ def single_gpu_test(model,
             img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
             if out_dir:
-                if 'track_results' in result or 'bbox' in result:
+                if 'track_results' in result:
                     out_file = osp.join(out_dir, img_meta['ori_filename'])
                 else:
                     out_file = osp.join(
                         out_dir, img_meta['ori_filename'].split('/', 1)[1])
-                print(f'out_file = {out_file}')
-                img_dir = osp.dirname(out_file)
-                if img_dir not in img_dir_list:
-                    img_dir_list.append(img_dir)
+                print(out_file)
             else:
                 out_file = None
 
-            if 'track_results' in result:
-                result_show = result['track_results']
-            elif 'bbox' in result:
-                result_show = result['bbox']
-            else:
-                result_show = result
+            result_show = result[
+                'track_results'] if 'track_results' in result else result
             model.module.show_result(
-                img_show, result_show, show=show, out_file=out_file)
+                img_show,
+                result_show,
+                show=show,
+                out_file=out_file,
+                score_thr=show_score_thr)
 
         for _ in range(batch_size):
             prog_bar.update()
 
     if out_dir:
-        for img_dir in img_dir_list:
-            if 'track_results' in result or 'bbox' in result:
-                video_name = img_dir.rsplit('/', 2)[1]
+        video_names = os.listdir(out_dir)
+        for video_name in video_names:
+            if isinstance(dataset, MOTChallengeDataset):
+                img_dirs = osp.join(out_dir, f'{video_name}/img1')
             else:
-                video_name = osp.basename(img_dir)
-            start_frame_id = int(sorted(os.listdir(img_dir))[0].split('.')[0])
-            end_frame_id = int(sorted(os.listdir(img_dir))[-1].split('.')[0])
-            if 'track_results' in result:
-                filename_tmpl = '{:06d}.jpg'
-            elif 'bbox' in result:
-                filename_tmpl = '{:08d}.jpg'
-            else:
-                filename_tmpl = '{:06d}.JPEG'
+                img_dirs = osp.join(out_dir, video_name)
+            img_names = sorted(os.listdir(img_dirs))
+            start_frame_id = int(img_names[0].split('.')[0])
+            end_frame_id = int(img_names[-1].split('.')[0])
+            idx, fmt = img_names[-1].split('.')
+            filename_tmpl = '{:0' + str(len(idx)) + 'd}.' + fmt
+
             mmcv.frames2video(
-                img_dir,
+                img_dirs,
                 f'{out_dir}/{video_name}.mp4',
                 fps=fps,
                 fourcc='mp4v',

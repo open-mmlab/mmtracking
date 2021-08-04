@@ -243,7 +243,8 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
                     show=False,
                     win_name='',
                     wait_time=0,
-                    out_file=None):
+                    out_file=None,
+                    **kwargs):
         """Visualize tracking results.
 
         Args:
@@ -266,7 +267,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             ndarray: Visualized image.
         """
         assert result.ndim == 1
-        assert result.shape[0] == 4
+        assert result.shape[0] == 5
         mmcv.imshow_bboxes(
             img,
             result[np.newaxis, :],

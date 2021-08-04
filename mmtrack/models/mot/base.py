@@ -246,7 +246,8 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                     show=False,
                     out_file=None,
                     wait_time=0,
-                    backend='cv2'):
+                    backend='cv2',
+                    **kwargs):
         """Visualize tracking results.
 
         Args:
