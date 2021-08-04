@@ -52,7 +52,7 @@ class DeepSORT(BaseMultiObjectTracker):
         """Forward function during training."""
         raise NotImplementedError(
             'Please train `detector` and `reid` models firstly, then \
-                inference with Sort/DeepSort.')
+                inference with SORT/DeepSORT.')
 
     def simple_test(self,
                     img,

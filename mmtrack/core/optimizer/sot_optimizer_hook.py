@@ -35,7 +35,7 @@ class SiameseRPNOptimizerHook(OptimizerHook):
 
 
 @HOOKS.register_module()
-class SiameseRPNFP16OptimizerHook(Fp16OptimizerHook):
+class SiameseRPNFp16OptimizerHook(Fp16OptimizerHook):
     """FP16Optimizer hook for siamese rpn.
 
     Args:
@@ -48,7 +48,7 @@ class SiameseRPNFP16OptimizerHook(Fp16OptimizerHook):
 
     def __init__(self, backbone_start_train_epoch, backbone_train_layers,
                  **kwargs):
-        super(SiameseRPNFP16OptimizerHook, self).__init__(**kwargs)
+        super(SiameseRPNFp16OptimizerHook, self).__init__(**kwargs)
         self.backbone_start_train_epoch = backbone_start_train_epoch
         self.backbone_train_layers = backbone_train_layers
 

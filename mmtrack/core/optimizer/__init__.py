@@ -1,8 +1,8 @@
 from .sot_lr_updater import SiameseRPNLrUpdaterHook
-from .sot_optimizer_hook import (SiameseRPNFP16OptimizerHook,
+from .sot_optimizer_hook import (SiameseRPNFp16OptimizerHook,
                                  SiameseRPNOptimizerHook)
 
 __all__ = [
     'SiameseRPNOptimizerHook', 'SiameseRPNLrUpdaterHook',
-    'SiameseRPNFP16OptimizerHook'
+    'SiameseRPNFp16OptimizerHook'
 ]
