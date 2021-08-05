@@ -2,11 +2,12 @@ _base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
-    ))
+        # 'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
+        'work_dirs/change_configs/faster-rcnn_r50_fpn_4e_mot17/latest.pth')
+)  # noqa: E501
 # data
 data_root = 'data/MOT17/'
-test_set = 'train'
+test_set = 'test'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 test_pipeline = [

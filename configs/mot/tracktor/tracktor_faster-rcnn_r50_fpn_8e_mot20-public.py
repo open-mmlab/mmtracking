@@ -2,17 +2,19 @@ _base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 model = dict(
     pretrains=dict(
         detector=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-ef875499.pth',  # noqa: E501
+        # 'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half-f48f6578.pth',  # noqa: E501
+        'work_dirs/change_configs/faster-rcnn_r50_fpn_8e_mot20/latest.pth',  # noqa: E501
         reid=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20-afbdfea4.pth'  # noqa: E501
-    ),
+        # 'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15-30ba14d3.pth'  # noqa: E501
+        'work_dirs/change_configs/resnet50_b32x8_MOT20_1/latest.pth'
+    ),  # noqa: E501
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=True)),
         roi_head=dict(
             bbox_head=dict(bbox_coder=dict(clip_border=True), num_classes=1))),
     reid=dict(head=dict(num_classes=1705)))
 data_root = 'data/MOT20/'
-test_set = 'train'
+test_set = 'test'
 data = dict(
     train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
     val=dict(
