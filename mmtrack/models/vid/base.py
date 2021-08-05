@@ -251,9 +251,11 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
 
         Args:
             img (str or Tensor): The image to be displayed.
-            result (dict): Detection result. The value of key 'bbox_results'
-                is list with length 30, and each element in list is ndarray
-                with shape(n, 5) in [tl_x, tl_y, br_x, br_y, score] format.
+            result (dict): The results to draw over `img` bbox_result or
+                (bbox_result, segm_result). The value of key 'bbox_results'
+                is list with length num_classes, and each element in list
+                is ndarray with shape(n, 5)
+                in [tl_x, tl_y, br_x, br_y, score] format.
             score_thr (float, optional): Minimum score of bboxes to be shown.
                 Default: 0.3.
             bbox_color (str or tuple or :obj:`Color`): Color of bbox lines.

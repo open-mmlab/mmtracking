@@ -38,7 +38,7 @@ def single_gpu_test(model,
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
-    last_img_meta = None
+    prev_img_meta = None
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -76,7 +76,7 @@ def single_gpu_test(model,
             # except the first frame of the entire dataset.
             # case2: the current frame is the last frame of the entire dataset.
             if i != 0 and img_meta['frame_id'] == 0 or i == len(dataset):
-                img_prefix, img_name = last_img_meta['ori_filename'].rsplit(
+                img_prefix, img_name = prev_img_meta['ori_filename'].rsplit(
                     '/', 1)
                 img_idx, img_type = img_name.split('.')
                 filename_tmpl = '{:0' + str(len(img_idx)) + 'd}.' + img_type
@@ -95,7 +95,7 @@ def single_gpu_test(model,
                     end=end_frame_id,
                     show_progress=False)
 
-            last_img_meta = img_meta
+            prev_img_meta = img_meta
 
         for _ in range(batch_size):
             prog_bar.update()
