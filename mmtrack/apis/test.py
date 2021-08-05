@@ -71,33 +71,35 @@ def single_gpu_test(model,
                 out_file=out_file,
                 score_thr=show_score_thr)
 
-            # Generate a video from images.
-            if out_dir:
-                # The frame_id == 0 means the model starts processing
-                # a new video, therefore we can write the previous video.
-                # There are two corner cases.
-                # Case 1: i == 0 means there is no previous video.
-                # Case 2: i == len(dataset) means processing the last video
-                if i != 0 and img_meta['frame_id'] == 0 or i == len(dataset):
-                    prev_img_prefix, prev_img_name = prev_img_meta[
-                        'ori_filename'].rsplit('/', 1)
-                    prev_img_idx, prev_img_type = prev_img_name.split('.')
-                    prev_filename_tmpl = '{:0' + str(
-                        len(prev_img_idx)) + 'd}.' + prev_img_type
-                    prev_img_dirs = f'{out_dir}/{prev_img_prefix}'
-                    prev_img_names = sorted(os.listdir(prev_img_dirs))
-                    prev_start_frame_id = int(prev_img_names[0].split('.')[0])
-                    prev_end_frame_id = int(prev_img_names[-1].split('.')[0])
+            # Whether need to generate a video from images.
+            # The frame_id == 0 means the model starts processing
+            # a new video, therefore we can write the previous video.
+            # There are two corner cases.
+            # Case 1: prev_img_meta == None means there is no previous video.
+            # Case 2: i == len(dataset) means processing the last video
+            need_write_video = (
+                prev_img_meta is not None and img_meta['frame_id'] == 0
+                or i == len(dataset))
+            if out_dir and need_write_video:
+                prev_img_prefix, prev_img_name = prev_img_meta[
+                    'ori_filename'].rsplit('/', 1)
+                prev_img_idx, prev_img_type = prev_img_name.split('.')
+                prev_filename_tmpl = '{:0' + str(
+                    len(prev_img_idx)) + 'd}.' + prev_img_type
+                prev_img_dirs = f'{out_dir}/{prev_img_prefix}'
+                prev_img_names = sorted(os.listdir(prev_img_dirs))
+                prev_start_frame_id = int(prev_img_names[0].split('.')[0])
+                prev_end_frame_id = int(prev_img_names[-1].split('.')[0])
 
-                    mmcv.frames2video(
-                        prev_img_dirs,
-                        f'{prev_img_dirs}/out_video.mp4',
-                        fps=fps,
-                        fourcc='mp4v',
-                        filename_tmpl=prev_filename_tmpl,
-                        start=prev_start_frame_id,
-                        end=prev_end_frame_id,
-                        show_progress=False)
+                mmcv.frames2video(
+                    prev_img_dirs,
+                    f'{prev_img_dirs}/out_video.mp4',
+                    fps=fps,
+                    fourcc='mp4v',
+                    filename_tmpl=prev_filename_tmpl,
+                    start=prev_start_frame_id,
+                    end=prev_end_frame_id,
+                    show_progress=False)
 
             prev_img_meta = img_meta
 
