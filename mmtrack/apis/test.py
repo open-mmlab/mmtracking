@@ -11,8 +11,6 @@ import torch.distributed as dist
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
 
-from mmtrack.datasets import ImagenetVIDDataset
-
 
 def single_gpu_test(model,
                     data_loader,
@@ -40,6 +38,7 @@ def single_gpu_test(model,
     model.eval()
     results = defaultdict(list)
     dataset = data_loader.dataset
+    last_img_meta = None
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -65,42 +64,42 @@ def single_gpu_test(model,
             else:
                 out_file = None
 
-            result_show = result[
-                'track_results'] if 'track_results' in result else result
             model.module.show_result(
                 img_show,
-                result_show,
+                result,
                 show=show,
                 out_file=out_file,
                 score_thr=show_score_thr)
 
+            # generate the video from images
+            # case1: the current frame is the first frame of the new video,
+            # except the first frame of the entire dataset.
+            # case2: the current frame is the last frame of the entire dataset.
+            if i != 0 and img_meta['frame_id'] == 0 or i == len(dataset):
+                img_prefix, img_name = last_img_meta['ori_filename'].rsplit(
+                    '/', 1)
+                img_idx, img_type = img_name.split('.')
+                filename_tmpl = '{:0' + str(len(img_idx)) + 'd}.' + img_type
+                img_dirs = f'{out_dir}/{img_prefix}'
+                img_names = sorted(os.listdir(img_dirs))
+                start_frame_id = int(img_names[0].split('.')[0])
+                end_frame_id = int(img_names[-1].split('.')[0])
+
+                mmcv.frames2video(
+                    img_dirs,
+                    f'{img_dirs}/out_video.mp4',
+                    fps=fps,
+                    fourcc='mp4v',
+                    filename_tmpl=filename_tmpl,
+                    start=start_frame_id,
+                    end=end_frame_id,
+                    show_progress=False)
+
+            last_img_meta = img_meta
+
         for _ in range(batch_size):
             prog_bar.update()
 
-    if out_dir:
-        img_name = img_meta['ori_filename'].rsplit('/', 1)[1]
-        img_idx, img_fmt = img_name.split('.')
-        filename_tmpl = '{:0' + str(len(img_idx)) + 'd}.' + img_fmt
-        if isinstance(dataset, ImagenetVIDDataset):
-            out_dir = osp.join(out_dir, os.listdir(out_dir)[0])
-        video_names = os.listdir(out_dir)
-        for video_name in video_names:
-            img_dirs = osp.join(out_dir, video_name)
-            if not os.listdir(img_dirs)[0].endswith(f'.{img_fmt}'):
-                img_dirs = f'{img_dirs}/{os.listdir(img_dirs)[0]}'
-            img_names = sorted(os.listdir(img_dirs))
-            start_frame_id = int(img_names[0].split('.')[0])
-            end_frame_id = int(img_names[-1].split('.')[0])
-
-            mmcv.frames2video(
-                img_dirs,
-                f'{out_dir}/{video_name}.mp4',
-                fps=fps,
-                fourcc='mp4v',
-                filename_tmpl=filename_tmpl,
-                start=start_frame_id,
-                end=end_frame_id,
-                show_progress=False)
     return results
 
 
