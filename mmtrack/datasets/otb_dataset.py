@@ -7,8 +7,8 @@ from .coco_video_dataset import CocoVideoDataset
 
 
 @DATASETS.register_module()
-class OTB2015Dataset(CocoVideoDataset):
-    """OTB2015 dataset for the testing of single object tracking.
+class OTB100Dataset(CocoVideoDataset):
+    """OTB100 dataset for the testing of single object tracking.
 
     The dataset doesn't support training mode.
     """

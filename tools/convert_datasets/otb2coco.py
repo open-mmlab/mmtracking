@@ -10,11 +10,11 @@ from tqdm import tqdm
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='OTB2015 dataset to COCO Video format')
+        description='OTB100 dataset to COCO Video format')
     parser.add_argument(
         '-i',
         '--input',
-        help='root directory of OTB2015 dataset',
+        help='root directory of OTB100 dataset',
     )
     parser.add_argument(
         '-o',
@@ -24,13 +24,13 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_otb2015(otb, ann_dir, save_dir):
-    """Convert OTB2015 dataset to COCO style.
+def convert_otb100(otb, ann_dir, save_dir):
+    """Convert OTB100 dataset to COCO style.
 
     Args:
         lasot_test (dict): The converted COCO style annotations.
-        ann_dir (str): The path of OTB2015 dataset
-        save_dir (str): The path to save `OTB2015`.
+        ann_dir (str): The path of OTB100 dataset
+        save_dir (str): The path to save `OTB100`.
     """
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     videos_list = os.listdir(ann_dir)
@@ -87,8 +87,8 @@ def convert_otb2015(otb, ann_dir, save_dir):
             records['global_instance_id'] += 1
             records['vid_id'] += 1
 
-    mmcv.dump(otb, osp.join(save_dir, 'otb2015.json'))
-    print('-----OTB2015 Dataset------')
+    mmcv.dump(otb, osp.join(save_dir, 'otb100.json'))
+    print('-----OTB100 Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
     print(f'{records["img_id"]- 1} images')
@@ -99,7 +99,7 @@ def convert_otb2015(otb, ann_dir, save_dir):
 def main():
     args = parse_args()
     otb = defaultdict(list)
-    convert_otb2015(otb, args.input, args.output)
+    convert_otb100(otb, args.input, args.output)
 
 
 if __name__ == '__main__':
