@@ -217,7 +217,13 @@ class DFF(BaseVideoDetector):
                 x.append(x_single)
         return x
 
-    def simple_test(self, img, img_metas, proposals=None, rescale=False):
+    def simple_test(self,
+                    img,
+                    img_metas,
+                    ref_img=None,
+                    ref_img_metas=None,
+                    proposals=None,
+                    rescale=False):
         """Test without augmentation.
 
         Args:
@@ -229,6 +235,11 @@ class DFF(BaseVideoDetector):
                 contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            ref_img (None): Not used in DFF. Only for unifying API interface.
+
+            ref_img_metas (None): Not used in DFF. Only for unifying API
+                interface.
 
             proposals (None | Tensor): Override rpn proposals with custom
                 proposals. Use when `with_rpn` is False. Defaults to None.
