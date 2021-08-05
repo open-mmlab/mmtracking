@@ -18,6 +18,7 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
     def __init__(self):
         super(BaseSingleObjectTracker, self).__init__()
         self.logger = get_root_logger()
+        self.fp16_enabled = False
 
     def init_module(self, module, pretrain=None):
         """Initialize the weights in video detector.
@@ -67,7 +68,8 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
         return hasattr(self, 'head') and self.head is not None
 
     @abstractmethod
-    def forward_train(self, imgs, img_metas, **kwargs):
+    def forward_train(self, imgs, img_metas, search_img, search_img_metas,
+                      **kwargs):
         """
         Args:
             img (Tensor): of shape (N, C, H, W) encoding input images.
@@ -76,6 +78,17 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             img_metas (list[dict]): list of image information dict where each
                 dict has: 'img_shape', 'scale_factor', 'flip', and may also
                 contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
+                images. 1 denotes there is only one search image for each
+                exemplar image. Typically H and W equal to 255.
+
+            search_img_metas (list[list[dict]]): The second list only has one
+                element. The first list contains search image information dict
+                where each dict has: 'img_shape', 'scale_factor', 'flip', and
+                may also contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
         """
@@ -134,8 +147,14 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
 
-    @auto_fp16(apply_to=('img', ))
-    def forward(self, img, img_metas, return_loss=True, **kwargs):
+    @auto_fp16(apply_to=('img', 'search_img'))
+    def forward(self,
+                img,
+                img_metas,
+                search_img=None,
+                search_img_metas=None,
+                return_loss=True,
+                **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_test` depending
         on whether ``return_loss`` is ``True``.
 
@@ -146,7 +165,12 @@ class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
         the outer list indicating test time augmentations.
         """
         if return_loss:
-            return self.forward_train(img, img_metas, **kwargs)
+            return self.forward_train(
+                img,
+                img_metas,
+                search_img=search_img,
+                search_img_metas=search_img_metas,
+                **kwargs)
         else:
             return self.forward_test(img, img_metas, **kwargs)
 

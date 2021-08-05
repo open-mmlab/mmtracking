@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from addict import Dict
 
@@ -8,7 +9,7 @@ from mmtrack.models import TRACKERS
 
 
 @TRACKERS.register_module()
-class BaseTracker(metaclass=ABCMeta):
+class BaseTracker(nn.Module, metaclass=ABCMeta):
     """Base tracker model.
 
     Args:
@@ -25,6 +26,7 @@ class BaseTracker(metaclass=ABCMeta):
             assert isinstance(momentums, dict), 'momentums must be a dict'
         self.momentums = momentums
         self.num_frames_retain = num_frames_retain
+        self.fp16_enabled = False
 
         self.reset()
 

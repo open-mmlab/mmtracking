@@ -164,20 +164,20 @@ class FlowNetSimple(nn.Module):
         """
         if not hasattr(self, 'img_norm_mean'):
             mean = img_metas[0]['img_norm_cfg']['mean']
-            mean = torch.tensor(mean, device=imgs.device)
+            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
             self.img_norm_mean = mean.repeat(2)[None, :, None, None]
 
             mean = self.flow_img_norm_mean
-            mean = torch.tensor(mean, device=imgs.device)
+            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
             self.flow_img_norm_mean = mean.repeat(2)[None, :, None, None]
 
         if not hasattr(self, 'img_norm_std'):
             std = img_metas[0]['img_norm_cfg']['std']
-            std = torch.tensor(std, device=imgs.device)
+            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
             self.img_norm_std = std.repeat(2)[None, :, None, None]
 
             std = self.flow_img_norm_std
-            std = torch.tensor(std, device=imgs.device)
+            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
             self.flow_img_norm_std = std.repeat(2)[None, :, None, None]
 
         flow_img = imgs * self.img_norm_std + self.img_norm_mean
