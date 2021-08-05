@@ -1,4 +1,5 @@
 import torch
+from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps, multiclass_nms
 from scipy.optimize import linear_sum_assignment
 
@@ -76,6 +77,7 @@ class TracktorTracker(BaseTracker):
         return track_bboxes[valid_inds], track_labels[valid_inds], ids[
             valid_inds]
 
+    @force_fp32(apply_to=('img', 'feats'))
     def track(self,
               img,
               img_metas,

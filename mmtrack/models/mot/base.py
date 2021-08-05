@@ -17,6 +17,7 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
     def __init__(self):
         super(BaseMultiObjectTracker, self).__init__()
         self.logger = get_root_logger()
+        self.fp16_enabled = False
 
     def init_module(self, module_name, pretrain=None):
         """Initialize the weights of a sub-module.
