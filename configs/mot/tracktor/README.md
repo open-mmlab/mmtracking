@@ -48,11 +48,11 @@ Our implementation outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
 
 The implementations of Tracktor follow the offical practices.
 In the table below, the result marked with * (the last line) is the offical one.
-Our implementation outperform it by 5.0 points on MOTA and 2.3 points on IDF1.
+Our implementation outperform it by 5.3 points on MOTA and 2.1 points on IDF1.
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :----: | :-------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
 | R50-FasterRCNN-FPN | R50 | half-train | half-val | Y     | 1.6  | 70.6 | 65.4 | 3652 | 175955 | 1441 | [config](tracktor_faster-rcnn_r50_fpn_8e_mot20-public-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half-860a6c6f.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20-afbdfea4.pth) |
 | R50-FasterRCNN-FPN | R50 | half-train | half-val | N     | 1.5  | 70.9 | 64.1 | 5539 | 171653 | 1619 | [config](tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half-860a6c6f.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20-afbdfea4.pth) |
-| R50-FasterRCNN-FPN | R50 | train      | test     | Y     | 1.5  | 57.6 | 55.0 | 7973 | 209676 | 1796 |  [config](tracktor_faster-rcnn_r50_fpn_8e_mot20-public.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-ef875499.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20-afbdfea4.pth) |
+| R50-FasterRCNN-FPN | R50 | train      | test     | Y     | 1.5  | 57.9 | 54.8 | 16203 | 199485 | 2299 |  [config](tracktor_faster-rcnn_r50_fpn_8e_mot20-public.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-ef875499.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20-afbdfea4.pth) |
 | R50-FasterRCNN-FPN* | R50 | train     | test     | Y     | -    | 52.6 | 52.7 | 6930 | 236680 | 1648 | -    | -     |
