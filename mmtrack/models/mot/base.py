@@ -247,12 +247,17 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                     show=False,
                     out_file=None,
                     wait_time=0,
-                    backend='cv2'):
+                    backend='cv2',
+                    **kwargs):
         """Visualize tracking results.
 
         Args:
             img (str | ndarray): Filename of loaded image.
-            result (list[ndarray]): Tracking results.
+            result (dict): Tracking result.
+                The value of key 'track_results' is ndarray with shape (n, 6)
+                in [id, tl_x, tl_y, br_x, br_y, score] format.
+                The value of key 'bbox_results' is ndarray with shape (n, 5)
+                in [tl_x, tl_y, br_x, br_y, score] format.
             thickness (int, optional): Thickness of lines. Defaults to 1.
             font_scale (float, optional): Font scales of texts. Defaults
                 to 0.5.
@@ -265,7 +270,9 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
         Returns:
             ndarray: Visualized image.
         """
-        bboxes, labels, ids = restore_result(result, return_ids=True)
+        assert isinstance(result, dict)
+        track_result = result.get('track_results', None)
+        bboxes, labels, ids = restore_result(track_result, return_ids=True)
         img = imshow_tracks(
             img,
             bboxes,

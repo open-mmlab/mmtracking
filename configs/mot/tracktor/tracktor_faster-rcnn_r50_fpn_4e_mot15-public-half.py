@@ -1,6 +1,14 @@
 _base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
+model = dict(
+    pretrains=dict(
+        detector=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half_20210804_001040-ae733d0c.pth',  # noqa: E501
+        reid=  # noqa: E251
+        'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15_20210803_192157-65b5e2d7.pth'  # noqa: E501
+    ),
+    reid=dict(head=dict(num_classes=375)))
 # data
-data_root = 'data/MOT17/'
+data_root = 'data/MOT15/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 test_pipeline = [
@@ -20,9 +28,17 @@ test_pipeline = [
         ])
 ]
 data = dict(
+    train=dict(
+        ann_file=data_root + 'annotations/half-train_cocoformat.json',
+        detection_file=data_root + 'annotations/half-train_detections.pkl',
+        img_prefix=data_root + 'train'),
     val=dict(
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         detection_file=data_root + 'annotations/half-val_detections.pkl',
+        img_prefix=data_root + 'train',
         pipeline=test_pipeline),
     test=dict(
+        ann_file=data_root + 'annotations/half-val_cocoformat.json',
         detection_file=data_root + 'annotations/half-val_detections.pkl',
+        img_prefix=data_root + 'train',
         pipeline=test_pipeline))
