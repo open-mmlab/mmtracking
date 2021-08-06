@@ -4,6 +4,7 @@ model = dict(
         detector=  # noqa: E251
         'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
     ))
+# data
 data_root = 'data/MOT17/'
 test_set = 'train'
 data = dict(
