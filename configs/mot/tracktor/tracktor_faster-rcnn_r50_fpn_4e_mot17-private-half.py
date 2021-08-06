@@ -9,7 +9,7 @@ model = dict(
         'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth',  # noqa: E501
         reid=  # noqa: E251
         'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot17-4bf6b63d.pth'  # noqa: E501
-    ),  # noqa: E501
+    ),
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(

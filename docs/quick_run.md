@@ -46,7 +46,7 @@ Examples:
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
-Note: The multiple object tracking model must use the private detectors.
+Note: When running `demo_mot.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
 
 #### Inference SOT models
 

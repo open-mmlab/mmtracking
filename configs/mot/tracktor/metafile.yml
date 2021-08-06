@@ -142,13 +142,6 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-public-half.py
     Metadata:
       Training Data: MOT20-half-train
-      inference time (ms/im):
-        - value: 625.0
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT20-half-val
@@ -164,13 +157,6 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half.py
     Metadata:
       Training Data: MOT20-half-train
-      inference time (ms/im):
-        - value: 666.7
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT20-half-val
@@ -186,13 +172,6 @@ Models:
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-public.py
     Metadata:
       Training Data: MOT20-train
-      inference time (ms/im):
-        - value: 666.7
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
     Results:
       - Task: Multiple Object Tracking
         Dataset: MOT20-test
