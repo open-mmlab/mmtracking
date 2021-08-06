@@ -11,6 +11,66 @@ Collections:
     README: configs/mot/tracktor/README.md
 
 Models:
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot15-public-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot15-public-half.py
+    Metadata:
+      Training Data: MOT15-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT15-half-val
+        Metrics:
+          MOTA: 61.8
+          IDF1: 64.9
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half_20210804_001040-ae733d0c.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15_20210803_192157-65b5e2d7.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot15-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot15-private-half.py
+    Metadata:
+      Training Data: MOT15-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT15-half-val
+        Metrics:
+          MOTA: 66.8
+          IDF1: 68.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half_20210804_001040-ae733d0c.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15_20210803_192157-65b5e2d7.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot16-public-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot16-public-half.py
+    Metadata:
+      Training Data: MOT16-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT16-half-val
+        Metrics:
+          MOTA: 54.1
+          IDF1: 61.5
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half_20210804_001054-73477869.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot16_20210803_204826-1b3e3cfd.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot16-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot16-private-half.py
+    Metadata:
+      Training Data: MOT16-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT16-half-val
+        Metrics:
+          MOTA: 63.4
+          IDF1: 66.2
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half_20210804_001054-73477869.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot16_20210803_204826-1b3e3cfd.pth
+
   - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half
     In Collection: Tracktor
     Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py
@@ -29,6 +89,28 @@ Models:
         Metrics:
           MOTA: 57.3
           IDF1: 63.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+      inference time (ms/im):
+        - value: 322.6
+          hardware: V100
+          backend: PyTorch
+          batch size: 1
+          mode: FP32
+          resolution: (640, 1088)
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 64.1
+          IDF1: 66.5
     Weights:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
@@ -54,3 +136,69 @@ Models:
     Weights:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_8e_mot20-public-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-public-half.py
+    Metadata:
+      Training Data: MOT20-half-train
+      inference time (ms/im):
+        - value: 625.0
+          hardware: V100
+          backend: PyTorch
+          batch size: 1
+          mode: FP32
+          resolution: (640, 1088)
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT20-half-val
+        Metrics:
+          MOTA: 70.6
+          IDF1: 65.4
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half_20210805_001244-2c323fd1.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20_20210803_212426-c83b1c01.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half.py
+    Metadata:
+      Training Data: MOT20-half-train
+      inference time (ms/im):
+        - value: 666.7
+          hardware: V100
+          backend: PyTorch
+          batch size: 1
+          mode: FP32
+          resolution: (640, 1088)
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT20-half-val
+        Metrics:
+          MOTA: 70.9
+          IDF1: 64.1
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half_20210805_001244-2c323fd1.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20_20210803_212426-c83b1c01.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_8e_mot20-public
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-public.py
+    Metadata:
+      Training Data: MOT20-train
+      inference time (ms/im):
+        - value: 666.7
+          hardware: V100
+          backend: PyTorch
+          batch size: 1
+          mode: FP32
+          resolution: (640, 1088)
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT20-test
+        Metrics:
+          MOTA: 57.9
+          IDF1: 54.8
+    Weights:
+      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20_20210804_162232-7fde5e8d.pth
+      - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20_20210803_212426-c83b1c01.pth

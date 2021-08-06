@@ -46,6 +46,8 @@ python demo/demo_mot.py \
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
+注意：多目标跟踪模型必须使用私有检测器。
+
 ### 使用 SOT 模型进行推理
 
 以下脚本可以使用单目标跟踪模型对一个输入视频进行推理。
