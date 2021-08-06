@@ -5,7 +5,6 @@ _base_ = [
 ]
 model = dict(
     type='SELSA',
-    pretrains=None,
     detector=dict(
         roi_head=dict(
             type='SelsaRoIHead',

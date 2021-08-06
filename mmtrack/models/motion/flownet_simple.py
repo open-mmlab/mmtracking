@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import BaseModule
 
 from ..builder import MOTION
 
 
 @MOTION.register_module()
-class FlowNetSimple(nn.Module):
+class FlowNetSimple(BaseModule):
     """The simple version of FlowNet.
 
     This FlowNetSimple is the implementation of `FlowNetSimple
@@ -40,8 +41,9 @@ class FlowNetSimple(nn.Module):
                  out_indices=[2, 3, 4, 5, 6],
                  flow_scale_factor=5.0,
                  flow_img_norm_std=[255.0, 255.0, 255.0],
-                 flow_img_norm_mean=[0.411, 0.432, 0.450]):
-        super(FlowNetSimple, self).__init__()
+                 flow_img_norm_mean=[0.411, 0.432, 0.450],
+                 init_cfg=None):
+        super(FlowNetSimple, self).__init__(init_cfg)
         self.img_scale_factor = img_scale_factor
         self.out_indices = out_indices
         self.flow_scale_factor = flow_scale_factor
@@ -140,11 +142,6 @@ class FlowNetSimple(nn.Module):
             bias=False,
             conv_cfg=dict(type='Conv'),
             act_cfg=None)
-
-    def init_weights(self):
-        """Initialize the weight FlowNetSimple."""
-        # using the default initialization in ConvModule.
-        pass
 
     def prepare_imgs(self, imgs, img_metas):
         """Preprocess images pairs for computing flow.
