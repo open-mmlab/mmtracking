@@ -21,6 +21,8 @@ class EmbedAggregator(BaseModule):
             conv. Defaults to None.
         act_cfg (dict): Configuration of activation method after each
             conv. Defaults to dict(type='ReLU').
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,

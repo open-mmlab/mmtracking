@@ -17,6 +17,8 @@ class SelsaAggregator(BaseModule):
             proposal.
         num_attention_blocks (int): The number of attention blocks used in
             selsa aggregator module. Defaults to 16.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self, in_channels, num_attention_blocks=16, init_cfg=None):

@@ -23,6 +23,8 @@ class FlowNetSimple(BaseModule):
             Defaults to [255.0, 255.0, 255.0].
         flow_img_norm_mean (list): Used to center the values of image.
             Defaults to [0.411, 0.432, 0.450].
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     arch_setting = {

@@ -11,7 +11,11 @@ from mmtrack.utils import get_root_logger
 
 
 class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
-    """Base class for video object detector."""
+    """Base class for video object detector.
+
+    Args:
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+    """
 
     def __init__(self, init_cfg):
         super(BaseVideoDetector, self).__init__(init_cfg)
