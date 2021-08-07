@@ -19,7 +19,7 @@ Notes:
 
 - For the training and testing of video object detection task, only ILSVRC dataset is needed.
 
-- For the training and testing of multi object tracking task, only MOT17 dataset is needed.
+- For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (i.e. MOT17) is needed.
 
 - For the training and testing of single object tracking task, the MSCOCO, ILSVRC and LaSOT datasets are needed.
 
@@ -56,7 +56,22 @@ mmtracking
 │   ├── lasot
 │   │   ├── LaSOTTesting
 │   │   ├── annotations
+|   ├── MOT15
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
+|   ├── MOT16
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
 |   ├── MOT17
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
+|   ├── MOT20
 |   |   ├── train
 |   |   ├── test
 |   |   ├── annotations
@@ -79,6 +94,7 @@ python ./tools/convert_datasets/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/
 python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
 
 # MOT17
+# The processing of other MOT Challenge dataset is the same as MOT17
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```
