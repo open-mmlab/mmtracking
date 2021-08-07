@@ -10,9 +10,11 @@ from .parsers import CocoVID
 from .pipelines import PIPELINES
 from .reid_dataset import ReIDDataset
 from .sot_train_dataset import SOTTrainDataset
+from .uav_dataset import UAV123Dataset
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
     'CocoVideoDataset', 'ImagenetVIDDataset', 'MOTChallengeDataset',
-    'LaSOTDataset', 'SOTTrainDataset', 'ReIDDataset', 'OTB100Dataset'
+    'LaSOTDataset', 'SOTTrainDataset', 'ReIDDataset', 'OTB100Dataset',
+    'TrackingNetTestDataset', 'UAV123Dataset'
 ]
