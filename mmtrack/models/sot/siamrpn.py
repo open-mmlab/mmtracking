@@ -22,10 +22,10 @@ class SiamRPN(BaseSingleObjectTracker):
 
     def __init__(self,
                  backbone,
-                 pretrains=None,
-                 init_cfg=None,
                  neck=None,
                  head=None,
+                 pretrains=None,
+                 init_cfg=None,
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
