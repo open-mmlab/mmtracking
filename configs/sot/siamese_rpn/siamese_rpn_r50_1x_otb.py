@@ -73,6 +73,7 @@ train_pipeline = [
         context_amount=0.5,
         exemplar_size=exemplar_size,
         crop_size=crop_size),
+    dict(type='SeqGrayAug', prob=0.2),
     dict(
         type='SeqShiftScaleAug',
         target_size=[exemplar_size, search_size],
@@ -98,7 +99,7 @@ test_pipeline = [
 ]
 # dataset settings
 data = dict(
-    samples_per_gpu=28,
+    samples_per_gpu=16,
     workers_per_gpu=2,
     train=[
         dict(
@@ -167,14 +168,14 @@ optimizer = dict(
 optimizer_config = dict(
     type='SiameseRPNOptimizerHook',
     backbone_start_train_epoch=10,
-    backbone_train_layers=['layer2', 'layer3', 'layer4'],
+    backbone_train_layers=['layer1', 'layer2', 'layer3', 'layer4'],
     grad_clip=dict(max_norm=10.0, norm_type=2))
 # learning policy
 lr_config = dict(
     policy='SiameseRPN',
     lr_configs=[
         dict(type='step', start_lr_factor=0.2, end_lr_factor=1.0, end_epoch=5),
-        dict(type='log', start_lr_factor=1.0, end_lr_factor=0.1, end_epoch=20),
+        dict(type='log', start_lr_factor=1.0, end_lr_factor=0.5, end_epoch=20),
     ])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
