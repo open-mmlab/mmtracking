@@ -205,7 +205,7 @@ class SiameseRPNHead(nn.Module):
         labels = gt_bbox.new_zeros((num_anchors, ), dtype=torch.long)
         labels_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
         bbox_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
-        bbox_targets = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
+        bbox_targets = gt_bbox.new_zeros((num_anchors, 4), dtype=torch.float)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_positive_pair_targets(self, gt_bbox, score_maps_size):
@@ -221,7 +221,7 @@ class SiameseRPNHead(nn.Module):
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
             shape is (H * W * num_base_anchors,), (H * W * num_base_anchors,),
-            (H * W * num_base_anchors, 4), (H * W * num_base_anchors,)
+            (H * W * num_base_anchors, 4), (H * W * num_base_anchors, 4)
             respectively. All of them are Tensor.
         """
         (labels, labels_weights, _,
@@ -232,7 +232,7 @@ class SiameseRPNHead(nn.Module):
                                                              gt_bbox.device)[0]
             # Transform the coordinate origin from the top left corner to the
             # center in the scaled featurs map.
-            feat_h, feat_w = score_maps_size[0]
+            feat_h, feat_w = score_maps_size
             stride_w, stride_h = self.anchor_generator.strides[0]
             self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w
             self.anchors[:, 1:4:2] -= (feat_h // 2) * stride_h
@@ -265,7 +265,7 @@ class SiameseRPNHead(nn.Module):
 
         bbox_targets = self.bbox_coder.encode(
             anchors, gt_bbox[:, 1:].repeat(anchors.shape[0], 1))
-
+        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_negative_pair_targets(self, gt_bbox, score_maps_size):
@@ -281,7 +281,7 @@ class SiameseRPNHead(nn.Module):
         Returns:
             tuple(labels, labels_weights, bbox_targets, bbox_weights): the
             shape is (H * W * num_base_anchors,), (H * W * num_base_anchors,),
-            (H * W * num_base_anchors, 4), (H * W * num_base_anchors,)
+            (H * W * num_base_anchors, 4), (H * W * num_base_anchors, 4)
             respectively. All of them are Tensor.
         """
         (labels, labels_weights, bbox_targets,
@@ -320,6 +320,7 @@ class SiameseRPNHead(nn.Module):
             labels_weights[neg_inds] = 1.0 / len(neg_inds) / 2
         labels[...] = 0
 
+        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def get_targets(self, gt_bboxes, score_maps_size, is_positive_pairs):
@@ -377,10 +378,10 @@ class SiameseRPNHead(nn.Module):
         Args:
             cls_score (Tensor): of shape (N, 2 * num_base_anchors, H, W).
             bbox_pred (Tensor): of shape (N, 4 * num_base_anchors, H, W).
-            labels (Tensor): of shape (N, num_base_anchors, H, W).
-            labels_weights (Tensor): of shape (N, num_base_anchors, H, W).
-            bbox_targets (Tensor): of shape (N, 4, num_base_anchors, H, W).
-            bbox_weights (Tensor): of shape (N, 4, num_base_anchors, H, W).
+            labels (Tensor): of shape (N, H * W * num_base_anchors).
+            labels_weights (Tensor): of shape (N, H * W * num_base_anchors).
+            bbox_targets (Tensor): of shape (N, H * W * num_base_anchors, 4).
+            bbox_weights (Tensor): of shape (N, H * W * num_base_anchors).
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
@@ -396,7 +397,9 @@ class SiameseRPNHead(nn.Module):
             cls_score, labels, weight=labels_weights)
 
         bbox_pred = bbox_pred.view(N, 4, -1, H, W)
-        bbox_pred = bbox_pred.permute(0, 3, 4, 2, 1).contigous().view(-1, 4)
+        bbox_pred = bbox_pred.permute(0, 3, 4, 2, 1).contiguous().view(-1, 4)
+        bbox_targets = bbox_targets.view(-1, 4)
+        bbox_weights = bbox_weights.view(-1, 4)
         losses['loss_rpn_bbox'] = self.loss_bbox(
             bbox_pred, bbox_targets, weight=bbox_weights)
 
@@ -434,7 +437,7 @@ class SiameseRPNHead(nn.Module):
 
         H, W = score_maps_size[0]
         cls_score = cls_score.view(2, -1, H, W)
-        cls_score = cls_score.premute(2, 3, 1, 0).contigous().view(-1, 2)
+        cls_score = cls_score.permute(2, 3, 1, 0).contiguous().view(-1, 2)
         cls_score = cls_score.softmax(dim=1)[:, 1]
 
         bbox_pred = bbox_pred.view(4, -1, H, W)
