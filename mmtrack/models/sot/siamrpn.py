@@ -21,9 +21,9 @@ class SiamRPN(BaseSingleObjectTracker):
     """
 
     def __init__(self,
+                 backbone,
                  pretrains=None,
                  init_cfg=None,
-                 backbone=None,
                  neck=None,
                  head=None,
                  frozen_modules=None,
