@@ -4,7 +4,6 @@ import torch.nn as nn
 from mmcls.models.builder import HEADS
 from mmcls.models.heads.base_head import BaseHead
 from mmcls.models.losses import Accuracy
-from mmcv.cnn import constant_init, normal_init
 from mmcv.runner import auto_fp16, force_fp32
 from mmdet.models.builder import build_loss
 
@@ -30,6 +29,9 @@ class LinearReIDHead(BaseHead):
         loss_pairwise (dict, optional): Triplet loss to train the
             re-identificaiton module.
         topk (int, optional): Calculate topk accuracy. Default to False.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to dict(type='Normal',layer=['fc_out', 'classifier'],
+            mean=0, std=0.01, bias=0).
     """
 
     def __init__(self,
@@ -42,8 +44,14 @@ class LinearReIDHead(BaseHead):
                  num_classes=None,
                  loss=None,
                  loss_pairwise=None,
-                 topk=(1, )):
-        super(LinearReIDHead, self).__init__()
+                 topk=(1, ),
+                 init_cfg=dict(
+                     type='Normal',
+                     layer=['fc_out', 'classifier'],
+                     mean=0,
+                     std=0.01,
+                     bias=0)):
+        super(LinearReIDHead, self).__init__(init_cfg)
         assert isinstance(topk, (int, tuple))
         if isinstance(topk, int):
             topk = (topk, )
@@ -91,13 +99,6 @@ class LinearReIDHead(BaseHead):
         if self.loss_cls:
             self.bn = nn.BatchNorm1d(self.out_channels)
             self.classifier = nn.Linear(self.out_channels, self.num_classes)
-
-    def init_weights(self):
-        """Initalize model weights."""
-        normal_init(self.fc_out, mean=0, std=0.01, bias=0)
-        if self.loss_cls:
-            constant_init(self.bn, 1, bias=0)
-            normal_init(self.classifier, mean=0, std=0.01, bias=0)
 
     @auto_fp16()
     def forward_train(self, x):
