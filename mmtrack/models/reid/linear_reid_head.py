@@ -30,8 +30,8 @@ class LinearReIDHead(BaseHead):
             re-identificaiton module.
         topk (int, optional): Calculate topk accuracy. Default to False.
         init_cfg (dict or list[dict], optional): Initialization config dict.
-            Defaults to dict(type='Normal',layer=['fc_out', 'classifier'],
-            mean=0, std=0.01, bias=0).
+            Defaults to dict(type='Normal',layer='Linear', mean=0, std=0.01,
+            bias=0).
     """
 
     def __init__(self,
@@ -46,11 +46,7 @@ class LinearReIDHead(BaseHead):
                  loss_pairwise=None,
                  topk=(1, ),
                  init_cfg=dict(
-                     type='Normal',
-                     layer=['fc_out', 'classifier'],
-                     mean=0,
-                     std=0.01,
-                     bias=0)):
+                     type='Normal', layer='Linear', mean=0, std=0.01, bias=0)):
         super(LinearReIDHead, self).__init__(init_cfg)
         assert isinstance(topk, (int, tuple))
         if isinstance(topk, int):
