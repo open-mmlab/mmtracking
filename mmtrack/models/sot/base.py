@@ -5,37 +5,22 @@ import mmcv
 import numpy as np
 import torch
 import torch.distributed as dist
-import torch.nn as nn
-from mmcv.runner import auto_fp16, load_checkpoint
-from mmcv.utils import print_log
+from mmcv.runner import BaseModule, auto_fp16
 
 from mmtrack.utils import get_root_logger
 
 
-class BaseSingleObjectTracker(nn.Module, metaclass=ABCMeta):
-    """Base class for single object tracker."""
+class BaseSingleObjectTracker(BaseModule, metaclass=ABCMeta):
+    """Base class for single object tracker.
 
-    def __init__(self):
-        super(BaseSingleObjectTracker, self).__init__()
+    Args:
+        init_cfg (dict or list[dict]): Initialization config dict.
+    """
+
+    def __init__(self, init_cfg):
+        super(BaseSingleObjectTracker, self).__init__(init_cfg)
         self.logger = get_root_logger()
         self.fp16_enabled = False
-
-    def init_module(self, module, pretrain=None):
-        """Initialize the weights in video detector.
-
-        Args:
-            pretrained (str, optional): Path to pre-trained weights.
-                Defaults to None.
-        """
-        if pretrain is not None:
-            print_log(f'load {module} from: {pretrain}', logger=self.logger)
-            load_checkpoint(
-                getattr(self, module),
-                pretrain,
-                strict=False,
-                logger=self.logger)
-        else:
-            getattr(self, module).init_weights()
 
     def freeze_module(self, module):
         """Freeze module during training."""

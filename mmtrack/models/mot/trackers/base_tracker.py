@@ -1,15 +1,15 @@
 from abc import ABCMeta, abstractmethod
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from addict import Dict
+from mmcv.runner import BaseModule
 
 from mmtrack.models import TRACKERS
 
 
 @TRACKERS.register_module()
-class BaseTracker(nn.Module, metaclass=ABCMeta):
+class BaseTracker(BaseModule, metaclass=ABCMeta):
     """Base tracker model.
 
     Args:
@@ -18,10 +18,12 @@ class BaseTracker(nn.Module, metaclass=ABCMeta):
             indicates the momentum. Default to None.
         num_frames_retain (int, optional). If a track is disappeared more than
             `num_frames_retain` frames, it will be deleted in the memo.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
-    def __init__(self, momentums=None, num_frames_retain=10):
-        super().__init__()
+    def __init__(self, momentums=None, num_frames_retain=10, init_cfg=None):
+        super().__init__(init_cfg)
         if momentums is not None:
             assert isinstance(momentums, dict), 'momentums must be a dict'
         self.momentums = momentums
