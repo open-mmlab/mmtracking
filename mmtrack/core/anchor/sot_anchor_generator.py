@@ -34,6 +34,6 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             hanning_h = np.hanning(featmap_sizes[i][0])
             hanning_w = np.hanning(featmap_sizes[i][1])
             window = np.outer(hanning_h, hanning_w)
-            window = np.tile(window.flatten(), self.num_base_anchors[i])
+            window = window.flatten().repeat(self.num_base_anchors[i])
             multi_level_windows.append(torch.from_numpy(window).to(device))
         return multi_level_windows
