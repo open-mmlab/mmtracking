@@ -116,6 +116,8 @@ def eval_single_class(names, accs):
         sum_motp = (summary['motp'] * num_dets['num_detections']).sum()
         motp = quiet_divide(sum_motp, num_dets['num_detections']['OVERALL'])
         results[motp_ind] = float(1 - motp)
+    else:
+        results[motp_ind] = 1 - results[motp_ind]
     return results
 
 
