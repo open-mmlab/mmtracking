@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
-from mmcv.runner import auto_fp16, force_fp32
+from mmcv.runner import BaseModule, auto_fp16, force_fp32
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_anchor_generator
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
@@ -11,7 +11,7 @@ from mmtrack.core.track import depthwise_correlation
 
 
 @HEADS.register_module()
-class CorrelationHead(nn.Module):
+class CorrelationHead(BaseModule):
     """Correlation head module.
 
     This module is proposed in
@@ -27,6 +27,8 @@ class CorrelationHead(nn.Module):
             Defaults to dict(type='BN').
         act_cfg (dict): Configuration of activation method after each conv.
             Defaults to dict(type='ReLU').
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -36,8 +38,9 @@ class CorrelationHead(nn.Module):
                  kernel_size=3,
                  norm_cfg=dict(type='BN'),
                  act_cfg=dict(type='ReLU'),
+                 init_cfg=None,
                  **kwargs):
-        super(CorrelationHead, self).__init__()
+        super(CorrelationHead, self).__init__(init_cfg)
         self.kernel_convs = ConvModule(
             in_channels=in_channels,
             out_channels=mid_channels,
@@ -74,7 +77,7 @@ class CorrelationHead(nn.Module):
 
 
 @HEADS.register_module()
-class SiameseRPNHead(nn.Module):
+class SiameseRPNHead(BaseModule):
     """Siamese RPN head.
 
     This module is proposed in
@@ -109,6 +112,9 @@ class SiameseRPNHead(nn.Module):
         train_cfg (Dict): Training setting. Defaults to None.
 
         test_cfg (Dict): Testing setting. Defaults to None.
+
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -128,9 +134,10 @@ class SiameseRPNHead(nn.Module):
                      type='L1Loss', reduction='sum', loss_weight=1.2),
                  train_cfg=None,
                  test_cfg=None,
+                 init_cfg=None,
                  *args,
                  **kwargs):
-        super(SiameseRPNHead, self).__init__(*args, **kwargs)
+        super(SiameseRPNHead, self).__init__(init_cfg)
         self.anchor_generator = build_anchor_generator(anchor_generator)
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg

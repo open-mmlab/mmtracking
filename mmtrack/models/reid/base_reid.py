@@ -8,9 +8,6 @@ from ..builder import REID
 class BaseReID(ImageClassifier):
     """Base class for re-identification."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def forward_train(self, img, gt_label, **kwargs):
         """"Training forward function."""
         if img.ndim == 5:

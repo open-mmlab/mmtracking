@@ -3,40 +3,19 @@ from collections import OrderedDict
 
 import torch
 import torch.distributed as dist
-import torch.nn as nn
-from mmcv.runner import auto_fp16, load_checkpoint
-from mmcv.utils import print_log
+from mmcv.runner import BaseModule, auto_fp16
 
 from mmtrack.core import imshow_tracks, restore_result
 from mmtrack.utils import get_root_logger
 
 
-class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
+class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
     """Base class for multiple object tracking."""
 
-    def __init__(self):
-        super(BaseMultiObjectTracker, self).__init__()
+    def __init__(self, init_cfg):
+        super(BaseMultiObjectTracker, self).__init__(init_cfg)
         self.logger = get_root_logger()
         self.fp16_enabled = False
-
-    def init_module(self, module_name, pretrain=None):
-        """Initialize the weights of a sub-module.
-
-        Args:
-            module (nn.Module): A sub-module of the model.
-            pretrained (str, optional): Path to pre-trained weights.
-                Defaults to None.
-        """
-        module = getattr(self, module_name)
-        if pretrain is not None:
-            print_log(
-                f'load {module_name} from: {pretrain}', logger=self.logger)
-            checkpoint = load_checkpoint(
-                module, pretrain, strict=False, logger=self.logger)
-            if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
-                module.CLASSES = checkpoint['meta']['CLASSES']
-        else:
-            module.init_weights()
 
     def freeze_module(self, module):
         """Freeze module during training."""
