@@ -1,7 +1,7 @@
 ## Run with Existing Datasets and Models
 
 MMTracking provides various methods on existing benchmarks.
-Details about these methods and benchmarks are presented in [model_zoo.md](model_zoo.md) and [dataset.md](dataset.md) respectively.
+Details about these methods and benchmarks are presented in [model_zoo.md](https://mmtracking.readthedocs.io/en/latest/model_zoo.html).
 This note will show how to perform common tasks on existing models and standard datasets, including:
 
 - Inference existing models on a given video or image folder.
@@ -11,9 +11,42 @@ This note will show how to perform common tasks on existing models and standard 
 ### Inference
 
 We provide demo scripts to inference a given video or a folder that contains continuous images.
-The source codes are available [here](../demo/).
+The source codes are available [here](https://github.com/open-mmlab/mmtracking/tree/master/demo/).
 
 Note that if you use a folder as the input, there should be only images in this folder and the image names must be **sortable**, which means we can re-order the images according to the filenames.
+
+#### Inference VID models
+
+This script can inference an input video with a video object detection model.
+
+```
+python demo/demo_vid.py \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
+    [--show]
+```
+
+Optional arguments:
+
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
+- `--show`: Whether show the video on the fly.
+
+Examples:
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`
+
+```shell
+python ./demo/demo_vid.py \
+    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint checkpoints/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+    --output ${OUTPUT} \
+    --show
+```
 
 #### Inference MOT models
 
@@ -46,7 +79,7 @@ Examples:
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
-Note: When running `demo_mot.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
+**Important**: When running `demo_mot.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
 
 #### Inference SOT models
 
@@ -70,43 +103,14 @@ Optional arguments:
 
 Examples:
 
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`
+
 ```shell
 python ./demo/demo_sot.py \
     ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+    --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
     --output ${OUTPUT} \
-    --show
-```
-
-#### Inference VID models
-
-This script can inference an input video with a video object detection model.
-
-```
-python demo/demo_vid.py \
-    ${CONFIG_FILE}\
-    --input ${INPUT} \
-    --checkpoint ${CHECKPOINT_FILE} \
-    [--output ${OUTPUT}] \
-    [--device ${DEVICE}] \
-    [--show]
-```
-
-Optional arguments:
-
-- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
-- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
-- `--show`: Whether show the video on the fly.
-
-Examples:
-
-```shell
-python ./demo/demo_vid.py \
-    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
-    --input ${VIDEO_FILE} \
-    --checkpoint ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
-    --output ${OUTPUT} \
     --show
 ```
 
@@ -140,7 +144,7 @@ Optional arguments:
 - `--eval-options`: If specified, the key-value pair optional eval cfg will be kwargs for dataset.evaluate() function, it’s only for evaluation
 - `--format-only`: If specified, the results will be formated to the offical format.
 
-Examples:
+#### Examples of testing VID model
 
 Assume that you have already downloaded the checkpoints to the directory `checkpoints/`.
 
@@ -153,7 +157,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval bbox
    ```
 
-2. Test DFF with 8 GPUs, and evaluate the bbox mAP.
+2. Test DFF with 8 GPUs on ImageNet VID, and evaluate the bbox mAP.
 
    ```shell
    ./tools/dist_test.sh configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
@@ -162,7 +166,43 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval bbox
    ```
 
-3. Test SiameseRPN++ on LaSOT, and evaluate the success and normed precision.
+#### Examples of testing MOT model
+
+1. Test Tracktor on MOT17, and evaluate CLEAR MOT metrics.
+
+   ```shell
+   python tools/test.py configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py \
+       --eval track
+   ```
+
+2. Test Tracktor with 8 GPUs on MOT17, and evaluate CLEAR MOT metrics.
+
+   ```shell
+   ./tools/dist_test.sh configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
+       --eval track
+   ```
+
+3. If you want to test Tracktor with your detector and reid model, you need modify the corresponding key-value pair in config as follows:
+
+    ```python
+
+    model = dict(
+        detector=dict(
+            init_cfg=dict(
+                type='Pretrained',
+                checkpoint='/path/to/detector_model')),
+        reid=dict(
+            init_cfg=dict(
+                type='Pretrained',
+                checkpoint='/path/to/reid_model'))
+        )
+    ```
+
+#### Examples of testing SOT model
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`.
+
+1. Test SiameseRPN++ on LaSOT, and evaluate the success, precision and normed precision.
 
    ```shell
    python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
@@ -171,7 +211,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval track
    ```
 
-4. Test SiameseRPN++ with 8 GPUs, and evaluate the success and normed precision.
+2. Test SiameseRPN++ with 8 GPUs on LaSOT, and evaluate the success, precision and normed precision.
 
    ```shell
    ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
@@ -180,25 +220,10 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --eval track
    ```
 
-5. Test Tracktor on MOT17, and evaluate CLEAR MOT metrics.
-
-   ```shell
-   python tools/test.py configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py \
-       --eval track
-   ```
-
-6. Test Tracktor with 8 GPUs, and evaluate CLEAR MOT metrics.
-
-   ```shell
-   ./tools/dist_test.sh  \
-       configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
-       --eval track
-   ```
-
 ### Training
 
 MMTracking also provides out-of-the-box tools for training models.
-This section will show how to train _predefined_ models (under [configs](https://github.com/open-mmlab/mmtracking/tree/master/configs)) on standard datasets i.e. MOT17.
+This section will show how to train _predefined_ models (under [configs](https://github.com/open-mmlab/mmtracking/tree/master/configs)) on standard datasets.
 
 By default we evaluate the model on the validation set after each epoch, you can change the evaluation interval by adding the interval argument in the training config.
 
@@ -206,7 +231,7 @@ By default we evaluate the model on the validation set after each epoch, you can
 evaluation = dict(interval=12)  # This evaluate the model per 12 epoch.
 ```
 
-**Important**: The default learning rate in config files is for 8 GPUs.
+**Important**: The default learning rate in all config files is for 8 GPUs.
 According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., `lr=0.01` for 8 GPUs \* 1 img/gpu and `lr=0.04` for 16 GPUs \* 2 imgs/gpu.
 
 #### Training on a single GPU
@@ -257,7 +282,7 @@ The basic usage is as follows.
 [GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
 ```
 
-You can check [the source code](https://github.com/open-mmlab/mmdetection/blob/master/tools/slurm_train.sh) to review full arguments and environment variables.
+You can check [the source code](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh) to review full arguments and environment variables.
 
 When using Slurm, the port option need to be set in one of the following ways:
 
@@ -289,6 +314,74 @@ When using Slurm, the port option need to be set in one of the following ways:
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
 
+#### Examples of training VID model
+
+1. Train DFF on ImageNet VID and ImageNet DET, then evaluate the bbox mAP at the last epoch.
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+#### Examples of training MOT model
+
+For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train a detector and a reid model rather than directly training the MOT model itself.
+
+1. Train a detector model
+
+    If you want to train a detector for multiple object tracking or other applications, to be compatablie with MMDetection, you only need to add a line of `USE_MMDET=True` in the config and run it with the same manner in mmdetection.
+    A base example can be found at [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py).
+
+    Please NOTE that there are some differences between the base config in MMTracking and MMDetection: `detector` is only a submodule of the `model`.
+    For example, the config of Faster R-CNN in MMDetection follows
+
+    ```python
+    model = dict(
+        type='FasterRCNN',
+        ...
+    )
+    ```
+
+    But in MMTracking, the config follows
+
+    ```python
+    model = dict(
+        detector=dict(
+            type='FasterRCNN',
+            ...
+        )
+    )
+    ```
+
+    Here is an example to train a detector model on MOT17, and evaluate the bbox mAP after each epoch.
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+2. Train a reid model
+
+    You may want to train a ReID model for multiple object tracking or other applications. We support ReID model training in MMTracking, which is built upon [MMClassification](https://github.com/open-mmlab/mmclassification).
+
+    Here is an example to train a reid model on MOT17, then evaluate the mAP after each epoch.
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+3. After training a detector and a reid model, you can refer to [Examples of testing MOT model](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model) to test your multi-object tracker.
+
+#### Examples of training SOT model
+
+1. Train SiameseRPN++ on COCO, ImageNet VID and ImageNet DET, then evaluate the success, precision and normed precision from the 10-th epoch to 20-th epoch.
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
 ## Run with Customized Datasets and Models
 
 In this note, you will know how to inference, test, and train with customized datasets and models.
@@ -298,33 +391,34 @@ The basic steps are as below:
 1. Prepare the customized dataset (if applicable)
 2. Prepare the customized model (if applicable)
 3. Prepare a config
-4. Train, test, inference the new models.
+4. Train a new model
+5. Test and inference the new model
 
-### Prepare the customized dataset
+### 1. Prepare the customized dataset
 
-There are three ways to support a new dataset in MMTracking:
+There are two ways to support a new dataset in MMTracking:
 
-1. Reorganize the dataset into CocoVID format.
-2. Implement a new dataset.
+Reorganize the dataset into CocoVID format.
+Implement a new dataset.
 
 Usually we recommend to use the first method which is usually easier than the second.
 
-Details for customizing datasets are provided in [tutorials/customize_dataset.md](tutorials/customize_dataset.md).
+Details for customizing datasets are provided in [tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_dataset.html).
 
-### Prepare the customized model
+### 2. Prepare the customized model
 
 We provide instructions for cutomizing models of different tasks.
 
-- [tutorials/customize_mot_model.md](tutorials/customize_mot_model.md)
-- [tutorials/customize_sot_model.md](tutorials/customize_sot_model.md)
-- [tutorials/customize_vid_model.md](tutorials/customize_vid_model.md)
+- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html)
+- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_sot_model.html)
+- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
 
-### Prepare a config
+### 3. Prepare a config
 
 The next step is to prepare a config thus the dataset or the model can be successfully loaded.
-More details about the config system are provided at [tutorials/config.md](tutorials/config.md).
+More details about the config system are provided at [tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html).
 
-### Train a new model
+### 4. Train a new model
 
 To train a model with the new config, you can simply run
 
@@ -334,7 +428,7 @@ python tools/train.py ${NEW_CONFIG_FILE}
 
 For more detailed usages, please refer to the training instructions above.
 
-### Test and inference
+### 5. Test and inference the new model
 
 To test the trained model, you can simply run
 

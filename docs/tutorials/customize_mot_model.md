@@ -75,13 +75,15 @@ Please refer to [tutorial in mmdetection](https://mmdetection.readthedocs.io/en/
 
 Create a new file `mmtrack/models/motion/my_flownet.py`.
 
-You can inherit the motion model from `nn.Module` if it is a deep learning module and from `object` if not.
+You can inherit the motion model from `BaseModule` in `mmcv.runner` if it is a deep learning module, and from `object` if not.
 
 ```python
+from mmcv.runner import BaseModule
+
 from ..builder import MOTION
 
 @MOTION.register_module()
-class MyFlowNet(nn.Module):
+class MyFlowNet(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -127,10 +129,12 @@ motion=dict(
 Create a new file `mmtrack/models/reid/my_reid.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from ..builder import REID
 
 @REID.register_module()
-class MyReID(nn.Module):
+class MyReID(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -176,10 +180,12 @@ reid=dict(
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from mmdet.models import HEADS
 
 @HEADS.register_module()
-class MyHead(nn.Module):
+class MyHead(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -228,8 +234,7 @@ The decorator `weighted_loss` enable the loss to be weighted for each element.
 import torch
 import torch.nn as nn
 
-from ..builder import LOSSES
-from .utils import weighted_loss
+from mmdet.models import LOSSES, weighted_loss
 
 @weighted_loss
 def my_loss(pred, target):
@@ -270,7 +275,8 @@ Alternatively, you can add
 
 ```python
 custom_imports=dict(
-    imports=['mmtrack.models.losses.my_loss'])
+    imports=['mmtrack.models.losses.my_loss'],
+    allow_failed_imports=False)
 ```
 
 to the config file and achieve the same goal.

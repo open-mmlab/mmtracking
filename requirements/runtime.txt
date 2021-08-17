@@ -3,7 +3,6 @@ matplotlib
 mmcls==0.14.0
 mmpycocotools
 motmetrics
-numpy
 packaging
 seaborn
 six

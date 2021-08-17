@@ -116,7 +116,12 @@ track_heads
 .. automodule:: mmtrack.models.track_heads
     :members:
 
-utils
-^^^^^^^^^^
-.. automodule:: mmtrack.models.utils
+builder
+^^^^^^^^^^^
+.. automodule:: mmtrack.models
+    :members:
+
+mmtrack.utils
+--------------
+.. automodule:: mmtrack.utils
     :members:

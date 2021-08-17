@@ -148,7 +148,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 To verify whether MMTracking and the required environment are installed correctly, we can run MOT, VID, SOT demo script.
 
-Run MOT demo and you will see a output video named `mot.mp4`:
+For example, run MOT demo and you will see a output video named `mot.mp4`:
 
 ```shell
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
