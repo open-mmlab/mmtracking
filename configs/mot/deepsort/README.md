@@ -39,3 +39,5 @@ We directly use the ReID model from [Tracktor](https://github.com/phil-bergmann/
 | R50-FasterRCNN-FPN | R50 | half-train | half-val | N     | 13.8  |  63.8 | 69.6 | 15060 | 40326 | 3183 | [config](deepsort_faster-rcnn_fpn_4e_mot17-private-half.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth) [reid](https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth) |
 | R50-FasterRCNN-FPN | - | train | train | Y               | 28.3  | 50.9 | 44.5 | 1108 | 153950 | 10522 | [config](sort_faster-rcnn_fpn_4e_mot17-public.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth) |
 | R50-FasterRCNN-FPN | - | train | train | N               | 18.6  | 80.8 | 61.3 | 21537 | 29280 | 13947 | [config](sort_faster-rcnn_fpn_4e_mot17-private.py) | [detector](https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth) |
+
+Note: When running `demo_mot.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.

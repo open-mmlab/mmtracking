@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import BaseModule
 
 from ..builder import AGGREGATORS
 
 
 @AGGREGATORS.register_module()
-class EmbedAggregator(nn.Module):
+class EmbedAggregator(BaseModule):
     """Embedding convs to aggregate multi feature maps.
 
     This module is proposed in "Flow-Guided Feature Aggregation for Video
@@ -20,6 +21,8 @@ class EmbedAggregator(nn.Module):
             conv. Defaults to None.
         act_cfg (dict): Configuration of activation method after each
             conv. Defaults to dict(type='ReLU').
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -27,8 +30,9 @@ class EmbedAggregator(nn.Module):
                  channels=256,
                  kernel_size=3,
                  norm_cfg=None,
-                 act_cfg=dict(type='ReLU')):
-        super(EmbedAggregator, self).__init__()
+                 act_cfg=dict(type='ReLU'),
+                 init_cfg=None):
+        super(EmbedAggregator, self).__init__(init_cfg)
         assert num_convs > 0, 'The number of convs must be bigger than 1.'
         self.embed_convs = nn.ModuleList()
         for i in range(num_convs):

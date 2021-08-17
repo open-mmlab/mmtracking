@@ -10,13 +10,13 @@ In MMTracking, we recommand to convert the data into CocoVID style and do the co
 The annotation json files in CocoVID style has the following necessary keys:
 
 - `videos`: contains a list of videos. Each video is a dictionary with keys `name`, `id`. Optional keys include `fps`, `width`, and `height`.
-- `images`: contains a list of images. Each image is a dictionary with keys `file_name`, `height`, `width`, `id`, `frame_id`, and `video_id`. Note that the `frame_id` is 0-index based.
-- `annotations`: contains a list of instance annotations. Each annotation is a dictionary with keys `bbox`, `area`,  `id`, `category_id`, `instance_id`, `image_id`. The `instance_id` is only required for tracking.
+- `images`: contains a list of images. Each image is a dictionary with keys `file_name`, `height`, `width`, `id`, `frame_id`, and `video_id`. Note that the `frame_id` is **0-index** based.
+- `annotations`: contains a list of instance annotations. Each annotation is a dictionary with keys `bbox`, `area`,  `id`, `category_id`, `instance_id`, `image_id` and `video_id`. The `instance_id` is only required for tracking.
 - `categories`: contains a list of categories. Each category is a dictionary with keys `id` and `name`.
 
-A simple example is presented at [here](../../tests/assets/demo_cocovid_data/ann.json).
+A simple example is presented at [here](https://github.com/open-mmlab/mmtracking/blob/master/tests/data/demo_cocovid_data/ann.json).
 
-The examples of converting existing datasets is presented at [here](../../tools/convert_datasets/).
+The examples of converting existing datasets are presented at [here](https://github.com/open-mmlab/mmtracking/tree/master/tools/convert_datasets/).
 
 #### Modify the config
 
@@ -54,7 +54,7 @@ data = dict(
 
 ### Using dataset wrappers
 
-MMTracking also supports many dataset wrappers to mix the dataset or modify the dataset distribution for training.
+MMTracking also supports some dataset wrappers to mix the dataset or modify the dataset distribution for training.
 Currently it supports to three dataset wrappers as below:
 
 - `RepeatDataset`: simply repeat the whole dataset.

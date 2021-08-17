@@ -5,15 +5,18 @@ _base_ = [
 ]
 model = dict(
     type='DFF',
-    pretrains=dict(
-        motion=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
-    ),
     detector=dict(
         train_cfg=dict(
             rpn_proposal=dict(max_per_img=1000),
             rcnn=dict(sampler=dict(num=512)))),
-    motion=dict(type='FlowNetSimple', img_scale_factor=0.5),
+    motion=dict(
+        type='FlowNetSimple',
+        img_scale_factor=0.5,
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
+        )),
     train_cfg=None,
     test_cfg=dict(key_frame_interval=10))
 

@@ -39,7 +39,7 @@ For example, if some modification is made base on Faster R-CNN, user may first i
 
 If you are building an entirely new method that does not share the structure with any of the existing methods, you may create a folder `xxx_rcnn` under `configs`,
 
-Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#config) for detailed documentation.
+Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#config) for detailed documentation.
 
 ### Config Name Style
 
@@ -65,20 +65,20 @@ We follow the below style to name config files. Contributors are advised to foll
 
 ### Detailed analysis of Config File
 
-Please refer to the corresponding page for config file structure for different tasks.
+Please refer to the corresponding page for config file structure of different tasks.
 
-[Video Object Detection](config_vid.md)
+[Video Object Detection](https://mmtracking.readthedocs.io/en/latest/tutorials/config_vid.html)
 
-[Single Object Tracking](config_sot.md)
+[Single Object Tracking](https://mmtracking.readthedocs.io/en/latest/tutorials/config_sot.html)
 
-[Multi Object Tracking](config_mot.md)
+[Multi Object Tracking](https://mmtracking.readthedocs.io/en/latest/tutorials/config_mot.html)
 
 ### FAQ
 
 #### Ignore some fields in the base configs
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
-You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#inherit-from-base-config-with-ignored-fields) for simple illustration.
+You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for simple illustration.
 
 #### Use intermediate variables in configs
 
@@ -87,26 +87,7 @@ It's worth noting that when modifying intermediate variables in the children con
 For example, we would like to use testing strategy of adaptive stride to test a SELSA. `ref_img_sampler` is intermediate variable we would like modify.
 
 ```python
-_base_ = [
-    '../../_base_/models/faster_rcnn_r50_dc5.py',
-    '../../_base_/datasets/imagenet_vid_fgfa_style.py',
-    '../../_base_/default_runtime.py'
-]
-model = dict(
-    type='SELSA',
-    pretrains=None,
-    detector=dict(
-        pretrained='torchvision://resnet101',
-        backbone=dict(depth=101),
-        roi_head=dict(
-            type='SelsaRoIHead',
-            bbox_head=dict(
-                type='SelsaBBoxHead',
-                num_shared_fcs=2,
-                aggregator=dict(
-                    type='SelsaAggregator',
-                    in_channels=1024,
-                    num_attention_blocks=16)))))
+_base_ = ['./selsa_faster_rcnn_r50_dc5_1x_imagenetvid.py']
 
 # dataset settings
 ref_img_sampler = dict(

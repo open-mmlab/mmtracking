@@ -3,13 +3,8 @@
 ```python
 model = dict(
     type='DFF',  # The name of video detector
-    pretrains=dict(
-        motion=
-        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/flownet_simple.pth'
-    ),  # The pretrained weights of modules, e.g. motion module.
-    detector=dict(  # Please refer to https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/config.md#an-example-of-mask-r-cnn for detailed comments of detector.
+    detector=dict(  # Please refer to https://mmdetection.readthedocs.io/en/latest/tutorials/config.html#an-example-of-mask-r-cnn for detailed comments of detector.
         type='FasterRCNN',
-        pretrained='torchvision://resnet50',
         backbone=dict(
             type='ResNet',
             depth=50,
@@ -20,7 +15,9 @@ model = dict(
             frozen_stages=1,
             norm_cfg=dict(type='BN', requires_grad=True),
             norm_eval=True,
-            style='pytorch'),
+            style='pytorch',
+            init_cfg=dict(
+                type='Pretrained', checkpoint='torchvision://resnet50')),
         neck=dict(
             type='ChannelMapper',
             in_channels=[2048],
@@ -120,8 +117,14 @@ model = dict(
                 score_thr=0.0001,
                 nms=dict(type='nms', iou_threshold=0.5),
                 max_per_img=100))),
-    motion=dict(type='FlowNetSimple',  # The name of motion model
-        img_scale_factor=0.5),  # the scale factor to downsample/upsample the input image of motion model
+    motion=dict(
+        type='FlowNetSimple',  # The name of motion model
+        img_scale_factor=0.5, # the scale factor to downsample/upsample the input image of motion model
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
+        )), # The pretrained weights of FlowNetSimple
     train_cfg=None,
     test_cfg=dict(key_frame_interval=10))  # The interval of key frame during testing
 dataset_type = 'ImagenetVIDDataset'  # Dataset type, this will be used to define the dataset

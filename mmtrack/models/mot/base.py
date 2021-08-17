@@ -3,39 +3,19 @@ from collections import OrderedDict
 
 import torch
 import torch.distributed as dist
-import torch.nn as nn
-from mmcv.runner import auto_fp16, load_checkpoint
-from mmcv.utils import print_log
+from mmcv.runner import BaseModule, auto_fp16
 
 from mmtrack.core import imshow_tracks, restore_result
 from mmtrack.utils import get_root_logger
 
 
-class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
+class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
     """Base class for multiple object tracking."""
 
-    def __init__(self):
-        super(BaseMultiObjectTracker, self).__init__()
+    def __init__(self, init_cfg):
+        super(BaseMultiObjectTracker, self).__init__(init_cfg)
         self.logger = get_root_logger()
-
-    def init_module(self, module_name, pretrain=None):
-        """Initialize the weights of a sub-module.
-
-        Args:
-            module (nn.Module): A sub-module of the model.
-            pretrained (str, optional): Path to pre-trained weights.
-                Defaults to None.
-        """
-        module = getattr(self, module_name)
-        if pretrain is not None:
-            print_log(
-                f'load {module_name} from: {pretrain}', logger=self.logger)
-            checkpoint = load_checkpoint(
-                module, pretrain, strict=False, logger=self.logger)
-            if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
-                module.CLASSES = checkpoint['meta']['CLASSES']
-        else:
-            module.init_weights()
+        self.fp16_enabled = False
 
     def freeze_module(self, module):
         """Freeze module during training."""
@@ -246,12 +226,17 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
                     show=False,
                     out_file=None,
                     wait_time=0,
-                    backend='cv2'):
+                    backend='cv2',
+                    **kwargs):
         """Visualize tracking results.
 
         Args:
             img (str | ndarray): Filename of loaded image.
-            result (list[ndarray]): Tracking results.
+            result (dict): Tracking result.
+                The value of key 'track_results' is ndarray with shape (n, 6)
+                in [id, tl_x, tl_y, br_x, br_y, score] format.
+                The value of key 'bbox_results' is ndarray with shape (n, 5)
+                in [tl_x, tl_y, br_x, br_y, score] format.
             thickness (int, optional): Thickness of lines. Defaults to 1.
             font_scale (float, optional): Font scales of texts. Defaults
                 to 0.5.
@@ -264,7 +249,9 @@ class BaseMultiObjectTracker(nn.Module, metaclass=ABCMeta):
         Returns:
             ndarray: Visualized image.
         """
-        bboxes, labels, ids = restore_result(result, return_ids=True)
+        assert isinstance(result, dict)
+        track_result = result.get('track_results', None)
+        bboxes, labels, ids = restore_result(track_result, return_ids=True)
         img = imshow_tracks(
             img,
             bboxes,

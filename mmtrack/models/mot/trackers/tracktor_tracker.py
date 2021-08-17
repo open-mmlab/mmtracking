@@ -1,4 +1,5 @@
 import torch
+from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps, multiclass_nms
 from scipy.optimize import linear_sum_assignment
 
@@ -34,6 +35,8 @@ class TracktorTracker(BaseTracker):
                 matching process. Default to 2.0.
             - match_iou_thr (float, optional): Minimum IoU when matching
                 objects with embedding similarity. Default to 0.2.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -48,8 +51,9 @@ class TracktorTracker(BaseTracker):
                      img_norm_cfg=None,
                      match_score_thr=2.0,
                      match_iou_thr=0.2),
+                 init_cfg=None,
                  **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(init_cfg=init_cfg, **kwargs)
         self.obj_score_thr = obj_score_thr
         self.regression = regression
         self.reid = reid
@@ -76,6 +80,7 @@ class TracktorTracker(BaseTracker):
         return track_bboxes[valid_inds], track_labels[valid_inds], ids[
             valid_inds]
 
+    @force_fp32(apply_to=('img', 'feats'))
     def track(self,
               img,
               img_metas,

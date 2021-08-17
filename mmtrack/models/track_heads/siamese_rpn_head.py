@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import BaseModule, auto_fp16, force_fp32
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_prior_generator
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
@@ -10,7 +11,7 @@ from mmtrack.core.track import depthwise_correlation
 
 
 @HEADS.register_module()
-class CorrelationHead(nn.Module):
+class CorrelationHead(BaseModule):
     """Correlation head module.
 
     This module is proposed in
@@ -26,6 +27,8 @@ class CorrelationHead(nn.Module):
             Defaults to dict(type='BN').
         act_cfg (dict): Configuration of activation method after each conv.
             Defaults to dict(type='ReLU').
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -35,8 +38,9 @@ class CorrelationHead(nn.Module):
                  kernel_size=3,
                  norm_cfg=dict(type='BN'),
                  act_cfg=dict(type='ReLU'),
+                 init_cfg=None,
                  **kwargs):
-        super(CorrelationHead, self).__init__()
+        super(CorrelationHead, self).__init__(init_cfg)
         self.kernel_convs = ConvModule(
             in_channels=in_channels,
             out_channels=mid_channels,
@@ -73,7 +77,7 @@ class CorrelationHead(nn.Module):
 
 
 @HEADS.register_module()
-class SiameseRPNHead(nn.Module):
+class SiameseRPNHead(BaseModule):
     """Siamese RPN head.
 
     This module is proposed in
@@ -108,6 +112,9 @@ class SiameseRPNHead(nn.Module):
         train_cfg (Dict): Training setting. Defaults to None.
 
         test_cfg (Dict): Testing setting. Defaults to None.
+
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -127,6 +134,7 @@ class SiameseRPNHead(nn.Module):
                      type='L1Loss', reduction='sum', loss_weight=1.2),
                  train_cfg=None,
                  test_cfg=None,
+                 init_cfg=None,
                  *args,
                  **kwargs):
         super(SiameseRPNHead, self).__init__(*args, **kwargs)
@@ -136,6 +144,7 @@ class SiameseRPNHead(nn.Module):
         self.test_cfg = test_cfg
         self.assigner = build_assigner(self.train_cfg.assigner)
         self.sampler = build_sampler(self.train_cfg.sampler)
+        self.fp16_enabled = False
 
         self.cls_heads = nn.ModuleList()
         self.reg_heads = nn.ModuleList()
@@ -157,6 +166,7 @@ class SiameseRPNHead(nn.Module):
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox = build_loss(loss_bbox)
 
+    @auto_fp16()
     def forward(self, z_feats, x_feats):
         """Forward with features `z_feats` of exemplar images and features
         `x_feats` of search images.
@@ -371,6 +381,7 @@ class SiameseRPNHead(nn.Module):
         return (all_labels, all_labels_weights, all_bbox_targets,
                 all_bbox_weights)
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss(self, cls_score, bbox_pred, labels, labels_weights, bbox_targets,
              bbox_weights):
         """Compute loss.
@@ -405,6 +416,7 @@ class SiameseRPNHead(nn.Module):
 
         return losses
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
         """Track `prev_bbox` to current frame based on the output of network.
 

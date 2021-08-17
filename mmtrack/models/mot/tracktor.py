@@ -1,3 +1,5 @@
+import warnings
+
 from mmdet.core import bbox2result
 from mmdet.models import build_detector
 
@@ -19,8 +21,26 @@ class Tracktor(BaseMultiObjectTracker):
                  reid=None,
                  tracker=None,
                  motion=None,
-                 pretrains=None):
-        super().__init__()
+                 pretrains=None,
+                 init_cfg=None):
+        super().__init__(init_cfg)
+        if isinstance(pretrains, dict):
+            warnings.warn('DeprecationWarning: pretrains is deprecated, '
+                          'please use "init_cfg" instead')
+            if detector:
+                detector_pretrain = pretrains.get('detector', None)
+                if detector_pretrain:
+                    detector.init_cfg = dict(
+                        type='Pretrained', checkpoint=detector_pretrain)
+                else:
+                    detector.init_cfg = None
+            if reid:
+                reid_pretrain = pretrains.get('reid', None)
+                if reid_pretrain:
+                    reid.init_cfg = dict(
+                        type='Pretrained', checkpoint=reid_pretrain)
+                else:
+                    reid.init_cfg = None
         if detector is not None:
             self.detector = build_detector(detector)
 
@@ -40,22 +60,6 @@ class Tracktor(BaseMultiObjectTracker):
         if tracker is not None:
             self.tracker = build_tracker(tracker)
 
-        self.init_weights(pretrains)
-
-    def init_weights(self, pretrain):
-        """Initialize the weights of the modules.
-
-        Args:
-            pretrained (dict): Path to pre-trained weights.
-        """
-        if pretrain is None:
-            pretrain = dict()
-        assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
-        if self.with_detector and pretrain.get('detector', False):
-            self.init_module('detector', pretrain['detector'])
-        if self.with_reid and pretrain.get('reid', False):
-            self.init_module('reid', pretrain['reid'])
-
     @property
     def with_cmc(self):
         """bool: whether the framework has a camera model compensation
@@ -72,7 +76,7 @@ class Tracktor(BaseMultiObjectTracker):
     def forward_train(self, *args, **kwargs):
         """Forward function during training."""
         raise NotImplementedError(
-            'Please train `detector` and `reid` models first and \
+            'Please train `detector` and `reid` models firstly, then \
                 inference with Tracktor.')
 
     def simple_test(self,
@@ -122,13 +126,9 @@ class Tracktor(BaseMultiObjectTracker):
             det_labels = det_labels[0]
             num_classes = self.detector.roi_head.bbox_head.num_classes
         elif hasattr(self.detector, 'bbox_head'):
-            outs = self.detector.bbox_head(x)
-            result_list = self.detector.bbox_head.get_bboxes(
-                *outs, img_metas=img_metas, rescale=rescale)
-            # TODO: support batch inference
-            det_bboxes = result_list[0][0]
-            det_labels = result_list[0][1]
             num_classes = self.detector.bbox_head.num_classes
+            raise NotImplementedError(
+                'Tracktor must need "roi_head" to refine proposals.')
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 

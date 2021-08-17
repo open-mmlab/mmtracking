@@ -18,7 +18,7 @@ There are several differences in MMTracking:
 In some cases, we may need to process multiple images simultaneously.
 This is basically because we need to sample reference images of the key image in the same video to facilitate the training or inference process.
 
-Please first take a look at the case of a single images above because the case of multiple images is heavily rely on it.
+Please firstly take a look at the case of a single images above because the case of multiple images is heavily rely on it.
 We explain the details of the pipeline below.
 
 #### 1. Sample reference images
@@ -57,7 +57,7 @@ The first item of the list indicates the annotations of the key image.
 
 In this step, we apply the transformations and then collected the information of the images.
 
-In contrast to the pipeline of a single image that take a dictionary as the input and also output a dictionary for the next transform, the sequential pipelines take a list of dictionaries as the input and also output a list of dictionaries for the next transform.
+In contrast to the pipeline of a single image that take a dictionary as the input and also output a dictionary for the next transformation, the sequential pipelines take a list of dictionaries as the input and also output a list of dictionaries for the next transformation.
 
 These sequential pipelines are generally inherited from the pipeline in MMDetection but process the list in a loop.
 

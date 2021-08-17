@@ -52,10 +52,9 @@ def main():
         # test a single image
         result = inference_sot(model, frame, init_bbox, frame_id)
 
-        track_bbox = result['track_results'][:4]
         vis_frame = model.show_result(
             frame,
-            track_bbox,
+            result,
             color=args.color,
             thickness=args.thickness,
             show=False)
