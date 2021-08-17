@@ -23,28 +23,28 @@
 
 ### DFF (CVPR 2017)
 
-Please refer to [DFF](https://github.com/open-mmlab/mmtracking/tree/master/configs/vid/dff) for details.
+Please refer to [DFF](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff) for details.
 
 ### FGFA (ICCV 2017)
 
-Please refer to [FGFA](https://github.com/open-mmlab/mmtracking/tree/master/configs/vid/fgfa) for details.
+Please refer to [FGFA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/fgfa) for details.
 
 ### SELSA (ICCV 2019)
 
-Please refer to [SELSA](https://github.com/open-mmlab/mmtracking/tree/master/configs/vid/selsa) for details.
+Please refer to [SELSA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/selsa) for details.
 
 ## Baselines of multiple object tracking
 
 ### SORT/DeepSORT (ICIP 2016/2017)
 
-Please refer to [SORT/DeepSORT](https://github.com/open-mmlab/mmtracking/tree/master/configs/mot/deepsort) for details.
+Please refer to [SORT/DeepSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/deepsort) for details.
 
 ### Tracktor (ICCV 2019)
 
-Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/tree/master/configs/mot/tracktor) for details.
+Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/tracktor) for details.
 
 ## Baselines of single object tracking
 
 ### SiameseRPN++ (CVPR 2019)
 
-Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/tree/master/configs/sot/siamese_rpn) for details.
+Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn) for details.
