@@ -19,7 +19,7 @@ def build_motion(cfg):
 
 
 def build_reid(cfg):
-    """Build motion model."""
+    """Build reid model."""
     return REID.build(cfg)
 
 

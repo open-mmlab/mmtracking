@@ -23,8 +23,8 @@ Assume you want to add a optimizer named `MyOptimizer`, which has arguments `a`,
 You need to create a new file named `mmtrack/core/optimizer/my_optimizer.py`.
 
 ```python
-from mmcv.runner.optimizer import OPTIMIZERS
 from torch.optim import Optimizer
+from mmcv.runner.optimizer import OPTIMIZERS
 
 
 @OPTIMIZERS.register_module()
@@ -40,8 +40,7 @@ To find the above module defined above, this module should be imported into the 
 
 - Modify `mmtrack/core/optimizer/__init__.py` to import it.
 
-    The newly defined module should be imported in `mmtrack/core/optimizer/__init__.py` so that the registry will
-    find the new module and add it:
+    The newly defined module should be imported in `mmtrack/core/optimizer/__init__.py` so that the registry will find the new module and add it:
 
     ```python
     from .my_optimizer import MyOptimizer
@@ -50,10 +49,10 @@ To find the above module defined above, this module should be imported into the 
 - Use `custom_imports` in the config to manually import it
 
     ```python
-    custom_imports = dict(imports=['mmtrack.core.optimizer.my_optimizer'], allow_failed_imports=False)
+    custom_imports = dict(imports=['mmtrack.core.optimizer.my_optimizer.py'], allow_failed_imports=False)
     ```
 
-The module `mmtrack.core.optimizer.my_optimizer` will be imported at the beginning of the program and the class `MyOptimizer` is then automatically registered.
+The module `mmtrack.core.optimizer.my_optimizer.MyOptimizer` will be imported at the beginning of the program and the class `MyOptimizer` is then automatically registered.
 Note that only the package containing the class `MyOptimizer` should be imported.
 `mmtrack.core.optimizer.my_optimizer.MyOptimizer` **cannot** be imported directly.
 
@@ -98,7 +97,7 @@ class MyOptimizerConstructor(object):
 
 ```
 
-The default optimizer constructor is implemented [here](https://github.com/open-mmlab/mmcv/blob/9ecd6b0d5ff9d2172c49a182eaa669e9f27bb8e7/mmcv/runner/optimizer/default_constructor.py#L11), which could also serve as a template for new optimizer constructor.
+The default optimizer constructor is implemented [here](https://mmcv.readthedocs.io/en/latest/api.html#mmcv.runner.DefaultOptimizerConstructor), which could also serve as a template for new optimizer constructor.
 
 #### Additional settings
 
@@ -112,7 +111,7 @@ Tricks not implemented by the optimizer should be implemented through optimizer 
         _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
     ```
 
-    If your config inherits the base config which already sets the `optimizer_config`, you might need `_delete_=True` to overide the unnecessary settings. See the [config documenetation](https://mmdetection.readthedocs.io/en/latest/config.html) for more details.
+    If your config inherits the base config which already sets the `optimizer_config`, you might need `_delete_=True` to overide the unnecessary settings. See the [config documenetation](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for more details.
 
 - __Use momentum schedule to accelerate model convergence__:
     We support momentum scheduler to modify model's momentum according to learning rate, which could make the model converge in a faster way.
@@ -226,8 +225,7 @@ Then we need to make `MyHook` imported. Assuming the file is in `mmtrack/core/ut
 
 - Modify `mmtrack/core/utils/__init__.py` to import it.
 
-    The newly defined module should be imported in `mmtrack/core/utils/__init__.py` so that the registry will
-    find the new module and add it:
+    The newly defined module should be imported in `mmtrack/core/utils/__init__.py` so that the registry will find the new module and add it:
 
     ```python
     from .my_hook import MyHook
@@ -284,7 +282,7 @@ Here we reveals how what we can do with `log_config`, `checkpoint_config`, and `
 
 ##### Checkpoint hook
 
-The MMCV runner will use `checkpoint_config` to initialize [`CheckpointHook`](https://github.com/open-mmlab/mmcv/blob/9ecd6b0d5ff9d2172c49a182eaa669e9f27bb8e7/mmcv/runner/hooks/checkpoint.py#L9).
+The MMCV runner will use `checkpoint_config` to initialize [`CheckpointHook`](https://mmcv.readthedocs.io/en/latest/api.html#mmcv.runner.CheckpointHook).
 
 ```python
 checkpoint_config = dict(interval=1)
@@ -308,8 +306,8 @@ log_config = dict(
 
 ##### Evaluation hook
 
-The config of `evaluation` will be used to initialize the [`EvalHook`](https://github.com/open-mmlab/mmdetection/blob/7a404a2c000620d52156774a5025070d9e00d918/mmdet/core/evaluation/eval_hooks.py#L8).
-Except the key `interval`, other arguments such as `metric` will be passed to the `dataset.evaluate()`
+The config of `evaluation` will be used to initialize the [`EvalHook`](https://mmcv.readthedocs.io/en/latest/api.html#mmcv.runner.EvalHook).
+Except keys like `interval`, `start` and so on, other arguments such as `metric` will be passed to the `dataset.evaluate()`
 
 ```python
 evaluation = dict(interval=1, metric='bbox')
