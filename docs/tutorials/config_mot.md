@@ -3,15 +3,8 @@
 ```python
 model = dict(
     type='Tracktor',  # The name of the multiple object tracker
-    pretrains=dict(
-        detector=
-        'https://download.openmmlab.com/mmtracking/v0.5/mot/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth',
-        reid=
-        'https://download.openmmlab.com/mmtracking/v0.5/mot/tracktor_reid_r50_iter25245-a452f51f.pth'
-    ),  # The pretrained weights of modules. It may also used for testing.
     detector=dict(  # Please refer to https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/config.md#an-example-of-mask-r-cnn for detailed comments of detector.
         type='FasterRCNN',
-        pretrained='torchvision://resnet50',
         backbone=dict(
             type='ResNet',
             depth=50,
@@ -20,7 +13,9 @@ model = dict(
             frozen_stages=1,
             norm_cfg=dict(type='BN', requires_grad=True),
             norm_eval=True,
-            style='pytorch'),
+            style='pytorch',
+            init_cfg=dict(
+                type='Pretrained', checkpoint='torchvision://resnet50')),
         neck=dict(
             type='FPN',
             in_channels=[256, 512, 1024, 2048],
@@ -70,6 +65,11 @@ model = dict(
                     use_sigmoid=False,
                     loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0))),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
+        ), # The pretrained weights of detector. It may also used for testing.
         train_cfg=dict(
             rpn=dict(
                 assigner=dict(
@@ -139,7 +139,12 @@ model = dict(
             fc_channels=1024,  # The number of channels of fc layers
             out_channels=128,  # The number of the output channels
             norm_cfg=dict(type='BN1d'),  # The config of the normalization modules
-            act_cfg=dict(type='ReLU'))),  # The config of the activation modules
+            act_cfg=dict(type='ReLU')),  # The config of the activation modules
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot17-4bf6b63d.pth'  # noqa: E501
+        )), # The pretrained weights of reid model. It may also used for testing.
     motion=dict(  # The config of the motion model
         type='CameraMotionCompensation',  # The name of the motion model
         warp_mode='cv2.MOTION_EUCLIDEAN',  # The warping mode
