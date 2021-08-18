@@ -10,7 +10,7 @@ model = dict(
             type='SelsaRoIHead',
             bbox_roi_extractor=dict(
                 type='TemporalRoIAlign',
-                ms_roi_algin_cfg=dict(sampling_point=2),
+                ms_roi_align_cfg=dict(sampling_point=2),
                 tafa_cfg=dict(num_attention_blocks=4),
                 roi_layer=dict(
                     type='RoIAlign', output_size=7, sampling_ratio=2),

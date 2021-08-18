@@ -108,7 +108,8 @@ def test_vid_dff_style_forward(cfg_file):
 
 @pytest.mark.parametrize('cfg_file', [
     'vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py',
-    'vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py'
+    'vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py',
+    'vid/temporal_roi_align/selsa_troi_faster_rcnn_r101_dc5_7e_imagenetvid.py'
 ])
 def test_vid_fgfa_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
