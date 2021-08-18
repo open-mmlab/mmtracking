@@ -213,9 +213,9 @@ class SiameseRPNHead(BaseModule):
         H, W = score_maps_size
         num_anchors = num_base_anchors * H * W
         labels = gt_bbox.new_zeros((num_anchors, ), dtype=torch.long)
-        labels_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
-        bbox_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
-        bbox_targets = gt_bbox.new_zeros((num_anchors, 4), dtype=torch.float)
+        labels_weights = gt_bbox.new_zeros((num_anchors, ))
+        bbox_weights = gt_bbox.new_zeros((num_anchors, ))
+        bbox_targets = gt_bbox.new_zeros((num_anchors, 4))
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_positive_pair_targets(self, gt_bbox, score_maps_size):
@@ -241,7 +241,7 @@ class SiameseRPNHead(BaseModule):
             self.anchors = self.anchor_generator.grid_priors([score_maps_size],
                                                              gt_bbox.device)[0]
             # Transform the coordinate origin from the top left corner to the
-            # center in the scaled featurs map.
+            # center in the scaled score map.
             feat_h, feat_w = score_maps_size
             stride_w, stride_h = self.anchor_generator.strides[0]
             self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w
