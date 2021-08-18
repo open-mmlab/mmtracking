@@ -8,14 +8,29 @@ from .single_level_roi_extractor import SingleRoIExtractor
 
 @ROI_EXTRACTORS.register_module()
 class TemporalRoIAlign(SingleRoIExtractor):
+    """Temporal RoI Align module.
+
+    This module is proposed in
+    "Temporal ROI Align for Video Object Recognition".
+    `TRoI Align <https://ojs.aaai.org/index.php/AAAI/article/view/16234>`_.
+
+    Args:
+        ms_roi_align_cfg (dict): A dict containning key `sampling_point`,
+            denoting the number of sampling points in the Most Similar RoI
+            Align. Defaults to dict(sampling_point=2).
+        tafa_cfg (dict): A dict containning key `num_attention_blocks`,
+            denoting the number of temporal attention blocks in the Temporal
+            Attentional Feature Aggregation. Defaults to
+            dict(num_attention_blocks=4).
+    """
 
     def __init__(self,
-                 ms_roi_algin_cfg=dict(sampling_point=4),
+                 ms_roi_align_cfg=dict(sampling_point=4),
                  tafa_cfg=dict(num_attention_blocks=8),
                  *args,
                  **kwargs):
         super(TemporalRoIAlign, self).__init__(*args, **kwargs)
-        self.ms_roi_algin_cfg = ms_roi_algin_cfg
+        self.ms_roi_align_cfg = ms_roi_align_cfg
         self.tafa_cfg = tafa_cfg
         if self.tafa_cfg:
             self.embed_network = ConvModule(
@@ -28,6 +43,26 @@ class TemporalRoIAlign(SingleRoIExtractor):
                 act_cfg=None)
 
     def tafa(self, x, ref_x):
+        """Aggregate the RoI features `x` with the MS RoI features `ref_x`.
+
+        The aggregation mainly contains three steps:
+        1. Pass through a tiny embed network.
+        2. Use multi-head attention to computing the weight between `x` and
+        `ref_x`.
+        3. Use the normlized (i.e. softmax) weight to weightedly sum `x` and
+        `ref_x`.
+
+        Args:
+            x (Tensor): of shape [1, roi_n, C, roi_h, roi_w]. roi_n, roi_h and
+                roi_w denote the number of key frame proposals, the height of
+                RoI features and the width of RoI features, respectively.
+            ref_x (Tensor): of shape [img_n, roi_n, C, roi_h, roi_w]. img_n is
+                the number of reference images.
+
+        Returns:
+            Tensor: The aggregated Temporal RoI features of key frame
+                proposals with shape [roi_n, C, roi_h, roi_w].
+        """
         # (img_n, roi_n, C, 7, 7)
         x = torch.cat((x, ref_x), dim=0)
 
@@ -62,6 +97,28 @@ class TemporalRoIAlign(SingleRoIExtractor):
         return x
 
     def ms_roi_align(self, roi_feats, ref_feats):
+        """Extract the MS RoI features from `ref_feats` based on `roi_feats`.
+
+        The extraction mainly contains three steps:
+        1. Compute cos similarity maps between `roi_feats` and `ref_feats`.
+        2. Pick the top K points based on the similarity maps.
+        3. Project these top K points into reference feature maps `ref_feats`.
+
+        Args:
+            roi_feats (Tensor): of shape [roi_n, C, roi_h, roi_w]. roi_n,
+                roi_h and roi_w denote the number of key frame proposals, the
+                height of RoI features and the width of RoI features,
+                respectively.
+
+            ref_feats (Tensor): of shape [img_n, C, img_h, img_w]. img_n,
+                img_h and img_w denote the number of reference frames, the
+                height of reference frame feature maps and the width of
+                reference frame feature maps, respectively.
+
+        Returns:
+            Tensor: The extracted MS RoI features from reference frames
+                feature maps with shape [img_n, roi_n, C, roi_h, roi_w].
+        """
         # 1. Compute cos similarity maps.
         # (roi_n, C, 7, 7)
         roi_feats_embed = roi_feats
@@ -90,7 +147,7 @@ class TemporalRoIAlign(SingleRoIExtractor):
         # 2. Pick the top K points based on the similarity scores.
         # (roi_n * 7 * 7, img_n, top_k)
         values, indices = cos_similarity_maps.topk(
-            k=self.ms_roi_algin_cfg.get('sampling_point', 4),
+            k=self.ms_roi_align_cfg.get('sampling_point', 4),
             dim=2,
             largest=True,
         )
@@ -129,7 +186,8 @@ class TemporalRoIAlign(SingleRoIExtractor):
         roi_feats = super().forward(feats, rois, roi_scale_factor)
 
         if ref_feats is None:
-            # Directly return roi features for proposals of reference images.
+            # Directly return roi features for proposals of reference images,
+            # when there is no ref_feats
             return roi_feats
         else:
             # We only use the last level of reference feature map to perform
