@@ -7,7 +7,7 @@ We basically categorize model components into 4 types.
 - head: the component for specific tasks, e.g., tracking bbox prediction.
 - loss: the component in head for calculating losses, e.g., FocalLoss, L1Loss.
 
-### Add a new backbones
+### Add a new backbone
 
 Here we show how to develop new components with an example of MobileNet.
 
