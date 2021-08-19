@@ -43,10 +43,14 @@ def convert_otb100(otb, ann_dir, save_dir):
 
         if video_name == 'David':
             start_frame_id = 300
+        # The first five frames in Tiger1 can not be used
+        # as the initinal frames.
+        # Details can be seen in tracker_benchmark_v1.0/initOmit/tiger1.txt.
+        elif video_name == 'Tiger1':
+            start_frame_id = 6
         else:
             start_frame_id = 1
 
-        # img_list = glob.glob(osp.join(video_path, 'img', '*.jpg'))
         img_list = os.listdir(osp.join(video_path, 'img'))
         img_list = sorted(img_list)
 
@@ -57,6 +61,8 @@ def convert_otb100(otb, ann_dir, save_dir):
             osp.join(ann_dir, video_name, 'groundtruth_rect*.txt'))
         for gt_file in gt_list:
             gt_bboxes = mmcv.list_from_file(gt_file)
+            if video_name == 'Tiger1':
+                gt_bboxes = gt_bboxes[5:]
             for i, gt_bbox in enumerate(gt_bboxes):
                 frame_id = i + start_frame_id - 1
                 file_name = osp.join(video_name, 'img', img_list[frame_id])
