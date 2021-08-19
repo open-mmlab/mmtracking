@@ -43,7 +43,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                                       scales,
                                       ratios,
                                       center=None):
-        """Generate base anchors of a single level.
+        """Generate base anchors of a single level feature map.
 
         Args:
             base_size (int | float): Basic size of an anchor.
@@ -54,7 +54,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                 related to a single feature grid. Defaults to None.
 
         Returns:
-            torch.Tensor: Anchors in a single-level feature maps.
+            torch.Tensor: Anchors of one spatial location in a single level
+            feature map in [tl_x, tl_y, br_x, br_y] format.
         """
         w = base_size
         h = base_size
@@ -74,7 +75,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             hs = ((h * h_ratios[None, :]).long() * scales[:, None]).view(-1)
 
         # use float anchor and the anchor's center is aligned with the
-        # pixel center
+        # pixel point
         base_anchors = [
             x_center - 0.5 * ws, y_center - 0.5 * hs, x_center + 0.5 * ws,
             y_center + 0.5 * hs

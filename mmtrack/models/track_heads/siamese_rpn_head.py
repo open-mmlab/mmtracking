@@ -211,7 +211,7 @@ class SiameseRPNHead(BaseModule):
         last score map."""
         num_base_anchors = self.anchor_generator.num_base_anchors[0]
         H, W = score_maps_size
-        num_anchors = num_base_anchors * H * W
+        num_anchors = H * W * num_base_anchors
         labels = gt_bbox.new_zeros((num_anchors, ), dtype=torch.long)
         labels_weights = gt_bbox.new_zeros((num_anchors, ))
         bbox_weights = gt_bbox.new_zeros((num_anchors, ))
@@ -350,7 +350,7 @@ class SiameseRPNHead(BaseModule):
             tuple(all_labels, all_labels_weights, all_bbox_targets,
             all_bbox_weights): the shape is (N, H * W * num_base_anchors),
             (N, H * W * num_base_anchors), (N, H * W * num_base_anchors, 4),
-            (N, H * W * num_base_anchors), respectively. All of them are
+            (N, H * W * num_base_anchors, 4), respectively. All of them are
             Tensor.
         """
         (all_labels, all_labels_weights, all_bbox_targets,
@@ -392,7 +392,7 @@ class SiameseRPNHead(BaseModule):
             labels (Tensor): of shape (N, H * W * num_base_anchors).
             labels_weights (Tensor): of shape (N, H * W * num_base_anchors).
             bbox_targets (Tensor): of shape (N, H * W * num_base_anchors, 4).
-            bbox_weights (Tensor): of shape (N, H * W * num_base_anchors).
+            bbox_weights (Tensor): of shape (N, H * W * num_base_anchors, 4).
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
