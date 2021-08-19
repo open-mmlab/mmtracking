@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from mmcls.models import ImageClassifier
 from mmcv.runner import auto_fp16
 
