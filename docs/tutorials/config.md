@@ -69,9 +69,9 @@ Please refer to the corresponding page for config file structure of different ta
 
 [Video Object Detection](https://mmtracking.readthedocs.io/en/latest/tutorials/config_vid.html)
 
-[Single Object Tracking](https://mmtracking.readthedocs.io/en/latest/tutorials/config_sot.html)
-
 [Multi Object Tracking](https://mmtracking.readthedocs.io/en/latest/tutorials/config_mot.html)
+
+[Single Object Tracking](https://mmtracking.readthedocs.io/en/latest/tutorials/config_sot.html)
 
 ### FAQ
 

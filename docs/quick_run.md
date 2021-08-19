@@ -409,9 +409,9 @@ Details for customizing datasets are provided in [tutorials/customize_dataset.md
 
 We provide instructions for cutomizing models of different tasks.
 
+- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
 - [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html)
 - [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_sot_model.html)
-- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
 
 ### 3. Prepare a config
 

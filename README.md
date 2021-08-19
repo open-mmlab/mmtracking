@@ -73,10 +73,21 @@ Supported methods of single object tracking:
 
 Please refer to [install.md](docs/install.md) for install instructions.
 
-## Get Started
+## Getting Started
 
 Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
-We also provide usage [tutorials](docs/tutorials/).
+We also provide usage [tutorials](docs/tutorials/), such as [learning about configs](docs/tutorials/config.md), [an example about detailed description of vid config](docs/tutorials/config_vid.md), [an example about detailed description of mot config](docs/tutorials/config_mot.md), [an example about detailed description of sot config](docs/tutorials/config_sot.md), [customizing dataset](docs/tutorials/customize_dataset.md), [customizing data pipeline](docs/tutorials/customize_data_pipeline.md), [customizing vid model](docs/tutorials/customize_vid_model.md), [customizing mot model](docs/tutorials/customize_mot_model.md), [customizing sot model](docs/tutorials/customize_sot_model/md), [customizing runtime settings](docs/tutorials/customize_runtime.md) and [useful tools](docs/useful_tools_scripts.md).
+
+## Contributing
+
+We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
+
+## Acknowledgement
+
+MMTracking is an open source project that welcome any contribution and feedback.
+We wish that the toolbox and benchmark could serve the growing research
+community by providing a flexible as well as standardized toolkit to reimplement existing methods
+and develop their own new video perception methods.
 
 ## Citation
 
@@ -90,17 +101,6 @@ If you find this project useful in your research, please consider cite:
     year={2020}
 }
 ```
-
-## Contributing
-
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
-
-## Acknowledgement
-
-MMTracking is an open source project that welcome any contribution and feedback.
-We wish that the toolbox and benchmark could serve the growing research
-community by providing a flexible as well as standardized toolkit to reimplement existing methods
-and develop their own new video perception methods.
 
 ## Projects in OpenMMLab
 
