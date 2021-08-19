@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.core import bbox2result, bbox2roi
 from mmdet.models import HEADS, StandardRoIHead
 

@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from .base_reid import BaseReID
 from .fc_module import FcModule
 from .gap import GlobalAveragePooling

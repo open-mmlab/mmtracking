@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import build_activation_layer, build_norm_layer
 from mmcv.runner import BaseModule
