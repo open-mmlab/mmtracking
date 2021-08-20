@@ -137,7 +137,7 @@ class SiameseRPNHead(BaseModule):
                  init_cfg=None,
                  *args,
                  **kwargs):
-        super(SiameseRPNHead, self).__init__(*args, **kwargs)
+        super(SiameseRPNHead, self).__init__(init_cfg, *args, **kwargs)
         self.anchor_generator = build_prior_generator(anchor_generator)
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg
@@ -214,7 +214,7 @@ class SiameseRPNHead(BaseModule):
         num_anchors = H * W * num_base_anchors
         labels = gt_bbox.new_zeros((num_anchors, ), dtype=torch.long)
         labels_weights = gt_bbox.new_zeros((num_anchors, ))
-        bbox_weights = gt_bbox.new_zeros((num_anchors, ))
+        bbox_weights = gt_bbox.new_zeros((num_anchors, 4))
         bbox_targets = gt_bbox.new_zeros((num_anchors, 4))
         return labels, labels_weights, bbox_targets, bbox_weights
 
@@ -275,7 +275,6 @@ class SiameseRPNHead(BaseModule):
 
         bbox_targets = self.bbox_coder.encode(
             anchors, gt_bbox[:, 1:].repeat(anchors.shape[0], 1))
-        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_negative_pair_targets(self, gt_bbox, score_maps_size):
@@ -330,7 +329,6 @@ class SiameseRPNHead(BaseModule):
             labels_weights[neg_inds] = 1.0 / len(neg_inds) / 2
         labels[...] = 0
 
-        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def get_targets(self, gt_bboxes, score_maps_size, is_positive_pairs):
@@ -437,7 +435,7 @@ class SiameseRPNHead(BaseModule):
             self.anchors = self.anchor_generator.grid_priors(
                 score_maps_size, cls_score.device)[0]
             # Transform the coordinate origin from the top left corner to the
-            # center in the scaled featurs map.
+            # center in the scaled feature map.
             feat_h, feat_w = score_maps_size[0]
             stride_w, stride_h = self.anchor_generator.strides[0]
             self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w
