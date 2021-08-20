@@ -137,7 +137,7 @@ class SiameseRPNHead(BaseModule):
                  init_cfg=None,
                  *args,
                  **kwargs):
-        super(SiameseRPNHead, self).__init__(init_cfg, *args, **kwargs)
+        super(SiameseRPNHead, self).__init__(init_cfg)
         self.anchor_generator = build_prior_generator(anchor_generator)
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg
