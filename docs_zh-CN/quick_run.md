@@ -15,7 +15,38 @@ MMTracking 为现有基准测试提供了多种算法。
 
 请注意，如果您使用文件夹作为输入，则该文件夹中应该只有图像，并且图像名称必须是 **可排序的**，这意味着我们可以根据文件名重新排序图像。
 
-### 使用 MOT 模型进行推理
+#### 使用 VID 模型进行推理
+
+以下脚本可以使用视频目标检测模型对一个输入视频进行推理。
+
+```
+python demo/demo_vid.py \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
+    [--show]
+```
+
+可选参数：
+
+- `OUTPUT`：可视化演示的输出路径。如果未指定 `OUTPUT`，使用 `--show` 会实时显示视频。
+- `DEVICE`：推理设备。可选 `cpu` 或者 `cuda:0` 等。
+- `--show`：是否实时显示视频。
+
+例子：
+
+```shell
+python ./demo/demo_vid.py \
+    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+    --output ${OUTPUT} \
+    --show
+```
+
+#### 使用 MOT 模型进行推理
 
 以下脚本可以使用多目标跟踪模型对一个输入视频或者图像进行推理。
 
@@ -48,7 +79,7 @@ python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-priva
 
 注意：当运行`demo_mot.py`时， 我们建议您使用包含`private`的配置文件，这是因为这些配置文件不需要外部的检测结果。
 
-### 使用 SOT 模型进行推理
+#### 使用 SOT 模型进行推理
 
 以下脚本可以使用单目标跟踪模型对一个输入视频进行推理。
 
@@ -76,37 +107,6 @@ python ./demo/demo_sot.py \
     --input ${VIDEO_FILE} \
     --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
     --output ${OUTPUT} \
-    --show
-```
-
-### 使用 VID 模型进行推理
-
-以下脚本可以使用视频目标检测模型对一个输入视频进行推理。
-
-```
-python demo/demo_vid.py \
-    ${CONFIG_FILE}\
-    --input ${INPUT} \
-    --checkpoint ${CHECKPOINT_FILE} \
-    [--output ${OUTPUT}] \
-    [--device ${DEVICE}] \
-    [--show]
-```
-
-可选参数：
-
-- `OUTPUT`：可视化演示的输出路径。如果未指定 `OUTPUT`，使用 `--show` 会实时显示视频。
-- `DEVICE`：推理设备。可选 `cpu` 或者 `cuda:0` 等。
-- `--show`：是否实时显示视频。
-
-例子：
-
-```shell
-python ./demo/demo_vid.py \
-    ./configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
-    --input ${VIDEO_FILE} \
-    --checkpoint ../mmtrack_output/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
-    --output ${OUTPUT} \
     --show
 ```
 
@@ -140,7 +140,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
 - `--eval-options`：如果指定，可选评估配置的键值对将作为 dataset.evaluate() 函数的参数，此参数只适用于评估。
 - `--format-only`：如果指定，结果将被格式化为官方格式。
 
-例子：
+#### 测试VID模型示例
 
 假设您已经下载模型权重文件至文件夹 `checkpoints/` 里。
 
@@ -161,8 +161,26 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
        --out results.pkl \
        --eval bbox
    ```
+#### 测试MOT模型示例
 
-3. 在 LaSOT 上测试 SiameseRPN++，并且评估 success 和 normed precision。
+1. 在 MOT17 上测试 Tracktor，并且评估 CLEAR MOT 指标。
+
+   ```shell
+   python tools/test.py configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py \
+       --eval track
+   ```
+
+2. 使用 8 GPUs 测试 Tracktor，并且评估 CLEAR MOT 指标。
+
+   ```shell
+   ./tools/dist_test.sh  \
+       configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
+       --eval track
+   ```
+
+#### 测试SOT模型示例
+
+1. 在 LaSOT 上测试 SiameseRPN++，并且评估 success 和 normed precision。
 
    ```shell
    python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
@@ -171,27 +189,12 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
        --eval track
    ```
 
-4. 使用 8 GPUs 测试 SiameseRPN++，并且评估 success 和 normed precision。
+2. 使用 8 GPUs 测试 SiameseRPN++，并且评估 success 和 normed precision。
 
    ```shell
    ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
-       --eval track
-   ```
-
-5. 在 MOT17 上测试 Tracktor，并且评估 CLEAR MOT 指标。
-
-   ```shell
-   python tools/test.py configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py \
-       --eval track
-   ```
-
-6. 使用 8 GPUs 测试 Tracktor，并且评估 CLEAR MOT 指标。
-
-   ```shell
-   ./tools/dist_test.sh  \
-       configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
        --eval track
    ```
 
@@ -209,7 +212,7 @@ evaluation = dict(interval=12)  # 每 12 个 epoch 评估一次模型。
 **重要提醒**：配置文件中的默认学习率是针对使用 8 个 GPU 的。
 根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，如果您使用不同数量的 GPU 或每个 GPU 使用不同数量的图片，则需要设置与 batch size 成正比的学习率，例如 `lr=0.01` 用于 8 个 GPU \* 1 img/gpu 和 `lr=0.04` 用于 16 个 GPU \* 2 imgs/gpu。
 
-### 单 GPU 训练
+#### 单 GPU 训练
 
 ```shell
 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -217,7 +220,7 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 
 在训练期间，日志文件和模型权重文件将保存到工作目录中，该目录由配置文件中的 `work_dir` 或通过 CLI 的 `--work-dir` 参数指定。
 
-### 多 GPU 训练
+#### 多 GPU 训练
 
 我们提供了 `tools/dist_train.sh` 来在多个 GPU 上启动训练。
 基本用法如下：
@@ -241,12 +244,12 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-### 多节点训练
+#### 多节点训练
 
 MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 因此，作为一种基本用法，可以通过 PyTorch 的 [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility) 启动分布式训练。
 
-### 使用 Slurm 管理任务
+#### 使用 Slurm 管理任务
 
 [Slurm](https://slurm.schedmd.com/) 是一款优秀的计算集群任务调度系统。
 在 Slurm 管理的集群上，您可以使用 `slurm_train.sh` 来启动训练任务，并且它同时支持单节点和多节点训练。
@@ -289,6 +292,57 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
 
+#### 训练VID模型示例
+
+1. 在ImageNet VID和ImageNet DET上训练DFF,接着在最后一个epoch评估bbox和mAP.
+```shell
+bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
+```
+#### 训练MOT模型示例
+
+对于像MOT、SORT、DeepSORT以及Trackor这样的MOT方法，你需要训练一个检测器和一个reid模型，而非直接训练MOT模型。
+1. 训练检测器
+    如果你想要为多目标跟踪器训练检测器，为了兼容MMDetection, 你只需要以和MMDetection相同的方式在config里面增加一行代码`USE_MMDET=True`。可参考示例[faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
+
+    请注意MMTracking和MMDetection在base config上有些许不同：`detector`仅仅是`model`的一个子模块。例如，MMDetection中的Faster R-CNN的config如下：
+    ```python
+        model = dict(
+            type='FasterRCNN',
+            ...
+        )
+    ```
+    但在MMTracking中，config如下：
+
+    ```python
+    model = dict(
+        detector=dict(
+            type='FasterRCNN',
+            ...
+        )
+    )
+    ```
+    这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+    ```shell
+    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+        --work-dir ./work_dirs/
+    ```
+2. 训练reid模型
+    我们在MMTracking中支持的ReID训练模型来自于[MMClassification](https://github.com/open-mmlab/mmclassification)。
+    这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+    ```shell
+    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+3. 完成检测器和reid模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model)来测试多目标跟踪器。
+
+#### 训练SOT模型示例
+1. 在COOC、ImageNet VID和ImageNet DET上训练SiameseRPN++，然后从第10个epoch到第20个epoch评估其success、precision和normed precision。
+    ```shell
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
 ## 使用自定义数据集和模型运行
 
 在本节中，您将了解如何使用自定义数据集和模型进行推理、测试和训练：
@@ -298,9 +352,10 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 1. 准备自定义数据集（如果适用）
 2. 准备自定义模型（如果适用）
 3. 准备配置文件
-4. 训练、测试、推理新模型
+4. 训练新模型
+5. 测试、推理新模型
 
-### 准备自定义数据集
+### 1. 准备自定义数据集
 
 在 MMTracking 中支持新数据集的方式有以下两种：
 
@@ -311,7 +366,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 
 [tutorials/customize_dataset.md](tutorials/customize_dataset.md) 中提供了有关自定义数据集的详细教程。
 
-### 准备自定义模型
+### 2. 准备自定义模型
 
 我们提供了不同任务下自定义模型的教程：
 
@@ -319,12 +374,12 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 - [tutorials/customize_sot_model.md](tutorials/customize_sot_model.md)
 - [tutorials/customize_vid_model.md](tutorials/customize_vid_model.md)
 
-### 准备配置文件
+### 3. 准备配置文件
 
 下一步是准备配置文件，从而可以成功加载数据集或模型。
 [tutorials/config.md](tutorials/config.md) 提供了有关配置系统的更多详细教程。
 
-### 训练新模型
+### 4. 训练新模型
 
 要使用新的配置文件训练模型，您只需运行
 
@@ -334,7 +389,7 @@ python tools/train.py ${NEW_CONFIG_FILE}
 
 更详细的用法请参考上面的训练说明。
 
-### 测试和推理
+### 5. 测试和推理
 
 要测试经过训练的模型，您只需运行
 
