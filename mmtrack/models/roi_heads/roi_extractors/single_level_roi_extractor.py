@@ -9,8 +9,8 @@ class SingleRoIExtractor(_SingleRoIExtractor):
     """Extract RoI features from a single level feature map.
 
     This Class is the same as `SingleRoIExtractor` from
-    `mmdet.models.roi_heads.roi_extractors` except for using **kwargs to accept
-    other arguments.
+    `mmdet.models.roi_heads.roi_extractors` except for using `**kwargs` to
+    accept external arguments.
     """
 
     @force_fp32(apply_to=('feats', ), out_fp16=True)

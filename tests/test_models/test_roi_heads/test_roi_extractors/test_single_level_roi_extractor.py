@@ -19,6 +19,6 @@ def test_single_roi_extractor():
     )
 
     rois = torch.tensor([[0.0000, 587.8285, 52.1405, 886.2484, 341.5644]])
-    # test allowing to accept arguments by **kwargs
+    # test allowing to accept external arguments by **kwargs
     roi_feats = self(feats, rois, variable=1)
     assert roi_feats.shape == torch.Size([1, 256, 7, 7])
