@@ -18,7 +18,9 @@
 
 ## Results and models on ImageNet VID dataset
 
-We observe around 0.5 mAP fluctuations in performance, and provide the best model. We find that using 3 selsa modules can bring slightly gains (around 0.2 mAP) than using 2 selsa modules in `SELSA + TRoI` method, and the performance will drop when changing the number of selsa modules in `SELSA` method from 2 to 3. Therefore, we adopt using 3 selsa modules in `SELSA + TRoI` method, meanwhile keeping using 2 selsa modules in `SELSA` method.
+We observe around 0.5 mAP fluctuations in performance, and provide the best model.
+
+We find that using 3 selsa modules can bring slightly gains (around 0.2 mAP) than using 2 selsa modules in `SELSA + TRoI` method, and the performance will drop when changing the number of selsa modules in `SELSA` method from 2 to 3. Therefore, we adopt using 3 selsa modules in `SELSA + TRoI` method, meanwhile keeping using 2 selsa modules in `SELSA` method.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :------: | :--------: |
