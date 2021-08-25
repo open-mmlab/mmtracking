@@ -7,7 +7,7 @@ We basically categorize model components into 4 types.
 - head: the component for specific tasks, e.g., tracking bbox prediction.
 - loss: the component in head for calculating losses, e.g., FocalLoss, L1Loss.
 
-### Add a new backbones
+### Add a new backbone
 
 Here we show how to develop new components with an example of MobileNet.
 
@@ -17,20 +17,18 @@ Create a new file `mmtrack/models/backbones/mobilenet.py`.
 
 ```python
 import torch.nn as nn
+from mmcv.runner import BaseModule
 
 from mmdet.models.builder import BACKBONES
 
 
 @BACKBONES.register_module()
-class MobileNet(nn.Module):
+class MobileNet(BaseModule):
 
-    def __init__(self, arg1, arg2):
+    def __init__(self, arg1, arg2, *args, **kwargs):
         pass
 
     def forward(self, x):  # should return a tuple
-        pass
-
-    def init_weights(self, pretrained=None):
         pass
 ```
 
@@ -71,18 +69,14 @@ model = dict(
 Create a new file `mmtrack/models/necks/my_fpn.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from mmdet.models.builder import NECKS
 
 @NECKS.register_module()
-class MyFPN(nn.Module):
+class MyFPN(BaseModule):
 
-    def __init__(self,
-                in_channels,
-                out_channels,
-                num_outs,
-                start_level=0,
-                end_level=-1,
-                add_extra_convs=False):
+    def __init__(self, arg1, arg2, *args, **kwargs):
         pass
 
     def forward(self, inputs):
@@ -113,9 +107,8 @@ to the config file and avoid modifying the original code.
 ```python
 neck=dict(
     type='MyFPN',
-    in_channels=[256, 512, 1024, 2048],
-    out_channels=256,
-    num_outs=5)
+    arg1=xxx,
+    arg2=xxx),
 ```
 
 ### Add a new head
@@ -125,14 +118,14 @@ neck=dict(
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from mmdet.models import HEADS
 
 @HEADS.register_module()
-class MyHead(nn.Module):
+class MyHead(BaseModule):
 
-    def __init__(self,
-                arg1,
-                arg2):
+    def __init__(self, arg1, arg2, *args, **kwargs):
         pass
 
     def forward(self, inputs):
@@ -161,7 +154,7 @@ to the config file and avoid modifying the original code.
 #### 3. Modify the config file
 
 ```python
-head=dict(
+track_head=dict(
     type='MyHead',
     arg1=xxx,
     arg2=xxx)
@@ -169,63 +162,4 @@ head=dict(
 
 ### Add a new loss
 
-Assume you want to add a new loss as `MyLoss`, for bounding box regression.
-To add a new loss function, the users need implement it in `mmtrack/models/losses/my_loss.py`.
-The decorator `weighted_loss` enable the loss to be weighted for each element.
-
-```python
-import torch
-import torch.nn as nn
-
-from mmdet.models import LOSSES, weighted_loss
-
-@weighted_loss
-def my_loss(pred, target):
-    assert pred.size() == target.size() and target.numel() > 0
-    loss = torch.abs(pred - target)
-    return loss
-
-@LOSSES.register_module()
-class MyLoss(nn.Module):
-
-    def __init__(self, reduction='mean', loss_weight=1.0):
-        super(MyLoss, self).__init__()
-        self.reduction = reduction
-        self.loss_weight = loss_weight
-
-    def forward(self,
-                pred,
-                target,
-                weight=None,
-                avg_factor=None,
-                reduction_override=None):
-        assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss_bbox = self.loss_weight * my_loss(
-            pred, target, weight, reduction=reduction, avg_factor=avg_factor)
-        return loss_bbox
-```
-
-Then the users need to add it in the `mmtrack/models/losses/__init__.py`.
-
-```python
-from .my_loss import MyLoss, my_loss
-
-```
-
-Alternatively, you can add
-
-```python
-custom_imports=dict(
-    imports=['mmtrack.models.losses.my_loss'])
-```
-
-to the config file and achieve the same goal.
-
-To use it, modify the `loss_xxx` field.
-Since MyLoss is for regression, you need to modify the `loss_bbox` field in the head.
-
-```python
-loss_bbox=dict(type='MyLoss', loss_weight=1.0))
-```
+Please refer to [Add a new loss](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html#add-a-new-loss) for developping a new loss.

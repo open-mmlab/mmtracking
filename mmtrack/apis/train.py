@@ -1,7 +1,8 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
-                         Fp16OptimizerHook, OptimizerHook, build_optimizer)
+                         build_optimizer)
 from mmcv.utils import build_from_cfg
 from mmdet.datasets import build_dataset
 
@@ -86,13 +87,14 @@ def train_model(model,
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        optimizer_config = Fp16OptimizerHook(
-            **cfg.optimizer_config, **fp16_cfg, distributed=distributed)
-    elif distributed and 'type' not in cfg.optimizer_config:
-        optimizer_config = OptimizerHook(**cfg.optimizer_config)
-    else:
-        optimizer_config = cfg.optimizer_config
+    optimizer_config = cfg.optimizer_config
+    if 'type' not in cfg.optimizer_config:
+        optimizer_config.type = 'Fp16OptimizerHook' \
+            if fp16_cfg else 'OptimizerHook'
+    if fp16_cfg:
+        optimizer_config.update(fp16_cfg)
+    if 'Fp16' in optimizer_config.type:
+        optimizer_config.update(distributed=distributed)
 
     # register hooks
     runner.register_training_hooks(cfg.lr_config, optimizer_config,

@@ -1,5 +1,7 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import torch
+from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 
@@ -29,6 +31,8 @@ class SortTracker(BaseTracker):
             Defaults to 0.7.
         num_tentatives (int, optional): Number of continuous frames to confirm
             a track. Defaults to 3.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -40,8 +44,9 @@ class SortTracker(BaseTracker):
                      match_score_thr=2.0),
                  match_iou_thr=0.7,
                  num_tentatives=3,
+                 init_cfg=None,
                  **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(init_cfg=init_cfg, **kwargs)
         self.obj_score_thr = obj_score_thr
         self.reid = reid
         self.match_iou_thr = match_iou_thr
@@ -97,6 +102,7 @@ class SortTracker(BaseTracker):
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
 
+    @force_fp32(apply_to=('img', ))
     def track(self,
               img,
               img_metas,

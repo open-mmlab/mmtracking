@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import build_conv_layer, build_norm_layer
 from mmdet.models.backbones.resnet import Bottleneck, ResNet

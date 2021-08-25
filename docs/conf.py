@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -47,8 +48,7 @@ extensions = [
 
 autodoc_mock_imports = [
     'matplotlib', 'pycocotools', 'terminaltables', 'mmtrack.version',
-    'mmcv.ops', 'mmcls', 'mmdet', 'seaborn', 'motmetrics', 'torchvision',
-    'pandas', 'scipy'
+    'seaborn', 'motmetrics', 'torchvision', 'pandas', 'scipy'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

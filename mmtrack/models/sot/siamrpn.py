@@ -1,3 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import warnings
+
 import numpy as np
 import torch
 from addict import Dict
@@ -19,14 +22,24 @@ class SiamRPN(BaseSingleObjectTracker):
     """
 
     def __init__(self,
-                 pretrains=None,
-                 backbone=None,
+                 backbone,
                  neck=None,
                  head=None,
+                 pretrains=None,
+                 init_cfg=None,
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
-        super(SiamRPN, self).__init__()
+        super(SiamRPN, self).__init__(init_cfg)
+        if isinstance(pretrains, dict):
+            warnings.warn('DeprecationWarning: pretrains is deprecated, '
+                          'please use "init_cfg" instead')
+            backbone_pretrain = pretrains.get('backbone', None)
+            if backbone_pretrain:
+                backbone.init_cfg = dict(
+                    type='Pretrained', checkpoint=backbone_pretrain)
+            else:
+                backbone.init_cfg = None
         self.backbone = build_backbone(backbone)
         if neck is not None:
             self.neck = build_neck(neck)
@@ -37,21 +50,16 @@ class SiamRPN(BaseSingleObjectTracker):
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
 
-        self.init_weights(pretrains)
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def init_weights(self, pretrain):
-        """Initialize the weights of modules in single object tracker.
-
-        Args:
-            pretrained (dict): Path to pre-trained weights.
-        """
-        if pretrain is None:
-            pretrain = dict()
-        assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
-        if self.with_backbone and pretrain.get('backbone', False):
-            self.init_module('backbone', pretrain['backbone'])
+    def init_weights(self):
+        """Initialize the weights of modules in single object tracker."""
+        # We don't use the `init_weights()` function in BaseModule, since it
+        # doesn't support the initialization method from `reset_parameters()`
+        # in Pytorch.
+        if self.with_backbone:
+            self.backbone.init_weights()
 
         if self.with_neck:
             for m in self.neck.modules():

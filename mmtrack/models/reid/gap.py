@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcls.models.builder import NECKS
 from mmcls.models.necks import GlobalAveragePooling as _GlobalAveragePooling

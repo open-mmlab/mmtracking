@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from .aggregators import *  # noqa: F401,F403
 from .backbones import *  # noqa: F401,F403
 from .builder import (AGGREGATORS, MODELS, MOTION, REID, TRACKERS,

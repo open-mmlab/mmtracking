@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import copy
 import os
@@ -66,13 +67,11 @@ def main():
 
     cfg = Config.fromfile(args.config)
 
-    need_init_detector = False
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import train_detector as train_model
         from mmdet.models import build_detector as build_model
         if 'detector' in cfg.model:
             cfg.model = cfg.model.detector
-            need_init_detector = True
     elif cfg.get('USE_MMCLS', False):
         from mmtrack.apis import train_model
         from mmtrack.models import build_reid as build_model
@@ -146,12 +145,7 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
-    if 'detector' in cfg.model:
-        model.detector.init_weights()
-    # if True, the model denotes a detector based on Line #75. Therefore, we
-    # need model.init_weights() rather than model.detector.init_weights()
-    if need_init_detector:
-        model.init_weights()
+    model.init_weights()
 
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:

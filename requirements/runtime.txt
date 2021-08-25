@@ -1,9 +1,9 @@
 dotty_dict
 matplotlib
-mmcls==0.12.0
+mmcls>=0.14.0
 mmpycocotools
 motmetrics
-numpy
+packaging
 seaborn
 six
 terminaltables

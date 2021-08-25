@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os
 import os.path as osp
 import tempfile
@@ -266,7 +267,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 gt = mm.io.loadtxt(gt_file)
                 res = mm.io.loadtxt(res_file)
                 ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
-                if osp.exists(ini_file):
+                if osp.exists(ini_file) and 'MOT15' not in self.img_prefix:
                     acc, ana = mm.utils.CLEAR_MOT_M(
                         gt, res, ini_file, distth=distth)
                 else:

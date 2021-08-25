@@ -1,10 +1,11 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
 import torch.nn as nn
 from mmcls.models.builder import HEADS
 from mmcls.models.heads.base_head import BaseHead
 from mmcls.models.losses import Accuracy
-from mmcv.cnn import constant_init, normal_init
+from mmcv.runner import auto_fp16, force_fp32
 from mmdet.models.builder import build_loss
 
 from .fc_module import FcModule
@@ -29,6 +30,9 @@ class LinearReIDHead(BaseHead):
         loss_pairwise (dict, optional): Triplet loss to train the
             re-identificaiton module.
         topk (int, optional): Calculate topk accuracy. Default to False.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to dict(type='Normal',layer='Linear', mean=0, std=0.01,
+            bias=0).
     """
 
     def __init__(self,
@@ -41,8 +45,10 @@ class LinearReIDHead(BaseHead):
                  num_classes=None,
                  loss=None,
                  loss_pairwise=None,
-                 topk=(1, )):
-        super(LinearReIDHead, self).__init__()
+                 topk=(1, ),
+                 init_cfg=dict(
+                     type='Normal', layer='Linear', mean=0, std=0.01, bias=0)):
+        super(LinearReIDHead, self).__init__(init_cfg)
         assert isinstance(topk, (int, tuple))
         if isinstance(topk, int):
             topk = (topk, )
@@ -72,6 +78,7 @@ class LinearReIDHead(BaseHead):
         self.act_cfg = act_cfg
         self.num_classes = num_classes
         self.accuracy = Accuracy(topk=self.topk)
+        self.fp16_enabled = False
 
         self._init_layers()
 
@@ -86,41 +93,39 @@ class LinearReIDHead(BaseHead):
         in_channels = self.in_channels if self.num_fcs == 0 else \
             self.fc_channels
         self.fc_out = nn.Linear(in_channels, self.out_channels)
-        if self.num_classes:
+        if self.loss_cls:
             self.bn = nn.BatchNorm1d(self.out_channels)
             self.classifier = nn.Linear(self.out_channels, self.num_classes)
 
-    def init_weights(self):
-        """Initalize model weights."""
-        normal_init(self.fc_out, mean=0, std=0.01, bias=0)
-        if self.num_classes:
-            constant_init(self.bn, 1, bias=0)
-            normal_init(self.classifier, mean=0, std=0.01, bias=0)
-
-    def simple_test(self, x):
-        """Test without augmentation."""
-        for m in self.fcs:
-            x = m(x)
-        feats = self.fc_out(x)
-        return feats
-
-    def forward_train(self, x, gt_label):
+    @auto_fp16()
+    def forward_train(self, x):
         """Model forward."""
         for m in self.fcs:
             x = m(x)
         feats = self.fc_out(x)
-        losses = dict()
-        if self.loss_triplet:
-            losses['triplet_loss'] = self.loss_triplet(feats, gt_label)
         if self.loss_cls:
             feats_bn = self.bn(feats)
-            out = self.classifier(feats_bn)
-            losses['ce_loss'] = self.loss_cls(out, gt_label)
+            cls_score = self.classifier(feats_bn)
+            return (feats, cls_score)
+        return (feats, )
+
+    @force_fp32(apply_to=('feats', 'cls_score'))
+    def loss(self, gt_label, feats, cls_score=None):
+        """Compute losses."""
+        losses = dict()
+
+        if self.loss_triplet:
+            losses['triplet_loss'] = self.loss_triplet(feats, gt_label)
+
+        if self.loss_cls:
+            assert cls_score is not None
+            losses['ce_loss'] = self.loss_cls(cls_score, gt_label)
             # compute accuracy
-            acc = self.accuracy(out, gt_label)
+            acc = self.accuracy(cls_score, gt_label)
             assert len(acc) == len(self.topk)
             losses['accuracy'] = {
                 f'top-{k}': a
                 for k, a in zip(self.topk, acc)
             }
+
         return losses

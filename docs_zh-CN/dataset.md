@@ -19,7 +19,7 @@
 
 - 对于视频目标检测任务的训练和测试，只需要 ILSVRC 数据集。
 
-- 对于多目标跟踪任务的训练和测试，只需要 MOT17 数据集。
+- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17 ）。
 
 - 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC 和 LaSOT 数据集。
 
@@ -56,7 +56,22 @@ mmtracking
 │   ├── lasot
 │   │   ├── LaSOTTesting
 │   │   ├── annotations
+|   ├── MOT15
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
+|   ├── MOT16
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
 |   ├── MOT17
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
+|   ├── MOT20
 |   |   ├── train
 |   |   ├── test
 |   |   ├── annotations
@@ -80,6 +95,7 @@ python ./tools/convert_datasets/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/
 python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
 
 # MOT17
+# MOT Challenge中其余数据集的处理与MOT17相同
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```

@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 

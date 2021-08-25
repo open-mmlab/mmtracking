@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import mmcv
 import numpy as np
 import torch
@@ -32,6 +33,8 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     if 'detector' in config.model:
         config.model.detector.pretrained = None
     model = build_model(config.model)
+    # We need call `init_weights()` to load pretained weights in MOT task.
+    model.init_weights()
     if checkpoint is not None:
         map_loc = 'cpu' if device == 'cpu' else None
         checkpoint = load_checkpoint(model, checkpoint, map_location=map_loc)
