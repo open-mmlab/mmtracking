@@ -133,7 +133,7 @@ class TracktorTracker(BaseTracker):
             if self.with_reid:
                 embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
-                                   rescale))
+                                   rescale))['reid_features']
         else:
             # motion
             if model.with_cmc:
@@ -161,11 +161,11 @@ class TracktorTracker(BaseTracker):
             if self.with_reid:
                 prop_embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas,
-                                   prop_bboxes[:, :4].clone(), rescale))
+                                   prop_bboxes[:, :4].clone(), rescale))['reid_features']
                 if bboxes.size(0) > 0:
                     embeds = model.reid.simple_test(
                         self.crop_imgs(reid_img, img_metas,
-                                       bboxes[:, :4].clone(), rescale))
+                                       bboxes[:, :4].clone(), rescale))['reid_features']
                 else:
                     embeds = prop_embeds.new_zeros((0, prop_embeds.size(1)))
                 # reid

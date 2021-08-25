@@ -72,14 +72,14 @@ def main():
         from mmdet.models import build_detector as build_model
         if 'detector' in cfg.model:
             cfg.model = cfg.model.detector
-    elif cfg.get('USE_MMCLS', False):
-        from mmtrack.apis import train_model
-        from mmtrack.models import build_reid as build_model
-        if 'reid' in cfg.model:
-            cfg.model = cfg.model.reid
     else:
         from mmtrack.apis import train_model
-        from mmtrack.models import build_model
+        if cfg.get('TRAIN_REID', False):
+            from mmtrack.models import build_reid as build_model
+            assert 'reid' in cfg.model
+            cfg.model = cfg.model.reid
+        else:
+            from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark

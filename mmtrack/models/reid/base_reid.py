@@ -28,10 +28,13 @@ class BaseReID(ImageClassifier):
     @auto_fp16(apply_to=('img', ), out_fp32=True)
     def simple_test(self, img, **kwargs):
         """Test without augmentation."""
+        results = dict()
         if img.nelement() > 0:
             x = self.extract_feat(img)
             head_outputs = self.head.forward_train(x)
             feats = head_outputs[0]
-            return feats
+            results['reid_features'] = feats
+            return results
         else:
-            return img.new_zeros(0, self.head.out_channels)
+            results['reid_features'] = img.new_zeros(0, self.head.out_channels)
+            return results
