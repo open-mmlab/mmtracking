@@ -38,7 +38,7 @@ def test_base_reid(model_type):
     assert 'accuracy' in outputs
     model.eval()
     x = torch.randn(1, 3, 256, 128)
-    outputs = model.simple_test(x)
+    outputs = model.simple_test(x)['reid_features']
     assert outputs.shape == (1, 128)
 
     head['num_classes'] = None
