@@ -85,7 +85,9 @@ python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```
+
 完成以上格式转换后，文件目录结构如下：
+
 ```
 mmtracking
 ├── mmtrack
@@ -138,19 +140,17 @@ mmtracking
 在`data/ILSVRC/annotations`中有3个json文件:
 
 `imagenet_det_30plus1cls.json`: 包含ImageNet DET训练集标注信息的json文件。`30plus1cls`中的`30`表示本数据集与ImageNet VID数据集重合的30类，`1cls`表示我们将ImageNet Det数据集中的其余170类作为一类，
-并命名为`other_categeries`。 
+并命名为`other_categeries`。
 
 `imagenet_vid_train.json`: 包含ImageNet VID训练集标注信息的json文件。
 
 `imagenet_vid_val.json`: 包含ImageNet VID验证集标注信息的json文件。
-
 
 #### lasot的标注文件夹
 
 在`data/lasot/annotations`中有1个json文件:
 
 `lasot_test.json`:  包含LaSOT测试集标注信息的json文件。
-
 
 #### MOT15/MOT16/MOT17/MOT20的标注和reid文件夹
 

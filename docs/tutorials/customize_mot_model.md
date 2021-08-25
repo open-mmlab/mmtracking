@@ -16,7 +16,7 @@ Create a new file `mmtrack/models/mot/trackers/my_tracker.py`.
 
 We implement a `BaseTracker` that provide basic APIs to maintain the tracks across the video.
 We recommend to inherit the new tracker from it.
-The users may refer to the documentations of `BaseTracker` for the details.
+The users may refer to the documentations of [BaseTracker](https://github.com/open-mmlab/mmtracking/tree/master/mmtrack/models/mot/trackers/base_tracker.py) for the details.
 
 ```python
 from mmtrack.models import TRACKERS
@@ -226,6 +226,8 @@ track_head=dict(
 
 ### Add a new loss
 
+#### 1. define a loss (e.g. MyLoss)
+
 Assume you want to add a new loss as `MyLoss`, for bounding box regression.
 To add a new loss function, the users need implement it in `mmtrack/models/losses/my_loss.py`.
 The decorator `weighted_loss` enable the loss to be weighted for each element.
@@ -264,6 +266,8 @@ class MyLoss(nn.Module):
         return loss_bbox
 ```
 
+#### 2. Import the module
+
 Then the users need to add it in the `mmtrack/models/losses/__init__.py`.
 
 ```python
@@ -281,8 +285,10 @@ custom_imports=dict(
 
 to the config file and achieve the same goal.
 
+#### 3. Modify the config file
+
 To use it, modify the `loss_xxx` field.
-Since MyLoss is for regression, you need to modify the `loss_bbox` field in the head.
+Since MyLoss is for regression, you need to modify the `loss_bbox` field in the `head`.
 
 ```python
 loss_bbox=dict(type='MyLoss', loss_weight=1.0))

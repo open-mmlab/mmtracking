@@ -161,6 +161,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
        --out results.pkl \
        --eval bbox
    ```
+
 #### 测试MOT模型示例
 
 1. 在 MOT17 上测试 Tracktor，并且评估 CLEAR MOT 指标。
@@ -295,22 +296,27 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 #### 训练VID模型示例
 
 1. 在ImageNet VID和ImageNet DET上训练DFF,接着在最后一个epoch评估bbox和mAP.
+
 ```shell
 bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
 ```
+
 #### 训练MOT模型示例
 
 对于像MOT、SORT、DeepSORT以及Trackor这样的MOT方法，你需要训练一个检测器和一个reid模型，而非直接训练MOT模型。
+
 1. 训练检测器
     如果你想要为多目标跟踪器训练检测器，为了兼容MMDetection, 你只需要以和MMDetection相同的方式在config里面增加一行代码`USE_MMDET=True`。可参考示例[faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
 
     请注意MMTracking和MMDetection在base config上有些许不同：`detector`仅仅是`model`的一个子模块。例如，MMDetection中的Faster R-CNN的config如下：
+
     ```python
         model = dict(
             type='FasterRCNN',
             ...
         )
     ```
+
     但在MMTracking中，config如下：
 
     ```python
@@ -321,14 +327,18 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
         )
     )
     ```
+
     这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+
     ```shell
     bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
         --work-dir ./work_dirs/
     ```
+
 2. 训练reid模型
     我们在MMTracking中支持的ReID训练模型来自于[MMClassification](https://github.com/open-mmlab/mmclassification)。
     这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+
     ```shell
     bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
         --work-dir ./work_dirs/
@@ -337,7 +347,9 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 3. 完成检测器和reid模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model)来测试多目标跟踪器。
 
 #### 训练SOT模型示例
+
 1. 在COOC、ImageNet VID和ImageNet DET上训练SiameseRPN++，然后从第10个epoch到第20个epoch评估其success、precision和normed precision。
+
     ```shell
     bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
         --work-dir ./work_dirs/
