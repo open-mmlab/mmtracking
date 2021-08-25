@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from mmcv.cnn import MODELS as MMCV_MODELS
 from mmcv.utils import Registry
 
@@ -19,7 +20,7 @@ def build_motion(cfg):
 
 
 def build_reid(cfg):
-    """Build motion model."""
+    """Build reid model."""
     return REID.build(cfg)
 
 

@@ -1,3 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import warnings
+
 import torch
 from addict import Dict
 from mmdet.models import build_detector
@@ -17,33 +20,28 @@ class SELSA(BaseVideoDetector):
     def __init__(self,
                  detector,
                  pretrains=None,
+                 init_cfg=None,
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
-        super(SELSA, self).__init__()
+        super(SELSA, self).__init__(init_cfg)
+        if isinstance(pretrains, dict):
+            warnings.warn('DeprecationWarning: pretrains is deprecated, '
+                          'please use "init_cfg" instead')
+            detector_pretrain = pretrains.get('detector', None)
+            if detector_pretrain:
+                detector.init_cfg = dict(
+                    type='Pretrained', checkpoint=detector_pretrain)
+            else:
+                detector.init_cfg = None
         self.detector = build_detector(detector)
         assert hasattr(self.detector, 'roi_head'), \
             'selsa video detector only supports two stage detector'
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        self.init_weights(pretrains)
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
-
-    def init_weights(self, pretrain):
-        """Initialize the weights of modules in video object detector.
-
-        Args:
-            pretrained (dict): Path to pre-trained weights.
-        """
-        if pretrain is None:
-            pretrain = dict()
-        assert isinstance(pretrain, dict), '`pretrain` must be a dict.'
-        if self.with_detector and pretrain.get('detector', False):
-            self.init_module('detector', pretrain['detector'])
-        if self.with_motion:
-            self.init_module('motion', pretrain.get('motion', None))
 
     def forward_train(self,
                       img,

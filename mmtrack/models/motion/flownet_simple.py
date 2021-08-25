@@ -1,12 +1,14 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import BaseModule
 
 from ..builder import MOTION
 
 
 @MOTION.register_module()
-class FlowNetSimple(nn.Module):
+class FlowNetSimple(BaseModule):
     """The simple version of FlowNet.
 
     This FlowNetSimple is the implementation of `FlowNetSimple
@@ -22,6 +24,8 @@ class FlowNetSimple(nn.Module):
             Defaults to [255.0, 255.0, 255.0].
         flow_img_norm_mean (list): Used to center the values of image.
             Defaults to [0.411, 0.432, 0.450].
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     arch_setting = {
@@ -40,8 +44,9 @@ class FlowNetSimple(nn.Module):
                  out_indices=[2, 3, 4, 5, 6],
                  flow_scale_factor=5.0,
                  flow_img_norm_std=[255.0, 255.0, 255.0],
-                 flow_img_norm_mean=[0.411, 0.432, 0.450]):
-        super(FlowNetSimple, self).__init__()
+                 flow_img_norm_mean=[0.411, 0.432, 0.450],
+                 init_cfg=None):
+        super(FlowNetSimple, self).__init__(init_cfg)
         self.img_scale_factor = img_scale_factor
         self.out_indices = out_indices
         self.flow_scale_factor = flow_scale_factor
@@ -141,11 +146,6 @@ class FlowNetSimple(nn.Module):
             conv_cfg=dict(type='Conv'),
             act_cfg=None)
 
-    def init_weights(self):
-        """Initialize the weight FlowNetSimple."""
-        # using the default initialization in ConvModule.
-        pass
-
     def prepare_imgs(self, imgs, img_metas):
         """Preprocess images pairs for computing flow.
 
@@ -164,20 +164,20 @@ class FlowNetSimple(nn.Module):
         """
         if not hasattr(self, 'img_norm_mean'):
             mean = img_metas[0]['img_norm_cfg']['mean']
-            mean = torch.tensor(mean, device=imgs.device)
+            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
             self.img_norm_mean = mean.repeat(2)[None, :, None, None]
 
             mean = self.flow_img_norm_mean
-            mean = torch.tensor(mean, device=imgs.device)
+            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
             self.flow_img_norm_mean = mean.repeat(2)[None, :, None, None]
 
         if not hasattr(self, 'img_norm_std'):
             std = img_metas[0]['img_norm_cfg']['std']
-            std = torch.tensor(std, device=imgs.device)
+            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
             self.img_norm_std = std.repeat(2)[None, :, None, None]
 
             std = self.flow_img_norm_std
-            std = torch.tensor(std, device=imgs.device)
+            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
             self.flow_img_norm_std = std.repeat(2)[None, :, None, None]
 
         flow_img = imgs * self.img_norm_std + self.img_norm_mean

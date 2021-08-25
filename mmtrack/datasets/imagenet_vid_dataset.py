@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.datasets import DATASETS
 from pycocotools.coco import COCO
 

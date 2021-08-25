@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 
@@ -5,36 +6,22 @@ import mmcv
 import numpy as np
 import torch
 import torch.distributed as dist
-import torch.nn as nn
-from mmcv.runner import auto_fp16, load_checkpoint
-from mmcv.utils import print_log
+from mmcv.runner import BaseModule, auto_fp16
 
 from mmtrack.utils import get_root_logger
 
 
-class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
-    """Base class for video object detector."""
+class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
+    """Base class for video object detector.
 
-    def __init__(self):
-        super(BaseVideoDetector, self).__init__()
+    Args:
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+    """
+
+    def __init__(self, init_cfg):
+        super(BaseVideoDetector, self).__init__(init_cfg)
         self.logger = get_root_logger()
-
-    def init_module(self, module, pretrain=None):
-        """Initialize the weights of modules in video detector.
-
-        Args:
-            pretrained (str, optional): Path to pre-trained weights.
-                Defaults to None.
-        """
-        if pretrain is not None:
-            print_log(f'load {module} from: {pretrain}', logger=self.logger)
-            load_checkpoint(
-                getattr(self, module),
-                pretrain,
-                strict=False,
-                logger=self.logger)
-        else:
-            getattr(self, module).init_weights()
+        self.fp16_enabled = False
 
     def freeze_module(self, module):
         """Freeze module during training."""
@@ -67,7 +54,12 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
         return hasattr(self, 'aggregator') and self.aggregator is not None
 
     @abstractmethod
-    def forward_train(self, imgs, img_metas, **kwargs):
+    def forward_train(self,
+                      imgs,
+                      img_metas,
+                      ref_img=None,
+                      ref_img_metas=None,
+                      **kwargs):
         """
         Args:
             img (Tensor): of shape (N, C, H, W) encoding input images.
@@ -77,6 +69,17 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
                 For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            ref_img (Tensor): of shape (N, R, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+                R denotes there is #R reference images for each input image.
+
+            ref_img_metas (list[list[dict]]): The first list only has one
+                element. The second list contains reference image information
+                dict where each dict has: 'img_shape', 'scale_factor', 'flip',
+                and may also contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
         """
         pass
@@ -89,15 +92,36 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
         """Test function with test time augmentation."""
         pass
 
-    def forward_test(self, imgs, img_metas, **kwargs):
+    def forward_test(self,
+                     imgs,
+                     img_metas,
+                     ref_img=None,
+                     ref_img_metas=None,
+                     **kwargs):
         """
         Args:
             imgs (List[Tensor]): the outer list indicates test-time
                 augmentations and inner Tensor should have a shape NxCxHxW,
                 which contains all images in the batch.
+
             img_metas (List[List[dict]]): the outer list indicates test-time
                 augs (multiscale, flip, etc.) and the inner list indicates
                 images in a batch.
+
+            ref_img (list[Tensor] | None): The list only contains one Tensor
+                of shape (1, N, C, H, W) encoding input reference images.
+                Typically these should be mean centered and std scaled. N
+                denotes the number for reference images. There may be no
+                reference images in some cases.
+
+            ref_img_metas (list[list[list[dict]]] | None): The first and
+                second list only has one element. The third list contains
+                image information dict where each dict has: 'img_shape',
+                'scale_factor', 'flip', and may also contain 'filename',
+                'ori_shape', 'pad_shape', and 'img_norm_cfg'. For details on
+                the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`. There
+                may be no reference images in some cases.
         """
         if isinstance(imgs, torch.Tensor):
             imgs = [imgs]
@@ -125,17 +149,33 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
             # proposals.
             if 'proposals' in kwargs:
                 kwargs['proposals'] = kwargs['proposals'][0]
-            return self.simple_test(imgs[0], img_metas[0], **kwargs)
+            return self.simple_test(
+                imgs[0],
+                img_metas[0],
+                ref_img=ref_img,
+                ref_img_metas=ref_img_metas,
+                **kwargs)
         else:
             assert imgs[0].size(0) == 1, 'aug test does not support ' \
                                          'inference with batch size ' \
                                          f'{imgs[0].size(0)}'
             # TODO: support test augmentation for predefined proposals
             assert 'proposals' not in kwargs
-            return self.aug_test(imgs, img_metas, **kwargs)
+            return self.aug_test(
+                imgs,
+                img_metas,
+                ref_img=ref_img,
+                ref_img_metas=ref_img_metas,
+                **kwargs)
 
-    @auto_fp16(apply_to=('img', ))
-    def forward(self, img, img_metas, return_loss=True, **kwargs):
+    @auto_fp16(apply_to=('img', 'ref_img'))
+    def forward(self,
+                img,
+                img_metas,
+                ref_img=None,
+                ref_img_metas=None,
+                return_loss=True,
+                **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_test` depending
         on whether ``return_loss`` is ``True``.
 
@@ -146,9 +186,19 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
         the outer list indicating test time augmentations.
         """
         if return_loss:
-            return self.forward_train(img, img_metas, **kwargs)
+            return self.forward_train(
+                img,
+                img_metas,
+                ref_img=ref_img,
+                ref_img_metas=ref_img_metas,
+                **kwargs)
         else:
-            return self.forward_test(img, img_metas, **kwargs)
+            return self.forward_test(
+                img,
+                img_metas,
+                ref_img=ref_img,
+                ref_img_metas=ref_img_metas,
+                **kwargs)
 
     def _parse_losses(self, losses):
         """Parse the raw outputs (losses) of the network.
@@ -251,8 +301,11 @@ class BaseVideoDetector(nn.Module, metaclass=ABCMeta):
 
         Args:
             img (str or Tensor): The image to be displayed.
-            result (Tensor or tuple): The results to draw over `img`
-                bbox_result or (bbox_result, segm_result).
+            result (dict): The results to draw over `img` bbox_result or
+                (bbox_result, segm_result). The value of key 'bbox_results'
+                is list with length num_classes, and each element in list
+                is ndarray with shape(n, 5)
+                in [tl_x, tl_y, br_x, br_y, score] format.
             score_thr (float, optional): Minimum score of bboxes to be shown.
                 Default: 0.3.
             bbox_color (str or tuple or :obj:`Color`): Color of bbox lines.
