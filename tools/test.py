@@ -96,6 +96,7 @@ def main():
         from mmtrack.datasets import build_dataloader
         if cfg.get('TRAIN_REID', False):
             from mmtrack.models import build_reid as build_model
+            assert 'reid' in cfg.model
             cfg.model = cfg.model.reid
         else:
             from mmtrack.models import build_model

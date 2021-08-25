@@ -32,8 +32,7 @@ class BaseReID(ImageClassifier):
         if img.nelement() > 0:
             x = self.extract_feat(img)
             head_outputs = self.head.forward_train(x)
-            feats = head_outputs[0]
-            results['reid_features'] = feats
+            results['reid_features'] = head_outputs[0]
             return results
         else:
             results['reid_features'] = img.new_zeros(0, self.head.out_channels)

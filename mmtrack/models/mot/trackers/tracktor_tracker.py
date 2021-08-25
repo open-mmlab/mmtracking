@@ -131,9 +131,10 @@ class TracktorTracker(BaseTracker):
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
             if self.with_reid:
-                embeds = model.reid.simple_test(
+                results = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
-                                   rescale))['reid_features']
+                                   rescale))
+                embeds = results['reid_features']
         else:
             # motion
             if model.with_cmc:
@@ -159,15 +160,17 @@ class TracktorTracker(BaseTracker):
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
 
             if self.with_reid:
-                prop_embeds = model.reid.simple_test(
+                results = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas,
                                    prop_bboxes[:, :4].clone(),
-                                   rescale))['reid_features']
+                                   rescale))
+                prop_embeds = results['reid_features']
                 if bboxes.size(0) > 0:
-                    embeds = model.reid.simple_test(
+                    results = model.reid.simple_test(
                         self.crop_imgs(reid_img, img_metas,
                                        bboxes[:, :4].clone(),
-                                       rescale))['reid_features']
+                                       rescale))
+                    embeds = results['reid_features']
                 else:
                     embeds = prop_embeds.new_zeros((0, prop_embeds.size(1)))
                 # reid
