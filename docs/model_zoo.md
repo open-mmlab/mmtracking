@@ -33,6 +33,10 @@ Please refer to [FGFA](https://github.com/open-mmlab/mmtracking/blob/master/conf
 
 Please refer to [SELSA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/selsa) for details.
 
+### Temporal RoI Align (AAAI 2021)
+
+Please refer to [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/temporal_roi_align) for details.
+
 ## Baselines of multiple object tracking
 
 ### SORT/DeepSORT (ICIP 2016/2017)

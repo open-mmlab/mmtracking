@@ -33,6 +33,10 @@
 
 详情请参考 [SELSA](../configs/vid/selsa/README.md)。
 
+### Temporal RoI Align (AAAI 2021)
+
+详情请参考 [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/temporal_roi_align)。
+
 ## 多目标跟踪基线
 
 ### SORT/DeepSORT (ICIP 2016/2017)
