@@ -2,8 +2,7 @@ import torch
 from mmcv.cnn import ConvModule
 from mmcv.runner import force_fp32
 from mmdet.models.builder import ROI_EXTRACTORS
-
-from .single_level_roi_extractor import SingleRoIExtractor
+from mmdet.models.roi_heads.roi_extractors import SingleRoIExtractor
 
 
 @ROI_EXTRACTORS.register_module()
@@ -15,24 +14,24 @@ class TemporalRoIAlign(SingleRoIExtractor):
     `TRoI Align <https://ojs.aaai.org/index.php/AAAI/article/view/16234>`_.
 
     Args:
-        ms_roi_align_cfg (dict): A dict containning key `sampling_point`,
-            denoting the number of sampling points in the Most Similar RoI
-            Align. Defaults to dict(sampling_point=2).
-        tafa_cfg (dict): A dict containning key `num_attention_blocks`,
-            denoting the number of temporal attention blocks in the Temporal
-            Attentional Feature Aggregation. Defaults to
-            dict(num_attention_blocks=4).
+        num_most_similar_locations (int): Denotes the number of the most
+            similar locations in the Most Similar RoI Align. Defaults to 2.
+        num_temporal_attention_blocks (int): Denotes the number of temporal
+            attention blocks in the Temporal Attentional Feature Aggregation.
+            If the value isn't greater than 0, the averaging operation will be
+            adopted to aggregate the RoI features with the Most Similar RoI
+            features. Defaults to 4.
     """
 
     def __init__(self,
-                 ms_roi_align_cfg=dict(sampling_point=4),
-                 tafa_cfg=dict(num_attention_blocks=8),
+                 num_most_similar_locations=2,
+                 num_temporal_attention_blocks=4,
                  *args,
                  **kwargs):
         super(TemporalRoIAlign, self).__init__(*args, **kwargs)
-        self.ms_roi_align_cfg = ms_roi_align_cfg
-        self.tafa_cfg = tafa_cfg
-        if self.tafa_cfg:
+        self.num_most_similar_locations = num_most_similar_locations
+        self.num_temporal_attention_blocks = num_temporal_attention_blocks
+        if self.num_temporal_attention_blocks > 0:
             self.embed_network = ConvModule(
                 self.out_channels,
                 self.out_channels,
@@ -42,8 +41,9 @@ class TemporalRoIAlign(SingleRoIExtractor):
                 norm_cfg=None,
                 act_cfg=None)
 
-    def tafa(self, x, ref_x):
-        """Aggregate the RoI features `x` with the MS RoI features `ref_x`.
+    def temporal_attentional_feature_aggregation(self, x, ref_x):
+        """Aggregate the RoI features `x` with the Most Similar RoI features
+        `ref_x`.
 
         The aggregation mainly contains three steps:
         1. Pass through a tiny embed network.
@@ -67,7 +67,7 @@ class TemporalRoIAlign(SingleRoIExtractor):
         x = torch.cat((x, ref_x), dim=0)
 
         img_n, roi_n, _, roi_h, roi_w = x.size()
-        num_attention_blocks = self.tafa_cfg.get('num_attention_blocks', 8)
+        num_attention_blocks = self.num_temporal_attention_blocks
 
         # 1. Pass through a tiny embed network
         # (img_n * roi_n, C, 7, 7)
@@ -96,8 +96,9 @@ class TemporalRoIAlign(SingleRoIExtractor):
         x = (x * ada_weights).sum(dim=0)
         return x
 
-    def ms_roi_align(self, roi_feats, ref_feats):
-        """Extract the MS RoI features from `ref_feats` based on `roi_feats`.
+    def most_similar_roi_align(self, roi_feats, ref_feats):
+        """Extract the Most Similar RoI features from reference feature maps
+        `ref_feats` based on RoI features `roi_feats`.
 
         The extraction mainly contains three steps:
         1. Compute cos similarity maps between `roi_feats` and `ref_feats`.
@@ -109,14 +110,13 @@ class TemporalRoIAlign(SingleRoIExtractor):
                 roi_h and roi_w denote the number of key frame proposals, the
                 height of RoI features and the width of RoI features,
                 respectively.
-
             ref_feats (Tensor): of shape [img_n, C, img_h, img_w]. img_n,
                 img_h and img_w denote the number of reference frames, the
                 height of reference frame feature maps and the width of
                 reference frame feature maps, respectively.
 
         Returns:
-            Tensor: The extracted MS RoI features from reference frames
+            Tensor: The extracted Most Similar RoI features from reference
                 feature maps with shape [img_n, roi_n, C, roi_h, roi_w].
         """
         # 1. Compute cos similarity maps.
@@ -147,7 +147,7 @@ class TemporalRoIAlign(SingleRoIExtractor):
         # 2. Pick the top K points based on the similarity scores.
         # (roi_n * 7 * 7, img_n, top_k)
         values, indices = cos_similarity_maps.topk(
-            k=self.ms_roi_align_cfg.get('sampling_point', 4),
+            k=self.num_most_similar_locations,
             dim=2,
             largest=True,
         )
@@ -192,13 +192,16 @@ class TemporalRoIAlign(SingleRoIExtractor):
         else:
             # We only use the last level of reference feature map to perform
             # Most Similar RoI Align.
-            ref_roi_feats = self.ms_roi_align(roi_feats, ref_feats[-1])
+            ref_roi_feats = self.most_similar_roi_align(
+                roi_feats, ref_feats[-1])
 
             roi_feats = roi_feats.unsqueeze(0)
-            if self.tafa_cfg is None:
+            if self.num_temporal_attention_blocks > 0:
+                temporal_roi_feats = \
+                    self.temporal_attentional_feature_aggregation(
+                        roi_feats, ref_roi_feats)
+            else:
                 temporal_roi_feats = torch.cat((roi_feats, ref_roi_feats),
                                                dim=0)
                 temporal_roi_feats = temporal_roi_feats.mean(dim=0)
-            else:
-                temporal_roi_feats = self.tafa(roi_feats, ref_roi_feats)
             return temporal_roi_feats

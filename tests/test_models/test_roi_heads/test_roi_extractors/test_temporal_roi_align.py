@@ -6,8 +6,8 @@ from mmtrack.models.roi_heads.roi_extractors import TemporalRoIAlign
 def test_temporal_roi_align():
     """Test Temporal RoI Align."""
     temporal_roi_align_config = dict(
-        ms_roi_align_cfg=dict(sampling_point=2),
-        tafa_cfg=dict(num_attention_blocks=4),
+        num_most_similar_locations=2,
+        num_temporal_attention_blocks=4,
         roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=2),
         out_channels=256,
         featmap_strides=[16])
