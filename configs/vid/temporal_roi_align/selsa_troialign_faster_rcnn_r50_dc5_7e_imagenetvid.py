@@ -10,7 +10,7 @@ model = dict(
             type='SelsaRoIHead',
             bbox_roi_extractor=dict(
                 type='TemporalRoIAlign',
-                num_most_similar_locations=2,
+                num_most_similar_points=2,
                 num_temporal_attention_blocks=4,
                 roi_layer=dict(
                     type='RoIAlign', output_size=7, sampling_ratio=2),

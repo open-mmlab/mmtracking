@@ -18,9 +18,9 @@
 
 ## Results and models on ImageNet VID dataset
 
-We observe around 0.5 mAP fluctuations in performance, and provide the best model.
+We observed that the performance of this method has a fluctuation of about 0.5 mAP. The checkpoint provided below is the best one from two experiments.
 
-We find that, in `SELSA + TemporalRoIAlign` method, using 3 selsa modules can bring around 0.2 mAP gains than using 2 selsa modules, while in `SELSA` method, doing so will degrade the performance by around 0.5 mAP. Therefore, we use 3 selsa modules in `SELSA + TemporalRoIAlign` method and 2 selsa modules in `SELSA` method.
+Note that the numbers of selsa modules in this method and `SELSA` are 3 and 2 respectively. This is because another selsa modules improve this method by 0.2 points but degrade `SELSA` by 0.5 points. We choose the best settings for the two methods for a fair comparison.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :------: | :--------: |

@@ -14,8 +14,8 @@ class TemporalRoIAlign(SingleRoIExtractor):
     `TRoI Align <https://ojs.aaai.org/index.php/AAAI/article/view/16234>`_.
 
     Args:
-        num_most_similar_locations (int): Denotes the number of the most
-            similar locations in the Most Similar RoI Align. Defaults to 2.
+        num_most_similar_points (int): Denotes the number of the most similar
+            points in the Most Similar RoI Align. Defaults to 2.
         num_temporal_attention_blocks (int): Denotes the number of temporal
             attention blocks in the Temporal Attentional Feature Aggregation.
             If the value isn't greater than 0, the averaging operation will be
@@ -24,12 +24,12 @@ class TemporalRoIAlign(SingleRoIExtractor):
     """
 
     def __init__(self,
-                 num_most_similar_locations=2,
+                 num_most_similar_points=2,
                  num_temporal_attention_blocks=4,
                  *args,
                  **kwargs):
         super(TemporalRoIAlign, self).__init__(*args, **kwargs)
-        self.num_most_similar_locations = num_most_similar_locations
+        self.num_most_similar_points = num_most_similar_points
         self.num_temporal_attention_blocks = num_temporal_attention_blocks
         if self.num_temporal_attention_blocks > 0:
             self.embed_network = ConvModule(
@@ -147,7 +147,7 @@ class TemporalRoIAlign(SingleRoIExtractor):
         # 2. Pick the top K points based on the similarity scores.
         # (roi_n * 7 * 7, img_n, top_k)
         values, indices = cos_similarity_maps.topk(
-            k=self.num_most_similar_locations,
+            k=self.num_most_similar_points,
             dim=2,
             largest=True,
         )
