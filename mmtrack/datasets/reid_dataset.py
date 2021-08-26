@@ -146,9 +146,11 @@ class ReIDDataset(BaseDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # distance
-        results = [result.data.cpu() for result in results]
-        features = torch.stack(results) if len(
-            results[0].size()) == 1 else torch.cat(results)
+        features_list = [
+            feature.data.cpu() for feature in results['reid_features']
+        ]
+        features = torch.stack(features_list) if len(
+            features_list[0].size()) == 1 else torch.cat(features_list)
         n, c = features.size()
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()
