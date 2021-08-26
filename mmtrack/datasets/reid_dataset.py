@@ -151,7 +151,7 @@ class ReIDDataset(BaseDataset):
         features_list = [
             feature.data.cpu() for feature in results['reid_features']
         ]
-        features = torch.cat(features_list)
+        features = torch.stack(features_list)
         n, c = features.size()
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()

@@ -13,13 +13,14 @@ REID_ANN_FILE = f'{PREFIX}/demo_reid_data/mot17_reid/ann.txt'
 
 def _create_reid_gt_results(dataset):
     results = dict()
+    reid_features_list = []
     dataset_infos = dataset.load_annotations()
     for dataset_info in dataset_infos:
         reid_features = torch.full((1, 128),
-                            float(dataset_info['gt_label']),
-                            dtype=torch.float32)
-
-        results['reid_features'] = reid_features
+                                   float(dataset_info['gt_label']),
+                                   dtype=torch.float32)
+        reid_features_list.append(reid_features)
+        results['reid_features'] = torch.cat(reid_features_list, dim=0)
     return results
 
 
