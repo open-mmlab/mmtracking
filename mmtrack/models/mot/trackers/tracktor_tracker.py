@@ -162,14 +162,12 @@ class TracktorTracker(BaseTracker):
             if self.with_reid:
                 results = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas,
-                                   prop_bboxes[:, :4].clone(),
-                                   rescale))
+                                   prop_bboxes[:, :4].clone(), rescale))
                 prop_embeds = results['reid_features']
                 if bboxes.size(0) > 0:
                     results = model.reid.simple_test(
                         self.crop_imgs(reid_img, img_metas,
-                                       bboxes[:, :4].clone(),
-                                       rescale))
+                                       bboxes[:, :4].clone(), rescale))
                     embeds = results['reid_features']
                 else:
                     embeds = prop_embeds.new_zeros((0, prop_embeds.size(1)))
