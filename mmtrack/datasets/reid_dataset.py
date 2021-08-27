@@ -119,7 +119,7 @@ class ReIDDataset(BaseDataset):
         """Evaluate the ReID dataset.
 
         Args:
-            results (list | dict): Testing results of the dataset.
+            results (dict): Testing results of the dataset.
             metric (str | list[str]): Metrics to be evaluated.
                 Default value is `mAP`.
             metric_options: (dict, optional): Options for calculating metrics.
@@ -130,8 +130,6 @@ class ReIDDataset(BaseDataset):
         Returns:
             dict: evaluation results
         """
-        if isinstance(results, list):
-            results['reid_features'] = results
         if metric_options is None:
             metric_options = dict(rank_list=[1, 5, 10, 20], max_rank=20)
         for rank in metric_options['rank_list']:
@@ -151,7 +149,7 @@ class ReIDDataset(BaseDataset):
         features_list = [
             feature.data.cpu() for feature in results['reid_features']
         ]
-        features = torch.stack(features_list)
+        features = torch.cat(features_list)
         n, c = features.size()
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()
