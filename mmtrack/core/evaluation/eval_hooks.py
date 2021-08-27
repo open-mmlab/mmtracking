@@ -6,8 +6,6 @@ from mmcv.runner import DistEvalHook as BaseDistEvalHook
 from mmcv.runner import EvalHook as BaseEvalHook
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from mmtrack.apis.test import single_gpu_test, multi_gpu_test
-
 
 class EvalHook(BaseEvalHook):
     """Please refer to `mmcv.runner.hooks.evaluation.py:EvalHook` for detailed
@@ -18,6 +16,7 @@ class EvalHook(BaseEvalHook):
         if not self._should_evaluate(runner):
             return
 
+        from mmtrack.apis import single_gpu_test
         results = single_gpu_test(runner.model, self.dataloader, show=False)
         runner.log_buffer.output['eval_iter_num'] = len(self.dataloader)
         key_score = self.evaluate(runner, results)
@@ -51,6 +50,7 @@ class DistEvalHook(BaseDistEvalHook):
         if tmpdir is None:
             tmpdir = osp.join(runner.work_dir, '.eval_hook')
 
+        from mmtrack.apis import multi_gpu_test
         results = multi_gpu_test(
             runner.model,
             self.dataloader,
