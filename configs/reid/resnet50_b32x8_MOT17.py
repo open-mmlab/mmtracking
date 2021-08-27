@@ -1,4 +1,4 @@
-USE_MMCLS = True
+TRAIN_REID = True
 _base_ = [
     '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]

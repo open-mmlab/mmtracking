@@ -1,4 +1,4 @@
-USE_MMCLS = True
+TRAIN_REID = True
 _base_ = ['./resnet50_b32x8_MOT17.py']
 model = dict(reid=dict(head=dict(num_classes=371)))
 # data
