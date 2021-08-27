@@ -19,7 +19,7 @@ def _create_reid_gt_results(dataset):
                                    float(dataset_info['gt_label']),
                                    dtype=torch.float32)
         reid_features_list.append(reid_features)
-    results = dict(reid_features=torch.cat(reid_features_list, dim=0))
+    results = dict(reid_features=reid_features_list)
     return results
 
 
