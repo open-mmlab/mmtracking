@@ -119,7 +119,7 @@ class ReIDDataset(BaseDataset):
         """Evaluate the ReID dataset.
 
         Args:
-            results (dict): Testing results of the dataset.
+            results (list): Testing results of the dataset.
             metric (str | list[str]): Metrics to be evaluated.
                 Default value is `mAP`.
             metric_options: (dict, optional): Options for calculating metrics.
@@ -146,10 +146,9 @@ class ReIDDataset(BaseDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # distance
-        features_list = [
-            feature.data.cpu() for feature in results['reid_features']
-        ]
-        features = torch.cat(features_list)
+        results = [result.data.cpu() for result in results]
+        features = torch.cat(results)
+
         n, c = features.size()
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()

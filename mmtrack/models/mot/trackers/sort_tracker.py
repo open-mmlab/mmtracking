@@ -153,10 +153,9 @@ class SortTracker(BaseTracker):
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
             if self.with_reid:
-                results = model.reid.simple_test(
+                embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
-                embeds = results['reid_features']
         else:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
 
@@ -167,10 +166,9 @@ class SortTracker(BaseTracker):
 
             active_ids = self.confirmed_ids
             if self.with_reid:
-                results = model.reid.simple_test(
+                embeds = model.reid.simple_test(
                     self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
                                    rescale))
-                embeds = results['reid_features']
                 # reid
                 if len(active_ids) > 0:
                     track_embeds = self.get(
