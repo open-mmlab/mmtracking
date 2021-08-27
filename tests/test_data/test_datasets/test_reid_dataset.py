@@ -19,7 +19,6 @@ def _create_reid_gt_results(dataset):
                             float(dataset_info['gt_label']),
                             dtype=torch.float32)
         results.append(result)
-
     return results
 
 
