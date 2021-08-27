@@ -6,7 +6,7 @@ from mmcv.runner import DistEvalHook as BaseDistEvalHook
 from mmcv.runner import EvalHook as BaseEvalHook
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from mmtrack.apis import multi_gpu_test, single_gpu_test
+from mmtrack.apis.test import single_gpu_test, multi_gpu_test
 
 
 class EvalHook(BaseEvalHook):
