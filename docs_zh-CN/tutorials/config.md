@@ -1,6 +1,6 @@
 ## 了解配置文件
 
-我们使用 python 文件作为我们的配置系统。 你可以在 $MMTracking/configs 下找到所有配置。
+我们使用 python 文件作为我们的配置系统。 你可以在 $MMTracking/configs 下找到所有配置文件。
 
 我们将模块化和继承融入我们的配置系统，这将方便我们进行各种实验。
 你可以运行 `python tools/print_config.py /PATH/TO/CONFIG` 来查看完整的配置。
@@ -10,12 +10,13 @@
 使用 “tools/train.py” 或 “tools/test.py” 提交任务时，你可以指定 `--cfg-options` 来原地修改配置。
 
 - 更新配置文件中字典的键值。
+
   可以按照原始配置中字典键的顺序修改配置选项。
-  例如 `--cfg-options model.detector.backbone.norm_eval=False` 将模型主干中的所有 BN 模块更改为训练模式。
+  例如 `--cfg-options model.detector.backbone.norm_eval=False` 将模型骨干网络中的 BN 模块更改为训练模式。
 
 - 更新配置文件列表中的字典键值。
 
-  一些配置字典在你的配置中被组成一个列表。例如，测试时的流水线 `data.test.pipeline` 通常是一个列表
+  在配置文件中，一些配置字典被组成一个列表。例如，测试时的流水线 `data.test.pipeline` 通常是一个列表
   例如 `[dict(type='LoadImageFromFile'), ...]` 。如果你想把流水线中的 `'LoadImageFromFile'` 更改为 `'LoadImageFromWebcam'`，
   你可以使用 `--cfg-options data.test.pipeline.0.type=LoadImageFromWebcam`。
 
@@ -31,7 +32,7 @@
 许多方法可以通过这些文件构筑，例如 DFF、FGFA、SELSA、SORT、DeepSORT。
 由来自 `_base_` 的组件组成的配置称为 _primitive_ 。
 
-对于同一文件夹下的所有配置，建议只有**一个** _primitive_ 配置。所有其他配置都应该从 _primitive_ 配置中继承。在这种方式下，继承级别不应超过3。
+对于同一文件夹下的所有配置，建议只有**一个** _primitive_ 配置。所有其他配置都应该从 _primitive_ 配置中继承。在这种方式下，最大的继承级别是3。
 
 为了便于理解，我们建议开发者继承现有方法。
 例如，如果基于 Faster R-CNN 做了一些修改，用户可以先通过指定 `_base_ = ../../_base_/models/faster_rcnn_r50_dc5.py` 来继承基本的 Faster R-CNN 结构，然后在配置文件中修改必要的字段。
@@ -40,7 +41,7 @@
 
 详细文档请参考[mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#config)。
 
-### 配置名称样式
+### 配置文件名样式
 
 我们遵循以下样式来命名配置文件。建议开发者遵循相同的样式。
 
@@ -59,7 +60,7 @@
 - `[misc]`：模型的其他设置/插件，例如`dconv`、`gcb`、`attention`、`albu`、`mstrain`。
 - `[gpu x batch_per_gpu]`：GPU 数目以及每个 GPU 的样本数，默认使用 `8x2`。
 - `{schedule}`：训练时长，选项为 `4e`、`7e`、`20e` 等。
-    `20e` 表示 20 个时期。
+    `20e` 表示 20 个周期。
 - `{dataset}`：数据集如 `imagenetvid`、`mot17`、`lasot`。
 
 ### 配置文件详细解析
@@ -83,7 +84,7 @@
 
 配置文件中使用了一些中间变量，例如数据集中的 `train_pipeline`/`test_pipeline`。
 值得注意的是，在子配置中修改中间变量时，用户需要再次将中间变量传递到相应的字段中。
-例如，我们想使用自适应步长的测试策略来测试 SELSA。 那么我们想要修改中间变量 `ref_img_sampler` 可以通过下面的方式。
+例如，我们想使用自适应步长的测试策略来测试 SELSA。 ref_img_sampler 是我们想要修改的中间变量。
 
 ```python
 _base_ = ['./selsa_faster_rcnn_r50_dc5_1x_imagenetvid.py']

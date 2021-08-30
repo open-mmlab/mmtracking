@@ -3,7 +3,7 @@
 ```python
 cudnn_benchmark = True  ## 当设置为 True 时可以加快网络训练
 crop_size = 511  # 边界框的裁剪大小
-exemplar_size = 127  # 示例大小
+exemplar_size = 127  # 模板大小
 search_size = 255  #  搜索大小
 
 # 模型设置
@@ -24,8 +24,8 @@ model = dict(
         )), # 主干网络的预训练权重
     neck=dict(
         type='ChannelMapper',  # 模型颈部名称.
-        in_channels=[512, 1024, 2048],  # 输出通道
-        out_channels=256,  # 输入通道
+        in_channels=[512, 1024, 2048],  # 输入通道
+        out_channels=256,  # 输出通道
         kernel_size=1,  # 卷积核大小
         norm_cfg=dict(type='BN'),  # 标准化层配置
         act_cfg=None),  # 激活函数层配置
@@ -43,10 +43,10 @@ model = dict(
             target_means=[0., 0., 0., 0.],  # 用于编码和解码框的均值
             target_stds=[1., 1., 1., 1.]),  # 用于编码和解码框的方差
         loss_cls=dict(  # 分类分支的损失函数配置
-            type='CrossEntropyLoss', # 分类分支的名称
+            type='CrossEntropyLoss', # 分类分支的损失函数类型，我们同样支持 Focal loss。
             reduction='sum',
             loss_weight=1.0),  # 分类分支的损失函数权重
-        loss_bbox=dict(  # 回归分支的损失女韩式配置
+        loss_bbox=dict(  # 回归分支的损失函数配置
             type='L1Loss',  # 损失函数名称，具体实现请查看 https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/losses/smooth_l1_loss.py#L56
             reduction='sum',
             loss_weight=1.2)),  # 回归分支损失函数权重
@@ -60,8 +60,8 @@ model = dict(
                 match_low_quality=False),  # 是否匹配低质量的框（有关更多详细信息，请参阅 API 文档）
             sampler=dict(  # 正负样本采样器配置
                 type='RandomSampler',  # 采样器名称, PseudoSampler 和其它的采样器同样也支持，详情请参考 https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/samplers/random_sampler.py#L8
-                num=64,  # 示例图像和搜索图像为正样本对的数目
-                pos_fraction=0.25,  # 当示例图像和搜索图像为正样本对时，正样本在总样本中所占比例
+                num=64,  # 模板图像和搜索图像为正样本对的数目
+                pos_fraction=0.25,  # 当模板图像和搜索图像为正样本对时，正样本在总样本中所占比例
                 add_gt_as_proposals=False),  # 采样后是否添加真实标签框作为提案框
             num_neg=16,  # 示例图像和搜索图像为负样本对时的负样本数
             exemplar_size=exemplar_size,
@@ -96,7 +96,7 @@ train_pipeline = [
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pairs']),  # 决定数据中哪些键应该传递给检测器
     dict(type='ConcatVideoReferences'),  # 拼接引用图像
     dict(type='SeqDefaultFormatBundle',  # 使用默认的方式格式化流水线中收集的数据
-        ref_prefix='search')  # 引用图片中键的前缀
+        ref_prefix='search')  # 参考图片中键值的前缀
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),  # 第一步：从文件路径中载入图像

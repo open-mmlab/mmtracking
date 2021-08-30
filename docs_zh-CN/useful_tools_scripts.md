@@ -111,7 +111,7 @@ python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/
 
 最后输出的文件名为 `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`。
 
-## 杂项
+## 其它有用的工具脚本
 
 ### 输出完整的配置
 

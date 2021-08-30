@@ -23,7 +23,7 @@
 
 ### v0.5.3 (01/07/2021)
 
-#### 新特性支持
+#### 新特性
 
 - 支持重识别任务的训练 ([#177](https://github.com/open-mmlab/mmtracking/pull/177), [#179](https://github.com/open-mmlab/mmtracking/pull/179), [#180](https://github.com/open-mmlab/mmtracking/pull/180), [#181](https://github.com/open-mmlab/mmtracking/pull/181))
 - 支持 MIM ([#158](https://github.com/open-mmlab/mmtracking/pull/158))
@@ -42,13 +42,13 @@
 #### 提升
 
 - 修复错字 ([#104](https://github.com/open-mmlab/mmtracking/commit/3ccc9b79ce6e14e013268d0dbb53462c0432f357), [#121](https://github.com/open-mmlab/mmtracking/commit/fadcd811df095781fbbdc7c47f8dac1305555461), [#145](https://github.com/open-mmlab/mmtracking/commit/48a47868abd9a0d96c010fc3f85cba1bd2854a9b))
-- 增阿基会议引用 ([#111](https://github.com/open-mmlab/mmtracking/commit/9a3c463b087cdee201a9345f270f6c01e116cf2c))
-- 更新 CONTRIBUTING 链接 ([#112](https://github.com/open-mmlab/mmtracking/commit/b725e63463b1bd795fd3c3000b30ef37832a844d))
+- 增加会议引用 ([#111](https://github.com/open-mmlab/mmtracking/commit/9a3c463b087cdee201a9345f270f6c01e116cf2c))
+- 更新 CONTRIBUTING 链接到 mmcv ([#112](https://github.com/open-mmlab/mmtracking/commit/b725e63463b1bd795fd3c3000b30ef37832a844d))
 - 调整 mmcv 中的更新 (FP16Hook) ([#114](https://github.com/open-mmlab/mmtracking/commit/49f910878345250d22fd5da1104f1fb227244939), [#119](https://github.com/open-mmlab/mmtracking/commit/f1df53dd8e571f4674867919d1886b9fb2024bf9))
 - 添加了指向其他代码库的 bibtex 和链接 ([#122](https://github.com/open-mmlab/mmtracking/commit/1b456423e0aeddb52e7c29e5b0ec3d48e058c615))
 - 添加 docker 文件 ([#124](https://github.com/open-mmlab/mmtracking/commit/a01c3e8fff97a2b8eebc8d28e3e9d9a360ffbc3c))
 - 使用 mmcv 中的 `collect_env` ([#129](https://github.com/open-mmlab/mmtracking/commit/0055947c4d19c8921c32ce128ae0314d61e593d2))
-- 增加中文教程 ([#135](https://github.com/open-mmlab/mmtracking/commit/ecc83b5e6523582b92196095eb21d72d654322f2), [#147](https://github.com/open-mmlab/mmtracking/commit/19004b6eeca594a2179d8b3a3622764e1753aa4d), [#148](https://github.com/open-mmlab/mmtracking/commit/dc367868453fdcb528041176a59ede368f0e2053))
+- 增加和更新中文教程 ([#135](https://github.com/open-mmlab/mmtracking/commit/ecc83b5e6523582b92196095eb21d72d654322f2), [#147](https://github.com/open-mmlab/mmtracking/commit/19004b6eeca594a2179d8b3a3622764e1753aa4d), [#148](https://github.com/open-mmlab/mmtracking/commit/dc367868453fdcb528041176a59ede368f0e2053))
 
 ### v0.5.1 (01/02/2021)
 
@@ -68,7 +68,7 @@
 
 - MMTracking 已经发布!
 
-#### 新特性支持
+#### 新特性
 
 - 支持的视频目标检测方法: [DFF](https://arxiv.org/abs/1611.07715), [FGFA](https://arxiv.org/abs/1703.10025), [SELSA](https://arxiv.org/abs/1907.06390)
 - 支持的多目标跟踪方法: [SORT](https://arxiv.org/abs/1602.00763)/[DeepSORT](https://arxiv.org/abs/1703.07402), [Tracktor](https://arxiv.org/abs/1903.05625)
