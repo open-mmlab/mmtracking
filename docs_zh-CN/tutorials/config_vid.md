@@ -3,7 +3,7 @@
 ```python
 model = dict(
     type='DFF',  # 视频目标检测器名称
-    detector=dict(  # Please refer to https://mmdetection.readthedocs.io/en/latest/tutorials/config.html#an-example-of-mask-r-cnn for detailed comments of detector.
+    detector=dict(  # 详情请参考 https://github.com/open-mmlab/mmdetection/blob/master/docs_zh-CN/tutorials/config.md#mask-r-cnn-配置文件示例
         type='FasterRCNN',
         backbone=dict(
             type='ResNet',
@@ -124,7 +124,7 @@ model = dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
-        )), # 与训练模型权重
+        )), # 预训练模型
     train_cfg=None,
     test_cfg=dict(key_frame_interval=10))  # 测试时关键帧间隔
 dataset_type = 'ImagenetVIDDataset'  # 数据集类型
