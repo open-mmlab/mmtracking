@@ -77,7 +77,7 @@ python demo/demo_mot.py \
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
-注意：当运行`demo_mot.py`时， 我们建议您使用包含`private`的配置文件，这是因为这些配置文件不需要外部的检测结果。
+注意：当运行 `demo_mot.py` 时， 我们建议您使用包含 `private` 的配置文件，这是因为这些配置文件不需要外部的检测结果。
 
 #### 使用 SOT 模型进行推理
 
@@ -178,6 +178,21 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
        configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-public-half.py 8 \
        --eval track
    ```
+
+3. 如果想使用自定义的检测器和重识别模型来测试 Trackor，你需要在 config 中更改相应的（关键字-值）对，如下所示：
+
+```python
+model = dict(
+    detector=dict(
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='/path/to/detector_model')),
+    reid=dict(
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='/path/to/reid_model'))
+    )
+```
 
 #### 测试SOT模型示例
 
@@ -295,7 +310,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 
 #### 训练VID模型示例
 
-1. 在ImageNet VID和ImageNet DET上训练DFF,接着在最后一个epoch评估bbox和mAP.
+1. 在 ImageNet VID 和 ImageNet DET 上 训练 DFF,接着在最后一个 epoch 评估 bbox mAP.
 
 ```shell
 bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
@@ -303,12 +318,13 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 #### 训练MOT模型示例
 
-对于像MOT、SORT、DeepSORT以及Trackor这样的MOT方法，你需要训练一个检测器和一个reid模型，而非直接训练MOT模型。
+对于像MOT、SORT、DeepSORT以及Trackor这样的MOT方法，你需要训练一个检测器和一个 reid 模型，而非直接训练MOT模型。
 
 1. 训练检测器
-    如果你想要为多目标跟踪器训练检测器，为了兼容MMDetection, 你只需要以和MMDetection相同的方式在config里面增加一行代码`USE_MMDET=True`。可参考示例[faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
 
-    请注意MMTracking和MMDetection在base config上有些许不同：`detector`仅仅是`model`的一个子模块。例如，MMDetection中的Faster R-CNN的config如下：
+    如果你想要为多目标跟踪器训练检测器，为了兼容 MMDetection, 你只需要在 config 里面增加一行代码 `USE_MMDET=True`, 然后使用与 MMDetection 相同的方式运行它。可参考示例[faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
+
+    请注意 MMTracking 和 MMDetection 在 base config 上有些许不同：`detector` 仅仅是 `model` 的一个子模块。例如，MMDetection 中的 Faster R-CNN 的 config如下：
 
     ```python
         model = dict(
@@ -317,7 +333,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
         )
     ```
 
-    但在MMTracking中，config如下：
+    但在 MMTracking 中，config 如下：
 
     ```python
     model = dict(
@@ -328,27 +344,28 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
     )
     ```
 
-    这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+    这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
     ```shell
     bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
         --work-dir ./work_dirs/
     ```
 
-2. 训练reid模型
-    我们在MMTracking中支持的ReID训练模型来自于[MMClassification](https://github.com/open-mmlab/mmclassification)。
-    这里有一个在MOT17上训练检测器模型，并在每个epoch结束后评估检测框mAP的范例：
+2. 训练 reid 模型
+
+    你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的
+    这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
     ```shell
     bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
         --work-dir ./work_dirs/
     ```
 
-3. 完成检测器和reid模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model)来测试多目标跟踪器。
+3. 完成检测器和 reid 模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/zh_CN/latest/quick_run.html#mot)来测试多目标跟踪器。
 
 #### 训练SOT模型示例
 
-1. 在COOC、ImageNet VID和ImageNet DET上训练SiameseRPN++，然后从第10个epoch到第20个epoch评估其success、precision和normed precision。
+1. 在 COCO、ImageNet VID 和 ImageNet DET 上训练 SiameseRPN++，然后从第 10 个 epoch 到第 20 个 epoch 评估其 success、precision 和 normed precision。
 
     ```shell
     bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \

@@ -9,9 +9,9 @@
 
 CocoVID 风格的标注文件需要以下键：
 
-- `videos`：视频序列。每个视频都是包含 `name`、`id` 键的一个字典，键为`name`、`id`。可选键有 `fps`、`width` 和 `height`。
-- `images`：图像序列。每张图像都是包含`file_name`、`height`、`width`、`id`、`frame_id` 和 `video_id`键的一个字典。请注意，`frame_id` 是基于 **0-索引** 的。
-- `annotations`：实例标注序列。每个标注都是包含`bbox`、`area`、`id`、`category_id`、`instance_id`、`image_id` 和 `video_id`键的一个字典。其中 `instance_id` 仅用于跟踪任务。
+- `videos`：视频序列。每个视频都是包含 `name`、`id` 键的一个字典，键为 `name`、`id`。可选键有 `fps`、`width` 和 `height`。
+- `images`：图像序列。每张图像都是包含 `file_name`、`height`、`width`、`id`、`frame_id` 和 `video_id` 键的一个字典。请注意，`frame_id` 是 **索引从 0 开始的**。
+- `annotations`：实例标注序列。每个标注都是包含 `bbox`、`area`、`id`、`category_id`、`instance_id`、`image_id` 和 `video_id` 键的一个字典。其中 `instance_id` 仅用于跟踪任务。
 - `categories`：类别序列。每个类别都是包含 `id`、`name` 键的一个字典。
 
 [此处](https://github.com/open-mmlab/mmtracking/blob/master/tests/data/demo_cocovid_data/ann.json) 提供了一个简单实例。

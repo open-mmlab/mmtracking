@@ -1,14 +1,14 @@
 ## 自定义数据预处理流程
 
-MMTracking中有两种数据流水线：
+MMTracking 中有两种数据流水线：
 
-- 单张图片，这与MMDetection中的大部分情况相同
+- 单张图片，这与 MMDetection 中的大部分情况相同
 - 成对/多张图片
 
 ### 单张图片的数据预处理流程
 
 对于单张图片，可以参考[MMDetection教程](https://mmdetection.readthedocs.io/en/latest/tutorials/data_pipeline.html)。
-MMTracking有些许不同之处：
+MMTracking 有些许不同之处：
 
 - 我们的 `VideoCollect` 实现方法和 MMdetection 中的 `Collect` 相似，但是更接近于视频感知任务。例如：原始数据集的关键字默认包括 `frame_id` 和 `is_video_data`。
 
@@ -51,7 +51,7 @@ class CocoVideoDataset(CocoDataset):
 
 在这一步，我们执行图片转换并且收集图片信息。
 单张图片预处理流程是接收字典作为输入，并输出字典，然后进入后续的图片转换; 与之不同，序列的预处理流程是接收字典作为输入，并输出一个包含字典的列表，然后进入后续的图片转换。
-序列的预处理流程通常继承于MMDetection, 但是会对列表元素做循环处理。
+序列的预处理流程通常继承于 MMDetection, 但是会对列表元素做循环处理。
 
 ```python
 from mmdet.datasets.builder import PIPELINES

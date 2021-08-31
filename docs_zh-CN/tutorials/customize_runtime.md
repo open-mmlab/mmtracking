@@ -161,7 +161,7 @@ workflow = [('train', 1)]
 
 2. config 中的关键字 `total_epoch` 进用来控制训练阶段轮数，不影响验证阶段。
 
-3. 工作流 `[('train',1),('val',1)]` 和 `[('train',1)]`将不会改变 `EvalHook`，因为 `EvalHook` 是被 `after_train_epoch` 调用，验证工作流仅影响在 `after_val_epoch` 中调用的钩子。因此，`[('train',1),('val',1)]` 和 `[('train',1)]` 唯一的不同就是 runner 将在每个训练阶段计算损失函数。
+3. 工作流 `[('train',1),('val',1)]` 和 `[('train',1)]` 将不会改变 `EvalHook`，因为 `EvalHook` 是被 `after_train_epoch` 调用，验证工作流仅影响在 `after_val_epoch` 中调用的钩子。因此，`[('train',1),('val',1)]` 和 `[('train',1)]` 唯一的不同就是 runner 将在每个训练阶段计算损失函数。
 
 ### 自定义钩子
 
