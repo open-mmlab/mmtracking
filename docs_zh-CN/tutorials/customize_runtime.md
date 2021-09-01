@@ -4,7 +4,7 @@
 
 #### 自定义 Pytorch 中的优化器
 
-我们已经支持使用 Pytorch 所有的优化器，并且仅在 config 文件中更改即可。例如，如果你使用 `ADAM`, 更改如下：
+我们已经支持使用 Pytorch 所有的优化器，并且仅在 config 文件中更改设置即可使用。例如，如果你使用 `ADAM`, 更改如下：
 
 ```python
 optimizer = dict(type='Adam', lr=0.0003, weight_decay=0.0001)
@@ -32,7 +32,7 @@ class MyOptimizer(Optimizer):
 
 #### 2. 将优化器加入注册器中
 
-为了能够找到上述定义的模块，它应首先被引入到主命名空间中。有两种方式来实现：
+为了能够找到上述定义的模块，它应首先被引入到主命名空间中。我们提供两种方式来实现：
 
 - 在文件 `mmtrack/core/optimizer/__init__.py` 中引入
 
@@ -66,7 +66,7 @@ optimizer = dict(type='MyOptimizer', a=a_value, b=b_value, c=c_value)
 
 #### 自定义优化器构建器
 
-一些模型有一些特定参数用于模型优化，例如：用于批归一化层的权值衰减。使用者可以通过自定义优化器构建器来调节这些参数。
+有的模型有一些用于模型优化的特定参数，例如：用于批归一化层的权值衰减。使用者可以通过自定义优化器构建器来调节这些参数。
 
 ```python
 from mmcv.utils import build_from_cfg
@@ -159,7 +159,7 @@ workflow = [('train', 1)]
 
 1. 模型的参数将不会在验证阶段更新。
 
-2. config 中的关键字 `total_epoch` 进用来控制训练阶段轮数，不影响验证阶段。
+2. config 中的关键字 `total_epoch` 是用来控制训练阶段轮数，不影响验证阶段。
 
 3. 工作流 `[('train',1),('val',1)]` 和 `[('train',1)]` 将不会改变 `EvalHook`，因为 `EvalHook` 是被 `after_train_epoch` 调用，验证工作流仅影响在 `after_val_epoch` 中调用的钩子。因此，`[('train',1),('val',1)]` 和 `[('train',1)]` 唯一的不同就是 runner 将在每个训练阶段计算损失函数。
 

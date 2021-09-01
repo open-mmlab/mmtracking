@@ -8,14 +8,14 @@ MMTracking 中有两种数据流水线：
 ### 单张图片的数据预处理流程
 
 对于单张图片，可以参考[MMDetection教程](https://mmdetection.readthedocs.io/en/latest/tutorials/data_pipeline.html)。
-MMTracking 有些许不同之处：
+此外，MMTracking 还有些许不同之处：
 
 - 我们的 `VideoCollect` 实现方法和 MMdetection 中的 `Collect` 相似，但是更接近于视频感知任务。例如：原始数据集的关键字默认包括 `frame_id` 和 `is_video_data`。
 
 ### 多张图片的数据预处理流程
 
 在多数情况下，我们需要同时处理多张图片。这主要是因为我们需要在同一视频中针对关键图片采样多个参考图片，以便于后续训练和推理。
-请先察看单张图片的预处理实现，因为多张图片是基于此。我们接下来将详细介绍整体流程。
+请先察看单张图片的预处理实现，因为多张图片的预处理实现也是基于此。我们接下来将详细介绍整体流程。
 
 ### 1. 采样参考图片
 
@@ -76,11 +76,11 @@ class LoadMultiImagesFromFile(LoadImageFromFile):
 
 ### 3. 拼接参考图片（如果需要）
 
-如果有超过一个参考图片，我们利用 `ConcatVideoReferences` 来收集所有参考图片成一个字典。经处理后，该包含字典的列表总长度为2。
+如果参考图片超过一个，我们利用 `ConcatVideoReferences` 来以字典形式收集所有参考图片。经处理后，该包含关键图片和参考图片的列表总长度为2。
 
 ### 4. 将输出结果格式化成一个字典
 
-最后，我们利用 `SeqDefaultFormatBundle` 来将列表转换为字典作为模型的输入。这里有一个数据全部处理流水线的示例：
+最后，我们利用 `SeqDefaultFormatBundle` 来将数据的列表形式转换为字典形式，作为后续模型的输入。这里有一个数据全部处理流水线的示例：
 
 ```python
 train_pipeline = [

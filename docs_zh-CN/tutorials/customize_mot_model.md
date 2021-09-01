@@ -215,7 +215,7 @@ motion=dict(
 
 #### 1. 定义一个损失函数
 
-假定你想要增加一个新的损失函数 `MyLoss` 来进行边界框回归。为此，你需要定义一个文件 `mmtrack/models/losses/my_loss.py`。装饰器 `weighted_loss` 可以让是损失函数对每个元素加权平均。
+假定你想要增加一个新的损失函数 `MyLoss` 来进行边界框回归。为此，你需要定义一个文件 `mmtrack/models/losses/my_loss.py`。装饰器 `weighted_loss` 可以对损失函数输出结果做基于单个元素的加权平均。
 
 ```python
 import torch

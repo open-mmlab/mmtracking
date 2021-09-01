@@ -11,7 +11,7 @@
 
 这里，我们以 MobileNet 为例来展示如何开发一个新组件。
 
-#### 1. 定义一个新主干网络 （例如：MobileNet
+#### 1. 定义一个新主干网络 （例如：MobileNet）
 
 创建一个新文件 `mmtrack/models/backbones/mobilenet.py`
 
