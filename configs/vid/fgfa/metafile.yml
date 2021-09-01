@@ -34,3 +34,15 @@ Models:
         Metrics:
           box AP@0.5: 77.8
     Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth
+
+  - Name: fgfa_faster_rcnn_x101_dc5_1x_imagenetvid
+    In Collection: FGFA
+    Config: configs/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 9.74
+    Results:
+      - Task: Video Object Detection
+        Dataset: ILSVRC
+        Metrics:
+          box AP@0.5: 79.6
+    Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid_20210818_223334-8723c594.pth
