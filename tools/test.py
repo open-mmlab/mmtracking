@@ -170,6 +170,13 @@ def main():
         if args.out:
             print(f'\nwriting results to {args.out}')
             mmcv.dump(outputs, args.out)
+        if cfg.data.test['type'] == 'TrackingNetTestDataset':
+            from tools.convert_submitted import dump_trackingnet_results
+            save_dir = os.path.join(
+                os.path.dirname(outputs), 'submitted_results')
+            dump_trackingnet_results(cfg.data.test['ann_file'],
+                                     outputs['track_results'], save_dir)
+
         kwargs = {} if args.eval_options is None else args.eval_options
         if args.format_only:
             dataset.format_results(outputs, **kwargs)
