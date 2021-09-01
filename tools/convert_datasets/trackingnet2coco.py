@@ -42,11 +42,15 @@ def convert_trackingnet_test(trackingnet_test, ann_dir, save_dir):
         ann_file = osp.join(ann_dir, 'anno', video_name + '.txt')
         gt_bboxes = mmcv.list_from_file(ann_file)
         video_path = osp.join(ann_dir, 'frames', video_name)
+        img_names = os.listdir(video_path)
+        img_names = sorted(img_names, key=lambda x: int(x[:-4]))
         img = mmcv.imread(osp.join(video_path, '0.jpg'))
-        height, width = img.shape
-        for frame_id, gt_bbox in enumerate(gt_bboxes):
+        height, width, _ = img.shape
+        for frame_id, img_name in enumerate(img_names):
             file_name = '%d' % (frame_id) + '.jpg'
-            file_name = osp.join(video_path, file_name)
+            assert img_name == file_name
+            # the images' root is not included in file_name
+            file_name = osp.join(video_name, img_name)
             image = dict(
                 file_name=file_name,
                 height=height,
@@ -57,7 +61,7 @@ def convert_trackingnet_test(trackingnet_test, ann_dir, save_dir):
             trackingnet_test['images'].append(image)
 
             if frame_id == 0:
-                x1, y1, w, h = gt_bbox.split(',')
+                x1, y1, w, h = gt_bboxes[0].split(',')
                 ignore = False
             else:
                 x1, y1, w, h = 0, 0, 0, 0
