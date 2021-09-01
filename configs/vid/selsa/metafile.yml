@@ -34,3 +34,15 @@ Models:
         Metrics:
           box AP@0.5: 81.5
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth
+
+  - Name: selsa_faster_rcnn_x101_dc5_1x_imagenetvid
+    In Collection: SELSA
+    Config: configs/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 9.15
+    Results:
+      - Task: Video Object Detection
+        Dataset: ILSVRC
+        Metrics:
+          box AP@0.5: 83.1
+    Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641-10252965.pth
