@@ -1,5 +1,31 @@
 ## Changelog
 
+### v0.7.0 (02/09/2021)
+
+#### Highlights
+
+- Release code of AAAI 2021 paper 'Temporal ROI Align for Video Object Recognition' ([#247](https://github.com/open-mmlab/mmtracking/pull/247))
+- Refactor English documentations ([#243](https://github.com/open-mmlab/mmtracking/pull/243))
+- Add Chinese documentations ([#248](https://github.com/open-mmlab/mmtracking/pull/248)), ([#250](https://github.com/open-mmlab/mmtracking/pull/250))
+
+#### New Features
+
+- Support fp16 training and testing ([#230](https://github.com/open-mmlab/mmtracking/pull/230))
+- Release model using ResNeXt-101 as backbone for all VID methods ([#254](https://github.com/open-mmlab/mmtracking/pull/254))
+- Support the results of Tracktor on MOT15, MOT16 and MOT20 datasets ([#217](https://github.com/open-mmlab/mmtracking/pull/217))
+- Support visualization for single gpu test ([#216](https://github.com/open-mmlab/mmtracking/pull/216))
+
+#### Bug Fixes
+
+- Fix a bug in MOTP evaluation ([#235](https://github.com/open-mmlab/mmtracking/pull/235))
+- Fix two bugs in reid training and testing ([#249](https://github.com/open-mmlab/mmtracking/pull/249))
+
+#### Improvements
+
+- Refactor anchor in SiameseRPN++ ([#229](https://github.com/open-mmlab/mmtracking/pull/229))
+- Unify model initialization ([#235](https://github.com/open-mmlab/mmtracking/pull/235))
+- Refactor unittest ([#231](https://github.com/open-mmlab/mmtracking/pull/231))
+
 ### v0.6.0 (30/07/2021)
 
 #### Highlights

@@ -60,7 +60,7 @@ mmcv_version = digit_version(mmcv.__version__)
 
 assert (mmcv_min_version <= mmcv_version < mmcv_max_version), \
     f'MMCV=={mmcv.__version__} is used but incompatible. ' \
-    f'Please install mmcv>={mmcv_min_version}, <{mmcv_max_version}.'
+    f'Please install mmcv>={MMCV_MIN}, <{MMCV_MAX}.'
 
 mmdet_min_version = digit_version(MMDET_MIN)
 mmdet_version = digit_version(mmdet.__version__)
@@ -68,6 +68,6 @@ mmdet_version = digit_version(mmdet.__version__)
 
 assert (mmdet_min_version <= mmdet_version), \
     f'MMDet=={mmdet.__version__} is used but incompatible. ' \
-    f'Please install mmdet>={mmdet_min_version}.'
+    f'Please install mmdet>={MMDET_MIN}.'
 
 __all__ = ['__version__', 'version_info', 'digit_version']
