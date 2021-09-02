@@ -1,7 +1,7 @@
 ## 运行现有的数据集与模型
 
 MMTracking 为现有基准测试提供了多种算法。
-这些算法和基准测试的详情分别在 [model_zoo.md](model_zoo.md) 和 [dataset.md](dataset.md) 中说明。
+这些算法和基准测试在 [model_zoo.md](https://mmtracking.readthedocs.io/en/latest/model_zoo.html)中有详细说明。
 以下将展示如何在现有模型和标准数据集上执行常见任务，包括：
 
 - 使用已有模型对给定的视频或者图像文件夹进行推理。
