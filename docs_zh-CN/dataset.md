@@ -19,7 +19,7 @@
 
 - 对于视频目标检测任务的训练和测试，只需要 ILSVRC 数据集。
 
-- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17 ）。
+- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
 
 - 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC 和 LaSOT 数据集。
 
@@ -66,7 +66,7 @@ mmtracking
 
 ### 2. 转换标注格式
 
-我们使用 [CocoVID](../mmtrack/datasets/parsers/coco_video_parser.py) 来维护代码库中所有的数据集。
+我们使用 [CocoVID](https://github.com/open-mmlab/mmtracking/blob/master/mmtrack/datasets/parsers/coco_video_parser.py) 来维护代码库中所有的数据集。
 
 基于此，您需要将官方的标注转换为此种格式。我们提供的脚本以及用法如下：
 
@@ -85,7 +85,9 @@ python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 ```
+
 完成以上格式转换后，文件目录结构如下：
+
 ```
 mmtracking
 ├── mmtrack
@@ -135,40 +137,38 @@ mmtracking
 
 #### ILSVRC的标注文件夹
 
-在`data/ILSVRC/annotations`中有3个json文件:
+在`data/ILSVRC/annotations`中有3个 json 文件:
 
-`imagenet_det_30plus1cls.json`: 包含ImageNet DET训练集标注信息的json文件。`30plus1cls`中的`30`表示本数据集与ImageNet VID数据集重合的30类，`1cls`表示我们将ImageNet Det数据集中的其余170类作为一类，
-并命名为`other_categeries`。 
+`imagenet_det_30plus1cls.json`: 包含 ImageNet DET 训练集标注信息的json文件。`30plus1cls` 中的 `30` 表示本数据集与 ImageNet VID 数据集重合的30类，`1cls` 表示我们将 ImageNet Det 数据集中的其余170类作为一类，
+并命名为 `other_categeries`。
 
-`imagenet_vid_train.json`: 包含ImageNet VID训练集标注信息的json文件。
+`imagenet_vid_train.json`: 包含 ImageNet VID 训练集标注信息的 json 文件。
 
-`imagenet_vid_val.json`: 包含ImageNet VID验证集标注信息的json文件。
-
+`imagenet_vid_val.json`: 包含 ImageNet VID 验证集标注信息的 json 文件。
 
 #### lasot的标注文件夹
 
-在`data/lasot/annotations`中有1个json文件:
+在 `data/lasot/annotations` 中有1个 json 文件:
 
-`lasot_test.json`:  包含LaSOT测试集标注信息的json文件。
-
+`lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
 
 #### MOT15/MOT16/MOT17/MOT20的标注和reid文件夹
 
-以MOT17为例，其余数据集结构相似。
+我们以MOT17为例，其余数据集结构相似。
 
-在`data/MOT17/annotations`中有8个json文件:
+在 `data/MOT17/annotations` 中有8个 json 文件:
 
-`train_cocoformat.json`: 包含MOT17训练集标注信息的json文件。
+`train_cocoformat.json`: 包含 MOT17 训练集标注信息的 json 文件。
 
-`train_detections.pkl`: 包含MOT17训练集公共检测结果信息的pickle文件。
+`train_detections.pkl`: 包含 MOT17 训练集公共检测结果信息的 pickle 文件。
 
-`test_cocoformat.json`: 包含MOT17测试集标注信息的json文件。
+`test_cocoformat.json`: 包含 MOT17 测试集标注信息的 json 文件。
 
-`test_detections.pkl`: 包含MOT17测试集公共检测结果信息的pickle文件。
+`test_detections.pkl`: 包含 MOT17 测试集公共检测结果信息的 pickle 文件。
 
-`half-train_cocoformat.json`, `half-train_detections.pkl`, `half-val_cocoformat.json`以及`half-val_detections.pkl`具有和`train_cocoformat.json`、`train_detections.pkl`相似的含义。 `half`意味着我们将训练集中的每个视频分成两半。 前一半标记为`half-train`, 后一半标记为`half-val`。
+`half-train_cocoformat.json`, `half-train_detections.pkl`, `half-val_cocoformat.json` 以及 `half-val_detections.pkl` 具有和 `train_cocoformat.json`、`train_detections.pkl` 相似的含义。 `half` 意味着我们将训练集中的每个视频分成两半。 前一半标记为 `half-train`, 后一半标记为 `half-val`。
 
-`data/MOT17/reid`的目录结构如下:
+`data/MOT17/reid` 的目录结构如下:
 
 ```
 reid
@@ -186,9 +186,9 @@ reid
 │   ├── val_20.txt
 ```
 
-`train_80.txt`中的`80`意味着将全部ReID数据集的80%作为训练集，剩余的20%作为验证集。
+`train_80.txt` 中的 `80` 意味着将全部 ReID 数据集的80%作为训练集，剩余的20%作为验证集。
 
-训练集标注`train_80.txt`中每一行包含一个文件名和其对应的图片物体真实标签。格式如下：
+训练集标注 `train_80.txt` 中每一行包含一个文件名和其对应的图片物体真实标签。格式如下：
 
 ```
 MOT17-05-FRCNN_000110/000018.jpg 0
@@ -197,8 +197,8 @@ MOT17-05-FRCNN_000088/000004.jpg 2
 MOT17-02-FRCNN_000009/000081.jpg 3
 ```
 
-`MOT17-05-FRCNN_000110`表示`MOT17-05-FRCNN`视频中的第110个人。
+`MOT17-05-FRCNN_000110` 表示 `MOT17-05-FRCNN` 视频中的第110个人。
 
-验证集标注`val_20.txt`的结构和上面类似。
+验证集标注 `val_20.txt` 的结构和上面类似。
 
-`reid/imgs`中的图片是从`MOT17/train`中原始图片根据对应的`gt.txt`裁剪得到。真实类别标签值在`[0, num_classes - 1]`范围内。
+`reid/imgs` 中的图片是从 `MOT17/train` 中原始图片根据对应的 `gt.txt` 裁剪得到。真实类别标签值在 `[0, num_classes - 1]` 范围内。
