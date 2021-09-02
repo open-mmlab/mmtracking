@@ -8,7 +8,7 @@
 
 ### 增加一个新的检测器
 
-请参考[MMDetection教程](https://mmdetection.readthedocs.io/en/latest/tutorials/customize_models.html)来开发新检测器
+请参考[MMDetection教程](https://mmdetection.readthedocs.io/zh_CN/latest/tutorials/customize_models.html)来开发新检测器
 
 ### 增加一个新的运动估计器
 

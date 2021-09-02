@@ -2,8 +2,8 @@
 
 我们通常将模型组件分为5类：
 
-- 跟踪器：利用以下组件线索来联系视频帧间目标的组件。
-- 检测器：通常是从一张图片中检出物体的检测组件，例如：Faster R-CNN。
+- 跟踪器：利用以下组件提取出来的线索来关联视频帧间目标的组件。
+- 检测器：通常是从一张图片中检出物体的检测器，例如：Faster R-CNN。
 - 运动估计器：计算相邻帧运动信息的组件，例如：卡尔曼滤波器。
 - 重识别器：从裁剪图片中抽取特征的的独立重识别模型，例如：BaseReID。
 - 跟踪头：用于抽取跟踪线索但是和检测器共享骨干网络的组件。例如：一个特征分支头或者回归分支头。
@@ -12,7 +12,7 @@
 
 #### 1. 定义一个跟踪器
 
-创建一个新文件 `mmtrack/models/mot/trackers/my_tracker.py`。`BaseTracker` 是提供跨视频跟踪基础 API 的基类，详情请参考 [BaseTracker](https://github.com/open-mmlab/mmtracking/tree/master/mmtrack/models/mot/trackers/base_tracker.py)。 我们推荐新的跟踪器继承该类。
+创建一个新文件 `mmtrack/models/mot/trackers/my_tracker.py`。`BaseTracker` 是提供跨视频跟踪基础 APIs，我们推荐新的跟踪器继承该类，用户可以参考 [BaseTracker](https://github.com/open-mmlab/mmtracking/tree/master/mmtrack/models/mot/trackers/base_tracker.py) 的文档来了解细节。
 
 ```python
 from mmtrack.models import TRACKERS
@@ -68,6 +68,8 @@ tracker=dict(
 #### 1. 定义一个运动估计模型（例如：MyFlowNet）
 
 新建一个文件 `mmtrack/models/motion/my_flownet.py`。
+
+如果该运动估计模型是一个深度学习模块，你可以继承 `mmcv.runner` 的 `BaseModule`，否则继承 `Object`。
 
 ``` python
 from mmcv.runner import BaseModule
@@ -269,7 +271,8 @@ custom_imports=dict(
 
 #### 3. 更改原始 config 文件
 
-假设 `MyLoss` 是用于回归任务，则在 `head` 区域中加入 `loss_bbox`。
+为了使用新的损失函数，你需要更改 `loss_xxx` 区域。
+假设 `MyLoss` 是用于回归任务，则需在 `head` 区域中更改 `loss_bbox`。
 
 ```python
 loss_bbox=dict(type='MyLoss', loss_weight=1.0))

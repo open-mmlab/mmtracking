@@ -353,7 +353,8 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 2. 训练 reid 模型
 
-    你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的
+    你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的。
+
     这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
     ```shell
@@ -393,20 +394,20 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 通常我们建议使用第一种方法，它比第二种方法容易实现。
 
-[tutorials/customize_dataset.md](tutorials/customize_dataset.md) 中提供了有关自定义数据集的详细教程。
+[tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_dataset.html) 中提供了有关自定义数据集的详细教程。
 
 ### 2. 准备自定义模型
 
 我们提供了不同任务下自定义模型的教程：
 
-- [tutorials/customize_mot_model.md](tutorials/customize_mot_model.md)
-- [tutorials/customize_sot_model.md](tutorials/customize_sot_model.md)
-- [tutorials/customize_vid_model.md](tutorials/customize_vid_model.md)
+- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
+- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html)
+- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_sot_model.html)
 
 ### 3. 准备配置文件
 
 下一步是准备配置文件，从而可以成功加载数据集或模型。
-[tutorials/config.md](tutorials/config.md) 提供了有关配置系统的更多详细教程。
+[tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
 
 ### 4. 训练新模型
 
