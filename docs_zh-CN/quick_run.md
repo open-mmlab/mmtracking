@@ -1,7 +1,7 @@
 ## 运行现有的数据集与模型
 
 MMTracking 为现有基准测试提供了多种算法。
-这些算法和基准测试在 [model_zoo.md](https://mmtracking.readthedocs.io/en/latest/model_zoo.html)中有详细说明。
+这些算法和基准测试在 [model_zoo.md](https://mmtracking.readthedocs.io/zh_CN/latest/model_zoo.html)中有详细说明。
 以下将展示如何在现有模型和标准数据集上执行常见任务，包括：
 
 - 使用已有模型对给定的视频或者图像文件夹进行推理。
@@ -276,7 +276,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 [GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
 ```
 
-您可以查看[源代码](../tools/slurm_train.sh)以了解全部的参数和环境变量。
+您可以查看[源代码](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh)以了解全部的参数和环境变量。
 
 使用 Slurm 时，需要通过以下方式之一设置端口选项：
 
@@ -394,20 +394,20 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 通常我们建议使用第一种方法，它比第二种方法容易实现。
 
-[tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_dataset.html) 中提供了有关自定义数据集的详细教程。
+[tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_dataset.html) 中提供了有关自定义数据集的详细教程。
 
 ### 2. 准备自定义模型
 
 我们提供了不同任务下自定义模型的教程：
 
-- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
-- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html)
-- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_sot_model.html)
+- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_vid_model.html)
+- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_mot_model.html)
+- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_sot_model.html)
 
 ### 3. 准备配置文件
 
 下一步是准备配置文件，从而可以成功加载数据集或模型。
-[tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
+[tutorials/config.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
 
 ### 4. 训练新模型
 
