@@ -407,7 +407,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 ### 3. 准备配置文件
 
 下一步是准备配置文件，从而可以成功加载数据集或模型。
-[tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
+[tutorials/config.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
 
 ### 4. 训练新模型
 
