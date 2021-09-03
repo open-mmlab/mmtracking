@@ -360,7 +360,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
         --work-dir ./work_dirs/
     ```
 
-2. Train a reid model
+2. Train a ReID model
 
     You may want to train a ReID model for multiple object tracking or other applications. We support ReID model training in MMTracking, which is built upon [MMClassification](https://github.com/open-mmlab/mmclassification).
 
@@ -371,7 +371,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
         --work-dir ./work_dirs/
     ```
 
-3. After training a detector and a reid model, you can refer to [Examples of testing MOT model](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model) to test your multi-object tracker.
+3. After training a detector and a ReID model, you can refer to [Examples of testing MOT model](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model) to test your multi-object tracker.
 
 #### Examples of training SOT model
 
