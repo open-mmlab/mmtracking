@@ -1,3 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import json
+import os
+import os.path as osp
+from collections import defaultdict
+
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
@@ -38,6 +44,56 @@ class TrackingNetTestDataset(CocoVideoDataset):
         gt_labels = np.array(self.cat2label[ann_info[0]['category_id']])
         ann = dict(bboxes=gt_bboxes, labels=gt_labels)
         return ann
+
+    def format_results(self, results, resfile_path=None):
+        """Format the results to txts (standard format for TrackingNet
+        Challenge).
+
+        Args:
+            results (dict(list[ndarray])): Testing results of the dataset.
+            resfile_path (str): Path to save the formatted results.
+                Defaults to None.
+        """
+        # prepare saved dir
+        assert resfile_path is not None, 'Please give key-value pair \
+            like resfile_path=xxx in argparse'
+
+        if not osp.isdir(resfile_path):
+            os.makedirs(resfile_path, exist_ok=True)
+
+        results = results['track_results']
+        # transform results
+        with open(self.ann_file, 'r') as f:
+            info = json.load(f)
+            video_info = info['videos']
+            imgs_info = info['images']
+        print('-------- Image Number: {} --------'.format(len(results)))
+
+        new_results = defaultdict(list)
+        for img_id, bbox in enumerate(results):
+            img_info = imgs_info[img_id]
+            assert img_info['id'] == img_id + 1, 'img id is not matched'
+            video_name = img_info['file_name'].split('/')[0]
+            new_results[video_name].append(results[img_id][:4])
+
+        assert len(video_info) == len(
+            new_results), 'video number is not right {}--{}'.format(
+                len(video_info), len(new_results))
+
+        # writing submitted results
+        print('writing submitted results to {}'.format(resfile_path))
+        for v_name, bboxes in new_results.items():
+            vid_txt = osp.join(resfile_path, '{}.txt'.format(v_name))
+            with open(vid_txt, 'w') as f:
+                for i, bbox in enumerate(bboxes):
+                    bbox = [
+                        str(bbox[0]),
+                        str(bbox[1]),
+                        str(bbox[2] - bbox[0]),
+                        str(bbox[3] - bbox[1])
+                    ]
+                    line = ','.join(bbox) + '\n'
+                    f.writelines(line)
 
     def evaluate(self, results, metric=['track'], logger=None):
         """Evaluation in OPE protocol.
