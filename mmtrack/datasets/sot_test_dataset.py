@@ -36,7 +36,13 @@ class SOTTestDataset(CocoVideoDataset):
         gt_bboxes[2] += gt_bboxes[0]
         gt_bboxes[3] += gt_bboxes[1]
         gt_labels = np.array(self.cat2label[ann_info[0]['category_id']])
-        ann = dict(bboxes=gt_bboxes, labels=gt_labels)
+        if 'ignore' in ann_info[0]:
+            ann = dict(
+                bboxes=gt_bboxes,
+                labels=gt_labels,
+                ignore=ann_info[0]['ignore'])
+        else:
+            ann = dict(bboxes=gt_bboxes, labels=gt_labels)
         return ann
 
     def evaluate(self, results, metric=['track'], logger=None):

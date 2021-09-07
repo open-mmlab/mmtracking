@@ -416,7 +416,7 @@ We provide instructions for cutomizing models of different tasks.
 ### 3. Prepare a config
 
 The next step is to prepare a config thus the dataset or the model can be successfully loaded.
-More details about the config system are provided at [tutorials/config.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/config.html).
+More details about the config system are provided at [tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html).
 
 ### 4. Train a new model
 

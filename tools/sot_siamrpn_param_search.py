@@ -20,13 +20,6 @@ def parse_range(range_str):
     return np.round(np.arange(*param), decimals=2)
 
 
-def parse_range_int(range_str):
-    range_list = range_str.split(',')
-    assert len(range_list) == 3 and int(range_list[1]) >= int(range_list[0])
-    param = map(int, range_list=range_str.split(','))
-    return np.arange(*param)
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description='mmtrack test model')
     parser.add_argument('config', help='test config file path')
@@ -34,17 +27,17 @@ def parse_args():
     parser.add_argument(
         '--penalty-k-range',
         type=parse_range,
-        help="the range of hyper-parameter 'penalty_k' in SiamRPN; the format \
+        help="the range of hyper-parameter 'penalty_k' in SiamRPN++; the format \
             is 'start,stop,step'")
     parser.add_argument(
         '--lr-range',
         type=parse_range,
-        help="the range of hyper-parameter 'lr' in SiamRPN; the format is \
+        help="the range of hyper-parameter 'lr' in SiamRPN++; the format is \
             'start,stop,step'")
     parser.add_argument(
         '--win-influ-range',
         type=parse_range,
-        help="the range of hyper-parameter 'window_influence' in SiamRPN; the \
+        help="the range of hyper-parameter 'window_influence' in SiamRPN++; the \
             format is 'start,stop,step'")
     parser.add_argument(
         '--fuse-conv-bn',
@@ -99,8 +92,8 @@ def main():
     assert args.eval or args.show \
         or args.show_dir, \
         ('Please specify at least one operation (save/eval/format/show the '
-         'results / save the results) with the argument "--out", "--eval"'
-         ', "--format-only", "--show" or "--show-dir"')
+         'results / save the results) with the argument "--eval"'
+         ', "--show" or "--show-dir"')
 
     cfg = Config.fromfile(args.config)
 
@@ -172,11 +165,6 @@ def main():
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
-
-    # search hyper parameters coarsely
-    # penalty_k_range = np.round(np.arange(0.05, 0.5, 0.05), decimals=2)
-    # lr_range = np.round(np.arange(0.35, 0.5, 0.05), decimals=2)
-    # win_influ_range = np.round(np.arange(0.1, 0.8, 0.1), decimals=2)
 
     if 'meta' in checkpoint and 'hook_msgs' in checkpoint[
             'meta'] and 'best_score' in checkpoint['meta']['hook_msgs']:
