@@ -90,5 +90,5 @@ def builder_inited_handler(app):
     subprocess.run(['./stat.py'])
 
 
-# def setup(app):
-#     app.connect('builder-inited', builder_inited_handler)
+def setup(app):
+    app.connect('builder-inited', builder_inited_handler)
