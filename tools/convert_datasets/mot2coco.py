@@ -108,7 +108,7 @@ def parse_dets(dets):
 
 def main():
     args = parse_args()
-    if not osp.exists(args.output):
+    if not osp.isdir(args.output):
         os.makedirs(args.output)
 
     sets = ['train', 'test']

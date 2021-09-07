@@ -1,4 +1,3 @@
-# Copyright (c) OpenMMLab. All rights reserved.
 _base_ = ['./siamese_rpn_r50_1x_lasot.py']
 
 # model settings

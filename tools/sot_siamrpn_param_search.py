@@ -2,7 +2,6 @@
 import argparse
 import os
 
-import mmcv
 import numpy as np
 import torch
 from mmcv import Config, DictAction, get_logger, print_log
@@ -13,24 +12,46 @@ from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
 from mmdet.datasets import build_dataset
 
 
+def parse_range(range_str):
+    range_list = range_str.split(',')
+    assert len(range_list) == 3 and float(range_list[1]) >= float(
+        range_list[0])
+    param = map(float, range_list)
+    return np.round(np.arange(*param), decimals=2)
+
+
+def parse_range_int(range_str):
+    range_list = range_str.split(',')
+    assert len(range_list) == 3 and int(range_list[1]) >= int(range_list[0])
+    param = map(int, range_list=range_str.split(','))
+    return np.arange(*param)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='mmtrack test model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file')
-    parser.add_argument('--out', help='output result file')
-    parser.add_argument('--log', help='log file')
-    parser.add_argument('--dataset', default='uav', help='dataset')
+    parser.add_argument(
+        '--penalty-k-range',
+        type=parse_range,
+        help="the range of hyper-parameter 'penalty_k' in SiamRPN; the format \
+            is 'start,stop,step'")
+    parser.add_argument(
+        '--lr-range',
+        type=parse_range,
+        help="the range of hyper-parameter 'lr' in SiamRPN; the format is \
+            'start,stop,step'")
+    parser.add_argument(
+        '--win-influ-range',
+        type=parse_range,
+        help="the range of hyper-parameter 'window_influence' in SiamRPN; the \
+            format is 'start,stop,step'")
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
         help='Whether to fuse conv and bn, this will slightly increase'
         'the inference speed')
-    parser.add_argument(
-        '--format-only',
-        action='store_true',
-        help='Format the output results without perform evaluation. It is'
-        'useful when you want to format the result to a specific format and '
-        'submit it to the test server')
+    parser.add_argument('--log', help='log file', default=None)
     parser.add_argument('--eval', type=str, nargs='+', help='eval types')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument(
@@ -75,17 +96,11 @@ def parse_args():
 def main():
     args = parse_args()
 
-    assert args.out or args.eval or args.format_only or args.show \
+    assert args.eval or args.show \
         or args.show_dir, \
         ('Please specify at least one operation (save/eval/format/show the '
          'results / save the results) with the argument "--out", "--eval"'
          ', "--format-only", "--show" or "--show-dir"')
-
-    if args.eval and args.format_only:
-        raise ValueError('--eval and --format_only cannot be both specified')
-
-    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
-        raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
 
@@ -110,9 +125,6 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    # cfg.model.pretrains = None
-    if hasattr(cfg.model, 'detector'):
-        cfg.model.detector.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
@@ -131,7 +143,7 @@ def main():
         dist=distributed,
         shuffle=False)
 
-    logger = get_logger('ParamsSearcher', log_file=args.log)
+    logger = get_logger('SOTParamsSearcher', log_file=args.log)
 
     # build the model and load checkpoint
     if cfg.get('test_cfg', False):
@@ -166,20 +178,6 @@ def main():
     # lr_range = np.round(np.arange(0.35, 0.5, 0.05), decimals=2)
     # win_influ_range = np.round(np.arange(0.1, 0.8, 0.1), decimals=2)
 
-    if args.dataset == 'otb':
-        # fine search on OTB
-        penalty_k_range = np.round(np.arange(0.26, 0.45, 0.02), decimals=2)
-        lr_range = np.round(np.arange(0.3, 0.45, 0.02), decimals=2)
-        win_influ_range = np.round(np.arange(0.46, 0.55, 0.02), decimals=2)
-    elif args.dataset == 'uav':
-        # fine search on UVA
-        penalty_k_range = np.round(np.arange(0.01, 0.08, 0.02), decimals=2)
-        lr_range = np.round(np.arange(0.46, 0.62, 0.02), decimals=2)
-        win_influ_range = np.round(np.arange(0.02, 0.12, 0.02), decimals=2)
-    else:
-        raise NotImplementedError(
-            'params search in {} is not supported'.fromat(args.dataset))
-
     if 'meta' in checkpoint and 'hook_msgs' in checkpoint[
             'meta'] and 'best_score' in checkpoint['meta']['hook_msgs']:
         best_score = checkpoint['meta']['hook_msgs']['best_score']
@@ -195,22 +193,22 @@ def main():
         'lr': cfg.model.test_cfg.rpn.lr,
         'win_influ': cfg.model.test_cfg.rpn.window_influence
     }
-    print_log(f'init best score: {best_score}', logger)
-    print_log(f'init best params: {best_params}', logger)
+    print_log(f'init best score as: {best_score}', logger)
+    print_log(f'init best params as: {best_params}', logger)
 
-    num_cases = len(penalty_k_range) * len(lr_range) * len(win_influ_range)
+    num_cases = len(args.penalty_k_range) * len(args.lr_range) * len(
+        args.win_influ_range)
     case_count = 0
 
-    for penalty_k in penalty_k_range:
-        for lr in lr_range:
-            for win_influ in win_influ_range:
+    for penalty_k in args.penalty_k_range:
+        for lr in args.lr_range:
+            for win_influ in args.win_influ_range:
                 case_count += 1
                 cfg.model.test_cfg.rpn.penalty_k = penalty_k
                 cfg.model.test_cfg.rpn.lr = lr
                 cfg.model.test_cfg.rpn.window_influence = win_influ
-                print_log(
-                    f'--------------------[{case_count}/{num_cases}]----------------------',  # noqa: E501
-                    logger)
+                print_log(f'-----------[{case_count}/{num_cases}]-----------',
+                          logger)
                 print_log(
                     f'penalty_k={penalty_k} lr={lr} win_influence={win_influ}',
                     logger)
@@ -228,15 +226,10 @@ def main():
 
                 rank, _ = get_dist_info()
                 if rank == 0:
-                    if args.out:
-                        print(f'\nwriting results to {args.out}')
-                        mmcv.dump(outputs, args.out)
                     if args.eval_options is None:
                         kwargs = {}
                     else:
                         kwargs = args.eval_options
-                    if args.format_only:
-                        dataset.format_results(outputs, **kwargs)
                     if args.eval:
                         eval_kwargs = cfg.get('evaluation', {}).copy()
                         # hard-code way to remove EvalHook args
@@ -260,12 +253,17 @@ def main():
                                 'lr': lr,
                                 'win_influ': win_influ
                             }
-                        print_log(f'Best evaluation results: {best_result}',
+                        print_log(
+                            f'The current best evaluation results: \
+                                {best_result}', logger)
+                        print_log(f'The current best params: {best_params}',
                                   logger)
-                        print_log(f'Best params: {best_params}', logger)
 
-    print_log(f'Best evaluation results: {best_result}', logger)
-    print_log(f'Best params: {best_params}', logger)
+    print_log(
+        f'After parameter searching, the best evaluation results: \
+            {best_result}', logger)
+    print_log(f'After parameter searching, the best params: {best_params}',
+              logger)
 
 
 if __name__ == '__main__':

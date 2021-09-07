@@ -1,3 +1,4 @@
+The format of each line in the txt is anno_name,anno_path,video_path,start_frame,end_frame
 bike1,anno/UAV123/bike1.txt,data_seq/UAV123/bike1,1,3085
 bike2,anno/UAV123/bike2.txt,data_seq/UAV123/bike2,1,553
 bike3,anno/UAV123/bike3.txt,data_seq/UAV123/bike3,1,433
