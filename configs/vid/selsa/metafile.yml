@@ -1,13 +1,15 @@
 Collections:
   - Name: SELSA
     Metadata:
-      Training Data: ILSVRC
+      Training Data: ImageNet DET, ImageNet VID
       Training Techniques:
         - SGD with Momentum
       Training Resources: 8x V100 GPUs
       Architecture:
         - ResNet
-    Paper: https://arxiv.org/abs/1907.06390
+    Paper:
+        URL: https://arxiv.org/abs/1907.06390
+        Title: Sequence Level Semantics Aggregation for Video Object Detection
     README: configs/vid/selsa/README.md
 
 Models:
@@ -18,7 +20,7 @@ Models:
       Training Memory (GB): 3.49
     Results:
       - Task: Video Object Detection
-        Dataset: ILSVRC
+        Dataset: ImageNet VID
         Metrics:
           box AP@0.5: 78.4
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth
@@ -30,7 +32,7 @@ Models:
       Training Memory (GB): 5.18
     Results:
       - Task: Video Object Detection
-        Dataset: ILSVRC
+        Dataset: ImageNet VID
         Metrics:
           box AP@0.5: 81.5
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth
@@ -42,7 +44,7 @@ Models:
       Training Memory (GB): 9.15
     Results:
       - Task: Video Object Detection
-        Dataset: ILSVRC
+        Dataset: ImageNet VID
         Metrics:
           box AP@0.5: 83.1
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641-10252965.pth
