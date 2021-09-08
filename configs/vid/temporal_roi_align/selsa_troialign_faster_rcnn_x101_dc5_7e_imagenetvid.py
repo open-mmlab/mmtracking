@@ -1,4 +1,4 @@
-_base_ = ['./selsa_troi_faster_rcnn_r50_dc5_7e_imagenetvid.py']
+_base_ = ['./selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid.py']
 model = dict(
     detector=dict(
         backbone=dict(
