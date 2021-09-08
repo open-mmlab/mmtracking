@@ -91,8 +91,8 @@ def main():
 
     assert args.eval or args.show \
         or args.show_dir, \
-        ('Please specify at least one operation (save/eval/format/show the '
-         'results / save the results) with the argument "--eval"'
+        ('Please specify at least one operation (eval/show the '
+         'results) with the argument "--eval"'
          ', "--show" or "--show-dir"')
 
     cfg = Config.fromfile(args.config)
