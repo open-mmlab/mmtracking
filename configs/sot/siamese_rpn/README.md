@@ -28,9 +28,9 @@ We observe around 1.0 points fluctuations in Success and 1.5 points fluctuations
 
 ### UAV123
 
-First, you can train the model following [quick_run](https://github.com/open-mmlab/mmtracking/blob/master/docs/quick_run.md#training). Note that the checkpoints from 10-th to 20-th epoch will be evaluated during training and the best checkpoint can be found from the log file.
+The checkpoints from 10-th to 20-th epoch will be evaluated during training.
 
-Then, you need to use the best checkpoint to search the hyperparameters in UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search) to achieve the best results.
+After training, you need to pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search) to achieve the best results.
 
 We observe around xxx points fluctuations in Success and xxx points fluctuations in Norm percision. We provide the best model with its configuration and training log.
 

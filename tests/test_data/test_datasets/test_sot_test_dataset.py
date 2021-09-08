@@ -12,7 +12,7 @@ LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
 @pytest.mark.parametrize('dataset', ['SOTTestDataset', 'LaSOTDataset'])
-def test_sot_dataset_parse_ann_info(dataset):
+def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(

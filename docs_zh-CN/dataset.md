@@ -69,9 +69,8 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
-│   │   ├── anno (the offical annotation files)
+│   │   ├── anno
 │   │   │   ├── UAV123
-│   │   ├── annotations (the converted annotation file)
 ```
 
 ### 2. 转换标注格式
@@ -96,7 +95,7 @@ python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/ann
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
 # UAV123
-python ./tools/convert_datasets/uav2coco.py -i ./data/uav123/ -o ./data/uav123/annotations
+python ./tools/convert_datasets/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 ```
 
 完成以上格式转换后，文件目录结构如下：
