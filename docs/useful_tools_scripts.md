@@ -111,11 +111,11 @@ python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/
 
 The final output filename will be `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`.
 
-### SiameseRPN Test-time Parameter Search
+### SiameseRPN++ Test-time Parameter Search
 
-`tools/sot_siamrpn_param_search.py` can search the test-time tracking parameters in SiameseRPN: `penalty_k`, `lr` and `window_influence`. You need to pass the range of each parameter into the argparser.
+`tools/sot_siamrpn_param_search.py` can search the test-time tracking parameters in SiameseRPN: `penalty_k`, `lr` and `window_influence`. You need to pass the searching range of each parameter into the argparser.
 
-Example:
+Example on UAV123 dataset:
 
 ```shell
 python tools/sot_siamrpn_param_search.py [${CONFIG}] [--checkpoint ${CHECKPOINT}] [--penalty-k-range 0.05,0.5,0.05]

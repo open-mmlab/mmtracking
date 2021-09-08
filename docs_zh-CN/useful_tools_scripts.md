@@ -111,6 +111,17 @@ python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/
 
 最后输出的文件名为 `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`。
 
+### SiameseRPN++ 测试参数搜索
+
+`tools/sot_siamrpn_param_search.py` 用来搜索 SiameseRPN++ 测试时的跟踪相关参数： `penalty_k`, `lr` 和 `window_influence`。你需要在参数解析器中传入前面每个参数的搜索范围。
+
+在 UAV123 上的超参搜索范例：
+
+```shell
+python tools/sot_siamrpn_param_search.py [${CONFIG}] [--checkpoint ${CHECKPOINT}] [--penalty-k-range 0.05,0.5,0.05]
+[--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02] [--log ${LOG}] [--eval ${EVAL}]
+```
+
 ## 其它有用的工具脚本
 
 ### 输出完整的配置

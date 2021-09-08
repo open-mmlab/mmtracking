@@ -105,23 +105,10 @@ def convert_uav123(uav123, ann_dir, save_dir):
     print('-----------------------------')
 
 
-def dataset_check(ann_dir):
-    print('----- Check Dataset Json File -----')
-    with open(osp.join(ann_dir, 'uav123.json'), 'r') as f:
-        anno = mmcv.load(f, file_format='json')
-    print('annotation keys: ', list(anno.keys()))
-    for key, value in anno.items():
-        print(key, value[0])
-        if len(value) > 1:
-            print(key, value[1])
-    print('-----------------------------')
-
-
 def main():
     args = parse_args()
     uav123 = defaultdict(list)
     convert_uav123(uav123, args.input, args.output)
-    dataset_check(args.output)
 
 
 if __name__ == '__main__':

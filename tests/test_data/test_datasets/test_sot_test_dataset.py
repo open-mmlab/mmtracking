@@ -8,15 +8,16 @@ import pytest
 from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
-UAV_ANN_PATH = f'{PREFIX}/demo_sot_data/uav'
+LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
-@pytest.mark.parametrize('dataset', ['UAVDataset'])
-def test_uav_dataset_parse_ann_info(dataset):
+@pytest.mark.parametrize('dataset', ['SOTTestDataset', 'LaSOTDataset'])
+def test_sot_dataset_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
-        ann_file=osp.join(UAV_ANN_PATH, 'uav_test_dummy.json'), pipeline=[])
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
 
     # image 5 has 1 objects
     img_id = 5
@@ -28,16 +29,17 @@ def test_uav_dataset_parse_ann_info(dataset):
     assert ann['labels'] == 0
 
 
-def test_uav_evaluation():
-    dataset_class = DATASETS.get('UAVDataset')
+def test_sot_ope_evaluation():
+    dataset_class = DATASETS.get('SOTTestDataset')
     dataset = dataset_class(
-        ann_file=osp.join(UAV_ANN_PATH, 'uav_test_dummy.json'), pipeline=[])
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
 
     results = []
-    for video_name in ['ball1', 'drone1']:
+    for video_name in ['airplane-1', 'airplane-2']:
         results.extend(
             mmcv.list_from_file(
-                osp.join(UAV_ANN_PATH, video_name, 'track_results.txt')))
+                osp.join(LASOT_ANN_PATH, video_name, 'track_results.txt')))
     track_results = []
     for result in results:
         x1, y1, x2, y2 = result.split(',')

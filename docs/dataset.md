@@ -64,7 +64,7 @@ mmtracking
 |   |   ├── train
 |   |   ├── test
 │   │
-│   ├── uav123
+│   ├── UAV123
 │   │   ├── data_seq
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
@@ -145,7 +145,7 @@ mmtracking
 │   │   │   ├── imgs
 │   │   │   ├── meta
 │   │
-│   ├── uav123
+│   ├── UAV123
 │   │   ├── data_seq
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
@@ -224,6 +224,6 @@ Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corres
 
 #### The folder of annotations in UAV123
 
-There are only 1 json files in `data/lasot/annotations`:
+There are only 1 json files in `data/UAV123/annotations`:
 
 `uav123.json`:  Json file containing the annotations information of the UAV123 dataset.
