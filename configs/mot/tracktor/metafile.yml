@@ -7,7 +7,9 @@ Collections:
       Architecture:
         - ResNet
         - FPN
-    Paper: https://arxiv.org/abs/1903.05625
+    Paper:
+        URL: https://arxiv.org/abs/1903.05625
+        Title: Tracking without bells and whistles
     README: configs/mot/tracktor/README.md
 
 Models:

@@ -8,6 +8,7 @@
   - [MOT Challenge](https://motchallenge.net/)
 - 单目标跟踪
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+  - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
 
 ### 1. 下载数据集
 
@@ -21,7 +22,7 @@
 
 - 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
 
-- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC 和 LaSOT 数据集。
+- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT 和 UAV123 数据集。
 
 ```
 mmtracking
@@ -62,6 +63,14 @@ mmtracking
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
 |   |   ├── test
+│   │
+│   ├── UAV123
+│   │   ├── data_seq
+│   │   │   ├── UAV123
+│   │   │   │   ├── bike1
+│   │   │   │   ├── boat1
+│   │   ├── anno
+│   │   │   ├── UAV123
 ```
 
 ### 2. 转换标注格式
@@ -84,6 +93,9 @@ python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./
 # MOT Challenge中其余数据集的处理与MOT17相同
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+
+# UAV123
+python ./tools/convert_datasets/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 ```
 
 完成以上格式转换后，文件目录结构如下：
@@ -133,6 +145,15 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── UAV123
+│   │   ├── data_seq
+│   │   │   ├── UAV123
+│   │   │   │   ├── bike1
+│   │   │   │   ├── boat1
+│   │   ├── anno (the offical annotation files)
+│   │   │   ├── UAV123
+│   │   ├── annotations (the converted annotation file)
 ```
 
 #### ILSVRC的标注文件夹
@@ -202,3 +223,9 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 验证集标注 `val_20.txt` 的结构和上面类似。
 
 `reid/imgs` 中的图片是从 `MOT17/train` 中原始图片根据对应的 `gt.txt` 裁剪得到。真实类别标签值在 `[0, num_classes - 1]` 范围内。
+
+#### UAV123的标注文件夹
+
+在 `data/UAV123/annotations` 中只有一个 json 文件:
+
+`uav123.json`: 包含 UAV123 数据集标注信息的 json 文件。

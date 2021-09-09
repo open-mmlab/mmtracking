@@ -8,6 +8,7 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [MOT Challenge](https://motchallenge.net/)
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+  - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
 
 ### 1. Download Datasets
 
@@ -21,7 +22,7 @@ Notes:
 
 - For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
 
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC and LaSOT datasets are needed.
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT and UAV123 datasets are needed.
 
 ```
 mmtracking
@@ -62,6 +63,14 @@ mmtracking
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
 |   |   ├── test
+│   │
+│   ├── UAV123
+│   │   ├── data_seq
+│   │   │   ├── UAV123
+│   │   │   │   ├── bike1
+│   │   │   │   ├── boat1
+│   │   ├── anno
+│   │   │   ├── UAV123
 ```
 
 ### 2. Convert Annotations
@@ -83,6 +92,9 @@ python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./
 # The processing of other MOT Challenge dataset is the same as MOT17
 python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+
+# UAV123
+python ./tools/convert_datasets/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -132,6 +144,15 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── UAV123
+│   │   ├── data_seq
+│   │   │   ├── UAV123
+│   │   │   │   ├── bike1
+│   │   │   │   ├── boat1
+│   │   ├── anno (the offical annotation files)
+│   │   │   ├── UAV123
+│   │   ├── annotations (the converted annotation file)
 ```
 
 #### The folder of annotations in ILSVRC
@@ -200,3 +221,9 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 For validation, The annotation list `val_20.txt` remains the same as format above.
 
 Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corresponding `gt.txt`. The value of ground-truth labels should fall in range `[0, num_classes - 1]`.
+
+#### The folder of annotations in UAV123
+
+There are only 1 json files in `data/UAV123/annotations`:
+
+`uav123.json`:  Json file containing the annotations information of the UAV123 dataset.

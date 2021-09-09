@@ -47,7 +47,7 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 ## 更新记录
 
-v0.6.0版本已于2021年7月30日发布，可通过查阅[更新日志](/docs/changelog.md)了解更多细节以及发布历史。
+v0.7.0版本已于2021年9月3日发布，可通过查阅[更新日志](/docs/changelog.md)了解更多细节以及发布历史。
 
 ## 基准测试与模型库
 
@@ -58,6 +58,7 @@ v0.6.0版本已于2021年7月30日发布，可通过查阅[更新日志](/docs/c
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
+- [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
 支持的多目标跟踪算法:
 
@@ -72,9 +73,17 @@ v0.6.0版本已于2021年7月30日发布，可通过查阅[更新日志](/docs/c
 
 请参考[安装指南](docs/install.md)进行安装。
 
-## 教程
+## 开始使用MMTracking
 
-请参考[数据集](docs/dataset.md)和[快速开始](docs/quick_run.md)了解MMTracking的基本使用。MMTracking也提供了更详细的[教程](docs/tutorials/)。
+请参考[数据集](docs/dataset.md)和[快速开始](docs/quick_run.md)了解MMTracking的基本使用。MMTracking也提供了更详细的[教程](docs/tutorials/)，比如[了解配置文件](docs/tutorials/config.md), [一个有关视频目标检测器配置文件的详细解释](docs/tutorials/config_vid.md), [一个有关多目标跟踪器配置文件的详细解释](docs/tutorials/config_mot.md), [一个有关单目标跟踪器配置文件的详细解释](docs/tutorials/config_sot.md), [自定义数据集](docs/tutorials/customize_dataset.md), [自定义数据预处理流程]](docs/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/tutorials/customize_sot_model.md), [自定义训练配置](docs/tutorials/customize_runtime.md) and [有用的工具和脚本](docs/useful_tools_scripts.md).
+
+## 参与贡献
+
+我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节。
+
+## 致谢
+
+MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希望该工具箱和基准测试可以为社区提供灵活的代码工具，供用户复现现有算法并开发自己新的视频目标感知方法。
 
 ## 引用
 
@@ -88,14 +97,6 @@ v0.6.0版本已于2021年7月30日发布，可通过查阅[更新日志](/docs/c
     year={2020}
 }
 ```
-
-## 参与贡献
-
-我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南]([/.github/CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md))文件了解更多细节。
-
-## 致谢
-
-MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希望该工具箱和基准测试可以为社区提供灵活的代码工具，供用户复现现有算法并开发自己新的视频目标感知方法。
 
 ## OpenMMLab 的其他项目
 

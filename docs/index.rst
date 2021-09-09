@@ -8,6 +8,7 @@ You can switch between Chinese and English documents in the lower-left corner of
    :caption: Get Started
 
    install.md
+   modelzoo_statistics.md
    model_zoo.md
 
 .. toctree::

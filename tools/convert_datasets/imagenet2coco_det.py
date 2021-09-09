@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import glob
+import os
 import os.path as osp
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -167,7 +168,8 @@ def convert_det(DET, ann_dir, save_dir):
                                                       is_vid_train_frame,
                                                       records, DET,
                                                       obj_num_classes)
-
+    if not osp.isdir(save_dir):
+        os.makedirs(save_dir)
     mmcv.dump(DET, osp.join(save_dir, 'imagenet_det_30plus1cls.json'))
     print('-----ImageNet DET------')
     print(f'total {records["img_id"] - 1} images')
