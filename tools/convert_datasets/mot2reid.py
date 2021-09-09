@@ -72,7 +72,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if not osp.exists(args.output):
+    if not osp.isdir(args.output):
         os.makedirs(args.output)
     elif os.listdir(args.output):
         raise OSError(f'Directory must empty: \'{args.output}\'')

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import os
 import os.path as osp
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -170,6 +171,8 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
                 records['ann_id'] += 1
             records['img_id'] += 1
         records['vid_id'] += 1
+    if not osp.isdir(save_dir):
+        os.makedirs(save_dir)
     mmcv.dump(VID, osp.join(save_dir, f'imagenet_vid_{mode}.json'))
     print(f'-----ImageNet VID {mode}------')
     print(f'{records["vid_id"]- 1} videos')
