@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - name: "MMTracking Contributors"
+title: "OpenMMLab Video Perception Toolbox and Benchmark"
+date-released: 2021-01-04
+url: "https://github.com/open-mmlab/mmtracking"
+license: Apache-2.0

@@ -11,8 +11,8 @@ PREFIX = osp.join(osp.dirname(__file__), '../../data')
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
-@pytest.mark.parametrize('dataset', ['LaSOTDataset'])
-def test_lasot_dataset_parse_ann_info(dataset):
+@pytest.mark.parametrize('dataset', ['SOTTestDataset', 'LaSOTDataset'])
+def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
     dataset = dataset_class(
@@ -29,8 +29,8 @@ def test_lasot_dataset_parse_ann_info(dataset):
     assert ann['labels'] == 0
 
 
-def test_lasot_evaluation():
-    dataset_class = DATASETS.get('LaSOTDataset')
+def test_sot_ope_evaluation():
+    dataset_class = DATASETS.get('SOTTestDataset')
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
         pipeline=[])

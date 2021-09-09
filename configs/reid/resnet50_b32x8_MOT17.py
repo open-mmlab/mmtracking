@@ -1,4 +1,4 @@
-USE_MMCLS = True
+TRAIN_REID = True
 _base_ = [
     '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]
@@ -18,7 +18,7 @@ model = dict(
             in_channels=2048,
             fc_channels=1024,
             out_channels=128,
-            num_classes=378,
+            num_classes=380,
             loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
             loss_pairwise=dict(
                 type='TripletLoss', margin=0.3, loss_weight=1.0),
