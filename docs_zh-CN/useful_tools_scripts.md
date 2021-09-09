@@ -118,8 +118,9 @@ python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/
 在 UAV123 上的超参搜索范例：
 
 ```shell
-python tools/sot_siamrpn_param_search.py [${CONFIG}] [--checkpoint ${CHECKPOINT}] [--penalty-k-range 0.05,0.5,0.05]
-[--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02] [--log ${LOG}] [--eval ${EVAL}]
+./tools/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
+[--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
+[--penalty-k-range 0.05,0.5,0.05] [--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02]
 ```
 
 ## 其它有用的工具脚本

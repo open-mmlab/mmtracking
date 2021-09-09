@@ -171,16 +171,12 @@ def main():
         best_score = checkpoint['meta']['hook_msgs']['best_score']
     else:
         best_score = 0
-    best_result = {
-        'success': best_score,
-        'norm_precision': 0.,
-        'precision': 0.
-    }
-    best_params = {
-        'penalty_k': cfg.model.test_cfg.rpn.penalty_k,
-        'lr': cfg.model.test_cfg.rpn.lr,
-        'win_influ': cfg.model.test_cfg.rpn.window_influence
-    }
+
+    best_result = dict(success=best_score, norm_precision=0., precision=0.)
+    best_params = dict(
+        penalty_k=cfg.model.test_cfg.rpn.penalty_k,
+        lr=cfg.model.test_cfg.rpn.lr,
+        win_influ=cfg.model.test_cfg.rpn.window_influence)
     print_log(f'init best score as: {best_score}', logger)
     print_log(f'init best params as: {best_params}', logger)
 
@@ -214,10 +210,7 @@ def main():
 
                 rank, _ = get_dist_info()
                 if rank == 0:
-                    if args.eval_options is None:
-                        kwargs = {}
-                    else:
-                        kwargs = args.eval_options
+                    kwargs = args.eval_options if args.eval_options else {}
                     if args.eval:
                         eval_kwargs = cfg.get('evaluation', {}).copy()
                         # hard-code way to remove EvalHook args
@@ -236,11 +229,10 @@ def main():
                                   logger)
                         if eval_results['success'] > best_result['success']:
                             best_result = eval_results
-                            best_params = {
-                                'penalty_k': penalty_k,
-                                'lr': lr,
-                                'win_influ': win_influ
-                            }
+                            best_params['penalty_k'] = penalty_k,
+                            best_params['lr'] = lr,
+                            best_params['win_influ'] = win_influ
+
                         print_log(
                             f'The current best evaluation results: \
                                 {best_result}', logger)

@@ -36,4 +36,4 @@ We observe around xxx points fluctuations in Success and xxx points fluctuations
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-|    R-50    |  -  |   20e    | -        | -              | 61.8 | 77.3 | [config](siamese_rpn_r50_1x_uav.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019.log.json) |
+|    R-50    |  -  |   20e    | 7.54     | -              | 61.8 | 77.3 | [config](siamese_rpn_r50_1x_uav123.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019.log.json) |
