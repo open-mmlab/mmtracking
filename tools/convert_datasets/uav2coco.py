@@ -73,10 +73,8 @@ def convert_uav123(uav123, ann_dir, save_dir):
 
             if 'NaN' in gt_bboxes[frame_id]:
                 x1 = y1 = w = h = 0
-                ignore = True
             else:
                 x1, y1, w, h = gt_bboxes[frame_id].split(',')
-                ignore = False
             ann = dict(
                 id=records['ann_id'],
                 image_id=records['img_id'],
@@ -84,8 +82,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
                 category_id=0,
                 bbox=[int(x1), int(y1), int(w),
                       int(h)],
-                area=int(w) * int(h),
-                ignore=ignore)
+                area=int(w) * int(h))
             uav123['annotations'].append(ann)
 
             records['ann_id'] += 1
