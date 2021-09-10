@@ -11,7 +11,7 @@ from .pipelines import PIPELINES
 from .reid_dataset import ReIDDataset
 from .sot_test_dataset import SOTTestDataset
 from .sot_train_dataset import SOTTrainDataset
-from .uav_dataset import UAV123Dataset
+from .uav123_dataset import UAV123Dataset
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
