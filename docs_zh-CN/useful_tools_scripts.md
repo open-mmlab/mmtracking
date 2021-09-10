@@ -43,6 +43,18 @@
 
     脚本将测试共12个案例，并记录相应测试结果。
 
+## SiameseRPN++ 测试时参数搜索
+
+`tools/sot_siamrpn_param_search.py` 用来搜索 SiameseRPN++ 测试时的跟踪相关参数： `penalty_k`, `lr` 和 `window_influence`。你需要在参数解析器中传入前面每个参数的搜索范围。
+
+在 UAV123 上的超参搜索范例：
+
+```shell
+./tools/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
+[--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
+[--penalty-k-range 0.05,0.5,0.05] [--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02]
+```
+
 ## 日志分析
 
 `tools/analyze_logs.py` 脚本可以根据训练日志文件绘制损失函数以及 mAP 曲线。
