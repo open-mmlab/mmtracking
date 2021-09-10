@@ -1,11 +1,13 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
+from mmcv.runner import BaseModule
 
 from ..builder import AGGREGATORS
 
 
 @AGGREGATORS.register_module()
-class SelsaAggregator(nn.Module):
+class SelsaAggregator(BaseModule):
     """Selsa aggregator module.
 
     This module is proposed in "Sequence Level Semantics Aggregation for Video
@@ -16,10 +18,12 @@ class SelsaAggregator(nn.Module):
             proposal.
         num_attention_blocks (int): The number of attention blocks used in
             selsa aggregator module. Defaults to 16.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
-    def __init__(self, in_channels, num_attention_blocks=16):
-        super(SelsaAggregator, self).__init__()
+    def __init__(self, in_channels, num_attention_blocks=16, init_cfg=None):
+        super(SelsaAggregator, self).__init__(init_cfg)
         self.fc_embed = nn.Linear(in_channels, in_channels)
         self.ref_fc_embed = nn.Linear(in_channels, in_channels)
         self.fc = nn.Linear(in_channels, in_channels)

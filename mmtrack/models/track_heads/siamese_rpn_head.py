@@ -1,6 +1,8 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner import BaseModule, auto_fp16, force_fp32
 from mmdet.core import build_assigner, build_bbox_coder, build_sampler
 from mmdet.core.anchor import build_prior_generator
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
@@ -10,7 +12,7 @@ from mmtrack.core.track import depthwise_correlation
 
 
 @HEADS.register_module()
-class CorrelationHead(nn.Module):
+class CorrelationHead(BaseModule):
     """Correlation head module.
 
     This module is proposed in
@@ -26,6 +28,8 @@ class CorrelationHead(nn.Module):
             Defaults to dict(type='BN').
         act_cfg (dict): Configuration of activation method after each conv.
             Defaults to dict(type='ReLU').
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -35,8 +39,9 @@ class CorrelationHead(nn.Module):
                  kernel_size=3,
                  norm_cfg=dict(type='BN'),
                  act_cfg=dict(type='ReLU'),
+                 init_cfg=None,
                  **kwargs):
-        super(CorrelationHead, self).__init__()
+        super(CorrelationHead, self).__init__(init_cfg)
         self.kernel_convs = ConvModule(
             in_channels=in_channels,
             out_channels=mid_channels,
@@ -73,7 +78,7 @@ class CorrelationHead(nn.Module):
 
 
 @HEADS.register_module()
-class SiameseRPNHead(nn.Module):
+class SiameseRPNHead(BaseModule):
     """Siamese RPN head.
 
     This module is proposed in
@@ -108,6 +113,9 @@ class SiameseRPNHead(nn.Module):
         train_cfg (Dict): Training setting. Defaults to None.
 
         test_cfg (Dict): Testing setting. Defaults to None.
+
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -127,15 +135,17 @@ class SiameseRPNHead(nn.Module):
                      type='L1Loss', reduction='sum', loss_weight=1.2),
                  train_cfg=None,
                  test_cfg=None,
+                 init_cfg=None,
                  *args,
                  **kwargs):
-        super(SiameseRPNHead, self).__init__(*args, **kwargs)
+        super(SiameseRPNHead, self).__init__(init_cfg)
         self.anchor_generator = build_prior_generator(anchor_generator)
         self.bbox_coder = build_bbox_coder(bbox_coder)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.assigner = build_assigner(self.train_cfg.assigner)
         self.sampler = build_sampler(self.train_cfg.sampler)
+        self.fp16_enabled = False
 
         self.cls_heads = nn.ModuleList()
         self.reg_heads = nn.ModuleList()
@@ -157,6 +167,7 @@ class SiameseRPNHead(nn.Module):
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox = build_loss(loss_bbox)
 
+    @auto_fp16()
     def forward(self, z_feats, x_feats):
         """Forward with features `z_feats` of exemplar images and features
         `x_feats` of search images.
@@ -201,11 +212,11 @@ class SiameseRPNHead(nn.Module):
         last score map."""
         num_base_anchors = self.anchor_generator.num_base_anchors[0]
         H, W = score_maps_size
-        num_anchors = num_base_anchors * H * W
+        num_anchors = H * W * num_base_anchors
         labels = gt_bbox.new_zeros((num_anchors, ), dtype=torch.long)
-        labels_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
-        bbox_weights = gt_bbox.new_zeros((num_anchors, ), dtype=torch.float)
-        bbox_targets = gt_bbox.new_zeros((num_anchors, 4), dtype=torch.float)
+        labels_weights = gt_bbox.new_zeros((num_anchors, ))
+        bbox_weights = gt_bbox.new_zeros((num_anchors, 4))
+        bbox_targets = gt_bbox.new_zeros((num_anchors, 4))
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_positive_pair_targets(self, gt_bbox, score_maps_size):
@@ -231,7 +242,7 @@ class SiameseRPNHead(nn.Module):
             self.anchors = self.anchor_generator.grid_priors([score_maps_size],
                                                              gt_bbox.device)[0]
             # Transform the coordinate origin from the top left corner to the
-            # center in the scaled featurs map.
+            # center in the scaled score map.
             feat_h, feat_w = score_maps_size
             stride_w, stride_h = self.anchor_generator.strides[0]
             self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w
@@ -265,7 +276,6 @@ class SiameseRPNHead(nn.Module):
 
         bbox_targets = self.bbox_coder.encode(
             anchors, gt_bbox[:, 1:].repeat(anchors.shape[0], 1))
-        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def _get_negative_pair_targets(self, gt_bbox, score_maps_size):
@@ -320,7 +330,6 @@ class SiameseRPNHead(nn.Module):
             labels_weights[neg_inds] = 1.0 / len(neg_inds) / 2
         labels[...] = 0
 
-        bbox_weights = bbox_weights.view(-1, 1).repeat(1, 4)
         return labels, labels_weights, bbox_targets, bbox_weights
 
     def get_targets(self, gt_bboxes, score_maps_size, is_positive_pairs):
@@ -340,7 +349,7 @@ class SiameseRPNHead(nn.Module):
             tuple(all_labels, all_labels_weights, all_bbox_targets,
             all_bbox_weights): the shape is (N, H * W * num_base_anchors),
             (N, H * W * num_base_anchors), (N, H * W * num_base_anchors, 4),
-            (N, H * W * num_base_anchors), respectively. All of them are
+            (N, H * W * num_base_anchors, 4), respectively. All of them are
             Tensor.
         """
         (all_labels, all_labels_weights, all_bbox_targets,
@@ -371,6 +380,7 @@ class SiameseRPNHead(nn.Module):
         return (all_labels, all_labels_weights, all_bbox_targets,
                 all_bbox_weights)
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss(self, cls_score, bbox_pred, labels, labels_weights, bbox_targets,
              bbox_weights):
         """Compute loss.
@@ -381,7 +391,7 @@ class SiameseRPNHead(nn.Module):
             labels (Tensor): of shape (N, H * W * num_base_anchors).
             labels_weights (Tensor): of shape (N, H * W * num_base_anchors).
             bbox_targets (Tensor): of shape (N, H * W * num_base_anchors, 4).
-            bbox_weights (Tensor): of shape (N, H * W * num_base_anchors).
+            bbox_weights (Tensor): of shape (N, H * W * num_base_anchors, 4).
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
@@ -405,6 +415,7 @@ class SiameseRPNHead(nn.Module):
 
         return losses
 
+    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def get_bbox(self, cls_score, bbox_pred, prev_bbox, scale_factor):
         """Track `prev_bbox` to current frame based on the output of network.
 
@@ -425,7 +436,7 @@ class SiameseRPNHead(nn.Module):
             self.anchors = self.anchor_generator.grid_priors(
                 score_maps_size, cls_score.device)[0]
             # Transform the coordinate origin from the top left corner to the
-            # center in the scaled featurs map.
+            # center in the scaled feature map.
             feat_h, feat_w = score_maps_size[0]
             stride_w, stride_h = self.anchor_generator.strides[0]
             self.anchors[:, 0:4:2] -= (feat_w // 2) * stride_w

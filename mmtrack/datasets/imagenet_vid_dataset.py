@@ -1,5 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.datasets import DATASETS
-from pycocotools.coco import COCO
+from mmdet.datasets.api_wrappers import COCO
 
 from .coco_video_dataset import CocoVideoDataset
 from .parsers import CocoVID

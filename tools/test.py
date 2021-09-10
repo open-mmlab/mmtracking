@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
 
@@ -8,7 +9,8 @@ from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
-from mmdet.datasets import build_dataset
+
+from mmtrack.datasets import build_dataset
 
 
 def parse_args():
@@ -90,9 +92,9 @@ def main():
         from mmdet.models import build_detector as build_model
         if 'detector' in cfg.model:
             cfg.model = cfg.model.detector
-    elif cfg.get('USE_MMCLS', False):
-        from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.datasets import build_dataloader
+    elif cfg.get('TRAIN_REID', False):
+        from mmdet.apis import multi_gpu_test, single_gpu_test
+        from mmdet.datasets import build_dataloader
         from mmtrack.models import build_reid as build_model
         if 'reid' in cfg.model:
             cfg.model = cfg.model.reid
@@ -132,6 +134,8 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
+    # We need call `init_weights()` to load pretained weights in MOT task.
+    model.init_weights()
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)

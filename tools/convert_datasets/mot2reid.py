@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 # This script converts MOT dataset into ReID dataset.
 # Offical website of the MOT dataset: https://motchallenge.net/
 #
@@ -71,7 +72,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if not osp.exists(args.output):
+    if not osp.isdir(args.output):
         os.makedirs(args.output)
     elif os.listdir(args.output):
         raise OSError(f'Directory must empty: \'{args.output}\'')
@@ -82,6 +83,7 @@ def main():
         video_names = [
             video_name for video_name in video_names if 'FRCNN' in video_name
         ]
+    is_mot15 = True if 'MOT15' in in_folder else False
     for video_name in tqdm(video_names):
         # load video infos
         video_folder = osp.join(in_folder, video_name)
@@ -103,8 +105,12 @@ def main():
             gt = gt.strip().split(',')
             frame_id, ins_id = map(int, gt[:2])
             ltwh = list(map(float, gt[2:6]))
-            class_id = int(gt[7])
-            visibility = float(gt[8])
+            if is_mot15:
+                class_id = 1
+                visibility = 1.
+            else:
+                class_id = int(gt[7])
+                visibility = float(gt[8])
             if class_id in USELESS:
                 continue
             elif class_id in IGNORES:
@@ -132,7 +138,7 @@ def main():
         os.makedirs(reid_meta_folder)
     reid_train_list = []
     reid_val_list = []
-    reid_img_folder_names = os.listdir(reid_train_folder)
+    reid_img_folder_names = sorted(os.listdir(reid_train_folder))
     num_ids = len(reid_img_folder_names)
     num_train_ids = int(num_ids * (1 - args.val_split))
     train_label, val_label = 0, 0

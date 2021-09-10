@@ -1,0 +1,50 @@
+Collections:
+  - Name: Temporal RoI Align
+    Metadata:
+      Training Data: ImageNet DET, ImageNet VID
+      Training Techniques:
+        - SGD with Momentum
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+    Paper:
+        URL: https://ojs.aaai.org/index.php/AAAI/article/view/16234
+        Title: Temporal ROI Align for Video Object Recognition
+    README: configs/vid/temporal_roi_align/README.md
+
+Models:
+  - Name: selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid
+    In Collection: SELSA-TemporalRoIAlign
+    Config: configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 4.14
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 79.8
+    Weights: https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid_20210820_162714-939fd657.pth
+
+  - Name: selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid
+    In Collection: SELSA-TemporalRoIAlign
+    Config: configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 5.83
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 82.6
+    Weights: https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid_20210822_111621-22cb96b9.pth
+
+  - Name: selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid
+    In Collection: SELSA-TemporalRoIAlign
+    Config: configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 9.74
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 84.1
+    Weights: https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid_20210822_164036-4471ac42.pth

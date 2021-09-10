@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -11,6 +12,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
@@ -47,8 +49,7 @@ extensions = [
 
 autodoc_mock_imports = [
     'matplotlib', 'pycocotools', 'terminaltables', 'mmtrack.version',
-    'mmcv.ops', 'mmcls', 'mmdet', 'seaborn', 'motmetrics', 'torchvision',
-    'pandas', 'scipy'
+    'seaborn', 'motmetrics', 'torchvision', 'pandas', 'scipy'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -84,8 +85,10 @@ html_static_path = ['_static']
 
 language = 'en'
 
-# def builder_inited_handler(app):
-#     subprocess.run(['./stat.py'])
 
-# def setup(app):
-#     app.connect('builder-inited', builder_inited_handler)
+def builder_inited_handler(app):
+    subprocess.run(['./stat.py'])
+
+
+def setup(app):
+    app.connect('builder-inited', builder_inited_handler)

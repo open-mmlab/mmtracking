@@ -9,10 +9,6 @@ search_size = 255  #  Search size
 # model settings
 model = dict(
     type='SiamRPN',  # the type of single object tracker
-    pretrains=dict(
-        backbone=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/v0.5/pretrained_weights/sot_resnet50.model'  # noqa: E501
-    ),  # The pretrained weights of modules, e.g. backbone module.
     backbone=dict(  # The config of backbone
         type='SOTResNet',  # The type of the backbone
         depth=50,  # The depth of backbone, usually it is 50 for ResNet backbones.
@@ -20,7 +16,12 @@ model = dict(
         frozen_stages=4,  # The weights in the first 1 stage are fronzen
         strides=(1, 2, 1, 1),  # The stride of conv in each stage
         dilations=(1, 1, 2, 4),  # The dilation of conv in each stage
-        norm_eval=True), # Whether to freeze the statistics in BN
+        norm_eval=True, # Whether to freeze the statistics in BN
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/pretrained_weights/sot_resnet50.model'  # noqa: E501
+        )), # The pretrained weights of backbone
     neck=dict(
         type='ChannelMapper',  # The neck is ChannelMapper.
         in_channels=[512, 1024, 2048],  # The input channels, this is consistent with the output channels of backbone
@@ -191,7 +192,12 @@ lr_config = dict((  # Learning rate scheduler config used to register LrUpdater 
     ])
 # checkpoint saving
 checkpoint_config = dict(interval=1)  # Config to set the checkpoint hook, Refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/checkpoint.py for implementation.
-evaluation = dict(metric=['track'], interval=20)  # The config to build the evaluation hook
+evaluation = dict(
+    metric=['track'],
+    interval=1,
+    start=10,
+    rule='greater',
+    save_best='success') # The config to build the evaluation hook
 # yapf:disable
 log_config = dict(  # config to register logger hook
     interval=50,

@@ -1,0 +1,55 @@
+Collections:
+  - Name: FP16
+    Metadata:
+      Training Techniques:
+        - Mixed Precision Training
+      Training Resources: 8x TITAN Xp GPUs
+    Paper:
+        URL: https://arxiv.org/abs/1710.03740
+        Title: Mixed Precision Training
+    README: configs/fp16/README.md
+
+Models:
+  - Name: selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid
+    In Collection: FP16
+    Config: configs/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid.py
+    Metadata:
+      Training Data: ImageNet DET, ImageNet VID
+      Training Memory (GB): 2.71
+      Epochs: 7
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 78.7
+    Weights: https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half
+    In Collection: FP16
+    Config: configs/fp16/tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 64.7
+          IDF1: 66.6
+    Weights:
+      - https://download.openmmlab.com/mmtracking/fp16/faster-rcnn_r50_fpn_fp16_4e_mot17-half_20210730_002436-f4ba7d61.pth
+      - https://download.openmmlab.com/mmtracking/fp16/reid_r50_fp16_8x32_6e_mot17_20210731_033055-4747ee95.pth
+
+  - Name: siamese_rpn_r50_fp16_1x_lasot
+    In Collection: FP16
+    Config: configs/fp16/siamese_rpn_r50_fp16_1x_lasot.py
+    Metadata:
+      Training Data: MSCOCO, ImageNet DET, ImageNet VID
+      Training Memory (GB): 7.54
+      Epochs: 20
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 49.1
+          Norm precision: 57.0
+    Weights: https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth

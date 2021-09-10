@@ -6,10 +6,6 @@ search_size = 255
 # model settings
 model = dict(
     type='SiamRPN',
-    pretrains=dict(
-        backbone=  # noqa: E251
-        'https://download.openmmlab.com/mmtracking/pretrained_weights/sot_resnet50.model'  # noqa: E501
-    ),
     backbone=dict(
         type='SOTResNet',
         depth=50,
@@ -17,7 +13,12 @@ model = dict(
         frozen_stages=4,
         strides=(1, 2, 1, 1),
         dilations=(1, 1, 2, 4),
-        norm_eval=True),
+        norm_eval=True,
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmtracking/pretrained_weights/sot_resnet50.model'  # noqa: E501
+        )),
     neck=dict(
         type='ChannelMapper',
         in_channels=[512, 1024, 2048],

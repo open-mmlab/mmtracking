@@ -5,8 +5,8 @@
 - PyTorch 1.3+
 - CUDA 9.2+ (If you build PyTorch from source, CUDA 9.0 is also compatible)
 - GCC 5+
-- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
-- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
+- [MMCV](https://mmcv.readthedocs.io/en/latest/get_started/installation.html)
+- [MMDetection](https://mmdetection.readthedocs.io/en/latest/get_started.html#installation)
 
 The compatible MMTracking, MMCV, and MMDetection versions are as below. Please install the correct version to avoid installation issues.
 
@@ -14,6 +14,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 |:-------------------:|:------------------------:|:-----------------------------:|
 |        master       | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0      |
 |        0.6.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
+|        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 
 ## Installation
 
@@ -58,7 +59,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
     ```
 
-    See [here](https://github.com/open-mmlab/mmcv#install-with-pip) for different versions of MMCV compatible to different PyTorch and CUDA versions.
+    See [here](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) for different versions of MMCV compatible to different PyTorch and CUDA versions.
     Optionally you can choose to compile mmcv from source by the following command
 
     ```shell
@@ -148,7 +149,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 To verify whether MMTracking and the required environment are installed correctly, we can run MOT, VID, SOT demo script.
 
-Run MOT demo and you will see a output video named `mot.mp4`:
+For example, run MOT demo and you will see a output video named `mot.mp4`:
 
 ```shell
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4

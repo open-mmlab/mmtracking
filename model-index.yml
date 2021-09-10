@@ -5,3 +5,5 @@ Import:
   - configs/vid/dff/metafile.yml
   - configs/vid/fgfa/metafile.yml
   - configs/vid/selsa/metafile.yml
+  - configs/vid/temporal_roi_align/metafile.yml
+  - configs/fp16/metafile.yml

@@ -16,7 +16,7 @@ Create a new file `mmtrack/models/mot/trackers/my_tracker.py`.
 
 We implement a `BaseTracker` that provide basic APIs to maintain the tracks across the video.
 We recommend to inherit the new tracker from it.
-The users may refer to the documentations of `BaseTracker` for the details.
+The users may refer to the documentations of [BaseTracker](https://github.com/open-mmlab/mmtracking/tree/master/mmtrack/models/mot/trackers/base_tracker.py) for the details.
 
 ```python
 from mmtrack.models import TRACKERS
@@ -75,13 +75,15 @@ Please refer to [tutorial in mmdetection](https://mmdetection.readthedocs.io/en/
 
 Create a new file `mmtrack/models/motion/my_flownet.py`.
 
-You can inherit the motion model from `nn.Module` if it is a deep learning module and from `object` if not.
+You can inherit the motion model from `BaseModule` in `mmcv.runner` if it is a deep learning module, and from `object` if not.
 
 ```python
+from mmcv.runner import BaseModule
+
 from ..builder import MOTION
 
 @MOTION.register_module()
-class MyFlowNet(nn.Module):
+class MyFlowNet(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -127,10 +129,12 @@ motion=dict(
 Create a new file `mmtrack/models/reid/my_reid.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from ..builder import REID
 
 @REID.register_module()
-class MyReID(nn.Module):
+class MyReID(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -176,10 +180,12 @@ reid=dict(
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
 ```python
+from mmcv.runner import BaseModule
+
 from mmdet.models import HEADS
 
 @HEADS.register_module()
-class MyHead(nn.Module):
+class MyHead(BaseModule):
 
     def __init__(self,
                 arg1,
@@ -220,6 +226,8 @@ track_head=dict(
 
 ### Add a new loss
 
+#### 1. define a loss (e.g. MyLoss)
+
 Assume you want to add a new loss as `MyLoss`, for bounding box regression.
 To add a new loss function, the users need implement it in `mmtrack/models/losses/my_loss.py`.
 The decorator `weighted_loss` enable the loss to be weighted for each element.
@@ -228,8 +236,7 @@ The decorator `weighted_loss` enable the loss to be weighted for each element.
 import torch
 import torch.nn as nn
 
-from ..builder import LOSSES
-from .utils import weighted_loss
+from mmdet.models import LOSSES, weighted_loss
 
 @weighted_loss
 def my_loss(pred, target):
@@ -259,6 +266,8 @@ class MyLoss(nn.Module):
         return loss_bbox
 ```
 
+#### 2. Import the module
+
 Then the users need to add it in the `mmtrack/models/losses/__init__.py`.
 
 ```python
@@ -270,13 +279,16 @@ Alternatively, you can add
 
 ```python
 custom_imports=dict(
-    imports=['mmtrack.models.losses.my_loss'])
+    imports=['mmtrack.models.losses.my_loss'],
+    allow_failed_imports=False)
 ```
 
 to the config file and achieve the same goal.
 
+#### 3. Modify the config file
+
 To use it, modify the `loss_xxx` field.
-Since MyLoss is for regression, you need to modify the `loss_bbox` field in the head.
+Since MyLoss is for regression, you need to modify the `loss_bbox` field in the `head`.
 
 ```python
 loss_bbox=dict(type='MyLoss', loss_weight=1.0))

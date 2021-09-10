@@ -1,4 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import os
 import os.path as osp
 from collections import defaultdict
 
@@ -82,6 +84,8 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
         records['global_instance_id'] += 1
         records['vid_id'] += 1
 
+    if not osp.isdir(save_dir):
+        os.makedirs(save_dir)
     mmcv.dump(lasot_test, osp.join(save_dir, 'lasot_test.json'))
     print('-----LaSOT Test Dataset------')
     print(f'{records["vid_id"]- 1} videos')

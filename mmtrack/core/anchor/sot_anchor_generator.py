@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import torch
 from mmdet.core.anchor import ANCHOR_GENERATORS, AnchorGenerator
@@ -54,7 +55,8 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                 related to a single feature grid. Defaults to None.
 
         Returns:
-            torch.Tensor: Anchors in a single-level feature maps.
+            torch.Tensor: Anchors of one spatial location in a single level
+            feature map in [tl_x, tl_y, br_x, br_y] format.
         """
         w = base_size
         h = base_size
@@ -75,11 +77,11 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             ws = (wr[:, None] * scales[None, :]).view(-1)
             hs = (hr[:, None] * scales[None, :]).view(-1)
         else:
-            ws = (wr[None, :] * scales[:, None]).view(-1)
-            hs = (hr[None, :] * scales[:, None]).view(-1)
+            ws = ((w * w_ratios[None, :]).long() * scales[:, None]).view(-1)
+            hs = ((h * h_ratios[None, :]).long() * scales[:, None]).view(-1)
 
         # use float anchor and the anchor's center is aligned with the
-        # pixel center
+        # pixel point
         base_anchors = [
             x_center - 0.5 * ws, y_center - 0.5 * hs, x_center + 0.5 * ws,
             y_center + 0.5 * hs

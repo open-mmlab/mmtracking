@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import copy
 from collections import defaultdict
 
@@ -146,8 +147,8 @@ class ReIDDataset(BaseDataset):
 
         # distance
         results = [result.data.cpu() for result in results]
-        features = torch.stack(results) if len(
-            results[0].size()) == 1 else torch.cat(results)
+        features = torch.stack(results)
+
         n, c = features.size()
         mat = torch.pow(features, 2).sum(dim=1, keepdim=True).expand(n, n)
         distmat = mat + mat.t()

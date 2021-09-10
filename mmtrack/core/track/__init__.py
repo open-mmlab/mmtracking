@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from .correlation import depthwise_correlation
 from .similarity import embed_similarity
 from .transforms import imrenormalize, restore_result, track2result

@@ -2,6 +2,7 @@
   <img src="resources/mmtrack-logo.png" width="600"/>
 </div>
 
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
 [![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/en/latest/)
 [![badge](https://github.com/open-mmlab/mmtracking/workflows/build/badge.svg)](https://github.com/open-mmlab/mmtracking/actions)
@@ -47,7 +48,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
-v0.6.0 was released in 30/07/2021.
+v0.7.0 was released in 03/09/2021.
 Please refer to [changelog.md](docs/changelog.md) for details and release history.
 
 ## Benchmark and model zoo
@@ -59,6 +60,7 @@ Supported methods of video object detection:
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
+- [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
 Supported methods of multi object tracking:
 
@@ -73,10 +75,21 @@ Supported methods of single object tracking:
 
 Please refer to [install.md](docs/install.md) for install instructions.
 
-## Get Started
+## Getting Started
 
 Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
-We also provide usage [tutorials](docs/tutorials/).
+We also provide usage [tutorials](docs/tutorials/), such as [learning about configs](docs/tutorials/config.md), [an example about detailed description of vid config](docs/tutorials/config_vid.md), [an example about detailed description of mot config](docs/tutorials/config_mot.md), [an example about detailed description of sot config](docs/tutorials/config_sot.md), [customizing dataset](docs/tutorials/customize_dataset.md), [customizing data pipeline](docs/tutorials/customize_data_pipeline.md), [customizing vid model](docs/tutorials/customize_vid_model.md), [customizing mot model](docs/tutorials/customize_mot_model.md), [customizing sot model](docs/tutorials/customize_sot_model.md), [customizing runtime settings](docs/tutorials/customize_runtime.md) and [useful tools](docs/useful_tools_scripts.md).
+
+## Contributing
+
+We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
+
+## Acknowledgement
+
+MMTracking is an open source project that welcome any contribution and feedback.
+We wish that the toolbox and benchmark could serve the growing research
+community by providing a flexible as well as standardized toolkit to reimplement existing methods
+and develop their own new video perception methods.
 
 ## Citation
 
@@ -90,17 +103,6 @@ If you find this project useful in your research, please consider cite:
     year={2020}
 }
 ```
-
-## Contributing
-
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
-
-## Acknowledgement
-
-MMTracking is an open source project that welcome any contribution and feedback.
-We wish that the toolbox and benchmark could serve the growing research
-community by providing a flexible as well as standardized toolkit to reimplement existing methods
-and develop their own new video perception methods.
 
 ## Projects in OpenMMLab
 

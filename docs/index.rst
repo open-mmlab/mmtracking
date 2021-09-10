@@ -8,6 +8,7 @@ You can switch between Chinese and English documents in the lower-left corner of
    :caption: Get Started
 
    install.md
+   modelzoo_statistics.md
    model_zoo.md
 
 .. toctree::
@@ -28,7 +29,7 @@ You can switch between Chinese and English documents in the lower-left corner of
    :maxdepth: 2
    :caption: Useful Tools and Scripts
 
-   useful_tools.md
+   useful_tools_scripts.md
 
 .. toctree::
    :maxdepth: 2
@@ -38,14 +39,15 @@ You can switch between Chinese and English documents in the lower-left corner of
 
 
 .. toctree::
-   :caption: API Reference
-
-   api.rst
-
-.. toctree::
    :caption: Switch Language
 
    switch_language.md
+
+
+.. toctree::
+   :caption: API Reference
+
+   api.rst
 
 
 Indices and tables

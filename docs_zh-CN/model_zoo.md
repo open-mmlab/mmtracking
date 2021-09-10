@@ -3,7 +3,7 @@
 ## 通用设置
 
 - 我们默认使用分布式训练。
-- 所有 pytorch 风格的预训练骨干网络都是来自 Pytorch 的模型库。
+- 所有 pytorch 类型的预训练骨干网络都是来自 Pytorch 的模型库。
 - 为了与其他代码库进行公平比较，我们以全部 8 个 GPU 的 `torch.cuda.max_memory_allocated()` 的最大值作为 GPU 显存使用量。请注意，此值通常小于 `nvidia-smi` 显示的值。
 - 该推理时间不包含数据加载时间，推理时间结果是通过脚本 `tools/benchmark.py` 获得的，该脚本计算处理 2000 张图像的平均时间。
 - 速度基准测试的环境如下：
@@ -32,6 +32,10 @@
 ### SELSA (ICCV 2019)
 
 详情请参考 [SELSA](../configs/vid/selsa/README.md)。
+
+### Temporal RoI Align (AAAI 2021)
+
+详情请参考 [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/temporal_roi_align)。
 
 ## 多目标跟踪基线
 

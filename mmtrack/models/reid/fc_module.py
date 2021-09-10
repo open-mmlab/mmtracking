@@ -1,9 +1,10 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmcv.cnn import (build_activation_layer, build_norm_layer, constant_init,
-                      kaiming_init)
+from mmcv.cnn import build_activation_layer, build_norm_layer
+from mmcv.runner import BaseModule
 
 
-class FcModule(nn.Module):
+class FcModule(BaseModule):
     """Fully-connected layer module.
 
     Args:
@@ -14,6 +15,8 @@ class FcModule(nn.Module):
         act_cfg (dict, optional): Configuration of activation method after fc.
             Defaults to dict(type='ReLU').
         inplace (bool, optional): Whether inplace the activatation module.
+        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to dict(type='Kaiming', layer='Linear').
     """
 
     def __init__(self,
@@ -21,8 +24,9 @@ class FcModule(nn.Module):
                  out_channels,
                  norm_cfg=None,
                  act_cfg=dict(type='ReLU'),
-                 inplace=True):
-        super(FcModule, self).__init__()
+                 inplace=True,
+                 init_cfg=dict(type='Kaiming', layer='Linear')):
+        super(FcModule, self).__init__(init_cfg)
         assert norm_cfg is None or isinstance(norm_cfg, dict)
         assert act_cfg is None or isinstance(act_cfg, dict)
         self.norm_cfg = norm_cfg
@@ -48,19 +52,10 @@ class FcModule(nn.Module):
                 act_cfg_.setdefault('inplace', inplace)
             self.activate = build_activation_layer(act_cfg_)
 
-        # Use msra init by default
-        self.init_weights()
-
     @property
     def norm(self):
         """Normalization."""
         return getattr(self, self.norm_name)
-
-    def init_weights(self):
-        """Initialize weights."""
-        kaiming_init(self.fc)
-        if self.with_norm:
-            constant_init(self.norm, 1, bias=0)
 
     def forward(self, x, activate=True, norm=True):
         """Model forward."""
