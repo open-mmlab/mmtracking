@@ -2,7 +2,7 @@
 
 ## MOT 测试时参数搜索
 
-`tools/mot_param_search.py` 脚本可以搜索 MOT 模型中`跟踪器`的参数。
+`tools/analysis/mot/mot_param_search.py` 脚本可以搜索 MOT 模型中`跟踪器`的参数。
 除了在配置文件上有所差别，该脚本的使用方法与 `tools/test.py` 脚本类似。
 
 这里有一个示例来展示如何修改配置文件：
@@ -45,22 +45,22 @@
 
 ## SiameseRPN++ 测试时参数搜索
 
-`tools/sot_siamrpn_param_search.py` 用来搜索 SiameseRPN++ 测试时的跟踪相关参数： `penalty_k`, `lr` 和 `window_influence`。你需要在参数解析器中传入前面每个参数的搜索范围。
+`tools/analysis/sot/sot_siamrpn_param_search.py` 用来搜索 SiameseRPN++ 测试时的跟踪相关参数： `penalty_k`, `lr` 和 `window_influence`。你需要在参数解析器中传入前面每个参数的搜索范围。
 
 在 UAV123 上的超参搜索范例：
 
 ```shell
-./tools/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
+./tools/analysis/sot/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
 [--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
 [--penalty-k-range 0.05,0.5,0.05] [--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02]
 ```
 
 ## 日志分析
 
-`tools/analyze_logs.py` 脚本可以根据训练日志文件绘制损失函数以及 mAP 曲线。
+`tools/analysis/analyze_logs.py` 脚本可以根据训练日志文件绘制损失函数以及 mAP 曲线。
 
  ```shell
-python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--legend ${LEGEND}] [--backend ${BACKEND}] [--style ${STYLE}] [--out ${OUT_FILE}]
+python tools/analysis/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--legend ${LEGEND}] [--backend ${BACKEND}] [--style ${STYLE}] [--out ${OUT_FILE}]
 ```
 
 几个例子：
@@ -68,25 +68,25 @@ python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--l
 - 绘制某次运行时的分类损失函数。
 
     ```shell
-    python tools/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
+    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
     ```
 
 - 绘制某次运行时的分类以及回归损失函数，并且保存成 pdf 文件。
 
     ```shell
-    python tools/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
+    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
     ```
 
 - 在同一张图中比较两次运行的 bbox mAP。
 
     ```shell
-    python tools/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
+    python tools/analysis/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
     ```
 
 - 计算平均运行速度
 
     ```shell
-    python tools/analyze_logs.py cal_train_time log.json [--include-outliers]
+    python tools/analysis/analyze_logs.py cal_train_time log.json [--include-outliers]
     ```
 
     输出如下所示：
@@ -103,7 +103,7 @@ python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--l
 
 ### 发布模型
 
-`tools/publish_model.py` 脚本可以帮助用户发布模型。
+`tools/analysis/publish_model.py` 脚本可以帮助用户发布模型。
 
 在将模型上传到AWS之前，你可能想要做以下事情：
 
@@ -112,35 +112,23 @@ python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--l
 3. 计算模型权重文件的哈希值并将其添加进文件名。
 
 ```shell
-python tools/publish_model.py ${INPUT_FILENAME} ${OUTPUT_FILENAME}
+python tools/analysis/publish_model.py ${INPUT_FILENAME} ${OUTPUT_FILENAME}
 ```
 
 比如：
 
 ```shell
-python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/latest.pth dff_faster_rcnn_r101_dc5_1x_imagenetvid.pth
+python tools/analysis/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/latest.pth dff_faster_rcnn_r101_dc5_1x_imagenetvid.pth
 ```
 
 最后输出的文件名为 `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`。
-
-## SiameseRPN++ 测试参数搜索
-
-`tools/sot_siamrpn_param_search.py` 用来搜索 SiameseRPN++ 测试时的跟踪相关参数： `penalty_k`, `lr` 和 `window_influence`。你需要在参数解析器中传入前面每个参数的搜索范围。
-
-在 UAV123 上的超参搜索范例：
-
-```shell
-./tools/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
-[--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
-[--penalty-k-range 0.05,0.5,0.05] [--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02]
-```
 
 ## 其它有用的工具脚本
 
 ### 输出完整的配置
 
-`tools/print_config.py` 脚本可以输出完整的配置，包括文件中导入的配置。
+`tools/analysis/print_config.py` 脚本可以输出完整的配置，包括文件中导入的配置。
 
 ```shell
-python tools/print_config.py ${CONFIG} [-h] [--options ${OPTIONS [OPTIONS...]}]
+python tools/analysis/print_config.py ${CONFIG} [-h] [--options ${OPTIONS [OPTIONS...]}]
 ```
