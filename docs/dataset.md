@@ -9,6 +9,7 @@ This page provides the instructions for dataset preparation on existing benchmar
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+  - [TrackingNet](https://tracking-net.org/)
 
 ### 1. Download Datasets
 
@@ -22,7 +23,7 @@ Notes:
 
 - For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
 
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT and UAV123 datasets are needed.
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123 and TrackingNet datasets are needed.
 
 ```
 mmtracking
@@ -71,6 +72,11 @@ mmtracking
 │   │   │   │   ├── boat1
 │   │   ├── anno
 │   │   │   ├── UAV123
+│   │
+│   ├── trackingnet
+│   │   ├── TEST
+│   │   │   ├── anno
+│   │   │   ├── zips
 ```
 
 ### 2. Convert Annotations
@@ -80,21 +86,27 @@ In this case, you need to convert the offical annotations to this style. We prov
 
 ```shell
 # ImageNet DET
-python ./tools/convert_datasets/imagenet2coco_det.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
+python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # ImageNet VID
-python ./tools/convert_datasets/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
+python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
 
 # MOT17
 # The processing of other MOT Challenge dataset is the same as MOT17
-python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
-python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
+python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
 # UAV123
-python ./tools/convert_datasets/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+
+# TrackingNet
+# unzip '*.zip' files in 'TEST/zips/'
+bash ./tools/convert_datasets/trackingnet/trackingnet_unzip.sh ./data/trackingnet/TEST
+# generate testset annotaions
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -153,6 +165,15 @@ mmtracking
 │   │   ├── anno (the offical annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
+│   │
+│   ├── trackingnet
+│   │   ├── TEST
+│   │   │   ├── anno (the offical annotation files)
+│   │   │   ├── zips
+│   │   │   ├── annotations (the converted annotation file)
+│   │   │   ├── frames
+│   │   │   │   ├── 0-6LB4FqxoE_0
+│   │   │   │   ├── 07Ysk1C0ZX0_0
 ```
 
 #### The folder of annotations in ILSVRC
@@ -227,3 +248,11 @@ Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corres
 There are only 1 json files in `data/UAV123/annotations`:
 
 `uav123.json`:  Json file containing the annotations information of the UAV123 dataset.
+
+#### The folder of frames and annotations in TrackingNet
+
+There are 511 video directories of TrackingNet testset in `/data/trackingnet/TEST/frames`, and each video directory contains all images of the video.
+
+There are only 1 json files in `data/trackingnet/TEST/annotations`:
+
+`trackingnet_test.json`:  Json file containing the annotations information of the testing set in TrackingNet dataset.
