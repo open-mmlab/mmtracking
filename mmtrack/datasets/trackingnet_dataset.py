@@ -53,9 +53,9 @@ class TrackingNetTestDataset(SOTTestDataset):
 
         # writing submitted results
         print('writing submitted results to {}'.format(resfile_path))
-        for v_name, bboxes in format_results.items():
-            vid_txt = osp.join(resfile_path, '{}.txt'.format(v_name))
-            with open(vid_txt, 'w') as f:
+        for video_name, bboxes in format_results.items():
+            video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
+            with open(video_txt, 'w') as f:
                 for bbox in bboxes:
                     bbox = [
                         str(f'{bbox[0]:.3f}'),

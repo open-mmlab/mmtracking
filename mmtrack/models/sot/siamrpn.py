@@ -173,7 +173,7 @@ class SiamRPN(BaseSingleObjectTracker):
             align_corners=False)
         return crop_img
 
-    # TODO boundary clip
+    # TODO fix the bug about boundary clipping
     def _bbox_clip(self, bbox, img_h, img_w):
         """Clip the bbox with [cx, cy, w, h] format."""
         bbox[0] = bbox[0].clamp(0., img_w)
