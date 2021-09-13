@@ -185,9 +185,9 @@ def main():
     print_log(f'Record {cfg.search_metrics}.', logger)
     for i, search_cfg in enumerate(search_cfgs):
         if not distributed:
-            model.tracker = build_tracker(search_cfg)
+            model.module.tracker = build_tracker(search_cfg)
             outputs = single_gpu_test(model, data_loader, args.show,
-                                      args.show_dir, args.show_score_thr)
+                                      args.show_dir)
         else:
             model.module.tracker = build_tracker(search_cfg)
             outputs = multi_gpu_test(model, data_loader, args.tmpdir,
