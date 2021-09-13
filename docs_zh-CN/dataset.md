@@ -105,7 +105,7 @@ python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/U
 
 # TrackingNet
 # 解压目录 'TEST/zips' 下的所有 '*.zip' 文件
-bash ./tools/convert_datasets/trackingnet/trackingnet_unzip.sh ./data/trackingnet/TEST
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
 # 生成测试集标注
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 ```
@@ -172,7 +172,7 @@ mmtracking
 │   │   │   ├── anno (the offical annotation files)
 │   │   │   ├── zips
 │   │   │   ├── annotations (the converted annotation file)
-│   │   │   ├── frames
+│   │   │   ├── frames (the unzipped folders)
 │   │   │   │   ├── 0-6LB4FqxoE_0
 │   │   │   │   ├── 07Ysk1C0ZX0_0
 ```
@@ -253,7 +253,7 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### TrackingNet的标注和视频帧文件夹
 
-在 `/data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。
+在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。
 
 在 `data/trackingnet/TEST/annotations` 中只有一个 json 文件：
 

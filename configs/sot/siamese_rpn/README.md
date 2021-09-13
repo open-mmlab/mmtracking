@@ -44,4 +44,4 @@ The best model on LaSOT is submitted to [the evaluation server on TrackingNet Ch
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-|    R-50    |  -  |   20e    |      | -              | 61.8 | 77.3 | [config](siamese_rpn_r50_1x_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019.log.json) |
+|    R-50    |  -  |   20e    |      | -              | 70.6 | 77.6 | [config](siamese_rpn_r50_1x_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019.log.json) |

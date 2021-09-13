@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import json
 import os
 import os.path as osp
 from collections import defaultdict
@@ -35,34 +34,34 @@ class TrackingNetTestDataset(SOTTestDataset):
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
         results = results['track_results']
-        with open(self.ann_file, 'r') as f:
-            info = json.load(f)
-            video_info = info['videos']
-            imgs_info = info['images']
-        print('-------- Image Number: {} --------'.format(len(results)))
+        print('-------- There are total {} images --------'.format(
+            len(results)))
 
+        video_info = self.coco.videos
         format_results = defaultdict(list)
         for img_id, res in enumerate(results):
-            img_info = imgs_info[img_id]
+            img_info = self.data_infos[img_id]
             assert img_info['id'] == img_id + 1, 'img id is not matched'
-            video_name = video_info['name']
+            video_name = video_info[img_info['video_id']]['name']
             format_results[video_name].append(res[:4])
 
         assert len(video_info) == len(
-            format_results), 'video number is not right {}--{}'.format(
-                len(video_info), len(format_results))
+            format_results
+        ), 'The number of video is not matched! There are {} videos in the \
+            dataset and {} videos in the testing results'.format(
+            len(video_info), len(format_results))
 
         # writing submitted results
         print('writing submitted results to {}'.format(resfile_path))
         for v_name, bboxes in format_results.items():
             vid_txt = osp.join(resfile_path, '{}.txt'.format(v_name))
             with open(vid_txt, 'w') as f:
-                for i, bbox in enumerate(bboxes):
+                for bbox in bboxes:
                     bbox = [
-                        str(bbox[0]),
-                        str(bbox[1]),
-                        str(bbox[2] - bbox[0]),
-                        str(bbox[3] - bbox[1])
+                        str(f'{bbox[0]:.3f}'),
+                        str(f'{bbox[1]:.3f}'),
+                        str(f'{(bbox[2] - bbox[0]):.3f}'),
+                        str(f'{(bbox[3] - bbox[1]):.3f}')
                     ]
                     line = ','.join(bbox) + '\n'
                     f.writelines(line)

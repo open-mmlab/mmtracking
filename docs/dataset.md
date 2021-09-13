@@ -103,8 +103,8 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 
 # TrackingNet
-# unzip '*.zip' files in 'TEST/zips/'
-bash ./tools/convert_datasets/trackingnet/trackingnet_unzip.sh ./data/trackingnet/TEST
+# unzip files in 'TEST/zips/*.zip'
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
 # generate testset annotaions
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 ```
@@ -171,7 +171,7 @@ mmtracking
 │   │   │   ├── anno (the offical annotation files)
 │   │   │   ├── zips
 │   │   │   ├── annotations (the converted annotation file)
-│   │   │   ├── frames
+│   │   │   ├── frames (the unzipped folders)
 │   │   │   │   ├── 0-6LB4FqxoE_0
 │   │   │   │   ├── 07Ysk1C0ZX0_0
 ```
@@ -251,7 +251,7 @@ There are only 1 json files in `data/UAV123/annotations`:
 
 #### The folder of frames and annotations in TrackingNet
 
-There are 511 video directories of TrackingNet testset in `/data/trackingnet/TEST/frames`, and each video directory contains all images of the video.
+There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video.
 
 There are only 1 json files in `data/trackingnet/TEST/annotations`:
 

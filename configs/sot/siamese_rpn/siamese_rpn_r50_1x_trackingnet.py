@@ -1,9 +1,5 @@
 _base_ = ['./siamese_rpn_r50_1x_lasot.py']
 
-# model settings
-model = dict(
-    test_cfg=dict(rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
-
 data_root = 'data/'
 # dataset settings
 data = dict(
