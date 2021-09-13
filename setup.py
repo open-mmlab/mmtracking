@@ -128,7 +128,7 @@ def parse_requirements(fname='requirements.txt', with_version=True):
     return packages
 
 
-def add_mim_extention():
+def add_mim_extension():
     """Add extra files that are required to support MIM into the package.
 
     These files will be added by creating a symlink to the originals if the
@@ -177,14 +177,14 @@ def add_mim_extention():
 
 
 if __name__ == '__main__':
-    add_mim_extention()
+    add_mim_extension()
     setup(
         name='mmtrack',
         version=get_version(),
         description='OpenMMLab Unified Video Perception Platform',
         long_description=readme(),
         long_description_content_type='text/markdown',
-        author='OpenMMLab',
+        author='MMTracking Contributors',
         author_email='openmmlab@gmail.com',
         keywords='computer vision, object tracking, video object detection',
         url='https://github.com/open-mmlab/mmtracking',
@@ -198,6 +198,7 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
         ],
         license='Apache License 2.0',
         setup_requires=parse_requirements('requirements/build.txt'),

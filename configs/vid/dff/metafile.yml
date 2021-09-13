@@ -1,13 +1,15 @@
 Collections:
   - Name: DFF
     Metadata:
-      Training Data: ILSVRC
+      Training Data: ImageNet DET, ImageNet VID
       Training Techniques:
         - SGD with Momentum
       Training Resources: 8x V100 GPUs
       Architecture:
         - ResNet
-    Paper: https://arxiv.org/abs/1611.07715
+    Paper:
+        URL: https://arxiv.org/abs/1611.07715
+        Title: Deep Feature Flow for Video Recognition
     README: configs/vid/dff/README.md
 
 Models:
@@ -18,7 +20,7 @@ Models:
       Training Memory (GB): 2.50
     Results:
       - Task: Video Object Detection
-        Dataset: ILSVRC
+        Dataset: ImageNet VID
         Metrics:
           box AP@0.5: 70.3
     Weights: https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid/dff_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_213250-548911a4.pth
@@ -30,7 +32,19 @@ Models:
       Training Memory (GB): 3.25
     Results:
       - Task: Video Object Detection
-        Dataset: ILSVRC
+        Dataset: ImageNet VID
         Metrics:
           box AP@0.5: 73.5
     Weights: https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid/dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172720-ad732e17.pth
+
+  - Name: dff_faster_rcnn_x101_dc5_1x_imagenetvid
+    In Collection: DFF
+    Config: configs/vid/dff/dff_faster_rcnn_x101_dc5_1x_imagenetvid.py
+    Metadata:
+      Training Memory (GB): 4.95
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 75.5
+    Weights: https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_x101_dc5_1x_imagenetvid/dff_faster_rcnn_x101_dc5_1x_imagenetvid_20210819_095932-0a9e6cb5.pth
