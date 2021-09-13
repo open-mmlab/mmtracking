@@ -62,10 +62,8 @@ def convert_trackingnet_test(trackingnet_test, ann_dir, save_dir):
 
             if frame_id == 0:
                 x1, y1, w, h = gt_bboxes[0].split(',')
-                ignore = False
             else:
                 x1, y1, w, h = 0, 0, 0, 0
-                ignore = True
             ann = dict(
                 id=records['ann_id'],
                 image_id=records['img_id'],
@@ -73,8 +71,7 @@ def convert_trackingnet_test(trackingnet_test, ann_dir, save_dir):
                 category_id=0,
                 bbox=[int(x1), int(y1), int(w),
                       int(h)],
-                area=int(w) * int(h),
-                ignore=ignore)
+                area=int(w) * int(h))
             trackingnet_test['annotations'].append(ann)
 
             records['ann_id'] += 1
