@@ -16,11 +16,7 @@ class EvalHook(BaseEvalHook):
         if not self._should_evaluate(runner):
             return
 
-        if hasattr(self.dataloader.dataset,
-                   'load_as_video') and self.dataloader.dataset.load_as_video:
-            from mmtrack.apis import single_gpu_test
-        else:
-            from mmdet.apis import single_gpu_test
+        from mmtrack.apis import single_gpu_test
         results = single_gpu_test(runner.model, self.dataloader, show=False)
         runner.log_buffer.output['eval_iter_num'] = len(self.dataloader)
         key_score = self.evaluate(runner, results)
@@ -54,11 +50,7 @@ class DistEvalHook(BaseDistEvalHook):
         if tmpdir is None:
             tmpdir = osp.join(runner.work_dir, '.eval_hook')
 
-        if hasattr(self.dataloader.dataset,
-                   'load_as_video') and self.dataloader.dataset.load_as_video:
-            from mmtrack.apis import multi_gpu_test
-        else:
-            from mmdet.apis import multi_gpu_test
+        from mmtrack.apis import multi_gpu_test
         results = multi_gpu_test(
             runner.model,
             self.dataloader,

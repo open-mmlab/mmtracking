@@ -4,19 +4,20 @@
 
 #### 自定义 Pytorch 中的优化器
 
-我们已经支持使用 Pytorch 所有的优化器，并且仅在 config 文件中更改即可。例如，如果你使用 `ADAM`, 更改如下：
+我们已经支持使用 Pytorch 所有的优化器，并且仅在 config 文件中更改设置即可使用。例如，如果你使用 `ADAM`, 更改如下：
 
 ```python
 optimizer = dict(type='Adam', lr=0.0003, weight_decay=0.0001)
 ```
 
-为了更改模型的学习率，使用者只需要更改 config 文件中的优化器的 `lr` 参数。使用者可以直接按照 Pytorch 的 `API doc` 设置参数。
+为了更改模型的学习率，使用者只需要更改 config 文件中的优化器的 `lr` 参数。使用者可以直接按照 Pytorch 的 [API doc](https://pytorch.org/docs/stable/optim.html?highlight=optim#module-torch.optim)设置参数。
 
 #### 自定义自己实现的优化器
 
 #### 1. 定义一个新的优化器
 
 一个自定义的优化器如下：
+
 假定你增加的优化器为 `MyOptimizer`, 它有参数 a, b, c。你需要建立一个新的文件 `mmtrack/core/optimizer/my_optimizer.py`。
 
 ```python
@@ -32,15 +33,17 @@ class MyOptimizer(Optimizer):
 
 #### 2. 将优化器加入注册器中
 
-为了能够找到上述定义的模块，它应首先被引入到主命名空间中。有两种方式来实现：
+为了能够找到上述定义的模块，它应首先被引入到主命名空间中。我们提供两种方式来实现：
 
 - 在文件 `mmtrack/core/optimizer/__init__.py` 中引入
+
+新定义的 module 应被引入到 `mmtrack/core/optimizer/__init__.py`， 以便注册器能够发现该新模块并添加它。
 
 ```python
 from .my_optimizer import MyOptimizer
 ```
 
-- 使用 config 文件中的 `custom_imports`
+- 在 config 文件中使用 `custom_imports` 来手动的引用它
 
 ```python
  custom_imports = dict(imports=['mmtrack.core.optimizer.my_optimizer.py'], allow_failed_imports=False)
@@ -66,7 +69,7 @@ optimizer = dict(type='MyOptimizer', a=a_value, b=b_value, c=c_value)
 
 #### 自定义优化器构建器
 
-一些模型有一些特定参数用于模型优化，例如：用于批归一化层的权值衰减。使用者可以通过自定义优化器构建器来调节这些参数。
+有的模型有一些用于模型优化的特定参数，例如：用于批归一化层的权值衰减。使用者可以通过自定义优化器构建器来调节这些参数。
 
 ```python
 from mmcv.utils import build_from_cfg
@@ -99,7 +102,7 @@ optimizer_config = dict(
     _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
 ```
 
-如果你的 config 继承于基础 config, 并且已经设置了优化器基础 config, 你需要设置 `_delete=True` 来重写不必要的设置。 详情请见 [config 文档](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields)
+如果你的 config 继承于基础 config, 并且已经设置了优化器基础 config, 你需要设置 `_delete=True` 来重写不必要的设置。 详情请见 [config 文档](https://mmcv.readthedocs.io/zh_CN/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields)
 
 - __使用动量调度器来加快模型收敛__。我们支持动量调度器来根据学习率改变模型的动量，使模型以更快的方式收敛。动量调度器通常和学习率调度器一起使用，例如：下面在 3D 检测中使用的 config 来加速模型收敛。 更多细节请参考 [CyclicLrUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/lr_updater.py#L327) and [CyclicMomentumUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/momentum_updater.py#L130)。
 
@@ -159,9 +162,9 @@ workflow = [('train', 1)]
 
 1. 模型的参数将不会在验证阶段更新。
 
-2. config 中的关键字 `total_epoch` 进用来控制训练阶段轮数，不影响验证阶段。
+2. config 中的关键字 `total_epoch` 是用来控制训练阶段轮数，不影响验证阶段。
 
-3. 工作流 `[('train',1),('val',1)]` 和 `[('train',1)]`将不会改变 `EvalHook`，因为 `EvalHook` 是被 `after_train_epoch` 调用，验证工作流仅影响在 `after_val_epoch` 中调用的钩子。因此，`[('train',1),('val',1)]` 和 `[('train',1)]` 唯一的不同就是 runner 将在每个训练阶段计算损失函数。
+3. 工作流 `[('train',1),('val',1)]` 和 `[('train',1)]` 将不会改变 `EvalHook`，因为 `EvalHook` 是被 `after_train_epoch` 调用，验证工作流仅影响在 `after_val_epoch` 中调用的钩子。因此，`[('train',1),('val',1)]` 和 `[('train',1)]` 唯一的不同就是 runner 将在每个训练循环结束后计算验证集上的损失函数。
 
 ### 自定义钩子
 
@@ -234,7 +237,7 @@ custom_hooks = [
 ]
 ```
 
-在注册器中默认钩子的优先级为 `NORMAL`。
+在注册器中钩子的默认优先级为 `NORMAL`。
 
 #### 使用 MMCV 中已定义的钩子
 

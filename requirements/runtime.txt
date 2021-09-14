@@ -1,9 +1,9 @@
 dotty_dict
 matplotlib
 mmcls>=0.14.0
-mmpycocotools
 motmetrics
 packaging
+pycocotools
 seaborn
 six
 terminaltables

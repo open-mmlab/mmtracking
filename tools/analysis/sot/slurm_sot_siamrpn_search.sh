@@ -20,4 +20,4 @@ srun -p ${PARTITION} \
     --cpus-per-task=${CPUS_PER_TASK} \
     --kill-on-bad-exit=1 \
     ${SRUN_ARGS} \
-    python -u tools/mot_param_search.py ${CONFIG} --launcher="slurm" ${PY_ARGS}
+    python -u $(dirname "$0")/sot_siamrpn_param_search.py ${CONFIG} --launcher="slurm" ${PY_ARGS}

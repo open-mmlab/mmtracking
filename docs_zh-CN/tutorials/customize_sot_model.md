@@ -3,7 +3,7 @@
 我们通常将模型组件分为4类：
 
 - 主干网络：通常是一个用于抽取特征图的FCN网络，例如：ResNet, MobileNet。
-- 模型颈部：通常是从一张图片中检出物体的检测组件，例如：ChannelMapper,FPN。
+- 模型颈部：通常是连接骨干网络和模型头部的组件，例如：ChannelMapper,FPN。
 - 模型头部：用于特定任务的组件，例如：跟踪框预测。
 - 损失函数：计算损失函数的部件，例如：FocalLoss, L1Loss。
 
@@ -11,7 +11,7 @@
 
 这里，我们以 MobileNet 为例来展示如何开发一个新组件。
 
-#### 1. 定义一个新主干网络 （例如：MobileNet
+#### 1. 定义一个新主干网络 （例如：MobileNet）
 
 创建一个新文件 `mmtrack/models/backbones/mobilenet.py`
 
@@ -156,4 +156,4 @@ track_head=dict(
 
 ### 增加一个新的损失函数
 
-详细请参考 [增加新损失函数](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html#add-a-new-loss)
+详细请参考 [增加新损失函数](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_mot_model.html#add-a-new-loss)

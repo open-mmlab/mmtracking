@@ -15,7 +15,7 @@ def _create_reid_gt_results(dataset):
     results = []
     dataset_infos = dataset.load_annotations()
     for dataset_info in dataset_infos:
-        result = torch.full((1, 128),
+        result = torch.full((128, ),
                             float(dataset_info['gt_label']),
                             dtype=torch.float32)
         results.append(result)
