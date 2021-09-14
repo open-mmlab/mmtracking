@@ -79,6 +79,8 @@ def convert_trackingnet_test(trackingnet_test, ann_dir, save_dir):
         records['global_instance_id'] += 1
         records['vid_id'] += 1
 
+    if not osp.isdir(save_dir):
+        os.makedirs(save_dir)
     mmcv.dump(trackingnet_test, osp.join(save_dir, 'trackingnet_test.json'))
     print('-----TrackingNet Test Dataset------')
     print(f'{records["vid_id"]- 1} videos')
