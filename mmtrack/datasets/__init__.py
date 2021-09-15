@@ -12,11 +12,12 @@ from .pipelines import PIPELINES
 from .reid_dataset import ReIDDataset
 from .sot_test_dataset import SOTTestDataset
 from .sot_train_dataset import SOTTrainDataset
+from .trackingnet_dataset import TrackingNetTestDataset
 from .uav123_dataset import UAV123Dataset
 
 __all__ = [
     'DATASETS', 'PIPELINES', 'build_dataloader', 'build_dataset', 'CocoVID',
     'CocoVideoDataset', 'ImagenetVIDDataset', 'MOTChallengeDataset',
     'ReIDDataset', 'SOTTrainDataset', 'SOTTestDataset', 'LaSOTDataset',
-    'UAV123Dataset', 'OTB100Dataset'
+    'UAV123Dataset', 'TrackingNetTestDataset', 'OTB100Dataset'
 ]

@@ -12,10 +12,10 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
     for detailed docstring.
     """
 
-    def __init__(self, strides, int_wh=False, **kwargs):
+    def __init__(self, strides, *args, **kwargs):
         assert len(strides) == 1, 'only support one feature map level'
-        self.int_wh = int_wh
-        super(SiameseRPNAnchorGenerator, self).__init__(strides, **kwargs)
+        super(SiameseRPNAnchorGenerator,
+              self).__init__(strides, *args, **kwargs)
 
     def gen_2d_hanning_windows(self, featmap_sizes, device='cuda'):
         """Generate 2D hanning window.
@@ -44,7 +44,7 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
                                       scales,
                                       ratios,
                                       center=None):
-        """Generate base anchors of a single level.
+        """Generate base anchors of a single level feature map.
 
         Args:
             base_size (int | float): Basic size of an anchor.
@@ -68,14 +68,9 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
 
         h_ratios = torch.sqrt(ratios)
         w_ratios = 1 / h_ratios
-        wr = w * w_ratios
-        hr = h * h_ratios
-        if self.int_wh:
-            wr = wr.long()
-            hr = hr.long()
         if self.scale_major:
-            ws = (wr[:, None] * scales[None, :]).view(-1)
-            hs = (hr[:, None] * scales[None, :]).view(-1)
+            ws = ((w * w_ratios[:, None]).long() * scales[None, :]).view(-1)
+            hs = ((h * h_ratios[:, None]).long() * scales[None, :]).view(-1)
         else:
             ws = ((w * w_ratios[None, :]).long() * scales[:, None]).view(-1)
             hs = ((h * h_ratios[None, :]).long() * scales[:, None]).view(-1)

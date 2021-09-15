@@ -7,10 +7,6 @@ model = dict(
 data_root = 'data/'
 # dataset settings
 data = dict(
-    val=dict(
-        type='UAV123Dataset',
-        ann_file=data_root + 'UAV123/annotations/uav123.json',
-        img_prefix=data_root + 'UAV123/data_seq/UAV123'),
     test=dict(
         type='UAV123Dataset',
         ann_file=data_root + 'UAV123/annotations/uav123.json',

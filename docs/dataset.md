@@ -9,10 +9,19 @@ This page provides the instructions for dataset preparation on existing benchmar
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+  - [TrackingNet](https://tracking-net.org/)
+  - [OTB100](http://www.visual-tracking.net/)
 
 ### 1. Download Datasets
 
 Please download the datasets from the offical websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
+
+#### OTB100
+
+```shell
+# download OTB100 dataset by web crawling
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100 -p 8
+```
 
 Notes:
 
@@ -22,7 +31,7 @@ Notes:
 
 - For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
 
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT and UAV123 datasets are needed.
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet and OTB100 datasets are needed.
 
 ```
 mmtracking
@@ -71,6 +80,15 @@ mmtracking
 │   │   │   │   ├── boat1
 │   │   ├── anno
 │   │   │   ├── UAV123
+│   │
+│   ├── trackingnet
+│   │   ├── TEST
+│   │   │   ├── anno
+│   │   │   ├── zips
+│   │
+│   ├── otb100
+│   │   ├── Basketball.zip
+│   │   ├── Biker.zip
 ```
 
 ### 2. Convert Annotations
@@ -80,21 +98,33 @@ In this case, you need to convert the offical annotations to this style. We prov
 
 ```shell
 # ImageNet DET
-python ./tools/convert_datasets/imagenet2coco_det.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
+python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # ImageNet VID
-python ./tools/convert_datasets/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
+python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
 
 # MOT17
 # The processing of other MOT Challenge dataset is the same as MOT17
-python ./tools/convert_datasets/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
-python ./tools/convert_datasets/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
+python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
 # UAV123
-python ./tools/convert_datasets/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+
+# TrackingNet
+# unzip files in 'data/trackingnet/TEST/zips/*.zip'
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
+# generate testset annotaions
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
+
+# OTB100
+# unzip files in 'data/otb100/*.zip'
+bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
+# generate annotations
+python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -153,6 +183,23 @@ mmtracking
 │   │   ├── anno (the offical annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
+│   │
+│   ├── trackingnet
+│   │   ├── TEST
+│   │   │   ├── anno (the offical annotation files)
+│   │   │   ├── zips
+│   │   │   ├── annotations (the converted annotation file)
+│   │   │   ├── frames (the unzipped folders)
+│   │   │   │   ├── 0-6LB4FqxoE_0
+│   │   │   │   ├── 07Ysk1C0ZX0_0
+│   │
+│   ├── otb100
+│   │   ├── Basketball.zip
+│   │   ├── Biker.zip
+│   │   ├── annotations
+│   │   ├── data
+│   │   │   ├── Basketball
+│   │   │   │   ├── img
 ```
 
 #### The folder of annotations in ILSVRC
@@ -227,3 +274,19 @@ Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corres
 There are only 1 json files in `data/UAV123/annotations`:
 
 `uav123.json`:  Json file containing the annotations information of the UAV123 dataset.
+
+#### The folder of frames and annotations in TrackingNet
+
+There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video.
+
+There are only 1 json files in `data/trackingnet/TEST/annotations`:
+
+`trackingnet_test.json`:  Json file containing the annotations information of the testing set in TrackingNet dataset.
+
+#### The folder of data and annotations in OTB100
+
+There are 98 video directories of OTB100 dataset in `data/otb100/data`, and the `img` folder under each video directory contains all images of the video.
+
+There are only 1 json files in `data/otb100/annotations`:
+
+`otb100.json`:  Json file containing the annotations information of the OTB100 dataset.
