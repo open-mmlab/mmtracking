@@ -20,7 +20,7 @@ Please download the datasets from the offical websites. It is recommended to sym
 
 ```shell
 # download OTB100 dataset by web crawling
-python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100 -p 8
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
 Notes:
@@ -87,8 +87,9 @@ mmtracking
 │   │   │   ├── zips
 │   │
 │   ├── otb100
-│   │   ├── Basketball.zip
-│   │   ├── Biker.zip
+│   │   │── zips
+│   │   │   │── Basketball.zip
+│   │   │   │── Biker.zip
 ```
 
 ### 2. Convert Annotations
@@ -121,7 +122,7 @@ bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/track
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 
 # OTB100
-# unzip files in 'data/otb100/*.zip'
+# unzip files in 'data/otb100/zips/*.zip'
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # generate annotations
 python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
@@ -194,8 +195,9 @@ mmtracking
 │   │   │   │   ├── 07Ysk1C0ZX0_0
 │   │
 │   ├── otb100
-│   │   ├── Basketball.zip
-│   │   ├── Biker.zip
+│   │   ├── zips
+│   │   │   ├── Basketball.zip
+│   │   │   ├── Biker.zip
 │   │   ├── annotations
 │   │   ├── data
 │   │   │   ├── Basketball

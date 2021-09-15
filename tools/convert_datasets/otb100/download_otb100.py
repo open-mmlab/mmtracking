@@ -16,7 +16,7 @@ def download_url(url_savedir_tuple):
     video_zip = osp.basename(url)
     if not osp.isdir(saved_dir):
         os.makedirs(saved_dir)
-    saved_file = saved_dir + '/' + video_zip
+    saved_file = osp.join(saved_dir, video_zip)
 
     try:
         request.urlretrieve(url, saved_file)

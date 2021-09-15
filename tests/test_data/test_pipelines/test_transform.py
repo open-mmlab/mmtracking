@@ -42,6 +42,17 @@ class TestTransforms(object):
         assert results[0]['img'].shape == (511, 511, 3)
         assert results[1]['img'].shape == (511, 511, 3)
 
+    def test_seq_gray_aug(self):
+        results = copy.deepcopy(self.results)
+        imgs_shape = [result['img'].shape for result in results]
+
+        transform = dict(type='SeqGrayAug', prob=0.2)
+        seq_gray_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_gray_aug(results)
+        assert results[0]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[1]
+
     def test_seq_shift_scale_aug(self):
         results = copy.deepcopy(self.results)
         for res in results:
@@ -73,7 +84,7 @@ class TestTransforms(object):
 
         results = seq_color_aug(results)
         assert results[0]['img'].shape == imgs_shape[0]
-        assert results[1]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[1]
 
     def test_seq_blur_aug(self):
         results = copy.deepcopy(self.results)
@@ -84,7 +95,7 @@ class TestTransforms(object):
 
         results = seq_blur_aug(results)
         assert results[0]['img'].shape == imgs_shape[0]
-        assert results[1]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[1]
 
     def test_seq_resize(self):
         results = copy.deepcopy(self.results)

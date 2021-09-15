@@ -4,11 +4,11 @@ data_dir=$1
 if [ ! -d $data_dir/data ]; then
     mkdir $data_dir/data
 fi
-for zips in $(ls "${data_dir}"); do
+for zips in $(ls "${data_dir}/zips"); do
     if [ ${zips##*.} == "zip" ]; then
         vid_name=${zips%.zip}
         # echo $vid_name
-        unzip -q $data_dir/$zips -d $data_dir/data/
+        unzip -q $data_dir/zips/$zips -d $data_dir/data/
 
         # clean up unnecessary files
         for x in $(ls "$data_dir/data/$vid_name/img" -a); do

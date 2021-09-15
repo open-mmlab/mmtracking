@@ -29,7 +29,7 @@ def convert_otb100(otb, ann_dir, save_dir):
     """Convert OTB100 dataset to COCO style.
 
     Args:
-        lasot_test (dict): The converted COCO style annotations.
+        otb (dict): The converted COCO style annotations.
         ann_dir (str): The path of OTB100 dataset
         save_dir (str): The path to save `OTB100`.
     """

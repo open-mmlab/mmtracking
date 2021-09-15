@@ -50,7 +50,7 @@ The checkpoints from 10-th to 20-th epoch will be evaluated during training.
 
 After training, you need to pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search) to achieve the best results.
 
-**Note** We can not reproduce the results reported in the official [SiameseRPN++](https://github.com/STVIR/pysot) codebase. In our codebase, the Success and Precision are lower 3.6 and 2.7 respectively than those of the official report.
+**Note:** we train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. In our codebase, the Success and Precision are lower 3.6 and 2.7 respectively than those of the paper.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |

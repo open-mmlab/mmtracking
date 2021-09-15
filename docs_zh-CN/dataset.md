@@ -20,7 +20,7 @@
 
 ```shell
 # 通过网页爬虫下载 OTB100 数据集
-python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100 -p 8
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
 注意：
@@ -87,8 +87,9 @@ mmtracking
 │   │   │   ├── zips
 │   │
 │   ├── otb100
-│   │   ├── Basketball.zip
-│   │   ├── Biker.zip
+│   │   │── zips
+│   │   │   │── Basketball.zip
+│   │   │   │── Biker.zip
 ```
 
 ### 2. 转换标注格式
@@ -122,7 +123,7 @@ bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/track
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 
 # OTB100
-# 解压目录 'data/otb100' 下的所有 '*.zip' 文件
+# 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 生成标注
 python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
@@ -195,8 +196,9 @@ mmtracking
 │   │   │   │   ├── 07Ysk1C0ZX0_0
 │   │
 │   ├── otb100
-│   │   ├── Basketball.zip
-│   │   ├── Biker.zip
+│   │   ├── zips
+│   │   │   ├── Basketball.zip
+│   │   │   ├── Biker.zip
 │   │   ├── annotations
 │   │   ├── data
 │   │   │   ├── Basketball
