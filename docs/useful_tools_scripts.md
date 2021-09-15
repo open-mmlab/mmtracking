@@ -2,7 +2,7 @@ We provide lots of useful tools under the `tools/` directory.
 
 ## MOT Test-time Parameter Search
 
-`tools/mot_param_search.py` can search the parameters of the `tracker` in MOT models.
+`tools/analysis/mot/mot_param_search.py` can search the parameters of the `tracker` in MOT models.
 It is used as the same manner with `tools/test.py` but different in the configs.
 
 Here is an example that shows how to modify the configs:
@@ -43,9 +43,21 @@ Here is an example that shows how to modify the configs:
 
     Then the script will test the totally 12 cases and log the results.
 
+## SiameseRPN++ Test-time Parameter Search
+
+`tools/analysis/sot/sot_siamrpn_param_search.py` can search the test-time tracking parameters in SiameseRPN++: `penalty_k`, `lr` and `window_influence`. You need to pass the searching range of each parameter into the argparser.
+
+Example on UAV123 dataset:
+
+```shell
+./tools/analysis/sot/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
+[--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
+[--penalty-k-range 0.05,0.5,0.05] [--lr-range 0.3,0.45,0.02] [--win-infu-range 0.46,0.55,0.02]
+```
+
 ## Log Analysis
 
-`tools/analyze_logs.py` plots loss/mAP curves given a training log file.
+`tools/analysis/analyze_logs.py` plots loss/mAP curves given a training log file.
 
  ```shell
 python tools/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--legend ${LEGEND}] [--backend ${BACKEND}] [--style ${STYLE}] [--out ${OUT_FILE}]
@@ -56,25 +68,25 @@ Examples:
 - Plot the classification loss of some run.
 
     ```shell
-    python tools/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
+    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
     ```
 
 - Plot the classification and regression loss of some run, and save the figure to a pdf.
 
     ```shell
-    python tools/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
+    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
     ```
 
 - Compare the bbox mAP of two runs in the same figure.
 
     ```shell
-    python tools/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
+    python tools/analysis/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
     ```
 
 - Compute the average training speed.
 
     ```shell
-    python tools/analyze_logs.py cal_train_time log.json [--include-outliers]
+    python tools/analysis/analyze_logs.py cal_train_time log.json [--include-outliers]
     ```
 
     The output is expected to be like the following.
@@ -91,7 +103,7 @@ Examples:
 
 ### Prepare a model for publishing
 
-`tools/publish_model.py` helps users to prepare their model for publishing.
+`tools/analysis/publish_model.py` helps users to prepare their model for publishing.
 
 Before you upload a model to AWS, you may want to
 
@@ -100,13 +112,13 @@ Before you upload a model to AWS, you may want to
 3. compute the hash of the checkpoint file and append the hash id to the filename.
 
 ```shell
-python tools/publish_model.py ${INPUT_FILENAME} ${OUTPUT_FILENAME}
+python tools/analysis/publish_model.py ${INPUT_FILENAME} ${OUTPUT_FILENAME}
 ```
 
 E.g.,
 
 ```shell
-python tools/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/latest.pth dff_faster_rcnn_r101_dc5_1x_imagenetvid.pth
+python tools/analysis/publish_model.py work_dirs/dff_faster_rcnn_r101_dc5_1x_imagenetvid/latest.pth dff_faster_rcnn_r101_dc5_1x_imagenetvid.pth
 ```
 
 The final output filename will be `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201230-{hash id}.pth`.
@@ -115,8 +127,8 @@ The final output filename will be `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201
 
 ### Print the entire config
 
-`tools/print_config.py` prints the whole config verbatim, expanding all its imports.
+`tools/analysis/print_config.py` prints the whole config verbatim, expanding all its imports.
 
 ```shell
-python tools/print_config.py ${CONFIG} [-h] [--options ${OPTIONS [OPTIONS...]}]
+python tools/analysis/print_config.py ${CONFIG} [-h] [--options ${OPTIONS [OPTIONS...]}]
 ```

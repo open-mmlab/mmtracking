@@ -8,6 +8,7 @@
    :caption: 开始你的第一步
 
    install.md
+   modelzoo_statistics.md
    model_zoo.md
 
 .. toctree::

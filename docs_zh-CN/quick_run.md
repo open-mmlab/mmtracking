@@ -1,7 +1,7 @@
 ## 运行现有的数据集与模型
 
 MMTracking 为现有基准测试提供了多种算法。
-这些算法和基准测试的详情分别在 [model_zoo.md](model_zoo.md) 和 [dataset.md](dataset.md) 中说明。
+这些算法和基准测试在 [model_zoo.md](https://mmtracking.readthedocs.io/zh_CN/latest/model_zoo.html)中有详细说明。
 以下将展示如何在现有模型和标准数据集上执行常见任务，包括：
 
 - 使用已有模型对给定的视频或者图像文件夹进行推理。
@@ -11,7 +11,7 @@ MMTracking 为现有基准测试提供了多种算法。
 ### 推理
 
 我们提供了对给定的视频或者包含连续图像的文件夹进行推理的演示脚本。
-源代码可在[这里](../demo/)得到。
+源代码可在[这里](https://github.com/open-mmlab/mmtracking/tree/master/demo/)得到。
 
 请注意，如果您使用文件夹作为输入，则该文件夹中应该只有图像，并且图像名称必须是 **可排序的**，这意味着我们可以根据文件名重新排序图像。
 
@@ -48,7 +48,7 @@ python ./demo/demo_vid.py \
 
 #### 使用 MOT 模型进行推理
 
-以下脚本可以使用多目标跟踪模型对一个输入视频或者图像进行推理。
+以下脚本可以使用多目标跟踪模型对单个输入视频或者图像进行推理。
 
 ```shell
 python demo/demo_mot.py \
@@ -77,11 +77,11 @@ python demo/demo_mot.py \
 python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
 
-注意：当运行 `demo_mot.py` 时， 我们建议您使用包含 `private` 的配置文件，这是因为这些配置文件不需要外部的检测结果。
+**注意**：当运行 `demo_mot.py` 时， 我们建议您使用包含 `private` 的配置文件，因为这些配置文件不需要外部的检测结果。
 
 #### 使用 SOT 模型进行推理
 
-以下脚本可以使用单目标跟踪模型对一个输入视频进行推理。
+以下脚本可以使用单目标跟踪模型对单个输入视频进行推理。
 
 ```shell
 python demo/demo_sot.py \
@@ -226,7 +226,7 @@ evaluation = dict(interval=12)  # 每 12 个 epoch 评估一次模型。
 ```
 
 **重要提醒**：配置文件中的默认学习率是针对使用 8 个 GPU 的。
-根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，如果您使用不同数量的 GPU 或每个 GPU 使用不同数量的图片，则需要设置与 batch size 成正比的学习率，例如 `lr=0.01` 用于 8 个 GPU \* 1 img/gpu 和 `lr=0.04` 用于 16 个 GPU \* 2 imgs/gpu。
+根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，如果您使用不同数量的 GPU 或每个 GPU 使用不同数量的图片，则需要设置与 batch size 成正比的学习率，例如：`lr=0.01` 用于 8 个 GPU \* 1 img/gpu， `lr=0.04` 用于 16 个 GPU \* 2 imgs/gpu。
 
 #### 单 GPU 训练
 
@@ -276,7 +276,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 [GPUS=${GPUS}] ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR}
 ```
 
-您可以查看[源代码](../tools/slurm_train.sh)以了解完整的参数和环境变量。
+您可以查看[源代码](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh)以了解全部的参数和环境变量。
 
 使用 Slurm 时，需要通过以下方式之一设置端口选项：
 
@@ -310,7 +310,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 
 #### 训练VID模型示例
 
-1. 在 ImageNet VID 和 ImageNet DET 上 训练 DFF,接着在最后一个 epoch 评估 bbox mAP.
+1. 在 ImageNet VID 和 ImageNet DET 上 训练 DFF，接着在最后一个 epoch 评估 bbox mAP.
 
 ```shell
 bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
@@ -318,11 +318,11 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 #### 训练MOT模型示例
 
-对于像MOT、SORT、DeepSORT以及Trackor这样的MOT方法，你需要训练一个检测器和一个 reid 模型，而非直接训练MOT模型。
+对于像 MOT、SORT、DeepSORT 以及 Trackor 这样的 MOT 方法，你需要训练一个检测器和一个 reid 模型，而非直接训练 MOT 模型。
 
 1. 训练检测器
 
-    如果你想要为多目标跟踪器训练检测器，为了兼容 MMDetection, 你只需要在 config 里面增加一行代码 `USE_MMDET=True`, 然后使用与 MMDetection 相同的方式运行它。可参考示例[faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
+    如果你想要为多目标跟踪器训练检测器，为了兼容 MMDetection, 你只需要在 config 里面增加一行代码 `USE_MMDET=True`, 然后使用与 MMDetection 相同的方式运行它。可参考示例  [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
 
     请注意 MMTracking 和 MMDetection 在 base config 上有些许不同：`detector` 仅仅是 `model` 的一个子模块。例如，MMDetection 中的 Faster R-CNN 的 config如下：
 
@@ -351,7 +351,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
         --work-dir ./work_dirs/
     ```
 
-2. 训练 reid 模型
+2. 训练 ReID 模型
 
     你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的。
 
@@ -362,7 +362,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
         --work-dir ./work_dirs/
     ```
 
-3. 完成检测器和 reid 模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/zh_CN/latest/quick_run.html#mot)来测试多目标跟踪器。
+3. 完成检测器和 ReID 模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/zh_CN/latest/quick_run.html#mot)来测试多目标跟踪器。
 
 #### 训练SOT模型示例
 
@@ -394,20 +394,20 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 通常我们建议使用第一种方法，它比第二种方法容易实现。
 
-[tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_dataset.html) 中提供了有关自定义数据集的详细教程。
+[tutorials/customize_dataset.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_dataset.html) 中提供了有关自定义数据集的详细教程。
 
 ### 2. 准备自定义模型
 
 我们提供了不同任务下自定义模型的教程：
 
-- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_vid_model.html)
-- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_mot_model.html)
-- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/en/latest/tutorials/customize_sot_model.html)
+- [tutorials/customize_mot_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_vid_model.html)
+- [tutorials/customize_sot_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_mot_model.html)
+- [tutorials/customize_vid_model.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/customize_sot_model.html)
 
 ### 3. 准备配置文件
 
 下一步是准备配置文件，从而可以成功加载数据集或模型。
-[tutorials/config.md](https://mmtracking.readthedocs.io/en/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
+[tutorials/config.md](https://mmtracking.readthedocs.io/zh_CN/latest/tutorials/config.html) 提供了有关配置系统的更多详细教程。
 
 ### 4. 训练新模型
 
@@ -417,7 +417,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 python tools/train.py ${NEW_CONFIG_FILE}
 ```
 
-更详细的用法请参考上面的训练说明。
+更详细的用法请参考前面的训练说明。
 
 ### 5. 测试和推理
 
@@ -427,4 +427,4 @@ python tools/train.py ${NEW_CONFIG_FILE}
 python tools/test.py ${NEW_CONFIG_FILE} ${TRAINED_MODEL} --eval bbox track
 ```
 
-更详细的用法请参考上面的测试或推理说明。
+更详细的用法请参考前面的测试或推理说明。
