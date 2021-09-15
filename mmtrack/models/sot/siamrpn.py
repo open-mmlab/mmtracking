@@ -175,12 +175,10 @@ class SiamRPN(BaseSingleObjectTracker):
 
     def _bbox_clip(self, bbox, img_h, img_w):
         """Clip the bbox with [cx, cy, w, h] format."""
-        corner_bbox = bbox_cxcywh_to_xyxy(bbox)
-        corner_bbox[0] = corner_bbox[0].clamp(0., img_w)
-        corner_bbox[1] = corner_bbox[1].clamp(0., img_h)
-        corner_bbox[2] = corner_bbox[2].clamp(0., img_w)
-        corner_bbox[3] = corner_bbox[3].clamp(0., img_h)
-        bbox = bbox_xyxy_to_cxcywh(corner_bbox)
+        bbox[0] = bbox[0].clamp(0., img_w)
+        bbox[1] = bbox[1].clamp(0., img_h)
+        bbox[2] = bbox[2].clamp(0., img_w)
+        bbox[3] = bbox[3].clamp(0., img_h)
         return bbox
 
     def init(self, img, bbox):
