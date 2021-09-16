@@ -16,6 +16,8 @@
 
 请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
 
+对于 OTB100 数据集，你不必要手工地从官网下载数据。我们提供了下载脚本。
+
 #### OTB100
 
 ```shell
@@ -117,7 +119,7 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 
 # TrackingNet
-# 解压目录 'TEST/zips' 下的所有 '*.zip' 文件
+# 解压目录 'data/trackingnet/TEST/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
 # 生成测试集标注
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations

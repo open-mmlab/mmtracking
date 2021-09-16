@@ -52,6 +52,8 @@ After training, you need to pick up the best checkpoint from the log file, then 
 
 **Note:** we train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. In our codebase, the Success and Precision are lower 3.6 and 2.7 respectively than those of the paper.
 
+TODO update the model link and readme
+
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
 |    R-50    |  -  |   20e    |   -   | -              | 66 | 88.7 | [config](siamese_rpn_r50_1x_otb100.py) | [model]() &#124; [log]() |

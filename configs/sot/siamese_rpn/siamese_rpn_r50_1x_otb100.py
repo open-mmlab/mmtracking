@@ -7,7 +7,7 @@ search_size = 255
 # model settings
 model = dict(
     head=dict(weighted_sum=False),
-    test_cfg=dict(rpn=dict(penalty_k=0.3, window_influence=0.5, lr=0.35)))
+    test_cfg=dict(rpn=dict(penalty_k=0.4, window_influence=0.5, lr=0.4)))
 
 data_root = 'data/'
 train_pipeline = [

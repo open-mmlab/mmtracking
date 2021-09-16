@@ -6,8 +6,12 @@ import re
 import socket
 from urllib import error, request
 
-from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 
 
 def download_url(url_savedir_tuple):
@@ -39,7 +43,11 @@ def download_url(url_savedir_tuple):
 
 def parse_url(homepage, href=None):
     html = request.urlopen(homepage + 'datasets.html').read().decode('utf-8')
-    soup = BeautifulSoup(html, features='html.parser')
+    if BeautifulSoup is not None:
+        soup = BeautifulSoup(html, features='html.parser')
+    else:
+        raise ImportError(
+            "Please install beautifulsoup4 by 'pip install beautifulsoup4'")
 
     tags = soup.find_all('a', href=href)
     for tag in tags:

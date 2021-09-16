@@ -16,6 +16,8 @@ This page provides the instructions for dataset preparation on existing benchmar
 
 Please download the datasets from the offical websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
+For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a sctipt to download it.
+
 #### OTB100
 
 ```shell
