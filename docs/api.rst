@@ -1,6 +1,3 @@
-API Reference
-=================
-
 mmtrack.apis
 --------------
 .. automodule:: mmtrack.apis
