@@ -30,11 +30,14 @@ We observe around 1.0 points fluctuations in Success and 1.5 points fluctuations
 
 The checkpoints from 10-th to 20-th epoch will be evaluated during training.
 
-After training, you need to pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search) to achieve the best results.
+If you want to get better results, you can pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
+Experimentally, the hyperparameters search on UAV123 can bring 1~2 success gain.
+
+Our reported results are got by simple training and testing without hyperparameters search.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-|    R-50    |  -  |   20e    | 7.54     | -              | 61.8 | 77.3 | [config](siamese_rpn_r50_1x_uav123.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019.log.json) |
+|    R-50    |  -  |   20e    | 7.54     | -              | 60.6 | 76.5 | [config](siamese_rpn_r50_1x_uav123.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20210917_104452-36ac4934.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20210917_104452.log.json) |
 
 ### TrackingNet
 
@@ -48,12 +51,10 @@ The best model on LaSOT is submitted to [the evaluation server on TrackingNet Ch
 
 The checkpoints from 10-th to 20-th epoch will be evaluated during training.
 
-After training, you need to pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search) to achieve the best results.
+**Note:** we train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. In our codebase, the Success and Precision are lower 4.8 and 3.7 respectively than those of the paper. Notably, our reported results are got by simple training and testing without hyperparameters search.
 
-**Note:** we train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. In our codebase, the Success and Precision are lower 3.6 and 2.7 respectively than those of the paper.
-
-TODO update the model link and readme
+If you want to get better results, you can pick up the best checkpoint from the log file, then use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search).Experimentally, the hyperparameters search on OTB100 can bring 1~2 success gain.
 
 |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Precision | Config | Download |
 | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-|    R-50    |  -  |   20e    |   -   | -              | 66 | 88.7 | [config](siamese_rpn_r50_1x_otb100.py) | [model]() &#124; [log]() |
+|    R-50    |  -  |   20e    |   -   | -              | 64.8 | 87.7 | [config](siamese_rpn_r50_1x_otb100.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20210920_001757-12636a0a.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20210920_001757.log.json) |
