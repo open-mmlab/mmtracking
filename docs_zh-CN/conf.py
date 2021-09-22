@@ -96,6 +96,20 @@ html_theme_options = {
         },
         {
             'name':
+            '上游库',
+            'children': [
+                {
+                    'name': 'MMCV',
+                    'url': 'https://github.com/open-mmlab/mmcv',
+                },
+                {
+                    'name': 'MMDetection',
+                    'url': 'https://github.com/open-mmlab/mmdetection',
+                },
+            ]
+        },
+        {
+            'name':
             '算法库',
             'children': [
                 {
@@ -105,10 +119,6 @@ html_theme_options = {
                 {
                     'name': 'MMClassification',
                     'url': 'https://github.com/open-mmlab/mmclassification',
-                },
-                {
-                    'name': 'MMDetection',
-                    'url': 'https://github.com/open-mmlab/mmdetection',
                 },
                 {
                     'name': 'MMDetection3D',
@@ -133,10 +143,6 @@ html_theme_options = {
                 {
                     'name': 'MMSegmentation',
                     'url': 'https://github.com/open-mmlab/mmsegmentation',
-                },
-                {
-                    'name': 'MMTracking',
-                    'url': 'https://github.com/open-mmlab/mmtracking',
                 },
             ]
         },
