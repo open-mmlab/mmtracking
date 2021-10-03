@@ -1,4 +1,4 @@
-# Usuage of configs
+# Usage of configs
 
 ## Training with configs
 

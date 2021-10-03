@@ -1,5 +1,22 @@
 ## Changelog
 
+### v0.8.0 (03/10/2021)
+
+#### New Features
+
+- Support OTB100 dataset in SOT ([#271](https://github.com/open-mmlab/mmtracking/pull/271))
+- Support TrackingNet dataset in SOT ([#268](https://github.com/open-mmlab/mmtracking/pull/268))
+- Support UAV123 dataset in SOT ([#260](https://github.com/open-mmlab/mmtracking/pull/260))
+
+#### Bug Fixes
+
+- Fix a bug in mot_param_search.py ([#270](https://github.com/open-mmlab/mmtracking/pull/270))
+
+#### Improvements
+
+- Use PyTorch sphinx theme ([#274](https://github.com/open-mmlab/mmtracking/pull/274))
+- Use pycocotools instead of mmpycocotools ([#263](https://github.com/open-mmlab/mmtracking/pull/263))
+
 ### v0.7.0 (03/09/2021)
 
 #### Highlights

@@ -15,6 +15,7 @@
 |        master       | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0      |
 |        0.6.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 |        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
+|        0.8.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 
 ## 安装
 
