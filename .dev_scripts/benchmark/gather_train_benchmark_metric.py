@@ -70,8 +70,13 @@ if __name__ == '__main__':
                 total_epochs = cfg.total_epochs
 
                 # the first metric will be used to find the best ckpt
+                has_final_ckpt = True
                 if 'vid' in config:
                     eval_metrics = ['bbox_mAP_50']
+                elif 'mot' in config:
+                    eval_metrics = ['MOTA', 'IDF1']
+                    # tracktor and deepsort don't have ckpt.
+                    has_final_ckpt = False
                 elif 'sot' in config:
                     eval_metrics = ['success', 'norm_precision', 'precision']
                 else:
@@ -83,6 +88,9 @@ if __name__ == '__main__':
                     if 'vid' in config:
                         sheet = readbook.sheet_by_name('vid')
                         table = xlrw.get_sheet('vid')
+                    elif 'mot' in config:
+                        sheet = readbook.sheet_by_name('mot')
+                        table = xlrw.get_sheet('mot')
                     elif 'sot' in config:
                         sheet = readbook.sheet_by_name('sot')
                         table = xlrw.get_sheet('sot')
@@ -92,7 +100,8 @@ if __name__ == '__main__':
 
                 # 2 determine whether total_epochs ckpt exists
                 ckpt_path = f'epoch_{total_epochs}.pth'
-                if osp.exists(osp.join(result_path, ckpt_path)):
+                if osp.exists(osp.join(result_path, ckpt_path)) or \
+                        not has_final_ckpt:
                     log_json_path = list(
                         sorted(glob.glob(osp.join(result_path,
                                                   '*.log.json'))))[-1]
@@ -105,7 +114,8 @@ if __name__ == '__main__':
                             if 'mode' not in log_line.keys():
                                 continue
 
-                            if log_line['mode'] == 'val':
+                            if log_line['mode'] == 'val' or \
+                                    log_line['mode'] == 'test':
                                 result_dict[f"epoch_{log_line['epoch']}"] = {
                                     key: log_line[key]
                                     for key in eval_metrics if key in log_line
@@ -121,12 +131,12 @@ if __name__ == '__main__':
                                 best_epoch_results = result_dict[epoch]
 
                         for metric in best_epoch_results:
-                            if 'bbox_mAP_50' in best_epoch_results:
-                                performance = round(
-                                    best_epoch_results[metric] * 100, 1)
-                            else:
+                            if 'success' in best_epoch_results:
                                 performance = round(best_epoch_results[metric],
                                                     1)
+                            else:
+                                performance = round(
+                                    best_epoch_results[metric] * 100, 1)
                             best_epoch_results[metric] = performance
                     all_results_dict[config] = best_epoch_results
 
