@@ -14,7 +14,7 @@ This page provides the instructions for dataset preparation on existing benchmar
 
 ### 1. Download Datasets
 
-Please download the datasets from the offical websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
+Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
 For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a sctipt to download it.
 
@@ -97,7 +97,7 @@ mmtracking
 ### 2. Convert Annotations
 
 We use [CocoVID](https://github.com/open-mmlab/mmtracking/blob/master/mmtrack/datasets/parsers/coco_video_parser.py) to maintain all datasets in this codebase.
-In this case, you need to convert the offical annotations to this style. We provide scripts and the usages are as following:
+In this case, you need to convert the official annotations to this style. We provide scripts and the usages are as following:
 
 ```shell
 # ImageNet DET
@@ -120,7 +120,7 @@ python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/U
 # TrackingNet
 # unzip files in 'data/trackingnet/TEST/zips/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
-# generate testset annotaions
+# generate testset annotations
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
 
 # OTB100
@@ -154,7 +154,7 @@ mmtracking
 |   │   │   │   ├── train
 |   │   │   │   ├── val
 |   │   │   │   ├── test
-│   │   ├── Annotations (the offical annotation files)
+│   │   ├── Annotations (the official annotation files)
 │   │   │   ├── DET
 |   │   │   │   ├── train
 |   │   │   │   ├── val
@@ -183,13 +183,13 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
-│   │   ├── anno (the offical annotation files)
+│   │   ├── anno (the official annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
 │   │
 │   ├── trackingnet
 │   │   ├── TEST
-│   │   │   ├── anno (the offical annotation files)
+│   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
 │   │   │   ├── annotations (the converted annotation file)
 │   │   │   ├── frames (the unzipped folders)
@@ -224,7 +224,7 @@ There are only 1 json files in `data/lasot/annotations`:
 
 #### The folder of annotations and reid in MOT15/MOT16/MOT17/MOT20
 
-We take MOT17 dataset as examples, the other datasets share similar struture.
+We take MOT17 dataset as examples, the other datasets share similar structure.
 
 There are 8 json files in `data/MOT17/annotations`:
 
@@ -238,7 +238,7 @@ There are 8 json files in `data/MOT17/annotations`:
 
 `half-train_cocoformat.json`, `half-train_detections.pkl`, `half-val_cocoformat.json`and `half-val_detections.pkl` share similar meaning with `train_cocoformat.json` and `train_detections.pkl`. The `half` means we split each video in the training set into half. The first half videos are denoted as `half-train` set, and the second half videos are denoted as`half-val` set.
 
-The struture of `data/MOT17/reid` is as follows:
+The structure of `data/MOT17/reid` is as follows:
 
 ```
 reid

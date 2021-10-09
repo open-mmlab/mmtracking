@@ -102,7 +102,7 @@ def eval_sot_ope(results, annotations):
             success_error(gt_bboxes_center, pred_bboxes_center,
                           pixel_offset_th, video_length))
 
-        # eval normed precison
+        # eval normed precision
         gt_bboxes_wh = np.array((gt_bboxes[:, 2] - gt_bboxes[:, 0],
                                  gt_bboxes[:, 3] - gt_bboxes[:, 1])).T
         norm_gt_bboxes_center = gt_bboxes_center / (gt_bboxes_wh + 1e-16)

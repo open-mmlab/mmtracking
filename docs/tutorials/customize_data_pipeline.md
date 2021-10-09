@@ -11,7 +11,7 @@ For a single image, you may refer to the [tutorial in MMDetection](https://mmdet
 
 There are several differences in MMTracking:
 
-- We implement `VideoCollect` which is similar to `Collect` in MMDetection but is more comptabile with the video perception tasks. For example, the meta keys `frame_id` and `is_video_data` are collected by default.
+- We implement `VideoCollect` which is similar to `Collect` in MMDetection but is more compatible with the video perception tasks. For example, the meta keys `frame_id` and `is_video_data` are collected by default.
 
 ### Data pipeline for multiple images
 

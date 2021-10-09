@@ -133,7 +133,7 @@ model = dict(
             style='pytorch'),  # The style of backbone, 'pytorch' means that stride 2 layers are in 3x3 conv, 'caffe' means stride 2 layers are in 1x1 convs.
         neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),  # The config of the neck of the ReID model. Generally it is a global average pooling module.
         head=dict(  # The config of the head of the ReID model.
-            type='LinearReIDHead',  # The nead of the classification head
+            type='LinearReIDHead',  # The type of the classification head
             num_fcs=1,  # Number of the fully-connected layers in the head
             in_channels=2048,  # The number of the input channels
             fc_channels=1024,  # The number of channels of fc layers

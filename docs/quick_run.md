@@ -6,7 +6,7 @@ This note will show how to perform common tasks on existing models and standard 
 
 - Inference existing models on a given video or image folder.
 - Test (inference and evaluate) existing models on standard datasets.
-- Train exisitng models on standard datasets.
+- Train existing models on standard datasets.
 
 ### Inference
 
@@ -148,7 +148,7 @@ Optional arguments:
 - `EVAL_METRICS`: Items to be evaluated on the results. Allowed values depend on the dataset, e.g., `bbox` is available for ImageNet VID, `track` is available for LaSOT, `bbox` and `track` are both suitable for MOT17.
 - `--cfg-options`: If specified, the key-value pair optional cfg will be merged into config file
 - `--eval-options`: If specified, the key-value pair optional eval cfg will be kwargs for dataset.evaluate() function, it’s only for evaluation
-- `--format-only`: If specified, the results will be formated to the offical format.
+- `--format-only`: If specified, the results will be formatted to the official format.
 
 #### Examples of testing VID model
 
@@ -335,7 +335,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 
 1. Train a detector model
 
-    If you want to train a detector for multiple object tracking or other applications, to be compatablie with MMDetection, you only need to add a line of `USE_MMDET=True` in the config and run it with the same manner in mmdetection.
+    If you want to train a detector for multiple object tracking or other applications, to be compatible with MMDetection, you only need to add a line of `USE_MMDET=True` in the config and run it with the same manner in mmdetection.
     A base example can be found at [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py).
 
     Please NOTE that there are some differences between the base config in MMTracking and MMDetection: `detector` is only a submodule of the `model`.

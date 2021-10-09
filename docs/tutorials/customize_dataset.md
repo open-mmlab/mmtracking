@@ -1,7 +1,7 @@
 ## Customize Datasets
 
 To customize a new dataset, you can convert them to the existing CocoVID style or implement a totally new dataset.
-In MMTracking, we recommand to convert the data into CocoVID style and do the conversion offline, thus you can use the `CocoVideoDataset` directly. In this case, you only need to modify the config's data annotation pathes and the `classes`.
+In MMTracking, we recommend to convert the data into CocoVID style and do the conversion offline, thus you can use the `CocoVideoDataset` directly. In this case, you only need to modify the config's data annotation paths and the `classes`.
 
 ### Convert the dataset into CocoVID style
 

@@ -40,7 +40,7 @@ The master branch works with **PyTorch1.3+**.
 
   **Fast**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
 
-  **Strong**: We reproduce state-of-the-art models and some of them even outperform the offical implementations.
+  **Strong**: We reproduce state-of-the-art models and some of them even outperform the official implementations.
 
 ## License
 

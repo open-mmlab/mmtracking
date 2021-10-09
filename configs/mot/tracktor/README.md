@@ -15,7 +15,7 @@
 ```
 
 We implement Tracktor with independent detector and ReID models. To train a model by yourself, you need to train a detector following [here](../../det/) and also train a ReID model following [here](../../reid/).
-The configs in this folder are basiclly for inference.
+The configs in this folder are basically for inference.
 
 ## Results and models on MOT15
 
@@ -33,8 +33,8 @@ The configs in this folder are basiclly for inference.
 
 ## Results and models on MOT17
 
-The implementations of Tracktor follow the offical practices.
-In the table below, the result marked with * (the last line) is the offical one.
+The implementations of Tracktor follow the official practices.
+In the table below, the result marked with * (the last line) is the official one.
 Our implementation outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
@@ -46,8 +46,8 @@ Our implementation outperform it by 4.9 points on MOTA and 3.3 points on IDF1.
 
 ## Results and models on MOT20
 
-The implementations of Tracktor follow the offical practices.
-In the table below, the result marked with * (the last line) is the offical one.
+The implementations of Tracktor follow the official practices.
+In the table below, the result marked with * (the last line) is the official one.
 Our implementation outperform it by 5.3 points on MOTA and 2.1 points on IDF1.
 
 |    Detector     |  ReID  | Train Set | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |

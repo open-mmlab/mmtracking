@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # This script converts MOT dataset into ReID dataset.
-# Offical website of the MOT dataset: https://motchallenge.net/
+# Official website of the MOT dataset: https://motchallenge.net/
 #
 # Label format of MOT dataset:
 #   GTs:

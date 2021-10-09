@@ -322,7 +322,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 format.
 
             is_positive_pairs (list[bool]): list of bool denoting whether each
-                exemplar image and corresponding seach image is positive pair.
+                exemplar image and corresponding search image is positive pair.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.

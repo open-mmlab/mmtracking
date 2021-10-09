@@ -155,7 +155,7 @@ mmtracking
 |   │   │   │   ├── train
 |   │   │   │   ├── val
 |   │   │   │   ├── test
-│   │   ├── Annotations (the offical annotation files)
+│   │   ├── Annotations (the official annotation files)
 │   │   │   ├── DET
 |   │   │   │   ├── train
 |   │   │   │   ├── val
@@ -184,13 +184,13 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
-│   │   ├── anno (the offical annotation files)
+│   │   ├── anno (the official annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
 │   │
 │   ├── trackingnet
 │   │   ├── TEST
-│   │   │   ├── anno (the offical annotation files)
+│   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
 │   │   │   ├── annotations (the converted annotation file)
 │   │   │   ├── frames (the unzipped folders)
