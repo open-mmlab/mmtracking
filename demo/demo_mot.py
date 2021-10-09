@@ -86,7 +86,7 @@ def main():
 
     if OUT_VIDEO:
         print(f'making the output video at {args.output} with a FPS of {fps}')
-        mmcv.frames2video(out_path, args.output, fps=fps)
+        mmcv.frames2video(out_path, args.output, fps=fps, fourcc='mp4v')
         out_dir.cleanup()
 
 

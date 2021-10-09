@@ -29,6 +29,8 @@ python demo/demo_vid.py \
     [--show]
 ```
 
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
 Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
@@ -92,14 +94,18 @@ python demo/demo_sot.py \
     --checkpoint ${CHECKPOINT_FILE} \
     [--output ${OUTPUT}] \
     [--device ${DEVICE}] \
-    [--show]
+    [--show] \
+    [--gt_bbox_file ${GT_BBOX_FILE}]
 ```
+
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
 
 Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `--show`: Whether show the video on the fly.
+- `--gt_bbox_file`: The gt_bbox file path of the video. We only use the gt_bbox of the first frame. If not specified, you would draw init bbox of the video manually.
 
 Examples:
 
