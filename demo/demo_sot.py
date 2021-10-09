@@ -27,13 +27,8 @@ def main():
         '--color', default=(0, 255, 0), help='Color of tracked bbox lines.')
     parser.add_argument(
         '--thickness', default=3, type=int, help='Thickness of bbox lines.')
-    parser.add_argument(
-        '--backend',
-        choices=['cv2', 'plt'],
-        default='cv2',
-        help='the backend to visualize the results')
     parser.add_argument('--fps', help='FPS of the output video')
-    parser.add_argument('--bbox_file', help='bbox file path')
+    parser.add_argument('--gt_bbox_file', help='The path of gt_bbox file')
     args = parser.parse_args()
 
     # load images
@@ -75,8 +70,8 @@ def main():
             img = osp.join(args.input, img)
             img = mmcv.imread(img)
         if i == 0:
-            if args.bbox_file is not None:
-                bboxes = mmcv.list_from_file(args.bbox_file)
+            if args.gt_bbox_file is not None:
+                bboxes = mmcv.list_from_file(args.gt_bbox_file)
                 init_bbox = list(map(float, bboxes[0].split(',')))
             else:
                 init_bbox = list(cv2.selectROI(args.input, img, False, False))
@@ -99,14 +94,13 @@ def main():
             show=args.show,
             wait_time=int(1000. / fps) if fps else 0,
             out_file=out_file,
-            backend=args.backend,
             thickness=args.thickness)
         prog_bar.update()
 
     if OUT_VIDEO:
         print(
             f'\nmaking the output video at {args.output} with a FPS of {fps}')
-        mmcv.frames2video(out_path, args.output, fps=fps)
+        mmcv.frames2video(out_path, args.output, fps=fps, fourcc='mp4v')
         out_dir.cleanup()
 
 
