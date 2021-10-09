@@ -1,6 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
+import os.path as osp
+import time
 
 import mmcv
 import torch
@@ -18,6 +20,9 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument('--out', help='output result file')
+    parser.add_argument(
+        '--work-dir',
+        help='the directory to save the file containing evaluation metrics')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -107,9 +112,7 @@ def main():
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
-    # cfg.model.pretrains = None
-    if hasattr(cfg.model, 'detector'):
-        cfg.model.detector.pretrained = None
+
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
@@ -118,6 +121,13 @@ def main():
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
+
+    rank, _ = get_dist_info()
+    # allows not to create
+    if args.work_dir is not None and rank == 0:
+        mmcv.mkdir_or_exist(osp.abspath(args.work_dir))
+        timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+        json_file = osp.join(args.work_dir, f'eval_{timestamp}.log.json')
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test)
@@ -184,7 +194,13 @@ def main():
             for key in eval_hook_args:
                 eval_kwargs.pop(key, None)
             eval_kwargs.update(dict(metric=args.eval, **kwargs))
-            print(dataset.evaluate(outputs, **eval_kwargs))
+            metric = dataset.evaluate(outputs, **eval_kwargs)
+            print(metric)
+            metric_dict = dict(
+                config=args.config, mode='test', epoch=cfg.total_epochs)
+            metric_dict.update(metric)
+            if args.work_dir is not None:
+                mmcv.dump(metric_dict, json_file)
 
 
 if __name__ == '__main__':

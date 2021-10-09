@@ -18,7 +18,7 @@ class BaseReID(ImageClassifier):
             # change the shape of label tensor from NxS to NS
             gt_label = gt_label.view(-1)
         x = self.extract_feat(img)
-        head_outputs = self.head.forward_train(x)
+        head_outputs = self.head.forward_train(x[0])
 
         losses = dict()
         reid_loss = self.head.loss(gt_label, *head_outputs)
@@ -30,7 +30,7 @@ class BaseReID(ImageClassifier):
         """Test without augmentation."""
         if img.nelement() > 0:
             x = self.extract_feat(img)
-            head_outputs = self.head.forward_train(x)
+            head_outputs = self.head.forward_train(x[0])
             feats = head_outputs[0]
             return feats
         else:

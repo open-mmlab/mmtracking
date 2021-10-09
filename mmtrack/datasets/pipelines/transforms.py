@@ -135,6 +135,43 @@ class SeqCropLikeSiamFC(object):
 
 
 @PIPELINES.register_module()
+class SeqGrayAug(object):
+    """Gray augmention for images.
+
+    Args:
+        prob (list[float]): The probability to perform gray augmention for
+            each image. Defaults to 0..
+    """
+
+    def __init__(self, prob=0.):
+        self.prob = prob
+
+    def __call__(self, results):
+        """Call function.
+
+        For each dict in results, perform gray augmention for image in the
+        dict.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains augmented gray image.
+        """
+        outs = []
+        gray_prob = np.random.random()
+        for _results in results:
+            if self.prob > gray_prob:
+                grayed = cv2.cvtColor(_results['img'], cv2.COLOR_BGR2GRAY)
+                image = cv2.cvtColor(grayed, cv2.COLOR_GRAY2BGR)
+                _results['img'] = image
+
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
 class SeqShiftScaleAug(object):
     """Shift and rescale images and bounding boxes.
 

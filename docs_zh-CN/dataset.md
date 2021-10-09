@@ -10,10 +10,20 @@
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
   - [TrackingNet](https://tracking-net.org/)
+  - [OTB100](http://www.visual-tracking.net/)
 
 ### 1. 下载数据集
 
 请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
+
+对于 OTB100 数据集，你不必要手工地从官网下载数据。我们提供了下载脚本。
+
+#### OTB100
+
+```shell
+# 通过网页爬虫下载 OTB100 数据集
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
+```
 
 注意：
 
@@ -23,7 +33,7 @@
 
 - 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
 
-- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123 和 TrackingNet 数据集。
+- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet 和 OTB100 数据集。
 
 ```
 mmtracking
@@ -77,6 +87,11 @@ mmtracking
 │   │   ├── TEST
 │   │   │   ├── anno
 │   │   │   ├── zips
+│   │
+│   ├── otb100
+│   │   │── zips
+│   │   │   │── Basketball.zip
+│   │   │   │── Biker.zip
 ```
 
 ### 2. 转换标注格式
@@ -104,10 +119,16 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 
 # TrackingNet
-# 解压目录 'TEST/zips' 下的所有 '*.zip' 文件
+# 解压目录 'data/trackingnet/TEST/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
 # 生成测试集标注
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
+
+# OTB100
+# 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
+bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
+# 生成标注
+python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
 ```
 
 完成以上格式转换后，文件目录结构如下：
@@ -175,6 +196,15 @@ mmtracking
 │   │   │   ├── frames (the unzipped folders)
 │   │   │   │   ├── 0-6LB4FqxoE_0
 │   │   │   │   ├── 07Ysk1C0ZX0_0
+│   │
+│   ├── otb100
+│   │   ├── zips
+│   │   │   ├── Basketball.zip
+│   │   │   ├── Biker.zip
+│   │   ├── annotations
+│   │   ├── data
+│   │   │   ├── Basketball
+│   │   │   │   ├── img
 ```
 
 #### ILSVRC的标注文件夹
@@ -258,3 +288,11 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在 `data/trackingnet/TEST/annotations` 中只有一个 json 文件：
 
 `trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 json 文件。
+
+#### TrackingNet的标注和视频帧文件夹
+
+在 `data/otb100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
+
+在 `data/otb100/data/annotations` 中只有一个 json 文件：
+
+`otb100.json`： 包含 OTB100 数据集标注信息的 json 文件
