@@ -128,8 +128,8 @@ class CocoVideoDataset(CocoDataset):
                 returned, otherwise, not returned. Default: True.
 
         Returns:
-            list(dict): `img_info` and the reference images informations or
-            only the reference images informations.
+            list(dict): `img_info` and the reference images information or
+            only the reference images information.
         """
         assert isinstance(img_info, dict)
         if isinstance(frame_range, int):

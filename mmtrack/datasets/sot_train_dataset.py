@@ -125,7 +125,7 @@ class SOTTrainDataset(CocoVideoDataset):
             a list that must contain search image id and may contain
             `image_id`, instance_ids is a list that must contain search
             instance id and may contain `instance_id`, is_positive_pair is
-            a bool denoting postive or negative sample pair.
+            a bool denoting positive or negative sample pair.
         """
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
@@ -172,7 +172,7 @@ class SOTTrainDataset(CocoVideoDataset):
         Args:
             img_id (int): The id of image.
             instance_id (int): The id of instance.
-            is_positive_pair (bool): denoting postive or negative sample pair.
+            is_positive_pair (bool): denoting positive or negative sample pair.
 
         Returns:
             dict: The information of training image and annotation.

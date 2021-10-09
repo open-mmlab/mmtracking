@@ -147,7 +147,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
 
         Args:
             item (str): The demanded item.
-            ids (list[int]): The demaned ids.
+            ids (list[int]): The demanded ids.
             num_samples (int, optional): Number of samples to calculate the
                 results. Defaults to None.
             behavior (str, optional): Behavior to calculate the results.

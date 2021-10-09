@@ -138,7 +138,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str, optional): Path to save the formatted results.
                 Defaults to None.
-            metrics (list[str], optional): The results of the specifc metrics
+            metrics (list[str], optional): The results of the specific metrics
                 will be formatted.. Defaults to ['track'].
 
         Returns:

@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # This script converts MOT labels into COCO style.
-# Offical website of the MOT dataset: https://motchallenge.net/
+# official website of the MOT dataset: https://motchallenge.net/
 #
 # Label format of MOT dataset:
 #   GTs:
@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument(
         '--convert-det',
         action='store_true',
-        help='convert offical detection results.')
+        help='convert official detection results.')
     parser.add_argument(
         '--split-train',
         action='store_true',

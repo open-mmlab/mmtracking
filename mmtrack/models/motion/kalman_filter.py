@@ -9,7 +9,7 @@ from ..builder import MOTION
 class KalmanFilter(object):
     """A simple Kalman filter for tracking bounding boxes in image space.
 
-    The implementation is refered to https://github.com/nwojke/deep_sort.
+    The implementation is referred to https://github.com/nwojke/deep_sort.
     """
     chi2inv95 = {
         1: 3.8415,

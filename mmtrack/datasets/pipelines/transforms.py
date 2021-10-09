@@ -205,7 +205,7 @@ class SeqShiftScaleAug(object):
 
         Returns:
             tuple(crop_img, bbox): crop_img is a ndarray of shape
-            (target_size, target_size, 3), bbox is the corrsponding ground
+            (target_size, target_size, 3), bbox is the corresponding ground
             truth box in [x1, y1, x2, y2] format.
         """
         img_h, img_w = image.shape[:2]
@@ -365,7 +365,7 @@ class SeqBlurAug(object):
 class SeqResize(Resize):
     """Resize images.
 
-    Please refer to `mmdet.datasets.pipelines.transfroms.py:Resize` for
+    Please refer to `mmdet.datasets.pipelines.transforms.py:Resize` for
     detailed docstring.
 
     Args:
@@ -407,7 +407,7 @@ class SeqResize(Resize):
 class SeqNormalize(Normalize):
     """Normalize images.
 
-    Please refer to `mmdet.datasets.pipelines.transfroms.py:Normalize` for
+    Please refer to `mmdet.datasets.pipelines.transforms.py:Normalize` for
     detailed docstring.
     """
 
@@ -439,7 +439,7 @@ class SeqNormalize(Normalize):
 class SeqRandomFlip(RandomFlip):
     """Randomly flip for images.
 
-    Please refer to `mmdet.datasets.pipelines.transfroms.py:RandomFlip` for
+    Please refer to `mmdet.datasets.pipelines.transforms.py:RandomFlip` for
     detailed docstring.
 
     Args:
@@ -501,7 +501,7 @@ class SeqRandomFlip(RandomFlip):
 class SeqPad(Pad):
     """Pad images.
 
-    Please refer to `mmdet.datasets.pipelines.transfroms.py:Pad` for detailed
+    Please refer to `mmdet.datasets.pipelines.transforms.py:Pad` for detailed
     docstring.
     """
 
