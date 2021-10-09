@@ -180,6 +180,7 @@ class SiamRPN(BaseSingleObjectTracker):
         bbox[1] = bbox[1].clamp(0., img_h)
         bbox[2] = bbox[2].clamp(10., img_w)
         bbox[3] = bbox[3].clamp(10., img_h)
+        return bbox
 
     def init(self, img, bbox):
         """Initialize the single object tracker in the first frame.
