@@ -29,6 +29,8 @@ python demo/demo_vid.py \
     [--show]
 ```
 
+`INPUT` 和 `OUTPUT` 支持 mp4 视频格式和文件夹格式。
+
 可选参数：
 
 - `OUTPUT`：可视化演示的输出路径。如果未指定 `OUTPUT`，使用 `--show` 会实时显示视频。
@@ -93,11 +95,14 @@ python demo/demo_sot.py \
     [--show]
 ```
 
+`INPUT` 和 `OUTPUT` 支持 mp4 视频格式和文件夹格式。
+
 可选参数：
 
 - `OUTPUT`：可视化演示的输出路径。如果未指定 `OUTPUT`，使用 `--show` 会实时显示视频。
 - `DEVICE`：推理设备。可选 `cpu` 或者 `cuda:0` 等。
 - `--show`：是否实时显示视频。
+- `--gt_bbox_file`: 视频的真实标注文件路径。我们只使用视频的第一帧标注。如果该参数没指定，你需要手动的画出视频初始框。
 
 例子：
 
@@ -106,8 +111,9 @@ python ./demo/demo_sot.py \
     ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
     --input ${VIDEO_FILE} \
     --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
-    --output ${OUTPUT} \
-    --show
+    [--output ${OUTPUT}] \
+    [--show] \
+    [--gt_bbox_file ${GT_BBOX_FILE}]
 ```
 
 ### 测试

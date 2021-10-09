@@ -1,7 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
+import os.path as osp
+import tempfile
 from argparse import ArgumentParser
 
-import cv2
+import mmcv
 
 from mmtrack.apis import inference_vid, init_model
 
@@ -21,48 +24,73 @@ def main():
         help='whether to show visualizations.')
     parser.add_argument(
         '--score-thr', type=float, default=0.8, help='bbox score threshold')
+    parser.add_argument(
+        '--thickness', default=3, type=int, help='Thickness of bbox lines.')
+    parser.add_argument('--fps', help='FPS of the output video')
     args = parser.parse_args()
+
+    # load images
+    if osp.isdir(args.input):
+        imgs = sorted(os.listdir(args.input))
+        IN_VIDEO = False
+    else:
+        imgs = mmcv.VideoReader(args.input)
+        IN_VIDEO = True
+
+    # define output
+    if args.output is not None:
+        if args.output.endswith('.mp4'):
+            OUT_VIDEO = True
+            out_dir = tempfile.TemporaryDirectory()
+            out_path = out_dir.name
+            _out = args.output.rsplit('/', 1)
+            if len(_out) > 1:
+                os.makedirs(_out[0], exist_ok=True)
+        else:
+            OUT_VIDEO = False
+            out_path = args.output
+            os.makedirs(out_path, exist_ok=True)
+    fps = args.fps
+    if args.show or OUT_VIDEO:
+        if fps is None and IN_VIDEO:
+            fps = imgs.fps
+        if not fps:
+            raise ValueError('Please set the FPS for the output video.')
+        fps = int(fps)
 
     # build the model from a config file and a checkpoint file
     model = init_model(args.config, args.checkpoint, device=args.device)
 
-    cap = cv2.VideoCapture(args.input)
+    prog_bar = mmcv.ProgressBar(len(imgs))
+    # test and show/save the images
+    for i, img in enumerate(imgs):
+        if isinstance(img, str):
+            img = osp.join(args.input, img)
+            img = mmcv.imread(img)
 
-    if args.output is not None:
-        save_out_video = True
+        result = inference_vid(model, img, frame_id=i)
+        if args.output is not None:
+            if IN_VIDEO or OUT_VIDEO:
+                out_file = osp.join(out_path, f'{i:06d}.jpg')
+            else:
+                out_file = osp.join(out_path, img.rsplit('/', 1)[-1])
+        else:
+            out_file = None
+        model.show_result(
+            img,
+            result,
+            score_thr=args.score_thr,
+            show=args.show,
+            wait_time=int(1000. / fps) if fps else 0,
+            out_file=out_file,
+            thickness=args.thickness)
+        prog_bar.update()
 
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        videoWriter = cv2.VideoWriter(args.output, fourcc, fps, size)
-
-    frame_id = 0
-    while (cap.isOpened()):
-        flag, frame = cap.read()
-        if not flag:
-            break
-
-        # test a single image
-        result = inference_vid(model, frame, frame_id)
-        vis_frame = model.show_result(
-            frame, result, score_thr=args.score_thr, show=False)
-
-        if save_out_video:
-            videoWriter.write(vis_frame)
-
-        if args.show:
-            cv2.imshow(args.input, vis_frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-        frame_id += 1
-
-    cap.release()
-    if save_out_video:
-        videoWriter.release()
-    cv2.destroyAllWindows()
+    if OUT_VIDEO:
+        print(
+            f'\nmaking the output video at {args.output} with a FPS of {fps}')
+        mmcv.frames2video(out_path, args.output, fps=fps, fourcc='mp4v')
+        out_dir.cleanup()
 
 
 if __name__ == '__main__':
