@@ -30,11 +30,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_vis(VIS, ann_dir, save_dir, dataset_version, mode='train'):
+def convert_vis(ann_dir, save_dir, dataset_version, mode='train'):
     """Convert YouTube-VIS dataset in COCO style.
 
     Args:
-        VIS (dict): The converted COCO style annotations.
         ann_dir (str): The path of YouTube-VIS dataset.
         save_dir (str): The path to save `VIS`.
         dataset_version (str): The version of dataset. Options are '2019',
@@ -44,6 +43,7 @@ def convert_vis(VIS, ann_dir, save_dir, dataset_version, mode='train'):
     """
     assert dataset_version in ['2019', '2021']
     assert mode in ['train', 'valid', 'test']
+    VIS = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     obj_num_classes = dict()
 
@@ -55,9 +55,9 @@ def convert_vis(VIS, ann_dir, save_dir, dataset_version, mode='train'):
 
     has_annotations = mode == 'train'
     if has_annotations:
-        VidToAnns = defaultdict(list)
+        vid_to_anns = defaultdict(list)
         for ann_info in official_anns['annotations']:
-            VidToAnns[ann_info['video_id']].append(ann_info)
+            vid_to_anns[ann_info['video_id']].append(ann_info)
 
     video_infos = official_anns['videos']
     for video_info in tqdm(video_infos):
@@ -69,7 +69,7 @@ def convert_vis(VIS, ann_dir, save_dir, dataset_version, mode='train'):
         width = video_info['width']
         height = video_info['height']
         if has_annotations:
-            ann_infos_in_video = VidToAnns[video_info['id']]
+            ann_infos_in_video = vid_to_anns[video_info['id']]
             instance_id_maps = dict()
 
         for frame_id in range(num_frames):
@@ -145,8 +145,7 @@ def convert_vis(VIS, ann_dir, save_dir, dataset_version, mode='train'):
 def main():
     args = parse_args()
     for sub_set in ['train', 'valid', 'test']:
-        VIS = defaultdict(list)
-        convert_vis(VIS, args.input, args.output, args.version, sub_set)
+        convert_vis(args.input, args.output, args.version, sub_set)
 
 
 if __name__ == '__main__':
