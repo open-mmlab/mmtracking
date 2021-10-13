@@ -142,6 +142,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
 
         return losses
 
+    # TODO: Support simple_test
     def simple_test(self, img, img_metas, **kwargs):
         """Test function with a single scale."""
         pass

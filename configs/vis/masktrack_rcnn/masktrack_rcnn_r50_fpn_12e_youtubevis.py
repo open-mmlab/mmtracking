@@ -47,6 +47,7 @@ model = dict(
                 add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False)),
+    # TODO: Support tracker
     # tracker=dict(
     #     type='MaskTrackRCNNTracker',
     #     score_coefficient=1.0,
@@ -137,4 +138,4 @@ lr_config = dict(
     step=[8, 11])
 # runtime settings
 total_epochs = 12
-evaluation = dict(metric=['segm'], interval=13)
+evaluation = dict(metric=['track_segm'], interval=13)

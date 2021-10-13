@@ -94,3 +94,5 @@ def test_vis_forward(cfg_file):
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
+
+    # TODO: Test forward test

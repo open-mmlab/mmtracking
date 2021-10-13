@@ -9,7 +9,12 @@ from mmtrack.models.track_heads import MaskTrackRCNNTrackHead
 def test_masktrack_rcnn_track_head_loss():
     """Tests masktrack rcnn track head loss when truth is non-empty."""
     cfg = mmcv.Config(
-        dict(num_fcs=2, roi_feat_size=7, in_channels=16, fc_out_channels=32))
+        dict(
+            num_convs=2,
+            num_fcs=2,
+            roi_feat_size=7,
+            in_channels=16,
+            fc_out_channels=32))
 
     self = MaskTrackRCNNTrackHead(**cfg)
 
@@ -43,7 +48,7 @@ def test_masktrack_rcnn_track_head_loss():
 
 
 def _dummy_bbox_sampling(proposal_list, gt_bboxes, gt_labels):
-    """Create sample results that can be passed to BBoxHead.get_targets."""
+    """Create sample results that can be passed to Head.get_targets."""
     num_imgs = len(proposal_list)
     feat = torch.rand(1, 1, 3, 3)
     assign_config = dict(

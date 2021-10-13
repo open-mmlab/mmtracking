@@ -12,13 +12,6 @@ class MaskTrackRCNNTrackRoIHead(BaseModule, metaclass=ABCMeta):
 
     This module is proposed in `MaskTrack R-CNN
     <https://arxiv.org/abs/1905.04804>`_.
-
-    Args:
-        bbox_roi_extractor (dict): Configuration of roi extractor.
-        track_head (dict): Configuration of track head.
-        train_cfg (dict): Configuration when training.
-        test_cfg (dict): Configuration when testing.
-        init_cfg (dict): Configuration of initialization.
     """
 
     def __init__(self,
