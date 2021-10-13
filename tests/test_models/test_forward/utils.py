@@ -86,7 +86,7 @@ def _demo_mm_inputs(
     gt_bboxes = []
     gt_labels = []
     gt_masks = []
-    gt_match_indices = []
+    gt_instance_ids = []
 
     for batch_idx in range(N):
         if num_items is None:
@@ -107,7 +107,7 @@ def _demo_mm_inputs(
         gt_bboxes.append(torch.FloatTensor(boxes))
         gt_labels.append(torch.LongTensor(class_idxs))
         if with_track:
-            gt_match_indices.append(torch.arange(boxes.shape[0]))
+            gt_instance_ids.append(torch.arange(boxes.shape[0]))
 
     mask = np.random.randint(0, 2, (len(boxes), H, W), dtype=np.uint8)
     gt_masks.append(BitmapMasks(mask, H, W))
@@ -121,5 +121,5 @@ def _demo_mm_inputs(
         'gt_masks': gt_masks,
     }
     if with_track:
-        mm_inputs['gt_match_indices'] = gt_match_indices
+        mm_inputs['gt_instance_ids'] = gt_instance_ids
     return mm_inputs

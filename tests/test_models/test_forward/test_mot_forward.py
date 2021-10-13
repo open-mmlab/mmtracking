@@ -12,11 +12,9 @@ from .utils import _demo_mm_inputs, _get_config_module
     'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py',
     'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'
 ])
-def test_tracktor_forward(cfg_file):
+def test_mot_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
-    model.pretrains = None
-    model.detector.pretrained = None
 
     from mmtrack.models import build_model
     mot = build_model(model)

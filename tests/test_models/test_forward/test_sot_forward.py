@@ -13,10 +13,9 @@ from .utils import _demo_mm_inputs, _get_config_module
 def test_sot_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
-    model.pretrains = None
 
     from mmtrack.models import build_model
-    tracktor = build_model(model)
+    sot = build_model(model)
 
     # Test forward train with a non-empty truth batch
     input_shape = (1, 3, 127, 127)
@@ -34,7 +33,7 @@ def test_sot_forward(cfg_file):
                                             0)
     search_gt_bboxes[0] = torch.cat((img_inds, search_gt_bboxes[0]), dim=1)
 
-    losses = tracktor.forward(
+    losses = sot.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -44,12 +43,12 @@ def test_sot_forward(cfg_file):
         is_positive_pairs=[True],
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = tracktor._parse_losses(losses)
+    loss, _ = sot._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
 
-    losses = tracktor.forward(
+    losses = sot.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -59,7 +58,7 @@ def test_sot_forward(cfg_file):
         is_positive_pairs=[False],
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = tracktor._parse_losses(losses)
+    loss, _ = sot._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
@@ -75,8 +74,8 @@ def test_sot_forward(cfg_file):
         results = defaultdict(list)
         for one_img, one_meta, one_gt_bboxes in zip(img_list, img_metas,
                                                     gt_bboxes):
-            result = tracktor.forward([one_img], [[one_meta]],
-                                      gt_bboxes=[one_gt_bboxes],
-                                      return_loss=False)
+            result = sot.forward([one_img], [[one_meta]],
+                                 gt_bboxes=[one_gt_bboxes],
+                                 return_loss=False)
             for k, v in result.items():
                 results[k].append(v)

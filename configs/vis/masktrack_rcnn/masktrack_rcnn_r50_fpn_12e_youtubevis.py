@@ -47,11 +47,12 @@ model = dict(
                 add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False)),
-    tracker=dict(
-        type='MaskTrackRCNNTracker',
-        score_coefficient=1.0,
-        iou_coefficient=2.0,
-        label_coefficient=10.0))
+    # tracker=dict(
+    #     type='MaskTrackRCNNTracker',
+    #     score_coefficient=1.0,
+    #     iou_coefficient=2.0,
+    #     label_coefficient=10.0))
+    tracker=None)
 
 # dataset settings
 img_norm_cfg = dict(

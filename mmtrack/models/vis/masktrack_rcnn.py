@@ -141,3 +141,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         losses.update(track_roi_losses)
 
         return losses
+
+    def simple_test(self, img, img_metas, **kwargs):
+        """Test function with a single scale."""
+        pass
