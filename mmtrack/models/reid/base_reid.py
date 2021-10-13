@@ -28,8 +28,6 @@ class BaseReID(ImageClassifier):
     @auto_fp16(apply_to=('img', ), out_fp32=True)
     def simple_test(self, img, **kwargs):
         """Test without augmentation."""
-        #todo
-        #breakpoint()
         if img.nelement() > 0:
             x = self.extract_feat(img)
             head_outputs = self.head.forward_train(x[0] if isinstance(x, tuple) else x)
