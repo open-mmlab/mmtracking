@@ -134,11 +134,11 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
             gt_bboxes_ignore, gt_masks, **kwargs)
         losses.update(roi_losses)
 
-        track_roi_losses = self.track_head.forward_train(
+        track_losses = self.track_head.forward_train(
             x, ref_x, img_metas, proposal_list, gt_bboxes, ref_gt_bboxes,
             gt_labels, gt_instance_ids, ref_gt_instance_ids, gt_bboxes_ignore,
             **kwargs)
-        losses.update(track_roi_losses)
+        losses.update(track_losses)
 
         return losses
 

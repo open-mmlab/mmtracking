@@ -12,10 +12,17 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
 
     This module is used in multi-object tracking methods, such as MaskTrack
     R-CNN.
+
+    Args:
+        roi_extractor (dict): Configuration of roi extractor. Defaults to None.
+        embed_head (dict): Configuration of embed head. Defaults to None.
+        train_cfg (dict): Configuration when training. Defaults to None.
+        test_cfg (dict): Configuration when testing. Defaults to None.
+        init_cfg (dict): Configuration of initialization. Defaults to None.
     """
 
     def __init__(self,
-                 bbox_roi_extractor=None,
+                 roi_extractor=None,
                  embed_head=None,
                  train_cfg=None,
                  test_cfg=None,
@@ -27,13 +34,13 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
         self.test_cfg = test_cfg
 
         if embed_head is not None:
-            self.init_embed_head(bbox_roi_extractor, embed_head)
+            self.init_embed_head(roi_extractor, embed_head)
 
         self.init_assigner_sampler()
 
-    def init_embed_head(self, bbox_roi_extractor, embed_head):
+    def init_embed_head(self, roi_extractor, embed_head):
         """Initialize ``embed_head``"""
-        self.bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)
+        self.roi_extractor = build_roi_extractor(roi_extractor)
         self.embed_head = build_head(embed_head)
 
     def init_assigner_sampler(self):
@@ -131,11 +138,11 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
         """Run forward function and calculate loss for track head in
         training."""
         rois = bbox2roi([res.bboxes for res in sampling_results])
-        bbox_feats = self.bbox_roi_extractor(
-            x[:self.bbox_roi_extractor.num_inputs], rois)
+        bbox_feats = self.roi_extractor(x[:self.roi_extractor.num_inputs],
+                                        rois)
         ref_rois = bbox2roi(ref_gt_bboxes)
-        ref_bbox_feats = self.bbox_roi_extractor(
-            ref_x[:self.bbox_roi_extractor.num_inputs], ref_rois)
+        ref_bbox_feats = self.roi_extractor(
+            ref_x[:self.roi_extractor.num_inputs], ref_rois)
 
         num_bbox_per_img = [len(res.bboxes) for res in sampling_results]
         num_bbox_per_ref_img = [

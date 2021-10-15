@@ -20,7 +20,7 @@ model = dict(
         )),
     track_head=dict(
         type='RoITrackHead',
-        bbox_roi_extractor=dict(
+        roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,

@@ -7,7 +7,7 @@ from mmtrack.models.track_heads import RoIEmbedHead
 
 
 def test_roi_embed_head_loss():
-    """Tests masktrack rcnn track head loss when truth is non-empty."""
+    """Test roi embed head loss when truth is non-empty."""
     cfg = mmcv.Config(
         dict(
             num_convs=2,

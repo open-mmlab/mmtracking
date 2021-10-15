@@ -9,6 +9,8 @@ from mmdet.models import HEADS, build_loss
 from mmdet.models.losses import accuracy
 from torch.nn.modules.utils import _pair
 
+from mmtrack.core import embed_similarity
+
 
 @HEADS.register_module()
 class RoIEmbedHead(BaseModule):
@@ -16,6 +18,27 @@ class RoIEmbedHead(BaseModule):
 
     This module is used in multi-object tracking methods, such as MaskTrack
     R-CNN.
+
+    Args:
+        num_convs (int): The number of convoluational layers to embed roi
+            features. Defaults to 0.
+        num_fcs (int): The number of fully connection layers to embed roi
+            features. Defaults to 0.
+        roi_feat_size (int|tuple(int)): The spatial size of roi features.
+            Defaults to 7.
+        in_channels (int): The input channel of roi features. Defaults to 256.
+        conv_out_channels (int): The output channel of roi features after
+            forwarding convoluational layers. Defaults to 256.
+        with_avg_pool (bool): Whether use average pooling before passing roi
+            features into fully connection layers. Defaults to False.
+        fc_out_channels (int): The output channel of roi features after
+            forwarding fully connection layers. Defaults to 1024.
+        conv_cfg (dict): Config dict for convolution layer. Defaults to None,
+            which means using conv2d.
+        norm_cfg (dict): Config dict for normalization layer. Defaults to None.
+        loss_cls (dict): The loss function. Defaults to
+            dict(type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+        init_cfg (dict): Configuration of initialization. Defaults to None.
     """
 
     def __init__(self,
@@ -96,6 +119,35 @@ class RoIEmbedHead(BaseModule):
     def custom_activation(self):
         return getattr(self.loss_cls, 'custom_activation', False)
 
+    def _forward(self, x, num_x_per_img):
+        """Forward the input `x`, and split the output to a list.
+
+        Args:
+            x (Tensor): of shape [N, C, H, W]. N is the number of proposals.
+            num_x_per_img (list[int]): The `x` contains proposals of
+                multi-images. `num_x_per_img` denotes the number of proposals
+                for each image.
+
+        Returns:
+            list[Tensor]: Each Tensor denotes the embed features belonging to
+            an image in a batch.
+        """
+        if self.num_convs > 0:
+            for conv in self.convs:
+                x = conv(x)
+
+        if self.num_fcs > 0:
+            if self.with_avg_pool:
+                x = self.avg_pool(x)
+            x = x.flatten(1)
+            for fc in self.fcs:
+                x = self.relu(fc(x))
+        else:
+            x = x.flatten(1)
+
+        x_split = torch.split(x, num_x_per_img, dim=0)
+        return x_split
+
     @auto_fp16(apply_to=('x', 'ref_x'))
     def forward(self, x, ref_x, num_x_per_img, num_x_per_ref_img):
         """Computing the similarity scores between `x` and `ref_x`.
@@ -116,32 +168,13 @@ class RoIEmbedHead(BaseModule):
             list[Tensor]: The predicted similarity_logits of each pair of key
             image and reference image.
         """
-        if self.num_convs > 0:
-            for conv in self.convs:
-                x = conv(x)
-                ref_x = conv(ref_x)
-
-        if self.num_fcs > 0:
-            if self.with_avg_pool:
-                x = self.avg_pool(x)
-                ref_x = self.avg_pool(ref_x)
-
-            x = x.flatten(1)
-            ref_x = ref_x.flatten(1)
-
-            for fc in self.fcs:
-                x = self.relu(fc(x))
-                ref_x = self.relu(fc(ref_x))
-        else:
-            x = x.flatten(1)
-            ref_x = ref_x.flatten(1)
-
-        x_split = torch.split(x, num_x_per_img, dim=0)
-        ref_x_split = torch.split(ref_x, num_x_per_ref_img, dim=0)
+        x_split = self._forward(x, num_x_per_img)
+        ref_x_split = self._forward(ref_x, num_x_per_ref_img)
 
         similarity_logits = []
         for one_x, one_ref_x in zip(x_split, ref_x_split):
-            similarity_logit = torch.mm(one_x, one_ref_x.T)
+            similarity_logit = embed_similarity(
+                one_x, one_ref_x, method='dot_product')
             dummy = similarity_logit.new_zeros(one_x.shape[0], 1)
             similarity_logit = torch.cat((dummy, similarity_logit), dim=1)
             similarity_logits.append(similarity_logit)
@@ -248,7 +281,7 @@ class RoIEmbedHead(BaseModule):
                     for key, value in acc_.items():
                         losses[key].append(value)
                 else:
-                    losses['match_acc'].append(
+                    losses['match_accuracy'].append(
                         accuracy(valid_similarity_logit,
                                  valid_track_id_target))
 
