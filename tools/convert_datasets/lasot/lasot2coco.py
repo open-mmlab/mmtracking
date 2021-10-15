@@ -21,27 +21,41 @@ def parse_args():
         '--output',
         help='directory to save coco formatted label file',
     )
+    parser.add_argument(
+        '--split',
+        help='the split set of lasot',
+        choices=['train', 'test', 'all'],
+        default='all')
     return parser.parse_args()
 
 
-def convert_lasot_test(lasot_test, ann_dir, save_dir):
+def convert_lasot(lasot, ann_dir, save_dir, split='test'):
     """Convert lasot dataset to COCO style.
 
     Args:
-        lasot_test (dict): The converted COCO style annotations.
-        ann_dir (str): The path of lasot test dataset
-        save_dir (str): The path to save `lasot_test`.
+        lasot (dict): The converted COCO style annotations.
+        ann_dir (str): The path of lasot dataset
+        save_dir (str): The path to save `lasot`.
+        split (str): the split ('train' or 'test') of dataset.
     """
+    assert split in ['train', 'test'], f'split [{split}] does not exist'
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
-    videos_list = osp.join(ann_dir, 'testing_set.txt')
-    videos_list = mmcv.list_from_file(videos_list)
-
-    lasot_test['categories'] = [dict(id=0, name=0)]
+    lasot['categories'] = [dict(id=0, name=0)]
+    videos_list = mmcv.list_from_file(
+        osp.join(osp.dirname(__file__), 'testing_set.txt'))
+    if split == 'train':
+        train_videos_list = []
+        for video_class in os.listdir(ann_dir):
+            for video_id in os.listdir(osp.join(ann_dir, video_class)):
+                if video_id not in videos_list:
+                    train_videos_list.append(video_id)
+        videos_list = train_videos_list
 
     for video_name in tqdm(videos_list):
-        video_path = osp.join(ann_dir, video_name)
+        video_class = video_name.split('-')[0]
+        video_path = osp.join(ann_dir, video_class, video_name)
         video = dict(id=records['vid_id'], name=video_name)
-        lasot_test['videos'].append(video)
+        lasot['videos'].append(video)
 
         gt_bboxes = mmcv.list_from_file(
             osp.join(video_path, 'groundtruth.txt'))
@@ -56,7 +70,7 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
         height, width, _ = img.shape
         for frame_id, gt_bbox in enumerate(gt_bboxes):
             file_name = '%08d' % (frame_id + 1) + '.jpg'
-            file_name = osp.join(video_name, 'img', file_name)
+            file_name = osp.join(video_class, video_name, 'img', file_name)
             image = dict(
                 file_name=file_name,
                 height=height,
@@ -64,7 +78,7 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
                 id=records['img_id'],
                 frame_id=frame_id,
                 video_id=records['vid_id'])
-            lasot_test['images'].append(image)
+            lasot['images'].append(image)
 
             x1, y1, w, h = gt_bbox.split(',')
             ann = dict(
@@ -77,7 +91,7 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
                 area=int(w) * int(h),
                 full_occlusion=full_occlusion[frame_id] == '1',
                 out_of_view=out_of_view[frame_id] == '1')
-            lasot_test['annotations'].append(ann)
+            lasot['annotations'].append(ann)
 
             records['ann_id'] += 1
             records['img_id'] += 1
@@ -86,8 +100,8 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(lasot_test, osp.join(save_dir, 'lasot_test.json'))
-    print('-----LaSOT Test Dataset------')
+    mmcv.dump(lasot, osp.join(save_dir, f'lasot_{split}.json'))
+    print(f'-----LaSOT {split} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
     print(f'{records["img_id"]- 1} images')
@@ -97,8 +111,13 @@ def convert_lasot_test(lasot_test, ann_dir, save_dir):
 
 def main():
     args = parse_args()
-    lasot_test = defaultdict(list)
-    convert_lasot_test(lasot_test, args.input, args.output)
+    if args.split == 'all':
+        convert_lasot(
+            defaultdict(list), args.input, args.output, split='train')
+        convert_lasot(defaultdict(list), args.input, args.output, split='test')
+    else:
+        convert_lasot(
+            defaultdict(list), args.input, args.output, split=args.split)
 
 
 if __name__ == '__main__':

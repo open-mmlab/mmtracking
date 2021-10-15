@@ -11,6 +11,7 @@
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
+  - [GOT10k](http://got-10k.aitestunion.com/)
 
 ### 1. 下载数据集
 
@@ -33,7 +34,7 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 
 - 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
 
-- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet 和 OTB100 数据集。
+- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 和 GOT10k 数据集。
 
 ```
 mmtracking
@@ -67,10 +68,13 @@ mmtracking
 │   │   ├── Lists
 |   │
 │   ├── lasot
-│   │   ├── LaSOTTesting
-│   │   │   ├── airplane-1
-│   │   │   ├── airplane-13
-|   │
+│   │   ├── LaSOTBenchmark
+│   │   │   ├── airplane
+|   │   │   │   ├── airplane-1
+|   │   │   │   ├── airplane-2
+|   │   │   │   ├── ......
+│   │   │   ├── ......
+│   │
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
 |   |   ├── test
@@ -80,18 +84,31 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
+│   │   │   │   ├── ......
 │   │   ├── anno
 │   │   │   ├── UAV123
 │   │
 │   ├── trackingnet
-│   │   ├── TEST
-│   │   │   ├── anno
-│   │   │   ├── zips
+│   │   ├── TEST.zip
+│   │   ├── TRAIN_0.zip
+│   │   ├── ......
+│   │   ├── TRAIN_11.zip
 │   │
 │   ├── otb100
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
+│   │   │   │── ......
+│   │
+│   ├── GOT10k
+│   │   │── full_data
+│   │   │   │── train_data
+│   │   │   │   ├── GOT-10k_Train_split_01.zip
+│   │   │   │   ├── ......
+│   │   │   │   ├── GOT-10k_Train_split_19.zip
+│   │   │   │   ├── list.txt
+│   │   │   │── test_data.zip
+│   │   │   │── val_data.zip
 ```
 
 ### 2. 转换标注格式
@@ -108,7 +125,7 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations --split {SPLIT}
 
 # MOT17
 # MOT Challenge中其余数据集的处理与MOT17相同
@@ -119,16 +136,22 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 
 # TrackingNet
-# 解压目录 'data/trackingnet/TEST/zips' 下的所有 '*.zip' 文件
-bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
-# 生成测试集标注
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
+# 解压目录 'data/trackingnet/' 下的所有 '*.zip' 文件
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
+# 生成标注
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations --split {SPLIT}
 
 # OTB100
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 生成标注
 python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
+
+# GOT10k
+# 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件
+bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
+# 生成标注
+python ./tools/convert_datasets/got10k/got2coco.py -i ./data/got10k -o ./data/got10k/annotations --split {SPLIT}
 ```
 
 完成以上格式转换后，文件目录结构如下：
@@ -166,11 +189,14 @@ mmtracking
 │   │   ├── annotations (the converted annotation files)
 |   │
 │   ├── lasot
-│   │   ├── LaSOTTesting
-│   │   │   ├── airplane-1
-│   │   │   ├── airplane-13
+│   │   ├── LaSOTBenchmark
+│   │   │   ├── airplane
+|   │   │   │   ├── airplane-1
+|   │   │   │   ├── airplane-2
+|   │   │   │   ├── ......
+│   │   │   ├── ......
 │   │   ├── annotations
-|   │
+│   │
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
 |   |   ├── test
@@ -184,6 +210,7 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
+│   │   │   │   ├── ......
 │   │   ├── anno (the official annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
@@ -192,19 +219,57 @@ mmtracking
 │   │   ├── TEST
 │   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
-│   │   │   ├── annotations (the converted annotation file)
 │   │   │   ├── frames (the unzipped folders)
 │   │   │   │   ├── 0-6LB4FqxoE_0
 │   │   │   │   ├── 07Ysk1C0ZX0_0
+│   │   │   │   ├── ......
+│   │   ├── TRAIN_0
+│   │   │   ├── anno (the official annotation files)
+│   │   │   ├── zips
+│   │   │   ├── frames (the unzipped folders)
+│   │   │   │   ├── -3TIfnTSM6c_2
+│   │   │   │   ├── a1qoB1eERn0_0
+│   │   │   │   ├── ......
+│   │   ├── ......
+│   │   ├── TRAIN_11
+│   │   ├── annotations (the converted annotation file)
 │   │
 │   ├── otb100
 │   │   ├── zips
 │   │   │   ├── Basketball.zip
 │   │   │   ├── Biker.zip
+│   │   │   │── ......
 │   │   ├── annotations
 │   │   ├── data
 │   │   │   ├── Basketball
 │   │   │   │   ├── img
+│   │   │   ├── ......
+│   │
+│   ├── got10k
+│   │   │── full_data
+│   │   │   │── train_data
+│   │   │   │   ├── GOT-10k_Train_split_01.zip
+│   │   │   │   ├── ......
+│   │   │   │   ├── GOT-10k_Train_split_19.zip
+│   │   │   │   ├── list.txt
+│   │   │   │── test_data.zip
+│   │   │   │── val_data.zip
+│   │   │── train
+│   │   │   ├── GOT-10k_Train_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Train_009335
+│   │   │   ├── list.txt
+│   │   │── test
+│   │   │   ├── GOT-10k_Test_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Test_000180
+│   │   │   ├── list.txt
+│   │   │── val
+│   │   │   ├── GOT-10k_Val_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Val_000180
+│   │   │   ├── list.txt
+│   │   │── annotations
 ```
 
 #### ILSVRC的标注文件夹
@@ -220,8 +285,9 @@ mmtracking
 
 #### lasot的标注文件夹
 
-在 `data/lasot/annotations` 中有1个 json 文件:
+在 `data/lasot/annotations` 中有2个 json 文件:
 
+`lasot_train.json`:  包含 LaSOT 训练集标注信息的 json 文件。
 `lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
 
 #### MOT15/MOT16/MOT17/MOT20的标注和reid文件夹
@@ -277,22 +343,33 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### UAV123的标注文件夹
 
-在 `data/UAV123/annotations` 中只有一个 json 文件:
+在 `data/UAV123/annotations` 中只有1个 json 文件:
 
 `uav123.json`: 包含 UAV123 数据集标注信息的 json 文件。
 
 #### TrackingNet的标注和视频帧文件夹
 
-在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。
+在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。`data/trackingnet/TRAIN_{*}/frames` 下具有类似的文件目录结构。
 
-在 `data/trackingnet/TEST/annotations` 中只有一个 json 文件：
+在 `data/trackingnet/annotations` 中有2个 json 文件：
 
+`trackingnet_train.json`： 包含 TrackingNet 训练集标注信息的 json 文件。
 `trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 json 文件。
 
-#### TrackingNet的标注和视频帧文件夹
+#### OTB100的标注和视频帧文件夹
 
 在 `data/otb100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
 
-在 `data/otb100/data/annotations` 中只有一个 json 文件：
+在 `data/otb100/data/annotations` 中只有1个 json 文件：
 
 `otb100.json`： 包含 OTB100 数据集标注信息的 json 文件
+
+#### GOT10k的标注和视频帧文件夹
+
+在 `data/got10k/train` 文件夹下有 GOT10k 训练集的视频目录， 每个视频目录下面包含该视频所有图片。`data/got10k/test` 和 `data/got10k/val` 下具有类似的文件目录结构。
+
+在 `data/got10k/annotations` 中有3个 json 文件：
+
+`got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
+`got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
+`got10k_val.json`： 包含 GOT10k 验证集标注信息的 json 文件。
