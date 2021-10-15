@@ -44,7 +44,7 @@ def test_roi_embed_head_loss():
     gt_losses = self.loss(similarity_scores, *track_targets)
     assert gt_losses['loss_match'] > 0, 'match loss should be non-zero'
     assert gt_losses[
-        'match_acc'] >= 0, 'match accuracy should be non-zero or zero'
+        'match_accuracy'] >= 0, 'match accuracy should be non-zero or zero'
 
 
 def _dummy_bbox_sampling(proposal_list, gt_bboxes, gt_labels):
