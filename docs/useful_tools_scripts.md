@@ -153,9 +153,7 @@ python tools/torchserve/mmtrack2torchserve.py ${CONFIG_FILE} ${CHECKPOINT_FILE} 
 --model-name ${MODEL_NAME}
 ```
 
-:::{note}
 ${MODEL_STORE} needs to be an absolute path to a folder.
-:::
 
 ### 2. Build `mmtrack-serve` docker image
 
