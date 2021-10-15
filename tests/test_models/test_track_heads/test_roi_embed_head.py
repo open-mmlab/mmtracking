@@ -3,10 +3,10 @@ import mmcv
 import torch
 from mmdet.core import build_assigner, build_sampler
 
-from mmtrack.models.track_heads import MaskTrackRCNNTrackHead
+from mmtrack.models.track_heads import RoIEmbedHead
 
 
-def test_masktrack_rcnn_track_head_loss():
+def test_roi_embed_head_loss():
     """Tests masktrack rcnn track head loss when truth is non-empty."""
     cfg = mmcv.Config(
         dict(
@@ -16,7 +16,7 @@ def test_masktrack_rcnn_track_head_loss():
             in_channels=16,
             fc_out_channels=32))
 
-    self = MaskTrackRCNNTrackHead(**cfg)
+    self = RoIEmbedHead(**cfg)
 
     x = torch.rand(2, 16, 7, 7)
     ref_x = torch.rand(2, 16, 7, 7)

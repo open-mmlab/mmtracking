@@ -7,16 +7,16 @@ from mmdet.models import HEADS, build_head, build_roi_extractor
 
 
 @HEADS.register_module()
-class MaskTrackRCNNTrackRoIHead(BaseModule, metaclass=ABCMeta):
-    """The track roi head of MaskTrack R-CNN.
+class RoITrackHead(BaseModule, metaclass=ABCMeta):
+    """The roi track head.
 
-    This module is proposed in `MaskTrack R-CNN
-    <https://arxiv.org/abs/1905.04804>`_.
+    This module is used in multi-object tracking methods, such as MaskTrack
+    R-CNN.
     """
 
     def __init__(self,
                  bbox_roi_extractor=None,
-                 track_head=None,
+                 embed_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
@@ -26,15 +26,15 @@ class MaskTrackRCNNTrackRoIHead(BaseModule, metaclass=ABCMeta):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
 
-        if track_head is not None:
-            self.init_track_head(bbox_roi_extractor, track_head)
+        if embed_head is not None:
+            self.init_embed_head(bbox_roi_extractor, embed_head)
 
         self.init_assigner_sampler()
 
-    def init_track_head(self, bbox_roi_extractor, track_head):
-        """Initialize ``track_head``"""
+    def init_embed_head(self, bbox_roi_extractor, embed_head):
+        """Initialize ``embed_head``"""
         self.bbox_roi_extractor = build_roi_extractor(bbox_roi_extractor)
-        self.track_head = build_head(track_head)
+        self.embed_head = build_head(embed_head)
 
     def init_assigner_sampler(self):
         """Initialize assigner and sampler."""
@@ -47,8 +47,8 @@ class MaskTrackRCNNTrackRoIHead(BaseModule, metaclass=ABCMeta):
 
     @property
     def with_track(self):
-        """bool: whether the mulit-object tracker has a track head"""
-        return hasattr(self, 'track_head') and self.track_head is not None
+        """bool: whether the mulit-object tracker has a embed head"""
+        return hasattr(self, 'embed_head') and self.embed_head is not None
 
     def forward_train(self,
                       x,
@@ -142,14 +142,14 @@ class MaskTrackRCNNTrackRoIHead(BaseModule, metaclass=ABCMeta):
             len(ref_gt_bbox) for ref_gt_bbox in ref_gt_bboxes
         ]
 
-        similarity_scores = self.track_head(bbox_feats, ref_bbox_feats,
+        similarity_logits = self.embed_head(bbox_feats, ref_bbox_feats,
                                             num_bbox_per_img,
                                             num_bbox_per_ref_img)
 
-        track_targets = self.track_head.get_targets(sampling_results,
+        track_targets = self.embed_head.get_targets(sampling_results,
                                                     gt_instance_ids,
                                                     ref_gt_instance_ids)
-        loss_track = self.track_head.loss(similarity_scores, *track_targets)
+        loss_track = self.embed_head.loss(similarity_logits, *track_targets)
         track_results = dict(loss_track=loss_track)
 
         return track_results

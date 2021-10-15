@@ -18,15 +18,15 @@ model = dict(
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_1x_coco/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth'  # noqa: E501
         )),
-    track_roi_head=dict(
-        type='MaskTrackRCNNTrackRoIHead',
+    track_head=dict(
+        type='RoITrackHead',
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
-        track_head=dict(
-            type='MaskTrackRCNNTrackHead',
+        embed_head=dict(
+            type='RoIEmbedHead',
             num_fcs=2,
             roi_feat_size=7,
             in_channels=256,

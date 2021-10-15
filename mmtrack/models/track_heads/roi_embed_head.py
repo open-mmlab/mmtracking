@@ -11,11 +11,11 @@ from torch.nn.modules.utils import _pair
 
 
 @HEADS.register_module()
-class MaskTrackRCNNTrackHead(BaseModule):
-    """The track head of MaskTrack R-CNN.
+class RoIEmbedHead(BaseModule):
+    """The roi embed head.
 
-    This module is proposed in `MaskTrack R-CNN
-    <https://arxiv.org/abs/1905.04804>`_.
+    This module is used in multi-object tracking methods, such as MaskTrack
+    R-CNN.
     """
 
     def __init__(self,
@@ -34,7 +34,7 @@ class MaskTrackRCNNTrackHead(BaseModule):
                      loss_weight=1.0),
                  init_cfg=None,
                  **kwargs):
-        super(MaskTrackRCNNTrackHead, self).__init__(init_cfg=init_cfg)
+        super(RoIEmbedHead, self).__init__(init_cfg=init_cfg)
         self.num_convs = num_convs
         self.num_fcs = num_fcs
         self.roi_feat_size = _pair(roi_feat_size)
@@ -113,7 +113,7 @@ class MaskTrackRCNNTrackHead(BaseModule):
                 proposals for each reference image.
 
         Returns:
-            list[Tensor]: The predicted similarity_score of each pair of key
+            list[Tensor]: The predicted similarity_logits of each pair of key
             image and reference image.
         """
         if self.num_convs > 0:
@@ -139,13 +139,13 @@ class MaskTrackRCNNTrackHead(BaseModule):
         x_split = torch.split(x, num_x_per_img, dim=0)
         ref_x_split = torch.split(ref_x, num_x_per_ref_img, dim=0)
 
-        similarity_scores = []
+        similarity_logits = []
         for one_x, one_ref_x in zip(x_split, ref_x_split):
-            similarity_score = torch.mm(one_x, one_ref_x.T)
-            dummy = similarity_score.new_zeros(one_x.shape[0], 1)
-            similarity_score = torch.cat((dummy, similarity_score), dim=1)
-            similarity_scores.append(similarity_score)
-        return similarity_scores
+            similarity_logit = torch.mm(one_x, one_ref_x.T)
+            dummy = similarity_logit.new_zeros(one_x.shape[0], 1)
+            similarity_logit = torch.cat((dummy, similarity_logit), dim=1)
+            similarity_logits.append(similarity_logit)
+        return similarity_logits
 
     def get_targets(self, sampling_results, gt_instance_ids,
                     ref_gt_instance_ids):
@@ -193,16 +193,16 @@ class MaskTrackRCNNTrackHead(BaseModule):
 
         return track_id_targets, track_id_weights
 
-    @force_fp32(apply_to=('similarity_scores', ))
+    @force_fp32(apply_to=('similarity_logits', ))
     def loss(self,
-             similarity_scores,
+             similarity_logits,
              track_id_targets,
              track_id_weights,
              reduction_override=None):
         """Calculate the loss in a batch.
 
         Args:
-            similarity_scores (list[Tensor]): The predicted similarity_score
+            similarity_logits (list[Tensor]): The predicted similarity_logits
                 of each pair of key image and reference image.
             track_id_targets (list[Tensor]): The instance ids of Gt_labels for
                 all proposals in a batch, each tensor in list has shape
@@ -216,17 +216,19 @@ class MaskTrackRCNNTrackHead(BaseModule):
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        assert isinstance(similarity_scores, list)
+        assert isinstance(similarity_logits, list)
         assert isinstance(track_id_targets, list)
         assert isinstance(track_id_weights, list)
+        assert len(similarity_logits) == len(track_id_targets)
+        assert len(track_id_weights) == len(track_id_targets)
         losses = defaultdict(list)
 
-        for similarity_score, track_id_target, track_id_weight in zip(
-                similarity_scores, track_id_targets, track_id_weights):
+        for similarity_logit, track_id_target, track_id_weight in zip(
+                similarity_logits, track_id_targets, track_id_weights):
             avg_factor = max(torch.sum(track_id_target > 0).float().item(), 1.)
-            if similarity_score.numel() > 0:
+            if similarity_logit.numel() > 0:
                 loss_cls_ = self.loss_cls(
-                    similarity_score,
+                    similarity_logit,
                     track_id_target,
                     track_id_weight,
                     avg_factor=avg_factor,
@@ -238,18 +240,18 @@ class MaskTrackRCNNTrackHead(BaseModule):
                     losses['loss_match'].append(loss_cls_)
 
                 valid_index = track_id_weight > 0
-                valid_similarity_score = similarity_score[valid_index]
+                valid_similarity_logit = similarity_logit[valid_index]
                 valid_track_id_target = track_id_target[valid_index]
                 if self.custom_activation:
-                    acc_ = self.loss_cls.get_accuracy(valid_similarity_score,
+                    acc_ = self.loss_cls.get_accuracy(valid_similarity_logit,
                                                       valid_track_id_target)
                     for key, value in acc_.items():
                         losses[key].append(value)
                 else:
                     losses['match_acc'].append(
-                        accuracy(valid_similarity_score,
+                        accuracy(valid_similarity_logit,
                                  valid_track_id_target))
 
         for key, value in losses.items():
-            losses[key] = sum(losses[key]) / len(similarity_scores)
+            losses[key] = sum(losses[key]) / len(similarity_logits)
         return losses
