@@ -36,7 +36,7 @@ class RoIEmbedHead(BaseModule):
         conv_cfg (dict): Config dict for convolution layer. Defaults to None,
             which means using conv2d.
         norm_cfg (dict): Config dict for normalization layer. Defaults to None.
-        loss_cls (dict): The loss function. Defaults to
+        loss_match (dict): The loss function. Defaults to
             dict(type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
         init_cfg (dict): Configuration of initialization. Defaults to None.
     """
@@ -51,7 +51,7 @@ class RoIEmbedHead(BaseModule):
                  fc_out_channels=1024,
                  conv_cfg=None,
                  norm_cfg=None,
-                 loss_cls=dict(
+                 loss_match=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=False,
                      loss_weight=1.0),
@@ -68,7 +68,7 @@ class RoIEmbedHead(BaseModule):
         self.fc_out_channels = fc_out_channels
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-        self.loss_cls = build_loss(loss_cls)
+        self.loss_match = build_loss(loss_match)
         self.fp16_enabled = False
 
         if self.with_avg_pool:
@@ -117,7 +117,7 @@ class RoIEmbedHead(BaseModule):
 
     @property
     def custom_activation(self):
-        return getattr(self.loss_cls, 'custom_activation', False)
+        return getattr(self.loss_match, 'custom_activation', False)
 
     def _forward(self, x, num_x_per_img):
         """Forward the input `x`, and split the output to a list.
@@ -260,25 +260,25 @@ class RoIEmbedHead(BaseModule):
                 similarity_logits, track_id_targets, track_id_weights):
             avg_factor = max(torch.sum(track_id_target > 0).float().item(), 1.)
             if similarity_logit.numel() > 0:
-                loss_cls_ = self.loss_cls(
+                loss_match = self.loss_match(
                     similarity_logit,
                     track_id_target,
                     track_id_weight,
                     avg_factor=avg_factor,
                     reduction_override=reduction_override)
-                if isinstance(loss_cls_, dict):
-                    for key, value in loss_cls_.items():
+                if isinstance(loss_match, dict):
+                    for key, value in loss_match.items():
                         losses[key].append(value)
                 else:
-                    losses['loss_match'].append(loss_cls_)
+                    losses['loss_match'].append(loss_match)
 
                 valid_index = track_id_weight > 0
                 valid_similarity_logit = similarity_logit[valid_index]
                 valid_track_id_target = track_id_target[valid_index]
                 if self.custom_activation:
-                    acc_ = self.loss_cls.get_accuracy(valid_similarity_logit,
-                                                      valid_track_id_target)
-                    for key, value in acc_.items():
+                    match_accuracy = self.loss_match.get_accuracy(
+                        valid_similarity_logit, valid_track_id_target)
+                    for key, value in match_accuracy.items():
                         losses[key].append(value)
                 else:
                     losses['match_accuracy'].append(

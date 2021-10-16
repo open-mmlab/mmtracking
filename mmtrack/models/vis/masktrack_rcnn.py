@@ -11,6 +11,12 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
 
     This video instance segmentor is the implementation of`MaskTrack R-CNN
     <https://arxiv.org/abs/1905.04804>`_.
+
+    Args:
+        detector (dict): Configuration of detector. Defaults to None.
+        track_head (dict): Configuration of track head. Defaults to None.
+        tracker (dict): Configuration of tracker. Defaults to None.
+        init_cfg (dict): Configuration of initialization. Defaults to None.
     """
 
     def __init__(self,
@@ -118,27 +124,27 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         if self.detector.with_rpn:
             proposal_cfg = self.detector.train_cfg.get(
                 'rpn_proposal', self.detector.test_cfg.rpn)
-            rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
+            losses_rpn, proposal_list = self.detector.rpn_head.forward_train(
                 x,
                 img_metas,
                 gt_bboxes,
                 gt_labels=None,
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg)
-            losses.update(rpn_losses)
+            losses.update(losses_rpn)
         else:
             proposal_list = proposals
 
-        roi_losses = self.detector.roi_head.forward_train(
+        losses_detect = self.detector.roi_head.forward_train(
             x, img_metas, proposal_list, gt_bboxes, gt_labels,
             gt_bboxes_ignore, gt_masks, **kwargs)
-        losses.update(roi_losses)
+        losses.update(losses_detect)
 
-        track_losses = self.track_head.forward_train(
+        losses_track = self.track_head.forward_train(
             x, ref_x, img_metas, proposal_list, gt_bboxes, ref_gt_bboxes,
             gt_labels, gt_instance_ids, ref_gt_instance_ids, gt_bboxes_ignore,
             **kwargs)
-        losses.update(track_losses)
+        losses.update(losses_track)
 
         return losses
 

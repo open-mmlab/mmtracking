@@ -24,6 +24,7 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
     def __init__(self,
                  roi_extractor=None,
                  embed_head=None,
+                 regress_head=None,
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
@@ -35,6 +36,9 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
 
         if embed_head is not None:
             self.init_embed_head(roi_extractor, embed_head)
+
+        if regress_head is not None:
+            raise NotImplementedError('Regression head is not supported yet.')
 
         self.init_assigner_sampler()
 
@@ -56,6 +60,14 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
     def with_track(self):
         """bool: whether the mulit-object tracker has a embed head"""
         return hasattr(self, 'embed_head') and self.embed_head is not None
+
+    def extract_roi_feats(self, x, bboxes):
+        """Extract roi features."""
+        rois = bbox2roi(bboxes)
+        bbox_feats = self.roi_extractor(x[:self.roi_extractor.num_inputs],
+                                        rois)
+        num_bbox_per_img = [len(bbox) for bbox in bboxes]
+        return bbox_feats, num_bbox_per_img
 
     def forward_train(self,
                       x,
@@ -137,17 +149,10 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
                              gt_instance_ids, ref_gt_instance_ids, **kwargs):
         """Run forward function and calculate loss for track head in
         training."""
-        rois = bbox2roi([res.bboxes for res in sampling_results])
-        bbox_feats = self.roi_extractor(x[:self.roi_extractor.num_inputs],
-                                        rois)
-        ref_rois = bbox2roi(ref_gt_bboxes)
-        ref_bbox_feats = self.roi_extractor(
-            ref_x[:self.roi_extractor.num_inputs], ref_rois)
-
-        num_bbox_per_img = [len(res.bboxes) for res in sampling_results]
-        num_bbox_per_ref_img = [
-            len(ref_gt_bbox) for ref_gt_bbox in ref_gt_bboxes
-        ]
+        bboxes = [res.bboxes for res in sampling_results]
+        bbox_feats, num_bbox_per_img = self.extract_roi_feats(x, bboxes)
+        ref_bbox_feats, num_bbox_per_ref_img = self.extract_roi_feats(
+            ref_x, ref_gt_bboxes)
 
         similarity_logits = self.embed_head(bbox_feats, ref_bbox_feats,
                                             num_bbox_per_img,
