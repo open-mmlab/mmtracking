@@ -48,18 +48,19 @@ def convert_trackingnet(trackingnet, ann_dir, save_dir, split='test'):
     trackingnet['categories'] = [dict(id=0, name=0)]
 
     for chunk in chunks:
-        ann_dir = osp.join(ann_dir, chunk)
+        chunk_ann_dir = osp.join(ann_dir, chunk)
         assert osp.isdir(
-            ann_dir), f'annotation directory {ann_dir} does not exist'
+            chunk_ann_dir
+        ), f'annotation directory {chunk_ann_dir} does not exist'
 
-        videos_list = os.listdir(osp.join(ann_dir, 'frames'))
-        for video_name in tqdm(videos_list):
+        videos_list = os.listdir(osp.join(chunk_ann_dir, 'frames'))
+        for video_name in tqdm(videos_list, desc=f'[{chunk}]'):
             video = dict(id=records['vid_id'], name=video_name)
             trackingnet['videos'].append(video)
 
-            ann_file = osp.join(ann_dir, 'anno', video_name + '.txt')
+            ann_file = osp.join(chunk_ann_dir, 'anno', video_name + '.txt')
             gt_bboxes = mmcv.list_from_file(ann_file)
-            video_path = osp.join(ann_dir, 'frames', video_name)
+            video_path = osp.join(chunk_ann_dir, 'frames', video_name)
             img_names = os.listdir(video_path)
             img_names = sorted(img_names, key=lambda x: int(x[:-4]))
             img = mmcv.imread(osp.join(video_path, '0.jpg'))
@@ -78,18 +79,24 @@ def convert_trackingnet(trackingnet, ann_dir, save_dir, split='test'):
                     video_id=records['vid_id'])
                 trackingnet['images'].append(image)
 
-                if frame_id == 0:
-                    x1, y1, w, h = gt_bboxes[0].split(',')
+                if split == 'test':
+                    if frame_id == 0:
+                        bbox = list(
+                            map(lambda x: int(float(x)),
+                                gt_bboxes[0].split(',')))
+                    else:
+                        bbox = [0, 0, 0, 0]
                 else:
-                    x1, y1, w, h = 0, 0, 0, 0
+                    bbox = list(
+                        map(lambda x: int(float(x)),
+                            gt_bboxes[frame_id].split(',')))
                 ann = dict(
                     id=records['ann_id'],
                     image_id=records['img_id'],
                     instance_id=records['global_instance_id'],
                     category_id=0,
-                    bbox=[int(x1), int(y1), int(w),
-                          int(h)],
-                    area=int(w) * int(h))
+                    bbox=bbox,
+                    area=bbox[2] * bbox[3])
                 trackingnet['annotations'].append(ann)
 
                 records['ann_id'] += 1
