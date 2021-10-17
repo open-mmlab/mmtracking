@@ -13,11 +13,9 @@ from .utils import _demo_mm_inputs, _get_config_module
 def test_vid_dff_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
-    model.pretrains = None
-    model.detector.pretrained = None
 
     from mmtrack.models import build_model
-    detector = build_model(model)
+    vid = build_model(model)
 
     # Test forward train with a non-empty truth batch
     input_shape = (1, 3, 256, 256)
@@ -38,7 +36,7 @@ def test_vid_dff_style_forward(cfg_file):
     ref_gt_labels = ref_mm_inputs['gt_labels']
     ref_gt_masks = ref_mm_inputs['gt_masks']
 
-    losses = detector.forward(
+    losses = vid.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -51,7 +49,7 @@ def test_vid_dff_style_forward(cfg_file):
         ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
+    loss, _ = vid._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
@@ -74,7 +72,7 @@ def test_vid_dff_style_forward(cfg_file):
     ref_gt_labels = ref_mm_inputs['gt_labels']
     ref_gt_masks = ref_mm_inputs['gt_masks']
 
-    losses = detector.forward(
+    losses = vid.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -87,7 +85,7 @@ def test_vid_dff_style_forward(cfg_file):
         ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
+    loss, _ = vid._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
@@ -101,8 +99,7 @@ def test_vid_dff_style_forward(cfg_file):
             img_metas[i]['frame_id'] = i
         results = defaultdict(list)
         for one_img, one_meta in zip(img_list, img_metas):
-            result = detector.forward([one_img], [[one_meta]],
-                                      return_loss=False)
+            result = vid.forward([one_img], [[one_meta]], return_loss=False)
             for k, v in result.items():
                 results[k].append(v)
 
@@ -116,11 +113,9 @@ def test_vid_dff_style_forward(cfg_file):
 def test_vid_fgfa_style_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
-    model.pretrains = None
-    model.detector.pretrained = None
 
     from mmtrack.models import build_model
-    detector = build_model(model)
+    vid = build_model(model)
 
     # Test forward train with a non-empty truth batch
     input_shape = (1, 3, 256, 256)
@@ -142,7 +137,7 @@ def test_vid_fgfa_style_forward(cfg_file):
     ref_gt_labels = ref_mm_inputs['gt_labels']
     ref_gt_masks = ref_mm_inputs['gt_masks']
 
-    losses = detector.forward(
+    losses = vid.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -155,7 +150,7 @@ def test_vid_fgfa_style_forward(cfg_file):
         ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
+    loss, _ = vid._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
@@ -178,7 +173,7 @@ def test_vid_fgfa_style_forward(cfg_file):
     ref_gt_labels = ref_mm_inputs['gt_labels']
     ref_gt_masks = ref_mm_inputs['gt_masks']
 
-    losses = detector.forward(
+    losses = vid.forward(
         img=imgs,
         img_metas=img_metas,
         gt_bboxes=gt_bboxes,
@@ -191,7 +186,7 @@ def test_vid_fgfa_style_forward(cfg_file):
         ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    loss, _ = detector._parse_losses(losses)
+    loss, _ = vid._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
@@ -213,9 +208,9 @@ def test_vid_fgfa_style_forward(cfg_file):
         results = defaultdict(list)
         for one_img, one_meta, ref_img, ref_img_meta in zip(
                 img_list, img_metas, ref_imgs, ref_img_metas):
-            result = detector.forward([one_img], [[one_meta]],
-                                      ref_img=[ref_img],
-                                      ref_img_metas=[[ref_img_meta]],
-                                      return_loss=False)
+            result = vid.forward([one_img], [[one_meta]],
+                                 ref_img=[ref_img],
+                                 ref_img_metas=[[ref_img_meta]],
+                                 return_loss=False)
             for k, v in result.items():
                 results[k].append(v)

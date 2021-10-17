@@ -8,34 +8,14 @@ def test_embed_similarity():
     ref_embeds = torch.randn(10, 256)
 
     sims = embed_similarity(
-        key_embeds,
-        ref_embeds,
-        method='dot_product',
-        temperature=-1,
-        transpose=True)
+        key_embeds, ref_embeds, method='dot_product', temperature=-1)
     assert sims.size() == (20, 10)
 
     sims = embed_similarity(
-        key_embeds,
-        ref_embeds.t(),
-        method='dot_product',
-        temperature=-1,
-        transpose=False)
+        key_embeds, ref_embeds, method='dot_product', temperature=0.07)
     assert sims.size() == (20, 10)
 
     sims = embed_similarity(
-        key_embeds,
-        ref_embeds,
-        method='dot_product',
-        temperature=0.07,
-        transpose=True)
-    assert sims.size() == (20, 10)
-
-    sims = embed_similarity(
-        key_embeds,
-        ref_embeds,
-        method='cosine',
-        temperature=-1,
-        transpose=True)
+        key_embeds, ref_embeds, method='cosine', temperature=-1)
     assert sims.size() == (20, 10)
     assert sims.max() <= 1

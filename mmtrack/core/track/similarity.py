@@ -6,19 +6,16 @@ import torch.nn.functional as F
 def embed_similarity(key_embeds,
                      ref_embeds,
                      method='dot_product',
-                     temperature=-1,
-                     transpose=True):
+                     temperature=-1):
     """Calculate feature similarity from embeddings.
 
     Args:
         key_embeds (Tensor): Shape (N1, C).
-        ref_embeds (Tensor): Shape (N2, C) or (C, N2).
+        ref_embeds (Tensor): Shape (N2, C).
         method (str, optional): Method to calculate the similarity,
             options are 'dot_product' and 'cosine'. Defaults to
             'dot_product'.
         temperature (int, optional): Softmax temperature. Defaults to -1.
-        transpose (bool, optional): Whether transpose `ref_embeds`.
-            Defaults to True.
 
     Returns:
         Tensor: Similarity matrix of shape (N1, N2).
@@ -32,15 +29,9 @@ def embed_similarity(key_embeds,
     if method == 'cosine':
         key_embeds = F.normalize(key_embeds, p=2, dim=1)
         ref_embeds = F.normalize(ref_embeds, p=2, dim=1)
-    elif method == 'dot_product':
-        if temperature > 0:
-            sims = embed_similarity(
-                key_embeds, ref_embeds, method='cosine', transpose=transpose)
-            sims /= temperature
-            return sims
-    else:
-        raise NotImplementedError()
 
-    if transpose:
-        ref_embeds = ref_embeds.t()
-    return torch.mm(key_embeds, ref_embeds)
+    similarity = torch.mm(key_embeds, ref_embeds.T)
+
+    if temperature > 0:
+        similarity /= float(temperature)
+    return similarity
