@@ -3,9 +3,13 @@ import os
 
 import cv2
 import torch
-from ts.torch_handler.base_handler import BaseHandler
 
 from mmtrack.apis import inference_vid, init_model
+
+try:
+    from ts.torch_handler.base_handler import BaseHandler
+except ImportError:
+    raise ImportError('Please pip install torchserve')
 
 
 class MMtrackHandler(BaseHandler):
