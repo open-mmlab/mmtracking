@@ -1,6 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import torch
 from mmdet.models import build_detector, build_head
 
+from mmtrack.core import restore_result_with_segm, track2result_with_segm
 from mmtrack.models.mot import BaseMultiObjectTracker
 from ..builder import MODELS, build_tracker
 
@@ -148,7 +150,65 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
 
         return losses
 
-    # TODO: Support simple_test
-    def simple_test(self, img, img_metas, **kwargs):
-        """Test function with a single scale."""
-        pass
+    def simple_test(self, img, img_metas, rescale=False, **kwargs):
+        """Test without augmentations.
+
+        Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            rescale (bool, optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to False.
+            public_bboxes (list[Tensor], optional): Public bounding boxes from
+                the benchmark. Defaults to None.
+
+        Returns:
+            dict[str : list(ndarray)]: The tracking results.
+        """
+        frame_id = img_metas[0].get('frame_id', -1)
+        if frame_id == 0:
+            self.tracker.reset()
+
+        x = self.detector.extract_feat(img)
+
+        proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+
+        det_results = self.detector.roi_head.simple_test(
+            x, proposal_list, img_metas, rescale=rescale)
+        assert len(det_results) == 1, 'Batch inference is not supported.'
+        assert len(det_results[0]) == 2, 'There are no mask results.'
+        bbox_results = det_results[0][0]
+        segm_results = det_results[0][1]
+        num_classes = self.detector.roi_head.bbox_head.num_classes
+        assert len(bbox_results) == num_classes
+
+        det_bboxes, det_labels, det_masks = restore_result_with_segm(
+            bbox_results,
+            segm_results,
+            img_height=img_metas[0]['ori_shape'][0],
+            img_width=img_metas[0]['ori_shape'][1],
+            return_ids=False)
+        det_bboxes = torch.tensor(det_bboxes).to(img)
+        det_labels = torch.tensor(det_labels).to(img).long()
+        det_masks = torch.tensor(det_masks).to(img).bool()
+
+        bboxes, labels, masks, ids = self.tracker.track(
+            img=img,
+            img_metas=img_metas,
+            model=self,
+            feats=x,
+            bboxes=det_bboxes,
+            labels=det_labels,
+            masks=det_masks,
+            frame_id=frame_id,
+            rescale=rescale,
+            **kwargs)
+
+        track_bbox_results, track_segm_results = track2result_with_segm(
+            bboxes, labels, masks, ids, num_classes)
+        return dict(
+            track_bbox_results=track_bbox_results,
+            track_segm_results=track_segm_results)

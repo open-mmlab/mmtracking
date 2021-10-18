@@ -165,3 +165,8 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
         track_results = dict(loss_track=loss_track)
 
         return track_results
+
+    def simple_test(self, roi_feats, prev_roi_feats):
+        """Test without augmentations."""
+        return self.embed_head(roi_feats, prev_roi_feats, [roi_feats.shape[0]],
+                               [prev_roi_feats.shape[0]])[0]

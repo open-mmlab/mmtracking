@@ -77,6 +77,17 @@ def track2result(bboxes, labels, ids, num_classes):
         ]
 
 
+def track2result_with_segm(bboxes, labels, masks, ids, num_classes):
+    track_bbox_results = track2result(bboxes, labels, ids, num_classes)
+
+    valid_inds = ids > -1
+    masks = masks[valid_inds]
+    track_segm_results = [[] for _ in range(num_classes)]
+    for i in range(bboxes.shape[0]):
+        track_segm_results[labels[i]].append(masks[i].detach().cpu().numpy())
+    return track_bbox_results, track_segm_results
+
+
 def restore_result(result, return_ids=False):
     """Restore the results (list of results of each category) into the results
     of the model forward.
@@ -100,3 +111,22 @@ def restore_result(result, return_ids=False):
         return bboxes, labels, ids
     else:
         return bboxes, labels
+
+
+def restore_result_with_segm(bbox_result,
+                             segm_result,
+                             img_height,
+                             img_width,
+                             return_ids=False):
+    segm_result = mmcv.concat_list(segm_result)
+    if len(segm_result) == 0:
+        masks = np.zeros((0, img_height, img_width)).astype(bool)
+    else:
+        masks = np.stack(segm_result, axis=0)
+
+    if return_ids:
+        bboxes, labels, ids = restore_result(bbox_result, return_ids=True)
+        return bboxes, labels, masks, ids
+    else:
+        bboxes, labels = restore_result(bbox_result, return_ids=False)
+        return bboxes, labels, masks
