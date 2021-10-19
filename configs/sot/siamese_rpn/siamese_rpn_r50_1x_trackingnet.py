@@ -5,6 +5,5 @@ data_root = 'data/'
 data = dict(
     test=dict(
         type='TrackingNetDataset',
-        ann_file=data_root +
-        'trackingnet/TEST/annotations/trackingnet_test.json',
+        ann_file=data_root + 'trackingnet/annotations/trackingnet_test.json',
         img_prefix=data_root + 'trackingnet/TEST/frames'))

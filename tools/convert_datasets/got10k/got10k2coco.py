@@ -29,7 +29,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_got10k(got10k, ann_dir, save_dir, split='test'):
+def convert_got10k(ann_dir, save_dir, split='all'):
     """Convert got10k dataset to COCO style.
 
     Args:
@@ -89,10 +89,9 @@ def convert_got10k(got10k, ann_dir, save_dir, split='test'):
 
             if split == 'test':
                 if frame_id == 0:
-                    bbox = list(
-                        map(lambda x: int(float(x)), gt_bboxes[0].split(',')))
+                    bbox = list(map(float, gt_bboxes[0].split(',')))
                 else:
-                    bbox = [0, 0, 0, 0]
+                    bbox = [0., 0., 0., 0.]
                 ann.update(dict(bbox=bbox, area=bbox[2] * bbox[3]))
             else:
                 bbox = list(

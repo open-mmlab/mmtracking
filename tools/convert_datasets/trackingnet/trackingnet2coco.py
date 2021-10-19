@@ -22,7 +22,7 @@ def parse_args():
     )
     parser.add_argument(
         '--split',
-        help='the split set of trackingnet',
+        help="the split set of trackingnet,'all' denotes the whole dataset",
         choices=['train', 'test', 'all'],
         default='all')
     return parser.parse_args()
@@ -81,15 +81,11 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
 
                 if split == 'test':
                     if frame_id == 0:
-                        bbox = list(
-                            map(lambda x: int(float(x)),
-                                gt_bboxes[0].split(',')))
+                        bbox = list(map(int, gt_bboxes[0].split(',')))
                     else:
                         bbox = [0, 0, 0, 0]
                 else:
-                    bbox = list(
-                        map(lambda x: int(float(x)),
-                            gt_bboxes[frame_id].split(',')))
+                    bbox = list(map(float, gt_bboxes[frame_id].split(',')))
                 ann = dict(
                     id=records['ann_id'],
                     image_id=records['img_id'],
