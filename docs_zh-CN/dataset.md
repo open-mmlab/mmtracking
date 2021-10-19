@@ -125,7 +125,7 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations --split {SPLIT}
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # MOT17
 # MOT Challenge中其余数据集的处理与MOT17相同
@@ -139,7 +139,7 @@ python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/U
 # 解压目录 'data/trackingnet/' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # 生成标注
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations --split {SPLIT}
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
@@ -151,12 +151,12 @@ python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./da
 # 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # 生成标注
-python ./tools/convert_datasets/got10k/got2coco.py -i ./data/got10k -o ./data/got10k/annotations --split {SPLIT}
-```
+python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 
 完成以上格式转换后，文件目录结构如下：
 
 ```
+
 mmtracking
 ├── mmtrack
 ├── tools
@@ -270,7 +270,9 @@ mmtracking
 │   │   │   ├── GOT-10k_Val_000180
 │   │   │   ├── list.txt
 │   │   │── annotations
+
 ```
+
 
 #### ILSVRC的标注文件夹
 
@@ -309,19 +311,21 @@ mmtracking
 `data/MOT17/reid` 的目录结构如下:
 
 ```
+
 reid
 ├── imgs
 │   ├── MOT17-02-FRCNN_000002
 │   │   ├── 000000.jpg
 │   │   ├── 000001.jpg
-│   │   ├── ...
+│   │   ├── ......
 │   ├── MOT17-02-FRCNN_000003
 │   │   ├── 000000.jpg
 │   │   ├── 000001.jpg
-│   │   ├── ...
+│   │   ├── ......
 ├── meta
 │   ├── train_80.txt
 │   ├── val_20.txt
+
 ```
 
 `train_80.txt` 中的 `80` 意味着将全部 ReID 数据集的80%作为训练集，剩余的20%作为验证集。
@@ -329,10 +333,12 @@ reid
 训练集标注 `train_80.txt` 中每一行包含一个文件名和其对应的图片物体真实标签。格式如下：
 
 ```
+
 MOT17-05-FRCNN_000110/000018.jpg 0
 MOT17-13-FRCNN_000146/000014.jpg 1
 MOT17-05-FRCNN_000088/000004.jpg 2
 MOT17-02-FRCNN_000009/000081.jpg 3
+
 ```
 
 `MOT17-05-FRCNN_000110` 表示 `MOT17-05-FRCNN` 视频中的第110个人。

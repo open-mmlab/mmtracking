@@ -23,7 +23,7 @@ def parse_args():
     )
     parser.add_argument(
         '--split',
-        help='the split set of GOT10k',
+        help="the split set of GOT10k, 'all' denotes the whole dataset",
         choices=['train', 'test', 'val', 'all'],
         default='all')
     return parser.parse_args()
@@ -33,12 +33,12 @@ def convert_got10k(got10k, ann_dir, save_dir, split='test'):
     """Convert got10k dataset to COCO style.
 
     Args:
-        got10k (dict): The converted COCO style annotations.
         ann_dir (str): The path of got10k dataset
         save_dir (str): The path to save `got10k`.
         split (str): the split ('train'， 'val' or 'test') of dataset.
     """
     assert split in ['train', 'test', 'val'], f'split [{split}] does not exist'
+    got10k = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     got10k['categories'] = [dict(id=0, name=0)]
 
@@ -58,9 +58,14 @@ def convert_got10k(got10k, ann_dir, save_dir, split='test'):
         if split in ['train', 'val']:
             absence_label = mmcv.list_from_file(
                 osp.join(video_path, 'absence.label'))
-            # cover_label in range [1,8]
+            # cover_label denotes the ranges of object visible ratios, ant it's
+            # in range [0,8] which correspond to ranges of object visible
+            # ratios: 0%, (0%, 15%], (15%~30%], (30%, 45%], (45%, 60%],
+            # (60%, 75%], (75%, 90%], (90%, 100%) and 100% respectively
             cover_label = mmcv.list_from_file(
                 osp.join(video_path, 'cover.label'))
+            # cut_by_image_label denotes whether the object is cut by the image
+            # boundary.
             cut_by_image_label = mmcv.list_from_file(
                 osp.join(video_path, 'cut_by_image.label'))
         for frame_id, img_file in enumerate(img_files):
@@ -122,14 +127,10 @@ def convert_got10k(got10k, ann_dir, save_dir, split='test'):
 def main():
     args = parse_args()
     if args.split == 'all':
-        convert_got10k(
-            defaultdict(list), args.input, args.output, split='train')
-        convert_got10k(defaultdict(list), args.input, args.output, split='val')
-        convert_got10k(
-            defaultdict(list), args.input, args.output, split='test')
+        for split in ['train', 'val', 'test']:
+            convert_got10k(args.input, args.output, split=split)
     else:
-        convert_got10k(
-            defaultdict(list), args.input, args.output, split=args.split)
+        convert_got10k(args.input, args.output, split=args.split)
 
 
 if __name__ == '__main__':

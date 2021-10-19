@@ -23,22 +23,22 @@ def parse_args():
     )
     parser.add_argument(
         '--split',
-        help='the split set of lasot',
+        help='the split set of lasot, all denotes the whole dataset',
         choices=['train', 'test', 'all'],
         default='all')
     return parser.parse_args()
 
 
-def convert_lasot(lasot, ann_dir, save_dir, split='test'):
+def convert_lasot(ann_dir, save_dir, split='all'):
     """Convert lasot dataset to COCO style.
 
     Args:
-        lasot (dict): The converted COCO style annotations.
         ann_dir (str): The path of lasot dataset
         save_dir (str): The path to save `lasot`.
         split (str): the split ('train' or 'test') of dataset.
     """
     assert split in ['train', 'test'], f'split [{split}] does not exist'
+    lasot = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     lasot['categories'] = [dict(id=0, name=0)]
     videos_list = mmcv.list_from_file(
@@ -112,12 +112,10 @@ def convert_lasot(lasot, ann_dir, save_dir, split='test'):
 def main():
     args = parse_args()
     if args.split == 'all':
-        convert_lasot(
-            defaultdict(list), args.input, args.output, split='train')
-        convert_lasot(defaultdict(list), args.input, args.output, split='test')
+        for split in ['train', 'test']:
+            convert_lasot(args.input, args.output, split=split)
     else:
-        convert_lasot(
-            defaultdict(list), args.input, args.output, split=args.split)
+        convert_lasot(args.input, args.output, split=args.split)
 
 
 if __name__ == '__main__':

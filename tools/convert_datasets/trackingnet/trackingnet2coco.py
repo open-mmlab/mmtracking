@@ -28,11 +28,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_trackingnet(trackingnet, ann_dir, save_dir, split='test'):
+def convert_trackingnet(ann_dir, save_dir, split='test'):
     """Convert trackingnet dataset to COCO style.
 
     Args:
-        trackingnet (dict): The converted COCO style annotations.
         ann_dir (str): The path of trackingnet test dataset
         save_dir (str): The path to save `trackingnet`.
         split (str): the split ('train' or 'test') of dataset.
@@ -44,6 +43,7 @@ def convert_trackingnet(trackingnet, ann_dir, save_dir, split='test'):
     else:
         NotImplementedError
 
+    trackingnet = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     trackingnet['categories'] = [dict(id=0, name=0)]
 
@@ -118,13 +118,10 @@ def convert_trackingnet(trackingnet, ann_dir, save_dir, split='test'):
 def main():
     args = parse_args()
     if args.split == 'all':
-        convert_trackingnet(
-            defaultdict(list), args.input, args.output, split='test')
-        convert_trackingnet(
-            defaultdict(list), args.input, args.output, split='train')
+        for split in ['train', 'test']:
+            convert_trackingnet(args.input, args.output, split=split)
     else:
-        convert_trackingnet(
-            defaultdict(list), args.input, args.output, split=args.split)
+        convert_trackingnet(args.input, args.output, split=args.split)
 
 
 if __name__ == '__main__':

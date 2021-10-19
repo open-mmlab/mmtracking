@@ -100,7 +100,7 @@ mmtracking
 │   │   │   │── Biker.zip
 │   │   │   │── ......
 │   │
-│   ├── GOT10k
+│   ├── got10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -124,7 +124,7 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations --split {SPLIT}
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # MOT17
 # The processing of other MOT Challenge dataset is the same as MOT17
@@ -138,7 +138,7 @@ python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/U
 # unzip files in 'data/trackingnet/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # generate annotations
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations --split {SPLIT}
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
 # unzip files in 'data/otb100/zips/*.zip'
@@ -150,7 +150,7 @@ python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./da
 # unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # generate annotations
-python ./tools/convert_datasets/got10k/got2coco.py -i ./data/got10k -o ./data/got10k/annotations --split {SPLIT}
+python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 ```
 
 The folder structure will be as following after your run these scripts:
