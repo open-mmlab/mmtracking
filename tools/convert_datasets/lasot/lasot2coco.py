@@ -29,7 +29,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_lasot(ann_dir, save_dir, split='all'):
+def convert_lasot(ann_dir, save_dir, split='test'):
     """Convert lasot dataset to COCO style.
 
     Args:
@@ -51,7 +51,7 @@ def convert_lasot(ann_dir, save_dir, split='all'):
                     train_videos_list.append(video_id)
         videos_list = train_videos_list
 
-    for video_name in tqdm(videos_list):
+    for video_name in tqdm(videos_list, desc=split):
         video_class = video_name.split('-')[0]
         video_path = osp.join(ann_dir, video_class, video_name)
         video = dict(id=records['vid_id'], name=video_name)

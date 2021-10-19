@@ -29,7 +29,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert_got10k(ann_dir, save_dir, split='all'):
+def convert_got10k(ann_dir, save_dir, split='test'):
     """Convert got10k dataset to COCO style.
 
     Args:
@@ -43,7 +43,7 @@ def convert_got10k(ann_dir, save_dir, split='all'):
     got10k['categories'] = [dict(id=0, name=0)]
 
     videos_list = mmcv.list_from_file(osp.join(ann_dir, split, 'list.txt'))
-    for video_name in tqdm(videos_list):
+    for video_name in tqdm(videos_list, desc=split):
         video = dict(id=records['vid_id'], name=video_name)
         got10k['videos'].append(video)
 
@@ -94,9 +94,7 @@ def convert_got10k(ann_dir, save_dir, split='all'):
                     bbox = [0., 0., 0., 0.]
                 ann.update(dict(bbox=bbox, area=bbox[2] * bbox[3]))
             else:
-                bbox = list(
-                    map(lambda x: int(float(x)),
-                        gt_bboxes[frame_id].split(',')))
+                bbox = list(map(float, gt_bboxes[frame_id].split(',')))
                 ann.update(
                     dict(
                         bbox=bbox,

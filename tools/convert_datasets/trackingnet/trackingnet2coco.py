@@ -81,7 +81,7 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
 
                 if split == 'test':
                     if frame_id == 0:
-                        bbox = list(map(int, gt_bboxes[0].split(',')))
+                        bbox = list(map(float, gt_bboxes[0].split(',')))
                     else:
                         bbox = [0, 0, 0, 0]
                 else:
