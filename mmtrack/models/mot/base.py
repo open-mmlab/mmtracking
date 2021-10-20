@@ -253,7 +253,7 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
         assert isinstance(result, dict)
         track_bboxes = result.get('track_results', None)
         track_results_dict = dict(bboxes=track_bboxes)
-        track_outs_dict = results2outs(track_results_dict, return_ids=True)
+        track_outs_dict = results2outs(track_results_dict)
         img = imshow_tracks(
             img,
             track_outs_dict['bboxes'],

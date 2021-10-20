@@ -14,7 +14,7 @@ def _create_coco_gt_results(dataset):
         bboxes = np.concatenate((ann['bboxes'], scores), axis=1)
         det_outs_dict = dict(
             bboxes=bboxes,
-            label=ann['labels'],
+            labels=ann['labels'],
             num_classes=len(dataset.CLASSES))
         det_results_dict = outs2results(det_outs_dict)
         track_outs_dict = dict(
