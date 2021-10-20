@@ -28,64 +28,105 @@ def test_imrenormalize():
     assert np.allclose(img, new_img, atol=1e-6)
 
 
-def test_track2result():
-    from mmtrack.core import track2result, track2result_with_segm
+def test_outs2results():
+    from mmtrack.core import outs2results
 
     # pseudo data
-    num_objects, num_classes = 8, 4
-    bboxes = random_boxes(num_objects, 640)
+    num_objects, num_classes, image_size = 8, 4, 100
+    bboxes = random_boxes(num_objects, image_size)
     scores = torch.FloatTensor(num_objects, 1).uniform_(0, 1)
     bboxes = torch.cat([bboxes, scores], dim=1)
     # leave the results of the last class as empty
     labels = torch.randint(0, num_classes - 1, (num_objects, ))
     ids = torch.arange(num_objects)
-    masks = torch.randint(0, 2, (num_objects, 100, 100)).bool()
+    masks = torch.randint(0, 2, (num_objects, image_size, image_size)).bool()
 
-    # test track2result
-    result = track2result(bboxes, labels, ids, num_classes)
+    # test track2result without ids
+    outs = dict(
+        bboxes=bboxes, labels=labels, masks=masks, num_classes=num_classes)
+    results = outs2results(outs)
 
-    assert len(result) == num_classes
-    assert result[-1].shape == (0, 6)
-    assert isinstance(result[0], np.ndarray)
+    for key in ['bboxes', 'masks']:
+        assert key in results
+    assert len(results['bboxes']) == num_classes
+    assert isinstance(results['bboxes'][0], np.ndarray)
+    assert results['bboxes'][-1].shape == (0, 5)
+    assert len(results['masks']) == num_classes
+    assert isinstance(results['masks'][-1], list)
+    assert len(results['masks'][-1]) == 0
     for i in range(num_classes):
-        assert result[i].shape[0] == (labels == i).sum()
-        assert result[i].shape[1] == 6
+        assert results['bboxes'][i].shape[0] == (labels == i).sum()
+        assert results['bboxes'][i].shape[1] == 5
+        assert len(results['masks'][i]) == (labels == i).sum()
+        if len(results['masks'][i]) > 0:
+            assert results['masks'][i][0].shape == (image_size, image_size)
 
-    # test track2result_with_segm
-    track_bbox_result, track_segm_result = track2result_with_segm(
-        bboxes, labels, masks, ids, num_classes)
+    # test track2result with ids
+    outs['ids'] = ids
+    results = outs2results(outs)
 
-    assert len(track_segm_result) == num_classes
-    assert len(track_segm_result[-1]) == 0
-    assert isinstance(track_segm_result[-1], list)
+    for key in ['bboxes', 'masks']:
+        assert key in results
+    assert len(results['bboxes']) == num_classes
+    assert isinstance(results['bboxes'][0], np.ndarray)
+    assert results['bboxes'][-1].shape == (0, 6)
+    assert len(results['masks']) == num_classes
+    assert isinstance(results['masks'][-1], list)
+    assert len(results['masks'][-1]) == 0
     for i in range(num_classes):
-        assert len(track_segm_result[i]) == (labels == i).sum()
+        assert results['bboxes'][i].shape[0] == (labels == i).sum()
+        assert results['bboxes'][i].shape[1] == 6
+        assert len(results['masks'][i]) == (labels == i).sum()
+        if len(results['masks'][i]) > 0:
+            assert results['masks'][i][0].shape == (image_size, image_size)
 
 
-def test_restore_result():
-    from mmtrack.core import restore_result, restore_result_with_segm
+def test_results2outs():
+    from mmtrack.core import results2outs
     num_classes = 3
     num_objects = [2, 0, 2]
+    gt_labels = []
+    for id, num in enumerate(num_objects):
+        gt_labels.extend([id for _ in range(num)])
+    image_size = 100
 
-    result = [np.random.randn(num_objects[i], 5) for i in range(num_classes)]
-    bboxes, labels = restore_result(result, return_ids=False)
-    assert bboxes.shape == (4, 5)
-    assert (labels == np.array([0, 0, 2, 2])).all()
-    segm_results = [[] for i in range(num_classes)]
-    for i in range(bboxes.shape[0]):
-        segm_results[labels[i]].append(np.random.randint(0, 2, (100, 100)))
-    bboxes, labels, masks = restore_result_with_segm(
-        result, segm_results, 100, 100, return_ids=False)
-    assert masks.shape == (4, 100, 100)
+    bbox_result = [
+        np.random.randint(low=0, high=image_size, size=(num_objects[i], 5))
+        for i in range(num_classes)
+    ]
+    bbox_result_with_ids = [
+        np.random.randint(low=0, high=image_size, size=(num_objects[i], 6))
+        for i in range(num_classes)
+    ]
+    mask_results = [[] for i in range(num_classes)]
+    for cls_id in range(num_classes):
+        for obj_id in range(num_objects[cls_id]):
+            mask_results[cls_id].append(
+                np.random.randint(0, 2, (image_size, image_size)))
 
-    result = [np.random.randn(num_objects[i], 6) for i in range(num_classes)]
-    bboxes, labels, ids = restore_result(result, return_ids=True)
-    assert bboxes.shape == (4, 5)
-    assert (labels == np.array([0, 0, 2, 2])).all()
-    assert len(ids) == 4
-    segm_results = [[] for i in range(num_classes)]
-    for i in range(bboxes.shape[0]):
-        segm_results[labels[i]].append(np.random.randint(0, 2, (100, 100)))
-    bboxes, labels, masks, ids = restore_result_with_segm(
-        result, segm_results, 100, 100, return_ids=True)
-    assert masks.shape == (4, 100, 100)
+    # test results2outs without ids
+    results = dict(
+        bboxes=bbox_result,
+        masks=mask_results,
+        mask_shape=(image_size, image_size))
+    outs = results2outs(results)
+
+    for key in ['bboxes', 'labels', 'masks']:
+        assert key in outs
+    assert outs['bboxes'].shape == (sum(num_objects), 5)
+    assert (outs['labels'] == np.array(gt_labels)).all()
+    assert outs['masks'].shape == (sum(num_objects), image_size, image_size)
+
+    # test results2outs with ids
+    results = dict(
+        bboxes=bbox_result_with_ids,
+        masks=mask_results,
+        mask_shape=(image_size, image_size))
+    outs = results2outs(results)
+
+    for key in ['bboxes', 'labels', 'ids', 'masks']:
+        assert key in outs
+    assert outs['bboxes'].shape == (sum(num_objects), 5)
+    assert (outs['labels'] == np.array(gt_labels)).all()
+    assert outs['ids'].shape == (sum(num_objects), )
+    assert outs['masks'].shape == (sum(num_objects), image_size, image_size)

@@ -2,6 +2,7 @@
 import mmcv
 import numpy as np
 import torch
+from mmdet.core import bbox2result
 
 
 def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
@@ -47,7 +48,7 @@ def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
     return img
 
 
-def track2result(bboxes, labels, ids, num_classes):
+def outs2results(output_dict):
     """Convert tracking results to a list of numpy arrays.
 
     Args:
@@ -59,36 +60,57 @@ def track2result(bboxes, labels, ids, num_classes):
     Returns:
         list(ndarray): tracking results of each class.
     """
-    valid_inds = ids > -1
-    bboxes = bboxes[valid_inds]
-    labels = labels[valid_inds]
-    ids = ids[valid_inds]
+    for key in output_dict:
+        assert key in ['bboxes', 'labels', 'masks', 'ids', 'num_classes']
+    for key in ['labels', 'num_classes']:
+        assert key in output_dict
 
-    if bboxes.shape[0] == 0:
-        return [np.zeros((0, 6), dtype=np.float32) for i in range(num_classes)]
-    else:
-        if isinstance(bboxes, torch.Tensor):
-            bboxes = bboxes.cpu().numpy()
-            labels = labels.cpu().numpy()
-            ids = ids.cpu().numpy()
-        return [
-            np.concatenate((ids[labels == i, None], bboxes[labels == i, :]),
-                           axis=1) for i in range(num_classes)
-        ]
+    bboxes = output_dict.get('bboxes', None)
+    masks = output_dict.get('masks', None)
+    ids = output_dict.get('ids', None)
+    labels = output_dict['labels']
+    num_classes = output_dict['num_classes']
+    result_dict = dict()
+
+    if ids is not None:
+        valid_inds = ids > -1
+        ids = ids[valid_inds]
+        labels = labels[valid_inds]
+
+    if bboxes is not None:
+        if ids is not None:
+            bboxes = bboxes[valid_inds]
+            if bboxes.shape[0] == 0:
+                bbox_results = [
+                    np.zeros((0, 6), dtype=np.float32)
+                    for i in range(num_classes)
+                ]
+            else:
+                if isinstance(bboxes, torch.Tensor):
+                    bboxes = bboxes.cpu().numpy()
+                    labels = labels.cpu().numpy()
+                    ids = ids.cpu().numpy()
+                bbox_results = [
+                    np.concatenate(
+                        (ids[labels == i, None], bboxes[labels == i, :]),
+                        axis=1) for i in range(num_classes)
+                ]
+        else:
+            bbox_results = bbox2result(bboxes, labels, num_classes)
+        result_dict['bboxes'] = bbox_results
+
+    if masks is not None:
+        if ids is not None:
+            masks = masks[valid_inds]
+        masks_results = [[] for _ in range(num_classes)]
+        for i in range(bboxes.shape[0]):
+            masks_results[labels[i]].append(masks[i].detach().cpu().numpy())
+        result_dict['masks'] = masks_results
+
+    return result_dict
 
 
-def track2result_with_segm(bboxes, labels, masks, ids, num_classes):
-    track_bbox_results = track2result(bboxes, labels, ids, num_classes)
-
-    valid_inds = ids > -1
-    masks = masks[valid_inds]
-    track_segm_results = [[] for _ in range(num_classes)]
-    for i in range(bboxes.shape[0]):
-        track_segm_results[labels[i]].append(masks[i].detach().cpu().numpy())
-    return track_bbox_results, track_segm_results
-
-
-def restore_result(result, return_ids=False):
+def results2outs(result_dict):
     """Restore the results (list of results of each category) into the results
     of the model forward.
 
@@ -100,33 +122,39 @@ def restore_result(result, return_ids=False):
     Returns:
         tuple: tracking results of each class.
     """
-    labels = []
-    for i, bbox in enumerate(result):
-        labels.extend([i] * bbox.shape[0])
-    bboxes = np.concatenate(result, axis=0).astype(np.float32)
-    labels = np.array(labels, dtype=np.int64)
-    if return_ids:
-        ids = bboxes[:, 0].astype(np.int64)
-        bboxes = bboxes[:, 1:]
-        return bboxes, labels, ids
-    else:
-        return bboxes, labels
+    for key in result_dict:
+        assert key in ['bboxes', 'masks', 'mask_shape']
+    bbox_results = result_dict.get('bboxes', None)
+    mask_results = result_dict.get('masks', None)
+    track_dict = dict()
 
+    if bbox_results is not None:
+        labels = []
+        for i, bbox in enumerate(bbox_results):
+            labels.extend([i] * bbox.shape[0])
+        labels = np.array(labels, dtype=np.int64)
+        track_dict['labels'] = labels
 
-def restore_result_with_segm(bbox_result,
-                             segm_result,
-                             img_height,
-                             img_width,
-                             return_ids=False):
-    segm_result = mmcv.concat_list(segm_result)
-    if len(segm_result) == 0:
-        masks = np.zeros((0, img_height, img_width)).astype(bool)
-    else:
-        masks = np.stack(segm_result, axis=0)
+        bboxes = np.concatenate(bbox_results, axis=0).astype(np.float32)
+        if bboxes.shape[1] == 5:
+            track_dict['bboxes'] = bboxes
+        elif bboxes.shape[1] == 6:
+            ids = bboxes[:, 0].astype(np.int64)
+            bboxes = bboxes[:, 1:]
+            track_dict['bboxes'] = bboxes
+            track_dict['ids'] = ids
+        else:
+            raise NotImplementedError(
+                f'Not supported bbox shape: (N, {bboxes.shape[1]})')
 
-    if return_ids:
-        bboxes, labels, ids = restore_result(bbox_result, return_ids=True)
-        return bboxes, labels, masks, ids
-    else:
-        bboxes, labels = restore_result(bbox_result, return_ids=False)
-        return bboxes, labels, masks
+    if mask_results is not None:
+        assert 'mask_shape' in result_dict
+        mask_height, mask_width = result_dict['mask_shape']
+        mask_results = mmcv.concat_list(mask_results)
+        if len(mask_results) == 0:
+            masks = np.zeros((0, mask_height, mask_width)).astype(bool)
+        else:
+            masks = np.stack(mask_results, axis=0)
+        track_dict['masks'] = masks
+
+    return track_dict

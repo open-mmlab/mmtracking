@@ -104,7 +104,7 @@ def single_gpu_test(model,
             prev_img_meta = img_meta
 
         for key in result:
-            if 'segm' in key:
+            if 'mask' in key:
                 result[key] = encode_mask_results(result[key])
 
         for k, v in result.items():
@@ -148,7 +148,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
         for key in result:
-            if 'segm' in key:
+            if 'mask' in key:
                 result[key] = encode_mask_results(result[key])
 
         for k, v in result.items():

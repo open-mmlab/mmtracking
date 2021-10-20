@@ -10,7 +10,7 @@ from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import restore_result
+from mmtrack.core import results2outs
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -187,8 +187,11 @@ class MOTChallengeDataset(CocoVideoDataset):
                     frame = info['mot_frame_id']
                 else:
                     frame = info['frame_id'] + 1
-                bboxes, labels, ids = restore_result(res, return_ids=True)
-                for bbox, label, id in zip(bboxes, labels, ids):
+                track_results_dict = dict(bboxes=res)
+                track_outs_dict = results2outs(track_results_dict)
+                for bbox, label, id in zip(track_outs_dict['bboxes'],
+                                           track_outs_dict['labels'],
+                                           track_outs_dict['ids']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
@@ -202,8 +205,11 @@ class MOTChallengeDataset(CocoVideoDataset):
                     frame = info['mot_frame_id']
                 else:
                     frame = info['frame_id'] + 1
-                bboxes, labels = restore_result(res)
-                for bbox, label in zip(bboxes, labels):
+
+                det_results_dict = dict(bboxes=res)
+                det_outs_dict = results2outs(det_results_dict)
+                for bbox, label in zip(det_outs_dict['bboxes'],
+                                       det_outs_dict['labels']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},-1,{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +

@@ -20,25 +20,27 @@ class TestBaseTracker(object):
         cls.num_objs = 5
 
     def test_track(self):
-        img = torch.rand((1, 3, 64, 64))
+        img_size, feats_channel = 64, 8
+        img = torch.rand((1, 3, img_size, img_size))
 
         img_metas = [dict(scale_factor=1.0)]
 
         model = MagicMock()
         model.track_head.extract_roi_feats = MagicMock(
-            return_value=(torch.rand(5, 8, 7, 7), [5]))
+            return_value=(torch.rand(self.num_objs, feats_channel, 7, 7),
+                          [self.num_objs]))
         model.track_head.simple_test = MagicMock(
             return_value=torch.rand((self.num_objs, self.num_objs + 1)))
 
-        feats = torch.rand((1, 8, 32, 32))
+        feats = torch.rand((1, feats_channel, img_size, img_size))
 
-        bboxes = random_boxes(self.num_objs, 512)
+        bboxes = random_boxes(self.num_objs, img_size)
         scores = torch.rand((self.num_objs, 1))
         bboxes = torch.cat((bboxes, scores), dim=1)
 
         labels = torch.arange(self.num_objs)
 
-        masks = torch.zeros((self.num_objs, 100, 100))
+        masks = torch.zeros((self.num_objs, img_size, img_size))
 
         for frame_id in range(3):
             bboxes, labels, masks, ids = self.tracker.track(
@@ -53,5 +55,5 @@ class TestBaseTracker(object):
                 rescale=True)
             assert bboxes.shape[0] == self.num_objs
             assert labels.shape[0] == self.num_objs
-            assert masks.shape == (self.num_objs, 100, 100)
+            assert masks.shape == (self.num_objs, img_size, img_size)
             assert ids.shape[0] == self.num_objs

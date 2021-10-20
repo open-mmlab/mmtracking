@@ -1,12 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .correlation import depthwise_correlation
 from .similarity import embed_similarity
-from .transforms import (imrenormalize, restore_result,
-                         restore_result_with_segm, track2result,
-                         track2result_with_segm)
+from .transforms import imrenormalize, outs2results, results2outs
 
 __all__ = [
-    'depthwise_correlation', 'track2result', 'restore_result',
-    'embed_similarity', 'imrenormalize', 'track2result_with_segm',
-    'restore_result_with_segm'
+    'depthwise_correlation', 'outs2results', 'results2outs',
+    'embed_similarity', 'imrenormalize'
 ]

@@ -6,12 +6,11 @@ import motmetrics as mm
 import numpy as np
 import pandas as pd
 from mmcv.utils import print_log
-from mmdet.core import bbox2result
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 from motmetrics.math_util import quiet_divide
 
-from ..track import track2result
+from mmtrack.core.track import outs2results
 
 METRIC_MAPS = {
     'idf1': 'IDF1',
@@ -49,12 +48,19 @@ def acc_single_video(results,
     ]
     for result, gt in zip(results, gts):
         if ignore_by_classes:
-            gt_ignore = bbox2result(gt['bboxes_ignore'], gt['labels_ignore'],
-                                    num_classes)
+            gt_ignore_outs_dict = dict(
+                bboxes=gt['bboxes_ignore'],
+                labels=gt['labels_ignore'],
+                num_classes=num_classes)
+            gt_ignore = outs2results(gt_ignore_outs_dict)['bboxes']
         else:
             gt_ignore = [gt['bboxes_ignore'] for i in range(num_classes)]
-        gt = track2result(gt['bboxes'], gt['labels'], gt['instance_ids'],
-                          num_classes)
+        gt_outs_dict = dict(
+            bboxes=gt['bboxes'],
+            labels=gt['labels'],
+            ids=gt['instance_ids'],
+            num_classes=num_classes)
+        gt = outs2results(gt_outs_dict)['bboxes']
         for i in range(num_classes):
             gt_ids, gt_bboxes = gt[i][:, 0].astype(np.int), gt[i][:, 1:]
             pred_ids, pred_bboxes = result[i][:, 0].astype(

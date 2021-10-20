@@ -2,7 +2,7 @@
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 
-from mmtrack.core import restore_result
+from mmtrack.core import results2outs
 
 
 @PIPELINES.register_module()
@@ -100,7 +100,11 @@ class LoadDetections(object):
     def __call__(self, results):
         detections = results['detections']
 
-        bboxes, labels = restore_result(detections)
+        det_results_dict = dict(bboxes=detections)
+        det_outs_dict = results2outs(det_results_dict)
+        bboxes = det_outs_dict['bboxes']
+        labels = det_outs_dict['labels']
+
         results['public_bboxes'] = bboxes[:, :4]
         if bboxes.shape[1] > 4:
             results['public_scores'] = bboxes[:, -1]

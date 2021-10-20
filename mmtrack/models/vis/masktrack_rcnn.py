@@ -2,7 +2,7 @@
 import torch
 from mmdet.models import build_detector, build_head
 
-from mmtrack.core import restore_result_with_segm, track2result_with_segm
+from mmtrack.core import outs2results, results2outs
 from mmtrack.models.mot import BaseMultiObjectTracker
 from ..builder import MODELS, build_tracker
 
@@ -181,19 +181,18 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         assert len(det_results) == 1, 'Batch inference is not supported.'
         assert len(det_results[0]) == 2, 'There are no mask results.'
         bbox_results = det_results[0][0]
-        segm_results = det_results[0][1]
+        mask_results = det_results[0][1]
         num_classes = self.detector.roi_head.bbox_head.num_classes
         assert len(bbox_results) == num_classes
 
-        det_bboxes, det_labels, det_masks = restore_result_with_segm(
-            bbox_results,
-            segm_results,
-            img_height=img_metas[0]['ori_shape'][0],
-            img_width=img_metas[0]['ori_shape'][1],
-            return_ids=False)
-        det_bboxes = torch.tensor(det_bboxes).to(img)
-        det_labels = torch.tensor(det_labels).to(img).long()
-        det_masks = torch.tensor(det_masks).to(img).bool()
+        det_results_dict = dict(
+            bboxes=bbox_results,
+            masks=mask_results,
+            mask_shape=img_metas[0]['ori_shape'][:2])
+        det_outs_dict = results2outs(det_results_dict)
+        det_bboxes = torch.tensor(det_outs_dict['bboxes']).to(img)
+        det_labels = torch.tensor(det_outs_dict['labels']).to(img).long()
+        det_masks = torch.tensor(det_outs_dict['masks']).to(img).bool()
 
         bboxes, labels, masks, ids = self.tracker.track(
             img=img,
@@ -207,8 +206,14 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
             rescale=rescale,
             **kwargs)
 
-        track_bbox_results, track_segm_results = track2result_with_segm(
-            bboxes, labels, masks, ids, num_classes)
+        track_outs_dict = dict(
+            bboxes=bboxes,
+            labels=labels,
+            masks=masks,
+            ids=ids,
+            num_classes=num_classes)
+
+        track_results_dict = outs2results(track_outs_dict)
         return dict(
-            track_bbox_results=track_bbox_results,
-            track_segm_results=track_segm_results)
+            track_bboxes=track_results_dict['bboxes'],
+            track_masks=track_results_dict['masks'])

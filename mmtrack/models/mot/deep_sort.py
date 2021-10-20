@@ -1,10 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
-from mmdet.core import bbox2result
 from mmdet.models import build_detector
 
-from mmtrack.core import track2result
+from mmtrack.core import outs2results
 from ..builder import MODELS, build_motion, build_reid, build_tracker
 from .base import BaseMultiObjectTracker
 
@@ -128,6 +127,14 @@ class DeepSORT(BaseMultiObjectTracker):
             rescale=rescale,
             **kwargs)
 
-        track_result = track2result(bboxes, labels, ids, num_classes)
-        bbox_result = bbox2result(det_bboxes, det_labels, num_classes)
-        return dict(bbox_results=bbox_result, track_results=track_result)
+        track_out_dict = dict(
+            bboxes=bboxes, labels=labels, ids=ids, num_classes=num_classes)
+        track_result_dict = outs2results(track_out_dict)
+
+        det_out_dict = dict(
+            bboxes=det_bboxes, labels=det_labels, num_classes=num_classes)
+        det_result_dict = outs2results(det_out_dict)
+
+        return dict(
+            bbox_results=det_result_dict['bboxes'],
+            track_results=track_result_dict['bboxes'])

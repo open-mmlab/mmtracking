@@ -41,7 +41,9 @@ class TestLoading(object):
         load = PIPELINES.get('LoadDetections')()
         results = load(results)
         assert 'public_bboxes' in results
+        assert 'public_scores' in results
         assert 'public_labels' in results
         assert results['public_bboxes'].shape == (7, 4)
+        assert results['public_scores'].shape == (7, )
         assert results['public_labels'].shape == (7, )
         assert 'public_bboxes' in results['bbox_fields']
