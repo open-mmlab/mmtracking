@@ -19,7 +19,7 @@ def _create_coco_gt_results(dataset):
         det_results_dict = outs2results(det_outs_dict)
         track_outs_dict = dict(
             bboxes=bboxes,
-            label=ann['labels'],
+            labels=ann['labels'],
             ids=ann['instance_ids'].astype(np.int),
             num_classes=len(dataset.CLASSES))
         track_results_dict = outs2results(track_outs_dict)
