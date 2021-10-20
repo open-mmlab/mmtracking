@@ -49,16 +49,27 @@ def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
 
 
 def outs2results(output_dict):
-    """Convert tracking results to a list of numpy arrays.
+    """Convert tracking/detection results to a list of numpy arrays.
 
     Args:
-        bboxes (torch.Tensor | np.ndarray): shape (n, 5)
-        labels (torch.Tensor | np.ndarray): shape (n, )
-        ids (torch.Tensor | np.ndarray): shape (n, )
-        num_classes (int): class number, including background class
+        output_dict (dict): The output results of the model forward. It may
+            contain keys as belows:
+
+            - bboxes (torch.Tensor | np.ndarray): shape (n, 5)
+            - labels (torch.Tensor | np.ndarray): shape (n, )
+            - masks (torch.Tensor | np.ndarray): shape (n, h, w)
+            - ids (torch.Tensor | np.ndarray): shape (n, )
+            - num_classes (int): class number, not including background class
 
     Returns:
-        list(ndarray): tracking results of each class.
+        dict[str : list(ndarray) | list[list[np.ndarray]]]: tracking/detection
+        results of each class. It may contain keys as belows:
+
+        - bboxes (list[np.ndarray]): Each list denotes bboxes of one
+            category.
+        - masks (list[list[np.ndarray]]): Each outer list denotes masks of
+            one category. Each inner list denotes one mask belonging to
+            the category. Each mask has shape (h, w).
     """
     for key in output_dict:
         assert key in ['bboxes', 'labels', 'masks', 'ids', 'num_classes']
@@ -102,9 +113,11 @@ def outs2results(output_dict):
     if masks is not None:
         if ids is not None:
             masks = masks[valid_inds]
+        if isinstance(masks, torch.Tensor):
+            masks = masks.detach().cpu().numpy()
         masks_results = [[] for _ in range(num_classes)]
         for i in range(bboxes.shape[0]):
-            masks_results[labels[i]].append(masks[i].detach().cpu().numpy())
+            masks_results[labels[i]].append(masks[i])
         result_dict['masks'] = masks_results
 
     return result_dict
@@ -115,12 +128,23 @@ def results2outs(result_dict):
     of the model forward.
 
     Args:
-        result (list[ndarray]): shape (n, 5) or (n, 6)
-        return_ids (bool, optional): Whether the input has tracking
-            result. Default to False.
+        result_dict (dict): List of results of each category. It may
+            contain keys as belows:
+
+            - bboxes (list[np.ndarray]): Each list denotes bboxes of one
+                category.
+            - masks (list[list[np.ndarray]]): Each outer list denotes masks of
+                one category. Each inner list denotes one mask belonging to
+                the category. Each mask has shape (h, w).
+            - mask_shape (tuple[int]): The shape (h, w) of mask.
 
     Returns:
-        tuple: tracking results of each class.
+        tuple: tracking results of each class. It may contain keys as belows:
+
+        - bboxes (np.ndarray): shape (n, 5)
+        - labels (np.ndarray): shape (n, )
+        - masks (np.ndarray): shape (n, h, w)
+        - ids (np.ndarray): shape (n, )
     """
     for key in result_dict:
         assert key in ['bboxes', 'masks', 'mask_shape']

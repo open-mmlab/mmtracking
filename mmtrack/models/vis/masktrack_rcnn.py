@@ -154,7 +154,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         """Test without augmentations.
 
         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
+            img (Tensor): of shape (1, C, H, W) encoding input images.
                 Typically these should be mean centered and std scaled.
             img_metas (list[dict]): list of image info dict where each dict
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
@@ -162,8 +162,6 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
             rescale (bool, optional): If False, then returned bboxes and masks
                 will fit the scale of img, otherwise, returned bboxes and masks
                 will fit the scale of original image shape. Defaults to False.
-            public_bboxes (list[Tensor], optional): Public bounding boxes from
-                the benchmark. Defaults to None.
 
         Returns:
             dict[str : list(ndarray)]: The tracking results.

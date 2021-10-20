@@ -54,19 +54,19 @@ class YouTubeVISDataset(CocoVideoDataset):
                        results,
                        resfile_path=None,
                        metrics=['track_segm']):
-        """Format the results to txts (standard format for MOT Challenge).
+        """Format the results to a zip file (standard format for YouTube-VIS
+        Challenge).
 
         Args:
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str, optional): Path to save the formatted results.
                 Defaults to None.
             metrics (list[str], optional): The results of the specific metrics
-                will be formatted.. Defaults to ['track'].
+                will be formatted. Defaults to ['track_segm'].
 
         Returns:
-            tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
-            the filepaths, names is a list containing the name of the
-            videos, tmp_dir is the temporal directory created for saving
+            tuple: (resfiles, tmp_dir), resfiles is the path of the result
+            json file, tmp_dir is the temporal directory created for saving
             files.
         """
         assert isinstance(results, dict), 'results must be a dict.'

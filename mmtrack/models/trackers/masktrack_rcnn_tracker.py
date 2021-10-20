@@ -9,9 +9,15 @@ from .base_tracker import BaseTracker
 
 @TRACKERS.register_module()
 class MaskTrackRCNNTracker(BaseTracker):
-    """Tracker for Tracktor.
+    """Tracker for MaskTrack R-CNN.
 
     Args:
+        det_score_coefficient (float): The coefficient of `det_score` when
+            computing match score.
+        iou_coefficient (float): The coefficient of `ious` when computing
+            match score.
+        label_coefficient (float): The coefficient of `label_deltas` when
+            computing match score.
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Defaults to None.
     """
@@ -29,6 +35,26 @@ class MaskTrackRCNNTracker(BaseTracker):
 
     def compute_match_score(self, similarity_scores, det_scores, ious,
                             label_deltas):
+        """Computing the match score.
+
+        Args:
+            similarity_scores (torch.Tensor): of shape (num_current_bboxes,
+                num_previous_bboxes + 1). Denoting the similarity scores from
+                track head.
+            det_scores (torch.Tensor): of shape (num_current_bboxes, 1).
+                Denoting the detection score of bboxes of current frame.
+            ious (torch.Tensor): of shape (num_current_bboxes,
+                num_previous_bboxes). Denoting the ious between current frame
+                bboxes and previous frame bboxes.
+            label_deltas (torch.Tensor): of shape (num_current_bboxes,
+                num_previous_bboxes). Denoting whether the predicted category
+                is the same between current frame bboxes and previous frame
+                bboxes.
+
+        Returns:
+            torch.Tensor: The matching score of shape (num_current_bboxes,
+            num_previous_bboxes + 1)
+        """
         iou_dummy = ious.new_zeros(ious.shape[0], 1)
         ious = torch.cat((iou_dummy, ious), dim=1)
 
@@ -57,15 +83,16 @@ class MaskTrackRCNNTracker(BaseTracker):
         """Tracking forward function.
 
         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
+            img (Tensor): of shape (1, C, H, W) encoding input images.
                 Typically these should be mean centered and std scaled.
             img_metas (list[dict]): list of image info dict where each dict
                 has: 'img_shape', 'scale_factor', 'flip', and may also contain
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-            model (nn.Module): MOT model.
+            model (nn.Module): VIS model.
             feats (tuple): Backbone features of the input image.
             bboxes (Tensor): of shape (N, 5).
             labels (Tensor): of shape (N, ).
+            masks (Tensor): of shape (N, H, W)
             frame_id (int): The id of current frame, 0-index.
             rescale (bool, optional): If True, the bounding boxes should be
                 rescaled to fit the original scale of the image. Defaults to
