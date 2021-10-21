@@ -83,7 +83,7 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
                     if frame_id == 0:
                         bbox = list(map(float, gt_bboxes[0].split(',')))
                     else:
-                        bbox = [0, 0, 0, 0]
+                        bbox = [0., 0., 0., 0.]
                 else:
                     bbox = list(map(float, gt_bboxes[frame_id].split(',')))
                 ann = dict(
