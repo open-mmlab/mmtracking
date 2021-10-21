@@ -11,6 +11,7 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
+  - [GOT10k](http://got-10k.aitestunion.com/)
 
 ### 1. Download Datasets
 
@@ -33,7 +34,7 @@ Notes:
 
 - For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
 
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet and OTB100 datasets are needed.
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 and GOT10k datasets are needed.
 
 ```
 mmtracking
@@ -67,9 +68,12 @@ mmtracking
 │   │   ├── Lists
 │   │
 │   ├── lasot
-│   │   ├── LaSOTTesting
-│   │   │   ├── airplane-1
-│   │   │   ├── airplane-13
+│   │   ├── LaSOTBenchmark
+│   │   │   ├── airplane
+|   │   │   │   ├── airplane-1
+|   │   │   │   ├── airplane-2
+|   │   │   │   ├── ......
+│   │   │   ├── ......
 │   │
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
@@ -80,18 +84,31 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
+│   │   │   │   ├── ......
 │   │   ├── anno
 │   │   │   ├── UAV123
 │   │
 │   ├── trackingnet
-│   │   ├── TEST
-│   │   │   ├── anno
-│   │   │   ├── zips
+│   │   ├── TEST.zip
+│   │   ├── TRAIN_0.zip
+│   │   ├── ......
+│   │   ├── TRAIN_11.zip
 │   │
 │   ├── otb100
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
+│   │   │   │── ......
+│   │
+│   ├── got10k
+│   │   │── full_data
+│   │   │   │── train_data
+│   │   │   │   ├── GOT-10k_Train_split_01.zip
+│   │   │   │   ├── ......
+│   │   │   │   ├── GOT-10k_Train_split_19.zip
+│   │   │   │   ├── list.txt
+│   │   │   │── test_data.zip
+│   │   │   │── val_data.zip
 ```
 
 ### 2. Convert Annotations
@@ -107,7 +124,7 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
 # LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTTesting -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # MOT17
 # The processing of other MOT Challenge dataset is the same as MOT17
@@ -118,16 +135,22 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
 
 # TrackingNet
-# unzip files in 'data/trackingnet/TEST/zips/*.zip'
-bash ./tools/convert_datasets/trackingnet/unzip_trackingnet_test.sh ./data/trackingnet/TEST
-# generate testset annotations
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet/TEST/ -o ./data/trackingnet/TEST/annotations
+# unzip files in 'data/trackingnet/*.zip'
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
+# generate annotations
+python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
 # unzip files in 'data/otb100/zips/*.zip'
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # generate annotations
 python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
+
+# GOT10k
+# unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
+bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
+# generate annotations
+python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -165,9 +188,12 @@ mmtracking
 │   │   ├── annotations (the converted annotation files)
 │   │
 │   ├── lasot
-│   │   ├── LaSOTTesting
-│   │   │   ├── airplane-1
-│   │   │   ├── airplane-13
+│   │   ├── LaSOTBenchmark
+│   │   │   ├── airplane
+|   │   │   │   ├── airplane-1
+|   │   │   │   ├── airplane-2
+|   │   │   │   ├── ......
+│   │   │   ├── ......
 │   │   ├── annotations
 │   │
 |   ├── MOT15/MOT16/MOT17/MOT20
@@ -183,6 +209,7 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   │   │   ├── bike1
 │   │   │   │   ├── boat1
+│   │   │   │   ├── ......
 │   │   ├── anno (the official annotation files)
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
@@ -191,19 +218,57 @@ mmtracking
 │   │   ├── TEST
 │   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
-│   │   │   ├── annotations (the converted annotation file)
 │   │   │   ├── frames (the unzipped folders)
 │   │   │   │   ├── 0-6LB4FqxoE_0
 │   │   │   │   ├── 07Ysk1C0ZX0_0
+│   │   │   │   ├── ......
+│   │   ├── TRAIN_0
+│   │   │   ├── anno (the official annotation files)
+│   │   │   ├── zips
+│   │   │   ├── frames (the unzipped folders)
+│   │   │   │   ├── -3TIfnTSM6c_2
+│   │   │   │   ├── a1qoB1eERn0_0
+│   │   │   │   ├── ......
+│   │   ├── ......
+│   │   ├── TRAIN_11
+│   │   ├── annotations (the converted annotation file)
 │   │
 │   ├── otb100
 │   │   ├── zips
 │   │   │   ├── Basketball.zip
 │   │   │   ├── Biker.zip
+│   │   │   │── ......
 │   │   ├── annotations
 │   │   ├── data
 │   │   │   ├── Basketball
 │   │   │   │   ├── img
+│   │   │   ├── ......
+│   │
+│   ├── got10k
+│   │   │── full_data
+│   │   │   │── train_data
+│   │   │   │   ├── GOT-10k_Train_split_01.zip
+│   │   │   │   ├── ......
+│   │   │   │   ├── GOT-10k_Train_split_19.zip
+│   │   │   │   ├── list.txt
+│   │   │   │── test_data.zip
+│   │   │   │── val_data.zip
+│   │   │── train
+│   │   │   ├── GOT-10k_Train_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Train_009335
+│   │   │   ├── list.txt
+│   │   │── test
+│   │   │   ├── GOT-10k_Test_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Test_000180
+│   │   │   ├── list.txt
+│   │   │── val
+│   │   │   ├── GOT-10k_Val_000001
+│   │   │   │   ├── ......
+│   │   │   ├── GOT-10k_Val_000180
+│   │   │   ├── list.txt
+│   │   │── annotations
 ```
 
 #### The folder of annotations in ILSVRC
@@ -218,8 +283,9 @@ There are 3 json files in `data/ILSVRC/annotations`:
 
 #### The folder of annotations in lasot
 
-There are only 1 json files in `data/lasot/annotations`:
+There are 2 json files in `data/lasot/annotations`:
 
+`lasot_train.json`:  Json file containing the annotations information of the training set in LaSOT dataset.
 `lasot_test.json`:  Json file containing the annotations information of the testing set in LaSOT dataset.
 
 #### The folder of annotations and reid in MOT15/MOT16/MOT17/MOT20
@@ -281,11 +347,12 @@ There are only 1 json files in `data/UAV123/annotations`:
 
 #### The folder of frames and annotations in TrackingNet
 
-There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video.
+There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video. Similar file structures can be seen in `data/trackingnet/TRAIN_{*}/frames`.
 
-There are only 1 json files in `data/trackingnet/TEST/annotations`:
+There are 2 json files in `data/trackingnet/annotations`:
 
 `trackingnet_test.json`:  Json file containing the annotations information of the testing set in TrackingNet dataset.
+`trackingnet_train.json`:  Json file containing the annotations information of the training set in TrackingNet dataset.
 
 #### The folder of data and annotations in OTB100
 
@@ -294,3 +361,13 @@ There are 98 video directories of OTB100 dataset in `data/otb100/data`, and the 
 There are only 1 json files in `data/otb100/annotations`:
 
 `otb100.json`:  Json file containing the annotations information of the OTB100 dataset.
+
+#### The folder of frames and annotations in GOT10k
+
+There are training video directories in `data/got10k/train`, and each video directory contains all images of the video. Similar file structures can be seen in `data/got10k/test` and `data/got10k/val`.
+
+There are 3 json files in `data/got10k/annotations`:
+
+`got10k_train.json`:  Json file containing the annotations information of the training set in GOT10k dataset.
+`got10k_test.json`:  Json file containing the annotations information of the testing set in GOT10k dataset.
+`got10k_val.json`:  Json file containing the annotations information of the valuation set in GOT10k dataset.

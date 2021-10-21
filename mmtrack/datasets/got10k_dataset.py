@@ -10,15 +10,14 @@ from .sot_test_dataset import SOTTestDataset
 
 
 @DATASETS.register_module()
-class TrackingNetDataset(SOTTestDataset):
-    """TrackingNet dataset for the testing of single object tracking.
+class GOT10kDataset(SOTTestDataset):
+    """GOT10k dataset for the testing of single object tracking.
 
     The dataset doesn't support training mode.
     """
 
     def format_results(self, results, resfile_path=None):
-        """Format the results to txts (standard format for TrackingNet
-        Challenge).
+        """Format the results to txts (standard format for GOT10k Challenge).
 
         Args:
             results (dict(list[ndarray])): Testing results of the dataset.
@@ -53,9 +52,14 @@ class TrackingNetDataset(SOTTestDataset):
             len(video_info), len(format_results))
 
         # writing submitted results
+        # TODO record test time
         print('writing submitted results to {}'.format(resfile_path))
         for video_name, bboxes in format_results.items():
-            video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
+            video_file_path = osp.join(resfile_path, video_name)
+            if not osp.isdir(video_file_path):
+                os.makedirs(video_file_path, exist_ok=True)
+            video_txt = osp.join(video_file_path,
+                                 '{}_001.txt'.format(video_name))
             with open(video_txt, 'w') as f:
                 for bbox in bboxes:
                     bbox = [
