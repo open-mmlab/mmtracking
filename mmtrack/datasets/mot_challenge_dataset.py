@@ -187,11 +187,11 @@ class MOTChallengeDataset(CocoVideoDataset):
                     frame = info['mot_frame_id']
                 else:
                     frame = info['frame_id'] + 1
-                track_results_dict = dict(bboxes=res)
-                track_outs_dict = results2outs(track_results_dict)
-                for bbox, label, id in zip(track_outs_dict['bboxes'],
-                                           track_outs_dict['labels'],
-                                           track_outs_dict['ids']):
+
+                track_outs = results2outs(bbox_results=res)
+                for bbox, label, id in zip(track_outs['bboxes'],
+                                           track_outs['labels'],
+                                           track_outs['ids']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
@@ -206,10 +206,8 @@ class MOTChallengeDataset(CocoVideoDataset):
                 else:
                     frame = info['frame_id'] + 1
 
-                det_results_dict = dict(bboxes=res)
-                det_outs_dict = results2outs(det_results_dict)
-                for bbox, label in zip(det_outs_dict['bboxes'],
-                                       det_outs_dict['labels']):
+                det_outs = results2outs(bbox_results=res)
+                for bbox, label in zip(det_outs['bboxes'], det_outs['labels']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},-1,{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +

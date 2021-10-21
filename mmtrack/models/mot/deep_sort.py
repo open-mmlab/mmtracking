@@ -127,14 +127,11 @@ class DeepSORT(BaseMultiObjectTracker):
             rescale=rescale,
             **kwargs)
 
-        track_out_dict = dict(
+        track_results = outs2results(
             bboxes=bboxes, labels=labels, ids=ids, num_classes=num_classes)
-        track_result_dict = outs2results(track_out_dict)
-
-        det_out_dict = dict(
+        det_results = outs2results(
             bboxes=det_bboxes, labels=det_labels, num_classes=num_classes)
-        det_result_dict = outs2results(det_out_dict)
 
         return dict(
-            bbox_results=det_result_dict['bboxes'],
-            track_results=track_result_dict['bboxes'])
+            bbox_results=det_results['bbox_results'],
+            track_results=track_results['bbox_results'])

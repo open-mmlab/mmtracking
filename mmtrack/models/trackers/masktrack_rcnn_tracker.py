@@ -23,50 +23,69 @@ class MaskTrackRCNNTracker(BaseTracker):
     """
 
     def __init__(self,
-                 det_score_coefficient=1.0,
-                 iou_coefficient=2.0,
-                 label_coefficient=10.0,
+                 match_weights=dict(det_score=1.0, iou=2.0, det_label=10.0),
                  init_cfg=None,
                  **kwargs):
         super().__init__(init_cfg=init_cfg, **kwargs)
-        self.det_score_coefficient = det_score_coefficient
-        self.iou_coefficient = iou_coefficient
-        self.label_coefficient = label_coefficient
+        self.match_weights = match_weights
 
-    def compute_match_score(self, similarity_scores, det_scores, ious,
-                            label_deltas):
-        """Computing the match score.
+    def get_match_score(self, bboxes, labels, prev_bboxes, prev_labels,
+                        similarity_logits):
+        """Get the match score.
 
         Args:
-            similarity_scores (torch.Tensor): of shape (num_current_bboxes,
-                num_previous_bboxes + 1). Denoting the similarity scores from
+            bboxes (torch.Tensor): of shape (num_current_bboxes, 5) in
+                [tl_x, tl_y, br_x, br_y, score] format. Denoting the detection
+                bboxes of current frame.
+            labels (torch.Tensor): of shape (num_current_bboxes, )
+            prev_bboxes (torch.Tensor): of shape (num_previous_bboxes, 5) in
+                [tl_x, tl_y, br_x, br_y, score] format.  Denoting the
+                detection bboxes of previous frame.
+            prev_labels (torch.Tensor): of shape (num_previous_bboxes, )
+            similarity_logits (torch.Tensor): of shape (num_current_bboxes,
+                num_previous_bboxes + 1). Denoting the similarity logits from
                 track head.
-            det_scores (torch.Tensor): of shape (num_current_bboxes, 1).
-                Denoting the detection score of bboxes of current frame.
-            ious (torch.Tensor): of shape (num_current_bboxes,
-                num_previous_bboxes). Denoting the ious between current frame
-                bboxes and previous frame bboxes.
-            label_deltas (torch.Tensor): of shape (num_current_bboxes,
-                num_previous_bboxes). Denoting whether the predicted category
-                is the same between current frame bboxes and previous frame
-                bboxes.
 
         Returns:
             torch.Tensor: The matching score of shape (num_current_bboxes,
             num_previous_bboxes + 1)
         """
+        similarity_scores = similarity_logits.softmax(dim=1)
+
+        ious = bbox_overlaps(bboxes[:, :4], prev_bboxes[:, :4])
         iou_dummy = ious.new_zeros(ious.shape[0], 1)
         ious = torch.cat((iou_dummy, ious), dim=1)
 
+        label_deltas = (labels.view(-1, 1) == prev_labels).float()
         label_deltas_dummy = label_deltas.new_ones(label_deltas.shape[0], 1)
         label_deltas = torch.cat((label_deltas_dummy, label_deltas), dim=1)
 
         match_score = similarity_scores.log()
-        match_score += self.det_score_coefficient * det_scores.log()
-        match_score += self.iou_coefficient * ious
-        match_score += self.label_coefficient * label_deltas
+        match_score += self.match_weights['det_score'] * \
+            bboxes[:, 4].view(-1, 1).log()
+        match_score += self.match_weights['iou'] * ious
+        match_score += self.match_weights['det_label'] * label_deltas
 
         return match_score
+
+    def assign_ids(self, match_scores):
+        num_prev_bboxes = match_scores.shape[1] - 1
+        _, match_ids = match_scores.max(dim=1)
+
+        ids = match_ids.new_zeros(match_ids.shape[0]) - 1
+        best_match_scores = match_scores.new_zeros(num_prev_bboxes) - 1e6
+        for idx, match_id in enumerate(match_ids):
+            if match_id == 0:
+                ids[idx] = self.num_tracks
+                self.num_tracks += 1
+            else:
+                match_score = match_scores[idx, match_id]
+                # TODO: fix the bug where multiple candidate might match
+                # with the same previous object.
+                if match_score > best_match_scores[match_id - 1]:
+                    ids[idx] = self.ids[match_id - 1]
+                    best_match_scores[match_id - 1] = match_score
+        return ids, best_match_scores
 
     @force_fp32(apply_to=('img', 'feats'))
     def track(self,
@@ -105,11 +124,12 @@ class MaskTrackRCNNTracker(BaseTracker):
             ids = torch.zeros_like(labels)
             return bboxes, labels, masks, ids
 
-        re_bboxes = bboxes.clone()
+        rescaled_bboxes = bboxes.clone()
         if rescale:
-            re_bboxes[:, :4] *= torch.tensor(img_metas[0]['scale_factor']).to(
-                bboxes.device)
-        roi_feats, _ = model.track_head.extract_roi_feats(feats, [re_bboxes])
+            rescaled_bboxes[:, :4] *= torch.tensor(
+                img_metas[0]['scale_factor']).to(bboxes.device)
+        roi_feats, _ = model.track_head.extract_roi_feats(
+            feats, [rescaled_bboxes])
 
         if self.empty:
             num_new_tracks = bboxes.size(0)
@@ -119,36 +139,15 @@ class MaskTrackRCNNTracker(BaseTracker):
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
         else:
+            prev_bboxes = self.get('bboxes')
+            prev_labels = self.get('labels')
             prev_roi_feats = self.get('roi_feats')
+
             similarity_logits = model.track_head.simple_test(
                 roi_feats, prev_roi_feats)
-            similarity_scores = similarity_logits.softmax(dim=1)
-
-            prev_bboxes = self.get('bboxes')
-            ious = bbox_overlaps(bboxes[:, :4], prev_bboxes)
-
-            prev_labels = self.get('labels')
-            label_deltas = (labels.view(-1, 1) == prev_labels).float()
-
-            match_scores = self.compute_match_score(similarity_scores,
-                                                    bboxes[:, 4].view(-1, 1),
-                                                    ious, label_deltas)
-            _, match_ids = match_scores.max(dim=1)
-
-            ids = match_ids.new_zeros(match_ids.shape[0]) - 1
-            best_match_scores = prev_bboxes.new_zeros(
-                prev_bboxes.shape[0]) - 1e6
-            for idx, match_id in enumerate(match_ids):
-                if match_id == 0:
-                    ids[idx] = self.num_tracks
-                    self.num_tracks += 1
-                else:
-                    match_score = match_scores[idx, match_id]
-                    # TODO: fix the bug where multiple candidate might match
-                    # with the same previous object.
-                    if match_score > best_match_scores[match_id - 1]:
-                        ids[idx] = self.ids[match_id - 1]
-                        best_match_scores[match_id - 1] = match_score
+            match_scores = self.get_match_score(bboxes, labels, prev_bboxes,
+                                                prev_labels, similarity_logits)
+            ids, best_match_scores = self.assign_ids(match_scores)
 
         valid_inds = ids > -1
         ids = ids[valid_inds]
@@ -159,8 +158,7 @@ class MaskTrackRCNNTracker(BaseTracker):
 
         self.update(
             ids=ids,
-            bboxes=bboxes[:, :4],
-            scores=bboxes[:, 4],
+            bboxes=bboxes,
             labels=labels,
             masks=masks,
             roi_feats=roi_feats,

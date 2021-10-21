@@ -48,19 +48,17 @@ def acc_single_video(results,
     ]
     for result, gt in zip(results, gts):
         if ignore_by_classes:
-            gt_ignore_outs_dict = dict(
+            gt_ignore = outs2results(
                 bboxes=gt['bboxes_ignore'],
                 labels=gt['labels_ignore'],
-                num_classes=num_classes)
-            gt_ignore = outs2results(gt_ignore_outs_dict)['bboxes']
+                num_classes=num_classes)['bbox_results']
         else:
             gt_ignore = [gt['bboxes_ignore'] for i in range(num_classes)]
-        gt_outs_dict = dict(
+        gt = outs2results(
             bboxes=gt['bboxes'],
             labels=gt['labels'],
             ids=gt['instance_ids'],
-            num_classes=num_classes)
-        gt = outs2results(gt_outs_dict)['bboxes']
+            num_classes=num_classes)['bbox_results']
         for i in range(num_classes):
             gt_ids, gt_bboxes = gt[i][:, 0].astype(np.int), gt[i][:, 1:]
             pred_ids, pred_bboxes = result[i][:, 0].astype(

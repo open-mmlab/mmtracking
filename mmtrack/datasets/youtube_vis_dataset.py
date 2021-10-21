@@ -91,15 +91,14 @@ class YouTubeVISDataset(CocoVideoDataset):
             video_id = vid_infos[i]['id']
             # collect data for each instances in a video.
             collect_data = dict()
-            for frame_id, (bbox_res, segm_res) in enumerate(
+            for frame_id, (bbox_res, mask_res) in enumerate(
                     zip(results['track_bboxes'][inds[i]:inds[i + 1]],
                         results['track_masks'][inds[i]:inds[i + 1]])):
-                track_results_dict = dict(bboxes=bbox_res)
-                track_outs_dict = results2outs(track_results_dict)
-                bboxes = track_outs_dict['bboxes']
-                labels = track_outs_dict['labels']
-                ids = track_outs_dict['ids']
-                masks = mmcv.concat_list(segm_res)
+                track_outs = results2outs(bbox_results=bbox_res)
+                bboxes = track_outs['bboxes']
+                labels = track_outs['labels']
+                ids = track_outs['ids']
+                masks = mmcv.concat_list(mask_res)
                 assert len(masks) == len(bboxes)
                 for i, id in enumerate(ids):
                     if id not in collect_data:

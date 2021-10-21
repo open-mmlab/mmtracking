@@ -49,9 +49,8 @@ model = dict(
             debug=False)),
     tracker=dict(
         type='MaskTrackRCNNTracker',
-        det_score_coefficient=1.0,
-        iou_coefficient=2.0,
-        label_coefficient=10.0))
+        match_weights=dict(det_score=1.0, iou=2.0, det_label=10.0),
+        num_frames_retain=10))
 
 # dataset settings
 img_norm_cfg = dict(

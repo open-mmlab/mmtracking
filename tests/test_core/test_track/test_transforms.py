@@ -42,43 +42,48 @@ def test_outs2results():
     masks = torch.randint(0, 2, (num_objects, image_size, image_size)).bool()
 
     # test track2result without ids
-    outs = dict(
+    results = outs2results(
         bboxes=bboxes, labels=labels, masks=masks, num_classes=num_classes)
-    results = outs2results(outs)
 
-    for key in ['bboxes', 'masks']:
+    for key in ['bbox_results', 'mask_results']:
         assert key in results
-    assert len(results['bboxes']) == num_classes
-    assert isinstance(results['bboxes'][0], np.ndarray)
-    assert results['bboxes'][-1].shape == (0, 5)
-    assert len(results['masks']) == num_classes
-    assert isinstance(results['masks'][-1], list)
-    assert len(results['masks'][-1]) == 0
+    assert len(results['bbox_results']) == num_classes
+    assert isinstance(results['bbox_results'][0], np.ndarray)
+    assert results['bbox_results'][-1].shape == (0, 5)
+    assert len(results['mask_results']) == num_classes
+    assert isinstance(results['mask_results'][-1], list)
+    assert len(results['mask_results'][-1]) == 0
     for i in range(num_classes):
-        assert results['bboxes'][i].shape[0] == (labels == i).sum()
-        assert results['bboxes'][i].shape[1] == 5
-        assert len(results['masks'][i]) == (labels == i).sum()
-        if len(results['masks'][i]) > 0:
-            assert results['masks'][i][0].shape == (image_size, image_size)
+        assert results['bbox_results'][i].shape[0] == (labels == i).sum()
+        assert results['bbox_results'][i].shape[1] == 5
+        assert len(results['mask_results'][i]) == (labels == i).sum()
+        if len(results['mask_results'][i]) > 0:
+            assert results['mask_results'][i][0].shape == (image_size,
+                                                           image_size)
 
     # test track2result with ids
-    outs['ids'] = ids
-    results = outs2results(outs)
+    results = outs2results(
+        bboxes=bboxes,
+        labels=labels,
+        masks=masks,
+        ids=ids,
+        num_classes=num_classes)
 
-    for key in ['bboxes', 'masks']:
+    for key in ['bbox_results', 'mask_results']:
         assert key in results
-    assert len(results['bboxes']) == num_classes
-    assert isinstance(results['bboxes'][0], np.ndarray)
-    assert results['bboxes'][-1].shape == (0, 6)
-    assert len(results['masks']) == num_classes
-    assert isinstance(results['masks'][-1], list)
-    assert len(results['masks'][-1]) == 0
+    assert len(results['bbox_results']) == num_classes
+    assert isinstance(results['bbox_results'][0], np.ndarray)
+    assert results['bbox_results'][-1].shape == (0, 6)
+    assert len(results['mask_results']) == num_classes
+    assert isinstance(results['mask_results'][-1], list)
+    assert len(results['mask_results'][-1]) == 0
     for i in range(num_classes):
-        assert results['bboxes'][i].shape[0] == (labels == i).sum()
-        assert results['bboxes'][i].shape[1] == 6
-        assert len(results['masks'][i]) == (labels == i).sum()
-        if len(results['masks'][i]) > 0:
-            assert results['masks'][i][0].shape == (image_size, image_size)
+        assert results['bbox_results'][i].shape[0] == (labels == i).sum()
+        assert results['bbox_results'][i].shape[1] == 6
+        assert len(results['mask_results'][i]) == (labels == i).sum()
+        if len(results['mask_results'][i]) > 0:
+            assert results['mask_results'][i][0].shape == (image_size,
+                                                           image_size)
 
 
 def test_results2outs():
@@ -90,11 +95,11 @@ def test_results2outs():
         gt_labels.extend([id for _ in range(num)])
     image_size = 100
 
-    bbox_result = [
+    bbox_results = [
         np.random.randint(low=0, high=image_size, size=(num_objects[i], 5))
         for i in range(num_classes)
     ]
-    bbox_result_with_ids = [
+    bbox_results_with_ids = [
         np.random.randint(low=0, high=image_size, size=(num_objects[i], 6))
         for i in range(num_classes)
     ]
@@ -105,11 +110,10 @@ def test_results2outs():
                 np.random.randint(0, 2, (image_size, image_size)))
 
     # test results2outs without ids
-    results = dict(
-        bboxes=bbox_result,
-        masks=mask_results,
+    outs = results2outs(
+        bbox_results=bbox_results,
+        mask_results=mask_results,
         mask_shape=(image_size, image_size))
-    outs = results2outs(results)
 
     for key in ['bboxes', 'labels', 'masks']:
         assert key in outs
@@ -118,11 +122,10 @@ def test_results2outs():
     assert outs['masks'].shape == (sum(num_objects), image_size, image_size)
 
     # test results2outs with ids
-    results = dict(
-        bboxes=bbox_result_with_ids,
-        masks=mask_results,
+    outs = results2outs(
+        bbox_results=bbox_results_with_ids,
+        mask_results=mask_results,
         mask_shape=(image_size, image_size))
-    outs = results2outs(results)
 
     for key in ['bboxes', 'labels', 'ids', 'masks']:
         assert key in outs

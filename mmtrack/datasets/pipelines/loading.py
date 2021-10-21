@@ -98,12 +98,9 @@ class LoadDetections(object):
     """
 
     def __call__(self, results):
-        detections = results['detections']
-
-        det_results_dict = dict(bboxes=detections)
-        det_outs_dict = results2outs(det_results_dict)
-        bboxes = det_outs_dict['bboxes']
-        labels = det_outs_dict['labels']
+        det_outs = results2outs(bbox_results=results['detections'])
+        bboxes = det_outs['bboxes']
+        labels = det_outs['labels']
 
         results['public_bboxes'] = bboxes[:, :4]
         if bboxes.shape[1] > 4:
