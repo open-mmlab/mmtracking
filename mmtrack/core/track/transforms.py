@@ -48,40 +48,35 @@ def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
     return img
 
 
-def outs2results(output_dict):
+def outs2results(bboxes=None,
+                 labels=None,
+                 masks=None,
+                 ids=None,
+                 num_classes=None,
+                 **kwargs):
     """Convert tracking/detection results to a list of numpy arrays.
 
     Args:
-        output_dict (dict): The output results of the model forward. It may
-            contain keys as belows:
-
-            - bboxes (torch.Tensor | np.ndarray): shape (n, 5)
-            - labels (torch.Tensor | np.ndarray): shape (n, )
-            - masks (torch.Tensor | np.ndarray): shape (n, h, w)
-            - ids (torch.Tensor | np.ndarray): shape (n, )
-            - num_classes (int): class number, not including background class
+        bboxes (torch.Tensor | np.ndarray): shape (n, 5)
+        labels (torch.Tensor | np.ndarray): shape (n, )
+        masks (torch.Tensor | np.ndarray): shape (n, h, w)
+        ids (torch.Tensor | np.ndarray): shape (n, )
+        num_classes (int): class number, not including background class
 
     Returns:
         dict[str : list(ndarray) | list[list[np.ndarray]]]: tracking/detection
         results of each class. It may contain keys as belows:
 
-        - bboxes (list[np.ndarray]): Each list denotes bboxes of one
+        - bbox_results (list[np.ndarray]): Each list denotes bboxes of one
             category.
-        - masks (list[list[np.ndarray]]): Each outer list denotes masks of
-            one category. Each inner list denotes one mask belonging to
+        - mask_results (list[list[np.ndarray]]): Each outer list denotes masks
+            of one category. Each inner list denotes one mask belonging to
             the category. Each mask has shape (h, w).
     """
-    for key in output_dict:
-        assert key in ['bboxes', 'labels', 'masks', 'ids', 'num_classes']
-    for key in ['labels', 'num_classes']:
-        assert key in output_dict
+    assert labels is not None
+    assert num_classes is not None
 
-    bboxes = output_dict.get('bboxes', None)
-    masks = output_dict.get('masks', None)
-    ids = output_dict.get('ids', None)
-    labels = output_dict['labels']
-    num_classes = output_dict['num_classes']
-    result_dict = dict()
+    results = dict()
 
     if ids is not None:
         valid_inds = ids > -1
@@ -108,7 +103,7 @@ def outs2results(output_dict):
                 ]
         else:
             bbox_results = bbox2result(bboxes, labels, num_classes)
-        result_dict['bboxes'] = bbox_results
+        results['bbox_results'] = bbox_results
 
     if masks is not None:
         if ids is not None:
@@ -118,25 +113,25 @@ def outs2results(output_dict):
         masks_results = [[] for _ in range(num_classes)]
         for i in range(bboxes.shape[0]):
             masks_results[labels[i]].append(masks[i])
-        result_dict['masks'] = masks_results
+        results['mask_results'] = masks_results
 
-    return result_dict
+    return results
 
 
-def results2outs(result_dict):
+def results2outs(bbox_results=None,
+                 mask_results=None,
+                 mask_shape=None,
+                 **kwargs):
     """Restore the results (list of results of each category) into the results
     of the model forward.
 
     Args:
-        result_dict (dict): List of results of each category. It may
-            contain keys as belows:
-
-            - bboxes (list[np.ndarray]): Each list denotes bboxes of one
-                category.
-            - masks (list[list[np.ndarray]]): Each outer list denotes masks of
-                one category. Each inner list denotes one mask belonging to
-                the category. Each mask has shape (h, w).
-            - mask_shape (tuple[int]): The shape (h, w) of mask.
+        bbox_results (list[np.ndarray]): Each list denotes bboxes of one
+            category.
+        mask_results (list[list[np.ndarray]]): Each outer list denotes masks of
+            one category. Each inner list denotes one mask belonging to
+            the category. Each mask has shape (h, w).
+        mask_shape (tuple[int]): The shape (h, w) of mask.
 
     Returns:
         tuple: tracking results of each class. It may contain keys as belows:
@@ -146,39 +141,35 @@ def results2outs(result_dict):
         - masks (np.ndarray): shape (n, h, w)
         - ids (np.ndarray): shape (n, )
     """
-    for key in result_dict:
-        assert key in ['bboxes', 'masks', 'mask_shape']
-    bbox_results = result_dict.get('bboxes', None)
-    mask_results = result_dict.get('masks', None)
-    track_dict = dict()
+    outputs = dict()
 
     if bbox_results is not None:
         labels = []
         for i, bbox in enumerate(bbox_results):
             labels.extend([i] * bbox.shape[0])
         labels = np.array(labels, dtype=np.int64)
-        track_dict['labels'] = labels
+        outputs['labels'] = labels
 
         bboxes = np.concatenate(bbox_results, axis=0).astype(np.float32)
         if bboxes.shape[1] == 5:
-            track_dict['bboxes'] = bboxes
+            outputs['bboxes'] = bboxes
         elif bboxes.shape[1] == 6:
             ids = bboxes[:, 0].astype(np.int64)
             bboxes = bboxes[:, 1:]
-            track_dict['bboxes'] = bboxes
-            track_dict['ids'] = ids
+            outputs['bboxes'] = bboxes
+            outputs['ids'] = ids
         else:
             raise NotImplementedError(
                 f'Not supported bbox shape: (N, {bboxes.shape[1]})')
 
     if mask_results is not None:
-        assert 'mask_shape' in result_dict
-        mask_height, mask_width = result_dict['mask_shape']
+        assert mask_shape is not None
+        mask_height, mask_width = mask_shape
         mask_results = mmcv.concat_list(mask_results)
         if len(mask_results) == 0:
             masks = np.zeros((0, mask_height, mask_width)).astype(bool)
         else:
             masks = np.stack(mask_results, axis=0)
-        track_dict['masks'] = masks
+        outputs['masks'] = masks
 
-    return track_dict
+    return outputs
