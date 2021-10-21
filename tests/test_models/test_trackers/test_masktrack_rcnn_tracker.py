@@ -12,9 +12,7 @@ class TestBaseTracker(object):
     @classmethod
     def setup_class(cls):
         cfg = dict(
-            det_score_coefficient=1.0,
-            iou_coefficient=1.0,
-            label_coefficient=1000.0)
+            match_weights=dict(det_score=1.0, iou=1.0, det_label=1000.0), )
         tracker = TRACKERS.get('MaskTrackRCNNTracker')
         cls.tracker = tracker(**cfg)
         cls.num_objs = 5
