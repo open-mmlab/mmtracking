@@ -7,7 +7,7 @@ from mmdet.core.bbox.demodata import random_boxes
 from mmtrack.models import TRACKERS
 
 
-class TestBaseTracker(object):
+class TestMaskTrackRCNNTracker(object):
 
     @classmethod
     def setup_class(cls):
