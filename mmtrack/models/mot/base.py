@@ -234,10 +234,12 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
         Args:
             img (str | ndarray): Filename of loaded image.
             result (dict): Tracking result.
-                The value of key 'track_results' is ndarray with shape (n, 6)
-                in [id, tl_x, tl_y, br_x, br_y, score] format.
-                The value of key 'bbox_results' is ndarray with shape (n, 5)
-                in [tl_x, tl_y, br_x, br_y, score] format.
+                - The value of key 'track_bboxes' is list with length
+                num_classes, and each element in list is ndarray with
+                shape(n, 6) in [id, tl_x, tl_y, br_x, br_y, score] format.
+                - The value of key 'det_bboxes' is list with length
+                num_classes, and each element in list is ndarray with
+                shape(n, 5) in [tl_x, tl_y, br_x, br_y, score] format.
             thickness (int, optional): Thickness of lines. Defaults to 1.
             font_scale (float, optional): Font scales of texts. Defaults
                 to 0.5.
@@ -251,7 +253,7 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
             ndarray: Visualized image.
         """
         assert isinstance(result, dict)
-        track_bboxes = result.get('track_results', None)
+        track_bboxes = result.get('track_bboxes', None)
         outs_track = results2outs(bbox_results=track_bboxes)
         img = imshow_tracks(
             img,

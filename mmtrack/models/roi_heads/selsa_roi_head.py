@@ -140,9 +140,9 @@ class SelsaRoIHead(StandardRoIHead):
         if not self.with_mask:
             return bbox_results
         else:
-            segm_results = self.simple_test_mask(
+            mask_results = self.simple_test_mask(
                 x, img_metas, det_bboxes, det_labels, rescale=rescale)
-            return list(zip(bbox_results, segm_results))
+            return list(zip(bbox_results, mask_results))
 
     def simple_test_bboxes(self,
                            x,
