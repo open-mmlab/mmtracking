@@ -153,4 +153,4 @@ class Tracktor(BaseMultiObjectTracker):
 
         return dict(
             det_bboxes=det_results['bbox_results'],
-            track_results=track_results['bbox_results'])
+            track_bboxes=track_results['bbox_results'])

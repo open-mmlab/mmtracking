@@ -281,10 +281,10 @@ class SiamRPN(BaseSingleObjectTracker):
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()
         if best_score == -1.:
-            results['track_results'] = np.concatenate(
+            results['track_bboxes'] = np.concatenate(
                 (bbox_pred.cpu().numpy(), np.array([best_score])))
         else:
-            results['track_results'] = np.concatenate(
+            results['track_bboxes'] = np.concatenate(
                 (bbox_pred.cpu().numpy(), best_score.cpu().numpy()[None]))
         return results
 

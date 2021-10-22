@@ -402,15 +402,15 @@ class CocoVideoDataset(CocoDataset):
 
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['track_results'])
+            assert len(self.data_infos) == len(results['track_bboxes'])
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
             ]
             num_vids = len(inds)
             inds.append(len(self.data_infos))
 
-            track_results = [
-                results['track_results'][inds[i]:inds[i + 1]]
+            track_bboxes = [
+                results['track_bboxes'][inds[i]:inds[i + 1]]
                 for i in range(num_vids)
             ]
             ann_infos = [self.get_ann_info(_) for _ in self.data_infos]
@@ -418,7 +418,7 @@ class CocoVideoDataset(CocoDataset):
                 ann_infos[inds[i]:inds[i + 1]] for i in range(num_vids)
             ]
             track_eval_results = eval_mot(
-                results=track_results,
+                results=track_bboxes,
                 annotations=ann_infos,
                 logger=logger,
                 classes=self.CLASSES,

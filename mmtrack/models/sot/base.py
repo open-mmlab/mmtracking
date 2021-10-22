@@ -260,7 +260,7 @@ class BaseSingleObjectTracker(BaseModule, metaclass=ABCMeta):
         Args:
             img (str or ndarray): The image to be displayed.
             result (dict): Tracking result.
-                The value of key 'track_results' is ndarray with shape (5, )
+                The value of key 'track_bboxes' is ndarray with shape (5, )
                 in [tl_x, tl_y, br_x, br_y, score] format.
             color (str or tuple or Color, optional): color of bbox.
                 Defaults to green.
@@ -279,14 +279,14 @@ class BaseSingleObjectTracker(BaseModule, metaclass=ABCMeta):
             ndarray: Visualized image.
         """
         assert isinstance(result, dict)
-        track_result = result.get('track_results', None)
-        assert track_result.ndim == 1
-        assert track_result.shape[0] == 5
+        track_bboxes = result.get('track_bboxes', None)
+        assert track_bboxes.ndim == 1
+        assert track_bboxes.shape[0] == 5
 
-        track_bbox = track_result[:4]
+        track_bboxes = track_bboxes[:4]
         mmcv.imshow_bboxes(
             img,
-            track_bbox[np.newaxis, :],
+            track_bboxes[np.newaxis, :],
             colors=color,
             thickness=thickness,
             show=show,
