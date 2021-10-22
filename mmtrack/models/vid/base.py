@@ -301,8 +301,8 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
 
         Args:
             img (str or Tensor): The image to be displayed.
-            result (dict): The results to draw over `img` bbox_result or
-                (bbox_result, mask_result). The value of key 'det_bboxes'
+            result (dict): The results to draw over `img` det_bboxes or
+                (det_bboxes, det_masks). The value of key 'det_bboxes'
                 is list with length num_classes, and each element in list
                 is ndarray with shape(n, 5)
                 in [tl_x, tl_y, br_x, br_y, score] format.
