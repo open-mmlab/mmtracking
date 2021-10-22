@@ -94,10 +94,10 @@ class YouTubeVISDataset(CocoVideoDataset):
             for frame_id, (bbox_res, mask_res) in enumerate(
                     zip(results['track_bboxes'][inds[i]:inds[i + 1]],
                         results['track_masks'][inds[i]:inds[i + 1]])):
-                track_outs = results2outs(bbox_results=bbox_res)
-                bboxes = track_outs['bboxes']
-                labels = track_outs['labels']
-                ids = track_outs['ids']
+                outs_track = results2outs(bbox_results=bbox_res)
+                bboxes = outs_track['bboxes']
+                labels = outs_track['labels']
+                ids = outs_track['ids']
                 masks = mmcv.concat_list(mask_res)
                 assert len(masks) == len(bboxes)
                 for i, id in enumerate(ids):

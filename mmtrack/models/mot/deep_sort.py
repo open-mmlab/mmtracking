@@ -116,7 +116,7 @@ class DeepSORT(BaseMultiObjectTracker):
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 
-        bboxes, labels, ids = self.tracker.track(
+        track_bboxes, track_labels, track_ids = self.tracker.track(
             img=img,
             img_metas=img_metas,
             model=self,
@@ -128,7 +128,10 @@ class DeepSORT(BaseMultiObjectTracker):
             **kwargs)
 
         track_results = outs2results(
-            bboxes=bboxes, labels=labels, ids=ids, num_classes=num_classes)
+            bboxes=track_bboxes,
+            labels=track_labels,
+            ids=track_ids,
+            num_classes=num_classes)
         det_results = outs2results(
             bboxes=det_bboxes, labels=det_labels, num_classes=num_classes)
 

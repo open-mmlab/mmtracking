@@ -12,12 +12,16 @@ class MaskTrackRCNNTracker(BaseTracker):
     """Tracker for MaskTrack R-CNN.
 
     Args:
-        det_score_coefficient (float): The coefficient of `det_score` when
-            computing match score.
-        iou_coefficient (float): The coefficient of `ious` when computing
-            match score.
-        label_coefficient (float): The coefficient of `label_deltas` when
-            computing match score.
+        match_weights (dict[str : float]): The Weighting factor when computing
+        the match score. It contains keys as follows:
+
+            - det_score (float): The coefficient of `det_score` when computing
+                match score.
+            - iou (float): The coefficient of `ious` when computing match
+                score.
+            - det_label (float): The coefficient of `label_deltas` when
+                computing match score.
+
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Defaults to None.
     """

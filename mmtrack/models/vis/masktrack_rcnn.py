@@ -183,31 +183,32 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         num_classes = self.detector.roi_head.bbox_head.num_classes
         assert len(bbox_results) == num_classes
 
-        det_outs = results2outs(
+        outs_det = results2outs(
             bbox_results=bbox_results,
             mask_results=mask_results,
             mask_shape=img_metas[0]['ori_shape'][:2])
-        det_bboxes = torch.tensor(det_outs['bboxes']).to(img)
-        det_labels = torch.tensor(det_outs['labels']).to(img).long()
-        det_masks = torch.tensor(det_outs['masks']).to(img).bool()
+        det_bboxes = torch.tensor(outs_det['bboxes']).to(img)
+        det_labels = torch.tensor(outs_det['labels']).to(img).long()
+        det_masks = torch.tensor(outs_det['masks']).to(img).bool()
 
-        bboxes, labels, masks, ids = self.tracker.track(
-            img=img,
-            img_metas=img_metas,
-            model=self,
-            feats=x,
-            bboxes=det_bboxes,
-            labels=det_labels,
-            masks=det_masks,
-            frame_id=frame_id,
-            rescale=rescale,
-            **kwargs)
+        (track_bboxes, track_labels, track_masks,
+         track_ids) = self.tracker.track(
+             img=img,
+             img_metas=img_metas,
+             model=self,
+             feats=x,
+             bboxes=det_bboxes,
+             labels=det_labels,
+             masks=det_masks,
+             frame_id=frame_id,
+             rescale=rescale,
+             **kwargs)
 
         track_results = outs2results(
-            bboxes=bboxes,
-            labels=labels,
-            masks=masks,
-            ids=ids,
+            bboxes=track_bboxes,
+            labels=track_labels,
+            masks=track_masks,
+            ids=track_ids,
             num_classes=num_classes)
         return dict(
             track_bboxes=track_results['bbox_results'],
