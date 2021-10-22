@@ -33,7 +33,7 @@ def test_load_detections(dataset):
     det_file = osp.join(tmp_dir.name, 'det.pkl')
     outputs = _create_coco_gt_results(dataset)
 
-    mmcv.dump(outputs['bbox_results'], det_file)
+    mmcv.dump(outputs['det_bboxes'], det_file)
     detections = dataset.load_detections(det_file)
     assert isinstance(detections, list)
     assert len(detections) == 8
@@ -46,12 +46,12 @@ def test_load_detections(dataset):
     i = np.random.randint(0, len(dataset.data_infos))
     results = dataset.prepare_results(dataset.data_infos[i])
     assert 'detections' in results
-    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+    for a, b in zip(results['detections'], outputs['det_bboxes'][i]):
         assert (a == b).all()
 
     out = dict()
     for i in range(len(dataset.data_infos)):
-        out[dataset.data_infos[i]['file_name']] = outputs['bbox_results'][i]
+        out[dataset.data_infos[i]['file_name']] = outputs['det_bboxes'][i]
     mmcv.dump(out, det_file)
     detections = dataset.load_detections(det_file)
     assert isinstance(detections, dict)
@@ -60,7 +60,7 @@ def test_load_detections(dataset):
     i = np.random.randint(0, len(dataset.data_infos))
     results = dataset.prepare_results(dataset.data_infos[i])
     assert 'detections' in results
-    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+    for a, b in zip(results['detections'], outputs['det_bboxes'][i]):
         assert (a == b).all()
 
     tmp_dir.cleanup()
@@ -108,9 +108,9 @@ def test_mot17_bbox_evaluation():
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_coco_gt_results(dataset)
 
-    eval_results = dataset.evaluate(results, metric='bbox')
+    eval_results = dataset.evaluate(results, metric='det')
     assert eval_results['mAP'] == 1.0
-    eval_results = dataset.evaluate(results['det_bboxes'], metric='bbox')
+    eval_results = dataset.evaluate(results['det_bboxes'], metric='det')
     assert eval_results['mAP'] == 1.0
 
 
