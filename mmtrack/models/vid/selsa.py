@@ -330,7 +330,7 @@ class SELSA(BaseVideoDetector):
         results = dict()
         results['bbox_results'] = outs[0]
         if len(outs) == 2:
-            results['segm_results'] = outs[1]
+            results['det_masks'] = outs[1]
         return results
 
     def aug_test(self, imgs, img_metas, **kwargs):

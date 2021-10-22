@@ -432,9 +432,9 @@ class CocoVideoDataset(CocoDataset):
             if isinstance(results, dict):
                 if 'bbox' in super_metrics and 'segm' in super_metrics:
                     super_results = []
-                    for bbox, segm in zip(results['bbox_results'],
-                                          results['segm_results']):
-                        super_results.append((bbox, segm))
+                    for bbox, mask in zip(results['bbox_results'],
+                                          results['det_masks']):
+                        super_results.append((bbox, mask))
                 else:
                     super_results = results['bbox_results']
             elif isinstance(results, list):
