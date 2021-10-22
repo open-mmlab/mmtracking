@@ -110,7 +110,7 @@ def test_mot17_bbox_evaluation():
 
     eval_results = dataset.evaluate(results, metric='bbox')
     assert eval_results['mAP'] == 1.0
-    eval_results = dataset.evaluate(results['bbox_results'], metric='bbox')
+    eval_results = dataset.evaluate(results['det_bboxes'], metric='bbox')
     assert eval_results['mAP'] == 1.0
 
 

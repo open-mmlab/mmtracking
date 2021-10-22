@@ -301,7 +301,7 @@ class MOTChallengeDataset(CocoVideoDataset):
 
         if 'bbox' in metrics:
             if isinstance(results, dict):
-                bbox_results = results['bbox_results']
+                bbox_results = results['det_bboxes']
             elif isinstance(results, list):
                 bbox_results = results
             else:

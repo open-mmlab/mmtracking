@@ -302,7 +302,7 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
         Args:
             img (str or Tensor): The image to be displayed.
             result (dict): The results to draw over `img` bbox_result or
-                (bbox_result, segm_result). The value of key 'bbox_results'
+                (bbox_result, mask_result). The value of key 'det_bboxes'
                 is list with length num_classes, and each element in list
                 is ndarray with shape(n, 5)
                 in [tl_x, tl_y, br_x, br_y, score] format.
@@ -327,14 +327,14 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
         img = mmcv.imread(img)
         img = img.copy()
         assert isinstance(result, dict)
-        bbox_result = result.get('bbox_results', None)
+        bbox_results = result.get('det_bboxes', None)
         mask_results = result.get('det_masks', None)
         if isinstance(mask_results, tuple):
             mask_results = mask_results[0]  # ms rcnn
-        bboxes = np.vstack(bbox_result)
+        bboxes = np.vstack(bbox_results)
         labels = [
             np.full(bbox.shape[0], i, dtype=np.int32)
-            for i, bbox in enumerate(bbox_result)
+            for i, bbox in enumerate(bbox_results)
         ]
         labels = np.concatenate(labels)
         # draw segmentation masks

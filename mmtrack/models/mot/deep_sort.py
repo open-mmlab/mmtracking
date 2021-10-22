@@ -136,5 +136,5 @@ class DeepSORT(BaseMultiObjectTracker):
             bboxes=det_bboxes, labels=det_labels, num_classes=num_classes)
 
         return dict(
-            bbox_results=det_results['bbox_results'],
+            det_bboxes=det_results['bbox_results'],
             track_results=track_results['bbox_results'])

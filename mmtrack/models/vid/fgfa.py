@@ -357,7 +357,7 @@ class FGFA(BaseVideoDetector):
             raise TypeError('detector must has roi_head or bbox_head.')
 
         results = dict()
-        results['bbox_results'] = outs[0]
+        results['det_bboxes'] = outs[0]
         if len(outs) == 2:
             results['det_masks'] = outs[1]
         return results
