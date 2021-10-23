@@ -50,7 +50,7 @@ model = dict(
     tracker=dict(
         type='MaskTrackRCNNTracker',
         match_weights=dict(det_score=1.0, iou=2.0, det_label=10.0),
-        num_frames_retain=10))
+        num_frames_retain=20))
 
 # optimizer
 optimizer = dict(type='SGD', lr=0.00125, momentum=0.9, weight_decay=0.0001)
