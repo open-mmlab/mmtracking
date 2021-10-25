@@ -33,17 +33,17 @@ class GOT10kDataset(SOTTestDataset):
 
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
-        results = results['track_results']
+        track_bboxes = results['track_bboxes']
         print('-------- There are total {} images --------'.format(
-            len(results)))
+            len(track_bboxes)))
 
         video_info = self.coco.videos
         format_results = defaultdict(list)
-        for img_id, res in enumerate(results):
+        for img_id, track_bbox in enumerate(track_bboxes):
             img_info = self.data_infos[img_id]
             assert img_info['id'] == img_id + 1, 'img id is not matched'
             video_name = video_info[img_info['video_id']]['name']
-            format_results[video_name].append(res[:4])
+            format_results[video_name].append(track_bbox[:4])
 
         assert len(video_info) == len(
             format_results

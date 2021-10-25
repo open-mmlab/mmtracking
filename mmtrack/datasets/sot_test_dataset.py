@@ -72,7 +72,7 @@ class SOTTestDataset(CocoVideoDataset):
 
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['track_results'])
+            assert len(self.data_infos) == len(results['track_bboxes'])
             print_log('Evaluate OPE Benchmark...', logger=logger)
             inds = [
                 i for i, _ in enumerate(self.data_infos) if _['frame_id'] == 0
@@ -83,7 +83,7 @@ class SOTTestDataset(CocoVideoDataset):
             track_bboxes = [
                 list(
                     map(lambda x: x[:4],
-                        results['track_results'][inds[i]:inds[i + 1]]))
+                        results['track_bboxes'][inds[i]:inds[i + 1]]))
                 for i in range(num_vids)
             ]
 

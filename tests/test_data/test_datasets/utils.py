@@ -21,6 +21,6 @@ def _create_coco_gt_results(dataset):
             labels=ann['labels'],
             ids=ann['instance_ids'].astype(np.int),
             num_classes=len(dataset.CLASSES))
-        results['bbox_results'].append(det_results['bbox_results'])
-        results['track_results'].append(track_results['bbox_results'])
+        results['det_bboxes'].append(det_results['bbox_results'])
+        results['track_bboxes'].append(track_results['bbox_results'])
     return results

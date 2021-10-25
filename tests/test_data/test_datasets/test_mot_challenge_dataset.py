@@ -33,7 +33,7 @@ def test_load_detections(dataset):
     det_file = osp.join(tmp_dir.name, 'det.pkl')
     outputs = _create_coco_gt_results(dataset)
 
-    mmcv.dump(outputs['bbox_results'], det_file)
+    mmcv.dump(outputs['det_bboxes'], det_file)
     detections = dataset.load_detections(det_file)
     assert isinstance(detections, list)
     assert len(detections) == 8
@@ -46,12 +46,12 @@ def test_load_detections(dataset):
     i = np.random.randint(0, len(dataset.data_infos))
     results = dataset.prepare_results(dataset.data_infos[i])
     assert 'detections' in results
-    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+    for a, b in zip(results['detections'], outputs['det_bboxes'][i]):
         assert (a == b).all()
 
     out = dict()
     for i in range(len(dataset.data_infos)):
-        out[dataset.data_infos[i]['file_name']] = outputs['bbox_results'][i]
+        out[dataset.data_infos[i]['file_name']] = outputs['det_bboxes'][i]
     mmcv.dump(out, det_file)
     detections = dataset.load_detections(det_file)
     assert isinstance(detections, dict)
@@ -60,7 +60,7 @@ def test_load_detections(dataset):
     i = np.random.randint(0, len(dataset.data_infos))
     results = dataset.prepare_results(dataset.data_infos[i])
     assert 'detections' in results
-    for a, b in zip(results['detections'], outputs['bbox_results'][i]):
+    for a, b in zip(results['detections'], outputs['det_bboxes'][i]):
         assert (a == b).all()
 
     tmp_dir.cleanup()
@@ -108,9 +108,9 @@ def test_mot17_bbox_evaluation():
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_coco_gt_results(dataset)
 
-    eval_results = dataset.evaluate(results, metric='bbox')
+    eval_results = dataset.evaluate(results, metric='det')
     assert eval_results['mAP'] == 1.0
-    eval_results = dataset.evaluate(results['bbox_results'], metric='bbox')
+    eval_results = dataset.evaluate(results['det_bboxes'], metric='det')
     assert eval_results['mAP'] == 1.0
 
 
@@ -134,11 +134,11 @@ def test_mot17_track_evaluation(dataset):
     dataset.data_infos = []
 
     def _load_results(videos):
-        track_results, data_infos = [], []
+        track_bboxes, data_infos = [], []
         for video in videos:
             dets = mmcv.list_from_file(
                 osp.join(MOT_ANN_PATH, 'results', f'{video}.txt'))
-            track_result = defaultdict(list)
+            track_bbox = defaultdict(list)
             for det in dets:
                 det = det.strip().split(',')
                 frame_id, ins_id = map(int, det[:2])
@@ -147,19 +147,19 @@ def test_mot17_track_evaluation(dataset):
                     ins_id, bbox[0], bbox[1], bbox[0] + bbox[2],
                     bbox[1] + bbox[3], bbox[4]
                 ]
-                track_result[frame_id].append(track)
-            max_frame = max(track_result.keys())
+                track_bbox[frame_id].append(track)
+            max_frame = max(track_bbox.keys())
             for i in range(1, max_frame + 1):
-                track_results.append(
-                    [np.array(track_result[i], dtype=np.float32)])
+                track_bboxes.append(
+                    [np.array(track_bbox[i], dtype=np.float32)])
                 data_infos.append(dict(frame_id=i - 1))
-        return track_results, data_infos
+        return track_bboxes, data_infos
 
-    track_results, data_infos = _load_results(videos)
+    track_bboxes, data_infos = _load_results(videos)
     dataset.data_infos = data_infos
 
     eval_results = dataset.evaluate(
-        dict(track_results=track_results),
+        dict(track_bboxes=track_bboxes),
         metric='track',
         logger=None,
         resfile_path=None,
