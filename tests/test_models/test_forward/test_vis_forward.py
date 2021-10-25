@@ -8,9 +8,10 @@ import torch
 from .utils import _demo_mm_inputs, _get_config_module
 
 
-@pytest.mark.parametrize(
-    'cfg_file',
-    ['vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis.py'])
+@pytest.mark.parametrize('cfg_file', [
+    'vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py',
+    'vis/masktrack_rcnn/cascade_masktrack_rcnn_r50_fpn_12e_youtubevis2019.py'
+])
 def test_vis_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
