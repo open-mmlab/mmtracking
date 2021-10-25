@@ -34,7 +34,9 @@ def _cv2_show_tracks(img,
                      bboxes,
                      labels,
                      ids,
+                     masks=None,
                      classes=None,
+                     score_thr=0.0,
                      thickness=2,
                      font_scale=0.4,
                      show=False,
@@ -53,8 +55,17 @@ def _cv2_show_tracks(img,
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
     bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
 
-    text_width, text_height = 10, 15
-    for bbox, label, id in zip(bboxes, labels, ids):
+    inds = np.where(bboxes[:, -1] > score_thr)[0]
+    bboxes = bboxes[inds]
+    labels = labels[inds]
+    ids = ids[inds]
+    if masks is not None:
+        assert masks.ndim == 3
+        masks = masks[inds]
+        assert masks.shape[0] == bboxes.shape[0]
+
+    text_width, text_height = 9, 13
+    for i, (bbox, label, id) in enumerate(zip(bboxes, labels, ids)):
         x1, y1, x2, y2 = bbox[:4].astype(np.int32)
         score = float(bbox[-1])
 
@@ -63,27 +74,36 @@ def _cv2_show_tracks(img,
         bbox_color = [int(255 * _c) for _c in bbox_color][::-1]
         cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=thickness)
 
-        # id
-        text = str(id)
+        # score
+        text = '{:.02f}'.format(score)
+        if classes is not None:
+            text += f'|{classes[label]}'
         width = len(text) * text_width
         img[y1:y1 + text_height, x1:x1 + width, :] = bbox_color
         cv2.putText(
             img,
-            str(id), (x1, y1 + text_height - 2),
+            text, (x1, y1 + text_height - 2),
             cv2.FONT_HERSHEY_COMPLEX,
             font_scale,
             color=(0, 0, 0))
 
-        # score
-        text = '{:.02f}'.format(score)
+        # id
+        text = str(id)
         width = len(text) * text_width
-        img[y1 - text_height:y1, x1:x1 + width, :] = bbox_color
+        img[y1 + text_height:y1 + 2 * text_height,
+            x1:x1 + width, :] = bbox_color
         cv2.putText(
             img,
-            text, (x1, y1 - 2),
+            str(id), (x1, y1 + 2 * text_height - 2),
             cv2.FONT_HERSHEY_COMPLEX,
             font_scale,
             color=(0, 0, 0))
+
+        # mask
+        if masks is not None:
+            mask = masks[i].astype(bool)
+            mask_color = np.array(bbox_color, dtype=np.uint8).reshape(1, -1)
+            img[mask] = img[mask] * 0.5 + mask_color * 0.5
 
     if show:
         mmcv.imshow(img, wait_time=wait_time)
@@ -97,9 +117,11 @@ def _plt_show_tracks(img,
                      bboxes,
                      labels,
                      ids,
+                     masks=None,
                      classes=None,
-                     thickness=1,
-                     font_scale=0.5,
+                     score_thr=0.0,
+                     thickness=0.1,
+                     font_scale=5,
                      show=False,
                      wait_time=0,
                      out_file=None):
@@ -108,7 +130,7 @@ def _plt_show_tracks(img,
     assert labels.ndim == 1
     assert ids.ndim == 1
     assert bboxes.shape[0] == ids.shape[0]
-    assert bboxes.shape[1] == 4 or bboxes.shape[1] == 5
+    assert bboxes.shape[1] == 5
 
     if isinstance(img, str):
         img = plt.imread(img)
@@ -118,6 +140,15 @@ def _plt_show_tracks(img,
     img_shape = img.shape
     bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, img_shape[1])
     bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, img_shape[0])
+
+    inds = np.where(bboxes[:, -1] > score_thr)[0]
+    bboxes = bboxes[inds]
+    labels = labels[inds]
+    ids = ids[inds]
+    if masks is not None:
+        assert masks.ndim == 3
+        masks = masks[inds]
+        assert masks.shape[0] == bboxes.shape[0]
 
     if not show:
         matplotlib.use('Agg')
@@ -133,28 +164,55 @@ def _plt_show_tracks(img,
     plt.rcParams['figure.figsize'] = img_shape[1], img_shape[0]
 
     text_width, text_height = 12, 16
-    for bbox, label, id in zip(bboxes, labels, ids):
-        x1, y1, x2, y2, score = bbox
+    for i, (bbox, label, id) in enumerate(zip(bboxes, labels, ids)):
+        x1, y1, x2, y2 = bbox[:4].astype(np.int32)
+        score = float(bbox[-1])
         w, h = int(x2 - x1), int(y2 - y1)
-        left_top = (int(x1), int(y1))
 
         # bbox
-        color = random_color(id)
+        bbox_color = random_color(id)
         plt.gca().add_patch(
-            Rectangle(
-                left_top, w, h, thickness, edgecolor=color, facecolor='none'))
+            Rectangle((x1, y1),
+                      w,
+                      h,
+                      thickness,
+                      edgecolor=bbox_color,
+                      facecolor='none'))
+
+        # score
+        text = '{:.02f}'.format(score)
+        if classes is not None:
+            text += f'|{classes[label]}'
+        width = len(text) * text_width
+        plt.gca().add_patch(
+            Rectangle((x1, y1),
+                      width,
+                      text_height,
+                      thickness,
+                      edgecolor=bbox_color,
+                      facecolor=bbox_color))
+        plt.text(x1, y1 + text_height, text, fontsize=5)
 
         # id
         text = str(id)
         width = len(text) * text_width
         plt.gca().add_patch(
-            Rectangle((left_top[0], left_top[1]),
+            Rectangle((x1, y1 + text_height + 1),
                       width,
                       text_height,
                       thickness,
-                      edgecolor=color,
-                      facecolor=color))
-        plt.text(left_top[0], left_top[1] + text_height + 2, text, fontsize=5)
+                      edgecolor=bbox_color,
+                      facecolor=bbox_color))
+        plt.text(x1, y1 + 2 * text_height + 2, text, fontsize=5)
+
+        # mask
+        if masks is not None:
+            mask = masks[i].astype(bool)
+            bbox_color = [int(255 * _c) for _c in bbox_color]
+            mask_color = np.array(bbox_color, dtype=np.uint8).reshape(1, -1)
+            img[mask] = img[mask] * 0.5 + mask_color * 0.5
+    # In order to show the mask.
+    plt.imshow(img)
 
     if out_file is not None:
         plt.savefig(out_file, dpi=300, bbox_inches='tight', pad_inches=0.0)
