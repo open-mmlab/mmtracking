@@ -12,7 +12,7 @@ LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
 
 
 def test_format_results():
-    dataset_class = DATASETS.get('TrackingNetTestDataset')
+    dataset_class = DATASETS.get('TrackingNetDataset')
     dataset = dataset_class(
         ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
         pipeline=[])

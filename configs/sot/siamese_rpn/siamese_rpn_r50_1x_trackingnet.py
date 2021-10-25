@@ -4,7 +4,7 @@ data_root = 'data/'
 # dataset settings
 data = dict(
     test=dict(
-        type='TrackingNetTestDataset',
+        type='TrackingNetDataset',
         ann_file=data_root +
         'trackingnet/TEST/annotations/trackingnet_test.json',
         img_prefix=data_root + 'trackingnet/TEST/frames'))

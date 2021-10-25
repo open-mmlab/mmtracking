@@ -38,7 +38,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     if checkpoint is not None:
         map_loc = 'cpu' if device == 'cpu' else None
         checkpoint = load_checkpoint(model, checkpoint, map_location=map_loc)
-        if 'CLASSES' in checkpoint['meta']:
+        if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
         if hasattr(model, 'detector') and hasattr(model.detector, 'CLASSES'):

@@ -9,7 +9,7 @@ from .sot_test_dataset import SOTTestDataset
 
 
 @DATASETS.register_module()
-class TrackingNetTestDataset(SOTTestDataset):
+class TrackingNetDataset(SOTTestDataset):
     """TrackingNet dataset for the testing of single object tracking.
 
     The dataset doesn't support training mode.
