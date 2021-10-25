@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
+import tempfile
 
 import mmcv
 import numpy as np
@@ -40,17 +41,47 @@ def test_sot_ope_evaluation():
         results.extend(
             mmcv.list_from_file(
                 osp.join(LASOT_ANN_PATH, video_name, 'track_results.txt')))
-    track_results = []
+    track_bboxes = []
     for result in results:
         x1, y1, x2, y2 = result.split(',')
-        track_results.append(
+        track_bboxes.append(
             np.array([float(x1),
                       float(y1),
                       float(x2),
                       float(y2), 0.]))
 
-    track_results = dict(track_results=track_results)
+    track_results = dict(track_bboxes=track_bboxes)
     eval_results = dataset.evaluate(track_results, metric=['track'])
     assert eval_results['success'] == 67.524
     assert eval_results['norm_precision'] == 70.0
     assert eval_results['precision'] == 50.0
+
+
+@pytest.mark.parametrize('dataset', ['TrackingNetDataset', 'GOT10kDataset'])
+def test_format_results(dataset):
+    dataset_class = DATASETS.get(dataset)
+    dataset = dataset_class(
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
+
+    results = []
+    for video_name in ['airplane-1', 'airplane-2']:
+        results.extend(
+            mmcv.list_from_file(
+                osp.join(LASOT_ANN_PATH, video_name, 'track_results.txt')))
+
+    track_bboxes = []
+    for result in results:
+        x1, y1, x2, y2 = result.split(',')
+        track_bboxes.append(
+            np.array([float(x1),
+                      float(y1),
+                      float(x2),
+                      float(y2), 0.]))
+
+    track_results = dict(track_bboxes=track_bboxes)
+
+    tmp_dir = tempfile.TemporaryDirectory()
+    dataset.format_results(track_results, resfile_path=tmp_dir.name)
+    if osp.isdir(tmp_dir.name):
+        tmp_dir.cleanup()

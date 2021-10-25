@@ -301,8 +301,8 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
 
         Args:
             img (str or Tensor): The image to be displayed.
-            result (dict): The results to draw over `img` bbox_result or
-                (bbox_result, segm_result). The value of key 'bbox_results'
+            result (dict): The results to draw over `img` det_bboxes or
+                (det_bboxes, det_masks). The value of key 'det_bboxes'
                 is list with length num_classes, and each element in list
                 is ndarray with shape(n, 5)
                 in [tl_x, tl_y, br_x, br_y, score] format.
@@ -327,19 +327,19 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
         img = mmcv.imread(img)
         img = img.copy()
         assert isinstance(result, dict)
-        bbox_result = result.get('bbox_results', None)
-        segm_result = result.get('segm_results', None)
-        if isinstance(segm_result, tuple):
-            segm_result = segm_result[0]  # ms rcnn
-        bboxes = np.vstack(bbox_result)
+        bbox_results = result.get('det_bboxes', None)
+        mask_results = result.get('det_masks', None)
+        if isinstance(mask_results, tuple):
+            mask_results = mask_results[0]  # ms rcnn
+        bboxes = np.vstack(bbox_results)
         labels = [
             np.full(bbox.shape[0], i, dtype=np.int32)
-            for i, bbox in enumerate(bbox_result)
+            for i, bbox in enumerate(bbox_results)
         ]
         labels = np.concatenate(labels)
         # draw segmentation masks
-        if segm_result is not None and len(labels) > 0:  # non empty
-            segms = mmcv.concat_list(segm_result)
+        if mask_results is not None and len(labels) > 0:  # non empty
+            masks = mmcv.concat_list(mask_results)
             inds = np.where(bboxes[:, -1] > score_thr)[0]
             np.random.seed(42)
             color_masks = [
@@ -349,7 +349,7 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
             for i in inds:
                 i = int(i)
                 color_mask = color_masks[labels[i]]
-                mask = segms[i].astype(bool)
+                mask = masks[i].astype(bool)
                 img[mask] = img[mask] * 0.5 + color_mask * 0.5
         # if out_file specified, do not show image in window
         if out_file is not None:

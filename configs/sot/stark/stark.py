@@ -89,11 +89,10 @@ data = dict(
     samples_per_gpu=28,
     workers_per_gpu=2,
     test=dict(
-        type='TrackingNetDataset',
+        type='GOT10kDataset',
         test_load_ann=True,
-        ann_file=data_root +
-        'trackingnet/TEST/annotations/trackingnet_test.json',
-        img_prefix=data_root + 'trackingnet/TEST/frames',
+        ann_file=data_root + 'got10k/annotations/got10k_test.json',
+        img_prefix=data_root + 'got10k/test',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))

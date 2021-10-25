@@ -140,3 +140,86 @@ The final output filename will be `dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201
 ```shell
 python tools/analysis/print_config.py ${CONFIG} [-h] [--options ${OPTIONS [OPTIONS...]}]
 ```
+
+## Model Serving
+
+In order to serve an `MMTracking` model with [`TorchServe`](https://pytorch.org/serve/), you can follow the steps:
+
+### 1. Convert model from MMTracking to TorchServe
+
+```shell
+python tools/torchserve/mmtrack2torchserve.py ${CONFIG_FILE} ${CHECKPOINT_FILE} \
+--output-folder ${MODEL_STORE} \
+--model-name ${MODEL_NAME}
+```
+
+${MODEL_STORE} needs to be an absolute path to a folder.
+
+### 2. Build `mmtrack-serve` docker image
+
+```shell
+docker build -t mmtrack-serve:latest docker/serve/
+```
+
+### 3. Run `mmtrack-serve`
+
+Check the official docs for [running TorchServe with docker](https://github.com/pytorch/serve/blob/master/docker/README.md#running-torchserve-in-a-production-docker-environment).
+
+In order to run in GPU, you need to install [nvidia-docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). You can omit the `--gpus` argument in order to run in CPU.
+
+Example:
+
+```shell
+docker run --rm \
+--cpus 8 \
+--gpus device=0 \
+-p8080:8080 -p8081:8081 -p8082:8082 \
+--mount type=bind,source=$MODEL_STORE,target=/home/model-server/model-store \
+mmtrack-serve:latest
+```
+
+[Read the docs](https://github.com/pytorch/serve/blob/072f5d088cce9bb64b2a18af065886c9b01b317b/docs/rest_api.md) about the Inference (8080), Management (8081) and Metrics (8082) APIs
+
+### 4. Test deployment
+
+```shell
+curl http://127.0.0.1:8080/predictions/${MODEL_NAME} -T demo/demo.mp4 -o result.mp4
+```
+
+The response will be a ".mp4" mask.
+
+You can visualize the output as follows:
+
+```python
+import cv2
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    while cap.isOpened():
+        flag, frame = cap.read()
+        if not flag:
+            break
+        cv2.imshow('result.mp4', frame)
+        if cv2.waitKey(int(1000 / fps)) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+```
+
+And you can use `test_torchserve.py` to compare result of torchserve and pytorch, and visualize them.
+
+```shell
+python tools/torchserve/test_torchserve.py ${VIDEO_FILE} ${CONFIG_FILE} ${CHECKPOINT_FILE} ${MODEL_NAME}
+[--inference-addr ${INFERENCE_ADDR}] [--result-video ${RESULT_VIDEO}] [--device ${DEVICE}]
+[--score-thr ${SCORE_THR}]
+```
+
+Example:
+
+```shell
+python tools/torchserve/test_torchserve.py \
+demo/demo.mp4 \
+configs/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid.py \
+checkpoint/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+selsa \
+--result-video=result.mp4
+```

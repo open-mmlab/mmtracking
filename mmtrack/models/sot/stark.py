@@ -441,7 +441,7 @@ class Stark(BaseSingleObjectTracker):
 
         bbox_pred = self.bbox_xywh_to_xyxy(self.memo.bbox, img.shape[2:])
         results = dict()
-        results['track_results'] = np.array(bbox_pred + [best_score])
+        results['track_bboxes'] = np.array(bbox_pred + [best_score])
 
         return results
 

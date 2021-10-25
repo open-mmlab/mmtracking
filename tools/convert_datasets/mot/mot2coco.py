@@ -128,7 +128,7 @@ def main():
         outputs['categories'] = [dict(id=1, name='pedestrian')]
         if args.convert_det:
             det_file = osp.join(args.output, f'{subset}_detections.pkl')
-            detections = dict(bbox_results=dict())
+            detections = dict(det_bboxes=dict())
         video_names = os.listdir(in_folder)
         for video_name in tqdm(video_names):
             # basic params
@@ -208,7 +208,7 @@ def main():
                     if dets.ndim == 1:
                         assert len(dets) == 0
                         dets = np.zeros((0, 5))
-                    detections['bbox_results'][img_name] = [dets]
+                    detections['det_bboxes'][img_name] = [dets]
                 outputs['images'].append(image)
                 img_id += 1
             outputs['videos'].append(video)

@@ -173,7 +173,6 @@ class SiamRPN(BaseSingleObjectTracker):
             align_corners=False)
         return crop_img
 
-    # TODO fix the bug about boundary clipping
     def _bbox_clip(self, bbox, img_h, img_w):
         """Clip the bbox with [cx, cy, w, h] format."""
         bbox[0] = bbox[0].clamp(0., img_w)
@@ -282,10 +281,10 @@ class SiamRPN(BaseSingleObjectTracker):
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
         results = dict()
         if best_score == -1.:
-            results['track_results'] = np.concatenate(
+            results['track_bboxes'] = np.concatenate(
                 (bbox_pred.cpu().numpy(), np.array([best_score])))
         else:
-            results['track_results'] = np.concatenate(
+            results['track_bboxes'] = np.concatenate(
                 (bbox_pred.cpu().numpy(), best_score.cpu().numpy()[None]))
         return results
 

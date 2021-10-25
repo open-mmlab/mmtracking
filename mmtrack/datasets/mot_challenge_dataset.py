@@ -10,7 +10,7 @@ from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import restore_result
+from mmtrack.core import results2outs
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -40,17 +40,17 @@ class MOTChallengeDataset(CocoVideoDataset):
         """Load public detections."""
         # support detections in three formats
         # 1. MMDet: [img_1, img_2, ...]
-        # 2. MMTrack: dict(bbox_results=[img_1, img_2, ...])
+        # 2. MMTrack: dict(det_bboxes=[img_1, img_2, ...])
         # 3. Public:
         #    1) dict(img1_name: [], img2_name: [], ...)
-        #    2) dict(bbox_results=dict(img1_name: [], img2_name: [], ...))
+        #    2) dict(det_bboxes=dict(img1_name: [], img2_name: [], ...))
         # return as a dict or a list
         if detection_file is not None:
             detections = mmcv.load(detection_file)
             if isinstance(detections, dict):
                 # results from mmtrack
-                if 'bbox_results' in detections:
-                    detections = detections['bbox_results']
+                if 'det_bboxes' in detections:
+                    detections = detections['det_bboxes']
             else:
                 # results from mmdet
                 if not isinstance(detections, list):
@@ -173,7 +173,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         for i in range(num_vids):
             for metric in metrics:
                 formatter = getattr(self, f'format_{metric}_results')
-                formatter(results[f'{metric}_results'][inds[i]:inds[i + 1]],
+                formatter(results[f'{metric}_bboxes'][inds[i]:inds[i + 1]],
                           self.data_infos[inds[i]:inds[i + 1]],
                           f'{resfiles[metric]}/{names[i]}.txt')
 
@@ -187,14 +187,17 @@ class MOTChallengeDataset(CocoVideoDataset):
                     frame = info['mot_frame_id']
                 else:
                     frame = info['frame_id'] + 1
-                bboxes, labels, ids = restore_result(res, return_ids=True)
-                for bbox, label, id in zip(bboxes, labels, ids):
+
+                outs_track = results2outs(bbox_results=res)
+                for bbox, label, id in zip(outs_track['bboxes'],
+                                           outs_track['labels'],
+                                           outs_track['ids']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
                         f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
 
-    def format_bbox_results(self, results, infos, resfile):
+    def format_det_results(self, results, infos, resfile):
         """Format detection results."""
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
@@ -202,8 +205,9 @@ class MOTChallengeDataset(CocoVideoDataset):
                     frame = info['mot_frame_id']
                 else:
                     frame = info['frame_id'] + 1
-                bboxes, labels = restore_result(res)
-                for bbox, label in zip(bboxes, labels):
+
+                outs_det = results2outs(bbox_results=res)
+                for bbox, label in zip(outs_det['bboxes'], outs_det['labels']):
                     x1, y1, x2, y2, conf = bbox
                     f.writelines(
                         f'{frame},-1,{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
@@ -242,7 +246,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             metrics = [metric]
         else:
             raise TypeError('metric must be a list or a str.')
-        allowed_metrics = ['bbox', 'track']
+        allowed_metrics = ['det', 'track']
         for metric in metrics:
             if metric not in allowed_metrics:
                 raise KeyError(f'metric {metric} is not supported.')
@@ -295,9 +299,9 @@ class MOTChallengeDataset(CocoVideoDataset):
             if tmp_dir is not None:
                 tmp_dir.cleanup()
 
-        if 'bbox' in metrics:
+        if 'det' in metrics:
             if isinstance(results, dict):
-                bbox_results = results['bbox_results']
+                bbox_results = results['det_bboxes']
             elif isinstance(results, list):
                 bbox_results = results
             else:

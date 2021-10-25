@@ -11,6 +11,7 @@ import torch
 import torch.distributed as dist
 from mmcv.image import tensor2imgs
 from mmcv.runner import get_dist_info
+from mmdet.core import encode_mask_results
 
 
 def single_gpu_test(model,
@@ -44,8 +45,6 @@ def single_gpu_test(model,
     for i, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
-        for k, v in result.items():
-            results[k].append(v)
 
         batch_size = data['img'][0].size(0)
         if show or out_dir:
@@ -104,6 +103,13 @@ def single_gpu_test(model,
 
             prev_img_meta = img_meta
 
+        for key in result:
+            if 'mask' in key:
+                result[key] = encode_mask_results(result[key])
+
+        for k, v in result.items():
+            results[k].append(v)
+
         for _ in range(batch_size):
             prog_bar.update()
 
@@ -141,6 +147,10 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     for i, data in enumerate(data_loader):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
+        for key in result:
+            if 'mask' in key:
+                result[key] = encode_mask_results(result[key])
+
         for k, v in result.items():
             results[k].append(v)
 

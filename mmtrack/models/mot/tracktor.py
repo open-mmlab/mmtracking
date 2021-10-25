@@ -1,10 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
-from mmdet.core import bbox2result
 from mmdet.models import build_detector
 
-from mmtrack.core import track2result
+from mmtrack.core import outs2results
 from ..builder import MODELS, build_motion, build_reid, build_tracker
 from ..motion import CameraMotionCompensation, LinearMotion
 from .base import BaseMultiObjectTracker
@@ -133,7 +132,7 @@ class Tracktor(BaseMultiObjectTracker):
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 
-        bboxes, labels, ids = self.tracker.track(
+        track_bboxes, track_labels, track_ids = self.tracker.track(
             img=img,
             img_metas=img_metas,
             model=self,
@@ -144,6 +143,14 @@ class Tracktor(BaseMultiObjectTracker):
             rescale=rescale,
             **kwargs)
 
-        track_result = track2result(bboxes, labels, ids, num_classes)
-        bbox_result = bbox2result(det_bboxes, det_labels, num_classes)
-        return dict(bbox_results=bbox_result, track_results=track_result)
+        track_results = outs2results(
+            bboxes=track_bboxes,
+            labels=track_labels,
+            ids=track_ids,
+            num_classes=num_classes)
+        det_results = outs2results(
+            bboxes=det_bboxes, labels=det_labels, num_classes=num_classes)
+
+        return dict(
+            det_bboxes=det_results['bbox_results'],
+            track_bboxes=track_results['bbox_results'])

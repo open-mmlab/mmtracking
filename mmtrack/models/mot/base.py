@@ -6,7 +6,7 @@ import torch
 import torch.distributed as dist
 from mmcv.runner import BaseModule, auto_fp16
 
-from mmtrack.core import imshow_tracks, restore_result
+from mmtrack.core import imshow_tracks, results2outs
 from mmtrack.utils import get_root_logger
 
 
@@ -234,10 +234,12 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
         Args:
             img (str | ndarray): Filename of loaded image.
             result (dict): Tracking result.
-                The value of key 'track_results' is ndarray with shape (n, 6)
-                in [id, tl_x, tl_y, br_x, br_y, score] format.
-                The value of key 'bbox_results' is ndarray with shape (n, 5)
-                in [tl_x, tl_y, br_x, br_y, score] format.
+                - The value of key 'track_bboxes' is list with length
+                num_classes, and each element in list is ndarray with
+                shape(n, 6) in [id, tl_x, tl_y, br_x, br_y, score] format.
+                - The value of key 'det_bboxes' is list with length
+                num_classes, and each element in list is ndarray with
+                shape(n, 5) in [tl_x, tl_y, br_x, br_y, score] format.
             thickness (int, optional): Thickness of lines. Defaults to 1.
             font_scale (float, optional): Font scales of texts. Defaults
                 to 0.5.
@@ -251,13 +253,13 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
             ndarray: Visualized image.
         """
         assert isinstance(result, dict)
-        track_result = result.get('track_results', None)
-        bboxes, labels, ids = restore_result(track_result, return_ids=True)
+        track_bboxes = result.get('track_bboxes', None)
+        outs_track = results2outs(bbox_results=track_bboxes)
         img = imshow_tracks(
             img,
-            bboxes,
-            labels,
-            ids,
+            outs_track['bboxes'],
+            outs_track['labels'],
+            outs_track['ids'],
             classes=self.CLASSES,
             thickness=thickness,
             font_scale=font_scale,
