@@ -2,6 +2,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 
+import mmcv
 import torch
 import torch.distributed as dist
 from mmcv.runner import BaseModule, auto_fp16
@@ -222,6 +223,7 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
     def show_result(self,
                     img,
                     result,
+                    score_thr=0.0,
                     thickness=1,
                     font_scale=0.5,
                     show=False,
@@ -254,13 +256,21 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
         """
         assert isinstance(result, dict)
         track_bboxes = result.get('track_bboxes', None)
-        outs_track = results2outs(bbox_results=track_bboxes)
+        track_masks = result.get('track_masks', None)
+        if isinstance(img, str):
+            img = mmcv.imread(img)
+        outs_track = results2outs(
+            bbox_results=track_bboxes,
+            mask_results=track_masks,
+            mask_shape=img.shape[:2])
         img = imshow_tracks(
             img,
-            outs_track['bboxes'],
-            outs_track['labels'],
-            outs_track['ids'],
+            outs_track.get('bboxes', None),
+            outs_track.get('labels', None),
+            outs_track.get('ids', None),
+            outs_track.get('masks', None),
             classes=self.CLASSES,
+            score_thr=score_thr,
             thickness=thickness,
             font_scale=font_scale,
             show=show,

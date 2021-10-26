@@ -130,10 +130,10 @@ class YouTubeVISDataset(CocoVideoDataset):
 
         # zip the json file in order to submit to the test server.
         zip_file_name = osp.join(resfile_path, 'submission_file.zip')
-        zf = zipfile.ZipFile(zip_file_name, mode='w')
-        print_log(f"zip the 'results.json' into {zip_file_name}, "
+        zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+        print_log(f"zip the 'results.json' into '{zip_file_name}', "
                   'please submmit the zip file to the test server')
-        zf.write(resfiles)
+        zf.write(resfiles, 'results.json')
         zf.close()
 
         return resfiles, tmp_dir
