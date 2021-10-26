@@ -97,7 +97,7 @@ class VOT2018Dataset(CocoVideoDataset):
                 annotations.append(ann_infos[inds[i]:inds[i + 1]])
 
                 # TODO del this piece of code
-                save_dir = 'logs/vot2018/best_eao_epoch_11_bbox_results'
+                save_dir = 'logs/vot2018/34.6_bbox_results'
                 import os
                 if not os.path.isdir(save_dir):
                     os.makedirs(save_dir)

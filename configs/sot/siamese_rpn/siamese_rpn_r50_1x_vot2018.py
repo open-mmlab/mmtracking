@@ -3,7 +3,7 @@ _base_ = ['./siamese_rpn_r50_1x_lasot.py']
 # model settings
 model = dict(
     test_cfg=dict(
-        rpn=dict(penalty_k=0.04, window_influence=0.44, lr=0.33),
+        rpn=dict(penalty_k=0.16, window_influence=0.4, lr=0.35),
         criteria='VOT'))
 
 data_root = 'data/'
