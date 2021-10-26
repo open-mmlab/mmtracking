@@ -10,6 +10,7 @@ from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
+VOT_ANN_PATH = f'{PREFIX}/demo_sot_data/vot'
 
 
 @pytest.mark.parametrize('dataset', ['SOTTestDataset', 'LaSOTDataset'])
@@ -55,6 +56,37 @@ def test_sot_ope_evaluation():
     assert eval_results['success'] == 67.524
     assert eval_results['norm_precision'] == 70.0
     assert eval_results['precision'] == 50.0
+
+
+def test_sot_vot_evaluation():
+    dataset_class = DATASETS.get('VOT2018Dataset')
+    dataset = dataset_class(
+        ann_file=osp.join(VOT_ANN_PATH, 'vot_test_dummy.json'), pipeline=[])
+
+    results = []
+    for video_name in ['drone_across', 'matrix']:
+        results.extend(
+            mmcv.list_from_file(
+                osp.join(VOT_ANN_PATH, video_name, 'track_results.txt')))
+    track_results = []
+    for result in results:
+        result = result.split(',')
+        if len(result) == 1:
+            track_results.append([float(result[0]), 0.])
+        else:
+            track_results.append([
+                float(result[0]),
+                float(result[1]),
+                float(result[2]),
+                float(result[3]), 0.
+            ])
+
+    track_results = dict(track_results=track_results)
+    eval_results = dataset.evaluate(
+        track_results, interval=[2, 28], metric=['track'])
+    assert eval_results['eao'] == 0.6049
+    assert eval_results['accuracy'] == 0.5848
+    assert eval_results['robustness'] == 2.0548
 
 
 @pytest.mark.parametrize('dataset', ['TrackingNetDataset', 'GOT10kDataset'])
