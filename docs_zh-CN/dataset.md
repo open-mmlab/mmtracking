@@ -12,6 +12,7 @@
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+  - [VOT2018](https://www.votchallenge.net/vot2018/)
 
 ### 1. 下载数据集
 
@@ -26,6 +27,15 @@
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
+对于 VOT2018, 我们使用官方的下载脚本。
+
+#### VOT2018
+
+```shell
+# download VOT2018 dataset by web crawling
+python ./tools/convert_datasets/vot2018/download_vot2018.py -d vot_st2018 -p ./data/vot2018/data
+```
+
 注意：
 
 - `ILSVRC` 下的 `Lists` 包含来自在[这里](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets)的 txt 文件。
@@ -34,7 +44,7 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 
 - 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
 
-- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 和 GOT10k 数据集。
+- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet, OTB100, GOT10k 和 VOT2018 数据集。
 
 ```
 mmtracking
@@ -109,6 +119,12 @@ mmtracking
 │   │   │   │   ├── list.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
+│   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+│   │   │   │── ......
 ```
 
 ### 2. 转换标注格式
@@ -153,9 +169,12 @@ bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # 生成标注
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 
-完成以上格式转换后，文件目录结构如下：
+# VOT2018
+python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations
+```
 
 ```
+完成以上格式转换后，文件目录结构如下：
 
 mmtracking
 ├── mmtrack
@@ -270,9 +289,15 @@ mmtracking
 │   │   │   ├── GOT-10k_Val_000180
 │   │   │   ├── list.txt
 │   │   │── annotations
+│   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+|   |   ├── annotations
+│   │   │   ├── ......
 
 ```
-
 
 #### ILSVRC的标注文件夹
 
@@ -379,3 +404,12 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
 `got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
 `got10k_val.json`： 包含 GOT10k 验证集标注信息的 json 文件。
+
+#### VOT2018的标注和视频帧文件夹
+
+在 `data/vot2018/data` 文件夹下有 VOT2018 数据集的 60 个视频目录， 每个视频目录下的 `color` 文件夹包含该视频所有图片。
+
+在 `data/vot2018/data/annotations` 中只有一个 json 文件：
+
+`vot2018.json`： 包含 VOT2018 数据集标注信息的 json 文件。
+`otb100.json`： 包含 OTB100 数据集标注信息的 json 文件
