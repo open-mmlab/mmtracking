@@ -52,3 +52,9 @@ Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/
 ### SiameseRPN++ (CVPR 2019)
 
 Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn) for details.
+
+## Baselines of video instance segmentation
+
+### MaskTrack R-CNN (ICCV 2019)
+
+Please refer to [MaskTrack R-CNN](https://github.com/open-mmlab/mmtracking/blob/master/configs/vis/masktrack_rcnn) for details.
