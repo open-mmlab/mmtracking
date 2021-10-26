@@ -12,6 +12,7 @@
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+  - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ### 1. 下载数据集
 
@@ -47,7 +48,7 @@ mmtracking
 │   │   ├── val2017
 │   │   ├── test2017
 │   │   ├── annotations
-|   │
+│   │
 │   ├── ILSVRC
 │   │   ├── Data
 │   │   │   ├── DET
@@ -66,7 +67,11 @@ mmtracking
 |   │   │   │   ├── train
 |   │   │   │   ├── val
 │   │   ├── Lists
-|   │
+│   │
+|   ├── MOT15/MOT16/MOT17/MOT20
+|   |   ├── train
+|   |   ├── test
+│   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
@@ -74,10 +79,6 @@ mmtracking
 |   │   │   │   ├── airplane-2
 |   │   │   │   ├── ......
 │   │   │   ├── ......
-│   │
-|   ├── MOT15/MOT16/MOT17/MOT20
-|   |   ├── train
-|   |   ├── test
 │   │
 │   ├── UAV123
 │   │   ├── data_seq
@@ -98,9 +99,9 @@ mmtracking
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
-│   │   │   │── ......
+│   │   │   │──
 │   │
-│   ├── GOT10k
+│   ├── got10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -109,6 +110,34 @@ mmtracking
 │   │   │   │   ├── list.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
+│   │
+│   ├── youtube_vis_2019
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── train.json (the official annotation files)
+│   │   │── valid.json (the official annotation files)
+│   │   │── test.json (the official annotation files)
+│   │
+│   ├── youtube_vis_2021
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
 ```
 
 ### 2. 转换标注格式
@@ -124,13 +153,13 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 # ImageNet VID
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
-# LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
-
 # MOT17
 # MOT Challenge中其余数据集的处理与MOT17相同
 python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+
+# LaSOT
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
@@ -153,10 +182,16 @@ bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # 生成标注
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 
+# YouTube-VIS 2019
+python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
+
+# YouTube-VIS 2021
+python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2021 -o ./data/youtube_vis_2021/annotations --version 2021
+```
+
 完成以上格式转换后，文件目录结构如下：
 
 ```
-
 mmtracking
 ├── mmtrack
 ├── tools
@@ -167,7 +202,7 @@ mmtracking
 │   │   ├── val2017
 │   │   ├── test2017
 │   │   ├── annotations
-|   │
+│   │
 │   ├── ILSVRC
 │   │   ├── Data
 │   │   │   ├── DET
@@ -187,15 +222,6 @@ mmtracking
 |   │   │   │   ├── val
 │   │   ├── Lists
 │   │   ├── annotations (the converted annotation files)
-|   │
-│   ├── lasot
-│   │   ├── LaSOTBenchmark
-│   │   │   ├── airplane
-|   │   │   │   ├── airplane-1
-|   │   │   │   ├── airplane-2
-|   │   │   │   ├── ......
-│   │   │   ├── ......
-│   │   ├── annotations
 │   │
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
@@ -204,6 +230,15 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── lasot
+│   │   ├── LaSOTBenchmark
+│   │   │   ├── airplane
+|   │   │   │   ├── airplane-1
+|   │   │   │   ├── airplane-2
+|   │   │   │   ├── ......
+│   │   │   ├── ......
+│   │   ├── annotations
 │   │
 │   ├── UAV123
 │   │   ├── data_seq
@@ -270,9 +305,37 @@ mmtracking
 │   │   │   ├── GOT-10k_Val_000180
 │   │   │   ├── list.txt
 │   │   │── annotations
-
+│   │
+│   ├── youtube_vis_2019
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── train.json (the official annotation files)
+│   │   │── valid.json (the official annotation files)
+│   │   │── test.json (the official annotation files)
+│   │   │── annotations (the converted annotation file)
+│   │
+│   ├── youtube_vis_2021
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── annotations (the converted annotation file)
 ```
-
 
 #### ILSVRC的标注文件夹
 
@@ -284,13 +347,6 @@ mmtracking
 `imagenet_vid_train.json`: 包含 ImageNet VID 训练集标注信息的 json 文件。
 
 `imagenet_vid_val.json`: 包含 ImageNet VID 验证集标注信息的 json 文件。
-
-#### lasot的标注文件夹
-
-在 `data/lasot/annotations` 中有2个 json 文件:
-
-`lasot_train.json`:  包含 LaSOT 训练集标注信息的 json 文件。
-`lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
 
 #### MOT15/MOT16/MOT17/MOT20的标注和reid文件夹
 
@@ -347,6 +403,13 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `reid/imgs` 中的图片是从 `MOT17/train` 中原始图片根据对应的 `gt.txt` 裁剪得到。真实类别标签值在 `[0, num_classes - 1]` 范围内。
 
+#### lasot的标注文件夹
+
+在 `data/lasot/annotations` 中有2个 json 文件:
+
+`lasot_train.json`:  包含 LaSOT 训练集标注信息的 json 文件。
+`lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
+
 #### UAV123的标注文件夹
 
 在 `data/UAV123/annotations` 中只有1个 json 文件:
@@ -379,3 +442,13 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
 `got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
 `got10k_val.json`： 包含 GOT10k 验证集标注信息的 json 文件。
+
+#### youtube_vis_2019/youtube_vis2021 的标注文件夹
+
+在 `data/youtube_vis_2019/annotations` 或者 `data/youtube_vis_2021/annotations` 下有 3 个 json 文件：
+
+`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: 包含着 youtube_vis_2019/youtube_vis2021 训练集注释信息的 json 文件。
+
+`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: 包含着 youtube_vis_2019/youtube_vis2021 验证集注释信息的 json 文件。
+
+`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: 包含着 youtube_vis_2019/youtube_vis2021 测试集注释信息的 json 文件。
