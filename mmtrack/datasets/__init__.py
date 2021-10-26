@@ -15,6 +15,7 @@ from .sot_test_dataset import SOTTestDataset
 from .sot_train_dataset import SOTTrainDataset
 from .trackingnet_dataset import TrackingNetDataset
 from .uav123_dataset import UAV123Dataset
+from .vot2018_dataset import VOT2018Dataset
 from .youtube_vis_dataset import YouTubeVISDataset
 
 __all__ = [
@@ -22,5 +23,5 @@ __all__ = [
     'CocoVideoDataset', 'ImagenetVIDDataset', 'MOTChallengeDataset',
     'ReIDDataset', 'SOTTrainDataset', 'SOTTestDataset', 'LaSOTDataset',
     'UAV123Dataset', 'TrackingNetDataset', 'OTB100Dataset',
-    'YouTubeVISDataset', 'GOT10kDataset'
+    'YouTubeVISDataset', 'GOT10kDataset', 'VOT2018Dataset'
 ]

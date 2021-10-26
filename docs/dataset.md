@@ -12,6 +12,7 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+  - [VOT2018](https://www.votchallenge.net/vot2018/)
 
 ### 1. Download Datasets
 
@@ -26,6 +27,15 @@ For OTB100 dataset, you don't need to download the dataset from the official web
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
+For VOT2018, we use the official downloading script.
+
+#### VOT2018
+
+```shell
+# download VOT2018 dataset by web crawling
+python ./tools/convert_datasets/vot2018/download_vot2018.py -d vot_st2018 -p ./data/vot2018/data
+```
+
 Notes:
 
 - The `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
@@ -34,7 +44,7 @@ Notes:
 
 - For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
 
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 and GOT10k datasets are needed.
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100, GOT10k and VOT2018 datasets are needed.
 
 ```
 mmtracking
@@ -109,6 +119,12 @@ mmtracking
 │   │   │   │   ├── list.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
+│   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+│   │   │   │── ......
 ```
 
 ### 2. Convert Annotations
@@ -151,6 +167,9 @@ python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./da
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # generate annotations
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
+
+# VOT2018
+python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -269,6 +288,13 @@ mmtracking
 │   │   │   ├── GOT-10k_Val_000180
 │   │   │   ├── list.txt
 │   │   │── annotations
+│   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+|   |   ├── annotations
+│   │   │   ├── ......
 ```
 
 #### The folder of annotations in ILSVRC
@@ -371,3 +397,11 @@ There are 3 json files in `data/got10k/annotations`:
 `got10k_train.json`:  Json file containing the annotations information of the training set in GOT10k dataset.
 `got10k_test.json`:  Json file containing the annotations information of the testing set in GOT10k dataset.
 `got10k_val.json`:  Json file containing the annotations information of the valuation set in GOT10k dataset.
+
+#### The folder of data and annotations in VOT2018
+
+There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and the `color` folder under each video directory contains all images of the video.
+
+There are only 1 json files in `data/vot2018/annotations`:
+
+`vot2018.json`:  Json file containing the annotations information of the VOT2018 dataset.
