@@ -10,4 +10,4 @@ Please refer to [Test MOT models](../../docs/quick_run.md#examples-of-testing-mo
 
 ## Inference with MOT configs
 
-Please refer to [Inference MOT models](../../docs/quick_run.md#inference-mot/vis-models) to see the examples.
+Please refer to [Inference MOT models](../../docs/quick_run.md#inference-motvis-models) to see the examples.

@@ -10,4 +10,4 @@ Please refer to [Test VIS models](../../docs/quick_run.md#examples-of-testing-vi
 
 ## Inference with VIS configs
 
-Please refer to [Inference VIS models](../../docs/quick_run.md#inference-mot/vis-models) to see the examples.
+Please refer to [Inference VIS models](../../docs/quick_run.md#inference-motvis-models) to see the examples.
