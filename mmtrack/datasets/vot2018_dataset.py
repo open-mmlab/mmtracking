@@ -62,7 +62,7 @@ class VOT2018Dataset(CocoVideoDataset):
 
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['track_results'])
+            assert len(self.data_infos) == len(results['track_bboxes'])
             print_log('Evaluate VOT Benchmark...', logger=logger)
             inds = []
             region_bound = []
@@ -86,7 +86,7 @@ class VOT2018Dataset(CocoVideoDataset):
             annotations = []
             for i in range(num_vids):
                 bboxes_per_video = []
-                for bbox in results['track_results'][inds[i]:inds[i + 1]]:
+                for bbox in results['track_bboxes'][inds[i]:inds[i + 1]]:
                     if len(bbox) != 2:
                         # convert bbox format from (tl_x, tl_y, br_x, br_y) to
                         # (x, y, w, h)
@@ -97,8 +97,7 @@ class VOT2018Dataset(CocoVideoDataset):
                 annotations.append(ann_infos[inds[i]:inds[i + 1]])
 
                 # TODO del this piece of code
-                '''
-                save_dir = 'logs/vot2018/bbox_round_track_results'
+                save_dir = 'logs/vot2018/best_eao_epoch_11_bbox_results'
                 import os
                 if not os.path.isdir(save_dir):
                     os.makedirs(save_dir)
@@ -107,7 +106,6 @@ class VOT2018Dataset(CocoVideoDataset):
                         'w') as f:
                     for x in bboxes_per_video:
                         f.write(','.join(list(map(str, x))) + '\n')
-                '''
 
             # anno_info is list[list]
             eao_score = eval_sot_eao(
