@@ -85,7 +85,9 @@ def convert_got10k(ann_dir, save_dir, split='test'):
                 id=records['ann_id'],
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
-                category_id=0)
+                category_id=0,
+                video_id=records['vid_id'],
+            )
 
             if split == 'test':
                 if frame_id == 0:

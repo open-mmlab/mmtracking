@@ -11,28 +11,28 @@ from vot.utilities.net import (download_json, download_uncompress,
                                get_base_url, join_url)
 
 VOT_DATASETS = {
-    'vot-st2018':
+    'vot_st2018':
     'http://data.votchallenge.net/vot2018/main/description.json',
-    'vot-lt2018':
+    'vot_lt2018':
     'http://data.votchallenge.net/vot2018/longterm/description.json',
-    'vot-st2019':
+    'vot_st2019':
     'http://data.votchallenge.net/vot2019/main/description.json',
-    'vot-lt2019':
+    'vot_lt2019':
     'http://data.votchallenge.net/vot2019/longterm/description.json',
-    'vot-rgbd2019':
+    'vot_rgbd2019':
     'http://data.votchallenge.net/vot2019/rgbd/description.json',
-    'vot-rgbt2019':
+    'vot_rgbt2019':
     'http://data.votchallenge.net/vot2019/rgbtir/meta/description.json',
-    'vot-st2020':
+    'vot_st2020':
     'https://data.votchallenge.net/vot2020/shortterm/description.json',
-    'vot-rgbt2020':
+    'vot_rgbt2020':
     'http://data.votchallenge.net/vot2020/rgbtir/meta/description.json',
-    'vot-st2021':
+    'vot_st2021':
     'https://data.votchallenge.net/vot2021/shortterm/description.json',
 }
 
 
-def download(dataset_name, path):
+def download_dataset(dataset_name, path):
     url = VOT_DATASETS[dataset_name]
     meta = download_json(url)
     base_url = get_base_url(url) + '/'
@@ -61,28 +61,16 @@ def download_url(url, saved_file):
     video_zip = osp.basename(saved_file)
     try:
         request.urlretrieve(url, saved_file)
-    except error.ContentTooShortError:
-        count = 1
-        while count <= 5:
-            try:
-                request.urlretrieve(url, saved_file)
-                break
-            except error.ContentTooShortError:
-                err_info = 'ReDownloading %s for %d time' % (video_zip, count)
-                print(err_info)
-                count += 1
-        if count > 5:
-            print('downloading %s failed!' % video_zip)
     except error.HTTPError as e:
         print(e)
         print('\r\n' + url + ' download failed!' + '\r\n')
-    except socket.timeout:
+    except (error.ContentTooShortError, socket.timeout):
         count = 1
         while count <= 5:
             try:
                 request.urlretrieve(url, saved_file)
                 break
-            except socket.timeout:
+            except (error.ContentTooShortError, socket.timeout):
                 err_info = 'ReDownloading %s for %d time' % (video_zip, count)
                 print(err_info)
                 count += 1
@@ -93,27 +81,25 @@ def download_url(url, saved_file):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('')
     parser.add_argument(
-        '--dataset',
-        '-d',
+        '-i',
+        '--input',
         help='dataset name',
-        default='vot-st2018',
+        default='vot_st2018',
         choices=[
-            'vot-st2018',
-            'vot-lt2018',
-            'vot-st2019',
-            'vot-lt2019',
-            'vot-rgbd2019',
-            'vot-rgbt2019',
-            'vot-st2020',
-            'vot-rgbt2020',
-            'vot-st2021',
+            'vot_st2018',
+            'vot_lt2018',
+            'vot_st2019',
+            'vot_lt2019',
+            'vot_rgbd2019',
+            'vot_rgbt2019',
+            'vot_st2020',
+            'vot_rgbt2020',
+            'vot_st2021',
         ],
     )
     parser.add_argument(
-        '--path', '-p', help='dataset saved path', default='./')
+        '-o', '--output', help='dataset saved path', default='./')
     args = parser.parse_args()
-    path = os.path.realpath(
-        os.path.join(os.path.dirname(__file__), '../../../', args.path))
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    download(args.dataset, path)
+    if not os.path.isdir(args.output):
+        os.makedirs(args.output)
+    download_dataset(args.input, args.output)

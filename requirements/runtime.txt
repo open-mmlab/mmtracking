@@ -8,4 +8,4 @@ seaborn
 six
 terminaltables
 tqdm
-vot-toolkit @ git+https://github.com/votchallenge/vot-toolkit-python@0c61b32d0711c238f71441f79e6af434ea3a7fcb
+vot-toolkit@git+https://github.com/votchallenge/vot-toolkit-python@0c61b32d0711c238f71441f79e6af434ea3a7fcb

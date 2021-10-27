@@ -80,6 +80,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
                 category_id=0,
+                video_id=records['vid_id'],
                 bbox=[int(x1), int(y1), int(w),
                       int(h)],
                 area=int(w) * int(h))

@@ -33,7 +33,7 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 
 ```shell
 # download VOT2018 dataset by web crawling
-python ./tools/convert_datasets/vot2018/download_vot2018.py -d vot_st2018 -p ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot2018.py -i vot_st2018 -o ./data/vot2018/data
 ```
 
 注意：
@@ -412,4 +412,3 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在 `data/vot2018/data/annotations` 中只有一个 json 文件：
 
 `vot2018.json`： 包含 VOT2018 数据集标注信息的 json 文件。
-`otb100.json`： 包含 OTB100 数据集标注信息的 json 文件

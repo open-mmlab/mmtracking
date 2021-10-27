@@ -33,7 +33,7 @@ For VOT2018, we use the official downloading script.
 
 ```shell
 # download VOT2018 dataset by web crawling
-python ./tools/convert_datasets/vot2018/download_vot2018.py -d vot_st2018 -p ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot2018.py -i vot_st2018 -o ./data/vot2018/data
 ```
 
 Notes:
@@ -404,4 +404,4 @@ There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and th
 
 There are only 1 json files in `data/vot2018/annotations`:
 
-`vot2018.json`:  Json file containing the annotations information of the VOT2018 dataset.
+`vot_st2018.json`:  Json file containing the annotations information of the VOT2018 dataset.

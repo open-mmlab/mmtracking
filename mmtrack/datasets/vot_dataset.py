@@ -5,10 +5,13 @@ from .sot_test_dataset import SOTTestDataset
 
 
 @DATASETS.register_module()
-class VOT2018Dataset(SOTTestDataset):
-    """VOT2018 dataset for the testing of single object tracking.
+class VOTDataset(SOTTestDataset):
+    """VOT dataset for the testing of single object tracking.
 
     The dataset doesn't support training mode.
+
+    Note: The vot datasets, such as VOT2020, using the mask annotation is not
+    supported now.
     """
     CLASSES = (0, )
 
