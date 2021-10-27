@@ -66,7 +66,7 @@ model = dict(
         search_size=320,
         template_factor=2.0,
         template_size=128,
-        update_intervals=[25]))
+        update_intervals=[200]))
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)

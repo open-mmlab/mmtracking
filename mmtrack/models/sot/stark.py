@@ -155,10 +155,15 @@ class Stark(BaseSingleObjectTracker):
             resize_factor = output_sz / crop_sz
             # im_crop_padded = cv2.resize(im_crop_padded,
             # (output_sz, output_sz))
-            im_crop_padded = F.interpolate(
-                im_crop_padded, (output_sz, output_sz),
-                mode='bilinear',
-                align_corners=False)
+            im_crop_padded_numpy = np.transpose(im_crop_padded.squeeze().cpu().numpy(),(1,2,0))
+            im_crop_padded_numpy = cv2.resize(im_crop_padded_numpy,(output_sz, output_sz))
+            im_crop_padded = torch.from_numpy(im_crop_padded_numpy).permute((2,0,1)).unsqueeze(0).to(im.device)
+
+
+            # im_crop_padded = F.interpolate(
+            #     im_crop_padded, (output_sz, output_sz),
+            #     mode='bilinear',
+            #     align_corners=False)
             # TODO use F.interpolate
             att_mask = cv2.resize(att_mask,
                                   (output_sz, output_sz)).astype(np.bool_)
@@ -261,7 +266,7 @@ class Stark(BaseSingleObjectTracker):
         self.z_dict_list = []
         # get the 1st template
         z_patch, _, z_mask = self.sample_target(
-            img,
+            img.type(torch.uint8),
             bbox,
             self.test_cfg['template_factor'],
             output_sz=self.test_cfg['template_size'])
@@ -305,7 +310,7 @@ class Stark(BaseSingleObjectTracker):
         H, W = img.shape[2:]
         # get the t-th search region
         x_patch, resize_factor, x_mask = self.sample_target(
-            img,
+            img.type(torch.uint8),
             bbox,
             self.test_cfg['search_factor'],
             output_sz=self.test_cfg['search_size'])  # bbox (x1, y1, w, h)
@@ -324,7 +329,8 @@ class Stark(BaseSingleObjectTracker):
         pred_boxes = track_results['pred_boxes'].view(-1, 4)
         # Baseline: Take the mean of all pred boxes as the final result
         pred_box = (pred_boxes.mean(dim=0) * self.test_cfg['search_size'] /
-                    resize_factor).tolist()  # (cx, cy, w, h) [0,1]
+                    resize_factor)  # (cx, cy, w, h) [0,1]
+        pred_box = pred_box.tolist()
         # get the final box result
         bbox = self._clip_box(
             self.map_box_back(pred_box, resize_factor), H, W, margin=10)
@@ -334,7 +340,7 @@ class Stark(BaseSingleObjectTracker):
         for idx, update_i in enumerate(self.update_intervals):
             if self.frame_id % update_i == 0 and conf_score > 0.5:
                 z_patch, _, z_mask = self.sample_target(
-                    img,
+                    img.type(torch.uint8),
                     bbox,
                     self.test_cfg['template_factor'],
                     output_sz=self.test_cfg['template_size'])  # (x1, y1, w, h)
@@ -343,6 +349,7 @@ class Stark(BaseSingleObjectTracker):
                     z_dict_dymanic = self.forward_before_head(z_patch, z_mask)
                 # the 1st element of z_dict_list is template from the 1st frame
                 self.z_dict_list[idx + 1] = z_dict_dymanic
+        print(bbox, conf_score)
 
         # for debug
         if self.debug:
@@ -439,7 +446,7 @@ class Stark(BaseSingleObjectTracker):
             best_score, self.memo.bbox = out_dict['conf_score'], out_dict[
                 'target_bbox']
 
-        bbox_pred = self.bbox_xywh_to_xyxy(self.memo.bbox, img.shape[2:])
+        bbox_pred = self.bbox_xywh_to_xyxy(deepcopy(self.memo.bbox), img.shape[2:])
         results = dict()
         results['track_bboxes'] = np.array(bbox_pred + [best_score])
 
