@@ -17,7 +17,7 @@ This page provides the instructions for dataset preparation on existing benchmar
 
 ### 1. Download Datasets
 
-Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
+Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`.
 
 #### 1.1 Video Object Detection
 
@@ -43,6 +43,10 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 #### 1.4 Video Instance Segmentation
 
 - For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
+
+#### 1.5 Data Structure
+
+If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
 ```
 mmtracking

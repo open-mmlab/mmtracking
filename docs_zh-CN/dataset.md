@@ -17,7 +17,7 @@
 
 ### 1. 下载数据集
 
-请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
+请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。
 
 #### 1.1 视频目标检测
 
@@ -43,6 +43,10 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 #### 1.4 视频个例分割
 
 - 对于视频个例分割任务的训练和测试，只需要 YouTube-VIS 中的任意一个数据集（比如 YouTube-VIS 2019）。
+
+#### 1.5 数据集文件夹结构
+
+如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
 
 ```
 mmtracking
@@ -344,9 +348,9 @@ mmtracking
 │   │   │── annotations (the converted annotation file)
 ```
 
-#### ILSVRC的标注文件夹
+#### ILSVRC 的标注文件夹
 
-在`data/ILSVRC/annotations`中有3个 json 文件:
+在`data/ILSVRC/annotations`中有 3 个 json 文件:
 
 `imagenet_det_30plus1cls.json`: 包含 ImageNet DET 训练集标注信息的json文件。`30plus1cls` 中的 `30` 表示本数据集与 ImageNet VID 数据集重合的30类，`1cls` 表示我们将 ImageNet Det 数据集中的其余170类作为一类，
 并命名为 `other_categeries`。
@@ -355,11 +359,11 @@ mmtracking
 
 `imagenet_vid_val.json`: 包含 ImageNet VID 验证集标注信息的 json 文件。
 
-#### MOT15/MOT16/MOT17/MOT20的标注和reid文件夹
+#### MOT15/MOT16/MOT17/MOT20 的标注和 reid 文件夹
 
 我们以MOT17为例，其余数据集结构相似。
 
-在 `data/MOT17/annotations` 中有8个 json 文件:
+在 `data/MOT17/annotations` 中有 8 个 json 文件:
 
 `train_cocoformat.json`: 包含 MOT17 训练集标注信息的 json 文件。
 
@@ -410,41 +414,41 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `reid/imgs` 中的图片是从 `MOT17/train` 中原始图片根据对应的 `gt.txt` 裁剪得到。真实类别标签值在 `[0, num_classes - 1]` 范围内。
 
-#### lasot的标注文件夹
+#### lasot 的标注文件夹
 
-在 `data/lasot/annotations` 中有2个 json 文件:
+在 `data/lasot/annotations` 中有 2 个 json 文件:
 
 `lasot_train.json`:  包含 LaSOT 训练集标注信息的 json 文件。
 `lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
 
-#### UAV123的标注文件夹
+#### UAV123 的标注文件夹
 
-在 `data/UAV123/annotations` 中只有1个 json 文件:
+在 `data/UAV123/annotations` 中只有 1 个 json 文件:
 
 `uav123.json`: 包含 UAV123 数据集标注信息的 json 文件。
 
-#### TrackingNet的标注和视频帧文件夹
+#### TrackingNet 的标注和视频帧文件夹
 
 在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。`data/trackingnet/TRAIN_{*}/frames` 下具有类似的文件目录结构。
 
-在 `data/trackingnet/annotations` 中有2个 json 文件：
+在 `data/trackingnet/annotations` 中有 2 个 json 文件：
 
 `trackingnet_train.json`： 包含 TrackingNet 训练集标注信息的 json 文件。
 `trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 json 文件。
 
-#### OTB100的标注和视频帧文件夹
+#### OTB100 的标注和视频帧文件夹
 
 在 `data/otb100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
 
-在 `data/otb100/data/annotations` 中只有1个 json 文件：
+在 `data/otb100/data/annotations` 中只有 1 个 json 文件：
 
 `otb100.json`： 包含 OTB100 数据集标注信息的 json 文件
 
-#### GOT10k的标注和视频帧文件夹
+#### GOT10k 的标注和视频帧文件夹
 
 在 `data/got10k/train` 文件夹下有 GOT10k 训练集的视频目录， 每个视频目录下面包含该视频所有图片。`data/got10k/test` 和 `data/got10k/val` 下具有类似的文件目录结构。
 
-在 `data/got10k/annotations` 中有3个 json 文件：
+在 `data/got10k/annotations` 中有 3 个 json 文件：
 
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
 `got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
