@@ -12,30 +12,37 @@
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+- 视频个例分割
   - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ### 1. 下载数据集
 
 请从官方网站下载数据集。建议将数据集的根目录符号链接到 `$MMTRACKING/data`。如果您的文件夹结构与以下不同，您可能需要更改配置文件中的相应路径。
 
-对于 OTB100 数据集，你不必要手工地从官网下载数据。我们提供了下载脚本。
+#### 1.1 视频目标检测
 
-#### OTB100
+- 对于视频目标检测任务的训练和测试，只需要 ILSVRC 数据集。
+
+- `ILSVRC` 下的 `Lists` 包含来自在[这里](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets)的 txt 文件。
+
+#### 1.2 多目标跟踪
+
+- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
+
+#### 1.3 单目标跟踪
+
+- 对于单目标跟踪任务的训练和测试，需要 MSCOCO， ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 和 GOT10k 数据集。
+
+- 对于 OTB100 数据集，你不必要手工地从官网下载数据。我们提供了下载脚本。
 
 ```shell
 # 通过网页爬虫下载 OTB100 数据集
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
-注意：
+#### 1.4 视频个例分割
 
-- `ILSVRC` 下的 `Lists` 包含来自在[这里](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets)的 txt 文件。
-
-- 对于视频目标检测任务的训练和测试，只需要 ILSVRC 数据集。
-
-- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）。
-
-- 对于单目标跟踪任务的训练和测试，需要 MSCOCO，ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 和 GOT10k 数据集。
+- 对于视频个例分割任务的训练和测试，只需要 YouTube-VIS 中的任意一个数据集（比如 YouTube-VIS 2019）。
 
 ```
 mmtracking

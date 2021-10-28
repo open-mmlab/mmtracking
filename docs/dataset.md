@@ -12,30 +12,37 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+- Video Instance Segmentation
   - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ### 1. Download Datasets
 
 Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
-For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a sctipt to download it.
+#### 1.1 Video Object Detection
 
-#### OTB100
+- For the training and testing of video object detection task, only ILSVRC dataset is needed.
+
+- The `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
+
+#### 1.2 Multiple Object Tracking
+
+- For the training and testing of multi object tracking task, only one of the MOT Challenge datasets (e.g. MOT17) is needed.
+
+#### 1.3 Single Object Tracking
+
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 and GOT10k datasets are needed.
+
+- For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a script to download it.
 
 ```shell
 # download OTB100 dataset by web crawling
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
-Notes:
+#### 1.4 Video Instance Segmentation
 
-- The `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
-
-- For the training and testing of video object detection task, only ILSVRC dataset is needed.
-
-- For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
-
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100 and GOT10k datasets are needed.
+- For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
 
 ```
 mmtracking
