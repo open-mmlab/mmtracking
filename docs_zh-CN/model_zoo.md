@@ -23,15 +23,15 @@
 
 ### DFF (CVPR 2017)
 
-详情请参考 [DFF](../configs/vid/dff/README.md)。
+详情请参考 [DFF](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff/README.md)。
 
 ### FGFA (ICCV 2017)
 
-详情请参考 [FGFA](../configs/vid/fgfa/README.md)。
+详情请参考 [FGFA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/fgfa/README.md)。
 
 ### SELSA (ICCV 2019)
 
-详情请参考 [SELSA](../configs/vid/selsa/README.md)。
+详情请参考 [SELSA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/selsa/README.md)。
 
 ### Temporal RoI Align (AAAI 2021)
 
@@ -41,14 +41,20 @@
 
 ### SORT/DeepSORT (ICIP 2016/2017)
 
-详情请参考 [SORT/DeepSORT](../configs/mot/deepsort/README.md)。
+详情请参考 [SORT/DeepSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/deepsort/README.md)。
 
 ### Tracktor (ICCV 2019)
 
-详情请参考 [Tracktor](../configs/mot/tracktor/README.md)。
+详情请参考 [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/tracktor/README.md)。
 
 ## 单目标跟踪基线
 
 ### SiameseRPN++ (CVPR 2019)
 
-详情请参考 [SiameseRPN++](../configs/sot/siamese_rpn/README.md)。
+详情请参考 [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn/README.md)。
+
+## 视频个例分割基线
+
+### MaskTrack R-CNN (ICCV 2019)
+
+详情请参考 [MaskTrack R-CNN](https://github.com/open-mmlab/mmtracking/blob/master/configs/vis/masktrack_rcnn)。

@@ -50,16 +50,17 @@ python ./demo/demo_vid.py \
     --show
 ```
 
-#### Inference MOT models
+#### Inference MOT/VIS models
 
-This script can inference an input video / images with a multiple object tracking model.
+This script can inference an input video / images with a multiple object tracking or video instance segmentation model.
 
 ```shell
-python demo/demo_mot.py \
+python demo/demo_mot_vis.py \
     ${CONFIG_FILE} \
     --input ${INPUT} \
     [--output ${OUTPUT}] \
     [--checkpoint ${CHECKPOINT_FILE}] \
+    [--score-thr ${SCORE_THR} \
     [--device ${DEVICE}] \
     [--backend ${BACKEND}] \
     [--show]
@@ -71,17 +72,34 @@ Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
 - `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `pretrains`.
+- `SCORE_THR`: The threshold of score to filter bboxes.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
 - `--show`: Whether show the video on the fly.
 
-Examples:
+Examples of running mot model:
 
 ```shell
-python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
+python demo/demo_mot_vis.py \
+    configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py \
+    --input demo/demo.mp4 \
+    --output mot.mp4 \
 ```
 
-**Important**: When running `demo_mot.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
+**Important**: When running `demo_mot_vis.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
+
+Examples of running vis model:
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+    --output ${OUTPUT} \
+    --show
+```
 
 #### Inference SOT models
 
@@ -224,6 +242,32 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
        --eval track
+   ```
+
+#### Examples of testing VIS model
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`.
+
+1. Test MaskTrack R-CNN on YouTube-VIS 2019, and generate a zip file for submission.
+
+   ```shell
+   python tools/test.py \
+       configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+       --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+       --out ${RESULTS_PATH}/results.pkl \
+       --format-only \
+       --eval-options resfile_path=${RESULTS_PATH}
+   ```
+
+2. Test MaskTrack R-CNN with 8 GPUs on YouTube-VIS 2019, and generate a zip file for submission.
+
+   ```shell
+   ./tools/dist_test.sh \
+       configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+       --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+       --out ${RESULTS_PATH}/results.pkl \
+       --format-only \
+       --eval-options resfile_path=${RESULTS_PATH}
    ```
 
 ### Training
@@ -385,6 +429,15 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 
     ```shell
     bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+#### Examples of training VIS model
+
+1. Train MaskTrack R-CNN on YouTube-VIS 2019 dataset. There are no evaluation results during training, since the annotations of validation dataset in YouTube-VIS are not provided.
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
         --work-dir ./work_dirs/
     ```
 
