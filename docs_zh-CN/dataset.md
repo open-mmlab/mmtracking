@@ -12,6 +12,7 @@
   - [TrackingNet](https://tracking-net.org/)
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
+  - [VOT2018](https://www.votchallenge.net/vot2018/)
 - 视频个例分割
   - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
@@ -38,6 +39,13 @@
 ```shell
 # 通过网页爬虫下载 OTB100 数据集
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
+```
+
+- 对于 VOT2018, 我们使用官方的下载脚本。
+
+```shell
+# 通过网页爬虫下载 VOT2018 数据集
+python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
 #### 1.4 视频个例分割
@@ -122,6 +130,11 @@ mmtracking
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+│   │
 │   ├── youtube_vis_2019
 │   │   │── train
 │   │   │   │── JPEGImages
@@ -192,6 +205,9 @@ python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./da
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # 生成标注
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
+
+# VOT2018
+python ./tools/convert_datasets/vot/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
 python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
@@ -316,6 +332,13 @@ mmtracking
 │   │   │   ├── GOT-10k_Val_000180
 │   │   │   ├── list.txt
 │   │   │── annotations
+│   │
+|   ├── vot2018
+|   |   ├── data
+|   |   |   ├── ants1
+|   │   │   │   ├──color
+|   |   ├── annotations
+│   │   │   ├── ......
 │   │
 │   ├── youtube_vis_2019
 │   │   │── train
@@ -453,6 +476,14 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
 `got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
 `got10k_val.json`： 包含 GOT10k 验证集标注信息的 json 文件。
+
+#### VOT2018的标注和视频帧文件夹
+
+在 `data/vot2018/data` 文件夹下有 VOT2018 数据集的 60 个视频目录， 每个视频目录下的 `color` 文件夹包含该视频所有图片。
+
+在 `data/vot2018/data/annotations` 中只有一个 json 文件：
+
+`vot2018.json`： 包含 VOT2018 数据集标注信息的 json 文件。
 
 #### youtube_vis_2019/youtube_vis2021 的标注文件夹
 
