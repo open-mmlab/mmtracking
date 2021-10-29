@@ -147,8 +147,8 @@ def convert_vot(ann_dir, save_dir, dataset_type):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(vot, osp.join(save_dir, f'vot_{dataset_type}.json'))
-    print(f'-----VOT {dataset_type} Dataset------')
+    mmcv.dump(vot, osp.join(save_dir, f'{dataset_type}.json'))
+    print(f'-----VOT Challenge {dataset_type} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
     print(f'{records["img_id"]- 1} images')

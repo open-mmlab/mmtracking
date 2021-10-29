@@ -13,38 +13,48 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
   - [VOT2018](https://www.votchallenge.net/vot2018/)
+- Video Instance Segmentation
+  - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ### 1. Download Datasets
 
-Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`. If your folder structure is different from the following, you may need to change the corresponding paths in config files.
+Please download the datasets from the official websites. It is recommended to symlink the root of the datasets to `$MMTRACKING/data`.
 
-For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a sctipt to download it.
+#### 1.1 Video Object Detection
 
-#### OTB100
+- For the training and testing of video object detection task, only ILSVRC dataset is needed.
+
+- The `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
+
+#### 1.2 Multiple Object Tracking
+
+- For the training and testing of multi object tracking task, only one of the MOT Challenge datasets (e.g. MOT17) is needed.
+
+#### 1.3 Single Object Tracking
+
+- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100, GOT10k and VOT2018 datasets are needed.
+
+- For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a script to download it.
 
 ```shell
 # download OTB100 dataset by web crawling
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
-For VOT2018, we use the official downloading script.
-
-#### VOT2018
+- For VOT2018, we use the official downloading script.
 
 ```shell
 # download VOT2018 dataset by web crawling
 python ./tools/convert_datasets/vot/download_vot2018.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
-Notes:
+#### 1.4 Video Instance Segmentation
 
-- The `Lists` under `ILSVRC` contains the txt files from [here](https://github.com/msracver/Flow-Guided-Feature-Aggregation/tree/master/data/ILSVRC2015/ImageSets).
+- For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
 
-- For the training and testing of video object detection task, only ILSVRC dataset is needed.
+#### 1.5 Data Structure
 
-- For the training and testing of multi object tracking task, only one of the MOT Challenge dataset (e.g. MOT17) is needed.
-
-- For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100, GOT10k and VOT2018 datasets are needed.
+If your folder structure is different from the following, you may need to change the corresponding paths in config files.
 
 ```
 mmtracking
@@ -77,6 +87,10 @@ mmtracking
 |   │   │   │   ├── val
 │   │   ├── Lists
 │   │
+|   ├── MOT15/MOT16/MOT17/MOT20
+|   |   ├── train
+|   |   ├── test
+│   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
@@ -84,10 +98,6 @@ mmtracking
 |   │   │   │   ├── airplane-2
 |   │   │   │   ├── ......
 │   │   │   ├── ......
-│   │
-|   ├── MOT15/MOT16/MOT17/MOT20
-|   |   ├── train
-|   |   ├── test
 │   │
 │   ├── UAV123
 │   │   ├── data_seq
@@ -108,7 +118,7 @@ mmtracking
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
-│   │   │   │── ......
+│   │   │   │──
 │   │
 │   ├── got10k
 │   │   │── full_data
@@ -124,6 +134,33 @@ mmtracking
 |   |   ├── data
 |   |   |   ├── ants1
 |   │   │   │   ├──color
+│   │
+│   ├── youtube_vis_2019
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── train.json (the official annotation files)
+│   │   │── valid.json (the official annotation files)
+│   │   │── test.json (the official annotation files)
+│   │
+│   ├── youtube_vis_2021
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
 │   │   │   │── ......
 ```
 
@@ -139,13 +176,13 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_det.py -i ./data/ILSVRC -o 
 # ImageNet VID
 python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o ./data/ILSVRC/annotations
 
-# LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
-
 # MOT17
 # The processing of other MOT Challenge dataset is the same as MOT17
 python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
+
+# LaSOT
+python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
@@ -170,6 +207,12 @@ python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data
 
 # VOT2018
 python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations --dataset_type vot2018
+
+# YouTube-VIS 2019
+python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
+
+# YouTube-VIS 2021
+python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2021 -o ./data/youtube_vis_2021/annotations --version 2021
 ```
 
 The folder structure will be as following after your run these scripts:
@@ -206,6 +249,14 @@ mmtracking
 │   │   ├── Lists
 │   │   ├── annotations (the converted annotation files)
 │   │
+|   ├── MOT15/MOT16/MOT17/MOT20
+|   |   ├── train
+|   |   ├── test
+|   |   ├── annotations
+|   |   ├── reid
+│   │   │   ├── imgs
+│   │   │   ├── meta
+│   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
@@ -214,14 +265,6 @@ mmtracking
 |   │   │   │   ├── ......
 │   │   │   ├── ......
 │   │   ├── annotations
-│   │
-|   ├── MOT15/MOT16/MOT17/MOT20
-|   |   ├── train
-|   |   ├── test
-|   |   ├── annotations
-|   |   ├── reid
-│   │   │   ├── imgs
-│   │   │   ├── meta
 │   │
 │   ├── UAV123
 │   │   ├── data_seq
@@ -295,6 +338,36 @@ mmtracking
 |   │   │   │   ├──color
 |   |   ├── annotations
 │   │   │   ├── ......
+│   │
+│   ├── youtube_vis_2019
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── ......
+│   │   │── train.json (the official annotation files)
+│   │   │── valid.json (the official annotation files)
+│   │   │── test.json (the official annotation files)
+│   │   │── annotations (the converted annotation file)
+│   │
+│   ├── youtube_vis_2021
+│   │   │── train
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── valid
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── test
+│   │   │   │── JPEGImages
+│   │   │   │── instances.json (the official annotation files)
+│   │   │   │── ......
+│   │   │── annotations (the converted annotation file)
 ```
 
 #### The folder of annotations in ILSVRC
@@ -306,13 +379,6 @@ There are 3 json files in `data/ILSVRC/annotations`:
 `imagenet_vid_train.json`: Json file containing the annotations information of the training set in ImageNet VID dataset.
 
 `imagenet_vid_val.json`: Json file containing the annotations information of the validation set in ImageNet VID dataset.
-
-#### The folder of annotations in lasot
-
-There are 2 json files in `data/lasot/annotations`:
-
-`lasot_train.json`:  Json file containing the annotations information of the training set in LaSOT dataset.
-`lasot_test.json`:  Json file containing the annotations information of the testing set in LaSOT dataset.
 
 #### The folder of annotations and reid in MOT15/MOT16/MOT17/MOT20
 
@@ -365,6 +431,13 @@ For validation, The annotation list `val_20.txt` remains the same as format abov
 
 Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corresponding `gt.txt`. The value of ground-truth labels should fall in range `[0, num_classes - 1]`.
 
+#### The folder of annotations in lasot
+
+There are 2 json files in `data/lasot/annotations`:
+
+`lasot_train.json`:  Json file containing the annotations information of the training set in LaSOT dataset.
+`lasot_test.json`:  Json file containing the annotations information of the testing set in LaSOT dataset.
+
 #### The folder of annotations in UAV123
 
 There are only 1 json files in `data/UAV123/annotations`:
@@ -404,4 +477,14 @@ There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and th
 
 There are only 1 json files in `data/vot2018/annotations`:
 
-`vot_st2018.json`:  Json file containing the annotations information of the VOT2018 dataset.
+`vot2018.json`:  Json file containing the annotations information of the VOT2018 dataset.
+
+#### The folder of annotations in youtube_vis_2019/youtube_vis2021
+
+There are 3 json files in `data/youtube_vis_2019/annotations` or `data/youtube_vis_2021/annotations`:
+
+`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: Json file containing the annotations information of the training set in youtube_vis_2019/youtube_vis2021 dataset.
+
+`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: Json file containing the annotations information of the validation set in youtube_vis_2019/youtube_vis2021 dataset.
+
+`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: Json file containing the annotations information of the testing set in youtube_vis_2019/youtube_vis2021 dataset.

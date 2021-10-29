@@ -28,7 +28,7 @@ The master branch works with **PyTorch1.3+**.
 
 - **The First Unified Video Perception Platform**
 
-  We are the first open source toolbox that unifies versatile video perception tasks include video object detection, single object tracking, and multiple object tracking.
+  We are the first open source toolbox that unifies versatile video perception tasks include video object detection, multiple object tracking, single object tracking and video instance segmentation.
 
 - **Modular Design**
 
@@ -70,6 +70,10 @@ Supported methods of multi object tracking:
 Supported methods of single object tracking:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+
+Supported methods of video instance segmentation:
+
+- [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
 
 ## Installation
 

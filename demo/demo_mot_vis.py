@@ -17,6 +17,11 @@ def main():
         '--output', help='output video file (mp4 format) or folder')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument(
+        '--score-thr',
+        type=float,
+        default=0.0,
+        help='The threshold of score to filter bboxes.')
+    parser.add_argument(
         '--device', default='cuda:0', help='device used for inference')
     parser.add_argument(
         '--show',
@@ -78,6 +83,7 @@ def main():
         model.show_result(
             img,
             result,
+            score_thr=args.score_thr,
             show=args.show,
             wait_time=int(1000. / fps) if fps else 0,
             out_file=out_file,
