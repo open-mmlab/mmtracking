@@ -10,29 +10,23 @@ from vot.utilities import extract_files
 from vot.utilities.net import (download_json, download_uncompress,
                                get_base_url, join_url)
 
-VOT_DATASETS = {
-    'vot-st2018':
-    'http://data.votchallenge.net/vot2018/main/description.json',
-    'vot-lt2018':
+VOT_DATASETS = dict(
+    vot2018='http://data.votchallenge.net/vot2018/main/description.json',
+    vot2018_lt=  # noqa: E251
     'http://data.votchallenge.net/vot2018/longterm/description.json',
-    'vot-st2019':
-    'http://data.votchallenge.net/vot2019/main/description.json',
-    'vot-lt2019':
+    vot2019='http://data.votchallenge.net/vot2019/main/description.json',
+    vot2019_lt=  # noqa: E251
     'http://data.votchallenge.net/vot2019/longterm/description.json',
-    'vot-rgbd2019':
-    'http://data.votchallenge.net/vot2019/rgbd/description.json',
-    'vot-rgbt2019':
+    vot2019_rgbd='http://data.votchallenge.net/vot2019/rgbd/description.json',
+    vot2019_rgbt=  # noqa: E251
     'http://data.votchallenge.net/vot2019/rgbtir/meta/description.json',
-    'vot-st2020':
-    'https://data.votchallenge.net/vot2020/shortterm/description.json',
-    'vot-rgbt2020':
+    vot2020='https://data.votchallenge.net/vot2020/shortterm/description.json',
+    vot2020_rgbt=  # noqa: E251
     'http://data.votchallenge.net/vot2020/rgbtir/meta/description.json',
-    'vot-st2021':
-    'https://data.votchallenge.net/vot2021/shortterm/description.json',
-}
+    vot2021='https://data.votchallenge.net/vot2021/shortterm/description.json')
 
 
-def download(dataset_name, path):
+def download_dataset(dataset_name, path):
     url = VOT_DATASETS[dataset_name]
     meta = download_json(url)
     base_url = get_base_url(url) + '/'
@@ -61,28 +55,16 @@ def download_url(url, saved_file):
     video_zip = osp.basename(saved_file)
     try:
         request.urlretrieve(url, saved_file)
-    except error.ContentTooShortError:
-        count = 1
-        while count <= 5:
-            try:
-                request.urlretrieve(url, saved_file)
-                break
-            except error.ContentTooShortError:
-                err_info = 'ReDownloading %s for %d time' % (video_zip, count)
-                print(err_info)
-                count += 1
-        if count > 5:
-            print('downloading %s failed!' % video_zip)
     except error.HTTPError as e:
         print(e)
         print('\r\n' + url + ' download failed!' + '\r\n')
-    except socket.timeout:
+    except (error.ContentTooShortError, socket.timeout):
         count = 1
         while count <= 5:
             try:
                 request.urlretrieve(url, saved_file)
                 break
-            except socket.timeout:
+            except (error.ContentTooShortError, socket.timeout):
                 err_info = 'ReDownloading %s for %d time' % (video_zip, count)
                 print(err_info)
                 count += 1
@@ -93,27 +75,23 @@ def download_url(url, saved_file):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('')
     parser.add_argument(
-        '--dataset',
-        '-d',
+        '--dataset_name',
         help='dataset name',
-        default='vot-st2018',
+        default='vot2018',
         choices=[
-            'vot-st2018',
-            'vot-lt2018',
-            'vot-st2019',
-            'vot-lt2019',
-            'vot-rgbd2019',
-            'vot-rgbt2019',
-            'vot-st2020',
-            'vot-rgbt2020',
-            'vot-st2021',
+            'vot2018',
+            'vot2018_lt',
+            'vot2019',
+            'vot2019_lt',
+            'vot2019_rgbd',
+            'vot2019_rgbt',
+            'vot2020',
+            'vot2020_rgbt',
+            'vot2021',
         ],
     )
-    parser.add_argument(
-        '--path', '-p', help='dataset saved path', default='./')
+    parser.add_argument('--save_path', help='dataset saved path', default='./')
     args = parser.parse_args()
-    path = os.path.realpath(
-        os.path.join(os.path.dirname(__file__), '../../../', args.path))
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    download(args.dataset, path)
+    if not os.path.isdir(args.save_path):
+        os.makedirs(args.save_path)
+    download_dataset(args.dataset_name, args.save_path)

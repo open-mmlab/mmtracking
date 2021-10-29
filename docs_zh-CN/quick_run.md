@@ -48,16 +48,17 @@ python ./demo/demo_vid.py \
     --show
 ```
 
-#### 使用 MOT 模型进行推理
+#### 使用 MOT/VIS 模型进行推理
 
-以下脚本可以使用多目标跟踪模型对单个输入视频或者图像进行推理。
+以下脚本可以使用多目标跟踪模型或者视频个例分割模型对单个输入视频或者图像进行推理。
 
 ```shell
-python demo/demo_mot.py \
+python demo/demo_mot_vis.py \
     ${CONFIG_FILE} \
     --input ${INPUT} \
     [--output ${OUTPUT}] \
     [--checkpoint ${CHECKPOINT_FILE}] \
+    [--score-thr ${SCORE_THR} \
     [--device ${DEVICE}] \
     [--backend ${BACKEND}] \
     [--show]
@@ -69,17 +70,34 @@ python demo/demo_mot.py \
 
 - `OUTPUT`：可视化演示的输出路径。如果未指定 `OUTPUT`，使用 `--show` 会实时显示视频。
 - `CHECKPOINT_FILE`：如果已经在配置文件里使用 `pretrains` 关键字设置了预训练模型，那么模型权重文件是可选的。
+- `SCORE_THR`: 用于过滤跟踪框的得分阈值。
 - `DEVICE`：推理设备。可选 `cpu` 或者 `cuda:0` 等。
 - `BACKEND`：可视化坐标框的后端。可选 `cv2` 或者 `plt`。
 - `--show`：是否实时显示视频。
 
-例子：
+MOT 的例子：
 
 ```shell
-python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
+python demo/demo_mot_vis.py \
+    configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py \
+    --input demo/demo.mp4 \
+    --output mot.mp4 \
 ```
 
-**注意**：当运行 `demo_mot.py` 时， 我们建议您使用包含 `private` 的配置文件，因为这些配置文件不需要外部的检测结果。
+**注意**：当运行 `demo_mot_vis.py` 时， 我们建议您使用包含 `private` 的配置文件，因为这些配置文件不需要外部的检测结果。
+
+VIS 的例子:
+
+假设你已经将预训练权重下载在了 `checkpoints/` 文件夹下。
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+    --output ${OUTPUT} \
+    --show
+```
 
 #### 使用 SOT 模型进行推理
 
@@ -146,7 +164,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
 - `--eval-options`：如果指定，可选评估配置的键值对将作为 dataset.evaluate() 函数的参数，此参数只适用于评估。
 - `--format-only`：如果指定，结果将被格式化为官方格式。
 
-#### 测试VID模型示例
+#### 测试 VID 模型示例
 
 假设您已经下载模型权重文件至文件夹 `checkpoints/` 里。
 
@@ -168,7 +186,7 @@ python tools/test.py ${CONFIG_FILE} [--checkpoint ${CHECKPOINT_FILE}] [--out ${R
        --eval bbox
    ```
 
-#### 测试MOT模型示例
+#### 测试 MOT 模型示例
 
 1. 在 MOT17 上测试 Tracktor，并且评估 CLEAR MOT 指标。
 
@@ -200,7 +218,7 @@ model = dict(
     )
 ```
 
-#### 测试SOT模型示例
+#### 测试 SOT 模型示例
 
 1. 在 LaSOT 上测试 SiameseRPN++，并且评估 success 和 normed precision。
 
@@ -218,6 +236,32 @@ model = dict(
        --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
        --out results.pkl \
        --eval track
+   ```
+
+#### 测试 VIS 模型示例
+
+假设你已经将预训练权重下载在了 `checkpoints/` 文件夹下。
+
+1. 在 YouTube-VIS 2019 上测试 MaskTrack R-CNN，并且生成一个用于提交结果的 zip 文件。
+
+   ```shell
+   python tools/test.py \
+       configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+       --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+       --out ${RESULTS_PATH}/results.pkl \
+       --format-only \
+       --eval-options resfile_path=${RESULTS_PATH}
+   ```
+
+2. 使用 8 GPUs 在 YouTube-VIS 2019 上测试 MaskTrack R-CNN，并且生成一个用于提交结果的 zip 文件。
+
+   ```shell
+   ./tools/dist_test.sh \
+       configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py \
+       --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+       --out ${RESULTS_PATH}/results.pkl \
+       --format-only \
+       --eval-options resfile_path=${RESULTS_PATH}
    ```
 
 ### 训练
@@ -314,7 +358,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
    CUDA_VISIBLE_DEVICES=4,5,6,7 GPUS=4 ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} config2.py ${WORK_DIR}
    ```
 
-#### 训练VID模型示例
+#### 训练 VID 模型示例
 
 1. 在 ImageNet VID 和 ImageNet DET 上 训练 DFF，接着在最后一个 epoch 评估 bbox mAP.
 
@@ -322,7 +366,7 @@ MMTracking 依赖 `torch.distributed` 包进行分布式训练。
 bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
 ```
 
-#### 训练MOT模型示例
+#### 训练 MOT 模型示例
 
 对于像 MOT、SORT、DeepSORT 以及 Trackor 这样的 MOT 方法，你需要训练一个检测器和一个 reid 模型，而非直接训练 MOT 模型。
 
@@ -370,12 +414,21 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 3. 完成检测器和 ReID 模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/zh_CN/latest/quick_run.html#mot)来测试多目标跟踪器。
 
-#### 训练SOT模型示例
+#### 训练 SOT 模型示例
 
 1. 在 COCO、ImageNet VID 和 ImageNet DET 上训练 SiameseRPN++，然后从第 10 个 epoch 到第 20 个 epoch 评估其 success、precision 和 normed precision。
 
     ```shell
     bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+        --work-dir ./work_dirs/
+    ```
+
+#### 训练 VIS 模型示例
+
+1. 在 YouTube-VIS 2019 数据集上训练 MaskTrack R-CNN。由于 YouTube-VIS 没有提供 validation 集的注释文件，因此在训练过程中不会进行评估。
+
+    ```shell
+    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
         --work-dir ./work_dirs/
     ```
 

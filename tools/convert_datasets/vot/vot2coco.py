@@ -21,7 +21,15 @@ def parse_args():
         '-o',
         '--output',
         help='directory to save coco formatted label file',
-    )
+    ),
+    parser.add_argument(
+        '--dataset_type',
+        help='the type of vot challenge',
+        default='vot2018',
+        choices=[
+            'vot2018', 'vot2018_lt', 'vot2019', 'vot2019_lt', 'vot2019_rgbd',
+            'vot2019_rgbt'
+        ])
     return parser.parse_args()
 
 
@@ -46,14 +54,15 @@ def parse_attribute(video_path, attr_name, img_num):
     return attr_list
 
 
-def convert_vot(vot, ann_dir, save_dir):
+def convert_vot(ann_dir, save_dir, dataset_type):
     """Convert vot dataset to COCO style.
 
     Args:
-        vot (dict): The converted COCO style annotations.
         ann_dir (str): The path of vot dataset
         save_dir (str): The path to save `vot`.
+        dataset_type (str): The type of vot challenge.
     """
+    vot = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     vot['categories'] = [dict(id=0, name=0)]
 
@@ -67,19 +76,20 @@ def convert_vot(vot, ann_dir, save_dir):
 
         video_path = osp.join(ann_dir, 'data', video_name)
         ann_file = osp.join(video_path, 'groundtruth.txt')
-        gt_annos = mmcv.list_from_file(ann_file)
+        gt_anns = mmcv.list_from_file(ann_file)
 
         camera_motion = parse_attribute(video_path, 'camera_motion',
-                                        len(gt_annos))
-        illu_change = parse_attribute(video_path, 'illu_change', len(gt_annos))
+                                        len(gt_anns))
+        illustration_change = parse_attribute(video_path, 'illu_change',
+                                              len(gt_anns))
         motion_change = parse_attribute(video_path, 'motion_change',
-                                        len(gt_annos))
-        occlusion = parse_attribute(video_path, 'occlusion', len(gt_annos))
-        size_change = parse_attribute(video_path, 'size_change', len(gt_annos))
+                                        len(gt_anns))
+        occlusion = parse_attribute(video_path, 'occlusion', len(gt_anns))
+        size_change = parse_attribute(video_path, 'size_change', len(gt_anns))
 
         img = mmcv.imread(osp.join(video_path, 'color', '00000001.jpg'))
         height, width, _ = img.shape
-        for frame_id, gt_anno in enumerate(gt_annos):
+        for frame_id, gt_anno in enumerate(gt_anns):
             file_name = '%08d' % (frame_id + 1) + '.jpg'
             file_name = osp.join(video_name, 'color', file_name)
             image = dict(
@@ -93,11 +103,12 @@ def convert_vot(vot, ann_dir, save_dir):
 
             ann = dict(
                 id=records['ann_id'],
+                video_id=records['vid_id'],
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
                 category_id=0,
                 camera_motion=camera_motion[frame_id] == '1',
-                illu_change=illu_change[frame_id] == '1',
+                illustration_change=illustration_change[frame_id] == '1',
                 motion_change=motion_change[frame_id] == '1',
                 occlusion=occlusion[frame_id] == '1',
                 size_change=size_change[frame_id] == '1')
@@ -107,6 +118,7 @@ def convert_vot(vot, ann_dir, save_dir):
             if anno[0][0] == 'm':
                 continue
             else:
+                # bbox is in [x1, y1, x2, y2, x3, y3, x4, y4] format
                 bbox = list(map(lambda x: float(x), anno))
                 if len(bbox) == 4:
                     bbox = [
@@ -114,12 +126,10 @@ def convert_vot(vot, ann_dir, save_dir):
                         bbox[0] + bbox[2], bbox[1] + bbox[3], bbox[0],
                         bbox[1] + bbox[3]
                     ]
-                ann.update(
-                    dict(
-                        bbox=bbox,
-                        area=cv2.contourArea(
-                            np.array(bbox, dtype='int').reshape(4, 2)),
-                    ))
+                assert len(bbox) == 8
+                ann['bbox'] = bbox
+                ann['area'] = cv2.contourArea(
+                    np.array(bbox, dtype='int').reshape(4, 2))
 
             vot['annotations'].append(ann)
 
@@ -130,8 +140,8 @@ def convert_vot(vot, ann_dir, save_dir):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(vot, osp.join(save_dir, 'vot.json'))
-    print('-----VOT Dataset------')
+    mmcv.dump(vot, osp.join(save_dir, f'{dataset_type}.json'))
+    print(f'-----VOT Challenge {dataset_type} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
     print(f'{records["img_id"]- 1} images')
@@ -141,8 +151,7 @@ def convert_vot(vot, ann_dir, save_dir):
 
 def main():
     args = parse_args()
-    vot = defaultdict(list)
-    convert_vot(vot, args.input, args.output)
+    convert_vot(args.input, args.output, args.dataset_type)
 
 
 if __name__ == '__main__':

@@ -180,8 +180,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         assert len(det_results[0]) == 2, 'There are no mask results.'
         bbox_results = det_results[0][0]
         mask_results = det_results[0][1]
-        num_classes = self.detector.roi_head.bbox_head.num_classes
-        assert len(bbox_results) == num_classes
+        num_classes = len(bbox_results)
 
         outs_det = results2outs(
             bbox_results=bbox_results,
