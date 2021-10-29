@@ -16,7 +16,7 @@
 
 ## Results and models of MaskTrack R-CNN on YouTube-VIS 2019 validation dataset
 
-As mentioned in [Issues #6](https://github.com/youtubevos/MaskTrackRCNN/issues/6) in MaskTrack R-CNN, the result is kind of unstable for different trials, which ranges from 28 AP to 31 AP when using R-50-FPN as backbone.
+As mentioned in [Issues #6](https://github.com/youtubevos/MaskTrackRCNN/issues/6#issuecomment-502503505) in MaskTrack R-CNN, the result is kind of unstable for different trials, which ranges from 28 AP to 31 AP when using R-50-FPN as backbone.
 The checkpoint provided below is the best one from two experiments.
 
 |    Base detector    |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | AP | Config | Download |
