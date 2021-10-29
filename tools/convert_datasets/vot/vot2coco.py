@@ -27,15 +27,8 @@ def parse_args():
         help='the type of vot challenge',
         default='vot2018',
         choices=[
-            'vot2018',
-            'vot2018_lt',
-            'vot2019',
-            'vot2019_lt',
-            'vot2019_rgbd',
-            'vot2019_rgbt',
-            'vot2020',
-            'vot2020_rgbt',
-            'vot2021',
+            'vot2018', 'vot2018_lt', 'vot2019', 'vot2019_lt', 'vot2019_rgbd',
+            'vot2019_rgbt'
         ])
     return parser.parse_args()
 

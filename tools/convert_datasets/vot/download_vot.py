@@ -92,6 +92,6 @@ if __name__ == '__main__':
     )
     parser.add_argument('--save_path', help='dataset saved path', default='./')
     args = parser.parse_args()
-    if not os.path.isdir(args.output):
-        os.makedirs(args.output)
-    download_dataset(args.input, args.output)
+    if not os.path.isdir(args.save_path):
+        os.makedirs(args.save_path)
+    download_dataset(args.dataset_name, args.save_path)

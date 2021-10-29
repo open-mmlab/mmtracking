@@ -45,7 +45,7 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 
 ```shell
 # download VOT2018 dataset by web crawling
-python ./tools/convert_datasets/vot/download_vot2018.py --dataset vot2018 --save_path ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
 #### 1.4 Video Instance Segmentation
@@ -206,7 +206,7 @@ bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 
 # VOT2018
-python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations --dataset_type vot2018
+python ./tools/convert_datasets/vot/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
 python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019

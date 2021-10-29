@@ -10,7 +10,6 @@ from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
-VOT_ANN_PATH = f'{PREFIX}/demo_sot_data/vot'
 
 
 @pytest.mark.parametrize('dataset',
@@ -18,11 +17,13 @@ VOT_ANN_PATH = f'{PREFIX}/demo_sot_data/vot'
 def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
-    ann_file = osp.join(
-        LASOT_ANN_PATH,
-        'lasot_test_dummy.json') if dataset != 'VOTDataset' else osp.join(
-            VOT_ANN_PATH, 'vot_test_dummy.json')
+    ann_file = osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json')
     dataset_object = dataset_class(ann_file=ann_file, pipeline=[])
+
+    if dataset == 'VOTDataset':
+        for _, img_ann in dataset_object.coco.anns.items():
+            x, y, w, h = img_ann['bbox']
+            img_ann['bbox'] = [x, y, x + w, y, x + w, y + h, x, y + h]
 
     # image 5 has 1 objects
     img_id = 5
