@@ -83,6 +83,7 @@ def convert_lasot(ann_dir, save_dir, split='test'):
             x1, y1, w, h = gt_bbox.split(',')
             ann = dict(
                 id=records['ann_id'],
+                video_id=records['vid_id'],
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
                 category_id=0,
