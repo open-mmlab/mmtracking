@@ -88,10 +88,10 @@ def convert_otb100(otb, ann_dir, save_dir):
                 assert len(bbox) == 4
                 anno_dict = dict(
                     id=records['ann_id'],
+                    video_id=records['vid_id'],
                     image_id=records['img_id'],
                     instance_id=records['global_instance_id'],
                     category_id=0,
-                    video_id=records['vid_id'],
                     bbox=bbox,
                     area=bbox[2] * bbox[3],
                 )

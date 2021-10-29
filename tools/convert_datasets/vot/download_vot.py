@@ -10,26 +10,20 @@ from vot.utilities import extract_files
 from vot.utilities.net import (download_json, download_uncompress,
                                get_base_url, join_url)
 
-VOT_DATASETS = {
-    'vot_st2018':
-    'http://data.votchallenge.net/vot2018/main/description.json',
-    'vot_lt2018':
+VOT_DATASETS = dict(
+    vot2018='http://data.votchallenge.net/vot2018/main/description.json',
+    vot2018_lt=  # noqa: E251
     'http://data.votchallenge.net/vot2018/longterm/description.json',
-    'vot_st2019':
-    'http://data.votchallenge.net/vot2019/main/description.json',
-    'vot_lt2019':
+    vot2019='http://data.votchallenge.net/vot2019/main/description.json',
+    vot2019_lt=  # noqa: E251
     'http://data.votchallenge.net/vot2019/longterm/description.json',
-    'vot_rgbd2019':
-    'http://data.votchallenge.net/vot2019/rgbd/description.json',
-    'vot_rgbt2019':
+    vot2019_rgbd='http://data.votchallenge.net/vot2019/rgbd/description.json',
+    vot2019_rgbt=  # noqa: E251
     'http://data.votchallenge.net/vot2019/rgbtir/meta/description.json',
-    'vot_st2020':
-    'https://data.votchallenge.net/vot2020/shortterm/description.json',
-    'vot_rgbt2020':
+    vot2020='https://data.votchallenge.net/vot2020/shortterm/description.json',
+    vot2020_rgbt=  # noqa: E251
     'http://data.votchallenge.net/vot2020/rgbtir/meta/description.json',
-    'vot_st2021':
-    'https://data.votchallenge.net/vot2021/shortterm/description.json',
-}
+    vot2021='https://data.votchallenge.net/vot2021/shortterm/description.json')
 
 
 def download_dataset(dataset_name, path):
@@ -81,24 +75,22 @@ def download_url(url, saved_file):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('')
     parser.add_argument(
-        '-i',
-        '--input',
+        '--dataset_name',
         help='dataset name',
-        default='vot_st2018',
+        default='vot2018',
         choices=[
-            'vot_st2018',
-            'vot_lt2018',
-            'vot_st2019',
-            'vot_lt2019',
-            'vot_rgbd2019',
-            'vot_rgbt2019',
-            'vot_st2020',
-            'vot_rgbt2020',
-            'vot_st2021',
+            'vot2018',
+            'vot2018_lt',
+            'vot2019',
+            'vot2019_lt',
+            'vot2019_rgbd',
+            'vot2019_rgbt',
+            'vot2020',
+            'vot2020_rgbt',
+            'vot2021',
         ],
     )
-    parser.add_argument(
-        '-o', '--output', help='dataset saved path', default='./')
+    parser.add_argument('--save_path', help='dataset saved path', default='./')
     args = parser.parse_args()
     if not os.path.isdir(args.output):
         os.makedirs(args.output)

@@ -10,23 +10,28 @@ from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
+VOT_ANN_PATH = f'{PREFIX}/demo_sot_data/vot'
 
 
-@pytest.mark.parametrize('dataset', ['SOTTestDataset', 'LaSOTDataset'])
+@pytest.mark.parametrize('dataset',
+                         ['SOTTestDataset', 'LaSOTDataset', 'VOTDataset'])
 def test_parse_ann_info(dataset):
     dataset_class = DATASETS.get(dataset)
 
-    dataset = dataset_class(
-        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
-        pipeline=[])
+    ann_file = osp.join(
+        LASOT_ANN_PATH,
+        'lasot_test_dummy.json') if dataset != 'VOTDataset' else osp.join(
+            VOT_ANN_PATH, 'vot_test_dummy.json')
+    dataset_object = dataset_class(ann_file=ann_file, pipeline=[])
 
     # image 5 has 1 objects
     img_id = 5
-    img_info = dataset.coco.load_imgs([img_id])[0]
-    ann_ids = dataset.coco.get_ann_ids([img_id])
-    ann_info = dataset.coco.loadAnns(ann_ids)
-    ann = dataset._parse_ann_info(img_info, ann_info)
-    assert ann['bboxes'].shape == (4, )
+    img_info = dataset_object.coco.load_imgs([img_id])[0]
+    ann_ids = dataset_object.coco.get_ann_ids([img_id])
+    ann_info = dataset_object.coco.loadAnns(ann_ids)
+    ann = dataset_object._parse_ann_info(img_info, ann_info)
+    assert ann['bboxes'].shape == (
+        4, ) if dataset != 'VOTDataset' else ann['bboxes'].shape == (8, )
     assert ann['labels'] == 0
 
 

@@ -23,22 +23,19 @@ def parse_args():
         help='directory to save coco formatted label file',
     ),
     parser.add_argument(
-        '--type',
+        '--dataset_type',
         help='the type of vot challenge',
+        default='vot2018',
         choices=[
-            '2018',
-            '2019',
-            '2020',
-            '2021',
-            'st2018',
-            'lt2018',
-            'st2019',
-            'lt2019',
-            'rgbd2019',
-            'rgbt2019',
-            'st2020',
-            'rgbt2020',
-            'st2021',
+            'vot2018',
+            'vot2018_lt',
+            'vot2019',
+            'vot2019_lt',
+            'vot2019_rgbd',
+            'vot2019_rgbt',
+            'vot2020',
+            'vot2020_rgbt',
+            'vot2021',
         ])
     return parser.parse_args()
 
@@ -64,13 +61,13 @@ def parse_attribute(video_path, attr_name, img_num):
     return attr_list
 
 
-def convert_vot(ann_dir, save_dir, type):
+def convert_vot(ann_dir, save_dir, dataset_type):
     """Convert vot dataset to COCO style.
 
     Args:
         ann_dir (str): The path of vot dataset
         save_dir (str): The path to save `vot`.
-        type (str): The type of vot challenge.
+        dataset_type (str): The type of vot challenge.
     """
     vot = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
@@ -113,10 +110,10 @@ def convert_vot(ann_dir, save_dir, type):
 
             ann = dict(
                 id=records['ann_id'],
+                video_id=records['vid_id'],
                 image_id=records['img_id'],
                 instance_id=records['global_instance_id'],
                 category_id=0,
-                video_id=records['vid_id'],
                 camera_motion=camera_motion[frame_id] == '1',
                 illustration_change=illustration_change[frame_id] == '1',
                 motion_change=motion_change[frame_id] == '1',
@@ -128,6 +125,7 @@ def convert_vot(ann_dir, save_dir, type):
             if anno[0][0] == 'm':
                 continue
             else:
+                # bbox is in [x1, y1, x2, y2, x3, y3, x4, y4] format
                 bbox = list(map(lambda x: float(x), anno))
                 if len(bbox) == 4:
                     bbox = [
@@ -149,8 +147,8 @@ def convert_vot(ann_dir, save_dir, type):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(vot, osp.join(save_dir, f'vot_{type}.json'))
-    print(f'-----VOT {type} Dataset------')
+    mmcv.dump(vot, osp.join(save_dir, f'vot_{dataset_type}.json'))
+    print(f'-----VOT {dataset_type} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
     print(f'{records["img_id"]- 1} images')
@@ -160,7 +158,7 @@ def convert_vot(ann_dir, save_dir, type):
 
 def main():
     args = parse_args()
-    convert_vot(args.input, args.output, args.type)
+    convert_vot(args.input, args.output, args.dataset_type)
 
 
 if __name__ == '__main__':

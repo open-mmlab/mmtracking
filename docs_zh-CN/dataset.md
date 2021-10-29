@@ -33,7 +33,7 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 
 ```shell
 # download VOT2018 dataset by web crawling
-python ./tools/convert_datasets/vot/download_vot2018.py -i vot_st2018 -o ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot2018.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
 注意：
@@ -170,7 +170,7 @@ bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
 
 # VOT2018
-python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations
+python ./tools/convert_datasets/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotatations --dataset_type vot2018
 ```
 
 ```

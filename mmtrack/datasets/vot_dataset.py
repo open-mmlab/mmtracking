@@ -10,7 +10,7 @@ class VOTDataset(SOTTestDataset):
 
     The dataset doesn't support training mode.
 
-    Note: The vot datasets, such as VOT2020, using the mask annotation is not
+    Note: The vot datasets using the mask annotation, such as VOT2020, is not
     supported now.
     """
     CLASSES = (0, )
@@ -29,6 +29,8 @@ class VOTDataset(SOTTestDataset):
             dict: A dict containing the following keys: bboxes, labels.
             labels are not useful in SOT.
         """
+        # The shape of gt_bboxes is (8, ), in [x1, y1, x2, y2, x3, y3, x4, y4]
+        # format
         gt_bboxes = np.array(ann_info[0]['bbox'], dtype=np.float32)
         gt_labels = np.array(self.cat2label[ann_info[0]['category_id']])
         ann = dict(bboxes=gt_bboxes, labels=gt_labels)

@@ -88,10 +88,10 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
                     bbox = list(map(float, gt_bboxes[frame_id].split(',')))
                 ann = dict(
                     id=records['ann_id'],
+                    video_id=records['vid_id'],
                     image_id=records['img_id'],
                     instance_id=records['global_instance_id'],
                     category_id=0,
-                    video_id=records['vid_id'],
                     bbox=bbox,
                     area=bbox[2] * bbox[3])
                 trackingnet['annotations'].append(ann)
