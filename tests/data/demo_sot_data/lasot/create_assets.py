@@ -11,7 +11,7 @@ def create_dummy_data():
     videos_list = ['airplane-1', 'airplane-2']
 
     lasot_test['categories'] = [dict(id=0, name=0)]
-
+    videos_size = {'airplane-1': (360, 640), 'airplane-2': (720, 1280)}
     for video_name in videos_list:
         video_path = video_name
         video = dict(id=records['vid_id'], name=video_name)
@@ -20,7 +20,7 @@ def create_dummy_data():
         gt_bboxes = mmcv.list_from_file(
             osp.join(video_path, 'groundtruth.txt'))
 
-        height, width, _ = (360, 640, 3)
+        height, width = videos_size[video_name]
         for frame_id, gt_bbox in enumerate(gt_bboxes):
             file_name = '%08d' % (frame_id + 1) + '.jpg'
             file_name = osp.join(video_name, 'img', file_name)

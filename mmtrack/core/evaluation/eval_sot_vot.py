@@ -186,6 +186,7 @@ def eval_sot_accuracy_robustness(
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
         gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
+        assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
         fail_num += count_failures(pred_traj)
         accuracy += calc_accuracy(
             gt_traj,
@@ -222,20 +223,25 @@ def calc_eao_curve(overlaps, success):
     total_runs = len(overlaps)
 
     overlaps_array = np.zeros((total_runs, max_length), dtype=np.float32)
-    # mask out frames which are not considered in EAO calculation
+    # mask out frames which are not considered in EAO calculation. initial
+    # value are zero, meaning ignored.
     mask_array = np.zeros((total_runs, max_length), dtype=np.float32)
     for i, (o, success) in enumerate(zip(overlaps, success)):
         overlaps_array[i, :len(o)] = np.array(o)
         if not success:
-            # tracker has failed during this run - fill zeros until the end of
-            # the run
+            # tracker has failed during this sequence - consider all of
+            # 'overlaps_array'. The interval from the end of sequence to max
+            # length are padded with zeros.
             mask_array[i, :] = 1
         else:
             # tracker has successfully tracked to the end - consider only this
-            # part of the sequence
+            # part of the true sequence, and ignore the padding from the end of
+            # sequence to max length.
             mask_array[i, :len(o)] = 1
 
     overlaps_array_sum = overlaps_array.copy()
+    # overlaps_array_sum[i,j] means the mean overlap from 1 to j in i-th
+    # sequence
     for j in range(1, overlaps_array_sum.shape[1]):
         overlaps_array_sum[:, j] = np.mean(overlaps_array[:, 1:j + 1], axis=1)
 
@@ -283,6 +289,7 @@ def eval_sot_eao(
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
         gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
+        assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
         fail_idxs, init_idxs = locate_failures_inits(pred_traj)
         overlaps = calc_overlaps(
             gt_traj, pred_traj, region_bound=region_bound[i])

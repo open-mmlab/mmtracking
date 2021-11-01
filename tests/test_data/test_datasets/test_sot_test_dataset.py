@@ -10,7 +10,6 @@ from mmtrack.datasets import DATASETS as DATASETS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 LASOT_ANN_PATH = f'{PREFIX}/demo_sot_data/lasot'
-VOT_ANN_PATH = f'{PREFIX}/demo_sot_data/vot'
 
 
 @pytest.mark.parametrize('dataset',
@@ -65,34 +64,39 @@ def test_sot_ope_evaluation():
 
 
 def test_sot_vot_evaluation():
-    dataset_class = DATASETS.get('VOT2018Dataset')
+    dataset_class = DATASETS.get('VOTDataset')
     dataset = dataset_class(
-        ann_file=osp.join(VOT_ANN_PATH, 'vot_test_dummy.json'), pipeline=[])
+        ann_file=osp.join(LASOT_ANN_PATH, 'lasot_test_dummy.json'),
+        pipeline=[])
+
+    for _, img_ann in dataset.coco.anns.items():
+        x, y, w, h = img_ann['bbox']
+        img_ann['bbox'] = [x, y, x + w, y, x + w, y + h, x, y + h]
 
     results = []
-    for video_name in ['drone_across', 'matrix']:
+    for video_name in ['airplane-1', 'airplane-2']:
         results.extend(
             mmcv.list_from_file(
-                osp.join(VOT_ANN_PATH, video_name, 'track_results.txt')))
-    track_results = []
+                osp.join(LASOT_ANN_PATH, video_name, 'vot_track_results.txt')))
+    track_bboxes = []
     for result in results:
         result = result.split(',')
         if len(result) == 1:
-            track_results.append([float(result[0]), 0.])
+            track_bboxes.append([float(result[0]), 0.])
         else:
-            track_results.append([
+            track_bboxes.append([
                 float(result[0]),
                 float(result[1]),
                 float(result[2]),
                 float(result[3]), 0.
             ])
 
-    track_results = dict(track_results=track_results)
+    track_bboxes = dict(track_bboxes=track_bboxes)
     eval_results = dataset.evaluate(
-        track_results, interval=[2, 28], metric=['track'])
-    assert eval_results['eao'] == 0.6049
-    assert eval_results['accuracy'] == 0.5848
-    assert eval_results['robustness'] == 2.0548
+        track_bboxes, interval=[1, 3], metric=['track'])
+    assert eval_results['eao'] == 0.6394
+    assert eval_results['accuracy'] == 0.5431
+    assert eval_results['robustness'] == 6.0
 
 
 @pytest.mark.parametrize('dataset', ['TrackingNetDataset', 'GOT10kDataset'])

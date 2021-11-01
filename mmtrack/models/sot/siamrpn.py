@@ -273,7 +273,7 @@ class SiamRPN(BaseSingleObjectTracker):
             w = s * (x2 - x1)
             h = s * (y2 - y1)
             bbox = torch.stack((cx, cy, w, h))
-        elif len(length) == 4:
+        elif length == 4:
             bbox = bbox_xyxy_to_cxcywh(quadrilateral)
         else:
             NotImplementedError(f'The length of quadrilateral: {length} is \
@@ -330,7 +330,7 @@ class SiamRPN(BaseSingleObjectTracker):
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
-            # self.memo.bbox = torch.round(self.memo.bbox)
+            self.memo.bbox = torch.round(self.memo.bbox)
             # convert bbox to region
             track_bbox = self.memo.bbox.cpu().numpy()
             track_bbox = self._bbox_cxcywh_to_xywh(track_bbox)
