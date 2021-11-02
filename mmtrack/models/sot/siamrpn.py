@@ -294,7 +294,7 @@ class SiamRPN(BaseSingleObjectTracker):
         bbox[3] = max(bbox[3] - bbox[1], 0)
         return bbox
 
-    def simple_test_vot(self, img, frame_id, gt_bboxes, image_shape):
+    def simple_test_vot(self, img, frame_id, gt_bboxes, image_shape=None):
         """Test using VOT criteria.
 
         Args:
@@ -337,7 +337,8 @@ class SiamRPN(BaseSingleObjectTracker):
             track_region = bbox2region(track_bbox)
             gt_bbox = gt_bboxes[0][0].cpu().numpy()
             gt_region = bbox2region(gt_bbox)
-            bounds = (image_shape[1], image_shape[0])
+            bounds = (image_shape[1],
+                      image_shape[0]) if image_shape is not None else None
             overlap = calculate_overlap(track_region, gt_region, bounds=bounds)
             if overlap <= 0:
                 # tracking failure
@@ -400,8 +401,10 @@ class SiamRPN(BaseSingleObjectTracker):
 
         eval_criteria = self.test_cfg.get('criteria', 'OPE')
         if eval_criteria == 'VOT':
+            img_shape = img_metas[0]['img_shape'] if 'img_shape' in img_metas[
+                0] else None
             bbox_pred, best_score = self.simple_test_vot(
-                img, frame_id, gt_bboxes, img_metas[0]['img_shape'])
+                img, frame_id, gt_bboxes, image_shape=img_shape)
         else:
             bbox_pred, best_score = self.simple_test_ope(
                 img, frame_id, gt_bboxes)

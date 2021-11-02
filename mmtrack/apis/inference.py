@@ -114,8 +114,7 @@ def inference_sot(model, image, init_bbox, frame_id):
     data = dict(
         img=image.astype(np.float32),
         gt_bboxes=np.array(init_bbox).astype(np.float32),
-        img_info=dict(frame_id=frame_id),
-        img_shape=image.shape[:-1])
+        img_info=dict(frame_id=frame_id))
     # remove the "LoadImageFromFile" and "LoadAnnotations" in pipeline
     test_pipeline = Compose(cfg.data.test.pipeline[2:])
     data = test_pipeline(data)
