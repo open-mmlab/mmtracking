@@ -11,7 +11,7 @@ from mmcv.cnn import fuse_conv_bn
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
-
+from mmdet.apis import set_random_seed
 from mmtrack.datasets import build_dataset
 
 
@@ -109,10 +109,8 @@ def main():
         from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
-    # set cudnn_benchmark
-    if cfg.get('cudnn_benchmark', False):
-        torch.backends.cudnn.benchmark = True
 
+    set_random_seed(1, deterministic=True)
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.

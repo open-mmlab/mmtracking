@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from addict import Dict
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
@@ -51,10 +52,8 @@ class Stark(BaseSingleObjectTracker):
 
         # Set the update interval
         self.update_intervals = self.test_cfg['update_intervals']
-        print('Update interval is: ', self.update_intervals)
         self.num_extra_template = len(self.update_intervals)
 
-        self.save_all_boxes = False
         self.debug = False
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
@@ -77,110 +76,76 @@ class Stark(BaseSingleObjectTracker):
                 if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
                     m.reset_parameters()
 
-    def sample_target(self,
-                      im,
-                      target_bb,
+    def get_cropped_img(self,
+                      img,
+                      target_bbox,
                       search_area_factor,
-                      output_sz=None,
-                      mask=None):
-        """ Extracts a square crop centered at target_bb box, of area
-        search_area_factor^2 times target_bb area
+                      output_size):
+        """ Crop Image
+        Only used during testing
+        This function mainly contains two steps:
+        1. Crop `img` based on target_bbox and search_area_factor. If the
+        cropped image/mask is out of boundary of `img`, use 0 to pad.
+        2. Resize the cropped image/mask to `output_size`.
+
         args:
-            im - cv image
-            target_bb - target box [x, y, w, h]
-            search_area_factor - Ratio of crop size to target size
-            output_sz - (float) Size to which the extracted crop is resized
-            (always square). If None, no resizing is done.
+            img (Tensor): of shape (B, C, H, W)
+            target_bbox (list | ndarray | array): in [cx, cy, w, h] format
+            search_area_factor (float): Ratio of crop size to target size
+            output_size (float): Size to which the extracted crop is resized (always square).
         returns:
-            cv image - extracted crop
-            float - the factor by which the crop has been resized to make the
-            crop size equal output_size
+            img_crop_padded (Tensor): of shape (B, C, H, W)
+            resize_factor (float): the factor by which the crop has been resized to make the
+                crop size equal output_size
+            att_mask (ndarray)
         """
+        cx, cy, w, h = target_bbox.split((1, 1, 1, 1), dim=-1)
 
-        if not isinstance(target_bb, list):
-            x, y, w, h = target_bb.tolist()
-        else:
-            x, y, w, h = target_bb
-        _, _, H, W = im.shape
-        # Crop image
-        crop_sz = math.ceil(math.sqrt(w * h) * search_area_factor)
-
-        if crop_sz < 1:
+        _, _, img_h, img_w = img.shape
+        # 1. Crop image
+        # 1.1 calculate crop size and pad size
+        crop_size = math.ceil(math.sqrt(w * h) * search_area_factor)
+        if crop_size < 1:
             raise Exception('Too small bounding box.')
 
-        x1 = round(x + 0.5 * w - crop_sz * 0.5)
-        x2 = x1 + crop_sz
-
-        y1 = round(y + 0.5 * h - crop_sz * 0.5)
-        y2 = y1 + crop_sz
+        x1 = torch.round(cx - crop_size * 0.5).long()
+        x2 = x1 + crop_size
+        y1 = torch.round(cy - crop_size * 0.5).long()
+        y2 = y1 + crop_size
 
         x1_pad = max(0, -x1)
-        x2_pad = max(x2 - W + 1, 0)
-
+        x2_pad = max(x2 - img_w + 1, 0)
         y1_pad = max(0, -y1)
-        y2_pad = max(y2 - H + 1, 0)
+        y2_pad = max(y2 - img_h + 1, 0)
 
-        # Crop target
-        # im_crop = im[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad, :]
-        im_crop = im[..., y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
-        if mask is not None:
-            mask_crop = mask[..., y1 + y1_pad:y2 - y2_pad,
-                             x1 + x1_pad:x2 - x2_pad]
+        # 1.2 crop image
+        img_crop = img[..., y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
 
-        # Pad
-        # im_crop_padded = cv2.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad,
-        #                                     x2_pad, cv2.BORDER_CONSTANT)
-        im_crop_padded = F.pad(
-            im_crop,
+        # 1.3 pad image
+        img_crop_padded = F.pad(
+            img_crop,
             pad=(x1_pad, x2_pad, y1_pad, y2_pad),
             mode='constant',
             value=0)
-        # deal with attention mask
-        bs, _, H, W = im_crop_padded.shape
-        att_mask = np.ones((H, W))
+        # 1.4 pad attention mask
+        _, _, img_h, img_w = img_crop_padded.shape
+        att_mask = np.ones((img_h, img_w))
         end_x, end_y = -x2_pad, -y2_pad
         if y2_pad == 0:
             end_y = None
         if x2_pad == 0:
             end_x = None
         att_mask[y1_pad:end_y, x1_pad:end_x] = 0
-        if mask is not None:
-            mask_crop_padded = F.pad(
-                mask_crop,
-                pad=(x1_pad, x2_pad, y1_pad, y2_pad),
-                mode='constant',
-                value=0)
 
-        if output_sz is not None:
-            resize_factor = output_sz / crop_sz
-            # im_crop_padded = cv2.resize(im_crop_padded,
-            # (output_sz, output_sz))
-            im_crop_padded_numpy = np.transpose(im_crop_padded.squeeze().cpu().numpy(),(1,2,0))
-            im_crop_padded_numpy = cv2.resize(im_crop_padded_numpy,(output_sz, output_sz))
-            im_crop_padded = torch.from_numpy(im_crop_padded_numpy).permute((2,0,1)).unsqueeze(0).to(im.device)
+        # 2. Resize image and attention mask
+        resize_factor = output_size / crop_size
+        img_crop_padded_numpy = np.transpose(img_crop_padded.squeeze().cpu().numpy(),(1,2,0))
+        img_crop_padded_numpy = cv2.resize(img_crop_padded_numpy,(output_size, output_size))
+        img_crop_padded = torch.from_numpy(img_crop_padded_numpy).permute((2,0,1)).unsqueeze(0).to(img.device)
 
+        att_mask = cv2.resize(att_mask, (output_size, output_size)).astype(np.bool_)
 
-            # im_crop_padded = F.interpolate(
-            #     im_crop_padded, (output_sz, output_sz),
-            #     mode='bilinear',
-            #     align_corners=False)
-            # TODO use F.interpolate
-            att_mask = cv2.resize(att_mask,
-                                  (output_sz, output_sz)).astype(np.bool_)
-
-            if mask is None:
-                return im_crop_padded, resize_factor, att_mask
-            mask_crop_padded = F.interpolate(
-                mask_crop_padded[None, None], (output_sz, output_sz),
-                mode='bilinear',
-                align_corners=False)[0, 0]
-            return im_crop_padded, resize_factor, att_mask, mask_crop_padded
-
-        else:
-            if mask is None:
-                return im_crop_padded, att_mask.astype(np.bool_), 1.0
-            return im_crop_padded, 1.0, att_mask.astype(
-                np.bool_), mask_crop_padded
+        return img_crop_padded, resize_factor, att_mask
 
     def _normalize(self, img_tensor, amask_arr):
         self.mean = torch.tensor([0.485, 0.456, 0.406]).view(
@@ -189,10 +154,7 @@ class Stark(BaseSingleObjectTracker):
             (1, 3, 1, 1)).cuda()
 
         # Deal with the image patch
-        # img_tensor = torch.tensor(img_arr).cuda().float().permute(
-        #     (2, 0, 1)).unsqueeze(dim=0)
-        img_tensor_norm = (
-            (img_tensor / 255.0) - self.mean) / self.std  # (1,3,H,W)
+        img_tensor_norm = ((img_tensor / 255.0) - self.mean) / self.std  # (1,3,H,W)
         # Deal with the attention mask
         amask_tensor = torch.from_numpy(amask_arr).to(
             torch.bool).cuda().unsqueeze(dim=0)  # (1,H,W)
@@ -254,22 +216,16 @@ class Stark(BaseSingleObjectTracker):
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            bbox (List or Tensor): [x, y, w, h]
-
-        Returns:
-            tuple(z_feat, avg_channel): z_feat is a tuple[Tensor] that
-            contains the multi level feature maps of exemplar image,
-            avg_channel is Tensor with shape (3, ), and denotes the padding
-            values.
+            bbox (List | Tensor): [cx, cy, w, h]
         """
         # initialize z_dict_list
         self.z_dict_list = []
         # get the 1st template
-        z_patch, _, z_mask = self.sample_target(
+        z_patch, _, z_mask = self.get_cropped_img(
             img.type(torch.uint8),
             bbox,
             self.test_cfg['template_factor'],
-            output_sz=self.test_cfg['template_size'])
+            self.test_cfg['template_size'])
         # z_patch:(1,C,H,W);  z_mask:(1,H,W)
         z_patch, z_mask = self._normalize(z_patch, z_mask)
         self.z_dict = self.forward_before_head(z_patch, z_mask)
@@ -279,21 +235,19 @@ class Stark(BaseSingleObjectTracker):
         for _ in range(self.num_extra_template):
             self.z_dict_list.append(deepcopy(self.z_dict))
 
-        if self.save_all_boxes:
-            """save all predicted boxes."""
-            all_boxes_save = bbox * self.cfg.num_object_queries
-            return {'all_boxes': all_boxes_save}
-
-    def _clip_box(self, box: list, H, W, margin=0):
-        x1, y1, w, h = box
-        x2, y2 = x1 + w, y1 + h
-        x1 = min(max(0, x1), W - margin)
-        x2 = min(max(margin, x2), W)
-        y1 = min(max(0, y1), H - margin)
-        y2 = min(max(margin, y2), H)
-        w = max(margin, x2 - x1)
-        h = max(margin, y2 - y1)
-        return [x1, y1, w, h]
+    def update_template(self, img, bbox, conf_score):
+        for idx, update_i in enumerate(self.update_intervals):
+            if self.frame_id % update_i == 0 and conf_score > 0.5:
+                z_patch, _, z_mask = self.get_cropped_img(
+                    img.type(torch.uint8),
+                    bbox,
+                    self.test_cfg['template_factor'],
+                    output_size=self.test_cfg['template_size'])
+                z_patch, z_mask = self._normalize(z_patch, z_mask)
+                with torch.no_grad():
+                    z_dict_dymanic = self.forward_before_head(z_patch, z_mask)
+                # the 1st element of z_dict_list is template from the 1st frame
+                self.z_dict_list[idx + 1] = z_dict_dymanic
 
     def track(self, img, bbox):
         """Track the box `bbox` of previous frame to current frame `img`.
@@ -302,18 +256,17 @@ class Stark(BaseSingleObjectTracker):
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
             bbox (List or Tensor): The bbox in previous frame. The shape of the
-            box is
-                (4, ) in [x, y, w, h] format.
+                bbox is (4, ) in [x, y, w, h] format.
 
         Returns:
         """
         H, W = img.shape[2:]
         # get the t-th search region
-        x_patch, resize_factor, x_mask = self.sample_target(
+        x_patch, resize_factor, x_mask = self.get_cropped_img(
             img.type(torch.uint8),
             bbox,
             self.test_cfg['search_factor'],
-            output_sz=self.test_cfg['search_size'])  # bbox (x1, y1, w, h)
+            self.test_cfg['search_size'])  # bbox (x1, y1, w, h)
         # x_mask:(1,h,w)
         x_patch, x_mask = self._normalize(x_patch, x_mask)
 
@@ -325,91 +278,25 @@ class Stark(BaseSingleObjectTracker):
             track_results, _ = self.head(
                 head_dict_inputs, run_box_head=True, run_cls_head=True)
 
-        # get the final result
-        pred_boxes = track_results['pred_boxes'].view(-1, 4)
-        # Baseline: Take the mean of all pred boxes as the final result
-        pred_box = (pred_boxes.mean(dim=0) * self.test_cfg['search_size'] /
-                    resize_factor)  # (cx, cy, w, h) [0,1]
-        pred_box = pred_box.tolist()
-        # get the final box result
-        bbox = self._clip_box(
-            self.map_box_back(pred_box, resize_factor), H, W, margin=10)
         # get confidence score (whether the search region is reliable)
         conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
-        # update template
-        for idx, update_i in enumerate(self.update_intervals):
-            if self.frame_id % update_i == 0 and conf_score > 0.5:
-                z_patch, _, z_mask = self.sample_target(
-                    img.type(torch.uint8),
-                    bbox,
-                    self.test_cfg['template_factor'],
-                    output_sz=self.test_cfg['template_size'])  # (x1, y1, w, h)
-                z_patch, z_mask = self._normalize(z_patch, z_mask)
-                with torch.no_grad():
-                    z_dict_dymanic = self.forward_before_head(z_patch, z_mask)
-                # the 1st element of z_dict_list is template from the 1st frame
-                self.z_dict_list[idx + 1] = z_dict_dymanic
-        print(bbox, conf_score)
 
-        # for debug
-        if self.debug:
-            x1, y1, w, h = bbox
-            image_BGR = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            cv2.rectangle(
-                image_BGR, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)),
-                color=(0, 0, 255),
-                thickness=2)
-            save_path = osp.join(self.save_dir, '%04d.jpg' % self.frame_id)
-            cv2.imwrite(save_path, image_BGR)
-        if self.save_all_boxes:
-            """save all predictions."""
-            all_boxes = self.map_box_back_batch(
-                pred_boxes * self.test_cfg['search_size'] / resize_factor,
-                resize_factor)
-            all_boxes_save = all_boxes.view(-1).tolist()  # (4N, )
-            return {
-                'target_bbox': bbox,
-                'all_boxes': all_boxes_save,
-                'conf_score': conf_score
-            }
-        else:
-            return {'target_bbox': bbox, 'conf_score': conf_score}
+        final_bbox = self.head.get_bbox(track_results['pred_bboxes'], self.memo.bbox, resize_factor)
+        final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
 
-    def map_box_back(self, pred_box: list, resize_factor: float):
-        '''
-        pred_bbox: [cx,cy,w,h]
-        return: [x,y,w,h]
-        '''
-        cx_prev, cy_prev = self.memo.bbox[0] + 0.5 * self.memo.bbox[
-            2], self.memo.bbox[1] + 0.5 * self.memo.bbox[3]
-        cx, cy, w, h = pred_box
-        half_side = 0.5 * self.test_cfg['search_size'] / resize_factor
-        cx_real = cx + (cx_prev - half_side)
-        cy_real = cy + (cy_prev - half_side)
-        return [cx_real - 0.5 * w, cy_real - 0.5 * h, w, h]
+        self.update_template(img, final_bbox, conf_score)
 
-    def map_box_back_batch(self, pred_box: torch.Tensor, resize_factor: float):
-        cx_prev, cy_prev = self.memo.bbox[0] + 0.5 * self.memo.bbox[
-            2], self.memo.bbox[1] + 0.5 * self.memo.bbox[3]
-        cx, cy, w, h = pred_box.unbind(-1)  # (N,4) --> (N,)
-        half_side = 0.5 * self.test_cfg['search_size'] / resize_factor
-        cx_real = cx + (cx_prev - half_side)
-        cy_real = cy + (cy_prev - half_side)
-        return torch.stack([cx_real - 0.5 * w, cy_real - 0.5 * h, w, h],
-                           dim=-1)
-
-    def bbox_xyxy_to_xywh(self, bbox):
-
-        bbox[2] = max(bbox[2] - bbox[0], 0)
-        bbox[3] = max(bbox[3] - bbox[1], 0)
-
-        return bbox
-
-    def bbox_xywh_to_xyxy(self, bbox, img_shape):
-
-        bbox[2] = min(bbox[2] + bbox[0], img_shape[1])
-        bbox[3] = min(bbox[3] + bbox[1], img_shape[0])
-
+        return conf_score, final_bbox
+ 
+    def _bbox_clip(self, bbox, img_h, img_w, margin=0):
+        """Clip the bbox with [tl_x, tl_y, br_x, br_y] format."""
+        bbox_w, bbox_h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        bbox[0] = bbox[0].clamp(0, img_w - margin)
+        bbox[1] = bbox[1].clamp(0, img_h - margin)
+        bbox_w = bbox_w.clamp(margin, img_w) 
+        bbox_h = bbox_h.clamp(margin, img_h) 
+        bbox[2] = bbox[0] + bbox_w
+        bbox[3] = bbox[1] + bbox_h
         return bbox
 
     def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
@@ -434,21 +321,23 @@ class Stark(BaseSingleObjectTracker):
         self.frame_id = frame_id
 
         if frame_id == 0:
-            gt_bboxes = gt_bboxes[0][0].tolist()
+            bbox_pred = gt_bboxes[0][0]
             self.memo = Dict()
-            # self.memo.bbox = bbox_xyxy_to_cxcywh(gt_bboxes)
-            self.memo.bbox = self.bbox_xyxy_to_xywh(gt_bboxes)  # [x,y,w,h]
+            self.memo.bbox = bbox_xyxy_to_cxcywh(bbox_pred)
+            # self.memo.bbox = self.bbox_xyxy_to_xywh(gt_bboxes)  # [x,y,w,h]
             # get the templates stored in self.z_dict_list
             self.init(img, self.memo.bbox)
             best_score = -1.
         else:
-            out_dict = self.track(img, self.memo.bbox)
-            best_score, self.memo.bbox = out_dict['conf_score'], out_dict[
-                'target_bbox']
+            best_score, bbox_pred = self.track(img, self.memo.bbox)
+            self.memo.bbox = bbox_xyxy_to_cxcywh(bbox_pred)
 
-        bbox_pred = self.bbox_xywh_to_xyxy(deepcopy(self.memo.bbox), img.shape[2:])
+        # tl_x, tl_y, br_x, br_y = bbox_pred.cpu().tolist()
+        # print(best_score, [tl_x, tl_y, br_x-tl_x, br_y-tl_y])
+
         results = dict()
-        results['track_bboxes'] = np.array(bbox_pred + [best_score])
+        results['track_bboxes'] = np.concatenate(
+            (bbox_pred.cpu().numpy(), np.array([best_score])))
 
         return results
 

@@ -21,7 +21,7 @@ model = dict(
         type='StarkHead',
         num_classes=1,
         in_channels=256,
-        stride=[16],
+        stride=16,
         num_cls_fcs=3,
         transformer=dict(
             type='StarkTransformer',
@@ -68,8 +68,7 @@ model = dict(
         template_size=128,
         update_intervals=[200]))
 
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+img_norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1], to_rgb=True)
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
     dict(type='LoadAnnotations', with_bbox=True),
@@ -78,6 +77,7 @@ test_pipeline = [
         scale_factor=1,
         flip=False,
         transforms=[
+            dict(type='Normalize', **img_norm_cfg),
             dict(type='VideoCollect', keys=['img', 'gt_bboxes']),
             dict(type='ImageToTensor', keys=['img'])
         ])
