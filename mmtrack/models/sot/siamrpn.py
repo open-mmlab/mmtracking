@@ -4,12 +4,13 @@ import warnings
 import numpy as np
 import torch
 from addict import Dict
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.core.bbox import bbox_cxcywh_to_xyxy
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 from vot.region import calculate_overlap
 
+from mmtrack.core.bbox import bbox_cxcywh_to_x1y1wh, quad2bbox
 from mmtrack.core.evaluation import bbox2region
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
@@ -247,61 +248,15 @@ class SiamRPN(BaseSingleObjectTracker):
         best_bbox = self._bbox_clip(best_bbox, img.shape[2], img.shape[3])
         return best_score, best_bbox
 
-    def _get_axis_aligned_bbox(self, quadrilateral):
-        """Convert polygon to axis aligned box in [cx, cy, w, h] format.
-
-        Args:
-            quadrilateral (Tensor): the coordinates of points in
-                [x1, y1, x2, y2, x3, y3, x4, y4] format. Specially, if the
-                shape is rectangle, the coordinate is in
-                [tl_x, tl_y, br_x, br_y] format.
-        Returns:
-            Tensor: in [cx, cy, w, h] format.
-        """
-        length = len(quadrilateral)
-        if length == 8:
-            cx = torch.mean(quadrilateral[0::2])
-            cy = torch.mean(quadrilateral[1::2])
-            x1 = torch.min(quadrilateral[0::2])
-            x2 = torch.max(quadrilateral[0::2])
-            y1 = torch.min(quadrilateral[1::2])
-            y2 = torch.max(quadrilateral[1::2])
-            A1 = torch.norm(quadrilateral[0:2] - quadrilateral[2:4]) * \
-                torch.norm(quadrilateral[2:4] - quadrilateral[4:6])
-            A2 = (x2 - x1) * (y2 - y1)
-            s = torch.sqrt(A1 / A2)
-            w = s * (x2 - x1)
-            h = s * (y2 - y1)
-            bbox = torch.stack((cx, cy, w, h))
-        elif length == 4:
-            bbox = bbox_xyxy_to_cxcywh(quadrilateral)
-        else:
-            NotImplementedError(f'The length of quadrilateral: {length} is \
-                 not supported')
-        return bbox
-
-    def _bbox_cxcywh_to_xywh(self, bbox):
-        """Convert bbox format from [cx, cy, w, h] to [x, y, w, h]"""
-        assert len(bbox) == 4
-        bbox[0] = max(bbox[0] - bbox[2] / 2, 0)
-        bbox[1] = max(bbox[1] - bbox[3] / 2, 0)
-        return bbox
-
-    def _bbox_xyxy_to_xywh(self, bbox):
-        """Convert bbox format from [x1, y1, x2, y2] to [x, y, w, h]"""
-        assert len(bbox) == 4
-        bbox[2] = max(bbox[2] - bbox[0], 0)
-        bbox[3] = max(bbox[3] - bbox[1], 0)
-        return bbox
-
-    def simple_test_vot(self, img, frame_id, gt_bboxes, image_shape=None):
-        """Test using VOT criteria.
+    def simple_test_vot(self, img, frame_id, gt_bboxes, img_metas=None):
+        """Test using VOT test mode.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding input image.
             frame_id (int): the id of current frame in the video.
             gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
+                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
+                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
             image_shape (tuple | list): used as the bounds when calculating
                 overlap.
 
@@ -313,16 +268,17 @@ class SiamRPN(BaseSingleObjectTracker):
         if frame_id == 0:
             self.init_frame_id = 0
         if self.init_frame_id == frame_id:
-            # initialization state
+            # initialization
             gt_bboxes = gt_bboxes[0][0]
             self.memo = Dict()
-            self.memo.bbox = self._get_axis_aligned_bbox(gt_bboxes)
+            self.memo.bbox = quad2bbox(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
                 img, self.memo.bbox)
+            # 1 denotes the initialization state
             bbox_pred = img.new_tensor([1.])
             best_score = -1.
         elif self.init_frame_id > frame_id:
-            # unknown state, namely the skipping frame after failure
+            # 0 denotes unknown state, namely the skipping frame after failure
             bbox_pred = img.new_tensor([0.])
             best_score = -1.
         else:
@@ -330,19 +286,23 @@ class SiamRPN(BaseSingleObjectTracker):
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
-            # self.memo.bbox = torch.round(self.memo.bbox)
             # convert bbox to region
-            track_bbox = self.memo.bbox.cpu().numpy()
-            track_bbox = self._bbox_cxcywh_to_xywh(track_bbox)
+            track_bbox = bbox_cxcywh_to_x1y1wh(self.memo.bbox).cpu().numpy()
             track_region = bbox2region(track_bbox)
             gt_bbox = gt_bboxes[0][0].cpu().numpy()
             gt_region = bbox2region(gt_bbox)
-            bounds = (image_shape[1],
-                      image_shape[0]) if image_shape is not None else None
+
+            if img_metas is not None and 'img_shape' in img_metas[0]:
+                image_shape = img_metas[0]['img_shape']
+                bounds = (image_shape[1], image_shape[0])
+            else:
+                bounds = None
+                Warning('image shape are need when calculating bbox overlap')
             overlap = calculate_overlap(track_region, gt_region, bounds=bounds)
             if overlap <= 0:
                 # tracking failure
                 self.init_frame_id = frame_id + 5
+                # 2 denotes the failure state
                 bbox_pred = img.new_tensor([2.])
             else:
                 bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
@@ -350,13 +310,14 @@ class SiamRPN(BaseSingleObjectTracker):
         return bbox_pred, best_score
 
     def simple_test_ope(self, img, frame_id, gt_bboxes):
-        """Test using OPE criteria.
+        """Test using OPE test mode.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding input image.
             frame_id (int): the id of current frame in the video.
             gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
+                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
+                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
 
         Returns:
             bbox_pred (Tensor): in [tl_x, tl_y, br_x, br_y] format.
@@ -366,7 +327,7 @@ class SiamRPN(BaseSingleObjectTracker):
         if frame_id == 0:
             gt_bboxes = gt_bboxes[0][0]
             self.memo = Dict()
-            self.memo.bbox = self._get_axis_aligned_bbox(gt_bboxes)
+            self.memo.bbox = quad2bbox(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
                 img, self.memo.bbox)
             best_score = -1.
@@ -374,7 +335,7 @@ class SiamRPN(BaseSingleObjectTracker):
             best_score, self.memo.bbox = self.track(img, self.memo.bbox,
                                                     self.memo.z_feat,
                                                     self.memo.avg_channel)
-            # self.memo.bbox = torch.round(self.memo.bbox)
+            self.memo.bbox = torch.round(self.memo.bbox)
         bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
 
         return bbox_pred, best_score
@@ -390,7 +351,8 @@ class SiamRPN(BaseSingleObjectTracker):
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
             gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
+                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
+                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
 
         Returns:
             dict[str : ndarray]: The tracking results.
@@ -399,12 +361,11 @@ class SiamRPN(BaseSingleObjectTracker):
         assert frame_id >= 0
         assert len(img) == 1, 'only support batch_size=1 when testing'
 
-        eval_criteria = self.test_cfg.get('criteria', 'OPE')
-        if eval_criteria == 'VOT':
-            img_shape = img_metas[0]['img_shape'] if 'img_shape' in img_metas[
-                0] else None
+        test_mode = self.test_cfg.get('test_mode', 'OPE')
+        assert test_mode in ['OPE', 'VOT']
+        if test_mode == 'VOT':
             bbox_pred, best_score = self.simple_test_vot(
-                img, frame_id, gt_bboxes, image_shape=img_shape)
+                img, frame_id, gt_bboxes, img_metas)
         else:
             bbox_pred, best_score = self.simple_test_ope(
                 img, frame_id, gt_bboxes)

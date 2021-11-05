@@ -1,14 +1,13 @@
 import numpy as np
 from vot.analysis import is_special
-from vot.region import Special, calculate_overlaps
-from vot.region.shapes import Polygon, Rectangle
+from vot.region import Polygon, Rectangle, Special, calculate_overlaps
 
 
 def bbox2region(bbox):
     """Convert bbox to Rectangle or Polygon Class object.
 
     Args:
-        bbox (list or ndarray): rectangle bbox format is (x, y, w, h) ; polygon
+        bbox (list | ndarray): rectangle bbox format is (x, y, w, h) ; polygon
             bbox format is (x1, y1, x2, y2, ...).
 
     Returns:
@@ -30,7 +29,7 @@ def trajectory2region(trajectory):
     """Convert bbox trajectory to Rectangle or Polygon Class object trajectory.
 
     Args:
-        trajectory (list[list or ndarray]): The outer list contains bbox of
+        trajectory (list[list | ndarray]): The outer list contains bbox of
             each frame in a video. The bbox is a list or ndarray.
 
     Returns:
@@ -68,7 +67,7 @@ def count_failures(trajectory):
     """count the number of failed frame in a trajectory.
 
     Args:
-        trajectory (list[list or ndarray]): list of tracking results.
+        trajectory (list[list | ndarray]): list of tracking results.
 
     Returns:
         List: the number of failed frame in a trajectory.
@@ -85,7 +84,7 @@ def calc_overlaps(gt_trajectory, pred_trajectory, region_bound=None):
 
     Args:
         gt_trajectory (list[list]): list of bboxes
-        pred_trajectory (list[list or ndarray]): The outer list contains the
+        pred_trajectory (list[list | ndarray]): The outer list contains the
             tracking results of each frame in one video. The inner list (or
             ndarray) has two categories:
                 - bbox: denotes the normal tracking box in [x, y, w, h] format.
@@ -158,7 +157,7 @@ def eval_sot_accuracy_robustness(
     """Calculate accuracy and robustness over all tracking sequences.
 
     Args:
-        results (list[list[list or ndarray]]): The first list contains the
+        results (list[list[list | ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
             tracking results of each frame in one video. The third list (or
             ndarray) have two categories:
@@ -259,7 +258,7 @@ def eval_sot_eao(
     """Calculate EAO socre over all tracking sequences.
 
     Args:
-        results (list[list[list or ndarray]]): The first list contains the
+        results (list[list[list | ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
             tracking results of each frame in one video. The third list (or
             ndarray) have two categories:
