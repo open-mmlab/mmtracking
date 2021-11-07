@@ -27,21 +27,11 @@ class Stark(BaseSingleObjectTracker):
                  backbone,
                  neck=None,
                  head=None,
-                 pretrains=None,
                  init_cfg=None,
                  frozen_modules=None,
                  train_cfg=None,
                  test_cfg=None):
         super(Stark, self).__init__(init_cfg)
-        if isinstance(pretrains, dict):
-            warnings.warn('DeprecationWarning: pretrains is deprecated, '
-                          'please use "init_cfg" instead')
-            backbone_pretrain = pretrains.get('backbone', None)
-            if backbone_pretrain:
-                backbone.init_cfg = dict(
-                    type='Pretrained', checkpoint=backbone_pretrain)
-            else:
-                backbone.init_cfg = None
         self.backbone = build_backbone(backbone)
         self.neck = build_neck(neck)
         head.update(test_cfg=test_cfg)
@@ -148,16 +138,14 @@ class Stark(BaseSingleObjectTracker):
         return img_crop_padded, resize_factor, att_mask
 
     def _normalize(self, img_tensor, amask_arr):
-        self.mean = torch.tensor([0.485, 0.456, 0.406]).view(
-            (1, 3, 1, 1)).cuda()
-        self.std = torch.tensor([0.229, 0.224, 0.225]).view(
-            (1, 3, 1, 1)).cuda()
+        self.mean = torch.tensor([0.485, 0.456, 0.406]).to(img_tensor.device)[None,:, None, None]
+        self.std = torch.tensor([0.229, 0.224, 0.225]).to(img_tensor.device)[None,:, None, None]
 
         # Deal with the image patch
         img_tensor_norm = ((img_tensor / 255.0) - self.mean) / self.std  # (1,3,H,W)
         # Deal with the attention mask
         amask_tensor = torch.from_numpy(amask_arr).to(
-            torch.bool).cuda().unsqueeze(dim=0)  # (1,H,W)
+            torch.bool).unsqueeze(dim=0).to(img_tensor.device)  # (1,H,W)
         return img_tensor_norm, amask_tensor
 
     def _merge_template_search(self, inputs):
@@ -283,7 +271,6 @@ class Stark(BaseSingleObjectTracker):
 
         final_bbox = self.head.get_bbox(track_results['pred_bboxes'], self.memo.bbox, resize_factor)
         final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
-
         self.update_template(img, final_bbox, conf_score)
 
         return conf_score, final_bbox
@@ -338,7 +325,6 @@ class Stark(BaseSingleObjectTracker):
         results = dict()
         results['track_bboxes'] = np.concatenate(
             (bbox_pred.cpu().numpy(), np.array([best_score])))
-
         return results
 
     def forward_train(self, ):

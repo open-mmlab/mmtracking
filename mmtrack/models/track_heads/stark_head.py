@@ -1,15 +1,17 @@
+from mmcv.runner.base_module import BaseModule
 import torch
+from torch import nn
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
+from mmcv.cnn.bricks.transformer import build_positional_encoding
 from mmdet.models import HEADS
-from mmdet.models.dense_heads import DETRHead
-from mmdet.models.utils import Transformer
+from mmdet.models.utils import Transformer,build_transformer
 from mmdet.models.utils.builder import TRANSFORMER
-from torch import nn
+from mmdet.models.builder import build_head
 
 @HEADS.register_module()
-class CornerPredictorHead(nn.Module):
+class CornerPredictorHead(BaseModule):
     """Corner Predictor module.
 
     Args:
@@ -20,8 +22,8 @@ class CornerPredictorHead(nn.Module):
     """
 
     def __init__(self,
-                 inplanes=64,
-                 channel=256,
+                 inplanes,
+                 channel,
                  feat_size=20,
                  stride=16):
         super(CornerPredictorHead, self).__init__()
@@ -45,17 +47,22 @@ class CornerPredictorHead(nn.Module):
                 inplace=True)
 
         # top-left corner
-        self.conv1_tl = conv_module(inplanes, channel)
-        self.conv2_tl = conv_module(channel, channel // 2)
-        self.conv3_tl = conv_module(channel // 2, channel // 4)
-        self.conv4_tl = conv_module(channel // 4, channel // 8)
-        self.conv5_tl = nn.Conv2d(channel // 8, 1, kernel_size=1)
+        self.tl_corner_pred = nn.Sequential(
+            conv_module(inplanes, channel),
+            conv_module(channel, channel // 2),
+            conv_module(channel // 2, channel // 4),
+            conv_module(channel // 4, channel // 8),
+            nn.Conv2d(channel // 8, 1, kernel_size=1)
+            )
         # bottom-right corner
-        self.conv1_br = conv_module(inplanes, channel)
-        self.conv2_br = conv_module(channel, channel // 2)
-        self.conv3_br = conv_module(channel // 2, channel // 4)
-        self.conv4_br = conv_module(channel // 4, channel // 8)
-        self.conv5_br = nn.Conv2d(channel // 8, 1, kernel_size=1)
+        self.br_corner_pred = nn.Sequential(
+            conv_module(inplanes, channel),
+            conv_module(channel, channel // 2),
+            conv_module(channel // 2, channel // 4),
+            conv_module(channel // 4, channel // 8),
+            nn.Conv2d(channel // 8, 1, kernel_size=1)
+            )
+
         # about coordinates and indexs
         with torch.no_grad():
             self.indice = torch.arange(0, self.feat_size).view(-1,
@@ -87,19 +94,8 @@ class CornerPredictorHead(nn.Module):
             score_map_tl (Tensor[bs, 1, H, W]): the score map of top left corner of tracking bbox
             score_map_br (Tensor[bs, 1, H, W]): the score map of bottom right corner of tracking bbox
         """
-        # top-left branch
-        x_tl1 = self.conv1_tl(x)
-        x_tl2 = self.conv2_tl(x_tl1)
-        x_tl3 = self.conv3_tl(x_tl2)
-        x_tl4 = self.conv4_tl(x_tl3)
-        score_map_tl = self.conv5_tl(x_tl4)
-
-        # bottom-right branch
-        x_br1 = self.conv1_br(x)
-        x_br2 = self.conv2_br(x_br1)
-        x_br3 = self.conv3_br(x_br2)
-        x_br4 = self.conv4_br(x_br3)
-        score_map_br = self.conv5_br(x_br4)
+        score_map_tl = self.tl_corner_pred(x)
+        score_map_br = self.br_corner_pred(x)
         return score_map_tl, score_map_br
 
     def soft_argmax(self, score_map):
@@ -120,7 +116,7 @@ class CornerPredictorHead(nn.Module):
         exp_y = torch.sum((self.coord_y * prob_vec), dim=1)
         return exp_x, exp_y
 
-
+@HEADS.register_module()
 class ScoreHead(nn.Module):
     """Predict the confidence score of target in current frame
     Cascade multiple Linear layer and empose relu on the output of last layer
@@ -204,7 +200,7 @@ class StarkTransformer(Transformer):
 
 
 @HEADS.register_module()
-class StarkHead(DETRHead):
+class StarkHead(BaseModule):
     """
     Args:
         num_classes (int): Number of categories excluding the background.
@@ -231,16 +227,14 @@ class StarkHead(DETRHead):
             Default: None
     """
     def __init__(self,
-                 num_classes,
-                 in_channels,
                  num_query=1,
-                 num_cls_fcs=3,
-                 stride=16,
                  transformer=None,
                  positional_encoding=dict(
                      type='SinePositionalEncoding',
                      num_feats=128,
                      normalize=True),
+                 bbox_head=None,
+                 cls_head=None,
                  loss_cls=dict(
                      type='CrossEntropyLoss',
                      use_sigmoid=False,
@@ -249,33 +243,25 @@ class StarkHead(DETRHead):
                  loss_bbox=dict(type='L1Loss', loss_weight=5.0),
                  loss_iou=dict(type='GIoULoss', loss_weight=2.0),
                  train_cfg=None,
-                 test_cfg=dict(max_per_img=100),
+                 test_cfg=None,
                  init_cfg=None,
                  **kwargs):
-        self.num_cls_fcs = num_cls_fcs
-        self.stride = stride
         super(StarkHead, self).__init__(
-            num_classes,
-            in_channels,
-            num_query=num_query,
-            transformer=transformer,
-            positional_encoding=positional_encoding,
-            loss_cls=loss_cls,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            init_cfg=init_cfg,
+            init_cfg=init_cfg
         )
-
-    def _init_layers(self):
-        feat_size = self.test_cfg['search_size'] // self.stride
-        self.bbox_head = CornerPredictorHead(
-            self.embed_dims,
-            self.embed_dims,
-            feat_size=feat_size,
-            stride=self.stride)
-        self.cls_head = ScoreHead(self.embed_dims, self.embed_dims, 1,
-                            self.num_cls_fcs)
+        self.transformer = build_transformer(transformer)
+        self.positional_encoding = build_positional_encoding(
+            positional_encoding)
+        self.bbox_head = build_head(bbox_head)
+        self.cls_head = build_head(cls_head)
+        self.embed_dims = self.transformer.embed_dims
+        self.num_query = num_query
         self.query_embedding = nn.Embedding(self.num_query, self.embed_dims)
+
+        self.train_cfg = train_cfg
+        self.test_cfg = test_cfg
+        self.fp16_enabled = False
+        
 
     def forward_bbox_head(self, feat, memory):
         """
