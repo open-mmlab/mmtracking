@@ -16,6 +16,7 @@ def train_model(model,
                 cfg,
                 distributed=False,
                 validate=False,
+                samples_per_epoch=-1,
                 timestamp=None,
                 meta=None):
     """Train model entry function.
@@ -56,6 +57,7 @@ def train_model(model,
             cfg.data.workers_per_gpu,
             # cfg.gpus will be ignored if distributed
             len(cfg.gpu_ids),
+            samples_per_epoch=samples_per_epoch,
             dist=distributed,
             seed=cfg.seed) for ds in dataset
     ]

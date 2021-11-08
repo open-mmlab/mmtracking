@@ -75,7 +75,6 @@ model = dict(
                 num_layers=3,
                 BN=False)),
         test_cfg=dict(
-            epoch=50,
             search_factor=5.0,
             search_size=320,
             template_factor=2.0,

@@ -341,8 +341,7 @@ class StarkHead(BaseModule):
         Args:
             pred_bboxes (Tensor): of shape (B, Nq, 4), in [tl_x, tl_y, br_x, br_y] format.
             prev_bbox (Tensor): of shape (B, 4), in [cx, cy, w, h] format.
-            resize_factor (float):
-
+            resize_factor (float):pred_bboxes
         Returns:
             (Tensor): in [tl_x, tl_y, br_x, br_y] format
         """
