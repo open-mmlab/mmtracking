@@ -36,8 +36,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     # We need call `init_weights()` to load pretained weights in MOT task.
     model.init_weights()
     if checkpoint is not None:
-        map_loc = 'cpu' if device == 'cpu' else None
-        checkpoint = load_checkpoint(model, checkpoint, map_location=map_loc)
+        checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
         if 'CLASSES' in checkpoint['meta']:
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
