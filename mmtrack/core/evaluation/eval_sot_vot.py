@@ -182,8 +182,8 @@ def calc_eao_curve(overlaps, successes):
         overlaps (list[list]): The outer list contains the overlaps of each
             video. The inner list contains the overlap of each frame in one
             video.
-        successes (list): The list contains the tracking states of last frame in
-            each fragment.
+        successes (list): The list contains the tracking states of last frame
+            in each fragment.
 
     Return:
         ndarray: The N-th element in ndarray denotes the average overlaps from
