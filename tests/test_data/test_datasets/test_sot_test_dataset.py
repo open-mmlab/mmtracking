@@ -94,9 +94,9 @@ def test_sot_vot_evaluation():
     track_bboxes = dict(track_bboxes=track_bboxes)
     eval_results = dataset.evaluate(
         track_bboxes, interval=[1, 3], metric=['track'])
-    assert eval_results['eao'] == 0.6394
-    assert eval_results['accuracy'] == 0.5431
-    assert eval_results['robustness'] == 6.0
+    assert abs(eval_results['eao']-0.6394)<0.0001
+    assert round(eval_results['accuracy'],4) == 0.5431
+    assert round(eval_results['robustness'],4) == 6.0
 
 
 @pytest.mark.parametrize('dataset', ['TrackingNetDataset', 'GOT10kDataset'])

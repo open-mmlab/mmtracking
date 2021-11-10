@@ -1,3 +1,5 @@
+import os.path as osp
+
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
@@ -5,6 +7,8 @@ from mmdet.datasets import DATASETS
 from mmtrack.core.evaluation import eval_sot_accuracy_robustness, eval_sot_eao
 from .sot_test_dataset import SOTTestDataset
 
+# parameter, used for EAO evaluation, may vary by different vot challenges.
+INTERVAL = dict(vot2018=[100, 356], vot2019=[46, 291], vot2020=[115, 755], vot2021=[115, 755])
 
 @DATASETS.register_module()
 class VOTDataset(SOTTestDataset):
@@ -19,6 +23,7 @@ class VOTDataset(SOTTestDataset):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.dataset_name = osp.basename(self.ann_file).rstrip('.json')
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox annotations.
@@ -38,10 +43,10 @@ class VOTDataset(SOTTestDataset):
         ann = dict(bboxes=gt_bboxes, labels=gt_labels)
         return ann
 
+    # TODO support multirun test
     def evaluate(self,
                  results,
                  metric=['track'],
-                 interval=[100, 356],
                  logger=None):
         """Evaluation in VOT protocol.
 
@@ -70,17 +75,12 @@ class VOTDataset(SOTTestDataset):
             assert len(self.data_infos) == len(results['track_bboxes'])
             print_log('Evaluate VOT Benchmark...', logger=logger)
             inds = []
-            region_bound = []
+            videos_wh = []
             ann_infos = []
-            videos_name = []
             for i, info in enumerate(self.data_infos):
                 if info['frame_id'] == 0:
                     inds.append(i)
-                    region_bound.append((info['width'], info['height']))
-                    video_id = info['video_id']
-                    video_name = self.coco.dataset['videos'][video_id -
-                                                             1]['name']
-                    videos_name.append(video_name)
+                    videos_wh.append((info['width'], info['height']))
 
                 ann_infos.append(self.get_ann_info(info))
 
@@ -93,36 +93,25 @@ class VOTDataset(SOTTestDataset):
                 for bbox in results['track_bboxes'][inds[i]:inds[i + 1]]:
                     if len(bbox) != 2:
                         # convert bbox format from (tl_x, tl_y, br_x, br_y) to
-                        # (x, y, w, h)
+                        # (x1, y1, w, h)
                         bbox[2] -= bbox[0]
                         bbox[3] -= bbox[1]
                     bboxes_per_video.append(bbox[:-1])
                 track_bboxes.append(bboxes_per_video)
                 annotations.append(ann_infos[inds[i]:inds[i + 1]])
 
-                # TODO del this piece of code
-                save_dir = 'logs/vot2018/11.1_notround_bbox_results'
-                import os
-                if not os.path.isdir(save_dir):
-                    os.makedirs(save_dir)
-                with open(
-                        os.path.join(save_dir, f'{videos_name[i]}.txt'),
-                        'w') as f:
-                    for x in bboxes_per_video:
-                        f.write(','.join(list(map(str, x))) + '\n')
-
             # anno_info is list[list[dict]]
             eao_score = eval_sot_eao(
                 results=track_bboxes,
                 annotations=annotations,
-                region_bound=region_bound,
-                interval=interval)
+                videos_wh=videos_wh,
+                interval=INTERVAL[self.dataset_name])
             eval_results.update(eao_score)
 
             accuracy_robustness = eval_sot_accuracy_robustness(
                 results=track_bboxes,
                 annotations=annotations,
-                region_bound=region_bound)
+                videos_wh=videos_wh)
             eval_results.update(accuracy_robustness)
             for k, v in eval_results.items():
                 if isinstance(v, float):

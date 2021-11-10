@@ -1,6 +1,7 @@
 import numpy as np
 from vot.analysis import is_special
-from vot.region import Polygon, Rectangle, Special, calculate_overlaps
+from vot.region import Polygon, Rectangle, Special
+from vot.region import calculate_overlaps as calculate_region_overlaps
 
 
 def bbox2region(bbox):
@@ -72,44 +73,17 @@ def count_failures(trajectory):
     Returns:
         List: the number of failed frame in a trajectory.
     """
-    fail_count = 0
+    num_fails = 0
     for x in trajectory:
         if len(x) == 1 and x[0] == 2.:
-            fail_count += 1
-    return fail_count
-
-
-def calc_overlaps(gt_trajectory, pred_trajectory, region_bound=None):
-    """Calculate overlaps over the sequence.
-
-    Args:
-        gt_trajectory (list[list]): list of bboxes
-        pred_trajectory (list[list | ndarray]): The outer list contains the
-            tracking results of each frame in one video. The inner list (or
-            ndarray) has two categories:
-                - bbox: denotes the normal tracking box in [x, y, w, h] format.
-                - special tracking state: [0] denotes the unknown state,
-                    namely the skipping frame after failure, [1] denotes the
-                    initialized state, and [2] denotes the failed state.
-        region_bound: bounding region
-
-    Return:
-        List: overlap in per frame. Note: for some special tracking
-            states, such initialized state [1], failed state [2], and unknown
-            state [0], the overlaps are 0.
-    """
-    pred_trajectory_ = trajectory2region(pred_trajectory)
-    gt_trajectory = trajectory2region(gt_trajectory)
-    overlaps = calculate_overlaps(pred_trajectory_, gt_trajectory,
-                                  region_bound)
-    return overlaps
-
+            num_fails += 1
+    return num_fails
 
 def calc_accuracy(gt_trajectory,
                   pred_trajectory,
                   burnin=10,
                   ignore_unknown=True,
-                  region_bound=None):
+                  video_wh=None):
     """Calculate accuracy over the sequence.
 
     Args:
@@ -125,7 +99,7 @@ def calc_accuracy(gt_trajectory,
             re-initialization when calculating accuracy. Default is 10.
         ignore_unknown (bool): whether ignore the skipping frames after
             failures when calculating accuracy. Default is True.
-        region_bound: bounding region
+        video_wh: bounding region (width, height)
 
     Return:
         Float: accuracy over the sequence.
@@ -133,7 +107,7 @@ def calc_accuracy(gt_trajectory,
     pred_traj_region = trajectory2region(pred_trajectory)
     gt_traj_region = trajectory2region(gt_trajectory)
     overlaps = np.array(
-        calculate_overlaps(pred_traj_region, gt_traj_region, region_bound))
+        calculate_region_overlaps(pred_traj_region, gt_traj_region, video_wh))
     mask = np.ones(len(overlaps), dtype=bool)
 
     for i, region in enumerate(pred_traj_region):
@@ -152,7 +126,7 @@ def eval_sot_accuracy_robustness(
     annotations,
     burnin=10,
     ignore_unknown=True,
-    region_bound=None,
+    videos_wh=None,
 ):
     """Calculate accuracy and robustness over all tracking sequences.
 
@@ -173,70 +147,68 @@ def eval_sot_accuracy_robustness(
             re-initialization when calculating accuracy. Default is 10.
         ignore_unknown (bool): whether ignore the skipping frames after
             failures when calculating accuracy. Default is True.
-        region_bound (list[tuple(width, height), ...]): The list contains the
+        videos_wh (list[tuple(width, height), ...]): The list contains the
             width and height of each video. Default is None.
 
     Return:
         dict{str: float}: accuracy and robustness in EAO evaluation metric.
     """
     accuracy = 0
-    fail_num = 0
-    weight_all = 0
+    num_fails = 0
+    weight = 0
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
         gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
-        fail_num += count_failures(pred_traj)
+        num_fails += count_failures(pred_traj)
         accuracy += calc_accuracy(
             gt_traj,
             pred_traj,
             burnin=burnin,
             ignore_unknown=ignore_unknown,
-            region_bound=region_bound[i]) * len(pred_traj)
-        weight_all += len(pred_traj)
+            video_wh=videos_wh[i]) * len(pred_traj)
+        weight += len(pred_traj)
 
-    accuracy /= weight_all
-    robustness = fail_num / weight_all * 100
-    return {
-        'accuracy': accuracy,
-        'robustness': robustness,
-        'fail_num': fail_num
-    }
+    accuracy /= weight
+    robustness = num_fails / weight * 100
+    return dict(accuracy=accuracy,
+        robustness=robustness,
+        num_fails=num_fails)
 
 
-def calc_eao_curve(overlaps, success):
+def calc_eao_curve(overlaps, successes):
     """Calculate EAO curve over all tracking sequences.
 
     Args:
         overlaps (list[list]): The outer list contains the overlaps of each
             video. The inner list contains the overlap of each frame in one
             video.
-        success (list): The list contains the tracking states of last frame in
+        successes (list): The list contains the tracking states of last frame in
             each fragment.
 
     Return:
         ndarray: The N-th element in ndarray denotes the average overlaps from
             1 to N in all fragments.
     """
-    max_length = max([len(el) for el in overlaps])
+    max_length = max([len(_) for _ in overlaps])
     total_runs = len(overlaps)
 
     overlaps_array = np.zeros((total_runs, max_length), dtype=np.float32)
     # mask out frames which are not considered in EAO calculation. initial
     # value are zero, meaning ignored.
-    mask_array = np.zeros((total_runs, max_length), dtype=np.float32)
-    for i, (o, success) in enumerate(zip(overlaps, success)):
+    mask = np.zeros((total_runs, max_length), dtype=np.float32)
+    for i, (o, success) in enumerate(zip(overlaps, successes)):
         overlaps_array[i, :len(o)] = np.array(o)
         if not success:
             # tracker has failed during this sequence - consider all of
-            # 'overlaps_array'. The interval from the end of sequence to max
-            # length are padded with zeros.
-            mask_array[i, :] = 1
+            # 'overlaps_array' and use the default padding from the end of
+            # sequence to max length.
+            mask[i, :] = 1
         else:
             # tracker has successfully tracked to the end - consider only this
             # part of the true sequence, and ignore the padding from the end of
             # sequence to max length.
-            mask_array[i, :len(o)] = 1
+            mask[i, :len(o)] = 1
 
     overlaps_array_sum = overlaps_array.copy()
     # overlaps_array_sum[i,j] means the mean overlap from 1 to j in i-th
@@ -245,15 +217,15 @@ def calc_eao_curve(overlaps, success):
         overlaps_array_sum[:, j] = np.mean(overlaps_array[:, 1:j + 1], axis=1)
 
     return np.sum(
-        overlaps_array_sum * mask_array, axis=0) / np.sum(
-            mask_array, axis=0).tolist()
+        overlaps_array_sum * mask, axis=0) / np.sum(
+            mask, axis=0)
 
 
 def eval_sot_eao(
     results,
     annotations,
     interval=[100, 356],
-    region_bound=None,
+    videos_wh=None,
 ):
     """Calculate EAO socre over all tracking sequences.
 
@@ -279,36 +251,40 @@ def eval_sot_eao(
     Return:
         dict[str, float]: EAO score in EAO evaluation metric.
     """
-    if region_bound is None:
-        region_bound = [region_bound] * len(annotations)
+    if videos_wh is None:
+        videos_wh = [None] * len(annotations)
 
     all_overlaps = []
-    all_success = []
+    all_successes = []
 
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
         gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
+        # initialized bbox annotation is [1]
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
         fail_idxs, init_idxs = locate_failures_inits(pred_traj)
-        overlaps = calc_overlaps(
-            gt_traj, pred_traj, region_bound=region_bound[i])
+
+        pred_traj = trajectory2region(pred_traj)
+        gt_traj = trajectory2region(gt_traj)
+        overlaps = calculate_region_overlaps(pred_traj, gt_traj,
+                                    videos_wh[i])
 
         if len(fail_idxs) > 0:
             for i in range(len(fail_idxs)):
                 all_overlaps.append(overlaps[init_idxs[i]:fail_idxs[i]])
-                all_success.append(False)
+                all_successes.append(False)
 
             # handle last initialization
             if len(init_idxs) > len(fail_idxs):
                 # tracker was initialized, but it has not failed until the end
                 # of the sequence
                 all_overlaps.append(overlaps[init_idxs[-1]:])
-                all_success.append(True)
+                all_successes.append(True)
         else:
             all_overlaps.append(overlaps)
-            all_success.append(True)
+            all_successes.append(True)
 
-    eao_curve = calc_eao_curve(all_overlaps, all_success)
+    eao_curve = calc_eao_curve(all_overlaps, all_successes)
     eao_score = np.mean(eao_curve[interval[0]:interval[1] + 1])
-    eao = {'eao': eao_score}
+    eao = dict(eao=eao_score)
     return eao
