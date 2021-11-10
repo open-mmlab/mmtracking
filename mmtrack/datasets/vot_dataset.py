@@ -49,7 +49,7 @@ class VOTDataset(SOTTestDataset):
         return ann
 
     # TODO support multirun test
-    def evaluate(self, results, metric=['track'], logger=None):
+    def evaluate(self, results, metric=['track'], logger=None, interval=None):
         """Evaluation in VOT protocol.
 
         Args:
@@ -58,6 +58,9 @@ class VOTDataset(SOTTestDataset):
                 'track'.
             logger (logging.Logger | str | None): Logger used for printing
                 related information during evaluation. Default: None.
+            interval (list): an specified interval in EAO curve used to
+                calculate the EAO score. There are different settings in
+                different VOT challenges.
         Returns:
             dict[str, float]:
         """
@@ -102,12 +105,14 @@ class VOTDataset(SOTTestDataset):
                 track_bboxes.append(bboxes_per_video)
                 annotations.append(ann_infos[inds[i]:inds[i + 1]])
 
+            interval = INTERVAL[self.dataset_name] if interval is None else \
+                interval
             # anno_info is list[list[dict]]
             eao_score = eval_sot_eao(
                 results=track_bboxes,
                 annotations=annotations,
                 videos_wh=videos_wh,
-                interval=INTERVAL[self.dataset_name])
+                interval=interval)
             eval_results.update(eao_score)
 
             accuracy_robustness = eval_sot_accuracy_robustness(
