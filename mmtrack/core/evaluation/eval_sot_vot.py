@@ -79,6 +79,7 @@ def count_failures(trajectory):
             num_fails += 1
     return num_fails
 
+
 def calc_accuracy(gt_trajectory,
                   pred_trajectory,
                   burnin=10,
@@ -171,9 +172,7 @@ def eval_sot_accuracy_robustness(
 
     accuracy /= weight
     robustness = num_fails / weight * 100
-    return dict(accuracy=accuracy,
-        robustness=robustness,
-        num_fails=num_fails)
+    return dict(accuracy=accuracy, robustness=robustness, num_fails=num_fails)
 
 
 def calc_eao_curve(overlaps, successes):
@@ -216,9 +215,7 @@ def calc_eao_curve(overlaps, successes):
     for j in range(1, overlaps_array_sum.shape[1]):
         overlaps_array_sum[:, j] = np.mean(overlaps_array[:, 1:j + 1], axis=1)
 
-    return np.sum(
-        overlaps_array_sum * mask, axis=0) / np.sum(
-            mask, axis=0)
+    return np.sum(overlaps_array_sum * mask, axis=0) / np.sum(mask, axis=0)
 
 
 def eval_sot_eao(
@@ -266,8 +263,7 @@ def eval_sot_eao(
 
         pred_traj = trajectory2region(pred_traj)
         gt_traj = trajectory2region(gt_traj)
-        overlaps = calculate_region_overlaps(pred_traj, gt_traj,
-                                    videos_wh[i])
+        overlaps = calculate_region_overlaps(pred_traj, gt_traj, videos_wh[i])
 
         if len(fail_idxs) > 0:
             for i in range(len(fail_idxs)):

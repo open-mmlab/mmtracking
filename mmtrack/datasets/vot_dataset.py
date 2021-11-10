@@ -8,7 +8,12 @@ from mmtrack.core.evaluation import eval_sot_accuracy_robustness, eval_sot_eao
 from .sot_test_dataset import SOTTestDataset
 
 # parameter, used for EAO evaluation, may vary by different vot challenges.
-INTERVAL = dict(vot2018=[100, 356], vot2019=[46, 291], vot2020=[115, 755], vot2021=[115, 755])
+INTERVAL = dict(
+    vot2018=[100, 356],
+    vot2019=[46, 291],
+    vot2020=[115, 755],
+    vot2021=[115, 755])
+
 
 @DATASETS.register_module()
 class VOTDataset(SOTTestDataset):
@@ -44,10 +49,7 @@ class VOTDataset(SOTTestDataset):
         return ann
 
     # TODO support multirun test
-    def evaluate(self,
-                 results,
-                 metric=['track'],
-                 logger=None):
+    def evaluate(self, results, metric=['track'], logger=None):
         """Evaluation in VOT protocol.
 
         Args:
