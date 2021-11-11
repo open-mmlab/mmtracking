@@ -8,9 +8,10 @@ from mmdet.core.bbox import bbox_cxcywh_to_xyxy
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
-from vot.region import calculate_overlap
+from vot.region import calculate_overlap as calculate_region_overlap
 
-from mmtrack.core.bbox import bbox_cxcywh_to_x1y1wh, quad2bbox
+from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_xyxy_to_x1y1wh,
+                               quad2bbox)
 from mmtrack.core.evaluation import bbox2region
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
@@ -257,8 +258,11 @@ class SiamRPN(BaseSingleObjectTracker):
             gt_bboxes (list[Tensor]): list of ground truth bboxes for each
                 image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
                 shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
-            image_shape (tuple | list): used as the bounds when calculating
-                overlap.
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
         Returns:
             bbox_pred (Tensor): in [tl_x, tl_y, br_x, br_y] format.
@@ -290,15 +294,18 @@ class SiamRPN(BaseSingleObjectTracker):
             track_bbox = bbox_cxcywh_to_x1y1wh(self.memo.bbox).cpu().numpy()
             track_region = bbox2region(track_bbox)
             gt_bbox = gt_bboxes[0][0].cpu().numpy()
+            if len(gt_bbox) == 4:
+                gt_bbox = bbox_xyxy_to_x1y1wh(gt_bbox)
             gt_region = bbox2region(gt_bbox)
 
             if img_metas is not None and 'img_shape' in img_metas[0]:
                 image_shape = img_metas[0]['img_shape']
-                bounds = (image_shape[1], image_shape[0])
+                image_wh = (image_shape[1], image_shape[0])
             else:
-                bounds = None
+                image_wh = None
                 Warning('image shape are need when calculating bbox overlap')
-            overlap = calculate_overlap(track_region, gt_region, bounds=bounds)
+            overlap = calculate_region_overlap(
+                track_region, gt_region, bounds=image_wh)
             if overlap <= 0:
                 # tracking failure
                 self.init_frame_id = frame_id + 5

@@ -7,13 +7,6 @@ from mmdet.datasets import DATASETS
 from mmtrack.core.evaluation import eval_sot_accuracy_robustness, eval_sot_eao
 from .sot_test_dataset import SOTTestDataset
 
-# parameter, used for EAO evaluation, may vary by different vot challenges.
-INTERVAL = dict(
-    vot2018=[100, 356],
-    vot2019=[46, 291],
-    vot2020=[115, 755],
-    vot2021=[115, 755])
-
 
 @DATASETS.register_module()
 class VOTDataset(SOTTestDataset):
@@ -29,6 +22,13 @@ class VOTDataset(SOTTestDataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dataset_name = osp.basename(self.ann_file).rstrip('.json')
+        # parameter, used for EAO evaluation, may vary by different vot
+        # challenges.
+        self.INTERVAL = dict(
+            vot2018=[100, 356],
+            vot2019=[46, 291],
+            vot2020=[115, 755],
+            vot2021=[115, 755])
 
     def _parse_ann_info(self, img_info, ann_info):
         """Parse bbox annotations.
@@ -96,6 +96,7 @@ class VOTDataset(SOTTestDataset):
             for i in range(num_vids):
                 bboxes_per_video = []
                 for bbox in results['track_bboxes'][inds[i]:inds[i + 1]]:
+                    # the last element of `bbox` is score.
                     if len(bbox) != 2:
                         # convert bbox format from (tl_x, tl_y, br_x, br_y) to
                         # (x1, y1, w, h)
@@ -105,8 +106,8 @@ class VOTDataset(SOTTestDataset):
                 track_bboxes.append(bboxes_per_video)
                 annotations.append(ann_infos[inds[i]:inds[i + 1]])
 
-            interval = INTERVAL[self.dataset_name] if interval is None else \
-                interval
+            interval = self.INTERVAL[self.dataset_name] if interval is None \
+                else interval
             # anno_info is list[list[dict]]
             eao_score = eval_sot_eao(
                 results=track_bboxes,

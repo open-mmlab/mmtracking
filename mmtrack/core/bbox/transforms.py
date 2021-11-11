@@ -7,10 +7,9 @@ def quad2bbox(quad):
     """Convert quadrilateral to axis aligned box in [cx, cy, w, h] format.
 
     Args:
-        quad (Tensor): of shape (N, 8), (8, ), (N, 4) or (4, ) the
-            coordinates of points are in [x1, y1, x2, y2, x3, y3, x4, y4]
-            format. Specially, if the shape is rectangle, the coordinates
-            are in [tl_x, tl_y, br_x, br_y] format.
+        quad (Tensor): of shape (N, 8), (8, ), (N, 4) or (4, ). The
+            coordinates are in [x1, y1, x2, y2, x3, y3, x4, y4] or
+            [tl_x, tl_y, br_x, br_y] format.
     Returns:
         Tensor: in [cx, cy, w, h] format.
     """
@@ -34,7 +33,7 @@ def quad2bbox(quad):
     elif length == 4:
         bbox = bbox_xyxy_to_cxcywh(quad).squeeze(0)
     else:
-        NotImplementedError(f'The length of quad: {length} is \
+        NotImplementedError(f'The length of quadrilateral: {length} is \
                  not supported')
     return bbox
 

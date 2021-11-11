@@ -82,14 +82,15 @@ def test_sot_vot_evaluation():
     for result in results:
         result = result.split(',')
         if len(result) == 1:
-            track_bboxes.append([float(result[0]), 0.])
+            track_bboxes.append(np.array([float(result[0]), 0.]))
         else:
-            track_bboxes.append([
-                float(result[0]),
-                float(result[1]),
-                float(result[2]),
-                float(result[3]), 0.
-            ])
+            track_bboxes.append(
+                np.array([
+                    float(result[0]),
+                    float(result[1]),
+                    float(result[2]),
+                    float(result[3]), 0.
+                ]))
 
     track_bboxes = dict(track_bboxes=track_bboxes)
     eval_results = dataset.evaluate(

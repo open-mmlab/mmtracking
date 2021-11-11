@@ -8,8 +8,8 @@ def bbox2region(bbox):
     """Convert bbox to Rectangle or Polygon Class object.
 
     Args:
-        bbox (list | ndarray): rectangle bbox format is (x, y, w, h) ; polygon
-            bbox format is (x1, y1, x2, y2, ...).
+        bbox (ndarray): the format of rectangle bbox is (x1, y1, w, h);
+            the format of polygon is (x1, y1, x2, y2, ...).
 
     Returns:
         Rectangle or Polygon Class object.
@@ -22,16 +22,15 @@ def bbox2region(bbox):
         return Polygon([(x_, y_) for x_, y_ in zip(bbox[::2], bbox[1::2])])
     else:
         raise NotImplementedError(
-            f'The length of bbox is not supported, len(bbox)=={len(bbox)},\
-                {bbox}')
+            f'The length of bbox is {len(bbox)}, which is not supported')
 
 
 def trajectory2region(trajectory):
     """Convert bbox trajectory to Rectangle or Polygon Class object trajectory.
 
     Args:
-        trajectory (list[list | ndarray]): The outer list contains bbox of
-            each frame in a video. The bbox is a list or ndarray.
+        trajectory (list[ndarray]): The outer list contains bbox of
+            each frame in a video. The bbox is a ndarray.
 
     Returns:
         List: contains the Region Class object of each frame in a
@@ -47,35 +46,35 @@ def locate_failures_inits(trajectory):
     """locate the failure frame and initialized frame in a trajectory.
 
     Args:
-        trajectory (list[list or ndarray]): list of tracking results.
+        trajectory (list[ndarray]): list of tracking results.
 
     Returns:
-        fail_idxs (list): index of failed frame in a trajectory.
-        init_idxs (list): index of initialized frame in a trajectory.
+        fail_inds (list): index of failed frame in a trajectory.
+        init_inds (list): index of initialized frame in a trajectory.
     """
-    fail_idxs = []
-    init_idxs = []
-    for i, x in enumerate(trajectory):
-        if len(x) == 1:
-            if x[0] == 1.:
-                init_idxs.append(i)
-            elif x[0] == 2.:
-                fail_idxs.append(i)
-    return fail_idxs, init_idxs
+    fail_inds = []
+    init_inds = []
+    for i, bbox in enumerate(trajectory):
+        if len(bbox) == 1:
+            if bbox[0] == 1.:
+                init_inds.append(i)
+            elif bbox[0] == 2.:
+                fail_inds.append(i)
+    return fail_inds, init_inds
 
 
 def count_failures(trajectory):
     """count the number of failed frame in a trajectory.
 
     Args:
-        trajectory (list[list | ndarray]): list of tracking results.
+        trajectory (list[ndarray]): list of tracking results.
 
     Returns:
         List: the number of failed frame in a trajectory.
     """
     num_fails = 0
-    for x in trajectory:
-        if len(x) == 1 and x[0] == 2.:
+    for bbox in trajectory:
+        if len(bbox) == 1 and bbox[0] == 2.:
             num_fails += 1
     return num_fails
 
@@ -89,10 +88,11 @@ def calc_accuracy(gt_trajectory,
 
     Args:
         gt_trajectory (list[list]): list of bboxes
-        pred_trajectory (list[list or ndarray]): The outer list contains the
-            tracking results of each frame in one video. The inner list (or
-            ndarray) has two categories:
-                - bbox: denotes the normal tracking box in [x, y, w, h] format.
+        pred_trajectory (list[ndarray]): The outer list contains the
+            tracking results of each frame in one video. The ndarray has two
+            cases:
+                - bbox: denotes the normal tracking box in [x1, y1, w, h]
+                    format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
@@ -132,11 +132,12 @@ def eval_sot_accuracy_robustness(
     """Calculate accuracy and robustness over all tracking sequences.
 
     Args:
-        results (list[list[list | ndarray]]): The first list contains the
+        results (list[list[ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
-            tracking results of each frame in one video. The third list (or
-            ndarray) have two categories:
-                - bbox: denotes the normal tracking box in [x, y, w, h] format.
+            tracking results of each frame in one video. The ndarray have two
+            cases:
+                - bbox: denotes the normal tracking box in [x1, y1, w, h]
+                    format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
@@ -196,8 +197,8 @@ def calc_eao_curve(overlaps, successes):
     # mask out frames which are not considered in EAO calculation. initial
     # value are zero, meaning ignored.
     mask = np.zeros((total_runs, max_length), dtype=np.float32)
-    for i, (o, success) in enumerate(zip(overlaps, successes)):
-        overlaps_array[i, :len(o)] = np.array(o)
+    for i, (overlap, success) in enumerate(zip(overlaps, successes)):
+        overlaps_array[i, :len(overlap)] = np.array(overlap)
         if not success:
             # tracker has failed during this sequence - consider all of
             # 'overlaps_array' and use the default padding from the end of
@@ -207,7 +208,7 @@ def calc_eao_curve(overlaps, successes):
             # tracker has successfully tracked to the end - consider only this
             # part of the true sequence, and ignore the padding from the end of
             # sequence to max length.
-            mask[i, :len(o)] = 1
+            mask[i, :len(overlap)] = 1
 
     overlaps_array_sum = overlaps_array.copy()
     # overlaps_array_sum[i,j] means the mean overlap from 1 to j in i-th
@@ -218,20 +219,16 @@ def calc_eao_curve(overlaps, successes):
     return np.sum(overlaps_array_sum * mask, axis=0) / np.sum(mask, axis=0)
 
 
-def eval_sot_eao(
-    results,
-    annotations,
-    interval=[100, 356],
-    videos_wh=None,
-):
+def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     """Calculate EAO socre over all tracking sequences.
 
     Args:
-        results (list[list[list | ndarray]]): The first list contains the
+        results (list[list[ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
-            tracking results of each frame in one video. The third list (or
-            ndarray) have two categories:
-                - bbox: denotes the normal tracking box in [x, y, w, h] format.
+            tracking results of each frame in one video. The ndarray have two
+            cases:
+                - bbox: denotes the normal tracking box in [x1, y1, w, h]
+                    format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
@@ -242,7 +239,7 @@ def eval_sot_eao(
         interval: an specified interval in EAO curve used to calculate the EAO
             score. There are different settings in different VOT challenge.
             Default is VOT2018 setting: [100, 356].
-        retion_bound (list[tuple(width, height), ...]): The list contains the
+        videos_wh (list[tuple(width, height), ...]): The list contains the
             width and height of each video. Default is None.
 
     Return:
@@ -259,22 +256,22 @@ def eval_sot_eao(
         assert len(gt_traj) == len(pred_traj)
         # initialized bbox annotation is [1]
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
-        fail_idxs, init_idxs = locate_failures_inits(pred_traj)
+        fail_inds, init_inds = locate_failures_inits(pred_traj)
 
         pred_traj = trajectory2region(pred_traj)
         gt_traj = trajectory2region(gt_traj)
         overlaps = calculate_region_overlaps(pred_traj, gt_traj, videos_wh[i])
 
-        if len(fail_idxs) > 0:
-            for i in range(len(fail_idxs)):
-                all_overlaps.append(overlaps[init_idxs[i]:fail_idxs[i]])
+        if len(fail_inds) > 0:
+            for i in range(len(fail_inds)):
+                all_overlaps.append(overlaps[init_inds[i]:fail_inds[i]])
                 all_successes.append(False)
 
             # handle last initialization
-            if len(init_idxs) > len(fail_idxs):
+            if len(init_inds) > len(fail_inds):
                 # tracker was initialized, but it has not failed until the end
                 # of the sequence
-                all_overlaps.append(overlaps[init_idxs[-1]:])
+                all_overlaps.append(overlaps[init_inds[-1]:])
                 all_successes.append(True)
         else:
             all_overlaps.append(overlaps)
