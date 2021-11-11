@@ -293,10 +293,10 @@ class SiamRPN(BaseSingleObjectTracker):
             # convert bbox to region
             track_bbox = bbox_cxcywh_to_x1y1wh(self.memo.bbox).cpu().numpy()
             track_region = bbox2region(track_bbox)
-            gt_bbox = gt_bboxes[0][0].cpu().numpy()
+            gt_bbox = gt_bboxes[0][0]
             if len(gt_bbox) == 4:
                 gt_bbox = bbox_xyxy_to_x1y1wh(gt_bbox)
-            gt_region = bbox2region(gt_bbox)
+            gt_region = bbox2region(gt_bbox.cpu().numpy())
 
             if img_metas is not None and 'img_shape' in img_metas[0]:
                 image_shape = img_metas[0]['img_shape']
