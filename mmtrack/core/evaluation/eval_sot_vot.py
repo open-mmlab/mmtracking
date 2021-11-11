@@ -122,13 +122,11 @@ def calc_accuracy(gt_trajectory,
     return np.mean(overlaps[mask]) if any(mask) else 0.
 
 
-def eval_sot_accuracy_robustness(
-    results,
-    annotations,
-    burnin=10,
-    ignore_unknown=True,
-    videos_wh=None,
-):
+def eval_sot_accuracy_robustness(results,
+                                 annotations,
+                                 burnin=10,
+                                 ignore_unknown=True,
+                                 videos_wh=None):
     """Calculate accuracy and robustness over all tracking sequences.
 
     Args:
