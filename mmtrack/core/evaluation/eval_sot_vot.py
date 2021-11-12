@@ -1,7 +1,12 @@
 import numpy as np
-from vot.analysis import is_special
-from vot.region import Polygon, Rectangle, Special
-from vot.region import calculate_overlaps as calculate_region_overlaps
+
+try:
+    import vot
+    from vot.analysis import is_special
+    from vot.region import Polygon, Rectangle, Special
+    from vot.region import calculate_overlaps as calculate_region_overlaps
+except ImportError:
+    vot = None
 
 
 def bbox2region(bbox):
@@ -14,6 +19,12 @@ def bbox2region(bbox):
     Returns:
         Rectangle or Polygon Class object.
     """
+    if vot is None:
+        raise ImportError(
+            'Please run'
+            'pip install vot-toolkit@git+https://github.com/votchallenge/vot-toolkit-python@0c61b3'  # noqa: E501
+            'to manually install vot-toolkit')
+
     if len(bbox) == 1:
         return Special(bbox[0])
     elif len(bbox) == 4:
@@ -153,6 +164,12 @@ def eval_sot_accuracy_robustness(results,
     Return:
         dict{str: float}: accuracy and robustness in EAO evaluation metric.
     """
+    if vot is None:
+        raise ImportError(
+            'Please run'
+            'pip install vot-toolkit@git+https://github.com/votchallenge/vot-toolkit-python@0c61b3'  # noqa: E501
+            'to manually install vot-toolkit')
+
     accuracy = 0
     num_fails = 0
     weight = 0
@@ -243,6 +260,12 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     Return:
         dict[str, float]: EAO score in EAO evaluation metric.
     """
+    if vot is None:
+        raise ImportError(
+            'Please run'
+            'pip install vot-toolkit@git+https://github.com/votchallenge/vot-toolkit-python@0c61b3'  # noqa: E501
+            'to manually install vot-toolkit')
+
     if videos_wh is None:
         videos_wh = [None] * len(annotations)
 

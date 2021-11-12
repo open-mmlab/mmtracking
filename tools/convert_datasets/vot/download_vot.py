@@ -6,9 +6,16 @@ import zipfile
 from urllib import error, request
 
 from tqdm import tqdm
-from vot.utilities import extract_files
-from vot.utilities.net import (download_json, download_uncompress,
-                               get_base_url, join_url)
+
+try:
+    from vot.utilities import extract_files
+    from vot.utilities.net import (download_json, download_uncompress,
+                                   get_base_url, join_url)
+except ImportError:
+    raise ImportError(
+        'Please run'
+        'pip install vot-toolkit@git+https://github.com/votchallenge/vot-toolkit-python@0c61b3'  # noqa: E501
+        'to manually install vot-toolkit')
 
 VOT_DATASETS = dict(
     vot2018='http://data.votchallenge.net/vot2018/main/description.json',
