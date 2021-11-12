@@ -54,6 +54,7 @@ jobs:
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/${{matrix.torch_version}}/index.html
           pip install mmdet
           pip install -r requirements.txt
+          pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
@@ -129,6 +130,7 @@ jobs:
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
+          pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32
       - name: Build and install
         run: |
           rm -rf .eggs

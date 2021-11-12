@@ -100,6 +100,12 @@
     pip install -v -e .  # or "python setup.py develop"
     ```
 
+7. 为 VOT 数据集测试评估安装额外库：
+
+    ```shell
+    pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32
+    ```
+
 注意：
 
 (1) 按照上述说明，MMTracking 将以 `dev` 模式安装，因此在本地对代码做的任何修改都会生效，无需重新安装；
