@@ -14,7 +14,7 @@ try:
 except ImportError:
     raise ImportError(
         'Please run'
-        'pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32'  # noqa: E501
+        'pip install git+https://github.com/votchallenge/toolkit.git'
         'to manually install vot-toolkit')
 
 VOT_DATASETS = dict(

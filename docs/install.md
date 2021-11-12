@@ -108,7 +108,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 7. Install extra dependencies for VOT evaluation
 
     ```shell
-    pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32
+    pip install git+https://github.com/votchallenge/toolkit.git
     ```
 
 Note:
@@ -140,6 +140,7 @@ git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
+pip install git+https://github.com/votchallenge/toolkit.git
 ```
 
 ### Developing with multiple MMTracking versions

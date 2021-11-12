@@ -103,7 +103,7 @@
 7. 为 VOT 数据集测试评估安装额外库：
 
     ```shell
-    pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32
+    pip install git+https://github.com/votchallenge/toolkit.git
     ```
 
 注意：
@@ -133,6 +133,7 @@ git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
+pip install git+https://github.com/votchallenge/toolkit.git
 ```
 
 ### 使用多个 MMTracking 版本进行开发

@@ -24,7 +24,7 @@ def bbox2region(bbox):
     if vot is None:
         raise ImportError(
             'Please run'
-            'pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32'  # noqa: E501
+            'pip install git+https://github.com/votchallenge/toolkit.git'
             'to manually install vot-toolkit')
 
     if len(bbox) == 1:
@@ -169,7 +169,7 @@ def eval_sot_accuracy_robustness(results,
     if vot is None:
         raise ImportError(
             'Please run'
-            'pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32'  # noqa: E501
+            'pip install git+https://github.com/votchallenge/toolkit.git'
             'to manually install vot-toolkit')
 
     accuracy = 0
@@ -265,7 +265,7 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     if vot is None:
         raise ImportError(
             'Please run'
-            'pip install vot-toolkit@git+ssh://git@github.com/votchallenge/vot-toolkit-python@0c61b32'  # noqa: E501
+            'pip install git+https://github.com/votchallenge/toolkit.git'
             'to manually install vot-toolkit')
 
     if videos_wh is None:
