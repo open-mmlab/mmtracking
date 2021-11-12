@@ -166,13 +166,16 @@ def main():
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
 
+    # init best_score, best_results and best parames
     if 'meta' in checkpoint and 'hook_msgs' in checkpoint[
             'meta'] and 'best_score' in checkpoint['meta']['hook_msgs']:
         best_score = checkpoint['meta']['hook_msgs']['best_score']
     else:
         best_score = 0
 
-    best_result = dict(success=best_score, norm_precision=0., precision=0.)
+    key_metric = cfg.evaluation.save_best
+    best_result = {f'{key_metric}': best_score}
+
     best_params = dict(
         penalty_k=cfg.model.test_cfg.rpn.penalty_k,
         lr=cfg.model.test_cfg.rpn.lr,
@@ -183,6 +186,10 @@ def main():
     num_cases = len(args.penalty_k_range) * len(args.lr_range) * len(
         args.win_influ_range)
     case_count = 0
+
+    # compare function setting in parameter search
+    rule_map = {'greater': lambda x, y: x > y, 'less': lambda x, y: x < y}
+    compare_func = rule_map[cfg.evaluation.rule]
 
     for penalty_k in args.penalty_k_range:
         for lr in args.lr_range:
@@ -222,12 +229,13 @@ def main():
                             eval_kwargs.pop(key, None)
                         eval_kwargs.update(dict(metric=args.eval, **kwargs))
                         eval_results = dataset.evaluate(outputs, **eval_kwargs)
-                        # print(eval_results)
                         print_log(f'evaluation results: {eval_results}',
                                   logger)
                         print_log('------------------------------------------',
                                   logger)
-                        if eval_results['success'] > best_result['success']:
+
+                        if compare_func(eval_results[key_metric],
+                                        best_result[key_metric]):
                             best_result = eval_results
                             best_params['penalty_k'] = penalty_k,
                             best_params['lr'] = lr,
