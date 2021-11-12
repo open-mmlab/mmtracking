@@ -8,10 +8,9 @@ from mmdet.core.bbox import bbox_cxcywh_to_xyxy
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
-from vot.region import calculate_overlap as calculate_region_overlap
 
 from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_xyxy_to_x1y1wh,
-                               quad2bbox)
+                               calculate_region_overlap, quad2bbox)
 from mmtrack.core.evaluation import bbox2region
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
