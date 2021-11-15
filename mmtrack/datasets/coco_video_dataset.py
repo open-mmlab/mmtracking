@@ -225,7 +225,7 @@ class CocoVideoDataset(CocoDataset):
         """Get COCO annotations by the information of image.
 
         Args:
-            img_info (int): Information of image.
+            img_info (dict): Information of image.
 
         Returns:
             dict: Annotation information of `img_info`.

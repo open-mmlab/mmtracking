@@ -69,7 +69,7 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
                 file_name = '%d' % (frame_id) + '.jpg'
                 assert img_name == file_name
                 # the images' root is not included in file_name
-                file_name = osp.join(video_name, img_name)
+                file_name = osp.join(chunk, 'frames', video_name, img_name)
                 image = dict(
                     file_name=file_name,
                     height=height,

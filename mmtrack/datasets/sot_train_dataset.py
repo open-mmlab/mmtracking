@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import random
+
 import numpy as np
 from mmdet.datasets import DATASETS
 
@@ -236,3 +238,174 @@ class SOTTrainDataset(CocoVideoDataset):
         ann = dict(
             bboxes=np.array(bbox, dtype=np.float32), labels=np.array([0]))
         return ann
+
+
+@DATASETS.register_module()
+class SOTQuotaTrainDataset(SOTTrainDataset):
+
+    def __init__(self, prob_datasets, visible_keys, max_gap, num_search_frames,
+                 num_template_frames):
+        prob_total = sum(prob_datasets)
+        self.prob_datasets = [x / prob_total for x in prob_datasets]
+        self.visible_keys = visible_keys
+        self.max_gap = max_gap
+        self.num_search_frames = num_search_frames
+        self.num_template_frames = num_template_frames
+        self.is_video_dataset = 'videos' in self.coco.dataset
+
+    def get_samples(self,
+                    visible,
+                    num_ids=1,
+                    min_id=None,
+                    max_id=None,
+                    allow_invisible=False,
+                    force_invisible=False):
+        """ get num_ids frames between min_id and max_id in specific conditions
+        args:
+            visible - 1d Tensor indicating whether target is visible for each
+                frame
+            num_ids - number of frames to be samples
+            min_id - Minimum allowed frame number
+            max_id - Maximum allowed frame number
+        returns:
+            list - List of sampled frame numbers. None if not sufficient
+                visible frames could be found.
+        """
+        if num_ids == 0:
+            return []
+        if min_id is None or min_id < 0:
+            min_id = 0
+        if max_id is None or max_id > len(visible):
+            max_id = len(visible)
+        # get valid ids
+        if force_invisible:
+            valid_ids = [i for i in range(min_id, max_id) if not visible[i]]
+        else:
+            if allow_invisible:
+                valid_ids = [i for i in range(min_id, max_id)]
+            else:
+                valid_ids = [i for i in range(min_id, max_id) if visible[i]]
+
+        # No visible ids
+        if len(valid_ids) == 0:
+            return None
+
+        return random.choices(valid_ids, k=num_ids)
+
+    def get_visible_info(self):
+        """Sample a sequence with enough visible frames.
+
+        Returns:
+            is_visible_ann (list): whether visible of each annotation about the
+                instance in the sequence
+            instance_id (int):
+        """
+        enough_visible_frames = False
+        while not enough_visible_frames:
+            # Sample a sequence
+            vid_id = random.randint(0, len(self) - 1)
+            instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
+            instance_id = random.choice(instance_ids)
+
+            img_ids = self.coco.get_img_ids_from_ins_id(instance_id)
+            ann_ids = self.coco.get_ann_ids(
+                img_ids=img_ids, cat_ids=self.cat_ids)
+            ann_infos = self.coco.load_anns(ann_ids)
+
+            is_visible_ann = []
+            for ann in ann_infos:
+                valid = self.data_infos[vid_id][
+                    'width'] > 0 & self.data_infos[vid_id]['height'] > 0
+
+                visible = valid
+                if visible and self.visible_keys is not None:
+                    for key in self.visible_keys:
+                        visible &= ~ann[key]
+                is_visible_ann.append(visible)
+
+                # vid_info_dict['visible'].append(visible)
+                # vid_info_dict['bbox'].append(ann['bbox'])
+                # vid_info_dict['valid'].append(valid)
+
+            enough_visible_frames = sum(is_visible_ann) > 2 * (
+                self.num_search_frames +
+                self.num_template_frames) and len(is_visible_ann) >= 20
+            enough_visible_frames = enough_visible_frames or not \
+                self.is_video_dataset
+
+        img_info = self.coco.load_imgs([img_ids[0]])[0]
+        img_info['filename'] = img_info['file_name']
+
+        return is_visible_ann, img_info
+
+    def sampling_trident(self, is_visible_ann):
+        template_ann_ids_extra = []
+        while None in template_ann_ids_extra or len(
+                template_ann_ids_extra) == 0:
+            template_ann_ids_extra = []
+            # first randomly sample two frames from a video
+            template_ann_id1 = self.get_samples(is_visible_ann, num_ids=1)
+            search_ann_ids = self.get_samples(is_visible_ann, num_ids=1)
+            # get the dynamic template id
+            for max_gap in self.max_gap:
+                if template_ann_id1[0] >= search_ann_ids[0]:
+                    min_id, max_id = search_ann_ids[
+                        0], search_ann_ids[0] + max_gap
+                else:
+                    min_id, max_id = search_ann_ids[
+                        0] - max_gap, search_ann_ids[0]
+
+                f_id = self.get_samples(
+                    is_visible_ann,
+                    num_ids=1,
+                    min_id=min_id,
+                    max_id=max_id,
+                    allow_invisible=True)
+                if f_id is None:
+                    template_ann_ids_extra += [None]
+                else:
+                    template_ann_ids_extra += f_id
+
+        all_ann_ids = template_ann_id1 + template_ann_ids_extra + \
+            search_ann_ids
+        return all_ann_ids
+
+    def prepare_results(self, ann_id, img_info, is_template=True):
+        """Get training data and annotations.
+
+        Args:
+            ann_id (int): The id of annotation.
+            img_info (dict):
+
+        Returns:
+            dict: The information of training image and annotation.
+        """
+
+        ann_infos = self.coco.load_anns([ann_id])
+        ann = self._parse_ann_info(ann_infos[0]['instance_id'], ann_infos)
+
+        result = dict(img_info=img_info, ann_info=ann, is_template=is_template)
+        self.pre_pipeline(result)
+        return result
+
+    def prepare_train_img(self, idx):
+        """Get training data and annotations after pipeline.
+
+        Args:
+            idx (int): Index of data. Ignore it.
+
+        Returns:
+            dict: Training data and annotation after pipeline with new keys
+            introduced by pipeline.
+        """
+
+        is_visible_ann, img_info = self.get_visible_info()
+        ann_ids = self.sampling_trident(is_visible_ann)
+        results = [
+            self.prepare_results(ann_id, img_info, is_template=True)
+            for ann_id in ann_ids[:-1]
+        ]
+        results.append(
+            self.prepare_results(ann_ids[-1], img_info, is_template=False))
+        results = self.pipeline(results)
+        return results

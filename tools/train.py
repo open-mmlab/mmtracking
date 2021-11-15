@@ -108,6 +108,7 @@ def main():
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
 
+    cfg.log_config.interval = 1
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
@@ -167,7 +168,7 @@ def main():
         cfg,
         distributed=distributed,
         validate=(not args.no_validate),
-        samples_per_epoch=5000,
+        samples_per_epoch=60000,
         timestamp=timestamp,
         meta=meta)
 

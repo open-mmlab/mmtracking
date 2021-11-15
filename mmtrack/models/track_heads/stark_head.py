@@ -1,40 +1,33 @@
-from mmcv.runner.base_module import BaseModule
 import torch
-from torch import nn
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
-from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmcv.cnn.bricks.transformer import build_positional_encoding
+from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
-from mmdet.models.utils import Transformer,build_transformer
-from mmdet.models.utils.builder import TRANSFORMER
 from mmdet.models.builder import build_head
+from mmdet.models.utils import Transformer, build_transformer
+from mmdet.models.utils.builder import TRANSFORMER
+from torch import nn
+
 
 @HEADS.register_module()
 class CornerPredictorHead(BaseModule):
     """Corner Predictor module.
 
     Args:
-        inplanes (int): input channle
+        inplanes (int): input channel
         channel (int): the output channel of the first conv block
         feat_size (int): the size of feature map
         stride (int): the stride of feature map from the backbone
     """
 
-    def __init__(self,
-                 inplanes,
-                 channel,
-                 feat_size=20,
-                 stride=16):
+    def __init__(self, inplanes, channel, feat_size=20, stride=16):
         super(CornerPredictorHead, self).__init__()
         self.feat_size = feat_size
         self.stride = stride
         self.img_size = self.feat_size * self.stride
 
-        def conv_module(in_planes,
-            out_planes,
-            kernel_size=3,
-            padding=1):
+        def conv_module(in_planes, out_planes, kernel_size=3, padding=1):
             # The module's pipeline: Conv -> BN -> ReLU.
             return ConvModule(
                 in_channels=in_planes,
@@ -48,25 +41,21 @@ class CornerPredictorHead(BaseModule):
 
         # top-left corner
         self.tl_corner_pred = nn.Sequential(
-            conv_module(inplanes, channel),
-            conv_module(channel, channel // 2),
+            conv_module(inplanes, channel), conv_module(channel, channel // 2),
             conv_module(channel // 2, channel // 4),
             conv_module(channel // 4, channel // 8),
-            nn.Conv2d(channel // 8, 1, kernel_size=1)
-            )
+            nn.Conv2d(channel // 8, 1, kernel_size=1))
         # bottom-right corner
         self.br_corner_pred = nn.Sequential(
-            conv_module(inplanes, channel),
-            conv_module(channel, channel // 2),
+            conv_module(inplanes, channel), conv_module(channel, channel // 2),
             conv_module(channel // 2, channel // 4),
             conv_module(channel // 4, channel // 8),
-            nn.Conv2d(channel // 8, 1, kernel_size=1)
-            )
+            nn.Conv2d(channel // 8, 1, kernel_size=1))
 
-        # about coordinates and indexs
+        # about coordinates and indexes
         with torch.no_grad():
             self.indice = torch.arange(0, self.feat_size).view(-1,
-                                                             1) * self.stride
+                                                               1) * self.stride
             # generate mesh-grid
             self.coord_x = self.indice.repeat((self.feat_size, 1)) \
                 .view((self.feat_size * self.feat_size,)).float().cuda()
@@ -75,6 +64,7 @@ class CornerPredictorHead(BaseModule):
 
     def forward(self, x):
         """Forward pass with input x.
+
         Args:
             x (Tensor): of shape [bs, C, H, W].
         Returns:
@@ -86,13 +76,15 @@ class CornerPredictorHead(BaseModule):
         return torch.stack((coorx_tl, coory_tl, coorx_br, coory_br), dim=1)
 
     def get_score_map(self, x):
-        """score map branch
+        """score map branch.
 
         Args:
             x (Tensor): of shape [bs, C, H, W].
         Returns:
-            score_map_tl (Tensor[bs, 1, H, W]): the score map of top left corner of tracking bbox
-            score_map_br (Tensor[bs, 1, H, W]): the score map of bottom right corner of tracking bbox
+            score_map_tl (Tensor[bs, 1, H, W]): the score map of top left
+                corner of tracking bbox
+            score_map_br (Tensor[bs, 1, H, W]): the score map of bottom right
+                corner of tracking bbox
         """
         score_map_tl = self.tl_corner_pred(x)
         score_map_br = self.br_corner_pred(x)
@@ -102,24 +94,29 @@ class CornerPredictorHead(BaseModule):
         """Get soft-argmax coordinate for a given heatmap.
 
         Args:
-            score_map (self.feat_size, self.feat_size): the last score map in bbox_head branch
+            score_map (self.feat_size, self.feat_size): the last score map
+                in bbox_head branch
 
         Returns:
-            exp_x (Tensor): of shape (bs, 1), the value is in range [0, self.feat_size * self.stride]
-            exp_y (Tensor): of shape (bs, 1), the value is in range [0, self.feat_size * self.stride]
+            exp_x (Tensor): of shape (bs, 1), the value is in range
+                [0, self.feat_size * self.stride]
+            exp_y (Tensor): of shape (bs, 1), the value is in range
+                [0, self.feat_size * self.stride]
         """
-    
+
         score_vec = score_map.view(
-            (-1, self.feat_size * self.feat_size))  # (B, feat_size * feat_size)
+            (-1,
+             self.feat_size * self.feat_size))  # (B, feat_size * feat_size)
         prob_vec = nn.functional.softmax(score_vec, dim=1)
         exp_x = torch.sum((self.coord_x * prob_vec), dim=1)
         exp_y = torch.sum((self.coord_y * prob_vec), dim=1)
         return exp_x, exp_y
 
+
 @HEADS.register_module()
 class ScoreHead(nn.Module):
-    """Predict the confidence score of target in current frame
-    Cascade multiple Linear layer and empose relu on the output of last layer
+    """Predict the confidence score of target in current frame Cascade multiple
+    Linear layer and empose relu on the output of last layer.
 
     Returns:
         Tensor: of shape [bs, 1]
@@ -137,11 +134,13 @@ class ScoreHead(nn.Module):
         if BN:
             self.layers = nn.ModuleList(
                 nn.Sequential(nn.Linear(n, k), nn.BatchNorm1d(k))
-                for n, k in zip([input_dim] + hidden_dims, hidden_dims + [output_dim]))
+                for n, k in zip([input_dim] + hidden_dims, hidden_dims +
+                                [output_dim]))
         else:
             self.layers = nn.ModuleList(
                 nn.Linear(n, k)
-                for n, k in zip([input_dim] + hidden_dims, hidden_dims + [output_dim]))
+                for n, k in zip([input_dim] + hidden_dims, hidden_dims +
+                                [output_dim]))
 
     def forward(self, x):
         for i, layer in enumerate(self.layers):
@@ -159,8 +158,8 @@ class StarkTransformer(Transformer):
     def forward(self, x, mask, query_embed, pos_embed):
         """Forward function for `StarkTransformer`.
         Args:
-            x (Tensor): Input query with shape [z_h*z_w*2 + x_h*x_w, bs, c] where
-                c = embed_dims.
+            x (Tensor): Input query with shape [z_h*z_w*2 + x_h*x_w, bs, c]
+                where c = embed_dims.
             mask (Tensor): The key_padding_mask used for encoder and decoder,
                 with shape [bs, z_h*z_w*2 + x_h*x_w].
             query_embed (Tensor): The query embedding for decoder, with shape
@@ -226,6 +225,7 @@ class StarkHead(BaseModule):
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Default: None
     """
+
     def __init__(self,
                  num_query=1,
                  transformer=None,
@@ -246,9 +246,7 @@ class StarkHead(BaseModule):
                  test_cfg=None,
                  init_cfg=None,
                  **kwargs):
-        super(StarkHead, self).__init__(
-            init_cfg=init_cfg
-        )
+        super(StarkHead, self).__init__(init_cfg=init_cfg)
         self.transformer = build_transformer(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
@@ -261,7 +259,6 @@ class StarkHead(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.fp16_enabled = False
-        
 
     def forward_bbox_head(self, feat, memory):
         """
@@ -269,8 +266,8 @@ class StarkHead(BaseModule):
             feat: output embeddings (1, bs, N, C)
             memory: encoder embeddings (z_h*z_w*2 + x_h*x_w, bs, C)
         Returns:
-            Tensor: of shape (bs, Nq, 4), Nq is the number of query in transformer.
-                the bbox format is [tl_x, tl_y, br_x, br_y]
+            Tensor: of shape (bs, Nq, 4), Nq is the number of query in
+                transformer. the bbox format is [tl_x, tl_y, br_x, br_y]
         """
         # adjust shape
         feat_len_x = self.bbox_head.feat_size**2
@@ -288,14 +285,19 @@ class StarkHead(BaseModule):
         outputs_coord = outputs_coord.view(bs, Nq, 4)
         return outputs_coord
 
-    def forward_head(self, feat, memory, run_box_head=False, run_cls_head=False):
+    def forward_head(self,
+                     feat,
+                     memory,
+                     run_box_head=False,
+                     run_cls_head=False):
         """
         Args:
             feat: output embeddings (1, bs, N, C)
             memory: encoder embeddings (z_h*z_w*2 + x_h*x_w, bs, C)
         Returns:
             (dict):
-                - 'pred_bboxes': shape (bs, Nq, 4), in [tl_x, tl_y, br_x, br_y] format
+                - 'pred_bboxes': shape (bs, Nq, 4), in [tl_x, tl_y, br_x, br_y]
+                    format
                 - 'pred_logit': shape (bs, Nq, 1)
         """
         out_dict = {}
@@ -317,7 +319,8 @@ class StarkHead(BaseModule):
                 'pos_embed': (Tensor) of shape (Nq, c)
         Returns:
              track_results:
-                - 'pred_bboxes': (Tensor) of shape (bs, Nq, 4), in [cx, cy, w, h] format
+                - 'pred_bboxes': (Tensor) of shape (bs, Nq, 4), in
+                    [cx, cy, w, h] format
                 - 'pred_logit': (Tensor) of shape (bs, Nq, 1)
             outs_dec: [1, bs, num_query, embed_dims]
         """
@@ -333,29 +336,3 @@ class StarkHead(BaseModule):
             run_box_head=run_box_head,
             run_cls_head=run_cls_head)
         return track_results, outs_dec
-
-    def get_bbox(self, pred_bboxes, prev_bbox, resize_factor):
-        """This function map the `prediction bboxes` from resized croped image to original image.
-        The coordinate origins of them are both the top left corner.
-
-        Args:
-            pred_bboxes (Tensor): of shape (B, Nq, 4), in [tl_x, tl_y, br_x, br_y] format.
-            prev_bbox (Tensor): of shape (B, 4), in [cx, cy, w, h] format.
-            resize_factor (float):pred_bboxes
-        Returns:
-            (Tensor): in [tl_x, tl_y, br_x, br_y] format
-        """
-        # based in resized croped image
-        pred_bboxes = pred_bboxes.view(-1, 4)
-        # based in original croped image
-        pred_bbox = pred_bboxes.mean(dim=0) / resize_factor  # (cx, cy, w, h)
-
-        # map the bbox to original image
-        half_crop_img_size = 0.5 * self.test_cfg['search_size'] / resize_factor
-        x_shift, y_shift = prev_bbox[0] - half_crop_img_size, prev_bbox[1] - half_crop_img_size
-        pred_bbox[0] += x_shift
-        pred_bbox[1] += y_shift
-        pred_bbox[2] += x_shift
-        pred_bbox[3] += y_shift
-
-        return pred_bbox

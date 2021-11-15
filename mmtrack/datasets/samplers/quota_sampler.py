@@ -1,9 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
+
 import numpy as np
 import torch
 import torch.distributed as dist
-from torch.utils.data import Sampler, DistributedSampler
+from mmcv.runner import get_dist_info
+from torch.utils.data import DistributedSampler, Sampler
 
 
 class GroupQuotaSampler(Sampler):
@@ -19,10 +21,12 @@ class GroupQuotaSampler(Sampler):
         self.grounp_sampling_quota = []
         for i, size in enumerate(self.group_sizes):
             # sampling at least 1 samples in each group
-            sampling_quota = int(np.ceil(samples_per_epoch * size / len(self.dataset)))
+            sampling_quota = int(
+                np.ceil(samples_per_epoch * size / len(self.dataset)))
             self.grounp_sampling_quota.append(sampling_quota)
-            self.num_samples += int(np.ceil(
-                sampling_quota / self.samples_per_gpu)) * self.samples_per_gpu
+            self.num_samples += int(
+                np.ceil(sampling_quota /
+                        self.samples_per_gpu)) * self.samples_per_gpu
 
     def __iter__(self):
         indices = []
@@ -66,20 +70,27 @@ class DistributedQuotaSampler(DistributedSampler):
         shuffle (bool): If True, shuffle the dataset. Defaults to False.
     """
 
-    def __init__(self, samples_per_epoch, num_replicas=None, rank=None, shuffle=True):
+    def __init__(self,
+                 samples_per_epoch,
+                 num_replicas=None,
+                 rank=None,
+                 shuffle=True):
         if num_replicas is None:
             if not dist.is_available():
-                raise RuntimeError("Requires distributed package to be available")
+                raise RuntimeError(
+                    'Requires distributed package to be available')
             num_replicas = dist.get_world_size()
         if rank is None:
             if not dist.is_available():
-                raise RuntimeError("Requires distributed package to be available")
+                raise RuntimeError(
+                    'Requires distributed package to be available')
             rank = dist.get_rank()
         self.num_replicas = num_replicas
         self.rank = rank
         self.epoch = 0
         self.samples_per_epoch = samples_per_epoch
-        self.num_samples = int(math.ceil(samples_per_epoch * 1.0 / self.num_replicas))
+        self.num_samples = int(
+            math.ceil(samples_per_epoch * 1.0 / self.num_replicas))
         self.total_size = self.num_samples * self.num_replicas
         self.shuffle = shuffle
 
@@ -88,10 +99,10 @@ class DistributedQuotaSampler(DistributedSampler):
         g = torch.Generator()
         g.manual_seed(self.epoch)
         if self.shuffle:
-            indices = torch.randperm(self.samples_per_epoch, generator=g).tolist()
+            indices = torch.randperm(
+                self.samples_per_epoch, generator=g).tolist()
         else:
             indices = list(range(self.samples_per_epoch))
-
 
         # add extra samples to make it evenly divisible
         indices += indices[:(self.total_size - len(indices))]
@@ -132,7 +143,7 @@ class DistributedGroupQuotaSampler(Sampler):
                  num_replicas=None,
                  rank=None,
                  seed=0):
-        _rank, _num_replicas = dist.get_dist_info()
+        _rank, _num_replicas = get_dist_info()
         if num_replicas is None:
             num_replicas = _num_replicas
         if rank is None:
@@ -153,7 +164,9 @@ class DistributedGroupQuotaSampler(Sampler):
         self.grounp_sampling_quota = []
         for i, j in enumerate(self.group_sizes):
             # sampling at least 1 samples in each group
-            sampling_quota = int(math.ceil(samples_per_epoch * self.group_sizes[i] / len(self.dataset)))
+            sampling_quota = int(
+                math.ceil(samples_per_epoch * self.group_sizes[i] /
+                          len(self.dataset)))
             self.grounp_sampling_quota.append(sampling_quota)
             self.num_samples += int(
                 math.ceil(sampling_quota * 1.0 / self.samples_per_gpu /
@@ -175,10 +188,12 @@ class DistributedGroupQuotaSampler(Sampler):
                 # TODO: check whether torch.randperm() can be replaced by
                 # numpy.random.permutation().
                 indice = indice[list(
-                    torch.randperm(int(size), generator=g).numpy()[:sampling_size])].tolist()
+                    torch.randperm(
+                        int(size),
+                        generator=g).numpy()[:sampling_size])].tolist()
                 extra = int(
-                    math.ceil(
-                        sampling_size * 1.0 / self.samples_per_gpu / self.num_replicas)
+                    math.ceil(sampling_size * 1.0 / self.samples_per_gpu /
+                              self.num_replicas)
                 ) * self.samples_per_gpu * self.num_replicas - len(indice)
                 # pad indice
                 tmp = indice.copy()

@@ -1,7 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import math
+
 import cv2
 import mmcv
 import numpy as np
+from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
@@ -130,6 +133,225 @@ class SeqCropLikeSiamFC(object):
                 _results['img_shape'] = crop_img.shape
             _results[_results.get('bbox_fields', [])[0]] = generated_bbox
 
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqBboxJitter(object):
+
+    def __init__(self, scale_jitter_factor, center_jitter_factor):
+        self.scale_jitter_factor = scale_jitter_factor
+        self.center_jitter_factor = center_jitter_factor
+
+    def __call__(self, results):
+        """[summary]
+
+        Args:
+
+
+        Returns:
+            [type]: [description]
+        """
+        outs = []
+        for _results in results:
+            mode = _results['mode']
+            assert mode in ['template', 'search']
+            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = bbox_xyxy_to_cxcywh(gt_bbox)  # (cx, cy, w, h)
+
+            jittered_size = gt_bbox[2:4] * np.exp(
+                np.random.randn(2) * self.scale_jitter_factor[mode])
+            max_offset = jittered_size.prod().sqrt(
+            ) * self.center_jitter_factor[mode]
+            jittered_center = gt_bbox[0:2] + max_offset * (
+                np.random.rand(2) - 0.5)
+
+            jittered_bbox = np.concatenate(
+                (jittered_center - 0.5 * jittered_size,
+                 jittered_center + 0.5 * jittered_size),
+                dim=0)
+            _results['jittered_bbox'] = jittered_bbox
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqBrightnessAug(object):
+
+    def __init__(self, brightness_jitter):
+        self.brightness_jitter = brightness_jitter
+
+    def __call__(self, results):
+        """[summary]
+
+        Args:
+
+        Returns:
+            [type]: [description]
+        """
+        brightness_factor = np.random.uniform(
+            max(0, 1 - self.brightness_jitter), 1 + self.brightness_jitter)
+        outs = []
+        for _results in results:
+            image = _results['img']
+            image = np.dot(image, brightness_factor).clip(0, 255.0)
+            _results['img'] = image
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqCropLikeStark(object):
+    """Crop images as SiamFC did.
+
+    The way of cropping an image is proposed in
+    "Fully-Convolutional Siamese Networks for Object Tracking."
+    `SiamFC <https://arxiv.org/abs/1606.09549>`_.
+
+    Args:
+        context_amount (float): The context amount around a bounding bbox.
+            Defaults to 0.5.
+        exemplar_size (int): Exemplar size. Defaults to 127.
+        crop_size (int): Crop size. Defaults to 511.
+    """
+
+    def __init__(self,
+                 template_factor=2.0,
+                 template_size=128,
+                 search_factor=5.0,
+                 search_size=320):
+        self.search_factor = search_factor
+        self.search_size = search_size
+        self.template_factor = template_factor
+        self.template_size = template_size
+
+    def crop_like_Stark(self, img, bbox, output_size):
+        """Crop an image as SiamFC did.
+
+        Args:
+            image (ndarray): of shape (H, W, 3).
+            bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            search_area_factor (float): Ratio of crop size to target size
+            output_size (int): Size to which the extracted crop is resized
+                (always square).
+
+        Returns:
+            ndarray: The cropped image of shape (crop_size, crop_size, 3).
+        """
+        cx, cy, w, h = bbox.split((1, 1, 1, 1), dim=-1)
+
+        _, _, img_h, img_w = img.shape
+        # 1. Crop image
+        # 1.1 calculate crop size and pad size
+        crop_size = math.ceil(math.sqrt(w * h) * self.search_factor)
+        if crop_size < 1:
+            raise Exception('Too small bounding box.')
+
+        x1 = int(np.round(cx - crop_size * 0.5))
+        x2 = x1 + crop_size
+        y1 = int(np.round(cy - crop_size * 0.5))
+        y2 = y1 + crop_size
+
+        x1_pad = max(0, -x1)
+        x2_pad = max(x2 - img_w + 1, 0)
+        y1_pad = max(0, -y1)
+        y2_pad = max(y2 - img_h + 1, 0)
+
+        # 1.2 crop image
+        img_crop = img[..., y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
+
+        # 1.3 pad image
+        img_crop_padded = cv2.copyMakeBorder(img_crop, y1_pad, y2_pad, x1_pad,
+                                             x2_pad, cv2.BORDER_CONSTANT)
+        # 1.4 pad attention mask
+        img_h, img_w, _ = img_crop_padded.shape
+        att_mask = np.ones((img_h, img_w))
+        end_x, end_y = -x2_pad, -y2_pad
+        if y2_pad == 0:
+            end_y = None
+        if x2_pad == 0:
+            end_x = None
+        att_mask[y1_pad:end_y, x1_pad:end_x] = 0
+
+        # 2. Resize image and attention mask
+        resize_factor = output_size / crop_size
+        img_crop_padded = cv2.resize(img_crop_padded,
+                                     (output_size, output_size))
+        att_mask = cv2.resize(att_mask,
+                              (output_size, output_size)).astype(np.bool_)
+
+        return img_crop_padded, resize_factor, att_mask
+
+    def generate_box(self,
+                     bbox_gt,
+                     bbox_cropped,
+                     resize_factor,
+                     output_size,
+                     normalize=False):
+        """Transform the box coordinates from the original image coordinates to
+        the coordinates of the cropped image.
+
+        Args:
+            box_in - the box for which the coordinates are to be transformed
+            box_extract - the box about which the image crop has been
+                extracted.
+            resize_factor - the ratio between the original image scale and the
+                scale of the image crop
+            crop_sz - size of the cropped image
+
+        Returns:
+            ndarray: Generated box of shape (4, ) in [x1, y1, x2, y2] format.
+        """
+        bbox_cropped_center = (bbox_cropped[0:2] + bbox_cropped[2:4]) * 0.5
+        bbox_gt_center = (bbox_gt[0:2] + bbox_gt[2:4]) * 0.5
+
+        # TODO plus 1 or not plus 1
+        box_out_center = (output_size - 1) / 2 + (
+            bbox_gt_center - bbox_cropped_center) * resize_factor
+        box_out_wh = bbox_gt_center[2:4] * resize_factor
+
+        box_out = np.concatenate((box_out_center - 0.5 * box_out_wh,
+                                  box_out_center + 0.5 * box_out_wh))
+        if normalize:
+            return box_out / output_size[0]
+        else:
+            return box_out
+
+    def __call__(self, results, mode):
+        """Call function.
+
+        For each dict in results, crop image like SiamFC did.
+
+        Args:
+            results (list[dict]): List of dict that from
+                :obj:`mmtrack.CocoVideoDataset`.
+
+        Returns:
+            list[dict]: List of dict that contains cropped image and
+            corresponding ground truth box.
+        """
+        outs = []
+        for _results in results:
+            image = _results['img']
+            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            mode = results['mode']
+            assert mode in ['template', 'search']
+            jittered_bbox = _results['jittered_bbox']
+            crop_img, resize_factor, att_mask = self.crop_like_Stark(
+                image, jittered_bbox, self.output_size[mode])
+
+            generated_bbox = self.generate_box(gt_bbox, jittered_bbox,
+                                               resize_factor,
+                                               self.output_size[mode])
+            generated_bbox = generated_bbox[None]
+
+            _results['img'] = crop_img
+            if 'img_shape' in _results:
+                _results['img_shape'] = crop_img.shape
+            _results[_results.get('bbox_fields', [])[0]] = generated_bbox
+            _results['mask_fields'] = ['att_mask']
+            _results[_results.get('mask_fields', [])[0]] = att_mask
             outs.append(_results)
         return outs
 

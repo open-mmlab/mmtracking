@@ -6,4 +6,4 @@ data = dict(
     test=dict(
         type='TrackingNetDataset',
         ann_file=data_root + 'trackingnet/annotations/trackingnet_test.json',
-        img_prefix=data_root + 'trackingnet/TEST/frames'))
+        img_prefix=data_root + 'trackingnet'))

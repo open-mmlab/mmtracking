@@ -9,7 +9,8 @@ from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
 
-from .samplers import DistributedVideoSampler, GroupQuotaSampler, DistributedGroupQuotaSampler
+from .samplers import (DistributedGroupQuotaSampler, DistributedVideoSampler,
+                       GroupQuotaSampler)
 
 
 def build_dataloader(dataset,
@@ -46,9 +47,12 @@ def build_dataloader(dataset,
         if shuffle:
             if samples_per_epoch == -1:
                 sampler = DistributedGroupSampler(dataset, samples_per_gpu,
-                                                world_size, rank)
+                                                  world_size, rank)
             else:
-                sampler = DistributedGroupQuotaSampler(dataset, samples_per_epoch, samples_per_gpu, world_size, rank)
+                sampler = DistributedGroupQuotaSampler(dataset,
+                                                       samples_per_epoch,
+                                                       samples_per_gpu,
+                                                       world_size, rank)
 
         else:
             if hasattr(dataset, 'load_as_video') and dataset.load_as_video:
@@ -64,7 +68,8 @@ def build_dataloader(dataset,
             if samples_per_epoch == -1:
                 sampler = GroupSampler(dataset, samples_per_gpu)
             else:
-                sampler = GroupQuotaSampler(dataset, samples_per_epoch, samples_per_gpu)
+                sampler = GroupQuotaSampler(dataset, samples_per_epoch,
+                                            samples_per_gpu)
         else:
             sampler = None
         batch_size = num_gpus * samples_per_gpu

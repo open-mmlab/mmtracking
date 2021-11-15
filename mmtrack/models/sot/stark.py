@@ -1,7 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-import os.path as osp
-import warnings
 from collections import defaultdict
 from copy import deepcopy
 
@@ -10,7 +8,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from addict import Dict
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
@@ -34,7 +32,6 @@ class Stark(BaseSingleObjectTracker):
         super(Stark, self).__init__(init_cfg)
         self.backbone = build_backbone(backbone)
         self.neck = build_neck(neck)
-        head.update(test_cfg=test_cfg)
         self.head = build_head(head)
 
         self.test_cfg = test_cfg
@@ -66,11 +63,8 @@ class Stark(BaseSingleObjectTracker):
                 if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
                     m.reset_parameters()
 
-    def get_cropped_img(self,
-                      img,
-                      target_bbox,
-                      search_area_factor,
-                      output_size):
+    def get_cropped_img(self, img, target_bbox, search_area_factor,
+                        output_size):
         """ Crop Image
         Only used during testing
         This function mainly contains two steps:
@@ -82,10 +76,12 @@ class Stark(BaseSingleObjectTracker):
             img (Tensor): of shape (B, C, H, W)
             target_bbox (list | ndarray | array): in [cx, cy, w, h] format
             search_area_factor (float): Ratio of crop size to target size
-            output_size (float): Size to which the extracted crop is resized (always square).
+            output_size (float): Size to which the extracted crop is resized
+            (always square).
         returns:
             img_crop_padded (Tensor): of shape (B, C, H, W)
-            resize_factor (float): the factor by which the crop has been resized to make the
+            resize_factor (float): the factor by which the crop has been
+            resized to make the
                 crop size equal output_size
             att_mask (ndarray)
         """
@@ -129,20 +125,29 @@ class Stark(BaseSingleObjectTracker):
 
         # 2. Resize image and attention mask
         resize_factor = output_size / crop_size
-        img_crop_padded_numpy = np.transpose(img_crop_padded.squeeze().cpu().numpy(),(1,2,0))
-        img_crop_padded_numpy = cv2.resize(img_crop_padded_numpy,(output_size, output_size))
-        img_crop_padded = torch.from_numpy(img_crop_padded_numpy).permute((2,0,1)).unsqueeze(0).to(img.device)
+        img_crop_padded_numpy = np.transpose(
+            img_crop_padded.squeeze().cpu().numpy(), (1, 2, 0))
+        img_crop_padded_numpy = cv2.resize(img_crop_padded_numpy,
+                                           (output_size, output_size))
+        img_crop_padded = torch.from_numpy(img_crop_padded_numpy).permute(
+            (2, 0, 1)).unsqueeze(0).to(img.device)
 
-        att_mask = cv2.resize(att_mask, (output_size, output_size)).astype(np.bool_)
+        att_mask = cv2.resize(att_mask,
+                              (output_size, output_size)).astype(np.bool_)
 
         return img_crop_padded, resize_factor, att_mask
 
     def _normalize(self, img_tensor, amask_arr):
-        self.mean = torch.tensor([0.485, 0.456, 0.406]).to(img_tensor.device)[None,:, None, None]
-        self.std = torch.tensor([0.229, 0.224, 0.225]).to(img_tensor.device)[None,:, None, None]
+        self.mean = torch.tensor([0.485, 0.456,
+                                  0.406]).to(img_tensor.device)[None, :, None,
+                                                                None]
+        self.std = torch.tensor([0.229, 0.224,
+                                 0.225]).to(img_tensor.device)[None, :, None,
+                                                               None]
 
         # Deal with the image patch
-        img_tensor_norm = ((img_tensor / 255.0) - self.mean) / self.std  # (1,3,H,W)
+        img_tensor_norm = (
+            (img_tensor / 255.0) - self.mean) / self.std  # (1,3,H,W)
         # Deal with the attention mask
         amask_tensor = torch.from_numpy(amask_arr).to(
             torch.bool).unsqueeze(dim=0).to(img_tensor.device)  # (1,H,W)
@@ -210,9 +215,7 @@ class Stark(BaseSingleObjectTracker):
         self.z_dict_list = []
         # get the 1st template
         z_patch, _, z_mask = self.get_cropped_img(
-            img.type(torch.uint8),
-            bbox,
-            self.test_cfg['template_factor'],
+            img.type(torch.uint8), bbox, self.test_cfg['template_factor'],
             self.test_cfg['template_size'])
         # z_patch:(1,C,H,W);  z_mask:(1,H,W)
         z_patch, z_mask = self._normalize(z_patch, z_mask)
@@ -237,6 +240,35 @@ class Stark(BaseSingleObjectTracker):
                 # the 1st element of z_dict_list is template from the 1st frame
                 self.z_dict_list[idx + 1] = z_dict_dymanic
 
+    def mapping_bbox_back(self, pred_bboxes, prev_bbox, resize_factor):
+        """This function map the `prediction bboxes` from resized croped image
+        to original image. The coordinate origins of them are both the top left
+        corner.
+
+        Args:
+            pred_bboxes (Tensor): of shape (B, Nq, 4), in
+            [tl_x, tl_y, br_x, br_y] format.
+            prev_bbox (Tensor): of shape (B, 4), in [cx, cy, w, h] format.
+            resize_factor (float):pred_bboxes
+        Returns:
+            (Tensor): in [tl_x, tl_y, br_x, br_y] format
+        """
+        # based in resized croped image
+        pred_bboxes = pred_bboxes.view(-1, 4)
+        # based in original croped image
+        pred_bbox = pred_bboxes.mean(dim=0) / resize_factor  # (cx, cy, w, h)
+
+        # map the bbox to original image
+        half_crop_img_size = 0.5 * self.test_cfg['search_size'] / resize_factor
+        x_shift, y_shift = prev_bbox[0] - half_crop_img_size, prev_bbox[
+            1] - half_crop_img_size
+        pred_bbox[0] += x_shift
+        pred_bbox[1] += y_shift
+        pred_bbox[2] += x_shift
+        pred_bbox[3] += y_shift
+
+        return pred_bbox
+
     def track(self, img, bbox):
         """Track the box `bbox` of previous frame to current frame `img`.
 
@@ -251,9 +283,7 @@ class Stark(BaseSingleObjectTracker):
         H, W = img.shape[2:]
         # get the t-th search region
         x_patch, resize_factor, x_mask = self.get_cropped_img(
-            img.type(torch.uint8),
-            bbox,
-            self.test_cfg['search_factor'],
+            img.type(torch.uint8), bbox, self.test_cfg['search_factor'],
             self.test_cfg['search_size'])  # bbox (x1, y1, w, h)
         # x_mask:(1,h,w)
         x_patch, x_mask = self._normalize(x_patch, x_mask)
@@ -269,19 +299,20 @@ class Stark(BaseSingleObjectTracker):
         # get confidence score (whether the search region is reliable)
         conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
 
-        final_bbox = self.head.get_bbox(track_results['pred_bboxes'], self.memo.bbox, resize_factor)
+        final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
+                                            self.memo.bbox, resize_factor)
         final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
         self.update_template(img, final_bbox, conf_score)
 
         return conf_score, final_bbox
- 
+
     def _bbox_clip(self, bbox, img_h, img_w, margin=0):
         """Clip the bbox with [tl_x, tl_y, br_x, br_y] format."""
-        bbox_w, bbox_h = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         bbox[0] = bbox[0].clamp(0, img_w - margin)
         bbox[1] = bbox[1].clamp(0, img_h - margin)
-        bbox_w = bbox_w.clamp(margin, img_w) 
-        bbox_h = bbox_h.clamp(margin, img_h) 
+        bbox_w = bbox_w.clamp(margin, img_w)
+        bbox_h = bbox_h.clamp(margin, img_h)
         bbox[2] = bbox[0] + bbox_w
         bbox[3] = bbox[1] + bbox_h
         return bbox
@@ -327,5 +358,7 @@ class Stark(BaseSingleObjectTracker):
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self, ):
+    def forward_train(self, img, img_metas, gt_bboxes, search_img,
+                      search_img_metas, search_gt_bboxes, is_positive_pairs,
+                      **kwargs):
         pass
