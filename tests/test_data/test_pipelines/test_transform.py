@@ -219,3 +219,51 @@ class TestTransforms(object):
         outs = transform(results)
         assert outs[0]['img_info']['color_jitter'] == outs[1]['img_info'][
             'color_jitter']
+
+    def test_seq_crop_like_stark(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256)
+            res['bbox_fields'] = ['gt_bboxes']
+            res['jittered_bboxes'] = random_boxes(1, 256)
+        results[0]['mode'] = 'template'
+        results[1]['mode'] = 'search'
+
+        transform = dict(
+            type='SeqCropLikeStark',
+            crop_size_factor=dict(template=2.0, search=5.0),
+            output_size=dict(template=128, search=320))
+        seq_crop_like_stark = build_from_cfg(transform, PIPELINES)
+
+        results = seq_crop_like_stark(results)
+        assert results[0]['img'].shape == (128, 128, 3)
+        assert results[1]['img'].shape == (320, 320, 3)
+
+    def test_seq_bbox_jitter(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256)
+            res['bbox_fields'] = ['gt_bboxes']
+        results[0]['mode'] = 'template'
+        results[1]['mode'] = 'search'
+
+        transform = dict(
+            type='SeqBboxJitter',
+            center_jitter_factor=dict(template=0, search=4.5),
+            scale_jitter_factor=dict(template=0, search=0.5))
+        seq_bbox_jitter = build_from_cfg(transform, PIPELINES)
+
+        results = seq_bbox_jitter(results)
+        assert 'jittered_bboxes' in results[1].keys()
+        assert results[1]['jittered_bboxes'].shape == (1, 4)
+
+    def test_seq_brightness_aug(self):
+        results = copy.deepcopy(self.results)
+        imgs_shape = [result['img'].shape for result in results]
+
+        transform = dict(type='SeqBrightnessAug', brightness_jitter=0.2)
+        seq_brightness_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_brightness_aug(results)
+        assert results[0]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[1]

@@ -98,12 +98,17 @@ train_pipeline = [
         scale_jitter_factor=dict(template=0, search=0.5)),
     dict(
         type='SeqCropLikeStark',
-        size_factor=dict(template=2.0, search=5.0),
+        crop_size_factor=dict(template=2.0, search=5.0),
         output_size=dict(template=128, search=320)),
     dict(type='SeqBrightnessAug', brightness_jitter=0.2),
+    dict(
+        type='SeqNormalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'att_mask']),
-    # dict(type='ConcatVideoReferences'),
-    # dict(type='SeqDefaultFormatBundle', ref_prefix='search')
+    dict(type='ConcatVideoReferences'),
+    dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 
 img_norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1], to_rgb=True)
@@ -123,14 +128,17 @@ test_pipeline = [
 
 # dataset settings
 data = dict(
-    samples_per_gpu=16,
+    samples_per_gpu=2,
     workers_per_gpu=2,
     train=[
         dict(
-            type='SOTTrainDataset',
+            type='SOTQuotaTrainDataset',
             ann_file=data_root + 'got10k/annotations/got10k_test.json',
             img_prefix=data_root + 'got10k/test',
             pipeline=train_pipeline,
+            max_gap=[10],
+            num_search_frames=1,
+            num_template_frames=2,
             visible_keys=['absence', 'cover'],
             ref_img_sampler=dict(
                 frame_range=100,
@@ -223,7 +231,7 @@ evaluation = dict(
     save_best='success')
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')

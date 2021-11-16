@@ -243,14 +243,13 @@ class SOTTrainDataset(CocoVideoDataset):
 @DATASETS.register_module()
 class SOTQuotaTrainDataset(SOTTrainDataset):
 
-    def __init__(self, prob_datasets, visible_keys, max_gap, num_search_frames,
-                 num_template_frames):
-        prob_total = sum(prob_datasets)
-        self.prob_datasets = [x / prob_total for x in prob_datasets]
+    def __init__(self, visible_keys, max_gap, num_search_frames,
+                 num_template_frames, *args, **kwargs):
         self.visible_keys = visible_keys
         self.max_gap = max_gap
         self.num_search_frames = num_search_frames
         self.num_template_frames = num_template_frames
+        super().__init__(*args, **kwargs)
         self.is_video_dataset = 'videos' in self.coco.dataset
 
     def get_samples(self,
@@ -303,40 +302,41 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
         enough_visible_frames = False
         while not enough_visible_frames:
             # Sample a sequence
-            vid_id = random.randint(0, len(self) - 1)
+            vid_id = random.randint(1, len(self))
             instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
             instance_id = random.choice(instance_ids)
-
             img_ids = self.coco.get_img_ids_from_ins_id(instance_id)
-            ann_ids = self.coco.get_ann_ids(
-                img_ids=img_ids, cat_ids=self.cat_ids)
-            ann_infos = self.coco.load_anns(ann_ids)
 
             is_visible_ann = []
-            for ann in ann_infos:
-                valid = self.data_infos[vid_id][
-                    'width'] > 0 & self.data_infos[vid_id]['height'] > 0
+            new_ann_infos = []
+            new_img_infos = []
 
-                visible = valid
-                if visible and self.visible_keys is not None:
-                    for key in self.visible_keys:
-                        visible &= ~ann[key]
-                is_visible_ann.append(visible)
-
-                # vid_info_dict['visible'].append(visible)
-                # vid_info_dict['bbox'].append(ann['bbox'])
-                # vid_info_dict['valid'].append(valid)
-
+            for img_id in img_ids:
+                img_info = self.coco.load_imgs([img_id])[0]
+                ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+                ann_infos = self.coco.load_anns(ann_ids)
+                # TODO ooco dataset have different valid standard
+                valid = img_info['width'] > 0 and img_info['height'] > 0
+                for ann in ann_infos:
+                    if ann['instance_id'] == instance_id:
+                        visible = valid
+                        if visible and self.visible_keys is not None:
+                            for key in self.visible_keys:
+                                visible &= ~ann[key]
+                        is_visible_ann.append(visible)
+                        new_ann_infos.append(ann)
+                        img_info['filename'] = img_info['file_name']
+                        new_img_infos.append(img_info)
+            # TODO fix unittest failed
             enough_visible_frames = sum(is_visible_ann) > 2 * (
                 self.num_search_frames +
                 self.num_template_frames) and len(is_visible_ann) >= 20
+            # enough_visible_frames = sum(is_visible_ann) > (
+            #     self.num_search_frames + self.num_template_frames)
             enough_visible_frames = enough_visible_frames or not \
                 self.is_video_dataset
 
-        img_info = self.coco.load_imgs([img_ids[0]])[0]
-        img_info['filename'] = img_info['file_name']
-
-        return is_visible_ann, img_info
+        return is_visible_ann, new_ann_infos, new_img_infos
 
     def sampling_trident(self, is_visible_ann):
         template_ann_ids_extra = []
@@ -370,7 +370,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
             search_ann_ids
         return all_ann_ids
 
-    def prepare_results(self, ann_id, img_info, is_template=True):
+    def prepare_results(self, inds_intra_video, ann_infos, img_infos):
         """Get training data and annotations.
 
         Args:
@@ -380,13 +380,27 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
         Returns:
             dict: The information of training image and annotation.
         """
+        assert len(inds_intra_video) == (
+            self.num_template_frames + self.num_search_frames)
+        results = []
+        for i in range(self.num_template_frames):
+            index = inds_intra_video[i]
+            result = dict(
+                img_info=img_infos[index],
+                ann_info=ann_infos[index],
+                is_template=True)
+            self.pre_pipeline(result)
+            results.append(result)
 
-        ann_infos = self.coco.load_anns([ann_id])
-        ann = self._parse_ann_info(ann_infos[0]['instance_id'], ann_infos)
-
-        result = dict(img_info=img_info, ann_info=ann, is_template=is_template)
-        self.pre_pipeline(result)
-        return result
+        for i in range(self.num_search_frames):
+            index = inds_intra_video[self.num_template_frames + i]
+            result = dict(
+                img_info=img_infos[index],
+                ann_info=ann_infos[index],
+                is_template=False)
+            self.pre_pipeline(result)
+            results.append(result)
+        return results
 
     def prepare_train_img(self, idx):
         """Get training data and annotations after pipeline.
@@ -399,13 +413,8 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
             introduced by pipeline.
         """
 
-        is_visible_ann, img_info = self.get_visible_info()
-        ann_ids = self.sampling_trident(is_visible_ann)
-        results = [
-            self.prepare_results(ann_id, img_info, is_template=True)
-            for ann_id in ann_ids[:-1]
-        ]
-        results.append(
-            self.prepare_results(ann_ids[-1], img_info, is_template=False))
+        is_visible_ann, ann_infos, img_infos = self.get_visible_info()
+        inds_intra_video = self.sampling_trident(is_visible_ann)
+        results = self.prepare_results(inds_intra_video, ann_infos, img_infos)
         results = self.pipeline(results)
         return results

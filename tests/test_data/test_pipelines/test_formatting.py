@@ -89,6 +89,12 @@ class TestFormatting(object):
             reid_results = [copy.deepcopy(results[0])]
             reid_results = bundle(reid_results)
 
+        for i, result in enumerate(results):
+            if i == 0:
+                result['mode'] = 'template'
+            else:
+                result['mode'] = 'search'
+
         concat_ref = dict(type='ConcatVideoReferences')
         concat_ref = build_from_cfg(concat_ref, PIPELINES)
         results = concat_ref(results)

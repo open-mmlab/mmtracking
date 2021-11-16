@@ -19,30 +19,29 @@ class ConcatVideoReferences(object):
             'gt_instance_ids'.
 
     Returns:
-        list[dict]: The first dict of outputs is the same as the first
-        dict of `results`. The second dict of outputs concats the
-        dicts in `results[1:]`.
+        list[dict]: The first dict of outputs concats the dicts of 'template'
+            mode. The second dict of outputs concats the dicts of 'search'
+            mode.
     """
 
-    def __call__(self, results):
-        assert (isinstance(results, list)), 'results must be list'
-        outs = results[:1]
-        for i, result in enumerate(results[1:], 1):
+    def concat_one_mode_results(self, results):
+        out = dict()
+        for i, result in enumerate(results):
             if 'img' in result:
                 img = result['img']
                 if len(img.shape) < 3:
                     img = np.expand_dims(img, -1)
-                if i == 1:
+                if i == 0:
                     result['img'] = np.expand_dims(img, -1)
                 else:
-                    outs[1]['img'] = np.concatenate(
-                        (outs[1]['img'], np.expand_dims(img, -1)), axis=-1)
+                    out['img'] = np.concatenate(
+                        (out['img'], np.expand_dims(img, -1)), axis=-1)
             for key in ['img_metas', 'gt_masks']:
                 if key in result:
-                    if i == 1:
+                    if i == 0:
                         result[key] = [result[key]]
                     else:
-                        outs[1][key].append(result[key])
+                        out[key].append(result[key])
             for key in [
                     'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
                     'gt_instance_ids'
@@ -54,25 +53,50 @@ class ConcatVideoReferences(object):
                     value = value[:, None]
                 N = value.shape[0]
                 value = np.concatenate((np.full(
-                    (N, 1), i - 1, dtype=np.float32), value),
+                    (N, 1), i, dtype=np.float32), value),
                                        axis=1)
-                if i == 1:
+                if i == 0:
                     result[key] = value
                 else:
-                    outs[1][key] = np.concatenate((outs[1][key], value),
-                                                  axis=0)
+                    out[key] = np.concatenate((out[key], value), axis=0)
             if 'gt_semantic_seg' in result:
-                if i == 1:
+                if i == 0:
                     result['gt_semantic_seg'] = result['gt_semantic_seg'][...,
                                                                           None,
                                                                           None]
                 else:
-                    outs[1]['gt_semantic_seg'] = np.concatenate(
-                        (outs[1]['gt_semantic_seg'],
+                    out['gt_semantic_seg'] = np.concatenate(
+                        (out['gt_semantic_seg'],
                          result['gt_semantic_seg'][..., None, None]),
                         axis=-1)
-            if i == 1:
-                outs.append(result)
+
+            if 'att_mask' in result:
+                if i == 0:
+                    result['att_mask'] = np.expand_dims(result['att_mask'], 0)
+                else:
+                    out['att_mask'] = np.concatenate(
+                        (out['att_mask'], np.expand_dims(
+                            result['att_mask'], 0)),
+                        axis=0)
+
+            if i == 0:
+                out = result
+        return out
+
+    def __call__(self, results):
+        assert (isinstance(results, list)), 'results must be list'
+        # outs = results[:1]
+        template_results = []
+        search_results = []
+        for i, result in enumerate(results):
+            if result['mode'] == 'template':
+                template_results.append(result)
+            else:
+                search_results.append(result)
+        outs = []
+        outs.append(self.concat_one_mode_results(template_results))
+        outs.append(self.concat_one_mode_results(search_results))
+
         return outs
 
 
@@ -158,6 +182,7 @@ class SeqDefaultFormatBundle(object):
     - gt_masks: (1) to DataContainer (cpu_only=True)
     - gt_semantic_seg: (1) unsqueeze dim-0 (2) to tensor, \
                        (3) to DataContainer (stack=True)
+    - att_mask: (1) to tensor, (2) to DataContainer
 
     Args:
         ref_prefix (str): The prefix of key added to the second dict of input
@@ -207,6 +232,9 @@ class SeqDefaultFormatBundle(object):
             else:
                 img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
             results['img'] = DC(to_tensor(img), stack=True)
+        if 'att_mask' in results:
+            results['att_mask'] = DC(
+                to_tensor(results['att_mask']), stack=True)
         for key in [
                 'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
                 'gt_instance_ids', 'gt_match_indices'

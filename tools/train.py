@@ -168,7 +168,7 @@ def main():
         cfg,
         distributed=distributed,
         validate=(not args.no_validate),
-        samples_per_epoch=60000,
+        samples_per_epoch=500,
         timestamp=timestamp,
         meta=meta)
 

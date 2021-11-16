@@ -358,7 +358,19 @@ class Stark(BaseSingleObjectTracker):
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self, img, img_metas, gt_bboxes, search_img,
-                      search_img_metas, search_gt_bboxes, is_positive_pairs,
+    def forward_train(self, img, img_metas, gt_bboxes, search_img, att_mask,
+                      search_img_metas, search_gt_bboxes, search_att_mask,
                       **kwargs):
-        pass
+        import pdb
+        pdb.set_trace()
+
+        z1_dict = self.forward_before_head(img[:, 0], att_mask[:, 0])
+        z2_dict = self.forward_before_head(img[:, 1], att_mask[:, 1])
+        x_dict = self.forward_before_head(search_img, search_att_mask)
+        inputs = [z1_dict, z2_dict, x_dict]
+        head_dict_inputs = self._merge_template_search(inputs)
+        # run the transformer
+        track_results, _ = self.head(
+            head_dict_inputs, run_box_head=True, run_cls_head=True)
+
+        pdb.set_trace()

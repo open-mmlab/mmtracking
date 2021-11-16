@@ -149,7 +149,6 @@ class SeqBboxJitter(object):
 
         Args:
 
-
         Returns:
             [type]: [description]
         """
@@ -167,11 +166,11 @@ class SeqBboxJitter(object):
             jittered_center = gt_bbox[0:2] + max_offset * (
                 np.random.rand(2) - 0.5)
 
-            jittered_bbox = np.concatenate(
+            jittered_bboxes = np.concatenate(
                 (jittered_center - 0.5 * jittered_size,
                  jittered_center + 0.5 * jittered_size),
-                dim=0)
-            _results['jittered_bbox'] = jittered_bbox
+                axis=-1)
+            _results['jittered_bboxes'] = jittered_bboxes[None]
             outs.append(_results)
         return outs
 
@@ -216,23 +215,17 @@ class SeqCropLikeStark(object):
         crop_size (int): Crop size. Defaults to 511.
     """
 
-    def __init__(self,
-                 template_factor=2.0,
-                 template_size=128,
-                 search_factor=5.0,
-                 search_size=320):
-        self.search_factor = search_factor
-        self.search_size = search_size
-        self.template_factor = template_factor
-        self.template_size = template_size
+    def __init__(self, crop_size_factor, output_size):
+        self.crop_size_factor = crop_size_factor
+        self.output_size = output_size
 
-    def crop_like_Stark(self, img, bbox, output_size):
+    def crop_like_Stark(self, img, bbox, crop_size_factor, output_size):
         """Crop an image as SiamFC did.
 
         Args:
             image (ndarray): of shape (H, W, 3).
             bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
-            search_area_factor (float): Ratio of crop size to target size
+            crop_size_factor (float): Ratio of crop size to bbox size
             output_size (int): Size to which the extracted crop is resized
                 (always square).
 
@@ -241,10 +234,10 @@ class SeqCropLikeStark(object):
         """
         cx, cy, w, h = bbox.split((1, 1, 1, 1), dim=-1)
 
-        _, _, img_h, img_w = img.shape
+        img_h, img_w, _ = img.shape
         # 1. Crop image
         # 1.1 calculate crop size and pad size
-        crop_size = math.ceil(math.sqrt(w * h) * self.search_factor)
+        crop_size = math.ceil(math.sqrt(w * h) * crop_size_factor)
         if crop_size < 1:
             raise Exception('Too small bounding box.')
 
@@ -259,7 +252,7 @@ class SeqCropLikeStark(object):
         y2_pad = max(y2 - img_h + 1, 0)
 
         # 1.2 crop image
-        img_crop = img[..., y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad]
+        img_crop = img[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad, :]
 
         # 1.3 pad image
         img_crop_padded = cv2.copyMakeBorder(img_crop, y1_pad, y2_pad, x1_pad,
@@ -303,22 +296,23 @@ class SeqCropLikeStark(object):
         Returns:
             ndarray: Generated box of shape (4, ) in [x1, y1, x2, y2] format.
         """
-        bbox_cropped_center = (bbox_cropped[0:2] + bbox_cropped[2:4]) * 0.5
         bbox_gt_center = (bbox_gt[0:2] + bbox_gt[2:4]) * 0.5
+        bbox_cropped_center = (bbox_cropped[0:2] + bbox_cropped[2:4]) * 0.5
 
         # TODO plus 1 or not plus 1
-        box_out_center = (output_size - 1) / 2 + (
+        bbox_out_center = (output_size - 1) / 2 + (
             bbox_gt_center - bbox_cropped_center) * resize_factor
-        box_out_wh = bbox_gt_center[2:4] * resize_factor
+        bbox_out_wh = (bbox_gt[2:4] - bbox_gt[0:2]) * resize_factor
 
-        box_out = np.concatenate((box_out_center - 0.5 * box_out_wh,
-                                  box_out_center + 0.5 * box_out_wh))
+        bbox_out = np.concatenate((bbox_out_center - 0.5 * bbox_out_wh,
+                                   bbox_out_center + 0.5 * bbox_out_wh),
+                                  axis=-1)
         if normalize:
-            return box_out / output_size[0]
+            return bbox_out / output_size[0]
         else:
-            return box_out
+            return bbox_out
 
-    def __call__(self, results, mode):
+    def __call__(self, results):
         """Call function.
 
         For each dict in results, crop image like SiamFC did.
@@ -335,13 +329,14 @@ class SeqCropLikeStark(object):
         for _results in results:
             image = _results['img']
             gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
-            mode = results['mode']
+            mode = _results['mode']
             assert mode in ['template', 'search']
-            jittered_bbox = _results['jittered_bbox']
+            jittered_bboxes = _results['jittered_bboxes'][0]
             crop_img, resize_factor, att_mask = self.crop_like_Stark(
-                image, jittered_bbox, self.output_size[mode])
+                image, jittered_bboxes, self.crop_size_factor[mode],
+                self.output_size[mode])
 
-            generated_bbox = self.generate_box(gt_bbox, jittered_bbox,
+            generated_bbox = self.generate_box(gt_bbox, jittered_bboxes,
                                                resize_factor,
                                                self.output_size[mode])
             generated_bbox = generated_bbox[None]

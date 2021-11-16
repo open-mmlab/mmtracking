@@ -55,13 +55,11 @@ def test_sot_train_dataset_prepare_data(dataset):
 @pytest.mark.parametrize('dataset', ['SOTQuotaTrainDataset'])
 def test_sot_quota_train_dataset_prepare_data(dataset):
     dataset_class = DATASETS.get(dataset)
-
     # train
     dataset = dataset_class(
         ann_file=DEMO_ANN_FILE,
-        prob_datasets=[1],
         visible_keys=None,
-        max_gap=10,
+        max_gap=[10],
         num_search_frames=1,
         num_template_frames=2,
         ref_img_sampler=dict(
@@ -75,6 +73,8 @@ def test_sot_quota_train_dataset_prepare_data(dataset):
 
     results = dataset.prepare_train_img(0)
     assert isinstance(results, list)
-    assert len(results) == 2
+    assert len(results) == 3
     assert 'ann_info' in results[0]
-    assert results[0].keys() == results[1].keys()
+    ref_key = results[0].keys()
+    for result in results[1:]:
+        assert ref_key == result.keys()
