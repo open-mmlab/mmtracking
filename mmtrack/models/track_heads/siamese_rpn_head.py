@@ -239,8 +239,8 @@ class SiameseRPNHead(BaseModule):
          bbox_weights) = self._get_init_targets(gt_bbox, score_maps_size)
 
         if not hasattr(self, 'anchors'):
-            self.anchors = self.anchor_generator.grid_priors([score_maps_size],
-                                                             gt_bbox.device)[0]
+            self.anchors = self.anchor_generator.grid_priors(
+                [score_maps_size], device=gt_bbox.device)[0]
             # Transform the coordinate origin from the top left corner to the
             # center in the scaled score map.
             feat_h, feat_w = score_maps_size
@@ -434,7 +434,7 @@ class SiameseRPNHead(BaseModule):
         score_maps_size = [(cls_score.shape[2:])]
         if not hasattr(self, 'anchors'):
             self.anchors = self.anchor_generator.grid_priors(
-                score_maps_size, cls_score.device)[0]
+                score_maps_size, device=cls_score.device)[0]
             # Transform the coordinate origin from the top left corner to the
             # center in the scaled feature map.
             feat_h, feat_w = score_maps_size[0]
