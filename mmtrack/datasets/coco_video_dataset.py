@@ -452,7 +452,7 @@ class CocoVideoDataset(CocoDataset):
         return eval_results
 
     def __repr__(self):
-        """Print the number of instance number."""
+        """Print the number of instance number suit for video dataset."""
         dataset_type = 'Test' if self.test_mode else 'Train'
         result = (f'\n{self.__class__.__name__} {dataset_type} dataset '
                   f'with number of images {len(self)}, '
@@ -494,4 +494,3 @@ class CocoVideoDataset(CocoDataset):
         table = AsciiTable(table_data)
         result += table.table
         return result
-
