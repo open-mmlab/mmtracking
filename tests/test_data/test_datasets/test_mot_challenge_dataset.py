@@ -108,9 +108,9 @@ def test_mot17_bbox_evaluation():
         ann_file=DEMO_ANN_FILE, classes=classes, pipeline=[])
     results = _create_coco_gt_results(dataset)
 
-    eval_results = dataset.evaluate(results, metric='det')
+    eval_results = dataset.evaluate(results, metric='bbox')
     assert eval_results['mAP'] == 1.0
-    eval_results = dataset.evaluate(results['det_bboxes'], metric='det')
+    eval_results = dataset.evaluate(results['det_bboxes'], metric='bbox')
     assert eval_results['mAP'] == 1.0
 
 
