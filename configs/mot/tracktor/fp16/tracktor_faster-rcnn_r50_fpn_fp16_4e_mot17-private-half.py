@@ -1,6 +1,4 @@
-_base_ = [
-    '../mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'
-]
+_base_ = ['../tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
 
 model = dict(
     detector=dict(
