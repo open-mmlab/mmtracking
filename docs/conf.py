@@ -113,6 +113,10 @@ html_theme_options = {
             'Projects',
             'children': [
                 {
+                    'name': 'MIM',
+                    'url': 'https://github.com/open-mmlab/mim'
+                },
+                {
                     'name': 'MMAction2',
                     'url': 'https://github.com/open-mmlab/mmaction2',
                 },
@@ -143,6 +147,10 @@ html_theme_options = {
                 {
                     'name': 'MMSegmentation',
                     'url': 'https://github.com/open-mmlab/mmsegmentation',
+                },
+                {
+                    'name': 'MMFlow',
+                    'url': 'https://github.com/open-mmlab/mmflow',
                 },
             ]
         },
