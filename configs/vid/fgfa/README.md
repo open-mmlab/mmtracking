@@ -13,8 +13,7 @@ the per-frame features by aggregation of nearby features
 along the motion paths, and thus improves the video recognition accuracy. Our method significantly improves upon
 strong single-frame baselines in ImageNet VID, especially for more challenging fast moving objects. Our framework is principled, and on par with the best engineered
 systems winning the ImageNet VID challenges 2016, without additional bells-and-whistles. The proposed method,
-together with Deep Feature Flow, powered the winning entry of ImageNet VID challenges 20171
-. The code is available at https://github.com/msracver/Flow-Guided-Feature-Aggregation.
+together with Deep Feature Flow, powered the winning entry of ImageNet VID challenges 2017.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142985575-4560a7c1-0402-428f-9094-ffb00d6b1e38.png"/>

@@ -7,7 +7,7 @@ great success on image recognition tasks. Yet, it is nontrivial to transfer the 
 and propagates their deep feature maps to other frames via
 a flow field. It achieves significant speedup as flow computation is relatively fast. The end-to-end training of the
 whole architecture significantly boosts the recognition accuracy. Deep feature flow is flexible and general. It is validated on two video datasets on object detection and semantic segmentation. It significantly advances the practice of
-video recognition tasks. Code is released at https://github.com/msracver/Deep-Feature-Flow.
+video recognition tasks.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142985441-53afc070-6646-404b-869a-e967dc92bde6.png"/>

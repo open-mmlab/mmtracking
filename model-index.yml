@@ -6,5 +6,4 @@ Import:
   - configs/vid/fgfa/metafile.yml
   - configs/vid/selsa/metafile.yml
   - configs/vid/temporal_roi_align/metafile.yml
-  - configs/fp16/metafile.yml
   - configs/vis/masktrack_rcnn/metafile.yml
