@@ -183,3 +183,18 @@ Models:
     Weights:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20_20210804_162232-7fde5e8d.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20_20210803_212426-c83b1c01.pth
+
+  - Name: tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half
+    In Collection: Tracktor
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half.py
+    Metadata:
+      Training Data: MOT17-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT17-half-val
+        Metrics:
+          MOTA: 64.7
+          IDF1: 66.6
+    Weights:
+      - https://download.openmmlab.com/mmtracking/fp16/faster-rcnn_r50_fpn_fp16_4e_mot17-half_20210730_002436-f4ba7d61.pth
+      - https://download.openmmlab.com/mmtracking/fp16/reid_r50_fp16_8x32_6e_mot17_20210731_033055-4747ee95.pth

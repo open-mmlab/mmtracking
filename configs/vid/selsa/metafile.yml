@@ -48,3 +48,17 @@ Models:
         Metrics:
           box AP@0.5: 83.1
     Weights: https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641-10252965.pth
+
+  - Name: selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid
+    In Collection: SELSA
+    Config: configs/vid/selsa/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid.py
+    Metadata:
+      Training Data: ImageNet DET, ImageNet VID
+      Training Memory (GB): 2.71
+      Epochs: 7
+    Results:
+      - Task: Video Object Detection
+        Dataset: ImageNet VID
+        Metrics:
+          box AP@0.5: 78.7
+    Weights: https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth

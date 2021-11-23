@@ -75,3 +75,18 @@ Models:
           Norm precision: 83.2
           Precision: 87.7
     Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20210920_001757-12636a0a.pth
+
+  - Name: siamese_rpn_r50_fp16_1x_lasot
+    In Collection: SiameseRPN++
+    Config: configs/sot/siamese_rpn/siamese_rpn_r50_fp16_1x_lasot.py
+    Metadata:
+      Training Data: MSCOCO, ImageNet DET, ImageNet VID
+      Training Memory (GB): 7.54
+      Epochs: 20
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 49.1
+          Norm precision: 57.0
+    Weights: https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth
