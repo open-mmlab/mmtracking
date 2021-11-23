@@ -198,7 +198,7 @@ python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/tracki
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 生成标注
-python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
+python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100 -o ./data/otb100/annotations
 
 # GOT10k
 # 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件
