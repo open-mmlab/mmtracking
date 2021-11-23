@@ -197,7 +197,7 @@ python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/tracki
 # unzip files in 'data/otb100/zips/*.zip'
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # generate annotations
-python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100/data -o ./data/otb100/annotations
+python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100 -o ./data/otb100/annotations
 
 # GOT10k
 # unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
