@@ -12,6 +12,7 @@ from mmcv.runner import init_dist
 from mmdet.apis import set_random_seed
 
 from mmtrack import __version__
+from mmtrack.apis import init_random_seed
 from mmtrack.datasets import build_dataset
 from mmtrack.utils import collect_env, get_root_logger
 
@@ -133,12 +134,12 @@ def main():
     logger.info(f'Config:\n{cfg.pretty_text}')
 
     # set random seeds
-    if args.seed is not None:
-        logger.info(f'Set random seed to {args.seed}, '
-                    f'deterministic: {args.deterministic}')
-        set_random_seed(args.seed, deterministic=args.deterministic)
-    cfg.seed = args.seed
-    meta['seed'] = args.seed
+    seed = init_random_seed(args.seed)
+    logger.info(f'Set random seed to {seed}, '
+                f'deterministic: {args.deterministic}')
+    set_random_seed(seed, deterministic=args.deterministic)
+    cfg.seed = seed
+    meta['seed'] = seed
 
     if cfg.get('train_cfg', False):
         model = build_model(
