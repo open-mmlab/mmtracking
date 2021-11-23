@@ -197,7 +197,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                         f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
                         f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
 
-    def format_det_results(self, results, infos, resfile):
+    def format_bbox_results(self, results, infos, resfile):
         """Format detection results."""
         with open(resfile, 'wt') as f:
             for res, info in zip(results, infos):
@@ -246,7 +246,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             metrics = [metric]
         else:
             raise TypeError('metric must be a list or a str.')
-        allowed_metrics = ['det', 'track']
+        allowed_metrics = ['bbox', 'track']
         for metric in metrics:
             if metric not in allowed_metrics:
                 raise KeyError(f'metric {metric} is not supported.')
@@ -299,7 +299,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             if tmp_dir is not None:
                 tmp_dir.cleanup()
 
-        if 'det' in metrics:
+        if 'bbox' in metrics:
             if isinstance(results, dict):
                 bbox_results = results['det_bboxes']
             elif isinstance(results, list):
