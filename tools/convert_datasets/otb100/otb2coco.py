@@ -34,6 +34,7 @@ def convert_otb100(otb, ann_dir, save_dir):
         save_dir (str): The path to save `OTB100`.
     """
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
+    ann_dir = osp.join(ann_dir, 'data')
     videos_list = os.listdir(ann_dir)
     otb['categories'] = [dict(id=0, name=0)]
 
@@ -84,7 +85,7 @@ def convert_otb100(otb, ann_dir, save_dir):
                     video_id=records['vid_id'])
                 otb['images'].append(image)
 
-                bbox = list(map(int, re.findall(r'\d+', gt_bbox)))
+                bbox = list(map(int, re.findall(r'-?\d+', gt_bbox)))
                 assert len(bbox) == 4
                 anno_dict = dict(
                     id=records['ann_id'],
