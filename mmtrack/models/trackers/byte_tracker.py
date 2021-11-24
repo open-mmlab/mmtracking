@@ -150,7 +150,7 @@ class ByteTracker(BaseTracker):
             col = np.zeros(len(det_bboxes)).astype(np.int32) - 1
         return row, col
 
-    @force_fp32(apply_to=('img', ))
+    @force_fp32(apply_to=('img', 'bboxes'))
     def track(self,
               img,
               img_metas,
