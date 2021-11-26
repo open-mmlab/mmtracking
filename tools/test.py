@@ -111,7 +111,9 @@ def main():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
-    set_random_seed(1, deterministic=True)
+    if cfg.get('seed', None) is None:
+        cfg.seed = 1
+    set_random_seed(cfg.seed, deterministic=True)
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.

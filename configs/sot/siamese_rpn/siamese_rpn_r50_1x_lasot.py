@@ -1,4 +1,6 @@
-cudnn_benchmark = True
+cudnn_benchmark = False
+deterministic = True
+seed = 1
 crop_size = 511
 exemplar_size = 127
 search_size = 255

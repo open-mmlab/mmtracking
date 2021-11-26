@@ -2,7 +2,7 @@ _base_ = ['./siamese_rpn_r50_1x_lasot.py']
 
 # model settings
 model = dict(
-    test_cfg=dict(rpn=dict(penalty_k=0.01, window_influence=0.02, lr=0.46)))
+    test_cfg=dict(rpn=dict(penalty_k=0.1, window_influence=0.1, lr=0.5)))
 
 data_root = 'data/'
 # dataset settings
