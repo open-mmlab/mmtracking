@@ -135,10 +135,12 @@ def main():
 
     # set random seeds. Force setting fixed seed and deterministic=True in SOT
     # configs
-    if cfg.get('seed', None) is None:
-        cfg.seed = init_random_seed(args.seed)
-    deterministic = cfg.deterministic if cfg.get('deterministic',
-                                                 False) else args.deterministic
+    if args.seed is not None:
+        cfg.seed = args.seed
+    elif cfg.get('seed', None) is None:
+        cfg.seed = init_random_seed()
+
+    deterministic = True if args.deterministic else cfg.get('deterministic',False)
     logger.info(f'Set random seed to {cfg.seed}, '
                 f'deterministic: {deterministic}')
     set_random_seed(cfg.seed, deterministic=deterministic)
