@@ -24,7 +24,7 @@ jobs:
           name: Check docstring coverage
           command: |
             pip install interrogate
-            interrogate -v --ignore-init-method --ignore-module --ignore-nested-functions --ignore-regex "__repr__" --fail-under 50 mmtracking
+            interrogate -v --ignore-init-method --ignore-module --ignore-nested-functions --ignore-regex "__repr__" --fail-under 50 mmtrack
   build_cpu:
     parameters:
       # The python version must match available image tags in
