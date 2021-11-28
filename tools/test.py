@@ -111,6 +111,8 @@ def main():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
+    # set random seeds. Force setting fixed seed and deterministic=True in SOT
+    # configs
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     if cfg.get('seed', None) is not None:

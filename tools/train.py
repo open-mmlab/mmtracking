@@ -140,7 +140,8 @@ def main():
     elif cfg.get('seed', None) is None:
         cfg.seed = init_random_seed()
 
-    deterministic = True if args.deterministic else cfg.get('deterministic',False)
+    deterministic = True if args.deterministic else cfg.get(
+        'deterministic', False)
     logger.info(f'Set random seed to {cfg.seed}, '
                 f'deterministic: {deterministic}')
     set_random_seed(cfg.seed, deterministic=deterministic)
