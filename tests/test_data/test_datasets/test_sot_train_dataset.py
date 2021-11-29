@@ -62,11 +62,7 @@ def test_sot_quota_train_dataset_prepare_data(dataset):
         max_gap=[10],
         num_search_frames=1,
         num_template_frames=2,
-        ref_img_sampler=dict(
-            frame_range=100,
-            pos_prob=0.8,
-            filter_key_img=False,
-            return_key_img=True),
+        ref_img_sampler=None,
         pipeline=[],
         test_mode=False)
     assert len(dataset) == 1

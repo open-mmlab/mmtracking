@@ -78,7 +78,9 @@ model = dict(
             hidden_dim=256,
             output_dim=1,
             num_layers=3,
-            BN=False)),
+            BN=False),
+        loss_bbox=dict(type='L1Loss', loss_weight=5.0),
+        loss_iou=dict(type='GIoULoss', loss_weight=2.0)),
     test_cfg=dict(
         search_factor=5.0,
         search_size=320,
@@ -91,23 +93,33 @@ train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True),
     dict(type='SeqGrayAug', prob=0.05),
-    dict(type='SeqRandomFlip', flip_ratio=0.5, direction='horizontal'),
+    dict(
+        type='SeqRandomFlip',
+        share_params=True,
+        flip_ratio=0.5,
+        direction='horizontal'),
     dict(
         type='SeqBboxJitter',
-        center_jitter_factor=dict(template=0, search=4.5),
-        scale_jitter_factor=dict(template=0, search=0.5)),
+        center_jitter_factor=[0, 0, 4.5],
+        scale_jitter_factor=[0, 0, 0.5],
+        crop_size_factor=[2, 2, 5]),
     dict(
         type='SeqCropLikeStark',
-        crop_size_factor=dict(template=2.0, search=5.0),
-        output_size=dict(template=128, search=320)),
+        crop_size_factor=[2, 2, 5],
+        output_size=[128, 128, 320]),
     dict(type='SeqBrightnessAug', brightness_jitter=0.2),
+    dict(
+        type='SeqRandomFlip',
+        share_params=False,
+        flip_ratio=0.5,
+        direction='horizontal'),
     dict(
         type='SeqNormalize',
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         to_rgb=True),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'att_mask']),
-    dict(type='ConcatVideoReferences'),
+    dict(type='ConcatVideoTripleReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 
@@ -128,24 +140,21 @@ test_pipeline = [
 
 # dataset settings
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=16,
+    workers_per_gpu=1,
     train=[
+        dict(datasets_sampling_prob=[1], train_cls=False),
         dict(
             type='SOTQuotaTrainDataset',
-            ann_file=data_root + 'got10k/annotations/got10k_test.json',
-            img_prefix=data_root + 'got10k/test',
+            ann_file=data_root + 'got10k/annotations/got10k_train.json',
+            img_prefix=data_root + 'got10k/train',
             pipeline=train_pipeline,
             max_gap=[10],
             num_search_frames=1,
             num_template_frames=2,
             visible_keys=['absence', 'cover'],
-            ref_img_sampler=dict(
-                frame_range=100,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            ref_img_sampler=None,
+            test_mode=False),
         # dict(
         #     type='SOTTrainDataset',
         #     ann_file=data_root + 'coco/annotations/instances_train2017.json',
@@ -203,30 +212,24 @@ data = dict(
 
 # optimizer
 optimizer = dict(
-    type='SGD',
-    lr=0.005,
-    momentum=0.9,
+    type='AdamW',
+    lr=0.0001,
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
 optimizer_config = dict(
     type='SiameseRPNOptimizerHook',
-    backbone_start_train_epoch=10,
-    backbone_train_layers=['layer2', 'layer3', 'layer4'],
-    grad_clip=dict(max_norm=10.0, norm_type=2))
+    backbone_start_train_epoch=0,
+    backbone_train_layers=['layer2', 'layer3'],
+    grad_clip=dict(max_norm=0.1, norm_type=2))
 # learning policy
-lr_config = dict(
-    policy='SiameseRPN',
-    lr_configs=[
-        dict(type='step', start_lr_factor=0.2, end_lr_factor=1.0, end_epoch=5),
-        dict(type='log', start_lr_factor=1.0, end_lr_factor=0.1, end_epoch=20),
-    ])
+lr_config = dict(policy='step', step=[400])
 # checkpoint saving
 checkpoint_config = dict(interval=1)
 evaluation = dict(
     metric=['track'],
-    interval=1,
-    start=10,
+    interval=100,
+    start=300,
     rule='greater',
     save_best='success')
 # yapf:disable
@@ -238,7 +241,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 20
+total_epochs = 500
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/xxx'

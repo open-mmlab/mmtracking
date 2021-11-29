@@ -13,6 +13,20 @@ from .samplers import (DistributedGroupQuotaSampler, DistributedVideoSampler,
                        GroupQuotaSampler)
 
 
+def build_dataset(cfg, default_args=None):
+    from mmdet.datasets.builder import build_dataset as mmdet_build_dataset
+    from .datasets_wrappers import RandomConcatDataset
+
+    if isinstance(cfg, (list, tuple)) and 'datasets_sampling_prob' in cfg[0]:
+        assert len(cfg[1:]) == len(cfg[0]['datasets_sampling_prob'])
+        dataset = RandomConcatDataset(
+            [build_dataset(c, default_args) for c in cfg[1:]], **cfg[0])
+    else:
+        dataset = mmdet_build_dataset(cfg, default_args)
+
+    return dataset
+
+
 def build_dataloader(dataset,
                      samples_per_gpu,
                      workers_per_gpu,

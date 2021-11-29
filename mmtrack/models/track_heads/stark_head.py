@@ -4,7 +4,7 @@ from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
 from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
-from mmdet.models.builder import build_head
+from mmdet.models.builder import build_head, build_loss
 from mmdet.models.utils import Transformer, build_transformer
 from mmdet.models.utils.builder import TRANSFORMER
 from torch import nn
@@ -260,6 +260,14 @@ class StarkHead(BaseModule):
         self.test_cfg = test_cfg
         self.fp16_enabled = False
 
+        self.loss_bbox = build_loss(loss_bbox)
+        self.loss_iou = build_loss(loss_iou)
+
+    def init_weights(self):
+        self.transformer.init_weights()
+        # self.bbox_head.init_weights()
+        # self.cls_head.init_weights()
+
     def forward_bbox_head(self, feat, memory):
         """
         Args:
@@ -336,3 +344,32 @@ class StarkHead(BaseModule):
             run_box_head=run_box_head,
             run_cls_head=run_cls_head)
         return track_results, outs_dec
+
+    def loss(self, pred_bboxes, gt_bboxes):
+        """"Loss function for outputs from a single decoder layer of a single
+        feature level.
+        Args:
+            pred_bboxes (Tensor): Sigmoid outputs from a single decoder layer
+                for all images, with normalized coordinate (cx, cy, w, h) and
+                shape [bs, num_query, 4].
+            gt_bboxes (list[Tensor]): Ground truth bboxes for each image
+                with shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
+            gt_labels_list (list[Tensor]): Ground truth class indices for each
+                image with shape (num_gts, ).
+            img_metas (list[dict]): List of image meta information.
+            gt_bboxes_ignore_list (list[Tensor], optional): Bounding
+                boxes which can be ignored for each image. Default None.
+        Returns:
+        """
+
+        losses = dict()
+
+        # regression IoU loss, defaultly GIoU loss
+        if (pred_bboxes[:, :2] >= pred_bboxes[:, 2:]).any() or (
+                gt_bboxes[:, :2] >= gt_bboxes[:, 2:]).any():
+            losses['loss_iou'] = torch.tensor(0.0).to(pred_bboxes)
+        else:
+            losses['loss_iou'] = self.loss_iou(pred_bboxes, gt_bboxes)
+        # regression L1 loss
+        losses['loss_bbox'] = self.loss_bbox(pred_bboxes, gt_bboxes)
+        return losses

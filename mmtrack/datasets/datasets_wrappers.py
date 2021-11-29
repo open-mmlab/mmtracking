@@ -18,20 +18,32 @@ class RandomConcatDataset(ConcatDataset):
             Defaults to True.
     """
 
-    def __getitem__(self, index):
-        if self.train_cls:
-            return self.getitem_cls()
+    def __init__(self,
+                 datasets,
+                 datasets_sampling_prob=None,
+                 train_cls=False,
+                 separate_eval=True):
+        super().__init__(datasets, separate_eval=separate_eval)
+        if datasets_sampling_prob is None:
+            self.datasets_sampling_prob = [1 / len(datasets)] * len(datasets)
         else:
-            return self.getitem()
+            prob_total = sum(datasets_sampling_prob)
+            self.datasets_sampling_prob = [
+                x / prob_total for x in datasets_sampling_prob
+            ]
+        self.train_cls = train_cls
 
-    def getitem(self):
-        valid = False
-        while not valid:
-            # Select a dataset
-            dataset = random.choices(self.datasets, self.prob_datasets)[0]
-            data = dataset.prepare_data()
+    def __getitem__(self, idx):
+        if self.train_cls:
+            return self.getitem_cls(idx)
+        else:
+            return self.getitem(idx)
+
+    def getitem(self, idx):
+        dataset = random.choices(self.datasets, self.datasets_sampling_prob)[0]
+        data = dataset.prepare_train_img(idx)
 
         return data
 
-    def getitem_cls(self):
+    def getitem_cls(self, idx):
         pass

@@ -108,7 +108,6 @@ def main():
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
 
-    cfg.log_config.interval = 1
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
@@ -162,13 +161,14 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
+    # cfg.load_from = 'checkpoints/converted_got10k_starkst50_v2.pth.tar'
     train_model(
         model,
         datasets,
         cfg,
         distributed=distributed,
         validate=(not args.no_validate),
-        samples_per_epoch=500,
+        samples_per_epoch=50000,
         timestamp=timestamp,
         meta=meta)
 

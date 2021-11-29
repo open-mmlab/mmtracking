@@ -300,9 +300,15 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
             instance_id (int):
         """
         enough_visible_frames = False
+        count = 0
         while not enough_visible_frames:
+            count += 1
+            if count > 100:
+                raise Exception(
+                    "--------Can't get enough visible instance------")
             # Sample a sequence
-            vid_id = random.randint(1, len(self))
+            vid_id = random.randint(
+                1, len(self))  # The left and right of intervals are closed
             instance_ids = self.coco.get_ins_ids_from_vid(vid_id)
             instance_id = random.choice(instance_ids)
             img_ids = self.coco.get_img_ids_from_ins_id(instance_id)
@@ -315,22 +321,37 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                 img_info = self.coco.load_imgs([img_id])[0]
                 ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
                 ann_infos = self.coco.load_anns(ann_ids)
-                # TODO ooco dataset have different valid standard
-                valid = img_info['width'] > 0 and img_info['height'] > 0
+
                 for ann in ann_infos:
                     if ann['instance_id'] == instance_id:
-                        visible = valid
+                        # coco dataset have different valid threshold
+                        # (> 50 pixel).
+                        # The visible information of trackingnet and coco only
+                        # depend on the bbox size.
+                        threshold_size = 0 if self.is_video_dataset else 50
+                        visible = ann['bbox'][2] > threshold_size and ann[
+                            'bbox'][3] > threshold_size
                         if visible and self.visible_keys is not None:
                             for key in self.visible_keys:
                                 visible &= ~ann[key]
                         is_visible_ann.append(visible)
+
+                        bbox = [[
+                            ann['bbox'][0], ann['bbox'][1],
+                            ann['bbox'][0] + ann['bbox'][2],
+                            ann['bbox'][1] + ann['bbox'][3]
+                        ]]
+                        ann = dict(
+                            bboxes=np.array(bbox, dtype=np.float32),
+                            labels=np.array([0]))
+
                         new_ann_infos.append(ann)
                         img_info['filename'] = img_info['file_name']
                         new_img_infos.append(img_info)
             # TODO fix unittest failed
             enough_visible_frames = sum(is_visible_ann) > 2 * (
                 self.num_search_frames +
-                self.num_template_frames) and len(is_visible_ann) >= 20
+                self.num_template_frames) and len(is_visible_ann) > 0
             # enough_visible_frames = sum(is_visible_ann) > (
             #     self.num_search_frames + self.num_template_frames)
             enough_visible_frames = enough_visible_frames or not \
@@ -340,6 +361,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
 
     def sampling_trident(self, is_visible_ann):
         template_ann_ids_extra = []
+        sampling_count = 0
         while None in template_ann_ids_extra or len(
                 template_ann_ids_extra) == 0:
             template_ann_ids_extra = []
@@ -365,6 +387,11 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                     template_ann_ids_extra += [None]
                 else:
                     template_ann_ids_extra += f_id
+            sampling_count += 1
+            if sampling_count > 100:
+                print('-------Not sampling valid extra template. Stop'
+                      'sampling and use the first template-------')
+                template_ann_ids_extra = [template_ann_id1] * len(self.max_gap)
 
         all_ann_ids = template_ann_id1 + template_ann_ids_extra + \
             search_ann_ids
@@ -385,19 +412,13 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
         results = []
         for i in range(self.num_template_frames):
             index = inds_intra_video[i]
-            result = dict(
-                img_info=img_infos[index],
-                ann_info=ann_infos[index],
-                is_template=True)
+            result = dict(img_info=img_infos[index], ann_info=ann_infos[index])
             self.pre_pipeline(result)
             results.append(result)
 
         for i in range(self.num_search_frames):
             index = inds_intra_video[self.num_template_frames + i]
-            result = dict(
-                img_info=img_infos[index],
-                ann_info=ann_infos[index],
-                is_template=False)
+            result = dict(img_info=img_infos[index], ann_info=ann_infos[index])
             self.pre_pipeline(result)
             results.append(result)
         return results

@@ -59,9 +59,7 @@ class Stark(BaseSingleObjectTracker):
                     m.reset_parameters()
 
         if self.with_head:
-            for m in self.head.modules():
-                if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
-                    m.reset_parameters()
+            self.head.init_weights()
 
     def get_cropped_img(self, img, target_bbox, search_area_factor,
                         output_size):
@@ -361,16 +359,25 @@ class Stark(BaseSingleObjectTracker):
     def forward_train(self, img, img_metas, gt_bboxes, search_img, att_mask,
                       search_img_metas, search_gt_bboxes, search_att_mask,
                       **kwargs):
-        import pdb
-        pdb.set_trace()
 
         z1_dict = self.forward_before_head(img[:, 0], att_mask[:, 0])
         z2_dict = self.forward_before_head(img[:, 1], att_mask[:, 1])
-        x_dict = self.forward_before_head(search_img, search_att_mask)
+        x_dict = self.forward_before_head(search_img[:, 0], search_att_mask[:,
+                                                                            0])
         inputs = [z1_dict, z2_dict, x_dict]
         head_dict_inputs = self._merge_template_search(inputs)
         # run the transformer
         track_results, _ = self.head(
-            head_dict_inputs, run_box_head=True, run_cls_head=True)
+            head_dict_inputs, run_box_head=True, run_cls_head=False)
 
-        pdb.set_trace()
+        img_size = search_img[:, 0].shape[2]
+        tracking_bboxes = track_results['pred_bboxes'][:, 0] / img_size
+        search_gt_bboxes = (
+            torch.cat(search_gt_bboxes, dim=0).type(torch.float32)[:, 1:] /
+            img_size).clamp(0., 1.)
+        # print(tracking_bboxes, search_gt_bboxes)
+        losses = dict()
+        head_losses = self.head.loss(tracking_bboxes, search_gt_bboxes)
+        losses.update(head_losses)
+
+        return losses

@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from mmdet.datasets.builder import DATASETS, build_dataset
+from mmdet.datasets.builder import DATASETS
 
-from .builder import build_dataloader
+from .builder import build_dataloader, build_dataset
 from .coco_video_dataset import CocoVideoDataset
 from .got10k_dataset import GOT10kDataset
 from .imagenet_vid_dataset import ImagenetVIDDataset

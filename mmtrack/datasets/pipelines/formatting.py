@@ -8,8 +8,76 @@ from mmdet.datasets.pipelines import to_tensor
 @PIPELINES.register_module()
 class ConcatVideoReferences(object):
     """Concat video references.
-
     If the input list contains at least two dicts, concat the input list of
+    dict to one dict from 2-nd dict of the input list.
+    Args:
+        results (list[dict]): List of dict that contain keys such as 'img',
+            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
+            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
+            'gt_instance_ids'.
+    Returns:
+        list[dict]: The first dict of outputs is the same as the first
+        dict of `results`. The second dict of outputs concats the
+        dicts in `results[1:]`.
+    """
+
+    def __call__(self, results):
+        assert (isinstance(results, list)), 'results must be list'
+        outs = results[:1]
+        for i, result in enumerate(results[1:], 1):
+            if 'img' in result:
+                img = result['img']
+                if len(img.shape) < 3:
+                    img = np.expand_dims(img, -1)
+                if i == 1:
+                    result['img'] = np.expand_dims(img, -1)
+                else:
+                    outs[1]['img'] = np.concatenate(
+                        (outs[1]['img'], np.expand_dims(img, -1)), axis=-1)
+            for key in ['img_metas', 'gt_masks']:
+                if key in result:
+                    if i == 1:
+                        result[key] = [result[key]]
+                    else:
+                        outs[1][key].append(result[key])
+            for key in [
+                    'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
+                    'gt_instance_ids'
+            ]:
+                if key not in result:
+                    continue
+                value = result[key]
+                if value.ndim == 1:
+                    value = value[:, None]
+                N = value.shape[0]
+                value = np.concatenate((np.full(
+                    (N, 1), i - 1, dtype=np.float32), value),
+                                       axis=1)
+                if i == 1:
+                    result[key] = value
+                else:
+                    outs[1][key] = np.concatenate((outs[1][key], value),
+                                                  axis=0)
+            if 'gt_semantic_seg' in result:
+                if i == 1:
+                    result['gt_semantic_seg'] = result['gt_semantic_seg'][...,
+                                                                          None,
+                                                                          None]
+                else:
+                    outs[1]['gt_semantic_seg'] = np.concatenate(
+                        (outs[1]['gt_semantic_seg'],
+                         result['gt_semantic_seg'][..., None, None]),
+                        axis=-1)
+            if i == 1:
+                outs.append(result)
+        return outs
+
+
+@PIPELINES.register_module()
+class ConcatVideoTripleReferences(object):
+    """Concat video triple references.
+
+    If the input list contains three dicts, concat the input list of
     dict to one dict from 2-nd dict of the input list.
 
     Args:
@@ -89,7 +157,7 @@ class ConcatVideoReferences(object):
         template_results = []
         search_results = []
         for i, result in enumerate(results):
-            if result['mode'] == 'template':
+            if i < 2:
                 template_results.append(result)
             else:
                 search_results.append(result)
@@ -234,7 +302,7 @@ class SeqDefaultFormatBundle(object):
             results['img'] = DC(to_tensor(img), stack=True)
         if 'att_mask' in results:
             results['att_mask'] = DC(
-                to_tensor(results['att_mask']), stack=True)
+                to_tensor(results['att_mask'].copy()), stack=True)
         for key in [
                 'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
                 'gt_instance_ids', 'gt_match_indices'

@@ -4,7 +4,6 @@ import math
 import cv2
 import mmcv
 import numpy as np
-from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
@@ -140,9 +139,11 @@ class SeqCropLikeSiamFC(object):
 @PIPELINES.register_module()
 class SeqBboxJitter(object):
 
-    def __init__(self, scale_jitter_factor, center_jitter_factor):
+    def __init__(self, scale_jitter_factor, center_jitter_factor,
+                 crop_size_factor):
         self.scale_jitter_factor = scale_jitter_factor
         self.center_jitter_factor = center_jitter_factor
+        self.crop_size_factor = crop_size_factor
 
     def __call__(self, results):
         """[summary]
@@ -153,23 +154,38 @@ class SeqBboxJitter(object):
             [type]: [description]
         """
         outs = []
-        for _results in results:
-            mode = _results['mode']
-            assert mode in ['template', 'search']
+        for i, _results in enumerate(results):
             gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
-            gt_bbox = bbox_xyxy_to_cxcywh(gt_bbox)  # (cx, cy, w, h)
+            x1, y1, x2, y2 = np.split(gt_bbox, 4, axis=-1)
+            bbox_w, bbox_h = x2 - x1, y2 - y1
+            gt_bbox = np.concatenate(
+                [x1 + bbox_w / 2, y1 + bbox_h / 2, bbox_w, bbox_h], axis=-1)
 
-            jittered_size = gt_bbox[2:4] * np.exp(
-                np.random.randn(2) * self.scale_jitter_factor[mode])
-            max_offset = jittered_size.prod().sqrt(
-            ) * self.center_jitter_factor[mode]
+            crop_img_size = -1
+            # avoid croped image size too small.
+            count = 0
+            while crop_img_size < 1:
+                count += 1
+                if count > 100:
+                    print('-------------bbox jitter block------------------')
+                    raise Exception('too small bbox')
+                jittered_wh = gt_bbox[2:4] * np.exp(
+                    np.random.randn(2) * self.scale_jitter_factor[i])
+                crop_img_size = np.ceil(
+                    np.sqrt(jittered_wh.prod()) * self.crop_size_factor[i])
+
+            max_offset = np.sqrt(
+                jittered_wh.prod()) * self.center_jitter_factor[i]
             jittered_center = gt_bbox[0:2] + max_offset * (
                 np.random.rand(2) - 0.5)
 
             jittered_bboxes = np.concatenate(
-                (jittered_center - 0.5 * jittered_size,
-                 jittered_center + 0.5 * jittered_size),
+                (jittered_center - 0.5 * jittered_wh,
+                 jittered_center + 0.5 * jittered_wh),
                 axis=-1)
+            # print(f'--------jitter bboxes {jittered_wh} {jittered_center}')
+            # print(gt_bbox,
+            #       np.concatenate([jittered_center, jittered_size], axis=-1))
             _results['jittered_bboxes'] = jittered_bboxes[None]
             outs.append(_results)
         return outs
@@ -232,12 +248,14 @@ class SeqCropLikeStark(object):
         Returns:
             ndarray: The cropped image of shape (crop_size, crop_size, 3).
         """
-        cx, cy, w, h = bbox.split((1, 1, 1, 1), dim=-1)
+        x1, y1, x2, y2 = np.split(bbox, 4, axis=-1)
+        bbox_w, bbox_h = x2 - x1, y2 - y1
+        cx, cy = x1 + bbox_w / 2, y1 + bbox_h / 2
 
         img_h, img_w, _ = img.shape
         # 1. Crop image
         # 1.1 calculate crop size and pad size
-        crop_size = math.ceil(math.sqrt(w * h) * crop_size_factor)
+        crop_size = math.ceil(math.sqrt(bbox_w * bbox_h) * crop_size_factor)
         if crop_size < 1:
             raise Exception('Too small bounding box.')
 
@@ -303,12 +321,12 @@ class SeqCropLikeStark(object):
         bbox_out_center = (output_size - 1) / 2 + (
             bbox_gt_center - bbox_cropped_center) * resize_factor
         bbox_out_wh = (bbox_gt[2:4] - bbox_gt[0:2]) * resize_factor
-
+        # print(bbox_out_center, bbox_out_wh)
         bbox_out = np.concatenate((bbox_out_center - 0.5 * bbox_out_wh,
                                    bbox_out_center + 0.5 * bbox_out_wh),
                                   axis=-1)
         if normalize:
-            return bbox_out / output_size[0]
+            return bbox_out / output_size
         else:
             return bbox_out
 
@@ -326,27 +344,30 @@ class SeqCropLikeStark(object):
             corresponding ground truth box.
         """
         outs = []
-        for _results in results:
+        for i, _results in enumerate(results):
             image = _results['img']
             gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
-            mode = _results['mode']
-            assert mode in ['template', 'search']
             jittered_bboxes = _results['jittered_bboxes'][0]
             crop_img, resize_factor, att_mask = self.crop_like_Stark(
-                image, jittered_bboxes, self.crop_size_factor[mode],
-                self.output_size[mode])
+                image, jittered_bboxes, self.crop_size_factor[i],
+                self.output_size[i])
 
-            generated_bbox = self.generate_box(gt_bbox, jittered_bboxes,
-                                               resize_factor,
-                                               self.output_size[mode])
+            generated_bbox = self.generate_box(
+                gt_bbox,
+                jittered_bboxes,
+                resize_factor,
+                self.output_size[i],
+                normalize=False)
+            # if i == 2:
+            #     print(generated_bbox)
             generated_bbox = generated_bbox[None]
 
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
             _results[_results.get('bbox_fields', [])[0]] = generated_bbox
-            _results['mask_fields'] = ['att_mask']
-            _results[_results.get('mask_fields', [])[0]] = att_mask
+            _results['seg_fields'] = ['att_mask']
+            _results[_results.get('seg_fields', [])[0]] = att_mask
             outs.append(_results)
         return outs
 
@@ -664,9 +685,10 @@ class SeqRandomFlip(RandomFlip):
             Defaults to True.
     """
 
-    def __init__(self, share_params, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, share_params, flipped_coords_base=1, **kwargs):
+        super().__init__(**kwargs)
         self.share_params = share_params
+        self.flipped_coords_base = flipped_coords_base
 
     def __call__(self, results):
         """Call function.
@@ -710,6 +732,16 @@ class SeqRandomFlip(RandomFlip):
         outs = []
         for _results in results:
             _results = super().__call__(_results)
+            if self.flipped_coords_base == 0 and _results['flip']:
+                assert _results['flip_direction'] in [
+                    'horizontal', 'vertical', 'diagonal'
+                ]
+                if _results['flip_direction'] == 'horizontal':
+                    _results['gt_bboxes'][..., 0::2] -= 1
+                elif _results['flip_direction'] == 'vertical':
+                    _results['gt_bboxes'][..., 1::2] -= 1
+                else:
+                    _results['gt_bboxes'] -= 1
             outs.append(_results)
         return outs
 

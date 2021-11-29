@@ -84,7 +84,8 @@ def convert_otb100(otb, ann_dir, save_dir):
                     video_id=records['vid_id'])
                 otb['images'].append(image)
 
-                bbox = list(map(int, re.findall(r'\d+', gt_bbox)))
+                # bbox coordinates may include negative number
+                bbox = list(map(int, re.findall(r'-?\d+', gt_bbox)))
                 assert len(bbox) == 4
                 anno_dict = dict(
                     id=records['ann_id'],
