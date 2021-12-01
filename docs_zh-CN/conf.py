@@ -152,6 +152,10 @@ html_theme_options = {
                     'name': 'MMFlow',
                     'url': 'https://github.com/open-mmlab/mmflow',
                 },
+                {
+                    'name': 'MMFewShot',
+                    'url': 'https://github.com/open-mmlab/mmfewshot',
+                },
             ]
         },
         {
