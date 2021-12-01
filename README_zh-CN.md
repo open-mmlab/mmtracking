@@ -117,6 +117,7 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 - [MMOCR](https://github.com/open-mmlab/mmocr)：OpenMMLab全流程文字检测识别理解工具箱
 - [MMGeneration](https://github.com/open-mmlab/mmgeneration)：OpenMMLab生成模型工具箱
 - [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab 光流估计工具箱与测试基准
+- [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab 少样本学习工具箱与测试基准
 
 ## 欢迎加入 OpenMMLab 社区
 
