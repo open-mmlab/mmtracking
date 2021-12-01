@@ -90,7 +90,9 @@ def train_model(model,
             # cfg.gpus will be ignored if distributed
             len(cfg.gpu_ids),
             dist=distributed,
-            seed=cfg.seed) for ds in dataset
+            seed=cfg.seed,
+            persistent_workers=cfg.data.get('persistent_workers', False))
+        for ds in dataset
     ]
 
     # put model on gpus
@@ -144,7 +146,8 @@ def train_model(model,
             samples_per_gpu=1,
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
-            shuffle=False)
+            shuffle=False,
+            persistent_workers=cfg.data.get('persistent_workers', False))
         eval_cfg = cfg.get('evaluation', {})
         eval_hook = DistEvalHook if distributed else EvalHook
         runner.register_hook(eval_hook(val_dataloader, **eval_cfg))
