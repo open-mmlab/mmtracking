@@ -164,6 +164,22 @@ class SOTResNet(ResNet):
     def __init__(self, depth, *args, **kwargs):
         assert depth == 50, 'Only support r50 backbone for sot.'
         super(SOTResNet, self).__init__(depth, *args, **kwargs)
+        self._unfreeze_stages()
+
+    def _unfreeze_stages(self):
+        if self.frozen_stages >= 0:
+            if self.deep_stem:
+                for param in self.stem.parameters():
+                    param.requires_grad = True
+            else:
+                for m in [self.conv1, self.norm1]:
+                    for param in m.parameters():
+                        param.requires_grad = True
+
+        for i in range(1, self.frozen_stages + 1):
+            m = getattr(self, f'layer{i}')
+            for param in m.parameters():
+                param.requires_grad = True
 
     def make_res_layer(self, **kwargs):
         """Pack all blocks in a stage into a ``ResLayer``."""
