@@ -1,6 +1,7 @@
 cudnn_benchmark = False
 deterministic = True
 seed = 1
+find_unused_parameters = True
 crop_size = 511
 exemplar_size = 127
 search_size = 255
@@ -203,4 +204,3 @@ work_dir = './work_dirs/xxx'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
-find_unused_parameters = True
