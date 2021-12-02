@@ -1,10 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import random
+import warnings
 from functools import partial
 
 import numpy as np
 from mmcv.parallel import collate
 from mmcv.runner import get_dist_info
+from mmcv.utils import TORCH_VERSION, digit_version
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
@@ -19,6 +21,7 @@ def build_dataloader(dataset,
                      dist=True,
                      shuffle=True,
                      seed=None,
+                     persistent_workers=False,
                      **kwargs):
     """Build PyTorch DataLoader.
 
@@ -35,6 +38,11 @@ def build_dataloader(dataset,
         dist (bool): Distributed training/test or not. Default: True.
         shuffle (bool): Whether to shuffle the data at every epoch.
             Default: True.
+        seed (int, Optional): Seed to be used. Default: None.
+        persistent_workers (bool): If True, the data loader will not shutdown
+            the worker processes after a dataset has been consumed once.
+            This allows to maintain the workers `Dataset` instances alive.
+            This argument is only valid when PyTorch>=1.7.0. Default: False.
         kwargs: any keyword argument to be used to initialize DataLoader
 
     Returns:
@@ -62,6 +70,13 @@ def build_dataloader(dataset,
     init_fn = partial(
         worker_init_fn, num_workers=num_workers, rank=rank,
         seed=seed) if seed is not None else None
+
+    if (TORCH_VERSION != 'parrots'
+            and digit_version(TORCH_VERSION) >= digit_version('1.7.0')):
+        kwargs['persistent_workers'] = persistent_workers
+    elif persistent_workers is True:
+        warnings.warn('persistent_workers is invalid because your pytorch '
+                      'version is lower than 1.7.0')
 
     data_loader = DataLoader(
         dataset,
