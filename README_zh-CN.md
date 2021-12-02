@@ -17,7 +17,7 @@
 
 MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenMMLab](http://openmmlab.org/)项目的一部分。
 
-主分支代码目前支持**PyTorch 1.3以上**的版本。
+主分支代码目前支持**PyTorch 1.5以上**的版本。
 
 <div align="left">
   <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
