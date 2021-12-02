@@ -191,9 +191,8 @@ class Stark(BaseSingleObjectTracker):
         Returns:
             tuple(Tensor): Multi level feature map of exemplar images.
         """
-        with torch.no_grad():
-            feat = self.backbone(img)
-            feat = self.neck(feat)[0]
+        feat = self.backbone(img)
+        feat = self.neck(feat)[0]
 
         mask = F.interpolate(
             mask[None].float(), size=feat.shape[-2:]).to(torch.bool)[0]
@@ -217,7 +216,8 @@ class Stark(BaseSingleObjectTracker):
             self.test_cfg['template_size'])
         # z_patch:(1,C,H,W);  z_mask:(1,H,W)
         z_patch, z_mask = self._normalize(z_patch, z_mask)
-        self.z_dict = self.forward_before_head(z_patch, z_mask)
+        with torch.no_grad():
+            self.z_dict = self.forward_before_head(z_patch, z_mask)
         self.z_dict_list.append(self.z_dict)
 
         # get the complete z_dict_list
@@ -292,7 +292,7 @@ class Stark(BaseSingleObjectTracker):
                                                            [x_dict])
             # run the transformer
             track_results, _ = self.head(
-                head_dict_inputs, run_box_head=True, run_cls_head=True)
+                head_dict_inputs, run_box_head=True, run_cls_head=False)
 
         # get confidence score (whether the search region is reliable)
         conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
@@ -377,7 +377,8 @@ class Stark(BaseSingleObjectTracker):
             img_size).clamp(0., 1.)
         # print(tracking_bboxes, search_gt_bboxes)
         losses = dict()
-        head_losses = self.head.loss(tracking_bboxes, search_gt_bboxes)
+        if self.head.run_bbox_head:
+            head_losses = self.head.reg_loss(tracking_bboxes, search_gt_bboxes)
         losses.update(head_losses)
 
         return losses

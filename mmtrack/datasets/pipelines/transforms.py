@@ -184,8 +184,6 @@ class SeqBboxJitter(object):
                  jittered_center + 0.5 * jittered_wh),
                 axis=-1)
             # print(f'--------jitter bboxes {jittered_wh} {jittered_center}')
-            # print(gt_bbox,
-            #       np.concatenate([jittered_center, jittered_size], axis=-1))
             _results['jittered_bboxes'] = jittered_bboxes[None]
             outs.append(_results)
         return outs

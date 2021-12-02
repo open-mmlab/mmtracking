@@ -13,6 +13,7 @@ model = dict(
         strides=(1, 2, 2),
         dilations=[1, 1, 1],
         out_indices=[2],
+        frozen_stages=1,
         norm_eval=True,
         norm_cfg=dict(type='BN', requires_grad=False),
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
@@ -25,6 +26,8 @@ model = dict(
     head=dict(
         type='StarkHead',
         num_querys=1,
+        run_bbox_head=True,
+        run_cls_head=False,
         transformer=dict(
             type='StarkTransformer',
             encoder=dict(
@@ -141,7 +144,7 @@ test_pipeline = [
 # dataset settings
 data = dict(
     samples_per_gpu=16,
-    workers_per_gpu=1,
+    workers_per_gpu=2,
     train=[
         dict(datasets_sampling_prob=[1], train_cls=False),
         dict(
@@ -149,63 +152,60 @@ data = dict(
             ann_file=data_root + 'got10k/annotations/got10k_train.json',
             img_prefix=data_root + 'got10k/train',
             pipeline=train_pipeline,
-            max_gap=[10],
+            max_gap=[200],
             num_search_frames=1,
             num_template_frames=2,
             visible_keys=['absence', 'cover'],
             ref_img_sampler=None,
             test_mode=False),
         # dict(
-        #     type='SOTTrainDataset',
-        #     ann_file=data_root + 'coco/annotations/instances_train2017.json',
-        #     img_prefix=data_root + 'coco/train2017',
-        #     pipeline=train_pipeline,
-        #     visible_key=None,
-        #     ref_img_sampler=dict(
-        #         frame_range=0,
-        #         pos_prob=0.8,
-        #         filter_key_img=False,
-        #         return_key_img=True),
-        # ),
-        # dict(
-        #     type='SOTTrainDataset',
+        #     type='SOTQuotaTrainDataset',
         #     ann_file=data_root + 'lasot/annotations/lasot_train.json',
         #     img_prefix=data_root + 'lasot/LaSOTBenchmark',
         #     pipeline=train_pipeline,
-        #     visible_key=['full_occlusion', 'out_of_view'],
-        #     ref_img_sampler=dict(
-        #         frame_range=0,
-        #         pos_prob=0.8,
-        #         filter_key_img=False,
-        #         return_key_img=True),
-        # ),
+        #     max_gap=[200],
+        #     num_search_frames=1,
+        #     num_template_frames=2,
+        #     visible_keys=['full_occlusion', 'out_of_view'],
+        #     ref_img_sampler=None,
+        #     test_mode=False),
         # dict(
-        #     type='SOTTrainDataset',
+        #     type='SOTQuotaTrainDataset',
         #     ann_file=data_root +
         #     'trackingnet/annotations/trackingnet_train.json',
-        #     img_prefix=data_root + 'trackingnet',
+        #     img_prefix=data_root + 'trackingnet/train',
         #     pipeline=train_pipeline,
-        #     visible_key=None,
-        #     ref_img_sampler=dict(
-        #         frame_range=0,
-        #         pos_prob=0.8,
-        #         filter_key_img=False,
-        #         return_key_img=True),
-        # ),
+        #     max_gap=[200],
+        #     num_search_frames=1,
+        #     num_template_frames=2,
+        #     visible_keys=None,
+        #     ref_img_sampler=None,
+        #     test_mode=False),
+        # dict(
+        #     type='SOTQuotaTrainDataset',
+        #     ann_file=data_root + 'coco/annotations/instances_train2017.json',
+        #     img_prefix=data_root + 'coco/train2017',
+        #     pipeline=train_pipeline,
+        #     max_gap=[200],
+        #     num_search_frames=1,
+        #     num_template_frames=2,
+        #     visible_keys=None,
+        #     ref_img_sampler=None,
+        #     test_mode=False),
     ],
     val=dict(
         type='GOT10kDataset',
         test_load_ann=True,
-        ann_file=data_root + 'got10k/annotations/got10k_test.json',
-        img_prefix=data_root + 'got10k/test',
+        ann_file=data_root + 'got10k/annotations/got10k_val.json',
+        img_prefix=data_root + 'got10k/val',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True),
     test=dict(
         type='GOT10kDataset',
         test_load_ann=True,
-        ann_file=data_root + 'got10k/annotations/got10k_test.json',
-        img_prefix=data_root + 'got10k/test',
+        ann_file=data_root + 'got10k/annotations/got10k_val.json',
+        img_prefix=data_root + 'got10k/val',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))
@@ -217,15 +217,11 @@ optimizer = dict(
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
-optimizer_config = dict(
-    type='SiameseRPNOptimizerHook',
-    backbone_start_train_epoch=0,
-    backbone_train_layers=['layer2', 'layer3'],
-    grad_clip=dict(max_norm=0.1, norm_type=2))
+optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[400])
 # checkpoint saving
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=100)
 evaluation = dict(
     metric=['track'],
     interval=100,
@@ -234,7 +230,7 @@ evaluation = dict(
     save_best='success')
 # yapf:disable
 log_config = dict(
-    interval=1,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')

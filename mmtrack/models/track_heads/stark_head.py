@@ -233,6 +233,8 @@ class StarkHead(BaseModule):
                      type='SinePositionalEncoding',
                      num_feats=128,
                      normalize=True),
+                 run_cls_head=False,
+                 run_bbox_head=True,
                  bbox_head=None,
                  cls_head=None,
                  loss_cls=dict(
@@ -250,8 +252,12 @@ class StarkHead(BaseModule):
         self.transformer = build_transformer(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
-        self.bbox_head = build_head(bbox_head)
-        self.cls_head = build_head(cls_head)
+        self.run_bbox_head = run_bbox_head
+        self.run_cls_head = run_cls_head
+        if self.run_bbox_head:
+            self.bbox_head = build_head(bbox_head)
+        if self.run_cls_head:
+            self.cls_head = build_head(cls_head)
         self.embed_dims = self.transformer.embed_dims
         self.num_query = num_query
         self.query_embedding = nn.Embedding(self.num_query, self.embed_dims)
@@ -311,6 +317,7 @@ class StarkHead(BaseModule):
         out_dict = {}
         if run_cls_head:
             # forward the classification head
+            print('forward cls head')
             out_dict['pred_logits'] = self.cls_head(feat)[-1]
         if run_box_head:
             # forward the box prediction head
@@ -345,9 +352,10 @@ class StarkHead(BaseModule):
             run_cls_head=run_cls_head)
         return track_results, outs_dec
 
-    def loss(self, pred_bboxes, gt_bboxes):
+    def reg_loss(self, pred_bboxes, gt_bboxes):
         """"Loss function for outputs from a single decoder layer of a single
         feature level.
+
         Args:
             pred_bboxes (Tensor): Sigmoid outputs from a single decoder layer
                 for all images, with normalized coordinate (cx, cy, w, h) and
@@ -363,7 +371,6 @@ class StarkHead(BaseModule):
         """
 
         losses = dict()
-
         # regression IoU loss, defaultly GIoU loss
         if (pred_bboxes[:, :2] >= pred_bboxes[:, 2:]).any() or (
                 gt_bboxes[:, :2] >= gt_bboxes[:, 2:]).any():
@@ -372,4 +379,16 @@ class StarkHead(BaseModule):
             losses['loss_iou'] = self.loss_iou(pred_bboxes, gt_bboxes)
         # regression L1 loss
         losses['loss_bbox'] = self.loss_bbox(pred_bboxes, gt_bboxes)
+
         return losses
+
+    def cls_loss(self, pred_bboxes, gt_bboxes):
+        """"Loss function for outputs from a single decoder layer of a single
+        feature level.
+
+        Args:
+        Returns:
+        """
+        # losses['loss_cls'] = self.loss_cls(pred_bboxes, gt_bboxes)
+        # return losses
+        pass

@@ -329,9 +329,12 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                         # The visible information of trackingnet and coco only
                         # depend on the bbox size.
                         threshold_size = 0 if self.is_video_dataset else 50
-                        visible = ann['bbox'][2] > threshold_size and ann[
+                        valid = ann['bbox'][2] > threshold_size and ann[
                             'bbox'][3] > threshold_size
-                        if visible and self.visible_keys is not None:
+                        if not valid:
+                            continue
+                        visible = valid
+                        if self.visible_keys is not None:
                             for key in self.visible_keys:
                                 visible &= ~ann[key]
                         is_visible_ann.append(visible)

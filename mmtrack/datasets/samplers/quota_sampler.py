@@ -187,10 +187,15 @@ class DistributedGroupQuotaSampler(Sampler):
                 # add .numpy() to avoid bug when selecting indice in parrots.
                 # TODO: check whether torch.randperm() can be replaced by
                 # numpy.random.permutation().
+                if sampling_size > size:
+                    indice = np.tile(indice,
+                                     int(math.ceil(sampling_size / size)))
+
                 indice = indice[list(
                     torch.randperm(
-                        int(size),
+                        len(indice),
                         generator=g).numpy()[:sampling_size])].tolist()
+
                 extra = int(
                     math.ceil(sampling_size * 1.0 / self.samples_per_gpu /
                               self.num_replicas)
