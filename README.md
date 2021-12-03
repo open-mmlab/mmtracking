@@ -124,3 +124,4 @@ If you find this project useful in your research, please consider cite:
 - [MMGeneration](https://github.com/open-mmlab/mmgeneration):  OpenMMLab Generative Model toolbox and benchmark.
 - [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab optical flow toolbox and benchmark.
 - [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab FewShot Learning Toolbox and Benchmark.
+- [MMHuman3D](https://github.com/open-mmlab/mmhuman3d.git): OpenMMLab Human Pose and Shape Estimation Toolbox and Benchmark.
