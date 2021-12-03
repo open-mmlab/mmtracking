@@ -2,18 +2,22 @@ name: build
 
 on:
   push:
-    paths:
-      - '!demo/**'
-      - '!docker/**'
-      - '!tools/**'
+    paths-ignore:
+      - 'README.md'
+      - 'README_zh-CN.md'
+      - 'docs/**'
+      - 'docs_zh-CN/**'
+      - 'examples/**'
+      - '.dev_scripts/**'
 
   pull_request:
-    paths:
-      - '!demo/**'
-      - '!docker/**'
-      - '!tools/**'
-      - '!docs/**'
-      - '!docs_zh-CN/**'
+    paths-ignore:
+      - 'README.md'
+      - 'README_zh-CN.md'
+      - 'docs/**'
+      - 'docs_zh-CN/**'
+      - 'examples/**'
+      - '.dev_scripts/**'
 
 jobs:
   build_cpu:
