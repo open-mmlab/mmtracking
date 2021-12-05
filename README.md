@@ -66,7 +66,7 @@ Supported methods of multi object tracking:
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [ ] ByteTrack (arXiv) ([WIP](https://github.com/open-mmlab/mmtracking/pull/359))
+- [ ] ByteTrack (arXiv 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/359))
 
 Supported methods of single object tracking:
 
