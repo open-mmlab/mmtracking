@@ -64,12 +64,12 @@ v0.8.0版本已于2021年10月03日发布，可通过查阅[更新日志](/docs/
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [x] [ByteTrack][(WIP)](https://github.com/open-mmlab/mmtracking/pull/359)
+- [ ] ByteTrack [(WIP)](https://github.com/open-mmlab/mmtracking/pull/359)
 
 支持的单目标跟踪算法:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK][(WIP)](https://github.com/open-mmlab/mmtracking/pull/308) (ICCV 2021)
+- [ ] STARK [(WIP)](https://github.com/open-mmlab/mmtracking/pull/308) (ICCV 2021)
 
 支持的视频实例分割算法:
 
