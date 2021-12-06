@@ -97,7 +97,7 @@ def main():
             thickness=args.thickness)
         prog_bar.update()
 
-    if OUT_VIDEO:
+    if args.output and OUT_VIDEO:
         print(
             f'\nmaking the output video at {args.output} with a FPS of {fps}')
         mmcv.frames2video(out_path, args.output, fps=fps, fourcc='mp4v')
