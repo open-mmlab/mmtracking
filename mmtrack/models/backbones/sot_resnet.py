@@ -161,12 +161,14 @@ class SOTResNet(ResNet):
 
     arch_settings = {50: (SOTBottleneck, (3, 4, 6, 3))}
 
-    def __init__(self, depth, *args, **kwargs):
+    def __init__(self, depth, unfreeze_backbone=True, **kwargs):
         assert depth == 50, 'Only support r50 backbone for sot.'
-        super(SOTResNet, self).__init__(depth, *args, **kwargs)
+        super(SOTResNet, self).__init__(depth, **kwargs)
         # unfreeze the backbone parameters so that DDP can build all parameters
         # into buckets.
-        self._unfreeze_stages()
+        self.unfreeze_backbone = unfreeze_backbone
+        if self.unfreeze_backbone:
+            self._unfreeze_stages()
 
     def _unfreeze_stages(self):
         if self.frozen_stages >= 0:
