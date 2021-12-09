@@ -112,10 +112,6 @@ html_theme_options = {
             'Docs',
             'children': [
                 {
-                    'name': 'MMTracking',
-                    'url': 'https://mmtracking.readthedocs.io/en/latest/',
-                },
-                {
                     'name': 'MIM',
                     'url': 'https://openmim.readthedocs.io/en/latest/'
                 },
