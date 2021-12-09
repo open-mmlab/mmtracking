@@ -91,15 +91,29 @@ html_theme_options = {
     'menu': [
         {
             'name': 'GitHub',
-            'url': 'https://github.com/open-mmlab/mmcv'
+            'url': 'https://github.com/open-mmlab/mmtracking'
+        },
+        {
+            'name':
+            'Upstream',
+            'children': [
+                {
+                    'name': 'MMCV',
+                    'url': 'https://mmcv.readthedocs.io/en/latest/',
+                },
+                {
+                    'name': 'MMDetection',
+                    'url': 'https://mmdetection.readthedocs.io/en/latest/',
+                },
+            ]
         },
         {
             'name':
             'Docs',
             'children': [
                 {
-                    'name': 'MMCV',
-                    'url': 'https://mmcv.readthedocs.io/en/latest/',
+                    'name': 'MMTracking',
+                    'url': 'https://mmtracking.readthedocs.io/en/latest/',
                 },
                 {
                     'name': 'MIM',
@@ -113,10 +127,6 @@ html_theme_options = {
                     'name': 'MMClassification',
                     'url':
                     'https://mmclassification.readthedocs.io/en/latest/',
-                },
-                {
-                    'name': 'MMDetection',
-                    'url': 'https://mmdetection.readthedocs.io/en/latest/',
                 },
                 {
                     'name': 'MMDetection3D',
@@ -141,10 +151,6 @@ html_theme_options = {
                 {
                     'name': 'MMSegmentation',
                     'url': 'https://mmsegmentation.readthedocs.io/en/latest/',
-                },
-                {
-                    'name': 'MMTracking',
-                    'url': 'https://mmtracking.readthedocs.io/en/latest/',
                 },
                 {
                     'name': 'MMFlow',
