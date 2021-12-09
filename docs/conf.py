@@ -164,6 +164,10 @@ html_theme_options = {
                     'name': 'MMHuman3D',
                     'url': 'https://mmhuman3d.readthedocs.io/en/latest/',
                 },
+                {
+                    'name': 'MMHuman3D',
+                    'url': 'https://github.com/open-mmlab/mmhuman3d',
+                },
             ]
         },
         {

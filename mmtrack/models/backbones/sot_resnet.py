@@ -161,9 +161,32 @@ class SOTResNet(ResNet):
 
     arch_settings = {50: (SOTBottleneck, (3, 4, 6, 3))}
 
-    def __init__(self, depth, *args, **kwargs):
+    def __init__(self, depth, unfreeze_backbone=True, **kwargs):
         assert depth == 50, 'Only support r50 backbone for sot.'
-        super(SOTResNet, self).__init__(depth, *args, **kwargs)
+        super(SOTResNet, self).__init__(depth, **kwargs)
+        # unfreeze the backbone parameters so that DDP can build all parameters
+        # into buckets.
+        self.unfreeze_backbone = unfreeze_backbone
+        if self.unfreeze_backbone:
+            self._unfreeze_stages()
+
+    def _unfreeze_stages(self):
+        if self.frozen_stages >= 0:
+            if self.deep_stem:
+                self.stem.train()
+                for param in self.stem.parameters():
+                    param.requires_grad = True
+            else:
+                self.norm1.train()
+                for m in [self.conv1, self.norm1]:
+                    for param in m.parameters():
+                        param.requires_grad = True
+
+        for i in range(1, self.frozen_stages + 1):
+            m = getattr(self, f'layer{i}')
+            m.train()
+            for param in m.parameters():
+                param.requires_grad = True
 
     def make_res_layer(self, **kwargs):
         """Pack all blocks in a stage into a ``ResLayer``."""

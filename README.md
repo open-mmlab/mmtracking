@@ -66,10 +66,12 @@ Supported methods of multi object tracking:
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
+- [ ] ByteTrack (arXiv 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/359))
 
 Supported methods of single object tracking:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+- [ ] STARK (ICCV 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/308))
 
 Supported methods of video instance segmentation:
 
@@ -124,3 +126,4 @@ If you find this project useful in your research, please consider cite:
 - [MMGeneration](https://github.com/open-mmlab/mmgeneration):  OpenMMLab Generative Model toolbox and benchmark.
 - [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab optical flow toolbox and benchmark.
 - [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab FewShot Learning Toolbox and Benchmark.
+- [MMHuman3D](https://github.com/open-mmlab/mmhuman3d): OpenMMLab Human Pose and Shape Estimation Toolbox and Benchmark.
