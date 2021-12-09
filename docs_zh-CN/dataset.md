@@ -14,7 +14,7 @@
   - [OTB100](http://www.visual-tracking.net/)
   - [GOT10k](http://got-10k.aitestunion.com/)
   - [VOT2018](https://www.votchallenge.net/vot2018/)
-- 视频个例分割
+- 视频实例分割
   - [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ### 1. 下载数据集
@@ -49,9 +49,9 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
-#### 1.4 视频个例分割
+#### 1.4 视频实例分割
 
-- 对于视频个例分割任务的训练和测试，只需要 YouTube-VIS 中的任意一个数据集（比如 YouTube-VIS 2019）。
+- 对于视频实例分割任务的训练和测试，只需要 YouTube-VIS 中的任意一个数据集（比如 YouTube-VIS 2019）。
 
 #### 1.5 数据集文件夹结构
 
