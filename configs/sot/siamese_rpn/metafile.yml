@@ -24,9 +24,10 @@ Models:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 49.9
-          Norm precision: 57.9
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth
+          Success: 50.1
+          Norm precision: 59.1
+          Precision: 48.7
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth
 
   - Name: siamese_rpn_r50_1x_uav123
     In Collection: SiameseRPN++
@@ -39,10 +40,10 @@ Models:
       - Task: Single Object Tracking
         Dataset: UAV123
         Metrics:
-          Success: 60.6
-          Norm precision: 76.5
-          Precision: 80.5
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20210917_104452-36ac4934.pth
+          Success: 59.8
+          Norm precision: 77.3
+          Precision: 80.0
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20211203_153949-6d82f39e.pth
 
   - Name: siamese_rpn_r50_1x_trackingnet
     In Collection: SiameseRPN++
@@ -55,10 +56,10 @@ Models:
       - Task: Single Object Tracking
         Dataset: TrackingNet
         Metrics:
-          Success: 70.6
-          Norm precision: 77.6
-          Precision: 65.7
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_trackingnet/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth
+          Success: 69.0
+          Norm precision: 75.8
+          Precision: 63.2
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth
 
   - Name: siamese_rpn_r50_1x_otb100
     In Collection: SiameseRPN++
@@ -71,10 +72,26 @@ Models:
       - Task: Single Object Tracking
         Dataset: OTB100
         Metrics:
-          Success: 64.8
-          Norm precision: 83.2
-          Precision: 87.7
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20210920_001757-12636a0a.pth
+          Success: 65.1
+          Norm precision: 82.0
+          Precision: 86.1
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20211203_154048-9dfde4fa.pth
+
+  - Name: siamese_rpn_r50_1x_vot2018
+    In Collection: SiameseRPN++
+    Config: configs/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018.py
+    Metadata:
+      Training Data: MSCOCO, ImageNet DET, ImageNet VID
+      Training Memory (GB): _
+      Epochs: 20
+    Results:
+      - Task: Single Object Tracking
+        Dataset: VOT2018
+        Metrics:
+          EAO: 0.348
+          Accuracy: 0.578
+          Robustness: 0.272
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_1x_vot2018_20211206_211710-10e082cd.pth
 
   - Name: siamese_rpn_r50_fp16_1x_lasot
     In Collection: SiameseRPN++
