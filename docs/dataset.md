@@ -6,6 +6,7 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
 - Multiple Object Tracking
   - [MOT Challenge](https://motchallenge.net/)
+  - [CrowdHuman](https://www.crowdhuman.org/)
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -28,7 +29,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, only one of the MOT Challenge datasets (e.g. MOT17) is needed.
+- For the training and testing of multi object tracking task, only one of the MOT Challenge datasets (e.g. MOT17) and CrowdHuman dataset are needed.
 
 #### 1.3 Single Object Tracking
 
@@ -90,6 +91,18 @@ mmtracking
 |   ├── MOT15/MOT16/MOT17/MOT20
 |   |   ├── train
 |   |   ├── test
+│   │
+│   ├── crowdhuman
+│   │   ├── annotation_train.odgt
+│   │   ├── annotation_val.odgt
+│   │   ├── train
+│   │   │   ├── Images
+│   │   │   ├── CrowdHuman_train01.zip
+│   │   │   ├── CrowdHuman_train02.zip
+│   │   │   ├── CrowdHuman_train03.zip
+│   │   ├── val
+│   │   │   ├── Images
+│   │   │   ├── CrowdHuman_val.zip
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -181,6 +194,9 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
+# CrowdHuman
+python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
+
 # LaSOT
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
@@ -256,6 +272,21 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── crowdhuman
+│   │   ├── annotation_train.odgt
+│   │   ├── annotation_val.odgt
+│   │   ├── train
+│   │   │   ├── Images
+│   │   │   ├── CrowdHuman_train01.zip
+│   │   │   ├── CrowdHuman_train02.zip
+│   │   │   ├── CrowdHuman_train03.zip
+│   │   ├── val
+│   │   │   ├── Images
+│   │   │   ├── CrowdHuman_val.zip
+│   │   ├── annotations
+│   │   │   ├── crowdhuman_train.json
+│   │   │   ├── crowdhuman_val.json
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -430,6 +461,13 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 For validation, The annotation list `val_20.txt` remains the same as format above.
 
 Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corresponding `gt.txt`. The value of ground-truth labels should fall in range `[0, num_classes - 1]`.
+
+#### The folder of annotations in crowdhuman
+
+There are 2 json files in `data/crowdhuman/annotations`:
+
+`crowdhuman_train.json`:  Json file containing the annotations information of the training set in CrowdHuman dataset.
+`crowdhuman_val.json`:  Json file containing the annotations information of the validation set in CrowdHuman dataset.
 
 #### The folder of annotations in lasot
 
