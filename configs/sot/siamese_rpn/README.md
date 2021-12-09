@@ -46,10 +46,10 @@ Note that the checkpoints from 10-th to 20-th epoch will be evaluated during tra
 
 We provide the best model with its configuration and training log.
 
-| Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Config | Download |
-| :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    | 7.54        | 50.0              | 50.1 | 59.1 | [config](siamese_rpn_r50_1x_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612.log.json) |
-| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 49.1 | 57.0 | [config](siamese_rpn_r50_fp16_1x_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245.log.json) |
+| Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision | Config | Download |
+| :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :----: | :------: | :--------: |
+| SiamRPN++ |    R-50    |  -  |   20e    | 7.54        | 50.0              | 50.1 | 59.1 |  48.7 | [config](siamese_rpn_r50_1x_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612.log.json) |
+| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 49.1 | 57.0 | -  | [config](siamese_rpn_r50_fp16_1x_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245.log.json) |
 
 Note:
 
@@ -82,7 +82,7 @@ The checkpoints from 10-th to 20-th epoch will be evaluated during training. You
 
 If you want to get better results, you can use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search). Experimentally, the hyperparameters search on OTB100 can bring around 1.0 Success gain.
 
-**Note:** We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. In our codebase, the Success and Precision are lower 4.5 and 5.3 respectively than those of the paper. Notably, the results below are achieved without hyperparameters search.
+**Note:** The results reported in the paper are 69.6 Success and 91.4 Precision. We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. Without hyperparameters search, we get 65.3 Success and 85.8 Norm Precision. In our codebase, the results below are also achieved without hyperparameters search, close to the results reproduced in pysot in the same setting.
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm Precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
@@ -94,7 +94,7 @@ The checkpoints from 10-th to 20-th epoch will be evaluated during training. You
 
 If you want to get better results, you can use the best checkpoint to search the hyperparameters on VOT2018 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
 
-**Note:** We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results reported in the paper. We only get 0.364 EAO by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 0.05 EAO. In our codebase, the EAO are lower 0.066 than those of the paper. Notably, the results below are achieved without hyperparameters search.
+**Note:** The result reported in the paper is 0.414 EAO. We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same result. We only get 0.364 EAO by following the training and hyperparameters searching instructions of pysot, which is lower than that of the paper by 0.05 EAO. Without hyperparameters search, we get 0.346 EAO. In our codebase, the results below are also achieved without hyperparameters search, close to the results reproduced in pysot in the same setting.
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | EAO | Accuracy | Robustness | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
