@@ -63,6 +63,14 @@ Example on OTB100 dataset:
 [--penalty-k-range 0.3,0.45,0.02] [--lr-range 0.35,0.5,0.02] [--win-infu-range 0.46,0.55,0.02]
 ```
 
+Example on VOT2018 dataset:
+
+```shell
+./tools/analysis/sot/dist_sot_siamrpn_param_search.sh [${CONFIG_FILE}] [$GPUS] \
+[--checkpoint ${CHECKPOINT}] [--log ${LOG_FILENAME}] [--eval ${EVAL}] \
+[--penalty-k-range 0.01,0.31,0.05] [--lr-range 0.2,0.51,0.05] [--win-infu-range 0.3,0.56,0.05]
+```
+
 ## Log Analysis
 
 `tools/analysis/analyze_logs.py` plots loss/mAP curves given a training log file.

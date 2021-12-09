@@ -133,13 +133,19 @@ def main():
     logger.info(f'Distributed training: {distributed}')
     logger.info(f'Config:\n{cfg.pretty_text}')
 
-    # set random seeds
-    seed = init_random_seed(args.seed)
-    logger.info(f'Set random seed to {seed}, '
-                f'deterministic: {args.deterministic}')
-    set_random_seed(seed, deterministic=args.deterministic)
-    cfg.seed = seed
-    meta['seed'] = seed
+    # set random seeds. Force setting fixed seed and deterministic=True in SOT
+    # configs
+    if args.seed is not None:
+        cfg.seed = args.seed
+    elif cfg.get('seed', None) is None:
+        cfg.seed = init_random_seed()
+
+    deterministic = True if args.deterministic else cfg.get(
+        'deterministic', False)
+    logger.info(f'Set random seed to {cfg.seed}, '
+                f'deterministic: {deterministic}')
+    set_random_seed(cfg.seed, deterministic=deterministic)
+    meta['seed'] = cfg.seed
 
     if cfg.get('train_cfg', False):
         model = build_model(
