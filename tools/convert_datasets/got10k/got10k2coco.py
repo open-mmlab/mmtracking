@@ -46,9 +46,12 @@ def convert_got10k(ann_dir, save_dir, split='test'):
     if split in ['train', 'test', 'val']:
         videos_list = mmcv.list_from_file(osp.join(ann_dir, split, 'list.txt'))
     else:
-        videos_id_list = sorted(
-            mmcv.list_from_file(
-                osp.join(ann_dir, 'train', f'got10k_{split}_split.txt')))
+        vot_split_file = osp.join(ann_dir, 'train',
+                                  f'got10k_{split}_split.txt')
+        if not os.path.exists(vot_split_file):
+            print(f"Warning: '{vot_split_file}' does not exist")
+            return
+        videos_id_list = sorted(mmcv.list_from_file(vot_split_file))
         videos_list = [
             'GOT-10k_Train_%06d' % (int(video_id) + 1)
             for video_id in videos_id_list

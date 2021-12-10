@@ -6,6 +6,8 @@ if [ ! -d $new_train_dir ]; then
     mkdir $new_train_dir
 fi
 cp $train_dir/list.txt $new_train_dir
+[[ -s $train_dir/got10k_vot_train_split.txt ]] && cp $train_dir/got10k_vot_train_split.txt $new_train_dir
+[[ -s $train_dir/got10k_vot_val_split.txt ]] && cp $train_dir/got10k_vot_val_split.txt $new_train_dir
 for x in $(ls $train_dir); do
     if [ ${x##*.} == zip ]; then
         unzip $train_dir/$x -d $new_train_dir

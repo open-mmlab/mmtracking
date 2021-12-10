@@ -318,6 +318,8 @@ mmtracking
 │   │   │   │   ├── ......
 │   │   │   │   ├── GOT-10k_Train_split_19.zip
 │   │   │   │   ├── list.txt
+│   │   │   │   ├── got10k_vot_train_split.txt
+│   │   │   │   ├── got10k_vot_val_split.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │   │── train
@@ -325,6 +327,8 @@ mmtracking
 │   │   │   │   ├── ......
 │   │   │   ├── GOT-10k_Train_009335
 │   │   │   ├── list.txt
+│   │   │   │   ├── got10k_vot_train_split.txt
+│   │   │   │   ├── got10k_vot_val_split.txt
 │   │   │── test
 │   │   │   ├── GOT-10k_Test_000001
 │   │   │   │   ├── ......
