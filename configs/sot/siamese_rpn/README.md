@@ -2,31 +2,19 @@
 
 ## Abstract
 
-Siamese network based trackers formulate tracking as
-convolutional feature cross-correlation between a target
-template and a search region. However, Siamese track-
-ers still have an accuracy gap compared with state-of-the-
-art algorithms and they cannot take advantage of features
-from deep networks, such as ResNet-50 or deeper. In this
-work we prove the core reason comes from the lack of strict
-translation invariance. By comprehensive theoretical anal-
-ysis and experimental validations, we break this restriction
-through a simple yet effective spatial aware sampling strat-
-egy and successfully train a ResNet-driven Siamese tracker
-with significant performance gain. Moreover, we propose
-a new model architecture to perform layer-wise and depth-
-wise aggregations, which not only further improves the ac-
-curacy but also reduces the model size. We conduct exten-
-sive ablation studies to demonstrate the effectiveness of the
-proposed tracker, which obtains currently the best results
-on five large tracking benchmarks, including OTB2015,
-VOT2018, UAV123, LaSOT, and TrackingNet.
+<!-- [ABSTRACT] -->
+
+Siamese network based trackers formulate tracking as convolutional feature cross-correlation between a target template and a search region. However, Siamese trackers still have an accuracy gap compared with state-of-the-art algorithms and they cannot take advantage of features from deep networks, such as ResNet-50 or deeper. In this work we prove the core reason comes from the lack of strict translation invariance. By comprehensive theoretical analysis and experimental validations, we break this restriction through a simple yet effective spatial aware sampling strategy and successfully train a ResNet-driven Siamese tracker with significant performance gain. Moreover, we propose a new model architecture to perform layer-wise and depth-wise aggregations, which not only further improves the accuracy but also reduces the model size. We conduct extensive ablation studies to demonstrate the effectiveness of the proposed tracker, which obtains currently the best results on five large tracking benchmarks, including OTB2015, VOT2018, UAV123, LaSOT, and TrackingNet.
+
+<!-- [IMAGE] -->
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142985529-0a9b4e18-5476-40c6-8abf-7d68aab1e5c9.png"/>
 </div>
 
 ## Citation
+
+<!-- [ALGORITHM] -->
 
 ```latex
 @inproceedings{li2019siamrpn++,

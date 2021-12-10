@@ -2,18 +2,19 @@
 
 ## Abstract
 
-Deep convolutional neutral networks have achieved
-great success on image recognition tasks. Yet, it is nontrivial to transfer the state-of-the-art image recognition networks to videos as per-frame evaluation is too slow and unaffordable. We present deep feature flow, a fast and accurate framework for video recognition. It runs the expensive convolutional sub-network only on sparse key frames
-and propagates their deep feature maps to other frames via
-a flow field. It achieves significant speedup as flow computation is relatively fast. The end-to-end training of the
-whole architecture significantly boosts the recognition accuracy. Deep feature flow is flexible and general. It is validated on two video datasets on object detection and semantic segmentation. It significantly advances the practice of
-video recognition tasks.
+<!-- [ABSTRACT] -->
+
+Deep convolutional neutral networks have achieved great success on image recognition tasks. Yet, it is nontrivial to transfer the state-of-the-art image recognition networks to videos as per-frame evaluation is too slow and unaffordable. We present deep feature flow, a fast and accurate framework for video recognition. It runs the expensive convolutional sub-network only on sparse key frames and propagates their deep feature maps to other frames via a flow field. It achieves significant speedup as flow computation is relatively fast. The end-to-end training of the whole architecture significantly boosts the recognition accuracy. Deep feature flow is flexible and general. It is validated on two video datasets on object detection and semantic segmentation. It significantly advances the practice of video recognition tasks.
+
+<!-- [IMAGE] -->
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142985441-53afc070-6646-404b-869a-e967dc92bde6.png"/>
 </div>
 
 ## Citation
+
+<!-- [ALGORITHM] -->
 
 ```latex
 @inproceedings{zhu2017deep,
