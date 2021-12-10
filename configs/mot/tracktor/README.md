@@ -2,13 +2,19 @@
 
 ## Abstract
 
+<!-- [ABSTRACT] -->
+
 The problem of tracking multiple objects in a video sequence poses several challenging tasks. For tracking-by-detection, these include object re-identification, motion prediction and dealing with occlusions. We present a tracker (without bells and whistles) that accomplishes tracking without specifically targeting any of these tasks, in particular, we perform no training or optimization on tracking data. To this end, we exploit the bounding box regression of an object detector to predict the position of an object in the next frame, thereby converting a detector into a Tracktor. We demonstrate the potential of Tracktor and provide a new state-of-the-art on three multi-object tracking benchmarks by extending it with a straightforward re-identification and camera motion compensation. We then perform an analysis on the performance and failure cases of several state-of-the-art tracking methods in comparison to our Tracktor. Surprisingly, none of the dedicated tracking methods are considerably better in dealing with complex tracking scenarios, namely, small and occluded objects or missing detections. However, our approach tackles most of the easy tracking scenarios. Therefore, we motivate our approach as a new tracking paradigm and point out promising future research directions. Overall, Tracktor yields superior tracking performance than any current tracking method and our analysis exposes remaining and unsolved tracking challenges to inspire future research directions.
+
+<!-- [IMAGE] -->
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142983507-fcf71ca3-82c2-4e36-9840-3115476ee23f.png"/>
 </div>
 
 ## Citation
+
+<!-- [ALGORITHM] -->
 
 ```latex
 @inproceedings{bergmann2019tracking,
