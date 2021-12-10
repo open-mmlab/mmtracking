@@ -48,6 +48,8 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
+- For GOT10k, there are 1k videos in official training set that are forbidden from "using to train models then testing on VOT" (as required by [VOT Challenge](https://www.votchallenge.net/vot2019/participation.html)). Following the common setting, we use the video IDs on [got10k_vot_train_split.txt](https://github.com/visionml/pytracking/blob/master/ltr/data_specs/got10k_vot_train_split.txt) to train and [got10k_vot_val_split.txt](https://github.com/visionml/pytracking/blob/master/ltr/data_specs/got10k_vot_val_split.txt) to evaluation.
+
 #### 1.4 Video Instance Segmentation
 
 - For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
@@ -127,6 +129,8 @@ mmtracking
 │   │   │   │   ├── ......
 │   │   │   │   ├── GOT-10k_Train_split_19.zip
 │   │   │   │   ├── list.txt
+│   │   │   │   ├── got10k_vot_train_split.txt
+│   │   │   │   ├── got10k_vot_val_split.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │

@@ -48,6 +48,8 @@ python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips 
 python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
 ```
 
+- 如果参与 [VOT Challenge](https://www.votchallenge.net/vot2019/participation.html)， GOT10k 的官方训练集中有 1k 的视频数据被禁止用来训练模型。鉴于此，我们按照通用的设定，仅使用 ID 出现在 [got10k_vot_train_split.txt](https://github.com/visionml/pytracking/blob/master/ltr/data_specs/got10k_vot_train_split.txt) 的视频来训练模型，使用 ID 出现在 [got10k_vot_val_split.txt](https://github.com/visionml/pytracking/blob/master/ltr/data_specs/got10k_vot_val_split.txt) 上的视频来验证模型。
+
 #### 1.4 视频个例分割
 
 - 对于视频个例分割任务的训练和测试，只需要 YouTube-VIS 中的任意一个数据集（比如 YouTube-VIS 2019）。
@@ -127,6 +129,8 @@ mmtracking
 │   │   │   │   ├── ......
 │   │   │   │   ├── GOT-10k_Train_split_19.zip
 │   │   │   │   ├── list.txt
+│   │   │   │   ├── got10k_vot_train_split.txt
+│   │   │   │   ├── got10k_vot_val_split.txt
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │

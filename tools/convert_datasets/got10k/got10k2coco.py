@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument(
         '--split',
         help="the split set of GOT10k, 'all' denotes the whole dataset",
-        choices=['train', 'test', 'val', 'all'],
+        choices=['train', 'test', 'val', 'vot_train', 'vot_val', 'all'],
         default='all')
     return parser.parse_args()
 
@@ -37,17 +37,29 @@ def convert_got10k(ann_dir, save_dir, split='test'):
         save_dir (str): The path to save `got10k`.
         split (str): the split ('train'， 'val' or 'test') of dataset.
     """
-    assert split in ['train', 'test', 'val'], f'split [{split}] does not exist'
+    assert split in ['train', 'test', 'val', 'vot_train',
+                     'vot_val'], f'split [{split}] does not exist'
     got10k = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     got10k['categories'] = [dict(id=0, name=0)]
 
-    videos_list = mmcv.list_from_file(osp.join(ann_dir, split, 'list.txt'))
+    if split in ['train', 'test', 'val']:
+        videos_list = mmcv.list_from_file(osp.join(ann_dir, split, 'list.txt'))
+    else:
+        videos_id_list = sorted(
+            mmcv.list_from_file(
+                osp.join(ann_dir, 'train', f'got10k_{split}_split.txt')))
+        videos_list = [
+            'GOT-10k_Train_%06d' % (int(video_id) + 1)
+            for video_id in videos_id_list
+        ]
     for video_name in tqdm(videos_list, desc=split):
         video = dict(id=records['vid_id'], name=video_name)
         got10k['videos'].append(video)
-
-        video_path = osp.join(ann_dir, split, video_name)
+        if split in ['train', 'test', 'val']:
+            video_path = osp.join(ann_dir, split, video_name)
+        else:
+            video_path = osp.join(ann_dir, 'train', video_name)
         ann_file = osp.join(video_path, 'groundtruth.txt')
         gt_bboxes = mmcv.list_from_file(ann_file)
 
@@ -55,7 +67,7 @@ def convert_got10k(ann_dir, save_dir, split='test'):
         img_files = sorted(img_files, key=lambda x: int(x.split('/')[-1][:-4]))
         img = mmcv.imread(osp.join(video_path, '00000001.jpg'))
         height, width, _ = img.shape
-        if split in ['train', 'val']:
+        if split != 'test':
             absence_label = mmcv.list_from_file(
                 osp.join(video_path, 'absence.label'))
             # cover_label denotes the ranges of object visible ratios, ant it's
@@ -125,7 +137,7 @@ def convert_got10k(ann_dir, save_dir, split='test'):
 def main():
     args = parse_args()
     if args.split == 'all':
-        for split in ['train', 'val', 'test']:
+        for split in ['train', 'val', 'test', 'vot_train', 'vot_val']:
             convert_got10k(args.input, args.output, split=split)
     else:
         convert_got10k(args.input, args.output, split=args.split)
