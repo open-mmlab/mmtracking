@@ -29,7 +29,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, only one of the MOT Challenge datasets (e.g. MOT17) and CrowdHuman dataset are needed.
+- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) is needed, and CrowdHuman can be served as comlementary dataset.
 
 #### 1.3 Single Object Tracking
 
@@ -403,25 +403,25 @@ mmtracking
 
 #### The folder of annotations in ILSVRC
 
-There are 3 json files in `data/ILSVRC/annotations`:
+There are 3 JSON files in `data/ILSVRC/annotations`:
 
-`imagenet_det_30plus1cls.json`: Json file containing the annotations information of the training set in ImageNet DET dataset. The `30` in `30plus1cls` denotes the overlapped 30 categories in ImageNet VID dataset, and the `1cls` means we take the other 170 categories in ImageNet DET dataset as a category, named as `other_categeries`.
+`imagenet_det_30plus1cls.json`: JSON file containing the annotations information of the training set in ImageNet DET dataset. The `30` in `30plus1cls` denotes the overlapped 30 categories in ImageNet VID dataset, and the `1cls` means we take the other 170 categories in ImageNet DET dataset as a category, named as `other_categeries`.
 
-`imagenet_vid_train.json`: Json file containing the annotations information of the training set in ImageNet VID dataset.
+`imagenet_vid_train.json`: JSON file containing the annotations information of the training set in ImageNet VID dataset.
 
-`imagenet_vid_val.json`: Json file containing the annotations information of the validation set in ImageNet VID dataset.
+`imagenet_vid_val.json`: JSON file containing the annotations information of the validation set in ImageNet VID dataset.
 
 #### The folder of annotations and reid in MOT15/MOT16/MOT17/MOT20
 
 We take MOT17 dataset as examples, the other datasets share similar structure.
 
-There are 8 json files in `data/MOT17/annotations`:
+There are 8 JSON files in `data/MOT17/annotations`:
 
-`train_cocoformat.json`: Json file containing the annotations information of the training set in MOT17 dataset.
+`train_cocoformat.json`: JSON file containing the annotations information of the training set in MOT17 dataset.
 
 `train_detections.pkl`: Pickle file containing the public detections of the training set in MOT17 dataset.
 
-`test_cocoformat.json`: Json file containing the annotations information of the testing set in MOT17 dataset.
+`test_cocoformat.json`: JSON file containing the annotations information of the testing set in MOT17 dataset.
 
 `test_detections.pkl`: Pickle file containing the public detections of the testing set in MOT17 dataset.
 
@@ -464,65 +464,65 @@ Images in `reid/imgs` are cropped from raw images in `MOT17/train` by the corres
 
 #### The folder of annotations in crowdhuman
 
-There are 2 json files in `data/crowdhuman/annotations`:
+There are 2 JSON files in `data/crowdhuman/annotations`:
 
-`crowdhuman_train.json`:  Json file containing the annotations information of the training set in CrowdHuman dataset.
-`crowdhuman_val.json`:  Json file containing the annotations information of the validation set in CrowdHuman dataset.
+`crowdhuman_train.json`:  JSON file containing the annotations information of the training set in CrowdHuman dataset.
+`crowdhuman_val.json`:  JSON file containing the annotations information of the validation set in CrowdHuman dataset.
 
 #### The folder of annotations in lasot
 
-There are 2 json files in `data/lasot/annotations`:
+There are 2 JSON files in `data/lasot/annotations`:
 
-`lasot_train.json`:  Json file containing the annotations information of the training set in LaSOT dataset.
-`lasot_test.json`:  Json file containing the annotations information of the testing set in LaSOT dataset.
+`lasot_train.json`:  JSON file containing the annotations information of the training set in LaSOT dataset.
+`lasot_test.json`:  JSON file containing the annotations information of the testing set in LaSOT dataset.
 
 #### The folder of annotations in UAV123
 
-There are only 1 json files in `data/UAV123/annotations`:
+There are only 1 JSON files in `data/UAV123/annotations`:
 
-`uav123.json`:  Json file containing the annotations information of the UAV123 dataset.
+`uav123.json`:  JSON file containing the annotations information of the UAV123 dataset.
 
 #### The folder of frames and annotations in TrackingNet
 
 There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video. Similar file structures can be seen in `data/trackingnet/TRAIN_{*}/frames`.
 
-There are 2 json files in `data/trackingnet/annotations`:
+There are 2 JSON files in `data/trackingnet/annotations`:
 
-`trackingnet_test.json`:  Json file containing the annotations information of the testing set in TrackingNet dataset.
-`trackingnet_train.json`:  Json file containing the annotations information of the training set in TrackingNet dataset.
+`trackingnet_test.json`:  JSON file containing the annotations information of the testing set in TrackingNet dataset.
+`trackingnet_train.json`:  JSON file containing the annotations information of the training set in TrackingNet dataset.
 
 #### The folder of data and annotations in OTB100
 
 There are 98 video directories of OTB100 dataset in `data/otb100/data`, and the `img` folder under each video directory contains all images of the video.
 
-There are only 1 json files in `data/otb100/annotations`:
+There are only 1 JSON files in `data/otb100/annotations`:
 
-`otb100.json`:  Json file containing the annotations information of the OTB100 dataset.
+`otb100.json`:  JSON file containing the annotations information of the OTB100 dataset.
 
 #### The folder of frames and annotations in GOT10k
 
 There are training video directories in `data/got10k/train`, and each video directory contains all images of the video. Similar file structures can be seen in `data/got10k/test` and `data/got10k/val`.
 
-There are 3 json files in `data/got10k/annotations`:
+There are 3 JSON files in `data/got10k/annotations`:
 
-`got10k_train.json`:  Json file containing the annotations information of the training set in GOT10k dataset.
-`got10k_test.json`:  Json file containing the annotations information of the testing set in GOT10k dataset.
-`got10k_val.json`:  Json file containing the annotations information of the valuation set in GOT10k dataset.
+`got10k_train.json`:  JSON file containing the annotations information of the training set in GOT10k dataset.
+`got10k_test.json`:  JSON file containing the annotations information of the testing set in GOT10k dataset.
+`got10k_val.json`:  JSON file containing the annotations information of the valuation set in GOT10k dataset.
 
 #### The folder of data and annotations in VOT2018
 
 There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and the `color` folder under each video directory contains all images of the video.
 
-There are only 1 json files in `data/vot2018/annotations`:
+There are only 1 JSON files in `data/vot2018/annotations`:
 
-`vot2018.json`:  Json file containing the annotations information of the VOT2018 dataset.
+`vot2018.json`:  JSON file containing the annotations information of the VOT2018 dataset.
 
 #### The folder of annotations in youtube_vis_2019/youtube_vis2021
 
-There are 3 json files in `data/youtube_vis_2019/annotations` or `data/youtube_vis_2021/annotations`:
+There are 3 JSON files in `data/youtube_vis_2019/annotations` or `data/youtube_vis_2021/annotations`:
 
-`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: Json file containing the annotations information of the training set in youtube_vis_2019/youtube_vis2021 dataset.
+`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: JSON file containing the annotations information of the training set in youtube_vis_2019/youtube_vis2021 dataset.
 
-`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: Json file containing the annotations information of the validation set in youtube_vis_2019/youtube_vis2021 dataset.
+`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: JSON file containing the annotations information of the validation set in youtube_vis_2019/youtube_vis2021 dataset.
 
-`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: Json file containing the annotations information of the testing set in youtube_vis_2019/youtube_vis2021 dataset.
+`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: JSON file containing the annotations information of the testing set in youtube_vis_2019/youtube_vis2021 dataset.

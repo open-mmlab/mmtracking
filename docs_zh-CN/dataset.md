@@ -29,7 +29,7 @@
 
 #### 1.2 多目标跟踪
 
-- 对于多目标跟踪任务的训练和测试，只需要 MOT Challenge 中的任意一个数据集（比如 MOT17）和 CrowdHuman 数据集。
+- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）， CrowdHuman 可以作为补充数据。
 
 #### 1.3 单目标跟踪
 
@@ -404,26 +404,26 @@ mmtracking
 
 #### ILSVRC 的标注文件夹
 
-在`data/ILSVRC/annotations`中有 3 个 json 文件:
+在`data/ILSVRC/annotations`中有 3 个 JSON 文件:
 
 `imagenet_det_30plus1cls.json`: 包含 ImageNet DET 训练集标注信息的json文件。`30plus1cls` 中的 `30` 表示本数据集与 ImageNet VID 数据集重合的30类，`1cls` 表示我们将 ImageNet Det 数据集中的其余170类作为一类，
 并命名为 `other_categeries`。
 
-`imagenet_vid_train.json`: 包含 ImageNet VID 训练集标注信息的 json 文件。
+`imagenet_vid_train.json`: 包含 ImageNet VID 训练集标注信息的 JSON 文件。
 
-`imagenet_vid_val.json`: 包含 ImageNet VID 验证集标注信息的 json 文件。
+`imagenet_vid_val.json`: 包含 ImageNet VID 验证集标注信息的 JSON 文件。
 
 #### MOT15/MOT16/MOT17/MOT20 的标注和 reid 文件夹
 
 我们以MOT17为例，其余数据集结构相似。
 
-在 `data/MOT17/annotations` 中有 8 个 json 文件:
+在 `data/MOT17/annotations` 中有 8 个 JSON 文件:
 
-`train_cocoformat.json`: 包含 MOT17 训练集标注信息的 json 文件。
+`train_cocoformat.json`: 包含 MOT17 训练集标注信息的 JSON 文件。
 
 `train_detections.pkl`: 包含 MOT17 训练集公共检测结果信息的 pickle 文件。
 
-`test_cocoformat.json`: 包含 MOT17 测试集标注信息的 json 文件。
+`test_cocoformat.json`: 包含 MOT17 测试集标注信息的 JSON 文件。
 
 `test_detections.pkl`: 包含 MOT17 测试集公共检测结果信息的 pickle 文件。
 
@@ -470,65 +470,65 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### crowdhuman 的标注文件夹
 
-在 `data/crowdhuman/annotations` 中有 2 个 json 文件:
+在 `data/crowdhuman/annotations` 中有 2 个 JSON 文件:
 
-`crowdhuman_train.json`:  包含 CrowdHuman 训练集标注信息的 json 文件。
-`crowdhuman_val.json`:  包含 CrowdHuman 验证集标注信息的 json 文件。
+`crowdhuman_train.json`:  包含 CrowdHuman 训练集标注信息的 JSON 文件。
+`crowdhuman_val.json`:  包含 CrowdHuman 验证集标注信息的 JSON 文件。
 
 #### lasot 的标注文件夹
 
-在 `data/lasot/annotations` 中有 2 个 json 文件:
+在 `data/lasot/annotations` 中有 2 个 JSON 文件:
 
-`lasot_train.json`:  包含 LaSOT 训练集标注信息的 json 文件。
-`lasot_test.json`:  包含 LaSOT 测试集标注信息的 json 文件。
+`lasot_train.json`:  包含 LaSOT 训练集标注信息的 JSON 文件。
+`lasot_test.json`:  包含 LaSOT 测试集标注信息的 JSON 文件。
 
 #### UAV123 的标注文件夹
 
-在 `data/UAV123/annotations` 中只有 1 个 json 文件:
+在 `data/UAV123/annotations` 中只有 1 个 JSON 文件:
 
-`uav123.json`: 包含 UAV123 数据集标注信息的 json 文件。
+`uav123.json`: 包含 UAV123 数据集标注信息的 JSON 文件。
 
 #### TrackingNet 的标注和视频帧文件夹
 
 在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。`data/trackingnet/TRAIN_{*}/frames` 下具有类似的文件目录结构。
 
-在 `data/trackingnet/annotations` 中有 2 个 json 文件：
+在 `data/trackingnet/annotations` 中有 2 个 JSON 文件：
 
-`trackingnet_train.json`： 包含 TrackingNet 训练集标注信息的 json 文件。
-`trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 json 文件。
+`trackingnet_train.json`： 包含 TrackingNet 训练集标注信息的 JSON 文件。
+`trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 JSON 文件。
 
 #### OTB100 的标注和视频帧文件夹
 
 在 `data/otb100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
 
-在 `data/otb100/data/annotations` 中只有 1 个 json 文件：
+在 `data/otb100/data/annotations` 中只有 1 个 JSON 文件：
 
-`otb100.json`： 包含 OTB100 数据集标注信息的 json 文件
+`otb100.json`： 包含 OTB100 数据集标注信息的 JSON 文件
 
 #### GOT10k 的标注和视频帧文件夹
 
 在 `data/got10k/train` 文件夹下有 GOT10k 训练集的视频目录， 每个视频目录下面包含该视频所有图片。`data/got10k/test` 和 `data/got10k/val` 下具有类似的文件目录结构。
 
-在 `data/got10k/annotations` 中有 3 个 json 文件：
+在 `data/got10k/annotations` 中有 3 个 JSON 文件：
 
-`got10k_train.json`： 包含 GOT10k 训练集标注信息的 json 文件。
-`got10k_test.json`： 包含 GOT10k 测试集标注信息的 json 文件。
-`got10k_val.json`： 包含 GOT10k 验证集标注信息的 json 文件。
+`got10k_train.json`： 包含 GOT10k 训练集标注信息的 JSON 文件。
+`got10k_test.json`： 包含 GOT10k 测试集标注信息的 JSON 文件。
+`got10k_val.json`： 包含 GOT10k 验证集标注信息的 JSON 文件。
 
 #### VOT2018的标注和视频帧文件夹
 
 在 `data/vot2018/data` 文件夹下有 VOT2018 数据集的 60 个视频目录， 每个视频目录下的 `color` 文件夹包含该视频所有图片。
 
-在 `data/vot2018/data/annotations` 中只有一个 json 文件：
+在 `data/vot2018/data/annotations` 中只有一个 JSON 文件：
 
-`vot2018.json`： 包含 VOT2018 数据集标注信息的 json 文件。
+`vot2018.json`： 包含 VOT2018 数据集标注信息的 JSON 文件。
 
 #### youtube_vis_2019/youtube_vis2021 的标注文件夹
 
-在 `data/youtube_vis_2019/annotations` 或者 `data/youtube_vis_2021/annotations` 下有 3 个 json 文件：
+在 `data/youtube_vis_2019/annotations` 或者 `data/youtube_vis_2021/annotations` 下有 3 个 JSON 文件：
 
-`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: 包含着 youtube_vis_2019/youtube_vis2021 训练集注释信息的 json 文件。
+`youtube_vis_2019_train.json`/`youtube_vis_2021_train.json`: 包含着 youtube_vis_2019/youtube_vis2021 训练集注释信息的 JSON 文件。
 
-`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: 包含着 youtube_vis_2019/youtube_vis2021 验证集注释信息的 json 文件。
+`youtube_vis_2019_valid.json`/`youtube_vis_2021_valid.json`: 包含着 youtube_vis_2019/youtube_vis2021 验证集注释信息的 JSON 文件。
 
-`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: 包含着 youtube_vis_2019/youtube_vis2021 测试集注释信息的 json 文件。
+`youtube_vis_2019_test.json`/`youtube_vis_2021_test.json`: 包含着 youtube_vis_2019/youtube_vis2021 测试集注释信息的 JSON 文件。
