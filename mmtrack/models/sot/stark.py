@@ -294,13 +294,14 @@ class Stark(BaseSingleObjectTracker):
             track_results, _ = self.head(
                 head_dict_inputs, run_box_head=True, run_cls_head=False)
 
-        # get confidence score (whether the search region is reliable)
-        conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
-
         final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
                                             self.memo.bbox, resize_factor)
         final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
-        self.update_template(img, final_bbox, conf_score)
+
+        if self.head.run_cls_head:
+            # get confidence score (whether the search region is reliable)
+            conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
+            self.update_template(img, final_bbox, conf_score)
 
         return conf_score, final_bbox
 

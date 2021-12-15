@@ -1,4 +1,5 @@
 cudnn_benchmark = True
+persistent_workers = True
 crop_size = 511
 exemplar_size = 127
 search_size = 255
@@ -145,6 +146,7 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=2,
+    persistent_workers=True,
     train=[
         dict(datasets_sampling_prob=[1], train_cls=False),
         dict(
@@ -204,8 +206,8 @@ data = dict(
     test=dict(
         type='GOT10kDataset',
         test_load_ann=True,
-        ann_file=data_root + 'got10k/annotations/got10k_val.json',
-        img_prefix=data_root + 'got10k/val',
+        ann_file=data_root + 'got10k/annotations/got10k_test.json',
+        img_prefix=data_root + 'got10k/test',
         pipeline=test_pipeline,
         ref_img_sampler=None,
         test_mode=True))
@@ -221,11 +223,11 @@ optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[400])
 # checkpoint saving
-checkpoint_config = dict(interval=100)
+checkpoint_config = dict(interval=25)
 evaluation = dict(
     metric=['track'],
     interval=100,
-    start=300,
+    start=500,
     rule='greater',
     save_best='success')
 # yapf:disable
