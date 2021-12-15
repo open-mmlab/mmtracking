@@ -3,6 +3,8 @@ import numpy as np
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor
+import torch
+import torch.nn.functional as F
 
 
 @PIPELINES.register_module()
@@ -167,6 +169,23 @@ class ConcatVideoTripleReferences(object):
 
         return outs
 
+@PIPELINES.register_module()
+class CheckDataValidity(object):
+
+    def __init__(self, stride):
+        self.stride = stride
+
+    def __call__(self, results):
+        for _results in results:
+            mask = torch.from_numpy(_results['att_mask'].copy())
+            feat_size = _results['img'].shape[0] // self.stride
+            downsample_mask = F.interpolate(
+                mask[None, None].float(), size=feat_size).to(torch.bool)[0]
+            if (downsample_mask == 1).all():
+                _results['valid'] = False
+            else:
+                _results['valid'] = True
+        return results
 
 @PIPELINES.register_module()
 class MultiImagesToTensor(object):

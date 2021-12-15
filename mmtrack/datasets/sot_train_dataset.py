@@ -334,9 +334,19 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                         if not valid:
                             continue
                         visible = valid
+                        # lasot and got10k have visible keys. All keys are bool
+                        # denoting whether the object is absence except the
+                        # key 'cover' in got10k. The values of key 'cover' are
+                        # int numbers in range [0,8], which correspond to
+                        # ranges of object visible ratios: 0%, (0%, 15%],
+                        # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
+                        # (75%, 90%], (90%, 100%) and 100% respectively
                         if self.visible_keys is not None:
                             for key in self.visible_keys:
-                                visible &= ~ann[key]
+                                if isinstance(ann[key], bool):
+                                    visible &= ~ann[key]
+                                else:
+                                    visible &= ann[key] > 0
                         is_visible_ann.append(visible)
 
                         bbox = [[
@@ -437,8 +447,18 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
             introduced by pipeline.
         """
 
-        is_visible_ann, ann_infos, img_infos = self.get_visible_info()
-        inds_intra_video = self.sampling_trident(is_visible_ann)
-        results = self.prepare_results(inds_intra_video, ann_infos, img_infos)
-        results = self.pipeline(results)
+        valid = False
+        while not valid:
+            is_visible_ann, ann_infos, img_infos = self.get_visible_info()
+            inds_intra_video = self.sampling_trident(is_visible_ann)
+            results = self.prepare_results(inds_intra_video, ann_infos,
+                                           img_infos)
+            results = self.pipeline(results)
+            valid = True
+            img_metas = results['img_metas'].data + results[
+                'search_img_metas'].data
+            for x in img_metas:
+                if not x['valid']:
+                    valid = False
+                    break
         return results
