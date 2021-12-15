@@ -298,6 +298,7 @@ class Stark(BaseSingleObjectTracker):
                                             self.memo.bbox, resize_factor)
         final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
 
+        conf_score = -1
         if self.head.run_cls_head:
             # get confidence score (whether the search region is reliable)
             conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
