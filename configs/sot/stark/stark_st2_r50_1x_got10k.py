@@ -1,10 +1,5 @@
 _base_ = ['./stark_r50_1x_got10k.py']
-cudnn_benchmark = True
-persistent_workers = True
 find_unused_parameters = True
-crop_size = 511
-exemplar_size = 127
-search_size = 255
 
 # model setting
 model = dict(
@@ -129,4 +124,4 @@ log_config = dict(
 # yapf:enable
 # runtime settings
 total_epochs = 50
-load_from = None
+load_from = 'checkpoints/stark_official_models/converted_got10k_starkst1.pth.tar'
