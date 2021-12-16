@@ -1,6 +1,7 @@
 _base_ = ['./stark_r50_1x_got10k.py']
 cudnn_benchmark = True
 persistent_workers = True
+find_unused_parameters = True
 crop_size = 511
 exemplar_size = 127
 search_size = 255

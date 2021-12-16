@@ -254,8 +254,8 @@ class StarkHead(BaseModule):
             positional_encoding)
         self.run_bbox_head = run_bbox_head
         self.run_cls_head = run_cls_head
+        self.bbox_head = build_head(bbox_head)
         if self.run_bbox_head:
-            self.bbox_head = build_head(bbox_head)
             self.loss_bbox = build_loss(loss_bbox)
             self.loss_iou = build_loss(loss_iou)
         if self.run_cls_head:

@@ -368,6 +368,14 @@ class Stark(BaseSingleObjectTracker):
                       att_mask, search_img_metas, search_gt_bboxes,
                       search_gt_labels, search_att_mask, **kwargs):
 
+        # print('----------------------------')
+        # for name, x in self.named_parameters():
+        #     if x.requires_grad:
+        #         print(name)
+        # for name, x in self.named_modules():
+        #     if isinstance(x, _BatchNorm):
+        #         print(x.training, name)
+
         z1_dict = self.forward_before_head(img[:, 0], att_mask[:, 0])
         z2_dict = self.forward_before_head(img[:, 1], att_mask[:, 1])
         x_dict = self.forward_before_head(search_img[:, 0], search_att_mask[:,
