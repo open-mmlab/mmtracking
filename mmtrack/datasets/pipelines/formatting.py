@@ -1,5 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+import torch
+import torch.nn.functional as F
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor
@@ -8,6 +10,7 @@ from mmdet.datasets.pipelines import to_tensor
 @PIPELINES.register_module()
 class ConcatVideoReferences(object):
     """Concat video references.
+
     If the input list contains at least two dicts, concat the input list of
     dict to one dict from 2-nd dict of the input list.
     Args:
@@ -166,6 +169,25 @@ class ConcatVideoTripleReferences(object):
         outs.append(self.concat_one_mode_results(search_results))
 
         return outs
+
+
+@PIPELINES.register_module()
+class CheckDataValidity(object):
+
+    def __init__(self, stride):
+        self.stride = stride
+
+    def __call__(self, results):
+        for _results in results:
+            mask = torch.from_numpy(_results['att_mask'].copy())
+            feat_size = _results['img'].shape[0] // self.stride
+            downsample_mask = F.interpolate(
+                mask[None, None].float(), size=feat_size).to(torch.bool)[0]
+            if (downsample_mask == 1).all():
+                _results['valid'] = False
+            else:
+                _results['valid'] = True
+        return results
 
 
 @PIPELINES.register_module()

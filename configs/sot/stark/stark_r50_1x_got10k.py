@@ -122,7 +122,11 @@ train_pipeline = [
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         to_rgb=True),
-    dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'att_mask']),
+    dict(type='CheckDataValidity', stride=16),
+    dict(
+        type='VideoCollect',
+        keys=['img', 'gt_bboxes', 'gt_labels', 'att_mask'],
+        meta_keys=('valid')),
     dict(type='ConcatVideoTripleReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]

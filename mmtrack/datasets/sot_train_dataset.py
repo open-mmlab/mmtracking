@@ -341,9 +341,19 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                         if not valid:
                             continue
                         visible = valid
+                        # lasot and got10k have visible keys. All keys are bool
+                        # denoting whether the object is absence except the
+                        # key 'cover' in got10k. The values of key 'cover' are
+                        # int numbers in range [0,8], which correspond to
+                        # ranges of object visible ratios: 0%, (0%, 15%],
+                        # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
+                        # (75%, 90%], (90%, 100%) and 100% respectively
                         if self.visible_keys is not None:
                             for key in self.visible_keys:
-                                visible &= ~ann[key]
+                                if isinstance(ann[key], bool):
+                                    visible &= ~ann[key]
+                                else:
+                                    visible &= ann[key] > 0
                         is_visible_ann.append(visible)
 
                         # parse annotation info
@@ -354,7 +364,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                         ]]
                         ann = dict(
                             bboxes=np.array(bbox, dtype=np.float32),
-                            labels=np.array([0]))
+                            labels=np.array([0], dtype=np.float32))
 
                         new_ann_infos.append(ann)
                         img_info['filename'] = img_info['file_name']
@@ -471,7 +481,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                 inds_intra_video[-self.num_search_frames:], ann_infos,
                 img_infos)
             for sample in pos_search_samples:
-                sample['ann_info']['labels'] = np.array([1])
+                sample['ann_info']['labels'] = np.array([1], dtype=np.float32)
             results.extend(pos_search_samples)
         else:
             neg_search_ann_id = self.get_samples(
@@ -485,7 +495,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
             neg_search_samples = self.prepare_results(neg_search_ann_id,
                                                       ann_infos, img_infos)
             for sample in neg_search_samples:
-                sample['ann_info']['labels'] = np.array([0])
+                sample['ann_info']['labels'] = np.array([0], dtype=np.float32)
             results.extend(neg_search_samples)
         results = self.pipeline(results)
         return results
