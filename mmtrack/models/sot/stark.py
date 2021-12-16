@@ -44,6 +44,12 @@ class Stark(BaseSingleObjectTracker):
         self.debug = False
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
+        # We only train classification head in stage-2. The transformer and
+        # bbox head are not trained in stage-2.
+        if self.head.run_cls_head and not self.head.run_bbox_head:
+            for name, module in self.head.named_parameters():
+                if 'cls_head' not in name:
+                    module.requires_grad = False
 
     def init_weights(self):
         """Initialize the weights of modules in single object tracker."""
@@ -358,9 +364,9 @@ class Stark(BaseSingleObjectTracker):
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self, img, img_metas, gt_bboxes, search_img, att_mask,
-                      search_img_metas, search_gt_bboxes, search_att_mask,
-                      **kwargs):
+    def forward_train(self, img, img_metas, gt_bboxes, gt_labels, search_img,
+                      att_mask, search_img_metas, search_gt_bboxes,
+                      search_gt_labels, search_att_mask, **kwargs):
 
         z1_dict = self.forward_before_head(img[:, 0], att_mask[:, 0])
         z2_dict = self.forward_before_head(img[:, 1], att_mask[:, 1])
@@ -370,17 +376,23 @@ class Stark(BaseSingleObjectTracker):
         head_dict_inputs = self._merge_template_search(inputs)
         # run the transformer
         track_results, _ = self.head(
-            head_dict_inputs, run_box_head=True, run_cls_head=False)
+            head_dict_inputs, run_box_head=False, run_cls_head=True)
 
-        img_size = search_img[:, 0].shape[2]
-        tracking_bboxes = track_results['pred_bboxes'][:, 0] / img_size
-        search_gt_bboxes = (
-            torch.cat(search_gt_bboxes, dim=0).type(torch.float32)[:, 1:] /
-            img_size).clamp(0., 1.)
         # print(tracking_bboxes, search_gt_bboxes)
         losses = dict()
         if self.head.run_bbox_head:
+            img_size = search_img[:, 0].shape[2]
+            tracking_bboxes = track_results['pred_bboxes'][:, 0] / img_size
+            search_gt_bboxes = (
+                torch.cat(search_gt_bboxes, dim=0).type(torch.float32)[:, 1:] /
+                img_size).clamp(0., 1.)
             head_losses = self.head.reg_loss(tracking_bboxes, search_gt_bboxes)
+        elif self.head.run_cls_head:
+            pred_logits = track_results['pred_logits'][:, 0].squeeze()
+            search_gt_labels = torch.cat(
+                search_gt_labels, dim=0)[:, 1].squeeze()
+            head_losses = self.head.cls_loss(pred_logits, search_gt_labels)
+
         losses.update(head_losses)
 
         return losses

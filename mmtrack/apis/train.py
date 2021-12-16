@@ -60,7 +60,8 @@ def train_model(model,
             samples_per_epoch=samples_per_epoch,
             dist=distributed,
             seed=cfg.seed,
-            persistent_workers=cfg.data.get('persistent_workers', False)) for ds in dataset
+            persistent_workers=cfg.data.get('persistent_workers', False))
+        for ds in dataset
     ]
 
     # put model on gpus

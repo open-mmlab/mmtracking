@@ -146,7 +146,7 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=2,
-    persistent_workers=True,
+    persistent_workers=False,
     train=[
         dict(datasets_sampling_prob=[1], train_cls=False),
         dict(

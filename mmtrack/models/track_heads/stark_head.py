@@ -256,8 +256,11 @@ class StarkHead(BaseModule):
         self.run_cls_head = run_cls_head
         if self.run_bbox_head:
             self.bbox_head = build_head(bbox_head)
+            self.loss_bbox = build_loss(loss_bbox)
+            self.loss_iou = build_loss(loss_iou)
         if self.run_cls_head:
             self.cls_head = build_head(cls_head)
+            self.loss_cls = build_loss(loss_cls)
         self.embed_dims = self.transformer.embed_dims
         self.num_query = num_query
         self.query_embedding = nn.Embedding(self.num_query, self.embed_dims)
@@ -265,9 +268,6 @@ class StarkHead(BaseModule):
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.fp16_enabled = False
-
-        self.loss_bbox = build_loss(loss_bbox)
-        self.loss_iou = build_loss(loss_iou)
 
     def init_weights(self):
         self.transformer.init_weights()
@@ -317,7 +317,7 @@ class StarkHead(BaseModule):
         out_dict = {}
         if run_cls_head:
             # forward the classification head
-            print('forward cls head')
+            # print('forward cls head')
             out_dict['pred_logits'] = self.cls_head(feat)[-1]
         if run_box_head:
             # forward the box prediction head
@@ -382,13 +382,13 @@ class StarkHead(BaseModule):
 
         return losses
 
-    def cls_loss(self, pred_bboxes, gt_bboxes):
+    def cls_loss(self, pred_logits, gt_labels):
         """"Loss function for outputs from a single decoder layer of a single
         feature level.
 
         Args:
         Returns:
         """
-        # losses['loss_cls'] = self.loss_cls(pred_bboxes, gt_bboxes)
-        # return losses
-        pass
+        losses = dict()
+        losses['loss_cls'] = self.loss_cls(pred_logits, gt_labels)
+        return losses
