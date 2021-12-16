@@ -91,7 +91,7 @@ class MaskTrackRCNNTracker(BaseTracker):
                     best_match_scores[match_id - 1] = match_score
         return ids, best_match_scores
 
-    @force_fp32(apply_to=('img', 'feats'))
+    @force_fp32(apply_to=('img', 'feats', 'bboxes'))
     def track(self,
               img,
               img_metas,
