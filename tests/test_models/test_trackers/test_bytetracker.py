@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import torch
 from mmdet.core.bbox.demodata import random_boxes
 
-from mmtrack.models import TRACKERS
+from mmtrack.models import TRACKERS, KalmanFilter
 
 
 class TestByteTracker(object):
@@ -19,6 +19,7 @@ class TestByteTracker(object):
             first_match_iou_thr=0.1)
         tracker = TRACKERS.get('ByteTracker')
         cls.tracker = tracker(**cfg)
+        cls.tracker.kf = KalmanFilter()
         cls.num_objs = 5
 
     def test_track(self):
