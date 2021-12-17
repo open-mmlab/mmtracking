@@ -47,7 +47,7 @@ Note:
 
 The checkpoints from 10-th to 20-th epoch will be evaluated during training. You can find the best checkpoint from the log file.
 
-If you want to get better results, you can use the best checkpoint to search the hyperparameters on UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
+If you want to get better results, you can use the best checkpoint to search the hyperparameters on UAV123 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/en/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
 Experimentally, the hyperparameters search on UAV123 can bring around 1.0 Success gain.
 
 The results below are achieved without hyperparameters search.
@@ -68,7 +68,7 @@ The results of SiameseRPN++ in TrackingNet are reimplemented by ourselves. The b
 
 The checkpoints from 10-th to 20-th epoch will be evaluated during training. You can find the best checkpoint from the log file.
 
-If you want to get better results, you can use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search). Experimentally, the hyperparameters search on OTB100 can bring around 1.0 Success gain.
+If you want to get better results, you can use the best checkpoint to search the hyperparameters on OTB100 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/en/useful_tools_scripts.md#siameserpn-test-time-parameter-search). Experimentally, the hyperparameters search on OTB100 can bring around 1.0 Success gain.
 
 **Note:** The results reported in the paper are 69.6 Success and 91.4 Precision. We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same results. We only get 66.1 Success and 86.7 Precision by following the training and hyperparameters searching instructions of pysot, which are lower than those of the paper by 3.5 Succuess and 4.7 Precision respectively. Without hyperparameters search, we get 65.3 Success and 85.8 Precision. In our codebase, the results below are also achieved without hyperparameters search, close to the results reproduced in pysot in the same setting.
 
@@ -80,7 +80,7 @@ If you want to get better results, you can use the best checkpoint to search the
 
 The checkpoints from 10-th to 20-th epoch will be evaluated during training. You can find the best checkpoint from the log file.
 
-If you want to get better results, you can use the best checkpoint to search the hyperparameters on VOT2018 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
+If you want to get better results, you can use the best checkpoint to search the hyperparameters on VOT2018 following [here](https://github.com/open-mmlab/mmtracking/blob/master/docs/en/useful_tools_scripts.md#siameserpn-test-time-parameter-search).
 
 **Note:** The result reported in the paper is 0.414 EAO. We train the SiameseRPN++ in the official [pysot](https://github.com/STVIR/pysot) codebase and can not reproduce the same result. We only get 0.364 EAO by following the training and hyperparameters searching instructions of pysot, which is lower than that of the paper by 0.05 EAO. Without hyperparameters search, we get 0.346 EAO. In our codebase, the results below are also achieved without hyperparameters search, close to the results reproduced in pysot in the same setting.
 

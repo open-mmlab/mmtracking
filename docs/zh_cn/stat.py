@@ -9,7 +9,7 @@ import numpy as np
 
 url_prefix = 'https://github.com/open-mmlab/mmtracking/blob/master/'
 
-files = sorted(glob.glob('../configs/*/*/README.md'))
+files = sorted(glob.glob('../../configs/*/*/README.md'))
 
 stats = []
 titles = []
@@ -50,10 +50,10 @@ countstr = '\n'.join(
     [f'   - {t}: {c}' for t, c in zip(papertypes, papercounts)])
 
 modelzoo = f"""
-# Model Zoo Statistics
-* Number of papers: {len(set(titles))}
+# 模型库统计数据
+* 论文数量: {len(set(titles))}
 {countstr}
-* Number of checkpoints: {num_ckpts}
+* 模型数量: {num_ckpts}
 {msglist}
 """
 

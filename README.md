@@ -49,11 +49,11 @@ This project is released under the [Apache 2.0 license](LICENSE).
 ## Changelog
 
 v0.8.0 was released in 03/10/2021.
-Please refer to [changelog.md](docs/changelog.md) for details and release history.
+Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
 ## Benchmark and model zoo
 
-Results and models are available in the [model zoo](docs/model_zoo.md).
+Results and models are available in the [model zoo](docs/en/model_zoo.md).
 
 Supported methods of video object detection:
 
@@ -79,12 +79,12 @@ Supported methods of video instance segmentation:
 
 ## Installation
 
-Please refer to [install.md](docs/install.md) for install instructions.
+Please refer to [install.md](docs/en/install.md) for install instructions.
 
 ## Getting Started
 
-Please see [dataset.md](docs/dataset.md) and [quick_run.md](docs/quick_run.md) for the basic usage of MMTracking.
-We also provide usage [tutorials](docs/tutorials/), such as [learning about configs](docs/tutorials/config.md), [an example about detailed description of vid config](docs/tutorials/config_vid.md), [an example about detailed description of mot config](docs/tutorials/config_mot.md), [an example about detailed description of sot config](docs/tutorials/config_sot.md), [customizing dataset](docs/tutorials/customize_dataset.md), [customizing data pipeline](docs/tutorials/customize_data_pipeline.md), [customizing vid model](docs/tutorials/customize_vid_model.md), [customizing mot model](docs/tutorials/customize_mot_model.md), [customizing sot model](docs/tutorials/customize_sot_model.md), [customizing runtime settings](docs/tutorials/customize_runtime.md) and [useful tools](docs/useful_tools_scripts.md).
+Please see [dataset.md](docs/en/dataset.md) and [quick_run.md](docs/en/quick_run.md) for the basic usage of MMTracking.
+We also provide usage [tutorials](docs/en/tutorials/), such as [learning about configs](docs/en/tutorials/config.md), [an example about detailed description of vid config](docs/en/tutorials/config_vid.md), [an example about detailed description of mot config](docs/en/tutorials/config_mot.md), [an example about detailed description of sot config](docs/en/tutorials/config_sot.md), [customizing dataset](docs/en/tutorials/customize_dataset.md), [customizing data pipeline](docs/en/tutorials/customize_data_pipeline.md), [customizing vid model](docs/en/tutorials/customize_vid_model.md), [customizing mot model](docs/en/tutorials/customize_mot_model.md), [customizing sot model](docs/en/tutorials/customize_sot_model.md), [customizing runtime settings](docs/en/tutorials/customize_runtime.md) and [useful tools](docs/en/useful_tools_scripts.md).
 
 ## Contributing
 
