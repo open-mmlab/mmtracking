@@ -107,11 +107,11 @@ data = dict(
 # learning policy
 lr_config = dict(policy='step', step=[40])
 # checkpoint saving
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=2)
 evaluation = dict(
     metric=['track'],
     interval=10,
-    start=50,
+    start=51,
     rule='greater',
     save_best='success')
 # yapf:disable

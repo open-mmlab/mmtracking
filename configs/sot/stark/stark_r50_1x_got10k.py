@@ -100,6 +100,7 @@ train_pipeline = [
     dict(
         type='SeqRandomFlip',
         share_params=True,
+        flipped_coords_base=0,
         flip_ratio=0.5,
         direction='horizontal'),
     dict(
@@ -115,6 +116,7 @@ train_pipeline = [
     dict(
         type='SeqRandomFlip',
         share_params=False,
+        flipped_coords_base=1,
         flip_ratio=0.5,
         direction='horizontal'),
     dict(

@@ -298,7 +298,7 @@ class Stark(BaseSingleObjectTracker):
                                                            [x_dict])
             # run the transformer
             track_results, _ = self.head(
-                head_dict_inputs, run_box_head=True, run_cls_head=False)
+                head_dict_inputs, run_box_head=self.head.run_bbox_head, run_cls_head=self.head.run_cls_head)
 
         final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
                                             self.memo.bbox, resize_factor)
