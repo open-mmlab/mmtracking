@@ -297,8 +297,7 @@ class Stark(BaseSingleObjectTracker):
             head_dict_inputs = self._merge_template_search(self.z_dict_list +
                                                            [x_dict])
             # run the transformer
-            track_results, _ = self.head(
-                head_dict_inputs, run_box_head=self.head.run_bbox_head, run_cls_head=self.head.run_cls_head)
+            track_results, _ = self.head(head_dict_inputs)
 
         final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
                                             self.memo.bbox, resize_factor)
@@ -383,8 +382,7 @@ class Stark(BaseSingleObjectTracker):
         inputs = [z1_dict, z2_dict, x_dict]
         head_dict_inputs = self._merge_template_search(inputs)
         # run the transformer
-        track_results, _ = self.head(
-            head_dict_inputs, run_box_head=False, run_cls_head=True)
+        track_results, _ = self.head(head_dict_inputs)
 
         # print(tracking_bboxes, search_gt_bboxes)
         losses = dict()

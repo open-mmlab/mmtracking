@@ -302,7 +302,7 @@ class StarkHead(BaseModule):
     def forward_head(self,
                      feat,
                      memory,
-                     run_box_head=False,
+                     run_bbox_head=False,
                      run_cls_head=False):
         """
         Args:
@@ -319,13 +319,13 @@ class StarkHead(BaseModule):
             # forward the classification head
             # print('forward cls head')
             out_dict['pred_logits'] = self.cls_head(feat)[-1]
-        if run_box_head:
+        if run_bbox_head:
             # forward the box prediction head
             out_dict['pred_bboxes'] = self.forward_bbox_head(feat, memory)
 
         return out_dict
 
-    def forward(self, inputs, run_box_head=True, run_cls_head=True):
+    def forward(self, inputs, run_bbox_head=True, run_cls_head=True):
         """"
         Args:
             inputs (Tensor): Input feature from backbone's single stage, shape
@@ -348,8 +348,8 @@ class StarkHead(BaseModule):
         track_results = self.forward_head(
             outs_dec,
             enc_mem,
-            run_box_head=run_box_head,
-            run_cls_head=run_cls_head)
+            run_bbox_head=self.run_bbox_head,
+            run_cls_head=self.run_cls_head)
         return track_results, outs_dec
 
     def reg_loss(self, pred_bboxes, gt_bboxes):

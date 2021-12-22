@@ -8,10 +8,11 @@ import time
 import mmcv
 import torch
 from mmcv import Config, DictAction
-from mmcv.runner import init_dist
+from mmcv.runner import init_dist, get_dist_info
 from mmdet.apis import set_random_seed
 
 from mmtrack import __version__
+from mmtrack.apis import init_random_seed
 from mmtrack.datasets import build_dataset
 from mmtrack.utils import collect_env, get_root_logger
 
@@ -132,13 +133,20 @@ def main():
     logger.info(f'Distributed training: {distributed}')
     logger.info(f'Config:\n{cfg.pretty_text}')
 
-    # set random seeds
+    # set random seeds. Force setting fixed seed and deterministic=True in SOT
+    # configs
+    rank, _ = get_dist_info()
     if args.seed is not None:
-        logger.info(f'Set random seed to {args.seed}, '
-                    f'deterministic: {args.deterministic}')
-        set_random_seed(args.seed, deterministic=args.deterministic)
-    cfg.seed = args.seed
-    meta['seed'] = args.seed
+        cfg.seed = args.seed
+    elif cfg.get('seed', None) is None:
+        cfg.seed = init_random_seed()
+    deterministic = True if args.deterministic else cfg.get(
+        'deterministic', False)
+    logger.info(f'Set random seed to {cfg.seed}, '
+                f'deterministic: {deterministic}')
+    # stark sets different seeds in different processes
+    set_random_seed(cfg.seed+rank, deterministic=deterministic)
+    meta['seed'] = cfg.seed
 
     if cfg.get('train_cfg', False):
         model = build_model(
@@ -161,7 +169,6 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
-    # cfg.load_from = 'checkpoints/converted_got10k_starkst50_v2.pth.tar'
     train_model(
         model,
         datasets,

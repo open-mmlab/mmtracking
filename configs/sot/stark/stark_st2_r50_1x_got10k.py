@@ -1,4 +1,4 @@
-_base_ = ['./stark_r50_1x_got10k.py']
+_base_ = ['./stark_st1_r50_1x_got10k.py']
 find_unused_parameters = True
 
 # model setting
@@ -53,7 +53,7 @@ train_pipeline = [
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=2,
-    persistent_workers=False,
+    persistent_workers=True,
     train=[
         dict(datasets_sampling_prob=[1], train_cls=True),
         dict(
@@ -67,47 +67,13 @@ data = dict(
             cls_pos_prob=0.5,
             visible_keys=['absence', 'cover'],
             ref_img_sampler=None,
-            test_mode=False),
-        # dict(
-        #     type='SOTQuotaTrainDataset',
-        #     ann_file=data_root + 'lasot/annotations/lasot_train.json',
-        #     img_prefix=data_root + 'lasot/LaSOTBenchmark',
-        #     pipeline=train_pipeline,
-        #     max_gap=[200],
-        #     num_search_frames=1,
-        #     num_template_frames=2,
-        #     visible_keys=['full_occlusion', 'out_of_view'],
-        #     ref_img_sampler=None,
-        #     test_mode=False),
-        # dict(
-        #     type='SOTQuotaTrainDataset',
-        #     ann_file=data_root +
-        #     'trackingnet/annotations/trackingnet_train.json',
-        #     img_prefix=data_root + 'trackingnet/train',
-        #     pipeline=train_pipeline,
-        #     max_gap=[200],
-        #     num_search_frames=1,
-        #     num_template_frames=2,
-        #     visible_keys=None,
-        #     ref_img_sampler=None,
-        #     test_mode=False),
-        # dict(
-        #     type='SOTQuotaTrainDataset',
-        #     ann_file=data_root + 'coco/annotations/instances_train2017.json',
-        #     img_prefix=data_root + 'coco/train2017',
-        #     pipeline=train_pipeline,
-        #     max_gap=[200],
-        #     num_search_frames=1,
-        #     num_template_frames=2,
-        #     visible_keys=None,
-        #     ref_img_sampler=None,
-        #     test_mode=False),
+            test_mode=False)
     ])
 
 # learning policy
 lr_config = dict(policy='step', step=[40])
 # checkpoint saving
-checkpoint_config = dict(interval=2)
+checkpoint_config = dict(interval=10)
 evaluation = dict(
     metric=['track'],
     interval=10,
