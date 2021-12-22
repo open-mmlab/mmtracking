@@ -243,14 +243,21 @@ class SOTTrainDataset(CocoVideoDataset):
 @DATASETS.register_module()
 class SOTQuotaTrainDataset(SOTTrainDataset):
 
-    def __init__(self, visible_keys, max_gap, num_search_frames,
-                 num_template_frames, *args, **kwargs):
+    def __init__(self,
+                 visible_keys,
+                 max_gap,
+                 num_search_frames,
+                 num_template_frames,
+                 cls_pos_prob=0.5,
+                 *args,
+                 **kwargs):
         self.visible_keys = visible_keys
         self.max_gap = max_gap
         self.num_search_frames = num_search_frames
         self.num_template_frames = num_template_frames
         super().__init__(*args, **kwargs)
         self.is_video_dataset = 'videos' in self.coco.dataset
+        self.cls_pos_prob = cls_pos_prob
 
     def get_samples(self,
                     visible,
@@ -349,6 +356,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                                     visible &= ann[key] > 0
                         is_visible_ann.append(visible)
 
+                        # parse annotation info
                         bbox = [[
                             ann['bbox'][0], ann['bbox'][1],
                             ann['bbox'][0] + ann['bbox'][2],
@@ -356,7 +364,7 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                         ]]
                         ann = dict(
                             bboxes=np.array(bbox, dtype=np.float32),
-                            labels=np.array([0]))
+                            labels=np.array([0], dtype=np.float32))
 
                         new_ann_infos.append(ann)
                         img_info['filename'] = img_info['file_name']
@@ -420,23 +428,14 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
         Returns:
             dict: The information of training image and annotation.
         """
-        assert len(inds_intra_video) == (
-            self.num_template_frames + self.num_search_frames)
         results = []
-        for i in range(self.num_template_frames):
-            index = inds_intra_video[i]
-            result = dict(img_info=img_infos[index], ann_info=ann_infos[index])
-            self.pre_pipeline(result)
-            results.append(result)
-
-        for i in range(self.num_search_frames):
-            index = inds_intra_video[self.num_template_frames + i]
+        for index in inds_intra_video:
             result = dict(img_info=img_infos[index], ann_info=ann_infos[index])
             self.pre_pipeline(result)
             results.append(result)
         return results
 
-    def prepare_train_img(self, idx):
+    def prepare_train_reg_img(self, idx):
         """Get training data and annotations after pipeline.
 
         Args:
@@ -461,4 +460,52 @@ class SOTQuotaTrainDataset(SOTTrainDataset):
                 if not x['valid']:
                     valid = False
                     break
+        return results
+
+    def get_one_search(self):
+        is_visible_ann, ann_infos, img_infos = self.get_visible_info()
+        search_id = self.get_samples(
+            is_visible_ann, num_ids=1, allow_invisible=True)
+
+        return search_id, ann_infos, img_infos
+
+    def prepare_train_cls_img(self, idx):
+        """Get training data and annotations after pipeline.
+
+        Args:
+            idx (int): Index of data. Ignore it.
+
+        Returns:
+            dict: Training data and annotation after pipeline with new keys
+            introduced by pipeline.
+        """
+
+        is_visible_ann, ann_infos, img_infos = self.get_visible_info()
+        inds_intra_video = self.sampling_trident(is_visible_ann)
+        # prepare template images
+        results = self.prepare_results(
+            inds_intra_video[:self.num_template_frames], ann_infos, img_infos)
+
+        if random.random() < self.cls_pos_prob:
+            pos_search_samples = self.prepare_results(
+                inds_intra_video[-self.num_search_frames:], ann_infos,
+                img_infos)
+            for sample in pos_search_samples:
+                sample['ann_info']['labels'] = np.array([1], dtype=np.float32)
+            results.extend(pos_search_samples)
+        else:
+            neg_search_ann_id = self.get_samples(
+                is_visible_ann,
+                num_ids=self.num_search_frames,
+                force_invisible=True)
+
+            if neg_search_ann_id is None:
+                neg_search_ann_id, ann_infos, img_infos = self.get_one_search()
+
+            neg_search_samples = self.prepare_results(neg_search_ann_id,
+                                                      ann_infos, img_infos)
+            for sample in neg_search_samples:
+                sample['ann_info']['labels'] = np.array([0], dtype=np.float32)
+            results.extend(neg_search_samples)
+        results = self.pipeline(results)
         return results

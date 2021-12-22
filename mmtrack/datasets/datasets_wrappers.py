@@ -34,16 +34,8 @@ class RandomConcatDataset(ConcatDataset):
         self.train_cls = train_cls
 
     def __getitem__(self, idx):
-        if self.train_cls:
-            return self.getitem_cls(idx)
-        else:
-            return self.getitem(idx)
-
-    def getitem(self, idx):
         dataset = random.choices(self.datasets, self.datasets_sampling_prob)[0]
-        data = dataset.prepare_train_img(idx)
-
-        return data
-
-    def getitem_cls(self, idx):
-        pass
+        if self.train_cls:
+            return dataset.prepare_train_cls_img(idx)
+        else:
+            return dataset.prepare_train_reg_img(idx)

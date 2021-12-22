@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.datasets.builder import PIPELINES
 
-from .formatting import (ConcatVideoReferences, ConcatVideoTripleReferences,
-                         ReIDFormatBundle, SeqDefaultFormatBundle, ToList,
-                         VideoCollect, CheckDataValidity)
+from .formatting import (ConcatVideoReferences,
+                         ConcatVideoTripleReferences, ReIDFormatBundle,
+                         SeqDefaultFormatBundle, ToList, CheckDataValidity, VideoCollect)
 from .loading import (LoadDetections, LoadMultiImagesFromFile,
                       SeqLoadAnnotations)
 from .processing import MatchInstances
@@ -18,5 +18,6 @@ __all__ = [
     'VideoCollect', 'ConcatVideoReferences', 'ConcatVideoTripleReferences',
     'LoadDetections', 'MatchInstances', 'SeqRandomCrop',
     'SeqPhotoMetricDistortion', 'SeqCropLikeSiamFC', 'SeqShiftScaleAug',
-    'SeqBlurAug', 'SeqColorAug', 'ToList', 'CheckDataValidity', 'ReIDFormatBundle', 'SeqGrayAug'
+    'SeqBlurAug', 'SeqColorAug', 'ToList', 'CheckDataValidity',
+    'ReIDFormatBundle', 'SeqGrayAug'
 ]

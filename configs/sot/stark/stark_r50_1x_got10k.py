@@ -100,6 +100,7 @@ train_pipeline = [
     dict(
         type='SeqRandomFlip',
         share_params=True,
+        flipped_coords_base=0,
         flip_ratio=0.5,
         direction='horizontal'),
     dict(
@@ -115,6 +116,7 @@ train_pipeline = [
     dict(
         type='SeqRandomFlip',
         share_params=False,
+        flipped_coords_base=1,
         flip_ratio=0.5,
         direction='horizontal'),
     dict(
@@ -123,8 +125,10 @@ train_pipeline = [
         std=[58.395, 57.12, 57.375],
         to_rgb=True),
     dict(type='CheckDataValidity', stride=16),
-    dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'att_mask'],
-    meta_keys=('valid')),
+    dict(
+        type='VideoCollect',
+        keys=['img', 'gt_bboxes', 'gt_labels', 'att_mask'],
+        meta_keys=('valid')),
     dict(type='ConcatVideoTripleReferences'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
@@ -148,7 +152,7 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=16,
     workers_per_gpu=2,
-    persistent_workers=True,
+    persistent_workers=False,
     train=[
         dict(datasets_sampling_prob=[1], train_cls=False),
         dict(
