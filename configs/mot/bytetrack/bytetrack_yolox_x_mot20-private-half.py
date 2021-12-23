@@ -4,7 +4,10 @@ img_scale = (896, 1600)
 
 model = dict(
     detector=dict(input_size=img_scale, random_size_range=(20, 36)),
-    tracker=dict(weight_iou=False, first_match_iou_thr=0.3))
+    tracker=dict(
+        weight_iou_with_det_scores=False,
+        match_iou_thrs=dict(high=0.3),
+    ))
 
 train_pipeline = [
     dict(type='Mosaic', img_scale=img_scale, pad_val=114.0),
@@ -63,3 +66,6 @@ data = dict(
         ann_file='data/MOT20/annotations/half-val_cocoformat.json',
         img_prefix='data/MOT20/train',
         test_pipeline=test_pipeline))
+
+checkpoint_config = dict(interval=1)
+evaluation = dict(metric=['bbox', 'track'], interval=100)

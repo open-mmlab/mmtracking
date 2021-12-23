@@ -12,11 +12,12 @@ class TestByteTracker(object):
     @classmethod
     def setup_class(cls):
         cfg = dict(
-            high_det_score=0.6,
-            low_det_score=0.1,
-            init_track_score=0.7,
-            weight_iou=True,
-            first_match_iou_thr=0.1)
+            obj_score_thrs=dict(high=0.6, low=0.1),
+            init_track_thr=0.7,
+            weight_iou_with_det_scores=True,
+            match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
+            num_tentatives=3,
+            num_frames_retain=30)
         tracker = TRACKERS.get('ByteTracker')
         cls.tracker = tracker(**cfg)
         cls.tracker.kf = KalmanFilter()

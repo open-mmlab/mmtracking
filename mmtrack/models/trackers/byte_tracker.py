@@ -5,6 +5,7 @@ import torch
 from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
 
+from mmtrack.core.bbox import bbox_cxcyah_to_xyxy, bbox_xyxy_to_cxcyah
 from mmtrack.models import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -14,15 +15,17 @@ class ByteTracker(BaseTracker):
     """Tracker for ByteTrack.
 
     Args:
-        high_det_score (float): Threshold of the first matching detection bbox.
-        low_det_score (float): Threshold of the second matching detection bbox.
-        init_track_score (float): Threshold of initializing a new tracklet.
-        weight_iou (bool): Whether using detection scores to weight IOU.
-        first_match_iou_thr (float): Threshold of the first matching threshold.
-        second_match_iou_thr (float, optional): Threshold of the second
-            matching threshold. Defaults to 0.5.
-        tentative_match_iou_thr (float, optional): Threshold of the tentative
-            matching threshold. Defaults to 0.5.
+        obj_score_thrs (dict): Threshold of the matching detection bbox.
+            - high (float): Threshold of the first matching. Defaults to 0.6.
+            - low (float): Threshold of the second matching. Defaults to 0.1.
+        init_track_thr (float): Threshold of initializing a new tracklet.
+        weight_iou_with_det_scores (bool): Whether using detection scores to
+            weight IOU which is used for matching.
+        match_iou_thrs (dict): Threshold of the matching threshold.
+            - high (float): Threshold of the first matching. Defaults to 0.1.
+            - low (float): Threshold of the second matching. Defaults to 0.5.
+            - tentative (float): Threshold of the matching for tentative
+                tracklets. Defaults to 0.3.
         num_tentatives (int, optional): Number of continuous frames to confirm
             a track. Defaults to 3.
         init_cfg (dict or list[dict], optional): Initialization config dict.
@@ -30,25 +33,19 @@ class ByteTracker(BaseTracker):
     """
 
     def __init__(self,
-                 high_det_score,
-                 low_det_score,
-                 init_track_score,
-                 weight_iou,
-                 first_match_iou_thr,
-                 second_match_iou_thr=0.5,
-                 tentative_match_iou_thr=0.3,
+                 obj_score_thrs=dict(high=0.6, low=0.1),
+                 init_track_thr=0.7,
+                 weight_iou_with_det_scores=True,
+                 match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
                  num_tentatives=3,
                  init_cfg=None,
                  **kwargs):
         super().__init__(init_cfg=init_cfg, **kwargs)
-        self.high_det_score = high_det_score
-        self.low_det_score = low_det_score
-        self.init_track_score = init_track_score
+        self.obj_score_thrs = obj_score_thrs
+        self.init_track_thr = init_track_thr
 
-        self.weight_iou = weight_iou
-        self.first_match_iou_thr = first_match_iou_thr
-        self.second_match_iou_thr = second_match_iou_thr
-        self.tentative_match_iou_thr = tentative_match_iou_thr
+        self.weight_iou_with_det_scores = weight_iou_with_det_scores
+        self.match_iou_thrs = match_iou_thrs
 
         self.num_tentatives = num_tentatives
 
@@ -71,7 +68,7 @@ class ByteTracker(BaseTracker):
             self.tracks[id].tentative = False
         else:
             self.tracks[id].tentative = True
-        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
@@ -83,7 +80,7 @@ class ByteTracker(BaseTracker):
         if self.tracks[id].tentative:
             if len(self.tracks[id]['bboxes']) >= self.num_tentatives:
                 self.tracks[id].tentative = False
-        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
@@ -102,43 +99,19 @@ class ByteTracker(BaseTracker):
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
 
-    def get_data_from_inds(self, inds, **kwargs):
-        """Get data based on indexes."""
-        out = []
-        for k, v in kwargs.items():
-            out.append(v[inds])
-        return tuple(out)
-
-    def xyxy2xyah(self, bboxes):
-        """Transform bounding boxes from [x1, y1, x2, y2] format to.
-
-        [cx, cy, ratio, h] format.
-        """
-        cx = (bboxes[:, 2] + bboxes[:, 0]) / 2
-        cy = (bboxes[:, 3] + bboxes[:, 1]) / 2
-        w = bboxes[:, 2] - bboxes[:, 0]
-        h = bboxes[:, 3] - bboxes[:, 1]
-        xyah = torch.stack([cx, cy, w / h, h], -1)
-        return xyah
-
-    def xyah2xyxy(self, bboxes):
-        """Transform bounding boxes from [cx, cy, ratio, h] format to.
-
-        [x1, y1, x2, y2] format.
-        """
-        cx, cy, ratio, h = bboxes.split((1, 1, 1, 1), dim=-1)
-        w = ratio * h
-        x1y1x2y2 = [cx - w / 2.0, cy - h / 2.0, cx + w / 2.0, cy + h / 2.0]
-        return torch.cat(x1y1x2y2, dim=-1)
-
-    def assign_ids(self, ids, det_bboxes, weight_iou=False, match_iou_thr=0.5):
+    def assign_ids(self,
+                   ids,
+                   det_bboxes,
+                   weight_iou_with_det_scores=False,
+                   match_iou_thr=0.5):
         """Assign ids.
 
         Args:
             ids (list[int]): Tracking ids.
             det_bboxes (Tensor): of shape (N, 5)
-            weight_iou (bool, optional): Whether using detection scores to
-                weight IOU. Defaults to False.
+            weight_iou_with_det_scores (bool, optional): Whether using
+                detection scores to weight IOU which is used for matching.
+                Defaults to False.
             match_iou_thr (float, optional): Matching threshold.
                 Defaults to 0.5.
 
@@ -151,11 +124,11 @@ class ByteTracker(BaseTracker):
             track_bboxes = np.concatenate(
                 (track_bboxes, self.tracks[id].mean[:4][None]), axis=0)
         track_bboxes = torch.from_numpy(track_bboxes).to(det_bboxes)
-        track_bboxes = self.xyah2xyxy(track_bboxes)
+        track_bboxes = bbox_cxcyah_to_xyxy(track_bboxes)
 
         # compute distance
         ious = bbox_overlaps(track_bboxes, det_bboxes[:, :4])
-        if weight_iou:
+        if weight_iou_with_det_scores:
             ious *= det_bboxes[:, 4][None]
         dists = (1 - ious).cpu().numpy()
 
@@ -200,7 +173,7 @@ class ByteTracker(BaseTracker):
             self.kf = model.motion
 
         if self.empty or bboxes.size(0) == 0:
-            valid_inds = bboxes[:, -1] > self.init_track_score
+            valid_inds = bboxes[:, -1] > self.init_track_thr
             bboxes = bboxes[valid_inds]
             labels = labels[valid_inds]
             num_new_tracks = bboxes.size(0)
@@ -213,17 +186,17 @@ class ByteTracker(BaseTracker):
             ids = torch.full((bboxes.size(0), ), -1).to(labels)
 
             # get the detection bboxes for the first association
-            first_det_inds = bboxes[:, -1] > self.high_det_score
-            (first_det_bboxes, first_det_labels,
-             first_det_ids) = self.get_data_from_inds(
-                 inds=first_det_inds, bboxes=bboxes, labels=labels, ids=ids)
+            first_det_inds = bboxes[:, -1] > self.obj_score_thrs['high']
+            first_det_bboxes = bboxes[first_det_inds]
+            first_det_labels = labels[first_det_inds]
+            first_det_ids = ids[first_det_inds]
 
             # get the detection bboxes for the second association
             second_det_inds = (~first_det_inds) & (
-                bboxes[:, -1] > self.low_det_score)
-            (second_det_bboxes, second_det_labels,
-             second_det_ids) = self.get_data_from_inds(
-                 inds=second_det_inds, bboxes=bboxes, labels=labels, ids=ids)
+                bboxes[:, -1] > self.obj_score_thrs['low'])
+            second_det_bboxes = bboxes[second_det_inds]
+            second_det_labels = labels[second_det_inds]
+            second_det_ids = ids[second_det_inds]
 
             # 1. use Kalman Filter to predict current location
             for id in self.confirmed_ids:
@@ -236,27 +209,22 @@ class ByteTracker(BaseTracker):
 
             # 2. first match
             first_match_track_inds, first_match_det_inds = self.assign_ids(
-                self.confirmed_ids, first_det_bboxes, self.weight_iou,
-                self.first_match_iou_thr)
+                self.confirmed_ids, first_det_bboxes,
+                self.weight_iou_with_det_scores, self.match_iou_thrs['high'])
             # '-1' mean a detection box is not matched with tracklets in
             # previous frame
             valid = first_match_det_inds > -1
             first_det_ids[valid] = torch.tensor(
                 self.confirmed_ids)[first_match_det_inds[valid]].to(labels)
 
-            (first_match_det_bboxes, first_match_det_labels,
-             first_match_det_ids) = self.get_data_from_inds(
-                 inds=valid,
-                 bboxes=first_det_bboxes,
-                 labels=first_det_labels,
-                 ids=first_det_ids)
-            (first_unmatch_det_bboxes, first_unmatch_det_labels,
-             first_unmatch_det_ids) = self.get_data_from_inds(
-                 inds=~valid,
-                 bboxes=first_det_bboxes,
-                 labels=first_det_labels,
-                 ids=first_det_ids)
+            first_match_det_bboxes = first_det_bboxes[valid]
+            first_match_det_labels = first_det_labels[valid]
+            first_match_det_ids = first_det_ids[valid]
             assert (first_match_det_ids > -1).all()
+
+            first_unmatch_det_bboxes = first_det_bboxes[~valid]
+            first_unmatch_det_labels = first_det_labels[~valid]
+            first_unmatch_det_ids = first_det_ids[~valid]
             assert (first_unmatch_det_ids == -1).all()
 
             # 3. use unmatched detection bboxes from the first match to match
@@ -264,7 +232,8 @@ class ByteTracker(BaseTracker):
             (tentative_match_track_inds,
              tentative_match_det_inds) = self.assign_ids(
                  self.unconfirmed_ids, first_unmatch_det_bboxes,
-                 self.weight_iou, self.tentative_match_iou_thr)
+                 self.weight_iou_with_det_scores,
+                 self.match_iou_thrs['tentative'])
             valid = tentative_match_det_inds > -1
             first_unmatch_det_ids[valid] = torch.tensor(self.unconfirmed_ids)[
                 tentative_match_det_inds[valid]].to(labels)
@@ -281,7 +250,7 @@ class ByteTracker(BaseTracker):
 
             second_match_track_inds, second_match_det_inds = self.assign_ids(
                 first_unmatch_track_ids, second_det_bboxes, False,
-                self.second_match_iou_thr)
+                self.match_iou_thrs['low'])
             valid = second_match_det_inds > -1
             second_det_ids[valid] = torch.tensor(first_unmatch_track_ids)[
                 second_match_det_inds[valid]].to(ids)

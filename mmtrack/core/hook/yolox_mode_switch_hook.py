@@ -6,6 +6,17 @@ from mmdet.core import YOLOXModeSwitchHook as _YOLOXModeSwitchHook
 
 @HOOKS.register_module(force=True)
 class YOLOXModeSwitchHook(_YOLOXModeSwitchHook):
+    """Switch the mode of YOLOX during training.
+
+    This hook turns off the mosaic and mixup data augmentation and switches
+    to use L1 loss in bbox_head.
+
+    The difference betwween this class and the class in mmdet is that the
+    class in mmdet use `model.bbox_head.use_l1=True` to switch mode, while
+    this class will check whether there is a detector module in the model
+    firstly, then use `model.detector.bbox_head.use_l1=True` or
+    `model.bbox_head.use_l1=True` to switch mode.
+    """
 
     def before_train_epoch(self, runner):
         """Close mosaic and mixup augmentation and switches to use L1 loss."""
