@@ -47,6 +47,10 @@ Please refer to [SORT/DeepSORT](https://github.com/open-mmlab/mmtracking/blob/ma
 
 Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/tracktor) for details.
 
+### ByteTrack (arXiv 2021)
+
+Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack) for details.
+
 ## Baselines of single object tracking
 
 ### SiameseRPN++ (CVPR 2019)

@@ -47,6 +47,10 @@
 
 详情请参考 [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/tracktor/README.md)。
 
+### ByteTrack (arXiv 2021)
+
+详情请参考 [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack)。
+
 ## 单目标跟踪基线
 
 ### SiameseRPN++ (CVPR 2019)

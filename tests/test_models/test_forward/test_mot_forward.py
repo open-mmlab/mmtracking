@@ -11,7 +11,7 @@ from .utils import _demo_mm_inputs, _get_config_module
 @pytest.mark.parametrize('cfg_file', [
     'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py',
     'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
-    'mot/bytetrack/bytetrack_yolox_x_mot17-private-half.py'
+    'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
 ])
 def test_mot_forward(cfg_file):
     config = _get_config_module(cfg_file)

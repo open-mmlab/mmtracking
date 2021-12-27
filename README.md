@@ -48,6 +48,8 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
+Release [ByteTrack](configs/mot/bytetrack) pretrained models.
+
 v0.8.0 was released in 03/10/2021.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
@@ -66,7 +68,7 @@ Supported methods of multi object tracking:
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [ ] ByteTrack (arXiv 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/359))
+- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 
 Supported methods of single object tracking:
 
