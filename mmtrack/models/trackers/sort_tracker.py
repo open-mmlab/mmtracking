@@ -6,6 +6,7 @@ from mmdet.core import bbox_overlaps
 from motmetrics.lap import linear_sum_assignment
 
 from mmtrack.core import imrenormalize
+from mmtrack.core.bbox import bbox_xyxy_to_cxcyah
 from mmtrack.models import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -52,15 +53,6 @@ class SortTracker(BaseTracker):
         self.match_iou_thr = match_iou_thr
         self.num_tentatives = num_tentatives
 
-    def xyxy2xyah(self, bboxes):
-        """Transform bounding boxes."""
-        cx = (bboxes[:, 2] + bboxes[:, 0]) / 2
-        cy = (bboxes[:, 3] + bboxes[:, 1]) / 2
-        w = bboxes[:, 2] - bboxes[:, 0]
-        h = bboxes[:, 3] - bboxes[:, 1]
-        xyah = torch.stack([cx, cy, w / h, h], -1)
-        return xyah
-
     @property
     def confirmed_ids(self):
         """Confirmed ids in the tracker."""
@@ -71,7 +63,7 @@ class SortTracker(BaseTracker):
         """Initialize a track."""
         super().init_track(id, obj)
         self.tracks[id].tentative = True
-        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
@@ -83,7 +75,7 @@ class SortTracker(BaseTracker):
         if self.tracks[id].tentative:
             if len(self.tracks[id]['bboxes']) >= self.num_tentatives:
                 self.tracks[id].tentative = False
-        bbox = self.xyxy2xyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
+        bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
@@ -162,7 +154,7 @@ class SortTracker(BaseTracker):
             # motion
             if model.with_motion:
                 self.tracks, costs = model.motion.track(
-                    self.tracks, self.xyxy2xyah(bboxes))
+                    self.tracks, bbox_xyxy_to_cxcyah(bboxes))
 
             active_ids = self.confirmed_ids
             if self.with_reid:
