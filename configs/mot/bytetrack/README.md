@@ -28,5 +28,5 @@ Multi-object tracking (MOT) aims at estimating bounding boxes and identities of 
 ## Results and models on MOT17
 
 |    Method     |      Detector     |     Train Set     | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
-| :-------------: | :---------------: | :------------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
+| :-------------: | :-----------------: | :------------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
 | ByteTrack | YOLOX-X | CrowdHuman + half-train | half-val | N     | - |   78.3 | 77.2 | 10845 | 24588 | 1425 | [config](bytetrack_yolox_x_crowdhuman_mot17-private-half.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
