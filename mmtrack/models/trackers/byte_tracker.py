@@ -15,13 +15,15 @@ class ByteTracker(BaseTracker):
     """Tracker for ByteTrack.
 
     Args:
-        obj_score_thrs (dict): Threshold of the matching detection bbox.
+        obj_score_thrs (dict): Detection score threshold for matching objects.
             - high (float): Threshold of the first matching. Defaults to 0.6.
             - low (float): Threshold of the second matching. Defaults to 0.1.
-        init_track_thr (float): Threshold of initializing a new tracklet.
+        init_track_thr (float): Detection score threshold for initializing a
+            new tracklet. Defaults to 0.7.
         weight_iou_with_det_scores (bool): Whether using detection scores to
-            weight IOU which is used for matching.
-        match_iou_thrs (dict): Threshold of the matching threshold.
+            weight IOU which is used for matching. Defaults to True.
+        match_iou_thrs (dict): IOU distance threshold for matching between two
+            frames.
             - high (float): Threshold of the first matching. Defaults to 0.1.
             - low (float): Threshold of the second matching. Defaults to 0.5.
             - tentative (float): Threshold of the matching for tentative

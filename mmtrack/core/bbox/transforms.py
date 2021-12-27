@@ -67,9 +67,13 @@ def bbox_xyxy_to_x1y1wh(bbox):
 
 
 def bbox_xyxy_to_cxcyah(bboxes):
-    """Transform bounding boxes from [x1, y1, x2, y2] format to.
+    """Convert bbox coordinates from (x1, y1, x2, y2) to (cx, cy, ratio, h).
 
-    [cx, cy, ratio, h] format.
+    Args:
+        bbox (Tensor): Shape (n, 4) for bboxes.
+
+    Returns:
+        Tensor: Converted bboxes.
     """
     cx = (bboxes[:, 2] + bboxes[:, 0]) / 2
     cy = (bboxes[:, 3] + bboxes[:, 1]) / 2
@@ -80,9 +84,13 @@ def bbox_xyxy_to_cxcyah(bboxes):
 
 
 def bbox_cxcyah_to_xyxy(bboxes):
-    """Transform bounding boxes from [cx, cy, ratio, h] format to.
+    """Convert bbox coordinates from (cx, cy, ratio, h) to (x1, y1, x2, y2).
 
-    [x1, y1, x2, y2] format.
+    Args:
+        bbox (Tensor): Shape (n, 4) for bboxes.
+
+    Returns:
+        Tensor: Converted bboxes.
     """
     cx, cy, ratio, h = bboxes.split((1, 1, 1, 1), dim=-1)
     w = ratio * h

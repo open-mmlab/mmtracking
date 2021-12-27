@@ -11,7 +11,7 @@ class YOLOXModeSwitchHook(_YOLOXModeSwitchHook):
     This hook turns off the mosaic and mixup data augmentation and switches
     to use L1 loss in bbox_head.
 
-    The difference betwween this class and the class in mmdet is that the
+    The difference between this class and the class in mmdet is that the
     class in mmdet use `model.bbox_head.use_l1=True` to switch mode, while
     this class will check whether there is a detector module in the model
     firstly, then use `model.detector.bbox_head.use_l1=True` or
