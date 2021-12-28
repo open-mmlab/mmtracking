@@ -156,6 +156,18 @@ html_theme_options = {
                     'name': 'MMFewShot',
                     'url': 'https://github.com/open-mmlab/mmfewshot',
                 },
+                {
+                    'name': 'MMSelfSup',
+                    'url': 'https://github.com/open-mmlab/mmselfsup',
+                },
+                {
+                    'name': 'MMRazor',
+                    'url': 'https://github.com/open-mmlab/mmrazor',
+                },
+                {
+                    'name': 'MMDeploy',
+                    'url': 'https://github.com/open-mmlab/mmdeploy',
+                },            
             ]
         },
         {
