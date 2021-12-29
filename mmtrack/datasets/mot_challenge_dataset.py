@@ -10,7 +10,7 @@ from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import results2outs
+from mmtrack.core import results2outs, tracklet_interpolation
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -21,6 +21,13 @@ class MOTChallengeDataset(CocoVideoDataset):
     Args:
         visibility_thr (float, optional): The minimum visibility
             for the objects during training. Default to -1.
+        interpolate_tracklet (dict, optional): If not None, tracklet
+            interpolation will be performed to recover objects that are
+            missed. Default to None.
+            - min_frames (int, optional): The minimum frames of a tracklet
+                that will be interpolated.
+            - max_frames (int, optional): The maximum frames of a tracklet
+                that will be interpolated.
         detection_file (str, optional): The path of the public
             detection file. Default to None.
     """
@@ -29,11 +36,13 @@ class MOTChallengeDataset(CocoVideoDataset):
 
     def __init__(self,
                  visibility_thr=-1,
+                 interpolate_tracklet=None,
                  detection_file=None,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.visibility_thr = visibility_thr
+        self.interpolate_tracklet = interpolate_tracklet
         self.detections = self.load_detections(detection_file)
 
     def load_detections(self, detection_file=None):
@@ -181,21 +190,39 @@ class MOTChallengeDataset(CocoVideoDataset):
 
     def format_track_results(self, results, infos, resfile):
         """Format tracking results."""
-        with open(resfile, 'wt') as f:
-            for res, info in zip(results, infos):
-                if 'mot_frame_id' in info:
-                    frame = info['mot_frame_id']
-                else:
-                    frame = info['frame_id'] + 1
 
-                outs_track = results2outs(bbox_results=res)
-                for bbox, label, id in zip(outs_track['bboxes'],
-                                           outs_track['labels'],
-                                           outs_track['ids']):
-                    x1, y1, x2, y2, conf = bbox
+        results_per_video = []
+        for frame_id, result in enumerate(results):
+            outs_track = results2outs(bbox_results=result)
+            track_ids, bboxes = outs_track['ids'], outs_track['bboxes']
+            frame_ids = np.full_like(track_ids, frame_id)
+            results_per_frame = np.concatenate(
+                (frame_ids[:, None], track_ids[:, None], bboxes), axis=1)
+            results_per_video.append(results_per_frame)
+        # `results_per_video` is a ndarray with shape (N, 7). Each row denotes
+        # (frame_id, track_id, x1, y1, x2, y2, score)
+        results_per_video = np.concatenate(results_per_video)
+
+        if self.interpolate_tracklet is not None:
+            results_per_video = tracklet_interpolation(
+                results_per_video, **self.interpolate_tracklet)
+
+        with open(resfile, 'wt') as f:
+            for frame_id, info in enumerate(infos):
+                # `mot_frame_id` is the actually frame id used for evaluation.
+                # It may not start from 0.
+                if 'mot_frame_id' in info:
+                    mot_frame_id = info['mot_frame_id']
+                else:
+                    mot_frame_id = info['frame_id'] + 1
+
+                results_per_frame = \
+                    results_per_video[results_per_video[:, 0] == frame_id]
+                for i in range(len(results_per_frame)):
+                    _, track_id, x1, y1, x2, y2, conf = results_per_frame[i]
                     f.writelines(
-                        f'{frame},{id},{x1:.3f},{y1:.3f},{(x2-x1):.3f},' +
-                        f'{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
+                        f'{mot_frame_id},{track_id},{x1:.3f},{y1:.3f},' +
+                        f'{(x2-x1):.3f},{(y2-y1):.3f},{conf:.3f},-1,-1,-1\n')
 
     def format_bbox_results(self, results, infos, resfile):
         """Format detection results."""
