@@ -27,6 +27,11 @@ Multi-object tracking (MOT) aims at estimating bounding boxes and identities of 
 
 ## Results and models on MOT17
 
-|    Method     |      Detector     |     Train Set     | Test Set | Public | Inf time (fps) | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
+Please note that the performance of `MOT17-half-val` is comparable with the performance reported in the manuscript, while the performance of `MOT17-test` is lower than the performance reported in the manuscript.
+
+The reason is that ByteTrack tunes customized hyper-parameters (e.g., image resolution and the high threshold of detection score) for each video in `MOT17-test` set, while we use unified parameters.
+
+|    Method     |      Detector     |     Train Set     | Test Set | Public | Inf time (fps) | HOTA | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
 | :-------------: | :-----------------: | :------------: | :------: | :----: | :------------: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
-| ByteTrack | YOLOX-X | CrowdHuman + half-train | half-val | N     | - |   78.3 | 77.2 | 10845 | 24588 | 1425 | [config](bytetrack_yolox_x_crowdhuman_mot17-private-half.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
+| ByteTrack | YOLOX-X | CrowdHuman + half-train | half-val | N     | - | - | 78.6 | 79.2 | 12909 | 21024 | 666 | [config](bytetrack_yolox_x_crowdhuman_mot17-private-half.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
+| ByteTrack | YOLOX-X | CrowdHuman + half-train | test | N     | - | 61.7 | 78.1 | 74.8 | 36705 | 85032 | 2049 | [config](bytetrack_yolox_x_crowdhuman_mot17-private.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |

@@ -13,9 +13,9 @@ def test_tracklet_interpolation():
         axis=1)
     out_results = tracklet_interpolation(in_results)
     assert out_results.shape[1] == in_results.shape[1]
-    # the range of frame ids should not changed
+    # the range of frame ids should not change
     assert min(out_results[:, 0]) == min(in_results[:, 0])
     assert max(out_results[:, 0]) == max(in_results[:, 0])
-    # the range of tracklet ids should not changed
+    # the range of tracklet ids should not change
     assert min(out_results[:, 1]) == min(in_results[:, 1])
     assert max(out_results[:, 1]) == max(in_results[:, 1])
