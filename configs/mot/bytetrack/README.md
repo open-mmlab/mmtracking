@@ -27,7 +27,7 @@ Multi-object tracking (MOT) aims at estimating bounding boxes and identities of 
 
 ## Results and models on MOT17
 
-Please note that the performance of `MOT17-half-val` is comparable with the performance reported in the manuscript, while the performance of `MOT17-test` is lower than the performance reported in the manuscript.
+Please note that the performance on `MOT17-half-val` is comparable with the performance reported in the manuscript, while the performance on `MOT17-test` is lower than the performance reported in the manuscript.
 
 The reason is that ByteTrack tunes customized hyper-parameters (e.g., image resolution and the high threshold of detection score) for each video in `MOT17-test` set, while we use unified parameters.
 
