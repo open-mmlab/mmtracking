@@ -21,13 +21,12 @@ class MOTChallengeDataset(CocoVideoDataset):
     Args:
         visibility_thr (float, optional): The minimum visibility
             for the objects during training. Default to -1.
-        interpolate_tracklet (dict, optional): If not None, tracklet
-            interpolation will be performed to recover objects that are
-            missed. Default to None.
-            - min_frames (int, optional): The minimum frames of a tracklet
-                that will be interpolated.
-            - max_frames (int, optional): The maximum frames of a tracklet
-                that will be interpolated.
+        interpolate_tracks_cfg (dict, optional): If not None, Interpolate
+            tracks linearly to make tracks more complete. Defaults to None.
+            - min_num_frames (int, optional): The minimum length of a track
+                that will be interpolated. Defaults to 5.
+            - max_num_frames (int, optional): The maximum disconnected length
+                in tracks. Defaults to 20.
         detection_file (str, optional): The path of the public
             detection file. Default to None.
     """
@@ -36,13 +35,13 @@ class MOTChallengeDataset(CocoVideoDataset):
 
     def __init__(self,
                  visibility_thr=-1,
-                 interpolate_tracklet=None,
+                 interpolate_tracks_cfg=None,
                  detection_file=None,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.visibility_thr = visibility_thr
-        self.interpolate_tracklet = interpolate_tracklet
+        self.interpolate_tracks_cfg = interpolate_tracks_cfg
         self.detections = self.load_detections(detection_file)
 
     def load_detections(self, detection_file=None):
@@ -203,9 +202,9 @@ class MOTChallengeDataset(CocoVideoDataset):
         # (frame_id, track_id, x1, y1, x2, y2, score)
         results_per_video = np.concatenate(results_per_video)
 
-        if self.interpolate_tracklet is not None:
-            results_per_video = interpolate_tracks(results_per_video,
-                                                   **self.interpolate_tracklet)
+        if self.interpolate_tracks_cfg is not None:
+            results_per_video = interpolate_tracks(
+                results_per_video, **self.interpolate_tracks_cfg)
 
         with open(resfile, 'wt') as f:
             for frame_id, info in enumerate(infos):

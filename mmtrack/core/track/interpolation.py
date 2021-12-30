@@ -7,8 +7,8 @@ def _interpolate_track(track, track_id, max_num_frames=20):
     Args:
         track (ndarray): With shape (N, 7). Each row denotes
             (frame_id, track_id, x1, y1, x2, y2, score).
-        max_num_frames (int, optional): The maximum frames of a tracklet that
-            will be interpolated. Defaults to 20.
+        max_num_frames (int, optional): The maximum disconnected length in the
+            track. Defaults to 20.
 
     Returns:
         ndarray: The interpolated track with shape (N, 7). Each row denotes
@@ -19,7 +19,7 @@ def _interpolate_track(track, track_id, max_num_frames=20):
 
     frame_ids = track[:, 0]
     interpolated_track = np.zeros((0, 7))
-    # perform interpolation for all adjacent tracklets in the track.
+    # perform interpolation for the disconnected frames in the track.
     for i in np.where(np.diff(frame_ids) > 1)[0]:
         left_frame_id = frame_ids[i]
         right_frame_id = frame_ids[i + 1]
@@ -55,10 +55,10 @@ def interpolate_tracks(tracks, min_num_frames=5, max_num_frames=20):
     Args:
         tracks (ndarray): With shape (N, 7). Each row denotes
             (frame_id, track_id, x1, y1, x2, y2, score).
-        min_num_frames (int, optional): The minimum frames of a track that will
+        min_num_frames (int, optional): The minimum length of a track that will
             be interpolated. Defaults to 5.
-        max_num_frames (int, optional): The maximum frames of a tracklet that
-            will be interpolated. Defaults to 20.
+        max_num_frames (int, optional): The maximum disconnected length in
+            tracks. Defaults to 20.
 
     Returns:
         ndarray: The interpolated tracks with shape (N, 7). Each row denotes
@@ -67,7 +67,7 @@ def interpolate_tracks(tracks, min_num_frames=5, max_num_frames=20):
     max_track_id = int(np.max(tracks[:, 1]))
     min_track_id = int(np.min(tracks[:, 1]))
 
-    # perform interpolation for each tracklet
+    # perform interpolation for each track
     interpolated_tracks = []
     for track_id in range(min_track_id, max_track_id + 1):
         inds = tracks[:, 1] == track_id
