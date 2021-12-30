@@ -10,7 +10,7 @@ from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import results2outs, tracklet_interpolation
+from mmtrack.core import interpolate_tracks, results2outs
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -204,8 +204,8 @@ class MOTChallengeDataset(CocoVideoDataset):
         results_per_video = np.concatenate(results_per_video)
 
         if self.interpolate_tracklet is not None:
-            results_per_video = tracklet_interpolation(
-                results_per_video, **self.interpolate_tracklet)
+            results_per_video = interpolate_tracks(results_per_video,
+                                                   **self.interpolate_tracklet)
 
         with open(resfile, 'wt') as f:
             for frame_id, info in enumerate(infos):
