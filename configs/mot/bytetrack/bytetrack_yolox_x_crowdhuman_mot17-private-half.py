@@ -101,10 +101,10 @@ data = dict(
         pipeline=train_pipeline),
     val=dict(
         pipeline=test_pipeline,
-        interpolate_tracklet=dict(min_frames=5, max_frames=20)),
+        interpolate_tracklet=dict(min_num_frames=5, max_num_frames=20)),
     test=dict(
         pipeline=test_pipeline,
-        interpolate_tracklet=dict(min_frames=5, max_frames=20)))
+        interpolate_tracklet=dict(min_num_frames=5, max_num_frames=20)))
 
 # optimizer
 # default 8 gpu
