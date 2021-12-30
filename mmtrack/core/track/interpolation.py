@@ -58,7 +58,7 @@ def interpolate_tracks(tracks, min_num_frames=5, max_num_frames=20):
         min_num_frames (int, optional): The minimum length of a track that will
             be interpolated. Defaults to 5.
         max_num_frames (int, optional): The maximum disconnected length in
-            tracks. Defaults to 20.
+            a track. Defaults to 20.
 
     Returns:
         ndarray: The interpolated tracks with shape (N, 7). Each row denotes

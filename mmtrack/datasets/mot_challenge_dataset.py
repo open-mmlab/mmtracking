@@ -26,7 +26,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             - min_num_frames (int, optional): The minimum length of a track
                 that will be interpolated. Defaults to 5.
             - max_num_frames (int, optional): The maximum disconnected length
-                in tracks. Defaults to 20.
+                in a track. Defaults to 20.
         detection_file (str, optional): The path of the public
             detection file. Default to None.
     """

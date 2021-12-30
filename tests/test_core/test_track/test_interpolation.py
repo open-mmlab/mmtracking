@@ -16,6 +16,6 @@ def test_interpolate_tracks():
     # the range of frame ids should not change
     assert min(out_results[:, 0]) == min(in_results[:, 0])
     assert max(out_results[:, 0]) == max(in_results[:, 0])
-    # the range of tracklet ids should not change
+    # the range of track ids should not change
     assert min(out_results[:, 1]) == min(in_results[:, 1])
     assert max(out_results[:, 1]) == max(in_results[:, 1])
