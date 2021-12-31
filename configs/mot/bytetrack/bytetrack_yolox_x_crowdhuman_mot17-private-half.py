@@ -99,8 +99,12 @@ data = dict(
             ],
             filter_empty_gt=False),
         pipeline=train_pipeline),
-    val=dict(pipeline=test_pipeline),
-    test=dict(pipeline=test_pipeline))
+    val=dict(
+        pipeline=test_pipeline,
+        interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)),
+    test=dict(
+        pipeline=test_pipeline,
+        interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)))
 
 # optimizer
 # default 8 gpu
