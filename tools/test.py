@@ -111,7 +111,13 @@ def main():
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
 
-    set_random_seed(1, deterministic=True)
+    # set random seeds. Force setting fixed seed and deterministic=True in SOT
+    # configs
+    if cfg.get('cudnn_benchmark', False):
+        torch.backends.cudnn.benchmark = True
+    if cfg.get('seed', None) is not None:
+        set_random_seed(
+            cfg.seed, deterministic=cfg.get('deterministic', False))
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.

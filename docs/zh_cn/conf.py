@@ -17,14 +17,14 @@ import sys
 
 import pytorch_sphinx_theme
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'MMTracking'
 copyright = '2018-2021, OpenMMLab'
 author = 'MMTracking Authors'
-version_file = '../mmtrack/version.py'
+version_file = '../../mmtrack/version.py'
 
 
 def get_version():
@@ -96,7 +96,7 @@ html_theme_options = {
         },
         {
             'name':
-            'Upstream',
+            '上游库',
             'children': [
                 {
                     'name': 'MMCV',
@@ -110,7 +110,7 @@ html_theme_options = {
         },
         {
             'name':
-            'Projects',
+            '算法库',
             'children': [
                 {
                     'name': 'MIM',
@@ -167,7 +167,7 @@ html_theme_options = {
                 {
                     'name': 'MMDeploy',
                     'url': 'https://github.com/open-mmlab/mmdeploy',
-                },            
+                },                
             ]
         },
         {
@@ -175,7 +175,7 @@ html_theme_options = {
             'OpenMMLab',
             'children': [
                 {
-                    'name': 'Homepage',
+                    'name': '官网',
                     'url': 'https://openmmlab.com/'
                 },
                 {
@@ -183,16 +183,19 @@ html_theme_options = {
                     'url': 'https://github.com/open-mmlab/'
                 },
                 {
-                    'name': 'Twitter',
+                    'name': '推特',
                     'url': 'https://twitter.com/OpenMMLab'
                 },
                 {
-                    'name': 'Zhihu',
+                    'name': '知乎',
                     'url': 'https://zhihu.com/people/openmmlab'
                 },
             ]
         },
-    ]
+    ],
+    # Specify the language of shared menu
+    'menu_lang':
+    'cn'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -201,7 +204,7 @@ html_theme_options = {
 html_static_path = ['_static']
 html_css_files = ['css/readthedocs.css']
 
-language = 'en'
+language = 'zh_CN'
 
 
 def builder_inited_handler(app):

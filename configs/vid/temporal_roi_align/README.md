@@ -2,25 +2,19 @@
 
 ## Abstract
 
-Video object detection is challenging in the presence of appearance deterioration in certain video frames. Therefore, it is
-a natural choice to aggregate temporal information from other frames of the same video into the current frame. However,
-ROI Align, as one of the most core procedures of video detectors, still remains extracting features from a single-frame
-feature map for proposals, making the extracted ROI features
-lack temporal information from videos. In this work, considering the features of the same object instance are highly similar among frames in a video, a novel Temporal ROI Align
-operator is proposed to extract features from other frames
-feature maps for current frame proposals by utilizing feature
-similarity. The proposed Temporal ROI Align operator can
-extract temporal information from the entire video for proposals. We integrate it into single-frame video detectors and
-other state-of-the-art video detectors, and conduct quantitative experiments to demonstrate that the proposed Temporal
-ROI Align operator can consistently and significantly boost
-the performance. Besides, the proposed Temporal ROI Align
-can also be applied into video instance segmentation.
+<!-- [ABSTRACT] -->
+
+Video object detection is challenging in the presence of appearance deterioration in certain video frames. Therefore, it is a natural choice to aggregate temporal information from other frames of the same video into the current frame. However, ROI Align, as one of the most core procedures of video detectors, still remains extracting features from a single-frame feature map for proposals, making the extracted ROI features lack temporal information from videos. In this work, considering the features of the same object instance are highly similar among frames in a video, a novel Temporal ROI Align operator is proposed to extract features from other frames feature maps for current frame proposals by utilizing feature similarity. The proposed Temporal ROI Align operator can extract temporal information from the entire video for proposals. We integrate it into single-frame video detectors and other state-of-the-art video detectors, and conduct quantitative experiments to demonstrate that the proposed Temporal ROI Align operator can consistently and significantly boost the performance. Besides, the proposed Temporal ROI Align can also be applied into video instance segmentation.
+
+<!-- [IMAGE] -->
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/34888372/142986136-0eebcb9c-0534-4b54-9da9-3f7ea207bd7c.png"/>
 </div>
 
 ## Citation
+
+<!-- [ALGORITHM] -->
 
 ```latex
 @inproceedings{gong2021temporal,

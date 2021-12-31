@@ -9,7 +9,7 @@ model = dict(
         )))
 # data
 data_root = 'data/MOT17/'
-test_set = 'train'
+test_set = 'test'
 data = dict(
     train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
     val=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),

@@ -98,6 +98,8 @@ def train_model(model,
     # put model on gpus
     if distributed:
         find_unused_parameters = cfg.get('find_unused_parameters', False)
+        if find_unused_parameters:
+            logger.info('set find_unused_parameters = True in DDP')
         # Sets the `find_unused_parameters` parameter in
         # torch.nn.parallel.DistributedDataParallel
         model = MMDistributedDataParallel(
