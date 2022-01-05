@@ -1,5 +1,27 @@
 ## Changelog
 
+### v0.9.0 (05/01/2022)
+
+#### Highlights
+
+- Support arXiv 2021 manuscript 'ByteTrack: Multi-Object Tracking by Associating Every Detection Box' ([#385](https://github.com/open-mmlab/mmtracking/pull/385)), ([#383](https://github.com/open-mmlab/mmtracking/pull/383)), ([#372](https://github.com/open-mmlab/mmtracking/pull/372))
+- Support ICCV 2019 paper 'Video Instance Segmentation' ([#304](https://github.com/open-mmlab/mmtracking/pull/304)), ([#303](https://github.com/open-mmlab/mmtracking/pull/303)), ([#298](https://github.com/open-mmlab/mmtracking/pull/298)), ([#292](https://github.com/open-mmlab/mmtracking/pull/292))
+
+#### New Features
+
+- Support CrowdHuman dataset for MOT ([#366](https://github.com/open-mmlab/mmtracking/pull/366))
+- Support VOT2018 dataset for SOT ([#305](https://github.com/open-mmlab/mmtracking/pull/305))
+- Support YouTube-VIS dataset for VIS ([#290](https://github.com/open-mmlab/mmtracking/pull/290))
+
+#### Bug Fixes
+
+- Fix two significant bugs in SOT and provide new SOT pretrained models ([#349](https://github.com/open-mmlab/mmtracking/pull/349))
+
+#### Improvements
+
+- Refactor LaSOT, TrackingNet dataset and support GOT-10K datasets ([#296](https://github.com/open-mmlab/mmtracking/pull/296))
+- Support persisitent workers ([#348](https://github.com/open-mmlab/mmtracking/pull/348))
+
 ### v0.8.0 (03/10/2021)
 
 #### New Features

@@ -50,7 +50,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 Release [ByteTrack](configs/mot/bytetrack) pretrained models.
 
-v0.8.0 was released in 03/10/2021.
+v0.9.0 was released in 05/01/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
 ## Benchmark and model zoo
