@@ -3,6 +3,8 @@ lap
 matplotlib
 mmcls>=0.16.0
 motmetrics
+# we may unlock the verion of numpy in the future
+numpy<1.20.0
 packaging
 pycocotools
 seaborn
