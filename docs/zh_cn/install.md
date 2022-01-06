@@ -12,10 +12,11 @@
 
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
-|        master       | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0      |
-|        0.6.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
-|        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
+|        master       | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
+|        0.9.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.8.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
+|        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
+|        0.6.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 
 ## 安装
 
@@ -63,12 +64,6 @@
     cd mmcv
     MMCV_WITH_OPS=1 pip install -e .  # package mmcv-full will be installed after this step
     cd ..
-    ```
-
-    或者，可以直接使用命令行安装：
-
-    ```shell
-    pip install mmcv-full
     ```
 
 4. 安装 MMDetection：

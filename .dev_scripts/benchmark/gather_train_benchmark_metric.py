@@ -130,14 +130,13 @@ if __name__ == '__main__':
                                     0]] < result_dict[epoch][eval_metrics[0]]:
                                 best_epoch_results = result_dict[epoch]
 
-                        for metric in best_epoch_results:
-                            if 'success' in best_epoch_results:
-                                performance = round(best_epoch_results[metric],
-                                                    1)
-                            else:
-                                performance = round(
-                                    best_epoch_results[metric] * 100, 1)
-                            best_epoch_results[metric] = performance
+                    for metric in best_epoch_results:
+                        if 'success' in best_epoch_results:
+                            performance = round(best_epoch_results[metric], 1)
+                        else:
+                            performance = round(
+                                best_epoch_results[metric] * 100, 1)
+                        best_epoch_results[metric] = performance
                     all_results_dict[config] = best_epoch_results
 
                     # update and append excel content
