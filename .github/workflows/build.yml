@@ -177,7 +177,6 @@ jobs:
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
-          python -m pip uninstall pycocotools
           python -m pip install pycocotools --no-cache-dir --force-reinstall --no-deps
           python -m pip install git+https://github.com/votchallenge/toolkit.git
       - name: Build and install
