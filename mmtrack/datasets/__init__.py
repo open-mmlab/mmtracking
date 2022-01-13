@@ -11,6 +11,7 @@ from .otb_dataset import OTB100Dataset
 from .parsers import CocoVID
 from .pipelines import PIPELINES
 from .reid_dataset import ReIDDataset
+from .sot_dataset import SOTDataset
 from .sot_test_dataset import SOTTestDataset
 from .sot_train_dataset import SOTTrainDataset
 from .trackingnet_dataset import TrackingNetDataset
@@ -23,5 +24,5 @@ __all__ = [
     'CocoVideoDataset', 'ImagenetVIDDataset', 'MOTChallengeDataset',
     'ReIDDataset', 'SOTTrainDataset', 'SOTTestDataset', 'LaSOTDataset',
     'UAV123Dataset', 'TrackingNetDataset', 'OTB100Dataset',
-    'YouTubeVISDataset', 'GOT10kDataset', 'VOTDataset'
+    'YouTubeVISDataset', 'GOT10kDataset', 'VOTDataset', 'SOTDataset'
 ]
