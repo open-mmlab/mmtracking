@@ -67,6 +67,11 @@ test_pipeline = [
             dict(type='Resize', keep_ratio=True),
             dict(type='RandomFlip'),
             dict(
+                type='Normalize',
+                mean=[0.0, 0.0, 0.0],
+                std=[1.0, 1.0, 1.0],
+                to_rgb=False),
+            dict(
                 type='Pad',
                 size_divisor=32,
                 pad_val=dict(img=(114.0, 114.0, 114.0))),
