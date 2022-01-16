@@ -26,12 +26,15 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
                  split,
                  test_mode=False,
                  bbox_min_size=0,
+                 load_as_video=True,
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
         self.pipeline = Compose(pipeline)
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
+        # for DistributedVideoSampler in testing
+        self.laod_as_video = load_as_video
         ''' The self.data_info is a list, which the length is the
             number of videos. The default content is in the following format:
             [
