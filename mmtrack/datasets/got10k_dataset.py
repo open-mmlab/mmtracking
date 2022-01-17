@@ -80,14 +80,13 @@ class GOT10kDataset(SOTDataset):
             cover_info_path = osp.join(
                 self.img_prefix, self.data_infos[video_ind]['video_path'],
                 'cover.label')
-            absense_info = np.loadtxt(
-                absense_info_path, dtype=bool, delimiter=',')
+            absense_info = np.loadtxt(absense_info_path, dtype=bool)
             # The values of key 'cover' are
             # int numbers in range [0,8], which correspond to
             # ranges of object visible ratios: 0%, (0%, 15%],
             # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
             # (75%, 90%], (90%, 100%) and 100% respectively
-            cover_info = np.loadtxt(cover_info_path, dtype=int, delimiter=',')
+            cover_info = np.loadtxt(cover_info_path, dtype=int)
             visible = ~absense_info & (cover_info > 0)
             visible_ratio = cover_info / 8.
             return dict(visible=visible, visible_ratio=visible_ratio)
@@ -95,7 +94,7 @@ class GOT10kDataset(SOTDataset):
             return super(GOT10kDataset,
                          self).get_visibility_from_video(video_ind)
 
-    def prepare_test_img(self, video_ind, frame_ind):
+    def prepare_test_data(self, video_ind, frame_ind):
         """Get the data of one frame.
         Args:
             video_ind (int): video index

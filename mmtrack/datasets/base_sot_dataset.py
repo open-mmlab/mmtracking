@@ -96,7 +96,7 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
         """Get bboxes annotation about the instance in a video.
 
         Args:
-            video_ind (int): video index (>=0)
+            video_ind (int): video index
 
         Returns:
             ndarray: in [N, 4] shape. The N is the bbox number and the bbox
@@ -112,9 +112,9 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
         start_frame_id = self.data_infos[video_ind]['start_frame_id']
 
         if not self.test_mode:
-            assert len(bboxes) == (
-                end_frame_id - start_frame_id + 1
-            ), f'{len(bboxes)} is not equal {end_frame_id}-{start_frame_id}+1'
+            assert len(bboxes) == (end_frame_id - start_frame_id +
+                                   1), f'{len(bboxes)} is not equal to'
+            '{end_frame_id}-{start_frame_id}+1'
         return bboxes
 
     def get_len_per_video(self, video_ind):
@@ -169,14 +169,16 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
             filename=img_names, frame_ids=frame_ids, video_id=video_ind)
         return img_infos
 
-    def prepare_test_img(self, video_ind, frame_ind):
-        """Get the data of one frame.
+    def prepare_test_data(self, video_ind, frame_ind):
+        """Get testing data of one frame. We parse one video, get one frame
+        from it and pass the frame information to the pipeline.
+
         Args:
             video_ind (int): video index
             frame_ind (int): frame index
 
         Returns:
-            dict:
+            dict: testing data of one frame.
         """
         ann_infos = self.get_ann_infos_from_video(video_ind)
         img_infos = self.get_img_infos_from_video(video_ind)
@@ -191,13 +193,16 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
         results = self.pipeline(results)
         return results
 
-    def prepare_train_img(self, video_ind):
-        """Get the results sampled from some videos
+    def prepare_train_data(self, video_ind):
+        """Get training data sampled from some videos. We firstly sample two
+        videos from the dataset and then parse the data information. The first
+        operation in the training pipeline is frames sampling.
+
         Args:
             video_ind (int): video index
 
         Returns:
-            dict:
+            dict: training data pairs, triplets or groups.
         """
         while True:
             video_inds = random.choices(list(range(len(self))), k=2)
