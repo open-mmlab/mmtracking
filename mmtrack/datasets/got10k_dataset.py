@@ -43,7 +43,6 @@ class GOT10kDataset(SOTDataset):
                 osp.join(self.img_prefix, 'train',
                          f'got10k_{split}_split.txt'),
                 dtype=float)
-            vids_id_list = sorted(vids_id_list)
             videos_list = [
                 'GOT-10k_Train_%06d' % (int(video_id) + 1)
                 for video_id in vids_id_list
@@ -95,13 +94,15 @@ class GOT10kDataset(SOTDataset):
                          self).get_visibility_from_video(video_ind)
 
     def prepare_test_data(self, video_ind, frame_ind):
-        """Get the data of one frame.
+        """Get testing data of one frame. We parse one video, get one frame
+        from it and pass the frame information to the pipeline.
+
         Args:
             video_ind (int): video index
             frame_ind (int): frame index
 
         Returns:
-            dict:
+            dict: testing data of one frame.
         """
         ann_infos = self.get_ann_infos_from_video(video_ind)
         img_infos = self.get_img_infos_from_video(video_ind)
@@ -144,12 +145,12 @@ class GOT10kDataset(SOTDataset):
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
             video_name = video_info['video_path'].split('/')[-1]
-            video_resfile_path = osp.join(resfile_path, video_name)
-            if not osp.isdir(video_resfile_path):
-                os.makedirs(video_resfile_path, exist_ok=True)
-            video_bbox_txt = osp.join(video_resfile_path,
+            video_resfiles_path = osp.join(resfile_path, video_name)
+            if not osp.isdir(video_resfiles_path):
+                os.makedirs(video_resfiles_path, exist_ok=True)
+            video_bbox_txt = osp.join(video_resfiles_path,
                                       '{}_001.txt'.format(video_name))
-            video_time_txt = osp.join(video_resfile_path,
+            video_time_txt = osp.join(video_resfiles_path,
                                       '{}_time.txt'.format(video_name))
             with open(video_bbox_txt,
                       'w') as f_bbox, open(video_time_txt, 'w') as f_time:
