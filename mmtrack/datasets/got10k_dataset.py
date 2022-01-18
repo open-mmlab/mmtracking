@@ -164,8 +164,8 @@ class GOT10kDataset(BaseSOTDataset):
                     ]
                     line = ','.join(bbox) + '\n'
                     f_bbox.writelines(line)
-                    # we don't record testing time, so we set a default
-                    # time for testing on the server.
+                    # We don't record testing time, so we set a default
+                    # time in order to test on the server.
                     f_time.writelines('0.0001\n')
             start_ind += num
 

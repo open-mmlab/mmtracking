@@ -2,6 +2,8 @@
 import numpy as np
 from torch.utils.data import DistributedSampler as _DistributedSampler
 
+from mmtrack.datasets.base_sot_dataset import BaseSOTDataset
+
 
 class DistributedVideoSampler(_DistributedSampler):
     """Put videos to multi gpus during testing.
@@ -22,23 +24,46 @@ class DistributedVideoSampler(_DistributedSampler):
         assert not self.shuffle, 'Specific for video sequential testing.'
         self.num_samples = len(dataset)
 
-        first_frame_indices = []
-        for i, img_info in enumerate(self.dataset.data_infos):
-            if img_info['frame_id'] == 0:
-                first_frame_indices.append(i)
+        if isinstance(dataset, BaseSOTDataset):
+            # The input of '__getitem__' function in SOT dataset class must be
+            # a tuple when testing. The tuple is in (video_index, frame_index)
+            # format.
+            self.num_videos = len(self.dataset.data_infos)
+            self.num_frames_per_video = self.dataset.num_frames_per_video
+            if self.num_videos < num_replicas:
+                raise ValueError(f'only {self.num_videos} videos loaded,'
+                                 f'but {self.num_replicas} gpus were given.')
 
-        if len(first_frame_indices) < num_replicas:
-            raise ValueError(f'only {len(first_frame_indices)} videos loaded,'
-                             f'but {self.num_replicas} gpus were given.')
+            chunks = np.array_split(
+                list(range(self.num_videos)), self.num_replicas)
+            self.indices = []
+            for videos in chunks:
+                indices_chunk = []
+                for video_ind in videos:
+                    indices_chunk.extend([
+                        (video_ind, frame_ind) for frame_ind in range(
+                            self.num_frames_per_video[video_ind])
+                    ])
+                self.indices.append(indices_chunk)
+        else:
+            first_frame_indices = []
+            for i, img_info in enumerate(self.dataset.data_infos):
+                if img_info['frame_id'] == 0:
+                    first_frame_indices.append(i)
 
-        chunks = np.array_split(first_frame_indices, self.num_replicas)
-        split_flags = [c[0] for c in chunks]
-        split_flags.append(self.num_samples)
+            if len(first_frame_indices) < num_replicas:
+                raise ValueError(
+                    f'only {len(first_frame_indices)} videos loaded,'
+                    f'but {self.num_replicas} gpus were given.')
 
-        self.indices = [
-            list(range(split_flags[i], split_flags[i + 1]))
-            for i in range(self.num_replicas)
-        ]
+            chunks = np.array_split(first_frame_indices, self.num_replicas)
+            split_flags = [c[0] for c in chunks]
+            split_flags.append(self.num_samples)
+
+            self.indices = [
+                list(range(split_flags[i], split_flags[i + 1]))
+                for i in range(self.num_replicas)
+            ]
 
     def __iter__(self):
         """Put videos to specify gpu."""
