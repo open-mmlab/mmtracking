@@ -8,11 +8,11 @@ import time
 import numpy as np
 from mmdet.datasets import DATASETS
 
-from .base_sot_dataset import SOTDataset
+from .base_sot_dataset import BaseSOTDataset
 
 
 @DATASETS.register_module()
-class GOT10kDataset(SOTDataset):
+class GOT10kDataset(BaseSOTDataset):
     """Dataset of single object tracking.
 
     The dataset can both support training and testing mode.
@@ -66,7 +66,7 @@ class GOT10kDataset(SOTDataset):
                     ann_path=ann_path,
                     start_frame_id=1,
                     end_frame_id=end_frame_id,
-                    framename_template=8))
+                    framename_template='%08d.jpg'))
         print(f'GOT10k dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -164,7 +164,9 @@ class GOT10kDataset(SOTDataset):
                     ]
                     line = ','.join(bbox) + '\n'
                     f_bbox.writelines(line)
-                    f_time.writelines('0.04\n')
+                    # we don't record testing time, so we set a default
+                    # time for testing on the server.
+                    f_time.writelines('0.0001\n')
             start_ind += num
 
         shutil.make_archive(resfile_path, 'zip', resfile_path)

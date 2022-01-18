@@ -12,12 +12,21 @@ from mmtrack.datasets import DATASETS
 
 
 @DATASETS.register_module()
-class SOTDataset(Dataset, metaclass=ABCMeta):
-    """Dataset of single object tracking.
+class BaseSOTDataset(Dataset, metaclass=ABCMeta):
+    """Dataset of single object tracking. The dataset can both support training
+    and testing mode.
 
-    The dataset can both support training and testing mode.
+    Args:
+        img_prefix (str): Prefix in the paths of image files.
+        pipeline (list[dict]): Processing pipeline.
+        split (str): Dataset split.
+        test_mode (bool, optional): Default to False.
+        bbox_min_size (int, optional): Only bounding boxes whose sizes are
+            larger than `bbox_min_size` can be regarded as valid. Default to 0.
     """
 
+    # Compatible with MOT and VID Dataset class. The 'CLASSES' attribute will
+    # be called in tools/train.py.
     CLASSES = None
 
     def __init__(self,
@@ -26,15 +35,15 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
                  split,
                  test_mode=False,
                  bbox_min_size=0,
-                 load_as_video=True,
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
         self.pipeline = Compose(pipeline)
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
-        # for DistributedVideoSampler in testing
-        self.laod_as_video = load_as_video
+        # 'self.load_as_video' must be set to True in order to using
+        # distributed video sampler to load dataset when testing.
+        self.load_as_video = True
         ''' The self.data_info is a list, which the length is the
             number of videos. The default content is in the following format:
             [
@@ -45,8 +54,7 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
                                     the image name
                     'end_frame_id': the ending frame number contained in the
                                     image name
-                    'framename_template': the number of digits in the image
-                                    name
+                    'framename_template': the template of image name
                 },
                 ...
             ]
@@ -85,11 +93,8 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
         framename_template = self.data_infos[video_ind]['framename_template']
         for frame_id in range(start_frame_id, end_frame_id + 1):
             img_names.append(
-                osp.join(
-                    self.data_infos[video_ind]['video_path'],
-                    '{frame_id:0{framename_template}}.jpg'.format(
-                        frame_id=frame_id,
-                        framename_template=framename_template)))
+                osp.join(self.data_infos[video_ind]['video_path'],
+                         framename_template % frame_id))
         return img_names
 
     def get_bboxes_from_video(self, video_ind):
@@ -215,12 +220,14 @@ class SOTDataset(Dataset, metaclass=ABCMeta):
                 pair_video_infos.append(video_infos)
 
             results = self.pipeline(pair_video_infos)
-            if results is None:
-                continue
-            return results
+            if results is not None:
+                return results
 
     def pre_pipeline(self, results):
-        """Prepare results dict for pipeline."""
+        """Prepare results dict for pipeline.
+
+        The following keys in dict will be called in the subsequent pipeline.
+        """
         results['img_prefix'] = self.img_prefix
         results['bbox_fields'] = []
         results['mask_fields'] = []
