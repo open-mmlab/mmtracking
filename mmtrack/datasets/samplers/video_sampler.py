@@ -7,11 +7,11 @@ from mmtrack.datasets.base_sot_dataset import BaseSOTDataset
 
 
 class SOTVideoSampler(Sampler):
-    """Put videos to multi gpus during testing.
+    """Only used for sot testing on single gpu.
 
     Args:
-        dataset (Dataset): Test dataset that must has `num_frames_per_video`
-            attribute. It record the frame number of each video.
+        dataset (Dataset): Test dataset must have `num_frames_per_video`
+            attribute. It records the frame number of each video.
     """
 
     def __init__(self, dataset):
@@ -34,10 +34,10 @@ class DistributedVideoSampler(_DistributedSampler):
     """Put videos to multi gpus during testing.
 
     Args:
-        dataset (Dataset): Test dataset that must has `data_infos` attribute.
-            Each data_info in `data_infos` record information of one frame or
-            one video (in SOT Dataset). If not SOT Dataset, each video must has
-            one data_info that includes `data_info['frame_id'] == 0`.
+        dataset (Dataset): Test dataset must have `data_infos` attribute.
+            Each data_info in `data_infos` records information of one frame or
+            one video (in SOT Dataset). If not SOT Dataset, each video must
+            have one data_info that includes `data_info['frame_id'] == 0`.
         num_replicas (int): The number of gpus. Defaults to None.
         rank (int): Gpu rank id. Defaults to None.
         shuffle (bool): If True, shuffle the dataset. Defaults to False.
