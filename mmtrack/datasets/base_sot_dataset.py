@@ -70,9 +70,9 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             assert isinstance(ind, tuple)
             # the first element in the tuple is the video index and the second
             # element in the tuple is the frame index
-            return self.prepare_test_img(ind[0], ind[1])
+            return self.prepare_test_data(ind[0], ind[1])
         else:
-            return self.prepare_train_img(ind)
+            return self.prepare_train_data(ind)
 
     @abstractmethod
     def load_data_infos(self, split='train'):
