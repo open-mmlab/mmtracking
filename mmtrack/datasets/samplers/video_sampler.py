@@ -1,8 +1,33 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from torch.utils.data import DistributedSampler as _DistributedSampler
+from torch.utils.data import Sampler
 
 from mmtrack.datasets.base_sot_dataset import BaseSOTDataset
+
+
+class SOTVideoSampler(Sampler):
+    """Put videos to multi gpus during testing.
+
+    Args:
+        dataset (Dataset): Test dataset that must has `num_frames_per_video`
+            attribute. It record the frame number of each video.
+    """
+
+    def __init__(self, dataset):
+        super().__init__(dataset)
+        # The input of '__getitem__' function in SOT dataset class must be
+        # a tuple when testing. The tuple is in (video_index, frame_index)
+        # format.
+        self.dataset = dataset
+        self.indices = []
+        for video_ind, num_frames in enumerate(
+                self.dataset.num_frames_per_video):
+            self.indices.extend([(video_ind, frame_ind)
+                                 for frame_ind in range(num_frames)])
+
+    def __iter__(self):
+        return iter(self.indices)
 
 
 class DistributedVideoSampler(_DistributedSampler):
@@ -10,9 +35,9 @@ class DistributedVideoSampler(_DistributedSampler):
 
     Args:
         dataset (Dataset): Test dataset that must has `data_infos` attribute.
-            Each data_info in `data_infos` record information of one frame,
-            and each video must has one data_info that includes
-            `data_info['frame_id'] == 0`.
+            Each data_info in `data_infos` record information of one frame or
+            one video (in SOT Dataset). If not SOT Dataset, each video must has
+            one data_info that includes `data_info['frame_id'] == 0`.
         num_replicas (int): The number of gpus. Defaults to None.
         rank (int): Gpu rank id. Defaults to None.
         shuffle (bool): If True, shuffle the dataset. Defaults to False.

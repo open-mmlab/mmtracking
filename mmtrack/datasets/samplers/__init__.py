@@ -1,4 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .distributed_video_sampler import DistributedVideoSampler
+from .video_sampler import DistributedVideoSampler, SOTVideoSampler
 
-__all__ = ['DistributedVideoSampler']
+__all__ = ['DistributedVideoSampler', 'SOTVideoSampler']
