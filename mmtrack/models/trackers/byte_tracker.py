@@ -185,7 +185,8 @@ class ByteTracker(BaseTracker):
 
         else:
             # 0. init
-            ids = torch.full((bboxes.size(0), ), -1).to(labels)
+            ids = torch.full((bboxes.size(0), ), -1,
+                             dtype=labels.dtype).to(labels)
 
             # get the detection bboxes for the first association
             first_det_inds = bboxes[:, -1] > self.obj_score_thrs['high']
