@@ -100,7 +100,7 @@ def test_sot_vot_evaluation():
     assert round(eval_results['robustness'], 4) == 6.0
 
 
-@pytest.mark.parametrize('dataset', ['TrackingNetDataset', 'GOT10kDataset'])
+@pytest.mark.parametrize('dataset', ['TrackingNetDataset'])
 def test_format_results(dataset):
     dataset_class = DATASETS.get(dataset)
     dataset = dataset_class(

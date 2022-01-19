@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.datasets.builder import DATASETS, build_dataset
 
+from .base_sot_dataset import BaseSOTDataset
 from .builder import build_dataloader
 from .coco_video_dataset import CocoVideoDataset
 from .got10k_dataset import GOT10kDataset
@@ -23,5 +24,5 @@ __all__ = [
     'CocoVideoDataset', 'ImagenetVIDDataset', 'MOTChallengeDataset',
     'ReIDDataset', 'SOTTrainDataset', 'SOTTestDataset', 'LaSOTDataset',
     'UAV123Dataset', 'TrackingNetDataset', 'OTB100Dataset',
-    'YouTubeVISDataset', 'GOT10kDataset', 'VOTDataset'
+    'YouTubeVISDataset', 'GOT10kDataset', 'VOTDataset', 'BaseSOTDataset'
 ]

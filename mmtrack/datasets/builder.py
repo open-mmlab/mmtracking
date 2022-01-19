@@ -10,8 +10,10 @@ from mmcv.utils import TORCH_VERSION, digit_version
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import RandomSampler
 
-from .samplers import DistributedVideoSampler
+from .base_sot_dataset import BaseSOTDataset
+from .samplers import DistributedVideoSampler, SOTVideoSampler
 
 
 def build_dataloader(dataset,
@@ -63,7 +65,12 @@ def build_dataloader(dataset,
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:
-        sampler = GroupSampler(dataset, samples_per_gpu) if shuffle else None
+        if isinstance(dataset, BaseSOTDataset):
+            sampler = SOTVideoSampler(
+                dataset) if not shuffle else RandomSampler(dataset)
+        else:
+            sampler = GroupSampler(dataset,
+                                   samples_per_gpu) if shuffle else None
         batch_size = num_gpus * samples_per_gpu
         num_workers = num_gpus * workers_per_gpu
 

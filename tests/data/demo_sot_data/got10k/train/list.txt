@@ -1,0 +1,2 @@
+GOT-10k_Train_000001
+GOT-10k_Train_000002
