@@ -14,6 +14,7 @@ from .base_sot_dataset import BaseSOTDataset
 @DATASETS.register_module()
 class VOTDataset(BaseSOTDataset):
     """VOT dataset of single object tracking.
+
     The dataset is only used to test.
     """
 
@@ -89,7 +90,6 @@ class VOTDataset(BaseSOTDataset):
         visible_info = self.get_visibility_from_video(video_ind)
         # bboxes in VOT datasets are all valid
         bboxes_isvalid = np.array([True] * len(bboxes), dtype=np.bool_)
-        visible_info['visible'] = visible_info['visible'] & bboxes_isvalid
         ann_infos = dict(
             bboxes=bboxes, bboxes_isvalid=bboxes_isvalid, **visible_info)
         return ann_infos
@@ -140,11 +140,21 @@ class VOTDataset(BaseSOTDataset):
                 num = data_info['end_frame_id'] - data_info[
                     'start_frame_id'] + 1
                 end_ind += num
+
+                bboxes_per_video = []
+                # results are in dict(track_bboxes=list[ndarray]) format
                 # track_bboxes are in list[list[ndarray]] format
-                track_bboxes.append(
-                    list(
-                        map(lambda x: x[:-1],
-                            results['track_bboxes'][start_ind:end_ind])))
+                for bbox in results['track_bboxes'][start_ind:end_ind]:
+                    # the last element of `bbox` is score.
+                    if len(bbox) != 2:
+                        # convert bbox format from (tl_x, tl_y, br_x, br_y) to
+                        # (x1, y1, w, h)
+                        bbox[2] -= bbox[0]
+                        bbox[3] -= bbox[1]
+
+                    bboxes_per_video.append(bbox[:-1])
+
+                track_bboxes.append(bboxes_per_video)
                 start_ind += num
 
                 # read one image in the video to get video width and height

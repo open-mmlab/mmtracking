@@ -63,10 +63,10 @@ def eval_sot_ope(results, annotations):
             results of each video. The second list contains the tracking
             results of each frame in one video. The ndarray denotes the
             tracking box in [tl_x, tl_y, br_x, br_y] format.
-        annotations (list[list[ndarray]]): The first list contains the annotations
-            of each video. The second list contains the annotations of each
-            frame in one video. The dict contains the annotation information
-            of one frame.
+        annotations (list[dict]): The list contains the annotations
+            of each video. The dict contains the annotation information
+            of one video. The format is {'bboxes': ndarray in (N, 4) shape,
+            'visible':ndarray, ...}. The bbox is in (x1, y1, x2, y2) format.
 
     Returns:
         dict[str, float]: OPE style evaluation metric (i.e. success,
@@ -76,14 +76,15 @@ def eval_sot_ope(results, annotations):
     precision_results = []
     norm_precision_results = []
     for single_video_results, single_video_anns in zip(results, annotations):
-        gt_bboxes = np.stack(single_video_anns)
+        gt_bboxes = single_video_anns['bboxes']
         pred_bboxes = np.stack(single_video_results)
+        assert len(pred_bboxes) == len(gt_bboxes)
         video_length = len(single_video_results)
 
-        if 'ignore' in single_video_anns[0]:
-            gt_ignore = np.stack([ann['ignore'] for ann in single_video_anns])
-            gt_bboxes = gt_bboxes[gt_ignore == 0]
-            pred_bboxes = pred_bboxes[gt_ignore == 0]
+        if 'visible' in single_video_anns:
+            gt_valid = single_video_anns['visible']
+            gt_bboxes = gt_bboxes[gt_valid]
+            pred_bboxes = pred_bboxes[gt_valid]
 
         # eval success based on iou
         iou_th = np.arange(0, 1.05, 0.05)

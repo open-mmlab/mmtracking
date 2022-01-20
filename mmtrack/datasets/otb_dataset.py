@@ -93,8 +93,8 @@ class OTB100Dataset(BaseSOTDataset):
                 bboxes.append(bbox)
         bboxes = np.array(bboxes, dtype=int)
 
-        if 'init_skip_num' in self.data_infos:
-            init_skip_num = self.data_infos['init_skip_num']
+        if 'init_skip_num' in self.data_infos[video_ind]:
+            init_skip_num = self.data_infos[video_ind]['init_skip_num']
             bboxes = bboxes[init_skip_num:]
 
         end_frame_id = self.data_infos[video_ind]['end_frame_id']

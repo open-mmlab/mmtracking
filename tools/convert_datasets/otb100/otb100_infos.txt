@@ -1,4 +1,4 @@
-The format of each line in this txt is video_path,annotation_path,start_frame_id,end_frame_id
+The format of each line in this txt is (video_path,annotation_path,start_frame_id,end_frame_id)
 Basketball/img,Basketball/groundtruth_rect.txt,1,725
 Biker/img,Biker/groundtruth_rect.txt,1,142
 Bird1/img,Bird1/groundtruth_rect.txt,1,408

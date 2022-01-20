@@ -263,8 +263,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         # get all test annotations
         annotations = []
         for video_ind in range(len(self.data_infos)):
-            bboxes = self.get_ann_infos_from_video(video_ind)['bboxes']
-            annotations.append(bboxes)
+            video_anns = self.get_ann_infos_from_video(video_ind)
+            annotations.append(video_anns)
 
         # tracking_bboxes converting code
         eval_results = dict()

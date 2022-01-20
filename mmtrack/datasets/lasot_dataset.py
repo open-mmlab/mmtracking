@@ -12,6 +12,7 @@ from .base_sot_dataset import BaseSOTDataset
 @DATASETS.register_module()
 class LaSOTDataset(BaseSOTDataset):
     """LaSOT dataset of single object tracking.
+
     The dataset can both support training and testing mode.
     """
 
@@ -19,7 +20,7 @@ class LaSOTDataset(BaseSOTDataset):
         """Initialization of SOT dataset class.
 
         Args:
-            ann_file (str): The file contains testing video name. It will be
+            ann_file (str): The file contains testing video names. It will be
                 loaded in the `self.load_data_infos` function.
         """
         self.ann_file = ann_file
