@@ -6,6 +6,7 @@ import tempfile
 import mmcv
 import motmetrics as mm
 import numpy as np
+import trackeval
 from mmcv.utils import print_log
 from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
@@ -240,6 +241,68 @@ class MOTChallengeDataset(CocoVideoDataset):
                         f'{(y2-y1):.3f},{conf:.3f}\n')
             f.close()
 
+    def get_MOTChallenge_configs(self, tracker_folder):
+
+        dataset_config = {
+            # Location of GT data
+            'GT_FOLDER': self.img_prefix,
+            # Trackers location
+            'TRACKERS_FOLDER': tracker_folder,
+            # Where to save eval results
+            # (if None, same as TRACKERS_FOLDER)
+            'OUTPUT_FOLDER': None,
+            # Use 'track' as the default tracker
+            'TRACKERS_TO_EVAL': ['track'],
+            # Valid: ['pedestrian']
+            'CLASSES_TO_EVAL': ['pedestrian'],
+            # Valid: 'MOT17', 'MOT16', 'MOT20', 'MOT15'
+            'BENCHMARK': 'MOT17',
+            # Valid: 'train', 'test'
+            'SPLIT_TO_EVAL': 'train',
+            # Whether tracker input files are zipped
+            'INPUT_AS_ZIP': False,
+            # Whether to print current config
+            'PRINT_CONFIG': True,
+            # Whether to perform preprocessing
+            # (never done for MOT15)
+            'DO_PREPROC': True,
+            # Tracker files are in
+            # TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
+            'TRACKER_SUB_FOLDER': '',
+            # Output files are saved in
+            # OUTPUT_FOLDER/tracker_name/OUTPUT_SUB_FOLDER
+            'OUTPUT_SUB_FOLDER': '',
+            # Names of trackers to display
+            # (if None: TRACKERS_TO_EVAL)
+            'TRACKER_DISPLAY_NAMES': None,
+            # Where seqmaps are found
+            # (if None: GT_FOLDER/seqmaps)
+            'SEQMAP_FOLDER': None,
+            # Directly specify seqmap file
+            # (if none use seqmap_folder/benchmark-split_to_eval)
+            'SEQMAP_FILE': None,
+            # If not None, specify sequences to eval
+            # and their number of timesteps
+            'SEQ_INFO': None,
+            # '{gt_folder}/{seq}/gt/gt.txt'
+            'GT_LOC_FORMAT': '{gt_folder}/{seq}/gt/gt.txt',
+            # If False, data is in GT_FOLDER/BENCHMARK-SPLIT_TO_EVAL/ and in
+            # TRACKERS_FOLDER/BENCHMARK-SPLIT_TO_EVAL/tracker/
+            # If True, the middle 'benchmark-split' folder is skipped for both.
+            'SKIP_SPLIT_FOL': True,
+        }
+
+        if 'half-train' in self.ann_file:
+            dataset_config[
+                'GT_LOC_FORMAT'] = '{gt_folder}/{seq}/gt/gt_half-train.txt'
+        elif 'half-val' in self.ann_file:
+            dataset_config[
+                'GT_LOC_FORMAT'] = '{gt_folder}/{seq}/gt/gt_half-val.txt'
+        else:
+            dataset_config['GT_LOC_FORMAT'] = '{gt_folder}/{seq}/gt/gt.txt'
+
+        return dataset_config
+
     def evaluate(self,
                  results,
                  metric='track',
@@ -311,17 +374,45 @@ class MOTChallengeDataset(CocoVideoDataset):
                 names=names,
                 metrics=mm.metrics.motchallenge_metrics,
                 generate_overall=True)
-            str_summary = mm.io.render_summary(
-                summary,
-                formatters=mh.formatters,
-                namemap=mm.io.motchallenge_metric_names)
-            print(str_summary)
+
+            eval_config = trackeval.Evaluator.get_default_eval_config()
+            # tracker's name is set to 'track',
+            # so this word needs to be splited out
+            tracker_folder = resfiles['track'].rsplit('/', 1)[0]
+            dataset_config = self.get_MOTChallenge_configs(tracker_folder)
+
+            evaluator = trackeval.Evaluator(eval_config)
+            dataset = [trackeval.datasets.MotChallenge2DBox(dataset_config)]
+            metrics = [
+                trackeval.metrics.HOTA({
+                    'METRICS': ['HOTA'],
+                    'THRESHOLD': 0.5
+                })
+            ]
+            output_res, _ = evaluator.evaluate(dataset, metrics)
+            # modify HOTA results sequence according to summary list,
+            # 'OVERALL' is the last value
+            seq_list = list(summary.index)
+            seq_list.append('COMBINED_SEQ')
+
+            HOTA = (np.array([
+                np.average(output_res['MotChallenge2DBox']['track'][seq]
+                           ['pedestrian']['HOTA']['HOTA'])
+                for seq in seq_list if 'MOT' in seq or 'COMBINED_SEQ' in seq
+            ]) * 100).tolist()
 
             eval_results.update({
                 mm.io.motchallenge_metric_names[k]: v['OVERALL']
                 for k, v in summary.to_dict().items()
             })
+            eval_results['HOTA'] = HOTA[-1]
 
+            summary['HOTA'] = HOTA
+            str_summary = mm.io.render_summary(
+                summary,
+                formatters=mh.formatters,
+                namemap=mm.io.motchallenge_metric_names)
+            print(str_summary)
             if tmp_dir is not None:
                 tmp_dir.cleanup()
 
