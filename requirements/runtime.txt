@@ -9,4 +9,3 @@ seaborn
 six
 terminaltables
 tqdm
-trackeval

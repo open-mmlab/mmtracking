@@ -136,6 +136,7 @@ cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
 pip install git+https://github.com/votchallenge/toolkit.git
+pip install git+https://github.com/JonathonLuiten/TrackEval.git
 ```
 
 ### Developing with multiple MMTracking versions
