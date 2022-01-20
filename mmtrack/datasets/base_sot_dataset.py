@@ -117,9 +117,9 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         start_frame_id = self.data_infos[video_ind]['start_frame_id']
 
         if not self.test_mode:
-            assert len(bboxes) == (end_frame_id - start_frame_id +
-                                   1), f'{len(bboxes)} is not equal to'
-            '{end_frame_id}-{start_frame_id}+1'
+            assert len(bboxes) == (
+                end_frame_id - start_frame_id + 1
+            ), f'{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1'  # noqa
         return bboxes
 
     def get_len_per_video(self, video_ind):
@@ -277,7 +277,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                 end_ind += num
                 track_bboxes.append(
                     list(
-                        map(lambda x: x[:4],
+                        map(lambda x: x[:-1],
                             results['track_bboxes'][start_ind:end_ind])))
                 start_ind += num
 
@@ -289,4 +289,4 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             for k, v in eval_results.items():
                 if isinstance(v, float):
                     eval_results[k] = float(f'{(v):.3f}')
-            print_log(eval_results, logger=logger)
+        return eval_results

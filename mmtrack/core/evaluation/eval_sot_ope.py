@@ -63,7 +63,7 @@ def eval_sot_ope(results, annotations):
             results of each video. The second list contains the tracking
             results of each frame in one video. The ndarray denotes the
             tracking box in [tl_x, tl_y, br_x, br_y] format.
-        annotations (list[list[dict]]): The first list contains the annotations
+        annotations (list[list[ndarray]]): The first list contains the annotations
             of each video. The second list contains the annotations of each
             frame in one video. The dict contains the annotation information
             of one frame.
@@ -76,7 +76,7 @@ def eval_sot_ope(results, annotations):
     precision_results = []
     norm_precision_results = []
     for single_video_results, single_video_anns in zip(results, annotations):
-        gt_bboxes = np.stack([ann['bboxes'] for ann in single_video_anns])
+        gt_bboxes = np.stack(single_video_anns)
         pred_bboxes = np.stack(single_video_results)
         video_length = len(single_video_results)
 

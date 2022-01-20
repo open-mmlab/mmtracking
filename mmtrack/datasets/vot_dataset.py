@@ -1,27 +1,31 @@
+import glob
 import os.path as osp
+import time
 
+import mmcv
 import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from mmtrack.core.evaluation import eval_sot_accuracy_robustness, eval_sot_eao
-from .sot_test_dataset import SOTTestDataset
+from .base_sot_dataset import BaseSOTDataset
 
 
 @DATASETS.register_module()
-class VOTDataset(SOTTestDataset):
-    """VOT dataset for the testing of single object tracking.
-
-    The dataset doesn't support training mode.
-
-    Note: The vot datasets using the mask annotation, such as VOT2020, is not
-    supported now.
+class VOTDataset(BaseSOTDataset):
+    """VOT dataset of single object tracking.
+    The dataset is only used to test.
     """
-    CLASSES = (0, )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, challenge_year, *args, **kwargs):
+        """Initialization of SOT dataset class.
+
+        Args:
+            challenge_year (int): The year of VOT challenge.
+        """
         super().__init__(*args, **kwargs)
-        self.dataset_name = osp.basename(self.ann_file).rstrip('.json')
+        assert challenge_year in [2018, 2019, 2020, 2021]
+        self.dataset_name = 'vot' + str(challenge_year)
         # parameter, used for EAO evaluation, may vary by different vot
         # challenges.
         self.INTERVAL = dict(
@@ -30,23 +34,65 @@ class VOTDataset(SOTTestDataset):
             vot2020=[115, 755],
             vot2021=[115, 755])
 
-    def _parse_ann_info(self, img_info, ann_info):
-        """Parse bbox annotations.
+    def load_data_infos(self, split='test'):
+        """Load dataset information.
 
         Args:
-            img_info (dict): image information.
-            ann_info (list[dict]): Annotation information of an image. Each
-                image only has one bbox annotation.
+            split (str, optional): Dataset split. Defaults to 'test'.
+
         Returns:
-            dict: A dict containing the following keys: bboxes, labels.
-            labels are not useful in SOT.
+            list[dict]: The length of the list is the number of videos. The
+                inner dict is in the following format:
+                    {
+                        'video_path': the video path
+                        'ann_path': the annotation path
+                        'start_frame_id': the starting frame number contained
+                            in the image name
+                        'end_frame_id': the ending frame number contained in
+                            the image name
+                        'framename_template': the template of image name
+                    }
         """
-        # The shape of gt_bboxes is (8, ), in [x1, y1, x2, y2, x3, y3, x4, y4]
-        # format
-        gt_bboxes = np.array(ann_info[0]['bbox'], dtype=np.float32)
-        gt_labels = np.array(self.cat2label[ann_info[0]['category_id']])
-        ann = dict(bboxes=gt_bboxes, labels=gt_labels)
-        return ann
+        print('Loading VOT dataset...')
+        start_time = time.time()
+        data_infos = []
+        ann_file = osp.join(self.img_prefix, 'list.txt')
+        videos_list = np.loadtxt(ann_file, dtype=np.str_)
+        for video_name in videos_list:
+            video_path = osp.join(video_name, 'color')
+            ann_path = osp.join(video_name, 'groundtruth.txt')
+            img_names = glob.glob(
+                osp.join(self.img_prefix, video_path + '/*.jpg'))
+            end_frame_id = max(
+                img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
+            data_info = dict(
+                video_path=video_path,
+                ann_path=ann_path,
+                start_frame_id=1,
+                end_frame_id=int(osp.basename(end_frame_id).split('.')[0]),
+                framename_template='%08d.jpg')
+            data_infos.append(data_info)
+        print(f'VOT dataset loaded! ({time.time()-start_time:.2f} s)')
+        return data_infos
+
+    def get_ann_infos_from_video(self, video_ind):
+        """Get bboxes annotation about the instance in a video.
+
+        Args:
+            video_ind (int): video index
+
+        Returns:
+            ndarray: in [N, 8] shape. The N is the bbox number and the bbox
+                is in (x1, y1, x2, y2, x3, y3, x4, y4) format.
+        """
+        bboxes = self.get_bboxes_from_video(video_ind)
+        visible_info = self.get_visibility_from_video(video_ind)
+        # bboxes in VOT datasets are all valid
+        bboxes_isvalid = np.array([True] * len(bboxes), dtype=np.bool_)
+        visible_info['visible'] = visible_info['visible'] & bboxes_isvalid
+        ann_infos = dict(
+            bboxes=bboxes, bboxes_isvalid=bboxes_isvalid, **visible_info)
+        return ann_infos
 
     # TODO support multirun test
     def evaluate(self, results, metric=['track'], logger=None, interval=None):
@@ -75,40 +121,41 @@ class VOTDataset(SOTTestDataset):
             if metric not in allowed_metrics:
                 raise KeyError(f'metric {metric} is not supported.')
 
+        # get all test annotations
+        # annotations are in list[list[ndarray]] format
+        annotations = []
+        for video_ind in range(len(self.data_infos)):
+            bboxes = self.get_ann_infos_from_video(video_ind)['bboxes']
+            annotations.append(bboxes)
+
+        # tracking_bboxes converting code
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self.data_infos) == len(results['track_bboxes'])
+            assert len(self) == len(results['track_bboxes'])
             print_log('Evaluate VOT Benchmark...', logger=logger)
-            inds = []
-            videos_wh = []
-            ann_infos = []
-            for i, info in enumerate(self.data_infos):
-                if info['frame_id'] == 0:
-                    inds.append(i)
-                    videos_wh.append((info['width'], info['height']))
-
-                ann_infos.append(self.get_ann_info(info))
-
-            num_vids = len(inds)
-            inds.append(len(self.data_infos))
             track_bboxes = []
-            annotations = []
-            for i in range(num_vids):
-                bboxes_per_video = []
-                for bbox in results['track_bboxes'][inds[i]:inds[i + 1]]:
-                    # the last element of `bbox` is score.
-                    if len(bbox) != 2:
-                        # convert bbox format from (tl_x, tl_y, br_x, br_y) to
-                        # (x1, y1, w, h)
-                        bbox[2] -= bbox[0]
-                        bbox[3] -= bbox[1]
-                    bboxes_per_video.append(bbox[:-1])
-                track_bboxes.append(bboxes_per_video)
-                annotations.append(ann_infos[inds[i]:inds[i + 1]])
+            start_ind = end_ind = 0
+            videos_wh = []
+            for data_info in self.data_infos:
+                num = data_info['end_frame_id'] - data_info[
+                    'start_frame_id'] + 1
+                end_ind += num
+                # track_bboxes are in list[list[ndarray]] format
+                track_bboxes.append(
+                    list(
+                        map(lambda x: x[:-1],
+                            results['track_bboxes'][start_ind:end_ind])))
+                start_ind += num
+
+                # read one image in the video to get video width and height
+                filename = osp.join(self.img_prefix, data_info['video_path'],
+                                    data_info['framename_template'] % 1)
+                img = mmcv.imread(filename)
+                videos_wh.append((img.shape[1], img.shape[0]))
 
             interval = self.INTERVAL[self.dataset_name] if interval is None \
                 else interval
-            # anno_info is list[list[dict]]
+
             eao_score = eval_sot_eao(
                 results=track_bboxes,
                 annotations=annotations,
@@ -124,5 +171,4 @@ class VOTDataset(SOTTestDataset):
             for k, v in eval_results.items():
                 if isinstance(v, float):
                     eval_results[k] = float(f'{(v):.4f}')
-            print_log(eval_results, logger=logger)
         return eval_results

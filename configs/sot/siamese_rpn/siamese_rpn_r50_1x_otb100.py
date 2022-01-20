@@ -11,7 +11,7 @@ model = dict(
 data_root = 'data/'
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True),
+    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(
         type='SeqCropLikeSiamFC',
         context_amount=0.5,
@@ -74,9 +74,9 @@ data = dict(
     ],
     val=dict(
         type='OTB100Dataset',
-        ann_file=data_root + 'otb100/annotations/otb100.json',
+        ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
         img_prefix=data_root + 'otb100/data'),
     test=dict(
         type='OTB100Dataset',
-        ann_file=data_root + 'otb100/annotations/otb100.json',
+        ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
         img_prefix=data_root + 'otb100/data'))

@@ -152,7 +152,7 @@ def eval_sot_accuracy_robustness(results,
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[dict]]): The first list contains the
+        annotations (list[list[ndarray]]): The first list contains the
             gt_bboxes of each video. The second list contains the
             gt_bbox of each frame in one video. The dict contains the
             annotation information of one frame.
@@ -176,7 +176,6 @@ def eval_sot_accuracy_robustness(results,
     num_fails = 0
     weight = 0
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
-        gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
         num_fails += count_failures(pred_traj)
@@ -249,7 +248,7 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[dict]]): The first list contains the
+        annotations (list[list[ndarray]]): The first list contains the
             gt_bboxes of each video. The second list contains the
             gt_bbox of each frame in one video. The dict contains the
             annotation information of one frame.
@@ -275,7 +274,6 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     all_successes = []
 
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
-        gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
         # initialized bbox annotation is [1]
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
