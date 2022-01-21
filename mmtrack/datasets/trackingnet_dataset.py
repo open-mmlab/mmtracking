@@ -17,14 +17,14 @@ class TrackingNetDataset(BaseSOTDataset):
     The dataset can both support training and testing mode.
     """
 
-    def __init__(self, chunk_num=12, *args, **kwargs):
+    def __init__(self, num_chunks=12, *args, **kwargs):
         """Initialization of SOT dataset class.
 
         Args:
-            chunk_num (int, optional): the number of chunks. Some methods may
+            num_chunks (int, optional): the number of chunks. Some methods may
                 only use part of the dataset. Default to all chunks, 12.
         """
-        self.chunk_num = chunk_num
+        self.num_chunks = num_chunks
         super(TrackingNetDataset, self).__init__(*args, **kwargs)
 
     def load_data_infos(self, split='train'):
@@ -39,9 +39,9 @@ class TrackingNetDataset(BaseSOTDataset):
                     {
                         'video_path': the video path
                         'ann_path': the annotation path
-                        'start_frame_id': the starting frame number contained
-                            in the image name
-                        'end_frame_id': the ending frame number contained in
+                        'start_frame_id': the starting frame ID number
+                            contained in the image name
+                        'end_frame_id': the ending frame ID number contained in
                             the image name
                         'framename_template': the template of image name
                     }
@@ -51,7 +51,7 @@ class TrackingNetDataset(BaseSOTDataset):
         if split == 'test':
             chunks = ['TEST']
         elif split == 'train':
-            chunks = [f'TRAIN_{i}' for i in range(self.chunk_num)]
+            chunks = [f'TRAIN_{i}' for i in range(self.num_chunks)]
         else:
             raise NotImplementedError
 

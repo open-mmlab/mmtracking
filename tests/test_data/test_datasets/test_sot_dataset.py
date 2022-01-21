@@ -13,7 +13,7 @@ SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
     GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
     TrackingNetDataset=dict(
-        chunk_num=1, img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
+        num_chunks=1, img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     SOTCocoDataset=dict(
         ann_file=osp.join(SOT_DATA_PREFIX, 'lasot', 'lasot_test_dummy.json'),
         img_prefix=osp.join(SOT_DATA_PREFIX, 'lasot')),

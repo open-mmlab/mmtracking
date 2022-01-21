@@ -19,12 +19,11 @@ class SOTCocoDataset(BaseSOTDataset):
         """Initialization of SOT dataset class.
 
         Args:
-            ann_file (str): Official coco annotation file. It will be
+            ann_file (str): The official coco annotation file. It will be
                 loaded and parsed in the `self.load_data_infos` function.
         """
         self.coco = COCO(ann_file)
         super().__init__(*args, **kwargs)
-        self.bbox_min_size = 50
 
     def load_data_infos(self, split='train'):
         """Load dataset information. Each Image about an object is viewed as a
@@ -48,7 +47,7 @@ class SOTCocoDataset(BaseSOTDataset):
         return videos_list
 
     def get_bboxes_from_video(self, video_ind):
-        """Get bboxes annotation about the instance in an image.
+        """Get bbox annotation about the instance in an image.
 
         Args:
             video_ind (int): video index
@@ -76,5 +75,5 @@ class SOTCocoDataset(BaseSOTDataset):
         return frames_path
 
     def get_len_per_video(self, video_ind):
-        """Get the frame number in a video."""
+        """Get the number of frames in a video."""
         return 1

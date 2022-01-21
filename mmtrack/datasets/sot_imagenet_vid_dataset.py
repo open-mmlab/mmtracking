@@ -22,7 +22,6 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         """
         self.coco = CocoVID(ann_file)
         super().__init__(*args, **kwargs)
-        self.is_video_dataset = True
 
     def load_data_infos(self, split='train'):
         """Load dataset information.
@@ -32,13 +31,13 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
 
         Returns:
             list[int]: The length of the list is the number of instances. The
-                elemment in the list is annotation ID in coco API.
+                elemment in the list is instance ID in coco API.
         """
         data_infos = list(self.coco.instancesToImgs.keys())
         return data_infos
 
     def get_bboxes_from_video(self, video_ind):
-        """Get bboxes annotation about the instance in an image.
+        """Get bbox annotation about the instance in a video.
 
         Args:
             video_ind (int): video index
@@ -67,15 +66,12 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         """
         instance_id = self.data_infos[video_ind]
         img_ids = self.coco.instancesToImgs[instance_id]
-        img_names = []
-        for img_id in img_ids:
-            img_name = self.coco.imgs[img_id]
-            img_names.append(img_name['file_name'])
+        img_names = [self.coco.imgs[img_id]['file_name'] for img_id in img_ids]
         return img_names
 
     def get_ann_infos_from_video(self, video_ind):
         """Get annotation information in a video.
-        Note: We overload this function for speed up loading video info.
+        Note: We overload this function for speed up loading video information.
 
         Args:
             video_ind (int): video index
@@ -104,7 +100,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         return ann_infos
 
     def get_visibility_from_video(self, video_ind):
-        """Get the visible information of instance in a video."""
+        """Get the visible information in a video."""
         instance_id = self.data_infos[video_ind]
         img_ids = self.coco.instancesToImgs[instance_id]
         visible = []
@@ -116,7 +112,6 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         return visible_info
 
     def get_len_per_video(self, video_ind):
-        """Get the frame number in a video."""
+        """Get the number of frames in a video."""
         instance_id = self.data_infos[video_ind]
-        img_ids = self.coco.instancesToImgs[instance_id]
-        return len(img_ids)
+        return len(self.coco.instancesToImgs[instance_id])
