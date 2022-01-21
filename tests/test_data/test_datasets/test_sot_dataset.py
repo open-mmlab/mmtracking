@@ -155,7 +155,7 @@ def test_sot_ope_evaluation():
         bboxes = np.loadtxt(
             osp.join(lasot_root, video_name, 'track_results.txt'),
             delimiter=',')
-        scores = np.array([0.] * len(bboxes)).reshape(-1, 1)
+        scores = np.zeros((len(bboxes), 1))
         bboxes = np.concatenate((bboxes, scores), axis=-1)
         results.extend(bboxes)
         data_infos.append(
@@ -181,10 +181,9 @@ def test_sot_vot_evaluation():
         pipeline=[],
         split='test',
         test_mode=True)
+
     dataset_object.num_frames_per_video = [25, 25]
-
     data_infos = []
-
     results = []
     vot_root = osp.join(SOT_DATA_PREFIX, 'vot2018')
     for video_name in ['ants1', 'ants3']:
