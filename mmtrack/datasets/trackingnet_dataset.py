@@ -5,6 +5,7 @@ import os.path as osp
 import shutil
 import time
 
+import numpy as np
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -84,6 +85,33 @@ class TrackingNetDataset(BaseSOTDataset):
                 data_infos.append(data_info)
         print(f'TrackingNet dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
+
+    def prepare_test_data(self, video_ind, frame_ind):
+        """Get testing data of one frame. We parse one video, get one frame
+        from it and pass the frame information to the pipeline.
+
+        Args:
+            video_ind (int): video index
+            frame_ind (int): frame index
+
+        Returns:
+            dict: testing data of one frame.
+        """
+        ann_infos = self.get_ann_infos_from_video(video_ind)
+        img_infos = self.get_img_infos_from_video(video_ind)
+        img_info = dict(
+            filename=img_infos['filename'][frame_ind], frame_id=frame_ind)
+        if frame_ind == 0:
+            ann_info = dict(
+                bboxes=ann_infos['bboxes'][frame_ind], visible=True)
+        else:
+            ann_info = dict(
+                bboxes=np.array([0] * 4, dtype=np.float32), visible=True)
+
+        results = dict(img_info=img_info, ann_info=ann_info)
+        self.pre_pipeline(results)
+        results = self.pipeline(results)
+        return results
 
     def format_results(self, results, resfile_path=None):
         """Format the results to txts (standard format for TrackingNet
