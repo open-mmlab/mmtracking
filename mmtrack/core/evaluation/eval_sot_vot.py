@@ -274,9 +274,11 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     all_successes = []
 
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
-        assert len(gt_traj) == len(pred_traj)
+        assert len(gt_traj) == len(
+            pred_traj), f'{len(gt_traj)} == {len(pred_traj)}'
         # initialized bbox annotation is [1]
-        assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
+        assert len(pred_traj[0]) == 1 and pred_traj[0][
+            0] == 1, f'{len(pred_traj[0])} == 1 and {pred_traj[0][0]} == 1'
         fail_inds, init_inds = locate_failures_inits(pred_traj)
 
         pred_traj = trajectory2region(pred_traj)

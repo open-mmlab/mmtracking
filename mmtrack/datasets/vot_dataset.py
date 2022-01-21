@@ -131,7 +131,9 @@ class VOTDataset(BaseSOTDataset):
         # tracking_bboxes converting code
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self) == len(results['track_bboxes'])
+            assert len(self) == len(
+                results['track_bboxes']
+            ), f"{len(self)} == {len(results['track_bboxes'])}"
             print_log('Evaluate VOT Benchmark...', logger=logger)
             track_bboxes = []
             start_ind = end_ind = 0
