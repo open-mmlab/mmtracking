@@ -26,8 +26,7 @@ class SOTCocoDataset(BaseSOTDataset):
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='train'):
-        """Load dataset information. Each Image about an object is viewed as a
-        video.
+        """Load dataset information. Each instance is viewed as a video.
 
         Args:
             split (str, optional): The split of dataset. Defaults to 'train'.
@@ -41,7 +40,8 @@ class SOTCocoDataset(BaseSOTDataset):
         start_time = time.time()
         ann_list = list(self.coco.anns.keys())
         videos_list = [
-            ann for ann in ann_list if self.coco.anns[ann]['iscrowd'] == 0
+            ann for ann in ann_list
+            if self.coco.anns[ann].get('iscrowd', 0) == 0
         ]
         print(f'Coco dataset loaded! ({time.time()-start_time:.2f} s)')
         return videos_list
@@ -50,7 +50,7 @@ class SOTCocoDataset(BaseSOTDataset):
         """Get bbox annotation about the instance in an image.
 
         Args:
-            video_ind (int): video index
+            video_ind (int): video index. Each video_ind denotes an instance.
 
         Returns:
             ndarray: in [1, 4] shape. The bbox is in (x, y, w, h) format.
@@ -64,7 +64,7 @@ class SOTCocoDataset(BaseSOTDataset):
         """Get all frame paths in a video.
 
         Args:
-            video_ind (int): video index
+            video_ind (int): video index. Each video_ind denotes an instance.
 
         Returns:
             list[str]: all image paths

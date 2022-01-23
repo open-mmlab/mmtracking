@@ -15,11 +15,11 @@ DATASET_INFOS = dict(
     TrackingNetDataset=dict(
         num_chunks=1, img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     SOTCocoDataset=dict(
-        ann_file=osp.join(SOT_DATA_PREFIX, 'lasot', 'lasot_test_dummy.json'),
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'lasot')),
+        ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
+        img_prefix=osp.join(PREFIX, 'demo_cocovid_data')),
     SOTImageNetVIDDataset=dict(
-        ann_file=osp.join(SOT_DATA_PREFIX, 'lasot', 'lasot_test_dummy.json'),
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'lasot')))
+        ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
+        img_prefix=osp.join(PREFIX, 'demo_cocovid_data')))
 
 
 @pytest.mark.parametrize('dataset', [

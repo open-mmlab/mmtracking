@@ -40,7 +40,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         """Get bbox annotation about the instance in a video.
 
         Args:
-            video_ind (int): video index
+            video_ind (int): video index. Each video_ind denotes an instance.
 
         Returns:
             ndarray: in [N, 4] shape. The bbox is in (x, y, w, h) format.
@@ -59,7 +59,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         """Get all frame paths in a video.
 
         Args:
-            video_ind (int): video index
+            video_ind (int): video index. Each video_ind denotes an instance.
 
         Returns:
             list[str]: all image paths
@@ -74,7 +74,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         Note: We overload this function for speed up loading video information.
 
         Args:
-            video_ind (int): video index
+            video_ind (int): video index. Each video_ind denotes an instance.
 
         Returns:
             dict: {'bboxes': ndarray in (N, 4) shape, 'bboxes_isvalid':
