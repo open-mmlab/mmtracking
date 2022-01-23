@@ -101,6 +101,6 @@ class OTB100Dataset(BaseSOTDataset):
         start_frame_id = self.data_infos[video_ind]['start_frame_id']
         assert len(bboxes) == (
             end_frame_id - start_frame_id + 1
-        ), f"{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1"
+        ), f'{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1'
         assert bboxes.shape[1] == 4
         return bboxes
