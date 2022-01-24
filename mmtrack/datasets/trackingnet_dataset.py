@@ -18,14 +18,17 @@ class TrackingNetDataset(BaseSOTDataset):
     The dataset can both support training and testing mode.
     """
 
-    def __init__(self, num_chunks=12, *args, **kwargs):
+    def __init__(self, chunks_list=['all'], *args, **kwargs):
         """Initialization of SOT dataset class.
 
         Args:
-            num_chunks (int, optional): the number of chunks. Some methods may
-                only use part of the dataset. Default to all chunks, 12.
+            chunks_list (list, optional): the training chunks. Some methods may
+                only use part of the dataset. Default to all chunks, namely
+                ['all'].
         """
-        self.num_chunks = num_chunks
+        if isinstance(chunks_list, (str, int)):
+            chunks_list = [chunks_list]
+        self.chunks_list = chunks_list
         super(TrackingNetDataset, self).__init__(*args, **kwargs)
 
     def load_data_infos(self, split='train'):
@@ -52,10 +55,17 @@ class TrackingNetDataset(BaseSOTDataset):
         if split == 'test':
             chunks = ['TEST']
         elif split == 'train':
-            chunks = [f'TRAIN_{i}' for i in range(self.num_chunks)]
+            if 'all' in self.chunks_list:
+                chunks = [f'TRAIN_{i}' for i in range(12)]
+            else:
+                chunks = [
+                    f'TRAIN_{chunk}' for chunk in self.chunks_list
+                    if isinstance(chunk, int) and 0 <= chunk < 12
+                ]
         else:
             raise NotImplementedError
 
+        assert len(chunks) > 0
         data_infos = []
         for chunk in chunks:
             chunk_ann_dir = osp.join(self.img_prefix, chunk)

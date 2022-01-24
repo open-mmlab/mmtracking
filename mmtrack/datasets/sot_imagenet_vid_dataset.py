@@ -37,7 +37,10 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         return data_infos
 
     def get_bboxes_from_video(self, video_ind):
-        """Get bbox annotation about the instance in a video.
+        """Get bbox annotation about the instance in a video. Considering
+        `get_bboxes_from_video` in `SOTBaseDataset` is not compatible with
+        `SOTImageNetVIDDataset`, we oveload this function though it's not
+        called by `self.get_ann_infos_from_video`.
 
         Args:
             video_ind (int): video index. Each video_ind denotes an instance.
@@ -65,9 +68,32 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
             list[str]: all image paths
         """
         instance_id = self.data_infos[video_ind]
-        img_ids = self.coco.instancesToImgs[instance_id]
-        img_names = [self.coco.imgs[img_id]['file_name'] for img_id in img_ids]
-        return img_names
+        image_ids = self.coco.instancesToImgs[instance_id]
+        img_names = [
+            self.coco.imgs[img_id]['file_name'] for img_id in image_ids
+        ]
+        return img_names, image_ids
+
+    def get_img_infos_from_video(self, video_ind):
+        """Get image information in a video.
+
+        Args:
+            video_ind (int): video index
+
+        Returns:
+            dict: {'filename': list[str], 'frame_ids':ndarray, 'video_id':int}
+        """
+        img_names, image_ids = self.get_img_names_from_video(video_ind)
+        frame_ids = np.arange(self.get_len_per_video(video_ind))
+        # In ImageNetVID dataset, frame_ids are continuous, but image_ids may
+        # not be continuous. We use image_ids to reflect the true video
+        # temporal information.
+        img_infos = dict(
+            filename=img_names,
+            frame_ids=frame_ids,
+            video_id=video_ind,
+            image_ids=image_ids)
+        return img_infos
 
     def get_ann_infos_from_video(self, video_ind):
         """Get annotation information in a video.
@@ -100,7 +126,12 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         return ann_infos
 
     def get_visibility_from_video(self, video_ind):
-        """Get the visible information in a video."""
+        """Get the visible information in a video.
+
+        Considering `get_visibility_from_video` in `SOTBaseDataset` is not
+        compatible with `SOTImageNetVIDDataset`, we oveload this function
+        though it's not called by `self.get_ann_infos_from_video`.
+        """
         instance_id = self.data_infos[video_ind]
         img_ids = self.coco.instancesToImgs[instance_id]
         visible = []
