@@ -13,7 +13,7 @@ SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
     GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
     TrackingNetDataset=dict(
-        num_chunks=1, img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
+        chunks_list=[0], img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     SOTCocoDataset=dict(
         ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
         img_prefix=osp.join(PREFIX, 'demo_cocovid_data')),

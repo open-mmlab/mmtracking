@@ -68,11 +68,9 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
             list[str]: all image paths
         """
         instance_id = self.data_infos[video_ind]
-        image_ids = self.coco.instancesToImgs[instance_id]
-        img_names = [
-            self.coco.imgs[img_id]['file_name'] for img_id in image_ids
-        ]
-        return img_names, image_ids
+        img_ids = self.coco.instancesToImgs[instance_id]
+        img_names = [self.coco.imgs[img_id]['file_name'] for img_id in img_ids]
+        return img_names
 
     def get_img_infos_from_video(self, video_ind):
         """Get image information in a video.
@@ -83,16 +81,16 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         Returns:
             dict: {'filename': list[str], 'frame_ids':ndarray, 'video_id':int}
         """
-        img_names, image_ids = self.get_img_names_from_video(video_ind)
-        frame_ids = np.arange(self.get_len_per_video(video_ind))
-        # In ImageNetVID dataset, frame_ids are continuous, but image_ids may
-        # not be continuous. We use image_ids to reflect the true video
-        # temporal information.
+        instance_id = self.data_infos[video_ind]
+        img_ids = self.coco.instancesToImgs[instance_id]
+        frame_ids = []
+        img_names = []
+        # In ImageNetVID dataset, frame_ids may not be continuous.
+        for img_id in img_ids:
+            frame_ids.append(self.coco.imgs[img_id]['frame_id'])
+            img_names.append(self.coco.imgs[img_id]['file_name'])
         img_infos = dict(
-            filename=img_names,
-            frame_ids=frame_ids,
-            video_id=video_ind,
-            image_ids=image_ids)
+            filename=img_names, frame_ids=frame_ids, video_id=video_ind)
         return img_infos
 
     def get_ann_infos_from_video(self, video_ind):
