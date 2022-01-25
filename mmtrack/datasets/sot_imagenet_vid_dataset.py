@@ -58,20 +58,6 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         bboxes = np.array(bboxes).reshape(-1, 4)
         return bboxes
 
-    def get_img_names_from_video(self, video_ind):
-        """Get all frame paths in a video.
-
-        Args:
-            video_ind (int): video index. Each video_ind denotes an instance.
-
-        Returns:
-            list[str]: all image paths
-        """
-        instance_id = self.data_infos[video_ind]
-        img_ids = self.coco.instancesToImgs[instance_id]
-        img_names = [self.coco.imgs[img_id]['file_name'] for img_id in img_ids]
-        return img_names
-
     def get_img_infos_from_video(self, video_ind):
         """Get image information in a video.
 

@@ -22,12 +22,14 @@ class TrackingNetDataset(BaseSOTDataset):
         """Initialization of SOT dataset class.
 
         Args:
-            chunks_list (list, optional): the training chunks. Some methods may
-                only use part of the dataset. Default to all chunks, namely
-                ['all'].
+            chunks_list (list, optional): the training chunks. The optional
+                values in this list are: 0, 1, 2, ..., 10, 11 and 'all'. Some
+                methods may only use part of the dataset. Default to all
+                chunks, namely ['all'].
         """
         if isinstance(chunks_list, (str, int)):
             chunks_list = [chunks_list]
+        assert set(chunks_list).issubset(set(range(12)) | {'all'})
         self.chunks_list = chunks_list
         super(TrackingNetDataset, self).__init__(*args, **kwargs)
 
@@ -58,10 +60,7 @@ class TrackingNetDataset(BaseSOTDataset):
             if 'all' in self.chunks_list:
                 chunks = [f'TRAIN_{i}' for i in range(12)]
             else:
-                chunks = [
-                    f'TRAIN_{chunk}' for chunk in self.chunks_list
-                    if isinstance(chunk, int) and 0 <= chunk < 12
-                ]
+                chunks = [f'TRAIN_{chunk}' for chunk in self.chunks_list]
         else:
             raise NotImplementedError
 

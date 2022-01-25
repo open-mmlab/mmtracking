@@ -55,19 +55,6 @@ def test_get_bboxes_from_video(dataset):
     'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
     'SOTCocoDataset'
 ])
-def test_get_img_names_from_video(dataset):
-    dataset_class = DATASETS.get(dataset)
-
-    dataset_object = dataset_class(
-        **DATASET_INFOS[dataset], pipeline=[], split='train', test_mode=False)
-    image_names = dataset_object.get_img_names_from_video(0)
-    assert len(image_names) == dataset_object.num_frames_per_video[0]
-
-
-@pytest.mark.parametrize('dataset', [
-    'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
-])
 def test_get_visibility_from_video(dataset):
     dataset_class = DATASETS.get(dataset)
 

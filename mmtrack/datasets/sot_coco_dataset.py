@@ -60,7 +60,7 @@ class SOTCocoDataset(BaseSOTDataset):
         bboxes = np.array(anno['bbox']).reshape(-1, 4)
         return bboxes
 
-    def get_img_names_from_video(self, video_ind):
+    def get_img_infos_from_video(self, video_ind):
         """Get all frame paths in a video.
 
         Args:
@@ -71,8 +71,11 @@ class SOTCocoDataset(BaseSOTDataset):
         """
         ann_id = self.data_infos[video_ind]
         imgs = self.coco.loadImgs([self.coco.anns[ann_id]['image_id']])
-        frames_path = [img['file_name'] for img in imgs]
-        return frames_path
+        img_names = [img['file_name'] for img in imgs]
+        frame_ids = np.arange(self.get_len_per_video(video_ind))
+        img_infos = dict(
+            filename=img_names, frame_ids=frame_ids, video_id=video_ind)
+        return img_infos
 
     def get_len_per_video(self, video_ind):
         """Get the number of frames in a video."""
