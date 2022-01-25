@@ -13,7 +13,7 @@ from .base_sot_dataset import BaseSOTDataset
 
 @DATASETS.register_module()
 class GOT10kDataset(BaseSOTDataset):
-    """Dataset of single object tracking.
+    """GOT10k Dataset of single object tracking.
 
     The dataset can both support training and testing mode.
     """
@@ -28,7 +28,17 @@ class GOT10kDataset(BaseSOTDataset):
             split (str, optional): the split of dataset. Defaults to 'train'.
 
         Returns:
-            list[dict]: the length of the list is the number of videos.
+            list[dict]: the length of the list is the number of videos. The
+                inner dict is in the following format:
+                    {
+                        'video_path': the video path
+                        'ann_path': the annotation path
+                        'start_frame_id': the starting frame number contained
+                            in the image name
+                        'end_frame_id': the ending frame number contained in
+                            the image name
+                        'framename_template': the template of image name
+                    }
         """
         print('Loading GOT10k dataset...')
         start_time = time.time()
