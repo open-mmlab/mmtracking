@@ -90,7 +90,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
     dict(
         type='MultiScaleFlipAug',
         scale_factor=1,

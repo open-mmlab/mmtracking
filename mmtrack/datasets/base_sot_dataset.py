@@ -50,9 +50,9 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                 {
                     'video_path': the video path
                     'ann_path': the annotation path
-                    'start_frame_id': the starting frame number contained in
+                    'start_frame_id': the starting frame ID number contained in
                                     the image name
-                    'end_frame_id': the ending frame number contained in the
+                    'end_frame_id': the ending frame ID number contained in the
                                     image name
                     'framename_template': the template of image name
                 },
@@ -78,25 +78,6 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
     def load_data_infos(self, split='train'):
         pass
 
-    def get_img_names_from_video(self, video_ind):
-        """Get all frame paths in a video.
-
-        Args:
-            video_ind (int): video index
-
-        Returns:
-            list[str]: all image paths
-        """
-        img_names = []
-        start_frame_id = self.data_infos[video_ind]['start_frame_id']
-        end_frame_id = self.data_infos[video_ind]['end_frame_id']
-        framename_template = self.data_infos[video_ind]['framename_template']
-        for frame_id in range(start_frame_id, end_frame_id + 1):
-            img_names.append(
-                osp.join(self.data_infos[video_ind]['video_path'],
-                         framename_template % frame_id))
-        return img_names
-
     def get_bboxes_from_video(self, video_ind):
         """Get bboxes annotation about the instance in a video.
 
@@ -104,7 +85,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             video_ind (int): video index
 
         Returns:
-            ndarray: in [N, 4] shape. The N is the bbox number and the bbox
+            ndarray: in [N, 4] shape. The N is the number of bbox and the bbox
                 is in (x, y, w, h) format.
         """
         bbox_path = osp.join(self.img_prefix,
@@ -123,7 +104,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         return bboxes
 
     def get_len_per_video(self, video_ind):
-        """Get the frame number in a video."""
+        """Get the number of frames in a video."""
         return self.data_infos[video_ind]['end_frame_id'] - self.data_infos[
             video_ind]['start_frame_id'] + 1
 
@@ -168,7 +149,14 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         Returns:
             dict: {'filename': list[str], 'frame_ids':ndarray, 'video_id':int}
         """
-        img_names = self.get_img_names_from_video(video_ind)
+        img_names = []
+        start_frame_id = self.data_infos[video_ind]['start_frame_id']
+        end_frame_id = self.data_infos[video_ind]['end_frame_id']
+        framename_template = self.data_infos[video_ind]['framename_template']
+        for frame_id in range(start_frame_id, end_frame_id + 1):
+            img_names.append(
+                osp.join(self.data_infos[video_ind]['video_path'],
+                         framename_template % frame_id))
         frame_ids = np.arange(self.get_len_per_video(video_ind))
         img_infos = dict(
             filename=img_names, frame_ids=frame_ids, video_id=video_ind)
