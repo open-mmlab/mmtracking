@@ -157,7 +157,7 @@ def test_format_results(dataset):
 def test_sot_ope_evaluation():
     dataset_class = DATASETS.get('UAV123Dataset')
     dataset_object = dataset_class(
-        *DATASET_INFOS['UAV123Dataset'],
+        **DATASET_INFOS['UAV123Dataset'],
         pipeline=[],
         split='test',
         test_mode=True)
@@ -192,7 +192,7 @@ def test_sot_ope_evaluation():
 def test_sot_vot_evaluation():
     dataset_class = DATASETS.get('VOTDataset')
     dataset_object = dataset_class(
-        *DATASET_INFOS['VOTDataset'],
+        **DATASET_INFOS['VOTDataset'],
         pipeline=[],
         split='test',
         test_mode=True)
