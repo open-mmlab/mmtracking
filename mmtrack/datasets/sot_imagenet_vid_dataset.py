@@ -113,7 +113,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
             for ann in self.coco.imgToAnns[img_id]:
                 if ann['instance_id'] == instance_id:
                     bboxes.append(ann['bbox'])
-                    visible.append(not ann['occluded'])
+                    visible.append(not ann.get('occluded', False))
         bboxes = np.array(bboxes).reshape(-1, 4)
         bboxes_isvalid = (bboxes[:, 2] > self.bbox_min_size) & (
             bboxes[:, 3] > self.bbox_min_size)
