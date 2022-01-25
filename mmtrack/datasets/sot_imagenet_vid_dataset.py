@@ -136,7 +136,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         for img_id in img_ids:
             for ann in self.coco.imgToAnns[img_id]:
                 if ann['instance_id'] == instance_id:
-                    visible.append(not ann['occluded'])
+                    visible.append(not ann.get('occluded', False))
         visible_info = dict(visible=np.array(visible, dtype=np.bool_))
         return visible_info
 
