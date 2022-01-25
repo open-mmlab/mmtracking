@@ -43,9 +43,7 @@ def create_dummy_data():
                       int(h)],
                 area=int(w) * int(h),
                 full_occlusion=False,
-                out_of_view=False,
-                iscrowd=False,
-                occluded=False)
+                out_of_view=False)
             lasot_test['annotations'].append(ann)
 
             records['ann_id'] += 1
