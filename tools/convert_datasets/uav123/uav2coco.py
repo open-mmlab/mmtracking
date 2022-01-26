@@ -34,7 +34,8 @@ def convert_uav123(uav123, ann_dir, save_dir):
     """
     # The format of each line in "uav_info123.txt" is
     # "anno_name,anno_path,video_path,start_frame,end_frame"
-    info_path = osp.join(os.path.dirname(__file__), 'uav123_info.txt')
+    info_path = osp.join(
+        os.path.dirname(__file__), 'uav123_info_deprecated.txt')
     uav_info = mmcv.list_from_file(info_path)[1:]
 
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)

@@ -249,10 +249,12 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # get all test annotations
-        annotations = []
+        gt_bboxes = []
+        visible_infos = []
         for video_ind in range(len(self.data_infos)):
             video_anns = self.get_ann_infos_from_video(video_ind)
-            annotations.append(video_anns)
+            gt_bboxes.append(video_anns['bboxes'])
+            visible_infos.append(video_anns['visible'])
 
         # tracking_bboxes converting code
         eval_results = dict()
@@ -273,7 +275,9 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
 
             # evaluation
             track_eval_results = eval_sot_ope(
-                results=track_bboxes, annotations=annotations)
+                results=track_bboxes,
+                annotations=gt_bboxes,
+                visible_infos=visible_infos)
             eval_results.update(track_eval_results)
 
             for k, v in eval_results.items():

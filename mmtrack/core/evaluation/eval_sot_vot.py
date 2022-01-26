@@ -152,10 +152,9 @@ def eval_sot_accuracy_robustness(results,
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[ndarray]]): The first list contains the
-            gt_bboxes of each video. The second list contains the
-            gt_bbox of each frame in one video. The dict contains the
-            annotation information of one frame.
+        annotations (list[ndarray]): The list contains the gt_bboxes of each
+            video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
+            Each bbox is in (x1, y1, w, h) format.
         burnin: number of frames that have to be ignored after the
             re-initialization when calculating accuracy. Default is 10.
         ignore_unknown (bool): whether ignore the skipping frames after
@@ -248,10 +247,9 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[ndarray]]): The first list contains the
-            gt_bboxes of each video. The second list contains the
-            gt_bbox of each frame in one video. The dict contains the
-            annotation information of one frame.
+        annotations (list[ndarray]): The list contains the gt_bboxes of each
+            video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
+            Each bbox is in (x1, y1, w, h) format.
         interval: an specified interval in EAO curve used to calculate the EAO
             score. There are different settings in different VOT challenge.
             Default is VOT2018 setting: [100, 356].
