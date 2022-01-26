@@ -26,12 +26,12 @@ class VOTDataset(BaseSOTDataset):
                 optional values are in ['vot2018', 'vot2018_lt',
                 'vot2019', 'vot2019_lt', 'vot2020', 'vot2021']
         """
-        super().__init__(*args, **kwargs)
         assert dataset_type in [
             'vot2018', 'vot2018_lt', 'vot2019', 'vot2019_lt', 'vot2020',
             'vot2021'
         ]
         self.dataset_type = dataset_type
+        super().__init__(*args, **kwargs)
         # parameter, used for EAO evaluation, may vary by different vot
         # challenges.
         self.INTERVAL = dict(
@@ -92,6 +92,13 @@ class VOTDataset(BaseSOTDataset):
                 is in (x1, y1, x2, y2, x3, y3, x4, y4) format.
         """
         bboxes = self.get_bboxes_from_video(video_ind)
+        if bboxes.shape[1] == 4:
+            x1, y1 = bboxes[:, 0], bboxes[:, 1],
+            x2, y2 = bboxes[:, 0] + bboxes[:, 2], bboxes[:, 1],
+            x3, y3 = bboxes[:, 0] + bboxes[:, 2], bboxes[:, 1] + bboxes[:, 3]
+            x4, y4 = bboxes[:, 0], bboxes[:, 1] + bboxes[:, 3],
+            bboxes = np.stack((x1, y1, x2, y2, x3, y3, x4, y4), axis=-1)
+
         visible_info = self.get_visibility_from_video(video_ind)
         # bboxes in VOT datasets are all valid
         bboxes_isvalid = np.array([True] * len(bboxes), dtype=np.bool_)
@@ -104,7 +111,8 @@ class VOTDataset(BaseSOTDataset):
         """Evaluation in VOT protocol.
 
         Args:
-            results (dict): Testing results of the dataset.
+            results (dict): Testing results of the dataset. The tracking bboxes
+                are in (tl_x, tl_y, br_x, br_y) format.
             metric (str | list[str]): Metrics to be evaluated. Options are
                 'track'.
             logger (logging.Logger | str | None): Logger used for printing

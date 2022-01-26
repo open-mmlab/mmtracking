@@ -9,8 +9,8 @@ from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
-from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, calculate_region_overlap,
-                               quad2bbox)
+from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_xyxy_to_x1y1wh,
+                               calculate_region_overlap, quad2bbox)
 from mmtrack.core.evaluation import bbox2region
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
@@ -293,6 +293,8 @@ class SiamRPN(BaseSingleObjectTracker):
             track_bbox = bbox_cxcywh_to_x1y1wh(self.memo.bbox).cpu().numpy()
             track_region = bbox2region(track_bbox)
             gt_bbox = gt_bboxes[0][0]
+            if len(gt_bbox) == 4:
+                gt_bbox = bbox_xyxy_to_x1y1wh(gt_bbox)
             gt_region = bbox2region(gt_bbox.cpu().numpy())
 
             if img_metas is not None and 'img_shape' in img_metas[0]:

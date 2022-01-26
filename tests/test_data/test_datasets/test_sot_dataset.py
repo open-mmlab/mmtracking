@@ -13,7 +13,8 @@ SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
     GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
     VOTDataset=dict(
-        dataset_type=2018, img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
+        dataset_type='vot2018',
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
     OTB100Dataset=dict(
         ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
         img_prefix=osp.join(SOT_DATA_PREFIX, 'otb100')),
@@ -231,6 +232,6 @@ def test_sot_vot_evaluation():
     track_bboxes = dict(track_bboxes=track_bboxes)
     eval_results = dataset_object.evaluate(
         track_bboxes, interval=[1, 3], metric=['track'])
-    assert abs(eval_results['eao'] - 0.6394) < 0.0001
-    assert round(eval_results['accuracy'], 4) == 0.5431
+    assert abs(eval_results['eao'] - 0.6661) < 0.0001
+    assert round(eval_results['accuracy'], 4) == 0.5826
     assert round(eval_results['robustness'], 4) == 6.0
