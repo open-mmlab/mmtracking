@@ -279,4 +279,5 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             for k, v in eval_results.items():
                 if isinstance(v, float):
                     eval_results[k] = float(f'{(v):.3f}')
+            print_log(eval_results, logger=logger)
         return eval_results

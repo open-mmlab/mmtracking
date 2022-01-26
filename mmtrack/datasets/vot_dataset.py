@@ -18,15 +18,20 @@ class VOTDataset(BaseSOTDataset):
     The dataset is only used to test.
     """
 
-    def __init__(self, challenge_year, *args, **kwargs):
+    def __init__(self, dataset_type='vot2018', *args, **kwargs):
         """Initialization of SOT dataset class.
 
         Args:
-            challenge_year (int): The year of VOT challenge.
+            dataset_type (str, optional): The type of VOT challenge. The
+                optional values are in ['vot2018', 'vot2018_lt',
+                'vot2019', 'vot2019_lt', 'vot2020', 'vot2021']
         """
         super().__init__(*args, **kwargs)
-        assert challenge_year in [2018, 2019, 2020, 2021]
-        self.dataset_name = 'vot' + str(challenge_year)
+        assert dataset_type in [
+            'vot2018', 'vot2018_lt', 'vot2019', 'vot2019_lt', 'vot2020',
+            'vot2021'
+        ]
+        self.dataset_type = dataset_type
         # parameter, used for EAO evaluation, may vary by different vot
         # challenges.
         self.INTERVAL = dict(
@@ -165,7 +170,7 @@ class VOTDataset(BaseSOTDataset):
                 img = mmcv.imread(filename)
                 videos_wh.append((img.shape[1], img.shape[0]))
 
-            interval = self.INTERVAL[self.dataset_name] if interval is None \
+            interval = self.INTERVAL[self.dataset_type] if interval is None \
                 else interval
 
             eao_score = eval_sot_eao(
@@ -183,4 +188,5 @@ class VOTDataset(BaseSOTDataset):
             for k, v in eval_results.items():
                 if isinstance(v, float):
                     eval_results[k] = float(f'{(v):.4f}')
+            print_log(eval_results, logger=logger)
         return eval_results

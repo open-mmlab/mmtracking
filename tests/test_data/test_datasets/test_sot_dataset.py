@@ -13,7 +13,7 @@ SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
     GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
     VOTDataset=dict(
-        challenge_year=2018, img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
+        dataset_type=2018, img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
     OTB100Dataset=dict(
         ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
         img_prefix=osp.join(SOT_DATA_PREFIX, 'otb100')),
