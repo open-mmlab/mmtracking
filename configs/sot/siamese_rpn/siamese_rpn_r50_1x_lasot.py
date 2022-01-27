@@ -146,12 +146,14 @@ data = dict(
     ],
     val=dict(
         type='LaSOTDataset',
+        ann_file='tools/convert_datasets/lasot/testing_set.txt',
         img_prefix=data_root + 'lasot/LaSOTBenchmark',
         pipeline=test_pipeline,
         split='test',
         test_mode=True),
     test=dict(
         type='LaSOTDataset',
+        ann_file='tools/convert_datasets/lasot/testing_set.txt',
         img_prefix=data_root + 'lasot/LaSOTBenchmark',
         pipeline=test_pipeline,
         split='test',
