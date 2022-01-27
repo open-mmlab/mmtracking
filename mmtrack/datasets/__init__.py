@@ -3,6 +3,7 @@ from mmdet.datasets.builder import DATASETS, build_dataset
 
 from .base_sot_dataset import BaseSOTDataset
 from .builder import build_dataloader
+from .dataset_wrapers import RandomSampleConcatDataset
 from .coco_video_dataset import CocoVideoDataset
 from .got10k_dataset import GOT10kDataset
 from .imagenet_vid_dataset import ImagenetVIDDataset
@@ -27,5 +28,5 @@ __all__ = [
     'ReIDDataset', 'SOTTrainDataset', 'SOTTestDataset', 'LaSOTDataset',
     'UAV123Dataset', 'TrackingNetDataset', 'OTB100Dataset',
     'YouTubeVISDataset', 'GOT10kDataset', 'VOTDataset', 'BaseSOTDataset',
-    'SOTCocoDataset', 'SOTImageNetVIDDataset'
+    'SOTCocoDataset', 'SOTImageNetVIDDataset', 'RandomSampleConcatDataset'
 ]
