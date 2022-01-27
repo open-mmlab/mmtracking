@@ -9,7 +9,7 @@ from mmdet.datasets.builder import build_dataset
 @DATASETS.register_module()
 class RandomSampleConcatDataset(ConcatDataset):
     """A wrapper of concatenated dataset. Support randomly sampling one dataset
-        from concatenated datasets and then geting samples from the sampled
+        from concatenated datasets and then getting samples from the sampled
         dataset.
 
     Args:
