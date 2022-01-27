@@ -3,8 +3,8 @@ from mmdet.datasets.builder import DATASETS, build_dataset
 
 from .base_sot_dataset import BaseSOTDataset
 from .builder import build_dataloader
-from .dataset_wrapers import RandomSampleConcatDataset
 from .coco_video_dataset import CocoVideoDataset
+from .dataset_wrapers import RandomSampleConcatDataset
 from .got10k_dataset import GOT10kDataset
 from .imagenet_vid_dataset import ImagenetVIDDataset
 from .lasot_dataset import LaSOTDataset

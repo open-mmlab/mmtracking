@@ -1,16 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import random
 
+from mmdet.datasets.builder import DATASETS, build_dataset
 from torch.utils.data.dataset import ConcatDataset
-from mmdet.datasets.builder import DATASETS
-from mmdet.datasets.builder import build_dataset
 
 
 @DATASETS.register_module()
 class RandomSampleConcatDataset(ConcatDataset):
     """A wrapper of concatenated dataset. Support randomly sampling one dataset
-        from concatenated datasets and then getting samples from the sampled
-        dataset.
+    from concatenated datasets and then getting samples from the sampled
+    dataset.
 
     Args:
         dataset_cfgs (list[dict]): The list contains all configs of
@@ -32,7 +31,8 @@ class RandomSampleConcatDataset(ConcatDataset):
 
     def __getitem__(self, ind):
         """Random sampling a dataset and get samples from this dataset.
-            Actually, the input 'ind' is not used in 'dataset'.
+
+        Actually, the input 'ind' is not used in 'dataset'.
         """
         while True:
             dataset = random.choices(self.datasets,
