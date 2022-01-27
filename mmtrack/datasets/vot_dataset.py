@@ -135,7 +135,7 @@ class VOTDataset(BaseSOTDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # get all test annotations
-        # annotations are in list[list[ndarray]] format
+        # annotations are in list[ndarray] format
         annotations = []
         for video_ind in range(len(self.data_infos)):
             bboxes = self.get_ann_infos_from_video(video_ind)['bboxes']
