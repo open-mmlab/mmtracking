@@ -19,8 +19,6 @@ class RandomSampleConcatDataset(ConcatDataset):
     """
 
     def __init__(self, dataset_cfgs, dataset_sampling_weights=None):
-        datasets = [build_dataset(cfg) for cfg in dataset_cfgs]
-        super().__init__(datasets)
         if dataset_sampling_weights is None:
             self.dataset_sampling_probs = [1. / len(datasets)] * len(datasets)
         else:
@@ -31,6 +29,9 @@ class RandomSampleConcatDataset(ConcatDataset):
             self.dataset_sampling_probs = [
                 x / prob_total for x in dataset_sampling_weights
             ]
+
+        datasets = [build_dataset(cfg) for cfg in dataset_cfgs]
+        super().__init__(datasets)
 
     def __getitem__(self, ind):
         """Random sampling a dataset and get samples from this dataset.
