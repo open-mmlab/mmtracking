@@ -22,9 +22,12 @@ class RandomSampleConcatDataset(ConcatDataset):
         datasets = [build_dataset(cfg) for cfg in dataset_cfgs]
         super().__init__(datasets)
         if dataset_sampling_weights is None:
-            self.dataset_sampling_probs = [1 / len(datasets)] * len(datasets)
+            self.dataset_sampling_probs = [1. / len(datasets)] * len(datasets)
         else:
-            prob_total = sum(dataset_sampling_weights)
+            for x in dataset_sampling_weights:
+                assert x >= 0.
+            prob_total = float(sum(dataset_sampling_weights))
+            assert prob_total > 0.
             self.dataset_sampling_probs = [
                 x / prob_total for x in dataset_sampling_weights
             ]
@@ -37,6 +40,7 @@ class RandomSampleConcatDataset(ConcatDataset):
         while True:
             dataset = random.choices(self.datasets,
                                      self.dataset_sampling_probs)[0]
+            ind = random.randint(0, len(dataset) - 1)
             results = dataset[ind]
             if results is not None:
                 return results
