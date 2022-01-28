@@ -91,7 +91,7 @@ class OTB100Dataset(BaseSOTDataset):
             for bbox in f.readlines():
                 bbox = list(map(int, re.findall(r'-?\d+', bbox)))
                 bboxes.append(bbox)
-        bboxes = np.array(bboxes, dtype=int)
+        bboxes = np.array(bboxes, dtype=float)
 
         if 'init_skip_num' in self.data_infos[video_ind]:
             init_skip_num = self.data_infos[video_ind]['init_skip_num']
