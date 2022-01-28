@@ -23,6 +23,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         test_mode (bool, optional): Default to False.
         bbox_min_size (int, optional): Only bounding boxes whose sizes are
             larger than `bbox_min_size` can be regarded as valid. Default to 0.
+        only_eval_visible (bool, optional): Whether to only evaluate frames
+            where object are visible. Default to False.
     """
 
     # Compatible with MOT and VID Dataset class. The 'CLASSES' attribute will
@@ -35,12 +37,14 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                  split,
                  test_mode=False,
                  bbox_min_size=0,
+                 only_eval_visible=False,
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
         self.pipeline = Compose(pipeline)
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
+        self.only_eval_visible = only_eval_visible
         # 'self.load_as_video' must be set to True in order to using
         # distributed video sampler to load dataset when testing.
         self.load_as_video = True
@@ -273,6 +277,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                             results['track_bboxes'][start_ind:end_ind])))
                 start_ind += num
 
+            if not self.only_eval_visible:
+                visible_infos = None
             # evaluation
             track_eval_results = eval_sot_ope(
                 results=track_bboxes,
