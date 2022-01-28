@@ -14,7 +14,7 @@ class RandomSampleConcatDataset(ConcatDataset):
     Args:
         dataset_cfgs (list[dict]): The list contains all configs of
             concatenated datasets.
-        dataset_sampling_weights (list): The list contains the sampling
+        dataset_sampling_weights (list[float]): The list contains the sampling
             weights of each dataset.
     """
 
