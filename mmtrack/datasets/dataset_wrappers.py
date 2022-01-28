@@ -20,7 +20,8 @@ class RandomSampleConcatDataset(ConcatDataset):
 
     def __init__(self, dataset_cfgs, dataset_sampling_weights=None):
         if dataset_sampling_weights is None:
-            self.dataset_sampling_probs = [1. / len(dataset_cfgs)] * len(dataset_cfgs)
+            self.dataset_sampling_probs = [1. / len(dataset_cfgs)
+                                           ] * len(dataset_cfgs)
         else:
             for x in dataset_sampling_weights:
                 assert x >= 0.
