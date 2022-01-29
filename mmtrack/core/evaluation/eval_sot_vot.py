@@ -152,10 +152,9 @@ def eval_sot_accuracy_robustness(results,
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[dict]]): The first list contains the
-            gt_bboxes of each video. The second list contains the
-            gt_bbox of each frame in one video. The dict contains the
-            annotation information of one frame.
+        annotations (list[ndarray]): The list contains the gt_bboxes of each
+            video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
+            Each bbox is in (x1, y1, w, h) format.
         burnin: number of frames that have to be ignored after the
             re-initialization when calculating accuracy. Default is 10.
         ignore_unknown (bool): whether ignore the skipping frames after
@@ -176,7 +175,6 @@ def eval_sot_accuracy_robustness(results,
     num_fails = 0
     weight = 0
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
-        gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
         assert len(gt_traj) == len(pred_traj)
         assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
         num_fails += count_failures(pred_traj)
@@ -249,10 +247,9 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[list[dict]]): The first list contains the
-            gt_bboxes of each video. The second list contains the
-            gt_bbox of each frame in one video. The dict contains the
-            annotation information of one frame.
+        annotations (list[ndarray]): The list contains the gt_bboxes of each
+            video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
+            Each bbox is in (x1, y1, w, h) format.
         interval: an specified interval in EAO curve used to calculate the EAO
             score. There are different settings in different VOT challenge.
             Default is VOT2018 setting: [100, 356].
@@ -275,10 +272,11 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
     all_successes = []
 
     for i, (gt_traj, pred_traj) in enumerate(zip(annotations, results)):
-        gt_traj = np.stack([ann['bboxes'] for ann in gt_traj])
-        assert len(gt_traj) == len(pred_traj)
+        assert len(gt_traj) == len(
+            pred_traj), f'{len(gt_traj)} == {len(pred_traj)}'
         # initialized bbox annotation is [1]
-        assert len(pred_traj[0]) == 1 and pred_traj[0][0] == 1
+        assert len(pred_traj[0]) == 1 and pred_traj[0][
+            0] == 1, f'{len(pred_traj[0])} == 1 and {pred_traj[0][0]} == 1'
         fail_inds, init_inds = locate_failures_inits(pred_traj)
 
         pred_traj = trajectory2region(pred_traj)

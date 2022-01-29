@@ -55,7 +55,7 @@ def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
     return success
 
 
-def eval_sot_ope(results, annotations):
+def eval_sot_ope(results, annotations, visible_infos=None):
     """Evaluation in OPE protocol.
 
     Args:
@@ -63,10 +63,13 @@ def eval_sot_ope(results, annotations):
             results of each video. The second list contains the tracking
             results of each frame in one video. The ndarray denotes the
             tracking box in [tl_x, tl_y, br_x, br_y] format.
-        annotations (list[list[dict]]): The first list contains the annotations
-            of each video. The second list contains the annotations of each
-            frame in one video. The dict contains the annotation information
-            of one frame.
+        annotations (list[ndarray]): The list contains the bbox
+            annotations of each video. The ndarray is gt_bboxes of one video.
+            It's in (N, 4) shape. Each bbox is in (x1, y1, x2, y2) format.
+        visible_infos (list[ndarray] | None): If not None, the list
+            contains the visible information of each video. The ndarray is
+            visibility (with bool type) of object in one video. It's in (N,)
+            shape. Default to None.
 
     Returns:
         dict[str, float]: OPE style evaluation metric (i.e. success,
@@ -75,15 +78,16 @@ def eval_sot_ope(results, annotations):
     success_results = []
     precision_results = []
     norm_precision_results = []
-    for single_video_results, single_video_anns in zip(results, annotations):
-        gt_bboxes = np.stack([ann['bboxes'] for ann in single_video_anns])
+    if visible_infos is None:
+        visible_infos = [np.array([True] * len(_)) for _ in annotations]
+    for single_video_results, single_video_gt_bboxes, single_video_visible in zip(  # noqa
+            results, annotations, visible_infos):
         pred_bboxes = np.stack(single_video_results)
+        assert len(pred_bboxes) == len(single_video_gt_bboxes)
         video_length = len(single_video_results)
 
-        if 'ignore' in single_video_anns[0]:
-            gt_ignore = np.stack([ann['ignore'] for ann in single_video_anns])
-            gt_bboxes = gt_bboxes[gt_ignore == 0]
-            pred_bboxes = pred_bboxes[gt_ignore == 0]
+        gt_bboxes = single_video_gt_bboxes[single_video_visible]
+        pred_bboxes = pred_bboxes[single_video_visible]
 
         # eval success based on iou
         iou_th = np.arange(0, 1.05, 0.05)

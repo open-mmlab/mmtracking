@@ -71,7 +71,7 @@ model = dict(
 data_root = 'data/'
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True),
+    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(
         type='SeqCropLikeSiamFC',
         context_amount=0.5,
@@ -146,20 +146,20 @@ data = dict(
     ],
     val=dict(
         type='LaSOTDataset',
-        test_load_ann=True,
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        ann_file='tools/convert_datasets/lasot/testing_set.txt',
         img_prefix=data_root + 'lasot/LaSOTBenchmark',
         pipeline=test_pipeline,
-        ref_img_sampler=None,
-        test_mode=True),
+        split='test',
+        test_mode=True,
+        only_eval_visible=True),
     test=dict(
         type='LaSOTDataset',
-        test_load_ann=True,
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
+        ann_file='tools/convert_datasets/lasot/testing_set.txt',
         img_prefix=data_root + 'lasot/LaSOTBenchmark',
         pipeline=test_pipeline,
-        ref_img_sampler=None,
-        test_mode=True))
+        split='test',
+        test_mode=True,
+        only_eval_visible=True))
 # optimizer
 optimizer = dict(
     type='SGD',

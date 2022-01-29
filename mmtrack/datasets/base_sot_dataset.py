@@ -23,6 +23,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         test_mode (bool, optional): Default to False.
         bbox_min_size (int, optional): Only bounding boxes whose sizes are
             larger than `bbox_min_size` can be regarded as valid. Default to 0.
+        only_eval_visible (bool, optional): Whether to only evaluate frames
+            where object are visible. Default to False.
     """
 
     # Compatible with MOT and VID Dataset class. The 'CLASSES' attribute will
@@ -35,12 +37,14 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                  split,
                  test_mode=False,
                  bbox_min_size=0,
+                 only_eval_visible=False,
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
         self.pipeline = Compose(pipeline)
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
+        self.only_eval_visible = only_eval_visible
         # 'self.load_as_video' must be set to True in order to using
         # distributed video sampler to load dataset when testing.
         self.load_as_video = True
@@ -98,9 +102,9 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         start_frame_id = self.data_infos[video_ind]['start_frame_id']
 
         if not self.test_mode:
-            assert len(bboxes) == (end_frame_id - start_frame_id +
-                                   1), f'{len(bboxes)} is not equal to'
-            '{end_frame_id}-{start_frame_id}+1'
+            assert len(bboxes) == (
+                end_frame_id - start_frame_id + 1
+            ), f'{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1'  # noqa
         return bboxes
 
     def get_len_per_video(self, video_ind):
@@ -249,15 +253,19 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                 raise KeyError(f'metric {metric} is not supported.')
 
         # get all test annotations
-        annotations = []
+        gt_bboxes = []
+        visible_infos = []
         for video_ind in range(len(self.data_infos)):
-            bboxes = self.get_ann_infos_from_video(video_ind)['bboxes']
-            annotations.append(bboxes)
+            video_anns = self.get_ann_infos_from_video(video_ind)
+            gt_bboxes.append(video_anns['bboxes'])
+            visible_infos.append(video_anns['visible'])
 
         # tracking_bboxes converting code
         eval_results = dict()
         if 'track' in metrics:
-            assert len(self) == len(results['track_bboxes'])
+            assert len(self) == len(
+                results['track_bboxes']
+            ), f"{len(self)} == {len(results['track_bboxes'])}"
             print_log('Evaluate OPE Benchmark...', logger=logger)
             track_bboxes = []
             start_ind = end_ind = 0
@@ -265,16 +273,21 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                 end_ind += num
                 track_bboxes.append(
                     list(
-                        map(lambda x: x[:4],
+                        map(lambda x: x[:-1],
                             results['track_bboxes'][start_ind:end_ind])))
                 start_ind += num
 
+            if not self.only_eval_visible:
+                visible_infos = None
             # evaluation
             track_eval_results = eval_sot_ope(
-                results=track_bboxes, annotations=annotations)
+                results=track_bboxes,
+                annotations=gt_bboxes,
+                visible_infos=visible_infos)
             eval_results.update(track_eval_results)
 
             for k, v in eval_results.items():
                 if isinstance(v, float):
                     eval_results[k] = float(f'{(v):.3f}')
             print_log(eval_results, logger=logger)
+        return eval_results

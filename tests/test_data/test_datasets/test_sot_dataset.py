@@ -12,6 +12,18 @@ PREFIX = osp.join(osp.dirname(__file__), '../../data')
 SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
     GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
+    VOTDataset=dict(
+        dataset_type='vot2018',
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
+    OTB100Dataset=dict(
+        ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'otb100')),
+    UAV123Dataset=dict(
+        ann_file='tools/convert_datasets/uav123/uav123_infos.txt',
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'uav123')),
+    LaSOTDataset=dict(
+        ann_file=osp.join(SOT_DATA_PREFIX, 'lasot_full', 'testing_set.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'lasot_full')),
     TrackingNetDataset=dict(
         chunks_list=[0], img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     SOTCocoDataset=dict(
@@ -23,7 +35,8 @@ DATASET_INFOS = dict(
 
 
 @pytest.mark.parametrize('dataset', [
-    'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
+    'GOT10kDataset', 'VOTDataset', 'OTB100Dataset', 'UAV123Dataset',
+    'LaSOTDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
     'SOTCocoDataset'
 ])
 def test_load_data_infos(dataset):
@@ -34,8 +47,8 @@ def test_load_data_infos(dataset):
 
 
 @pytest.mark.parametrize('dataset', [
-    'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
+    'GOT10kDataset', 'VOTDataset', 'LaSOTDataset', 'TrackingNetDataset',
+    'SOTImageNetVIDDataset', 'SOTCocoDataset'
 ])
 def test_get_bboxes_from_video(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -52,8 +65,8 @@ def test_get_bboxes_from_video(dataset):
 
 
 @pytest.mark.parametrize('dataset', [
-    'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
+    'GOT10kDataset', 'VOTDataset', 'LaSOTDataset', 'TrackingNetDataset',
+    'SOTImageNetVIDDataset', 'SOTCocoDataset'
 ])
 def test_get_visibility_from_video(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -66,7 +79,7 @@ def test_get_visibility_from_video(dataset):
 
 @pytest.mark.parametrize('dataset', [
     'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
+    'SOTCocoDataset', 'VOTDataset', 'LaSOTDataset'
 ])
 def test_get_ann_infos_from_video(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -78,7 +91,7 @@ def test_get_ann_infos_from_video(dataset):
 
 @pytest.mark.parametrize('dataset', [
     'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
+    'SOTCocoDataset', 'VOTDataset', 'LaSOTDataset'
 ])
 def test_get_img_infos_from_video(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -88,7 +101,9 @@ def test_get_img_infos_from_video(dataset):
     dataset_object.get_img_infos_from_video(0)
 
 
-@pytest.mark.parametrize('dataset', ['GOT10kDataset', 'TrackingNetDataset'])
+@pytest.mark.parametrize(
+    'dataset',
+    ['GOT10kDataset', 'VOTDataset', 'LaSOTDataset', 'TrackingNetDataset'])
 def test_prepare_test_data(dataset):
     dataset_class = DATASETS.get(dataset)
 
@@ -99,7 +114,7 @@ def test_prepare_test_data(dataset):
 
 @pytest.mark.parametrize('dataset', [
     'GOT10kDataset', 'TrackingNetDataset', 'SOTImageNetVIDDataset',
-    'SOTCocoDataset'
+    'SOTCocoDataset', 'LaSOTDataset'
 ])
 def test_prepare_train_data(dataset):
     dataset_class = DATASETS.get(dataset)
@@ -138,3 +153,85 @@ def test_format_results(dataset):
     dataset_object.format_results(track_results, resfile_path=tmp_dir.name)
     if osp.isdir(tmp_dir.name):
         tmp_dir.cleanup()
+
+
+def test_sot_ope_evaluation():
+    dataset_class = DATASETS.get('UAV123Dataset')
+    dataset_object = dataset_class(
+        **DATASET_INFOS['UAV123Dataset'],
+        pipeline=[],
+        split='test',
+        test_mode=True)
+
+    dataset_object.num_frames_per_video = [25, 25]
+    results = []
+    data_infos = []
+    lasot_root = osp.join(SOT_DATA_PREFIX, 'lasot_full')
+    for video_name in ['airplane/airplane-1', 'basketball/basketball-2']:
+        bboxes = np.loadtxt(
+            osp.join(lasot_root, video_name, 'track_results.txt'),
+            delimiter=',')
+        scores = np.zeros((len(bboxes), 1))
+        bboxes = np.concatenate((bboxes, scores), axis=-1)
+        results.extend(bboxes)
+        data_infos.append(
+            dict(
+                video_path=osp.join(lasot_root, video_name, 'img'),
+                ann_path=osp.join(lasot_root, video_name, 'gt_for_eval.txt'),
+                start_frame_id=1,
+                end_frame_id=25,
+                framename_template='%06d.jpg'))
+
+    dataset_object.data_infos = data_infos
+    track_results = dict(track_bboxes=results)
+    eval_results = dataset_object.evaluate(track_results, metric=['track'])
+    assert eval_results['success'] == 67.524
+    assert eval_results['norm_precision'] == 70.0
+    assert eval_results['precision'] == 50.0
+
+
+def test_sot_vot_evaluation():
+    dataset_class = DATASETS.get('VOTDataset')
+    dataset_object = dataset_class(
+        **DATASET_INFOS['VOTDataset'],
+        pipeline=[],
+        split='test',
+        test_mode=True)
+
+    dataset_object.num_frames_per_video = [25, 25]
+    data_infos = []
+    results = []
+    vot_root = osp.join(SOT_DATA_PREFIX, 'vot2018')
+    for video_name in ['ants1', 'ants3']:
+        results.extend(
+            mmcv.list_from_file(
+                osp.join(vot_root, video_name, 'track_results.txt')))
+        data_infos.append(
+            dict(
+                video_path=osp.join(vot_root, video_name, 'color'),
+                ann_path=osp.join(vot_root, video_name, 'gt_for_eval.txt'),
+                start_frame_id=1,
+                end_frame_id=25,
+                framename_template='%08d.jpg'))
+    dataset_object.data_infos = data_infos
+
+    track_bboxes = []
+    for result in results:
+        result = result.split(',')
+        if len(result) == 1:
+            track_bboxes.append(np.array([float(result[0]), 0.]))
+        else:
+            track_bboxes.append(
+                np.array([
+                    float(result[0]),
+                    float(result[1]),
+                    float(result[2]),
+                    float(result[3]), 0.
+                ]))
+
+    track_bboxes = dict(track_bboxes=track_bboxes)
+    eval_results = dataset_object.evaluate(
+        track_bboxes, interval=[1, 3], metric=['track'])
+    assert abs(eval_results['eao'] - 0.6661) < 0.0001
+    assert round(eval_results['accuracy'], 4) == 0.5826
+    assert round(eval_results['robustness'], 4) == 6.0
