@@ -10,4 +10,4 @@ configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py
 configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
 
 # SOT
-configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py
+configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py
