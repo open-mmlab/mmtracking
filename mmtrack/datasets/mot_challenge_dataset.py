@@ -274,7 +274,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             # Option values: ['pedestrian']
             CLASSES_TO_EVAL=list(self.CLASSES),
             # Option Values: 'MOT17', 'MOT16', 'MOT20', 'MOT15'
-            BENCHMARK=self.get_benchmark,
+            BENCHMARK=self.get_benchmark(),
             # Option Values: 'train', 'test'
             SPLIT_TO_EVAL='train',
             # Whether tracker input files are zipped
