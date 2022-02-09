@@ -51,6 +51,7 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           pip install git+https://github.com/votchallenge/toolkit.git
+          pip install attributee<0.1.6
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/${{matrix.torch_version}}/index.html
           pip install mmdet
           pip install -r requirements.txt
@@ -109,6 +110,7 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           python -m pip install git+https://github.com/votchallenge/toolkit.git
+          python -m pip install attributee<0.1.6
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
@@ -175,6 +177,7 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           python -m pip install git+https://github.com/votchallenge/toolkit.git
+          python -m pip install attributee<0.1.6
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
