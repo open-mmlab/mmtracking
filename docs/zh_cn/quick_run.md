@@ -128,7 +128,7 @@ python demo/demo_sot.py \
 python ./demo/demo_sot.py \
     ./configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint ../mmtrack_output/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+    --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     [--output ${OUTPUT}] \
     [--show] \
     [--gt_bbox_file ${GT_BBOX_FILE}]
@@ -224,7 +224,7 @@ model = dict(
 
    ```shell
    python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py \
-       --checkpoint checkpoints/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -233,7 +233,7 @@ model = dict(
 
    ```shell
    ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py 8 \
-       --checkpoint checkpoints/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```

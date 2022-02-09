@@ -27,7 +27,7 @@ Models:
           Success: 50.1
           Norm precision: 59.1
           Precision: 48.7
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_lasot_20211203_151612-da4b3c66.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth
 
   - Name: siamese_rpn_r50_uav123
     In Collection: SiameseRPN++
@@ -43,7 +43,7 @@ Models:
           Success: 59.8
           Norm precision: 77.3
           Precision: 80.0
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_uav123_20211203_153949-6d82f39e.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20211203_153949-6d82f39e.pth
 
   - Name: siamese_rpn_r50_trackingnet
     In Collection: SiameseRPN++
@@ -59,7 +59,7 @@ Models:
           Success: 69.0
           Norm precision: 75.8
           Precision: 63.2
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_lasot_20211203_151612-da4b3c66.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth
 
   - Name: siamese_rpn_r50_otb100
     In Collection: SiameseRPN++
@@ -75,7 +75,7 @@ Models:
           Success: 65.1
           Norm precision: 82.0
           Precision: 86.1
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_otb100_20211203_154048-9dfde4fa.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20211203_154048-9dfde4fa.pth
 
   - Name: siamese_rpn_r50_vot2018
     In Collection: SiameseRPN++
@@ -91,7 +91,7 @@ Models:
           EAO: 0.348
           Accuracy: 0.578
           Robustness: 0.272
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_vot2018_20211206_211710-10e082cd.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_1x_vot2018_20211206_211710-10e082cd.pth
 
   - Name: siamese_rpn_r50_fp16_lasot
     In Collection: SiameseRPN++

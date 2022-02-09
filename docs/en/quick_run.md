@@ -133,7 +133,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 python ./demo/demo_sot.py \
     ./configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint checkpoints/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+    --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     --output ${OUTPUT} \
     --show
 ```
@@ -230,7 +230,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
    ```shell
    python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py \
-       --checkpoint checkpoints/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -239,7 +239,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
    ```shell
    ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py 8 \
-       --checkpoint checkpoints/siamese_rpn_r50_lasot_20201218_051019-3c522eff.pth \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
