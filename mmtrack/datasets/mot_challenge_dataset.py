@@ -245,6 +245,13 @@ class MOTChallengeDataset(CocoVideoDataset):
                         f'{(y2-y1):.3f},{conf:.3f}\n')
             f.close()
 
+    def get_benchmark(self):
+        """Get benchmark from upeper/lower-case image prefix."""
+        BENCHMARKS = ['MOT15', 'MOT16', 'MOT17', 'MOT20']
+        for benchamrk in BENCHMARKS:
+            if benchamrk in self.img_prefix.upper():
+                return benchamrk
+
     def get_dataset_cfg_for_hota(self, tracker_folder, seqmap):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
 
@@ -265,9 +272,9 @@ class MOTChallengeDataset(CocoVideoDataset):
             # Use 'track' as the default tracker
             TRACKERS_TO_EVAL=['track'],
             # Option values: ['pedestrian']
-            CLASSES_TO_EVAL=['pedestrian'],
+            CLASSES_TO_EVAL=list(self.CLASSES),
             # Option Values: 'MOT17', 'MOT16', 'MOT20', 'MOT15'
-            BENCHMARK=self.img_prefix.rsplit('/', 2)[-2],
+            BENCHMARK=self.get_benchmark,
             # Option Values: 'train', 'test'
             SPLIT_TO_EVAL='train',
             # Whether tracker input files are zipped
@@ -390,6 +397,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                     'pip install git+https://github.com/JonathonLuiten/TrackEval.git'  # noqa
                     'to manually install trackeval')
 
+            # get video name sequence for HOTA evaluation 
             seqmap = osp.join(self.img_prefix, 'videoseq.txt')
             if not osp.exists(seqmap):
                 with open(seqmap, 'w') as f:
@@ -413,6 +421,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 trackeval.metrics.HOTA(dict(METRICS=['HOTA'], THRESHOLD=0.5))
             ]
             output_res, _ = evaluator.evaluate(dataset, hota_metrics)
+
             # modify HOTA results sequence according to summary list,
             # indexes of summary are sequence names and 'OVERALL'
             # while for hota they are sequence names and 'COMBINED_SEQ'
