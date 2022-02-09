@@ -17,7 +17,7 @@ PREFIX = osp.join(osp.dirname(__file__), '../../data')
 # 8 images, 2 instances -> [4, 3] objects
 # 1 ignore, 2 crowd
 DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
-MOT_ANN_PATH = f'{PREFIX}/demo_mot17_data/'
+MOT_ANN_PATH = f'{PREFIX}/demo_MOT15_data/train'
 
 
 @pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
@@ -101,7 +101,7 @@ def test_parse_ann_info(dataset):
     assert ann['bboxes_ignore'].shape == (0, 4)
 
 
-def test_mot17_bbox_evaluation():
+def test_mot15_bbox_evaluation():
     classes = ('car', 'person')
     dataset_class = DATASETS.get('MOTChallengeDataset')
     dataset = dataset_class(
@@ -117,7 +117,7 @@ def test_mot17_bbox_evaluation():
 @patch('mmtrack.datasets.MOTChallengeDataset.load_annotations', MagicMock)
 @patch('mmtrack.datasets.MOTChallengeDataset._filter_imgs', MagicMock)
 @pytest.mark.parametrize('dataset', ['MOTChallengeDataset'])
-def test_mot17_track_evaluation(dataset):
+def test_mot15_track_evaluation(dataset):
     tmp_dir = tempfile.TemporaryDirectory()
     videos = ['TUD-Campus', 'TUD-Stadtmitte']
 
@@ -168,5 +168,6 @@ def test_mot17_track_evaluation(dataset):
     assert eval_results['IDP'] == 0.799
     assert eval_results['MOTA'] == 0.555
     assert eval_results['IDs'] == 14
+    assert eval_results['HOTA'] == 0.400
 
     tmp_dir.cleanup()

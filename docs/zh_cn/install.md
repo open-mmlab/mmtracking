@@ -96,17 +96,18 @@
     cd mmtracking
     ```
 
-6. 首先安装依赖，然后安装 MMTracking：
+6. 为 VOT 和 MOTChallenge 数据集测试评估安装额外库：
+
+    ```shell
+    pip install git+https://github.com/votchallenge/toolkit.git
+    pip install git+https://github.com/JonathonLuiten/TrackEval.git
+    ```
+
+7. 首先安装依赖，然后安装 MMTracking：
 
     ```shell
     pip install -r requirements/build.txt
     pip install -v -e .  # or "python setup.py develop"
-    ```
-
-7. 为 VOT 数据集测试评估安装额外库：
-
-    ```shell
-    pip install git+https://github.com/votchallenge/toolkit.git
     ```
 
 注意：
@@ -134,9 +135,10 @@ pip install mmdet
 # 安装 mmtracking
 git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
+pip install git+https://github.com/votchallenge/toolkit.git
+pip install git+https://github.com/JonathonLuiten/TrackEval.git
 pip install -r requirements/build.txt
 pip install -v -e .
-pip install git+https://github.com/votchallenge/toolkit.git
 ```
 
 ### 使用多个 MMTracking 版本进行开发
