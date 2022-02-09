@@ -118,7 +118,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     the version of this denpendency is limited.
 
     ```shell
-    pip install attributee<0.1.6
+    pip install attributee==0.1.5
     ```
 
     Detailed information of this disadaptation can be found at the following link:

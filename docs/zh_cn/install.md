@@ -113,7 +113,7 @@
     该依赖的版本会被限制。
 
     ```shell
-    pip install attributee<0.1.6
+    pip install attributee==0.1.5
     ```
 
     有关此不适配的具体信息可以在以下链接找到:
