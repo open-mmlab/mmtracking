@@ -397,7 +397,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                     'pip install git+https://github.com/JonathonLuiten/TrackEval.git'  # noqa
                     'to manually install trackeval')
 
-            # get video name sequence for HOTA evaluation 
+            # get video name sequence for HOTA evaluation
             seqmap = osp.join(self.img_prefix, 'videoseq.txt')
             if not osp.exists(seqmap):
                 with open(seqmap, 'w') as f:
