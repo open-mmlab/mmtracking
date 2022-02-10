@@ -105,12 +105,12 @@ def main():
     cfg = Config.fromfile(args.config)
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import multi_gpu_test, single_gpu_test
-        from mmdet.models import build_detector as build_model
         from mmdet.datasets import build_dataloader
+        from mmdet.models import build_detector as build_model
     else:
         from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.models import build_model
         from mmtrack.datasets import build_dataloader
+        from mmtrack.models import build_model
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # set cudnn_benchmark
