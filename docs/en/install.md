@@ -115,6 +115,16 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     pip install -v -e .  # or "python setup.py develop"
     ```
 
+    Because vot-toolkit hasn't adapted to the newest version of attributee (0.1.6),
+    the version of this denpendency is limited.
+
+    ```shell
+    pip install attributee==0.1.5
+    ```
+
+    Detailed information of this disadaptation can be found at the following link:
+    "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
+
 Note:
 
 a. Following the above instructions, MMTracking is installed on `dev` mode
