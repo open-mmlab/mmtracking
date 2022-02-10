@@ -13,6 +13,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
 |        master       | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
+|        0.10.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.9.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.8.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 |        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
@@ -113,6 +114,16 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     ```shell
     pip install git+https://github.com/votchallenge/toolkit.git
     ```
+
+    Because vot-toolkit hasn't adapted to the newest version of attributee (0.1.6),
+    the version of this denpendency is limited.
+
+    ```shell
+    pip install attributee==0.1.5
+    ```
+
+    Detailed information of this disadaptation can be found at the following link:
+    "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
 
 Note:
 

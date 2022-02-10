@@ -13,6 +13,7 @@
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
 |        master       | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
+|        0.10.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.9.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.8.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
 |        0.7.0        | mmcv-full>=1.3.8, <1.4.0 |       MMDetection>=2.14.0     |
@@ -60,7 +61,7 @@
 
     PyTorch 在 1.x.0 和 1.x.1 之间通常是兼容的，故 mmcv-full 只提供 1.x.0 的编译包。如果你的 PyTorch 版本是 1.x.1，你可以放心地安装在 1.x.0 版本编译的 mmcv-full。
 
-    ```
+    ```shell
     # 我们可以忽略 PyTorch 的小版本号
     pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.10/index.html
     ```
@@ -108,6 +109,16 @@
     ```shell
     pip install git+https://github.com/votchallenge/toolkit.git
     ```
+
+    因为vot-toolkit没有适配最新版本的attributee (0.1.6)，
+    该依赖的版本会被限制。
+
+    ```shell
+    pip install attributee==0.1.5
+    ```
+
+    有关此不适配的具体信息可以在以下链接找到:
+    "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
 
 注意：
 
