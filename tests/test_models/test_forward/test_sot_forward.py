@@ -9,8 +9,8 @@ from .utils import _demo_mm_inputs, _get_config_module
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'sot/siamese_rpn/siamese_rpn_r50_lasot.py',
-    'sot/siamese_rpn/siamese_rpn_r50_vot2018.py'
+    'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
+    'sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py'
 ])
 def test_sot_forward(cfg_file):
     config = _get_config_module(cfg_file)

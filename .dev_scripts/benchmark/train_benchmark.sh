@@ -35,8 +35,8 @@ echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options checkpoint_config.max_keep_ckpts=1 >/dev/null &
 
 # SOT
-CONFIG=configs/sot/siamese_rpn/siamese_rpn_r50_lasot.py
-WORK_DIR=siamese_rpn_r50_lasot
+CONFIG=configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py
+WORK_DIR=siamese_rpn_r50_20e_lasot
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options checkpoint_config.max_keep_ckpts=1 >/dev/null &
 
