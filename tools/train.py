@@ -83,6 +83,7 @@ def main():
             cfg.model = cfg.model.detector
     elif cfg.get('TRAIN_REID', False):
         from mmdet.apis import train_detector as train_model
+
         from mmtrack.models import build_reid as build_model
         if 'reid' in cfg.model:
             cfg.model = cfg.model.reid

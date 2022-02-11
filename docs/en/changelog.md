@@ -1,5 +1,15 @@
 ## Changelog
 
+### v0.10.0 (10/02/2022)
+
+#### New Features
+
+- Support CPU training ([#404](https://github.com/open-mmlab/mmtracking/pull/404))
+
+#### Improvements
+
+- Refactor SOT datasets ([#401](https://github.com/open-mmlab/mmtracking/pull/401)), ([#402](https://github.com/open-mmlab/mmtracking/pull/402)), ([#393](https://github.com/open-mmlab/mmtracking/pull/393))
+
 ### v0.9.0 (05/01/2022)
 
 #### Highlights
