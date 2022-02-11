@@ -124,6 +124,7 @@
 
     ```shell
     pip install git+https://github.com/TAO-Dataset/tao.git
+    pip install git+https://github.com/lvis-dataset/lvis-api.git
     ```
 
 注意：

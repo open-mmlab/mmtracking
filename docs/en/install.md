@@ -129,6 +129,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 
     ```shell
     pip install git+https://github.com/TAO-Dataset/tao.git
+    pip install git+https://github.com/lvis-dataset/lvis-api.git
     ```
 
 Note:
