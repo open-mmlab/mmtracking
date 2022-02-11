@@ -8,7 +8,7 @@ from mmdet.datasets.builder import PIPELINES
 @PIPELINES.register_module()
 class TridentSampling(object):
     """Multitemplate-style sampling in a trident manner. It's firstly used in
-    STARK. https://arxiv.org/abs/2103.17154.
+    `STARK <https://arxiv.org/abs/2103.17154.>`_.
 
     Args:
         num_search_frames (int, optional): the number of search frames
@@ -35,7 +35,7 @@ class TridentSampling(object):
         self.cls_pos_prob = cls_pos_prob
 
     def sampling_random(self,
-                        visible,
+                        video_visibility,
                         num_samples=1,
                         frame_range=None,
                         allow_invisible=False,
@@ -45,7 +45,8 @@ class TridentSampling(object):
         frame.
 
         Args:
-            visible (ndarray): the visibility of each frame in the video.
+            video_visibility (ndarray): the visibility of each frame in the
+                video.
             num_samples (int, optional): the number of samples. Defaults to 1.
             frame_range (list | None, optional): the frame range of sampling.
                 Defaults to None.
@@ -59,21 +60,21 @@ class TridentSampling(object):
         """
         assert num_samples > 0
         if frame_range is None:
-            frame_range = [0, len(visible)]
+            frame_range = [0, len(video_visibility)]
         else:
             assert isinstance(frame_range, list) and len(frame_range) == 2
             frame_range[0] = max(0, frame_range[0])
-            frame_range[1] = min(len(visible), frame_range[0])
+            frame_range[1] = min(len(video_visibility), frame_range[0])
 
-        visible = np.asarray(visible)
-        visible_in_range = visible[frame_range[0]:frame_range[1]]
+        video_visibility = np.asarray(video_visibility)
+        visibility_in_range = video_visibility[frame_range[0]:frame_range[1]]
         # get indexes of valid samples
         if force_invisible:
-            valid_inds = np.where(~visible_in_range)[0] + frame_range[0]
+            valid_inds = np.where(~visibility_in_range)[0] + frame_range[0]
         else:
             valid_inds = np.arange(
                 *frame_range) if allow_invisible else np.where(
-                    visible_in_range)[0] + frame_range[0]
+                    visibility_in_range)[0] + frame_range[0]
 
         # No valid samples
         if len(valid_inds) == 0:
@@ -81,12 +82,12 @@ class TridentSampling(object):
 
         return random.choices(valid_inds, k=num_samples)
 
-    def sampling_trident(self, is_visible_ann):
+    def sampling_trident(self, video_visibility):
         """Sampling multiple template images and one search images in one
         video.
 
         Args:
-            is_visible_ann (ndarray): the visibility of each frame in the
+            video_visibility (ndarray): the visibility of each frame in the
                 video.
 
         Returns:
@@ -98,7 +99,7 @@ class TridentSampling(object):
             while None in extra_template_inds:
                 # first randomly sample two frames from a video
                 template_ind, search_ind = self.sampling_random(
-                    is_visible_ann, num_samples=2)
+                    video_visibility, num_samples=2)
 
                 # then sample the extra templates
                 extra_template_inds = []
@@ -112,7 +113,7 @@ class TridentSampling(object):
                             search_ind
 
                     extra_template_index = self.sampling_random(
-                        is_visible_ann,
+                        video_visibility,
                         num_samples=1,
                         frame_range=[min_ind, max_ind],
                         allow_invisible=True)[0]
@@ -121,8 +122,9 @@ class TridentSampling(object):
 
                 sampling_count += 1
                 if sampling_count > 100:
-                    print('-------Not sampling extra valid templates. Stop'
-                          'sampling and use the first template-------')
+                    print('-------Not sampling extra valid templates'
+                          'successfully. Stop sampling and copy the'
+                          'first template as extra templates-------')
                     extra_template_inds = [template_ind] * len(
                         self.max_frame_range)
 
@@ -137,7 +139,7 @@ class TridentSampling(object):
         """Prepare sampled training data according to the sampled index.
 
         Args:
-            video_info (dict): the video information. It includes the keys:
+            video_info (dict): the video information. It contains the keys:
                 ['bboxes','bboxes_isvalid','filename','frame_ids',
                 'video_id','visible'].
             sampled_inds (list[int]): the sampled frame indexes.
@@ -177,11 +179,11 @@ class TridentSampling(object):
         sampled index.
 
         Args:
-            video_info (dict): the video information. It includes the keys:
+            video_info (dict): the video information. It contains the keys:
                 ['bboxes','bboxes_isvalid','filename','frame_ids',
                 'video_id','visible'].
             video_info_another (dict): the another video information. It
-                includes the keys: ['bboxes','bboxes_isvalid','filename',
+                contains the keys: ['bboxes','bboxes_isvalid','filename',
                 'frame_ids','video_id','visible'].
             sampled_inds (list[int]): the sampled frame indexes.
 

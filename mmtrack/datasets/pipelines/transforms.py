@@ -60,7 +60,7 @@ class SeqCropLikeSiamFC(object):
         z_size = np.sqrt(z_width * z_height)
 
         z_scale = exemplar_size / z_size
-        d_search = (crop_size - exemplar_size) / 2
+        d_search = (crop_size - exemplar_size) / 2.
         pad = d_search / z_scale
         x_size = z_size + 2 * pad
         x_bbox = np.array([
@@ -145,8 +145,10 @@ class SeqCropLikeStark(object):
     `Stark <https://arxiv.org/abs/2103.17154>`_.
 
     Args:
-        crop_size_factor (list): the ratio of crop size to bbox size.
-        output_size (list): the size of resized image (always square).
+        crop_size_factor (list[int | float]): contains the ratio of crop size
+            to bbox size.
+        output_size (list[int | float]): contains the size of resized image
+            (always square).
     """
 
     def __init__(self, crop_size_factor, output_size):
@@ -154,7 +156,7 @@ class SeqCropLikeStark(object):
         self.output_size = output_size
 
     def crop_like_stark(self, img, bbox, crop_size_factor, output_size):
-        """Crop an image as SiamFC did.
+        """Crop an image as Stark did.
 
         Args:
             image (ndarray): of shape (H, W, 3).
@@ -167,14 +169,13 @@ class SeqCropLikeStark(object):
         """
         x1, y1, x2, y2 = np.split(bbox, 4, axis=-1)
         bbox_w, bbox_h = x2 - x1, y2 - y1
-        cx, cy = x1 + bbox_w / 2, y1 + bbox_h / 2
+        cx, cy = x1 + bbox_w / 2., y1 + bbox_h / 2.
 
         img_h, img_w, _ = img.shape
         # 1. Crop image
         # 1.1 calculate crop size and pad size
         crop_size = math.ceil(math.sqrt(bbox_w * bbox_h) * crop_size_factor)
-        if crop_size < 1:
-            raise Exception('Too small bounding box.')
+        crop_size = max(crop_size, 1)
 
         x1 = int(np.round(cx - crop_size * 0.5))
         x2 = x1 + crop_size
@@ -192,24 +193,24 @@ class SeqCropLikeStark(object):
         # 1.3 pad image
         img_crop_padded = cv2.copyMakeBorder(img_crop, y1_pad, y2_pad, x1_pad,
                                              x2_pad, cv2.BORDER_CONSTANT)
-        # 1.4 pad attention mask
+        # 1.4 generate padding mask
         img_h, img_w, _ = img_crop_padded.shape
-        att_mask = np.ones((img_h, img_w))
+        pdding_mask = np.ones((img_h, img_w))
         end_x, end_y = -x2_pad, -y2_pad
         if y2_pad == 0:
             end_y = None
         if x2_pad == 0:
             end_x = None
-        att_mask[y1_pad:end_y, x1_pad:end_x] = 0
+        pdding_mask[y1_pad:end_y, x1_pad:end_x] = 0
 
         # 2. Resize image and attention mask
         resize_factor = output_size / crop_size
         img_crop_padded = cv2.resize(img_crop_padded,
                                      (output_size, output_size))
-        att_mask = cv2.resize(att_mask,
-                              (output_size, output_size)).astype(np.bool_)
+        pdding_mask = cv2.resize(pdding_mask,
+                                 (output_size, output_size)).astype(np.bool_)
 
-        return img_crop_padded, resize_factor, att_mask
+        return img_crop_padded, resize_factor, pdding_mask
 
     def generate_box(self,
                      bbox_gt,
@@ -232,11 +233,11 @@ class SeqCropLikeStark(object):
         Returns:
             ndarray: generated box of shape (4, ) in [x1, y1, x2, y2] format.
         """
+        assert output_size > 0
         bbox_gt_center = (bbox_gt[0:2] + bbox_gt[2:4]) * 0.5
         bbox_cropped_center = (bbox_cropped[0:2] + bbox_cropped[2:4]) * 0.5
 
-        # TODO plus 1 or not plus 1
-        bbox_out_center = (output_size - 1) / 2 + (
+        bbox_out_center = (output_size - 1) / 2. + (
             bbox_gt_center - bbox_cropped_center) * resize_factor
         bbox_out_wh = (bbox_gt[2:4] - bbox_gt[0:2]) * resize_factor
         bbox_out = np.concatenate((bbox_out_center - 0.5 * bbox_out_wh,
@@ -254,7 +255,7 @@ class SeqCropLikeStark(object):
 
         Returns:
             List[dict]: list of dict that contains cropped image and
-                the corresponding groundtruth box.
+                the corresponding groundtruth bbox.
         """
         outs = []
         for i, _results in enumerate(results):
@@ -286,12 +287,16 @@ class SeqCropLikeStark(object):
 
 @PIPELINES.register_module()
 class SeqBboxJitter(object):
-    """Bounding box jitter augmentation.
+    """Bounding box jitter augmentation. The jittered bboxes are used for
+    subsequent image cropping, like `SeqCropLikeStark`.
 
     Args:
-        scale_jitter_factor (int): the factor of scale jitter.
-        center_jitter_factor (int): the factor of center jitter.
-        crop_size_factor (int): the ratio of crop size to bbox size.
+        scale_jitter_factor (list[int | float]): contains the factor of scale
+            jitter.
+        center_jitter_factor (list[int | float]): contains the factor of center
+            jitter.
+        crop_size_factor (list[int | float]): contains the ratio of crop size
+            to bbox size.
     """
 
     def __init__(self, scale_jitter_factor, center_jitter_factor,
@@ -308,7 +313,7 @@ class SeqBboxJitter(object):
                 :obj:`mmtrack.base_sot_dataset`.
 
         Returns:
-            list[dict]: List of dict that contains augmented images.
+            list[dict]: list of dict that contains augmented images.
         """
         outs = []
         for i, _results in enumerate(results):
@@ -316,7 +321,7 @@ class SeqBboxJitter(object):
             x1, y1, x2, y2 = np.split(gt_bbox, 4, axis=-1)
             bbox_w, bbox_h = x2 - x1, y2 - y1
             gt_bbox_cxcywh = np.concatenate(
-                [x1 + bbox_w / 2, y1 + bbox_h / 2, bbox_w, bbox_h], axis=-1)
+                [x1 + bbox_w / 2., y1 + bbox_h / 2., bbox_w, bbox_h], axis=-1)
 
             crop_img_size = -1
             # avoid croped image size too small.
@@ -324,7 +329,7 @@ class SeqBboxJitter(object):
             while crop_img_size < 1:
                 count += 1
                 if count > 100:
-                    print('---------bbox is invalid--------', gt_bbox_cxcywh)
+                    print(f'-------- bbox {gt_bbox_cxcywh} is invalid -------')
                     return None
                 jittered_wh = gt_bbox_cxcywh[2:4] * np.exp(
                     np.random.randn(2) * self.scale_jitter_factor[i])
@@ -351,7 +356,7 @@ class SeqBrightnessAug(object):
     """Brightness augmention for images.
 
     Args:
-        prob (float): The range of brightness jitter.
+        jitter_range (float): The range of brightness jitter.
             Defaults to 0..
     """
 

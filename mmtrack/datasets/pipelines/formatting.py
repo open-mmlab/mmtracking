@@ -339,7 +339,7 @@ class VideoCollect(object):
 
 @PIPELINES.register_module()
 class CheckDataValidity(object):
-    """Check the data validity. Generally, it's used in such case: The image
+    """Check the validity of data. Generally, it's used in such case: The image
     padding masks generated in the image preprocess need to be downsampled, and
     then passed into Transformer model, like DETR. The computation in the
     subsequent Transformer model must make sure that the values of downsampled
@@ -359,7 +359,7 @@ class CheckDataValidity(object):
             results (dict): Result dict contains the data to be checked.
 
         Returns:
-            dict | None: if not valid, return None.
+            dict | None: if invalid, return None.
         """
         for _results in results:
             assert 'padding_mask' in _results
