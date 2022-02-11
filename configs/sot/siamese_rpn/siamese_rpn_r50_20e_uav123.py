@@ -1,4 +1,4 @@
-_base_ = ['./siamese_rpn_r50_1x_lasot.py']
+_base_ = ['./siamese_rpn_r50_20e_lasot.py']
 
 # model settings
 model = dict(

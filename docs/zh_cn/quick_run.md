@@ -126,9 +126,9 @@ python demo/demo_sot.py \
 
 ```shell
 python ./demo/demo_sot.py \
-    ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
+    ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+    --checkpoint ../mmtrack_output/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     [--output ${OUTPUT}] \
     [--show] \
     [--gt_bbox_file ${GT_BBOX_FILE}]
@@ -223,8 +223,8 @@ model = dict(
 1. 在 LaSOT 上测试 SiameseRPN++，并且评估 success 和 normed precision。
 
    ```shell
-   python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
-       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+   python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -232,8 +232,8 @@ model = dict(
 2. 使用 8 GPUs 测试 SiameseRPN++，并且评估 success 和 normed precision。
 
    ```shell
-   ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
-       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+   ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -419,7 +419,7 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 1. 在 COCO、ImageNet VID 和 ImageNet DET 上训练 SiameseRPN++，然后从第 10 个 epoch 到第 20 个 epoch 评估其 success、precision 和 normed precision。
 
     ```shell
-    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
         --work-dir ./work_dirs/
     ```
 
