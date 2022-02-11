@@ -31,6 +31,12 @@ class TestFormatting(object):
         results = load(results)
         assert len(results) == len(img_names)
 
+        for _result in results:
+            _result['padding_mask'] = np.ones_like(_result['img'], dtype=bool)
+        check_data_validity = dict(type='CheckDataValidity', stride=16)
+        check_data_validity = build_from_cfg(check_data_validity, PIPELINES)
+        assert results is not None
+
         for result in results:
             result['gt_bboxes'] = np.random.randn(num_objects, 4)
             result['gt_label'] = np.random.randint(0, 10)

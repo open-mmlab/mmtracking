@@ -42,6 +42,52 @@ class TestTransforms(object):
         assert results[0]['img'].shape == (511, 511, 3)
         assert results[1]['img'].shape == (511, 511, 3)
 
+    def test_seq_bbox_jitter(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256)
+            res['bbox_fields'] = ['gt_bboxes']
+
+        transform = dict(
+            type='SeqBboxJitter',
+            center_jitter_factor=[0, 4.5],
+            scale_jitter_factor=[0, 0.5],
+            crop_size_factor=[2, 5])
+        seq_bbox_jitter = build_from_cfg(transform, PIPELINES)
+        results = seq_bbox_jitter(results)
+        assert results[0]['jittered_bboxes'].shape == (1, 4)
+        assert results[1]['jittered_bboxes'].shape == (1, 4)
+
+    def test_seq_crop_like_stark(self):
+        results = copy.deepcopy(self.results)
+        for res in results:
+            res['gt_bboxes'] = random_boxes(1, 256)
+            res['jittered_bboxes'] = np.array([[
+                res['gt_bboxes'][0][0] - 1, res['gt_bboxes'][0][1] + 1,
+                res['gt_bboxes'][0][2] + 1, res['gt_bboxes'][0][3] - 1
+            ]])
+            res['bbox_fields'] = ['gt_bboxes']
+
+        transform = dict(
+            type='SeqCropLikeStark',
+            crop_size_factor=[2, 5],
+            output_size=[128, 320])
+        seq_crop_like_stark = build_from_cfg(transform, PIPELINES)
+        results = seq_crop_like_stark(results)
+        assert results[0]['img'].shape == (128, 128, 3)
+        assert results[1]['img'].shape == (320, 320, 3)
+
+    def test_seq_brightness_aug(self):
+        results = copy.deepcopy(self.results)
+        imgs_shape = [result['img'].shape for result in results]
+
+        transform = dict(type='SeqBrightnessAug', jitter_range=0.2)
+        seq_brightness_aug = build_from_cfg(transform, PIPELINES)
+
+        results = seq_brightness_aug(results)
+        assert results[0]['img'].shape == imgs_shape[0]
+        assert results[1]['img'].shape == imgs_shape[1]
+
     def test_seq_gray_aug(self):
         results = copy.deepcopy(self.results)
         imgs_shape = [result['img'].shape for result in results]
