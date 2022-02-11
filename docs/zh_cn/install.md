@@ -120,6 +120,12 @@
     有关此不适配的具体信息可以在以下链接找到:
     "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
 
+8. 为 TAO 数据集测试评估安装额外库：
+
+    ```shell
+    pip install git+https://github.com/TAO-Dataset/tao.git
+    ```
+
 注意：
 
 (1) 按照上述说明，MMTracking 将以 `dev` 模式安装，因此在本地对代码做的任何修改都会生效，无需重新安装；
@@ -148,6 +154,7 @@ cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
 pip install git+https://github.com/votchallenge/toolkit.git
+pip install git+https://github.com/TAO-Dataset/tao.git
 ```
 
 ### 使用多个 MMTracking 版本进行开发

@@ -125,6 +125,12 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     Detailed information of this disadaptation can be found at the following link:
     "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
 
+8. Install extra dependencies for TAO evaluation
+
+    ```shell
+    pip install git+https://github.com/TAO-Dataset/tao.git
+    ```
+
 Note:
 
 a. Following the above instructions, MMTracking is installed on `dev` mode
@@ -155,6 +161,7 @@ cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
 pip install git+https://github.com/votchallenge/toolkit.git
+pip install git+https://github.com/TAO-Dataset/tao.git
 ```
 
 ### Developing with multiple MMTracking versions
