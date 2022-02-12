@@ -114,11 +114,16 @@ class GOT10kDataset(BaseSOTDataset):
         Returns:
             dict: testing data of one frame.
         """
-        ann_infos = self.get_ann_infos_from_video(video_ind)
-        img_infos = self.get_img_infos_from_video(video_ind)
+        if self.test_memo.get('video_ind', -1) != video_ind:
+            self.test_memo.video_ind = video_ind
+            self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
+        assert 'video_ind' in self.test_memo and 'img_infos' in self.test_memo
+
         img_info = dict(
-            filename=img_infos['filename'][frame_ind], frame_id=frame_ind)
+            filename=self.test_memo.img_infos['filename'][frame_ind],
+            frame_id=frame_ind)
         if frame_ind == 0:
+            ann_infos = self.get_ann_infos_from_video(video_ind)
             ann_info = dict(
                 bboxes=ann_infos['bboxes'][frame_ind], visible=True)
         else:

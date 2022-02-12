@@ -3,6 +3,7 @@ import random
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from addict import Dict
 from mmcv.utils import print_log
 from mmdet.datasets.pipelines import Compose
 from torch.utils.data import Dataset
@@ -68,6 +69,10 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             self.get_len_per_video(video_ind)
             for video_ind in range(len(self.data_infos))
         ]
+        # used to record the video information at the beginning of the video
+        # test. Thus, we can avoid reloading the files of video information
+        # repeatedly in all frames of one video.
+        self.test_memo = Dict()
 
     def __getitem__(self, ind):
         if self.test_mode:
@@ -177,13 +182,19 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         Returns:
             dict: testing data of one frame.
         """
-        ann_infos = self.get_ann_infos_from_video(video_ind)
-        img_infos = self.get_img_infos_from_video(video_ind)
+        if self.test_memo.get('video_ind', -1) != video_ind:
+            self.test_memo.video_ind = video_ind
+            self.test_memo.ann_infos = self.get_ann_infos_from_video(video_ind)
+            self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
+        assert 'video_ind' in self.test_memo and 'ann_infos' in \
+            self.test_memo and 'img_infos' in self.test_memo
+
         img_info = dict(
-            filename=img_infos['filename'][frame_ind], frame_id=frame_ind)
+            filename=self.test_memo.img_infos['filename'][frame_ind],
+            frame_id=frame_ind)
         ann_info = dict(
-            bboxes=ann_infos['bboxes'][frame_ind],
-            visible=ann_infos['visible'][frame_ind])
+            bboxes=self.test_memo.ann_infos['bboxes'][frame_ind],
+            visible=self.test_memo.ann_infos['visible'][frame_ind])
 
         results = dict(img_info=img_info, ann_info=ann_info)
         self.pre_pipeline(results)
