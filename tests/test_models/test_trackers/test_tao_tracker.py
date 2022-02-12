@@ -66,7 +66,7 @@ class TestTaoTracker(object):
         self.tracker.init_tracklets(ids, obj_scores)
         assert self.tracker.num_tracklets == 1
 
-    def test_match(self):
+    def test_track(self):
         self.tracker.reset()
         bboxes = random_boxes(self.num_objs, 64)
         scores = torch.rand((self.num_objs, 1))
@@ -76,7 +76,7 @@ class TestTaoTracker(object):
         labels = torch.arange(self.num_objs)
 
         for frame_id in range(3):
-            bboxes, labels, ids = self.tracker.match(bboxes, labels, embeds,
+            bboxes, labels, ids = self.tracker.track(bboxes, labels, embeds,
                                                      frame_id)
 
             assert bboxes.shape[0] == labels.shape[0]
