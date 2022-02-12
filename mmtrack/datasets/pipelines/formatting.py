@@ -79,6 +79,105 @@ class ConcatVideoReferences(object):
 
 
 @PIPELINES.register_module()
+class ConcatVideo2TwoParts(object):
+    """Concat video to two parts.
+
+    The input list contains as least two dicts, concat the first
+    `num_template_frames` dicts to one dict, and the rest of dicts are concated
+    to another dict.
+
+    Args:
+        results (list[dict]): list of dict that contain keys such as 'img',
+            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
+            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
+            'gt_instance_ids'.
+
+    Returns:
+        list[dict]: The first dict of outputs concats the dicts of 'template'
+            information. The second dict of outputs concats the dicts of
+            'search' information.
+    """
+
+    def __init__(self, num_template_frames=2):
+        self.num_template_frames = num_template_frames
+
+    def concat_one_mode_results(self, results):
+        out = dict()
+        for i, result in enumerate(results):
+            if 'img' in result:
+                img = result['img']
+                if len(img.shape) < 3:
+                    img = np.expand_dims(img, -1)
+                if i == 0:
+                    result['img'] = np.expand_dims(img, -1)
+                else:
+                    out['img'] = np.concatenate(
+                        (out['img'], np.expand_dims(img, -1)), axis=-1)
+            for key in ['img_metas', 'gt_masks']:
+                if key in result:
+                    if i == 0:
+                        result[key] = [result[key]]
+                    else:
+                        out[key].append(result[key])
+            for key in [
+                    'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
+                    'gt_instance_ids'
+            ]:
+                if key not in result:
+                    continue
+                value = result[key]
+                if value.ndim == 1:
+                    value = value[:, None]
+                N = value.shape[0]
+                value = np.concatenate((np.full(
+                    (N, 1), i, dtype=np.float32), value),
+                                       axis=1)
+                if i == 0:
+                    result[key] = value
+                else:
+                    out[key] = np.concatenate((out[key], value), axis=0)
+            if 'gt_semantic_seg' in result:
+                if i == 0:
+                    result['gt_semantic_seg'] = result['gt_semantic_seg'][...,
+                                                                          None,
+                                                                          None]
+                else:
+                    out['gt_semantic_seg'] = np.concatenate(
+                        (out['gt_semantic_seg'],
+                         result['gt_semantic_seg'][..., None, None]),
+                        axis=-1)
+
+            if 'padding_mask' in result:
+                if i == 0:
+                    result['padding_mask'] = np.expand_dims(
+                        result['padding_mask'], 0)
+                else:
+                    out['padding_mask'] = np.concatenate(
+                        (out['padding_mask'],
+                         np.expand_dims(result['padding_mask'], 0)),
+                        axis=0)
+
+            if i == 0:
+                out = result
+        return out
+
+    def __call__(self, results):
+        assert (isinstance(results, list)), 'results must be list'
+        template_results = []
+        search_results = []
+        for i, result in enumerate(results):
+            if i < self.num_template_frames:
+                template_results.append(result)
+            else:
+                search_results.append(result)
+        outs = []
+        outs.append(self.concat_one_mode_results(template_results))
+        outs.append(self.concat_one_mode_results(search_results))
+
+        return outs
+
+
+@PIPELINES.register_module()
 class MultiImagesToTensor(object):
     """Multi images to tensor.
 
@@ -146,8 +245,9 @@ class SeqDefaultFormatBundle(object):
 
     It simplifies the pipeline of formatting common fields, including "img",
     "img_metas", "proposals", "gt_bboxes", "gt_instance_ids",
-    "gt_match_indices", "gt_bboxes_ignore", "gt_labels", "gt_masks" and
-    "gt_semantic_seg". These fields are formatted as follows.
+    "gt_match_indices", "gt_bboxes_ignore", "gt_labels", "gt_masks",
+    "gt_semantic_seg" and 'padding_mask'.
+    These fields are formatted as follows.
 
     - img: (1) transpose, (2) to tensor, (3) to DataContainer (stack=True)
     - img_metas: (1) to DataContainer (cpu_only=True)
@@ -160,6 +260,7 @@ class SeqDefaultFormatBundle(object):
     - gt_masks: (1) to DataContainer (cpu_only=True)
     - gt_semantic_seg: (1) unsqueeze dim-0 (2) to tensor, \
                        (3) to DataContainer (stack=True)
+    - padding_mask: (1) to tensor, (2) to DataContainer
 
     Args:
         ref_prefix (str): The prefix of key added to the second dict of input
@@ -209,6 +310,9 @@ class SeqDefaultFormatBundle(object):
             else:
                 img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
             results['img'] = DC(to_tensor(img), stack=True)
+        if 'padding_mask' in results:
+            results['padding_mask'] = DC(
+                to_tensor(results['padding_mask'].copy()), stack=True)
         for key in [
                 'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
                 'gt_instance_ids', 'gt_match_indices'

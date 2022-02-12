@@ -95,6 +95,19 @@ class TestFormatting(object):
             reid_results = [copy.deepcopy(results[0])]
             reid_results = bundle(reid_results)
 
+        concat2twoparts = dict(
+            type='ConcatVideo2TwoParts', num_template_frames=2)
+        concat2twoparts = build_from_cfg(concat2twoparts, PIPELINES)
+        concat_video_results = concat2twoparts(copy.deepcopy(results))
+        assert len(concat_video_results) == 2
+        assert concat_video_results[0]['img'].ndim == 4
+        assert concat_video_results[0]['img'].shape[3] == 2
+        assert len(concat_video_results[0]['img_metas']) == 2
+        assert concat_video_results[0]['gt_bboxes'].ndim == 2
+        assert concat_video_results[0]['gt_bboxes'].shape[1] == 5
+        assert concat_video_results[0]['gt_bboxes'].shape[0] == (
+            num_ref_imgs * num_objects)
+
         concat_ref = dict(type='ConcatVideoReferences')
         concat_ref = build_from_cfg(concat_ref, PIPELINES)
         results = concat_ref(results)
