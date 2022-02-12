@@ -90,7 +90,7 @@ class ConcatVideo2TwoParts(object):
         results (list[dict]): list of dict that contain keys such as 'img',
             'img_metas', 'gt_masks','proposals', 'gt_bboxes',
             'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
-            'gt_instance_ids'.
+            'gt_instance_ids', 'padding_mask'.
 
     Returns:
         list[dict]: The first dict of outputs concats the dicts of 'template'
