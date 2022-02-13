@@ -93,7 +93,7 @@ class QDTrack(TwoStageDetector):
             x, img_metas, proposal_list, rescale)
 
         if track_feats is not None:
-            bboxes, labels, ids = self.tracker.match(
+            bboxes, labels, ids = self.tracker.track(
                 bboxes=det_bboxes,
                 labels=det_labels,
                 track_feats=track_feats,
