@@ -1,7 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import warnings
+
 import cv2
 import numpy as np
-from importlib_metadata import warnings
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor

@@ -63,8 +63,8 @@ class TestTransforms(object):
         for res in results:
             res['gt_bboxes'] = random_boxes(1, 256)
             res['jittered_bboxes'] = np.array([[
-                res['gt_bboxes'][0][0] - 1, res['gt_bboxes'][0][1] + 1,
-                res['gt_bboxes'][0][2] + 1, res['gt_bboxes'][0][3] - 1
+                res['gt_bboxes'][0][0] - 1, res['gt_bboxes'][0][1] + 2,
+                res['gt_bboxes'][0][2] + 2, res['gt_bboxes'][0][3] + 3
             ]])
             res['bbox_fields'] = ['gt_bboxes']
 
