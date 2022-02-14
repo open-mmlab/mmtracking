@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import cv2
 import numpy as np
+from importlib_metadata import warnings
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor
@@ -13,6 +14,9 @@ class ConcatVideoReferences(object):
     If the input list contains at least two dicts, concat the input list of
     dict to one dict from 2-nd dict of the input list.
 
+    Note: the 'ConcatVideoReferences' class will be deprecated in the
+    future, please use 'ConcatVideo2TwoParts' instead
+
     Args:
         results (list[dict]): List of dict that contain keys such as 'img',
             'img_metas', 'gt_masks','proposals', 'gt_bboxes',
@@ -24,6 +28,11 @@ class ConcatVideoReferences(object):
         dict of `results`. The second dict of outputs concats the
         dicts in `results[1:]`.
     """
+
+    def __init__(self):
+        warnings.warn(
+            "The 'ConcatVideoReferences' class will be deprecated in the "
+            "future, please use 'ConcatVideo2TwoParts' instead")
 
     def __call__(self, results):
         assert (isinstance(results, list)), 'results must be list'
@@ -97,7 +106,7 @@ class ConcatVideo2TwoParts(object):
             'search' information.
     """
 
-    def __init__(self, num_template_frames=2):
+    def __init__(self, num_template_frames=1):
         self.num_template_frames = num_template_frames
 
     def concat_one_mode_results(self, results):
@@ -170,7 +179,11 @@ class ConcatVideo2TwoParts(object):
             else:
                 search_results.append(result)
         outs = []
-        outs.append(self.concat_one_mode_results(template_results))
+        if self.num_template_frames == 1:
+            # if single template, not expand the dim of variables
+            outs.append(template_results[0])
+        else:
+            outs.append(self.concat_one_mode_results(template_results))
         outs.append(self.concat_one_mode_results(search_results))
 
         return outs
