@@ -55,7 +55,16 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     If you build PyTorch from source instead of installing the prebuilt package,
     you can use more CUDA versions such as 9.0.
 
-3. Install mmcv-full, we recommend you to install the pre-build package as below.
+3. Install extra dependencies for VOT evaluation (optional)
+
+    If you need to evaluate on VOT Challenge, please install the vot-toolkit before the installation of mmcv and mmdetection to avoid possible numpy version requirement conflict among some dependencies.
+
+    ```shell
+    pip install git+https://github.com/votchallenge/toolkit.git
+
+    ```
+
+4. Install mmcv-full, we recommend you to install the pre-build package as below.
 
     ```shell
     # pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
@@ -64,7 +73,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 
     mmcv-full is only compiled on PyTorch 1.x.0 because the compatibility usually holds between 1.x.0 and 1.x.1. If your PyTorch version is 1.x.1, you can install mmcv-full compiled with PyTorch 1.x.0 and it usually works well.
 
-    ```
+    ```shell
     # We can ignore the micro version of PyTorch
     pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/torch1.10/index.html
     ```
@@ -79,7 +88,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     cd ..
     ```
 
-4. Install MMDetection
+5. Install MMDetection
 
     ```shell
     pip install mmdet
@@ -94,18 +103,11 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-5. Clone the MMTracking repository.
+6. Clone the MMTracking repository.
 
     ```shell
     git clone https://github.com/open-mmlab/mmtracking.git
     cd mmtracking
-    ```
-
-6. Install extra dependencies for VOT and MOTChallenge evaluation
-
-    ```shell
-    pip install git+https://github.com/votchallenge/toolkit.git
-    pip install git+https://github.com/JonathonLuiten/TrackEval.git
     ```
 
 7. Install build requirements and then install MMTracking.
@@ -115,15 +117,12 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-    Because vot-toolkit hasn't adapted to the newest version of attributee (0.1.6),
-    the version of this denpendency is limited.
+8. Install extra dependencies for MOTChallenge evaluation.
 
     ```shell
-    pip install attributee==0.1.5
-    ```
 
-    Detailed information of this disadaptation can be found at the following link:
-    "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
+    pip install git+https://github.com/JonathonLuiten/TrackEval.git
+    ```
 
 Note:
 
@@ -143,6 +142,7 @@ conda activate open-mmlab
 
 conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.1 -c pytorch -y
 
+pip install git+https://github.com/votchallenge/toolkit.git (optional)
 # install the latest mmcv
 pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
 
@@ -152,10 +152,9 @@ pip install mmdet
 # install mmtracking
 git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
-pip install git+https://github.com/votchallenge/toolkit.git
-pip install git+https://github.com/JonathonLuiten/TrackEval.git
 pip install -r requirements/build.txt
 pip install -v -e .
+pip install git+https://github.com/JonathonLuiten/TrackEval.git
 ```
 
 ### Developing with multiple MMTracking versions

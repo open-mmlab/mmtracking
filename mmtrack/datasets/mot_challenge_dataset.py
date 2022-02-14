@@ -257,6 +257,7 @@ class MOTChallengeDataset(CocoVideoDataset):
 
         Args:
             tracker_folder (str): the name of the tracker folder
+            seqmap (str): the file that contains the sequence of video names
 
         Returns:
             Dataset Configs for MotChallenge2DBox.
@@ -397,14 +398,12 @@ class MOTChallengeDataset(CocoVideoDataset):
                     'pip install git+https://github.com/JonathonLuiten/TrackEval.git'  # noqa
                     'to manually install trackeval')
 
-            # get video name sequence for HOTA evaluation
-            seqmap = osp.join(self.img_prefix, 'videoseq.txt')
-            if not osp.exists(seqmap):
-                with open(seqmap, 'w') as f:
-                    f.write('name\n')
-                    for name in names:
-                        f.write(name + '\n')
-                    f.close
+            seqmap = osp.join(tmp_dir.name, 'videoseq.txt')
+            with open(seqmap, 'w') as f:
+                f.write('name\n')
+                for name in names:
+                    f.write(name + '\n')
+                f.close
 
             eval_config = trackeval.Evaluator.get_default_eval_config()
 

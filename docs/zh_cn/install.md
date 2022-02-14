@@ -51,7 +51,16 @@
 
     如果不是安装预构建的包，而是从源码中构建 PyTorch，则可以使用更多的 CUDA 版本，例如 CUDA 9.0。
 
-3. 安装 mmcv-full，我们推荐您安装以下预构建包：
+3. 为VOT数据集测试评估安装额外库（可选）
+
+    如果您想要在VOT Challenge上进行评估，请在安装mmcv与mmdetection之前安装vot-toolkit，以避免可能出现的一些依赖间的numpy版本要求冲突。
+
+    ```shell
+    pip install git+https://github.com/votchallenge/toolkit.git
+
+    ```
+
+4. 安装 mmcv-full，我们推荐您安装以下预构建包：
 
     ```shell
     # pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
@@ -74,7 +83,7 @@
     cd ..
     ```
 
-4. 安装 MMDetection：
+5. 安装 MMDetection：
 
     ```shell
     pip install mmdet
@@ -89,18 +98,11 @@
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-5. 将 MMTracking 仓库克隆到本地：
+6. 将 MMTracking 仓库克隆到本地：
 
     ```shell
     git clone https://github.com/open-mmlab/mmtracking.git
     cd mmtracking
-    ```
-
-6. 为 VOT 和 MOTChallenge 数据集测试评估安装额外库：
-
-    ```shell
-    pip install git+https://github.com/votchallenge/toolkit.git
-    pip install git+https://github.com/JonathonLuiten/TrackEval.git
     ```
 
 7. 首先安装依赖，然后安装 MMTracking：
@@ -110,15 +112,11 @@
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-    因为vot-toolkit没有适配最新版本的attributee (0.1.6)，
-    该依赖的版本会被限制。
+8. 为 MOTChallenge 数据集测试评估安装额外库：
 
     ```shell
-    pip install attributee==0.1.5
+    pip install git+https://github.com/JonathonLuiten/TrackEval.git
     ```
-
-    有关此不适配的具体信息可以在以下链接找到:
-    "https://github.com/votchallenge/toolkit/issues/42#issuecomment-1033267539"
 
 注意：
 
@@ -136,6 +134,8 @@ conda activate open-mmlab
 
 conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.1 -c pytorch -y
 
+pip install git+https://github.com/votchallenge/toolkit.git（可选）
+
 # 安装最新版本的 mmcv
 pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.6.0/index.html
 
@@ -145,10 +145,9 @@ pip install mmdet
 # 安装 mmtracking
 git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
-pip install git+https://github.com/votchallenge/toolkit.git
-pip install git+https://github.com/JonathonLuiten/TrackEval.git
 pip install -r requirements/build.txt
 pip install -v -e .
+pip install git+https://github.com/JonathonLuiten/TrackEval.git
 ```
 
 ### 使用多个 MMTracking 版本进行开发
