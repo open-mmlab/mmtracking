@@ -182,7 +182,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         Returns:
             dict: testing data of one frame.
         """
-        if self.test_memo.get('video_ind', -1) != video_ind:
+        if self.test_memo.get('video_ind', None) != video_ind:
             self.test_memo.video_ind = video_ind
             self.test_memo.ann_infos = self.get_ann_infos_from_video(video_ind)
             self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)

@@ -114,7 +114,7 @@ class GOT10kDataset(BaseSOTDataset):
         Returns:
             dict: testing data of one frame.
         """
-        if self.test_memo.get('video_ind', -1) != video_ind:
+        if self.test_memo.get('video_ind', None) != video_ind:
             self.test_memo.video_ind = video_ind
             self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
         assert 'video_ind' in self.test_memo and 'img_infos' in self.test_memo
