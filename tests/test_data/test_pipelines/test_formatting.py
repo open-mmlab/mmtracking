@@ -33,7 +33,7 @@ class TestFormatting(object):
 
         for _result in results:
             _result['padding_mask'] = np.ones_like(_result['img'], dtype=bool)
-        check_data_validity = dict(type='CheckDataValidity', stride=16)
+        check_data_validity = dict(type='CheckPadMaskValidity', stride=16)
         check_data_validity = build_from_cfg(check_data_validity, PIPELINES)
         assert results is not None
 

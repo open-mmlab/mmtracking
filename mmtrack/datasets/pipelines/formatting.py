@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import cv2
 import numpy as np
-import torch
-import torch.nn.functional as F
 from mmcv.parallel import DataContainer as DC
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import to_tensor
@@ -442,7 +441,7 @@ class VideoCollect(object):
 
 
 @PIPELINES.register_module()
-class CheckDataValidity(object):
+class CheckPadMaskValidity(object):
     """Check the validity of data. Generally, it's used in such case: The image
     padding masks generated in the image preprocess need to be downsampled, and
     then passed into Transformer model, like DETR. The computation in the
@@ -450,7 +449,7 @@ class CheckDataValidity(object):
     mask are not all zeros.
 
     Args:
-        stride (int): the stride of feature map.
+        stride (int): the max stride of feature map.
     """
 
     def __init__(self, stride):
@@ -463,14 +462,15 @@ class CheckDataValidity(object):
             results (dict): Result dict contains the data to be checked.
 
         Returns:
-            dict | None: if invalid, return None.
+            dict | None: If invalid, return None; otherwise, return original
+                input.
         """
         for _results in results:
             assert 'padding_mask' in _results
-            mask = torch.from_numpy(_results['padding_mask'].copy())
+            mask = _results['padding_mask'].copy().astype(np.float32)
             feat_size = _results['img'].shape[0] // self.stride
-            downsample_mask = F.interpolate(
-                mask[None, None].float(), size=feat_size).to(torch.bool)[0]
+            downsample_mask = cv2.resize(
+                mask, dsize=(feat_size, feat_size)).astype(bool)
             if (downsample_mask == 1).all():
                 return None
         return results
