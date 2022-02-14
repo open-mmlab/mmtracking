@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. Modofied from script in TAO-Dataset/tao https://github.com/TAO-Dataset/tao.git # noqa
 import argparse
 import itertools
 import json

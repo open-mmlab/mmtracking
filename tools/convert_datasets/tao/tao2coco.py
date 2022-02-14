@@ -66,7 +66,7 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Make annotation files for TAO')
-    parser.add_argument('-t', '--tao', help='path of TAO json file')
+    parser.add_argument('-i', '--input', help='path of TAO json file')
     parser.add_argument(
         '--filter-classes',
         action='store_true',
@@ -140,18 +140,18 @@ def convert_tao(file, classes):
 def main():
     args = parse_args()
 
-    classes = get_classes(args.tao, args.filter_classes)
+    classes = get_classes(args.input, args.filter_classes)
     print(f'convert with {len(classes)} classes')
 
     for file in [
             'train.json', 'validation.json', 'test_without_annotations.json'
     ]:
         print(f'convert {file}')
-        out = convert_tao(osp.join(args.tao, file), classes)
+        out = convert_tao(osp.join(args.input, file), classes)
         c = '_482' if args.filter_classes else ''
         prefix = file.split('.')[0].split('_')[0]
-        out_file = f'{prefix}{c}_ours.json'
-        mmcv.dump(out, osp.join(args.tao, out_file))
+        out_file = f'{prefix}{c}.json'
+        mmcv.dump(out, osp.join(args.input, out_file))
 
 
 if __name__ == '__main__':

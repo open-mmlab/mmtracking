@@ -7,6 +7,7 @@ This page provides the instructions for dataset preparation on existing benchmar
 - Multiple Object Tracking
   - [MOT Challenge](https://motchallenge.net/)
   - [CrowdHuman](https://www.crowdhuman.org/)
+  - [TAO](https://github.com/TAO-Dataset/tao)
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -29,7 +30,13 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) is needed, and CrowdHuman can be served as comlementary dataset.
+- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) and TAO are needed, and CrowdHuman can be served as comlementary dataset.
+
+- For TAO dataset, you need to download annotations from the official website manually, and move the folder to the subfolder of tao as the following data structure shows.
+
+```shell
+git clone https://github.com/TAO-Dataset/annotations.git
+```
 
 #### 1.3 Single Object Tracking
 
@@ -103,6 +110,23 @@ mmtracking
 │   │   ├── val
 │   │   │   ├── Images
 │   │   │   ├── CrowdHuman_val.zip
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── validation.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -197,6 +221,10 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
+# TAO
+# Generate filtered json file for QDTrack
+python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
+
 # LaSOT
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
@@ -287,6 +315,26 @@ mmtracking
 │   │   ├── annotations
 │   │   │   ├── crowdhuman_train.json
 │   │   │   ├── crowdhuman_val.json
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_482.json
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── train_482.json
+│   │   │   ├── validation.json
+│   │   │   ├── validation_482.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -468,6 +516,20 @@ There are 2 JSON files in `data/crowdhuman/annotations`:
 
 `crowdhuman_train.json`:  JSON file containing the annotations information of the training set in CrowdHuman dataset.
 `crowdhuman_val.json`:  JSON file containing the annotations information of the validation set in CrowdHuman dataset.
+
+### The folder of annotations in tao
+
+There are 9 JSON files in `data/tao/annotations`:
+
+`test_categories.json`: JSON file containing a list of categories which will be evaluated on the TAO test set.
+`test_without_annotations.json`:  JSON for test videos. The 'images' and 'videos' fields contain the images and videos that will be evaluated on the test set.
+`test_482.json`: JSON file containing the converted results for test set.
+`train.json`: JSON file containing annotations for LVIS categories in TAO train.
+`train_482.json`: JSON file containing the converted results for train set.
+`train_with_freeform.json`: JSON file containing annotations for all categories in TAO train.
+`validation.json`: JSON file containing annotations for LVIS categories in TAO train.
+`validation_482.json`: JSON file containing the converted results for validation set.
+`validation_with_freeform.json`: JSON file containing annotations for all categories in TAO validation.
 
 #### The folder of annotations in lasot
 
