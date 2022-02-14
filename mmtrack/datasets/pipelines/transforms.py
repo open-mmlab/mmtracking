@@ -165,7 +165,11 @@ class SeqCropLikeStark(object):
             output_size (int): the size of resized image (always square).
 
         Returns:
-            ndarray: the cropped image of shape (crop_size, crop_size, 3).
+            img_crop_padded (ndarray): the cropped image of shape
+                (crop_size, crop_size, 3).
+            resize_factor (float): the ratio of original image scale to cropped
+                image scale.
+            pdding_mask (ndarray): the padding mask caused by cropping.
         """
         x1, y1, x2, y2 = np.split(bbox, 4, axis=-1)
         bbox_w, bbox_h = x2 - x1, y2 - y1
@@ -203,7 +207,7 @@ class SeqCropLikeStark(object):
             end_x = None
         pdding_mask[y1_pad:end_y, x1_pad:end_x] = 0
 
-        # 2. Resize image and attention mask
+        # 2. Resize image and padding mask
         resize_factor = output_size / crop_size
         img_crop_padded = cv2.resize(img_crop_padded,
                                      (output_size, output_size))
