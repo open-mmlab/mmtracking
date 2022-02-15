@@ -51,9 +51,9 @@
 
     如果不是安装预构建的包，而是从源码中构建 PyTorch，则可以使用更多的 CUDA 版本，例如 CUDA 9.0。
 
-3. 为VOT数据集测试评估安装额外库（可选）
+3. 为 VOT 数据集测试评估安装额外库（可选）
 
-    如果您想要在VOT Challenge上进行评估，请在安装mmcv与mmdetection之前安装vot-toolkit，以避免可能出现的一些依赖间的numpy版本要求冲突。
+    如果您想要在 VOT Challenge 上进行评估，请在安装 mmcv 与 mmdetection 之前安装 vot-toolkit ，以避免可能出现的一些依赖间的 numpy 版本要求冲突。
 
     ```shell
     pip install git+https://github.com/votchallenge/toolkit.git
