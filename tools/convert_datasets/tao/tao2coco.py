@@ -150,7 +150,7 @@ def main():
         out = convert_tao(osp.join(args.input, file), classes)
         c = '_482' if args.filter_classes else ''
         prefix = file.split('.')[0].split('_')[0]
-        out_file = f'{prefix}{c}.json'
+        out_file = f'{prefix}{c}_classes.json'
         mmcv.dump(out, osp.join(args.input, out_file))
 
 

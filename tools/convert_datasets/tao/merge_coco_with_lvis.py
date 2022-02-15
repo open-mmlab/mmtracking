@@ -2,13 +2,11 @@
 import argparse
 import itertools
 import json
-import logging
 from pathlib import Path
 
 import numpy as np
 import pycocotools.mask as mask_util
 from pycocotools.coco import COCO
-from script_utils.common import common_setup
 from tqdm import tqdm
 
 
@@ -18,7 +16,7 @@ def main():
         description=__doc__.split('\n')[0] if __doc__ else '',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--lvis', type=Path, requirged=True, help='lvis json path')
+        '--lvis', type=Path, required=True, help='lvis json path')
     parser.add_argument(
         '--coco', type=Path, required=True, help='coco json path')
     parser.add_argument(
@@ -36,7 +34,6 @@ def main():
 
     args = parser.parse_args()
     args.output.parent.mkdir(exist_ok=True, parents=True)
-    common_setup(args.output.name + '.log', args.output.parent, args)
 
     coco = COCO(args.coco)
     lvis = COCO(args.lvis)
@@ -56,8 +53,7 @@ def main():
         assert mapped['coco_cat_id'] == cat['id']
         synset = mapped['synset']
         if synset not in synset2lvis:
-            logging.debug(
-                f'Found no LVIS category for "{cat["name"]}" from COCO')
+            print(f'Found no LVIS category for "{cat["name"]}" from COCO')
             continue
         coco2lvis[cat['id']] = synset2lvis[synset]
 
@@ -67,7 +63,7 @@ def main():
             lvis_name = lvis.imgs[img_id]['file_name']
             assert coco_name in lvis_name
         else:
-            logging.info(f'Image {img_id} in COCO, but not annotated in LVIS')
+            print(f'Image {img_id} in COCO, but not annotated in LVIS')
 
     # add coco annotations at the end of lvis's
     lvis_highest_id = max(x['id'] for x in lvis.anns.values())
@@ -75,7 +71,7 @@ def main():
     new_annotations = []
     for img_id, lvis_anns in tqdm(lvis.imgToAnns.items()):
         if img_id not in coco.imgToAnns:
-            logging.info(f'Image {img_id} in LVIS, but not annotated in COCO')
+            print(f'Image {img_id} in LVIS, but not annotated in COCO')
             continue
 
         coco_anns = coco.imgToAnns[img_id]

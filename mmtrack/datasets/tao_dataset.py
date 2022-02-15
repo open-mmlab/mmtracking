@@ -10,6 +10,18 @@ from mmdet.datasets.api_wrappers import COCO
 from .coco_video_dataset import CocoVideoDataset
 from .parsers import CocoVID
 
+try:
+    import tao
+    from tao.toolkit.tao import TaoEval
+except ImportError:
+    tao = None
+
+try:
+    import lvis
+    from lvis import LVIS, LVISEval, LVISResults
+except ImportError:
+    lvis = None
+
 
 @DATASETS.register_module()
 class TaoDataset(CocoVideoDataset):
@@ -56,6 +68,14 @@ class TaoDataset(CocoVideoDataset):
         return data_infos
 
     def load_tao_anns(self, ann_file):
+        """Load annotation from COCOVID style annotation file.
+
+        Args:
+            ann_file (str): Path of annotation file.
+
+        Returns:
+            list[dict]: Annotation info from COCOVID api.
+        """
         self.coco = CocoVID(ann_file)
         self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
@@ -135,19 +155,17 @@ class TaoDataset(CocoVideoDataset):
         return json_results
 
     def format_results(self, results, resfile_path=None):
-        """Format the results to json (standard format for COCO evaluation).
+        """Format the results to json (standard format for TAO evaluation).
 
         Args:
-            results (list[tuple | numpy.ndarray]): Testing results of the
-                dataset.
-            jsonfile_prefix (str | None): The prefix of json files. It includes
-                the file path and the prefix of filename, e.g., "a/b/prefix".
-                If not specified, a temp file will be created. Default: None.
+            results (list[ndarray]): Testing results of the dataset.
+            resfile_path (str, optional): Path to save the formatted results.
+                Defaults to None.
 
         Returns:
             tuple: (result_files, tmp_dir), result_files is a dict containing \
                 the json filepaths, tmp_dir is the temporal directory created \
-                for saving json files when jsonfile_prefix is not specified.
+                for saving json files when resfile_path is not specified.
         """
         assert isinstance(results, dict), 'results must be a list'
         assert 'track_bboxes' in results
@@ -192,7 +210,12 @@ class TaoDataset(CocoVideoDataset):
         eval_results = dict()
 
         if 'track' in metrics:
-            from tao.toolkit.tao import TaoEval
+            if tao is None:
+                raise ImportError(
+                    'Please run'
+                    'pip install git+https://github.com/TAO-Dataset/tao.git'
+                    'to manually install tao')
+
             print_log('Evaluating tracking results...', logger)
             tao_eval = TaoEval(self.ann_file, result_files['track'])
             tao_eval.params.img_ids = self.img_ids
@@ -209,7 +232,12 @@ class TaoDataset(CocoVideoDataset):
                     eval_results[key] = val
 
         if 'bbox' in metrics:
-            from lvis import LVIS, LVISEval, LVISResults
+            if lvis is None:
+                raise ImportError(
+                    'Please run'
+                    'pip install git+https://github.com/lvis-dataset/lvis-api.git'  # noqa
+                    'to manually install lvis')
+
             print_log('Evaluating detection results...', logger)
             lvis_gt = LVIS(self.ann_file)
             lvis_dt = LVISResults(lvis_gt, result_files['bbox'])
