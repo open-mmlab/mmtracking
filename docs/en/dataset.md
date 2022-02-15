@@ -32,13 +32,13 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) and TAO are needed, and CrowdHuman can be served as comlementary dataset.
 
+- The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
+
 #### 1.3 Single Object Tracking
 
 - For the training and testing of single object tracking task, the MSCOCO, ILSVRC, LaSOT, UAV123, TrackingNet, OTB100, GOT10k and VOT2018 datasets are needed.
 
 - For OTB100 dataset, you don't need to download the dataset from the official website manually, since we provide a script to download it.
-
-- The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 
 ```shell
 # download OTB100 dataset by web crawling
@@ -314,12 +314,12 @@ mmtracking
 │   │
 │   ├── tao
 │   │   ├── annotations
-│   │   │   ├── test_482.json
+│   │   │   ├── test_482_classes.json
 │   │   │   ├── test_without_annotations.json
 │   │   │   ├── train.json
-│   │   │   ├── train_482.json
+│   │   │   ├── train_482_classes.json
 │   │   │   ├── validation.json
-│   │   │   ├── validation_482.json
+│   │   │   ├── validation_482_classes.json
 │   │   │   ├── ......
 │   │   ├── test
 │   │   │   ├── ArgoVerse

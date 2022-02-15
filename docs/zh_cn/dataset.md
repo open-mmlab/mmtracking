@@ -29,7 +29,9 @@
 
 #### 1.2 多目标跟踪
 
-- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）， CrowdHuman 可以作为补充数据。
+- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）和 TAO ， CrowdHuman 可以作为补充数据。
+
+- `tao` 文件夹下包含官方标注的 `annotations` 可以从[这里](https://github.com/TAO-Dataset/annotations)获取。
 
 #### 1.3 单目标跟踪
 
@@ -103,6 +105,23 @@ mmtracking
 │   │   ├── val
 │   │   │   ├── Images
 │   │   │   ├── CrowdHuman_val.zip
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── validation.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -198,6 +217,10 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
+# TAO
+# 为 QDTrack 生成过滤后的json文件
+python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
+
 # LaSOT
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
@@ -288,6 +311,26 @@ mmtracking
 │   │   ├── annotations
 │   │   │   ├── crowdhuman_train.json
 │   │   │   ├── crowdhuman_val.json
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_482_classes.json
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── train_482_classes.json
+│   │   │   ├── validation.json
+│   │   │   ├── validation_482_classes.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
