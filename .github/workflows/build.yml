@@ -50,11 +50,11 @@ jobs:
         run: pip install torch==${{matrix.torch}}+cpu torchvision==${{matrix.torchvision}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install mmtrack dependencies
         run: |
-          pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          pip install git+https://github.com/votchallenge/toolkit.git
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/${{matrix.torch_version}}/index.html
           pip install mmdet
           pip install -r requirements.txt
-          pip install git+https://github.com/votchallenge/toolkit.git
+          pip install git+https://github.com/JonathonLuiten/TrackEval.git
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
@@ -109,11 +109,11 @@ jobs:
         run: python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install mmtrack dependencies
         run: |
-          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          python -m pip install git+https://github.com/votchallenge/toolkit.git
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
-          python -m pip install git+https://github.com/votchallenge/toolkit.git
+          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
       - name: Build and install
         run: |
           rm -rf .eggs
@@ -176,11 +176,11 @@ jobs:
         run: python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
       - name: Install mmtrack dependencies
         run: |
-          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          python -m pip install git+https://github.com/votchallenge/toolkit.git
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
-          python -m pip install git+https://github.com/votchallenge/toolkit.git
+          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
       - name: Build and install
         run: |
           rm -rf .eggs

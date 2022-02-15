@@ -190,7 +190,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                           self.data_infos[inds[i]:inds[i + 1]],
                           f'{resfiles[metric]}/{names[i]}.txt')
 
-        return resfiles, names, tmp_dir
+        return resfile_path, resfiles, names, tmp_dir
 
     def format_track_results(self, results, infos, resfile):
         """Format tracking results."""
@@ -358,7 +358,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         if 'track' in metrics:
-            resfiles, names, tmp_dir = self.format_results(
+            resfile_path, resfiles, names, tmp_dir = self.format_results(
                 results, resfile_path, metrics)
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
@@ -398,7 +398,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                     'pip install git+https://github.com/JonathonLuiten/TrackEval.git'  # noqa
                     'to manually install trackeval')
 
-            seqmap = osp.join(tmp_dir.name, 'videoseq.txt')
+            seqmap = osp.join(resfile_path, 'videoseq.txt')
             with open(seqmap, 'w') as f:
                 f.write('name\n')
                 for name in names:
