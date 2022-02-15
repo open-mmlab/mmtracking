@@ -131,9 +131,9 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
 ```shell
 python ./demo/demo_sot.py \
-    ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
+    ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+    --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     --output ${OUTPUT} \
     --show
 ```
@@ -229,8 +229,8 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 1. Test SiameseRPN++ on LaSOT, and evaluate the success, precision and normed precision.
 
    ```shell
-   python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py \
-       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+   python tools/test.py configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -238,8 +238,8 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 2. Test SiameseRPN++ with 8 GPUs on LaSOT, and evaluate the success, precision and normed precision.
 
    ```shell
-   ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
-       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20201218_051019-3c522eff.pth \
+   ./tools/dist_test.sh configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+       --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
        --out results.pkl \
        --eval track
    ```
@@ -428,7 +428,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 1. Train SiameseRPN++ on COCO, ImageNet VID and ImageNet DET, then evaluate the success, precision and normed precision from the 10-th epoch to 20-th epoch.
 
     ```shell
-    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_1x_lasot.py 8 \
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
         --work-dir ./work_dirs/
     ```
 

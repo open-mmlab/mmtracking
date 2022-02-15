@@ -51,12 +51,12 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           pip install git+https://github.com/votchallenge/toolkit.git
-          pip install attributee==0.1.5
-          pip install git+https://github.com/TAO-Dataset/tao.git
-          pip install git+https://github.com/lvis-dataset/lvis-api.git
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/${{matrix.torch_version}}/index.html
           pip install mmdet
           pip install -r requirements.txt
+          pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          pip install git+https://github.com/TAO-Dataset/tao.git
+          pip install git+https://github.com/lvis-dataset/lvis-api.git
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
@@ -112,12 +112,12 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           python -m pip install git+https://github.com/votchallenge/toolkit.git
-          python -m pip install attributee==0.1.5
-          python -m pip install git+https://github.com/TAO-Dataset/tao.git
-          python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu101/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
+          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          python -m pip install git+https://github.com/TAO-Dataset/tao.git
+          python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
       - name: Build and install
         run: |
           rm -rf .eggs
@@ -181,12 +181,12 @@ jobs:
       - name: Install mmtrack dependencies
         run: |
           python -m pip install git+https://github.com/votchallenge/toolkit.git
-          python -m pip install attributee==0.1.5
-          python -m pip install git+https://github.com/TAO-Dataset/tao.git
-          python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu102/${{matrix.torch_version}}/index.html
           python -m pip install mmdet
           python -m pip install -r requirements.txt
+          python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+          python -m pip install git+https://github.com/TAO-Dataset/tao.git
+          python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
       - name: Build and install
         run: |
           rm -rf .eggs
