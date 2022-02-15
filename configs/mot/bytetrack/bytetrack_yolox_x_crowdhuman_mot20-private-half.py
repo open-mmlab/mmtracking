@@ -1,4 +1,4 @@
-_base_ = ['./bytetrack_yolox_x_mot17-private-half.py']
+_base_ = ['./bytetrack_yolox_x_crowdhuman_mot17-private-half.py']
 
 img_scale = (896, 1600)
 
@@ -66,11 +66,11 @@ data = dict(
     val=dict(
         ann_file='data/MOT20/annotations/half-val_cocoformat.json',
         img_prefix='data/MOT20/train',
-        test_pipeline=test_pipeline),
+        pipeline=test_pipeline),
     test=dict(
         ann_file='data/MOT20/annotations/half-val_cocoformat.json',
         img_prefix='data/MOT20/train',
-        test_pipeline=test_pipeline))
+        pipeline=test_pipeline))
 
 checkpoint_config = dict(interval=1)
 evaluation = dict(metric=['bbox', 'track'], interval=100)
