@@ -535,7 +535,7 @@ There are 2 JSON files in `data/crowdhuman/annotations`:
 
 ### The folder of annotations in lvis
 
-There are 2 JSON files in `data/tao/annotations`
+There are 2 JSON files in `data/lvis/annotations`
 
 `lvis_v0.5_train.json`: JSON file containing the annotations information of the training set in lvisv0.5.
 `lvisv0.5+coco_train.json`: JSON file containing the merged annotations.
