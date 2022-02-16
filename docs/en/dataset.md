@@ -37,7 +37,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
 
-- The synset mapping file `coco_to_lvis_synset.json` used `lvis` training can be found [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
+- The synset mapping file `coco_to_lvis_synset.json` used in `lvis` training can be found [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
 
 #### 1.3 Single Object Tracking
 
@@ -557,7 +557,7 @@ There are 7 JSON files in `data/lvis/annotations`
 `lvis_v1_train.json`: JSON file containing the annotations information of the training set in lvisv1.
 `lvis_v1_val.json`: JSON file containing the annotations information of the validation set in lvisv1.
 `lvis_v1_image_info_test_challenge.json`: JSON file containing the annotations information of the testing set in lvisv1 available for year-round evaluation.
-`lvis_v1_image_info_test_dev.json`: JSON file containing the annotations information of the testing set in lvisv1 only available once a year for LVIS Challenge.
+`lvis_v1_image_info_test_dev.json`: JSON file containing the annotations information of the testing set in lvisv1 available only once a year for LVIS Challenge.
 
 ### The folder of annotations in tao
 
