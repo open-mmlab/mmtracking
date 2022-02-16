@@ -546,12 +546,12 @@ There are 9 JSON files in `data/tao/annotations`:
 
 `test_categories.json`: JSON file containing a list of categories which will be evaluated on the TAO test set.
 `test_without_annotations.json`:  JSON for test videos. The 'images' and 'videos' fields contain the images and videos that will be evaluated on the test set.
-`test_482.json`: JSON file containing the converted results for test set.
+`test_482_classes.json`: JSON file containing the converted results for test set.
 `train.json`: JSON file containing annotations for LVIS categories in TAO train.
-`train_482.json`: JSON file containing the converted results for train set.
+`train_482_classes.json`: JSON file containing the converted results for train set.
 `train_with_freeform.json`: JSON file containing annotations for all categories in TAO train.
 `validation.json`: JSON file containing annotations for LVIS categories in TAO train.
-`validation_482.json`: JSON file containing the converted results for validation set.
+`validation_482_classes.json`: JSON file containing the converted results for validation set.
 `validation_with_freeform.json`: JSON file containing annotations for all categories in TAO validation.
 
 #### The folder of annotations in lasot

@@ -127,6 +127,7 @@ class TaoDataset(CocoVideoDataset):
                             score=float(bboxes[i][-1]),
                             video_id=img_info['video_id'],
                             category_id=label
+                            # 1230 is the number of categories in LVIS dataset
                             if len(results) == 1230 else self.cat_ids[label],
                             track_id=max_track_id + int(bboxes[i][0]))
                         track_ids.append(int(bboxes[i][0]))
@@ -150,6 +151,7 @@ class TaoDataset(CocoVideoDataset):
                         bbox=self.xyxy2xywh(bboxes[i]),
                         score=float(bboxes[i][4]),
                         category_id=label
+                        # 1230 is the number of categories in LVIS dataset
                         if len(result) == 1230 else self.cat_ids[label])
                     json_results.append(data)
         return json_results

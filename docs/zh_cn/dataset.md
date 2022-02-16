@@ -552,12 +552,12 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `test_categories.json`: 包含在 TAO 测试集中会被评估的类别序列的 JSON 文件。
 `test_without_annotations.json`:  包含测试视频的 JSON 文件。 `images` 和 `videos` 域包含会在测试集中被评估的图片和视频。
-`test_482.json`: 包含测试集转换结果的 JSON 文件。
+`test_482_classes.json`: 包含测试集转换结果的 JSON 文件。
 `train.json`: 包含 TAO 训练集中 LVIS 类别标注的 JSON 文件。
-`train_482.json`: 包含训练集转换结果的 JSON 文件。
+`train_482_classes.json`: 包含训练集转换结果的 JSON 文件。
 `train_with_freeform.json`: 包含 TAO 训练集所有类别标注的 JSON 文件。
 `validation.json`: 包含 TAO 验证集中 LVIS 类别标注的 JSON 文件。
-`validation_482.json`: 包含验证集转换结果的 JSON 文件。
+`validation_482_classes.json`: 包含验证集转换结果的 JSON 文件。
 `validation_with_freeform.json`: 包含 TAO 验证集所有类别标注的 JSON 文件。
 
 #### lasot 的标注文件夹
