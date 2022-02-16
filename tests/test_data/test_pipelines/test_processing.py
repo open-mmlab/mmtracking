@@ -38,7 +38,6 @@ def test_trident_sampling():
         pair_video_infos.append(video_info)
 
     outs = process(pair_video_infos)
-    assert outs is not None
     for out in outs:
         assert 0 <= out['img_info']['frame_id'] < num_frames
         assert 'labels' in out['ann_info']

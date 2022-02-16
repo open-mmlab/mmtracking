@@ -117,7 +117,9 @@ class TridentSampling(object):
                     else:
                         min_ind, max_ind = search_ind - max_frame_range, \
                             search_ind
-
+                    # TODO: invisible objects are not used, because their
+                    # bboxes must cause interruption in the subsequent
+                    # pipeline.
                     extra_template_index = self.random_sample_inds(
                         video_visibility,
                         num_samples=1,
@@ -212,6 +214,7 @@ class TridentSampling(object):
             if self.is_video_data:
                 neg_search_ind = self.random_sample_inds(
                     video_info_another['bboxes_isvalid'], num_samples=1)
+                # may not get valid negative sample in current video
                 if neg_search_ind[0] is None:
                     return None
                 neg_search_samples = self.prepare_data(video_info_another,
@@ -247,7 +250,8 @@ class TridentSampling(object):
             return None
 
         sampled_inds = np.array(self.sampling_trident(video_info['visible']))
-        # the sizes of some bboxes are zero
+        # the sizes of some bboxes may be zero, because extral templates may
+        # get invalid bboxes.
         if not video_info['bboxes_isvalid'][sampled_inds].all():
             return None
 
