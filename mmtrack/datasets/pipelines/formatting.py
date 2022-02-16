@@ -439,9 +439,10 @@ class CheckPadMaskValidity(object):
         for _results in results:
             assert 'padding_mask' in _results
             mask = _results['padding_mask'].copy().astype(np.float32)
-            feat_size = _results['img'].shape[0] // self.stride
+            img_h, img_w = _results['img'].shape[:2]
+            feat_h, feat_w = img_h // self.stride, img_w // self.stride
             downsample_mask = cv2.resize(
-                mask, dsize=(feat_size, feat_size)).astype(bool)
+                mask, dsize=(feat_h, feat_w)).astype(bool)
             if (downsample_mask == 1).all():
                 return None
         return results

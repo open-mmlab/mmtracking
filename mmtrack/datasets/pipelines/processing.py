@@ -31,6 +31,7 @@ class TridentSampling(object):
                  cls_pos_prob=0.5,
                  train_cls_head=False,
                  min_num_frames=20):
+        assert num_template_frames >= 2
         assert len(max_frame_range) == num_template_frames - 1
         self.num_search_frames = num_search_frames
         self.num_template_frames = num_template_frames
@@ -39,12 +40,12 @@ class TridentSampling(object):
         self.cls_pos_prob = cls_pos_prob
         self.min_num_frames = min_num_frames
 
-    def sampling_random(self,
-                        video_visibility,
-                        num_samples=1,
-                        frame_range=None,
-                        allow_invisible=False,
-                        force_invisible=False):
+    def random_sample_inds(self,
+                           video_visibility,
+                           num_samples=1,
+                           frame_range=None,
+                           allow_invisible=False,
+                           force_invisible=False):
         """Random sampling a specific number of samples from the specified
         frame range of the video. It also considers the visibility of each
         frame.
@@ -103,7 +104,7 @@ class TridentSampling(object):
         if self.is_video_data:
             while None in extra_template_inds:
                 # first randomly sample two frames from a video
-                template_ind, search_ind = self.sampling_random(
+                template_ind, search_ind = self.random_sample_inds(
                     video_visibility, num_samples=2)
 
                 # then sample the extra templates
@@ -117,7 +118,7 @@ class TridentSampling(object):
                         min_ind, max_ind = search_ind - max_frame_range, \
                             search_ind
 
-                    extra_template_index = self.sampling_random(
+                    extra_template_index = self.random_sample_inds(
                         video_visibility,
                         num_samples=1,
                         frame_range=[min_ind, max_ind],
@@ -187,7 +188,8 @@ class TridentSampling(object):
             video_info (dict): the video information. It contains the keys:
                 ['bboxes','bboxes_isvalid','filename','frame_ids',
                 'video_id','visible'].
-            video_info_another (dict): the another video information. It
+            video_info_another (dict): the another video information. It's only
+                used to get negative samples in classification train. It
                 contains the keys: ['bboxes','bboxes_isvalid','filename',
                 'frame_ids','video_id','visible'].
             sampled_inds (list[int]): the sampled frame indexes.
@@ -208,7 +210,7 @@ class TridentSampling(object):
             results.extend(pos_search_samples)
         else:
             if self.is_video_data:
-                neg_search_ind = self.sampling_random(
+                neg_search_ind = self.random_sample_inds(
                     video_info_another['bboxes_isvalid'], num_samples=1)
                 if neg_search_ind[0] is None:
                     return None
