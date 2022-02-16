@@ -95,8 +95,7 @@ class TestFormatting(object):
             reid_results = [copy.deepcopy(results[0])]
             reid_results = bundle(reid_results)
 
-        concat2twoparts = dict(
-            type='ConcatVideo2TwoParts', num_template_frames=2)
+        concat2twoparts = dict(type='ConcatSameTypeFrames', num_key_frames=2)
         concat2twoparts = build_from_cfg(concat2twoparts, PIPELINES)
         concat_video_results = concat2twoparts(copy.deepcopy(results))
         assert len(concat_video_results) == 2

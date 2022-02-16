@@ -2,6 +2,7 @@
 import random
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets.builder import PIPELINES
 
 
@@ -20,6 +21,7 @@ class TridentSampling(object):
         cls_pos_prob (float, optional): the probility of sampling positive
             samples in classification training.
         train_cls_head (bool, optional): whether to train classification head.
+        min_num_frames (int, optional): the min number of frames to be sampled.
     """
 
     def __init__(self,
@@ -27,12 +29,15 @@ class TridentSampling(object):
                  num_template_frames=2,
                  max_frame_range=[200],
                  cls_pos_prob=0.5,
-                 train_cls_head=False):
+                 train_cls_head=False,
+                 min_num_frames=20):
+        assert len(max_frame_range) == num_template_frames - 1
         self.num_search_frames = num_search_frames
         self.num_template_frames = num_template_frames
         self.max_frame_range = max_frame_range
         self.train_cls_head = train_cls_head
         self.cls_pos_prob = cls_pos_prob
+        self.min_num_frames = min_num_frames
 
     def sampling_random(self,
                         video_visibility,
@@ -64,7 +69,7 @@ class TridentSampling(object):
         else:
             assert isinstance(frame_range, list) and len(frame_range) == 2
             frame_range[0] = max(0, frame_range[0])
-            frame_range[1] = min(len(video_visibility), frame_range[0])
+            frame_range[1] = min(len(video_visibility), frame_range[1])
 
         video_visibility = np.asarray(video_visibility)
         visibility_in_range = video_visibility[frame_range[0]:frame_range[1]]
@@ -95,7 +100,7 @@ class TridentSampling(object):
         """
         extra_template_inds = [None]
         sampling_count = 0
-        if self.is_video_dataset:
+        if self.is_video_data:
             while None in extra_template_inds:
                 # first randomly sample two frames from a video
                 template_ind, search_ind = self.sampling_random(
@@ -122,9 +127,9 @@ class TridentSampling(object):
 
                 sampling_count += 1
                 if sampling_count > 100:
-                    print('-------Not sampling extra valid templates'
-                          'successfully. Stop sampling and copy the'
-                          'first template as extra templates-------')
+                    print_log('-------Not sampling extra valid templates'
+                              'successfully. Stop sampling and copy the'
+                              'first template as extra templates-------')
                     extra_template_inds = [template_ind] * len(
                         self.max_frame_range)
 
@@ -202,10 +207,10 @@ class TridentSampling(object):
                 sample['ann_info']['labels'] = np.array([1], dtype=np.float32)
             results.extend(pos_search_samples)
         else:
-            if self.is_video_dataset:
+            if self.is_video_data:
                 neg_search_ind = self.sampling_random(
                     video_info_another['bboxes_isvalid'], num_samples=1)
-                if neg_search_ind is None:
+                if neg_search_ind[0] is None:
                     return None
                 neg_search_samples = self.prepare_data(video_info_another,
                                                        neg_search_ind)
@@ -217,24 +222,24 @@ class TridentSampling(object):
             results.extend(neg_search_samples)
         return results
 
-    def __call__(self, video_infos_pair):
+    def __call__(self, pair_video_infos):
         """
         Args:
-            video_infos_pair (list[dict]): contains two video infos. Each video
+            pair_video_infos (list[dict]): contains two video infos. Each video
                 info contains the keys: ['bboxes','bboxes_isvalid','filename',
                 'frame_ids','video_id','visible'].
 
         Returns:
             List[dict]: contains the information of sampled data.
         """
-        video_info, video_info_another = video_infos_pair
-        self.is_video_dataset = len(video_info['frame_ids']) > 1 and len(
+        video_info, video_info_another = pair_video_infos
+        self.is_video_data = len(video_info['frame_ids']) > 1 and len(
             video_info_another['frame_ids']) > 1
         enough_visible_frames = sum(video_info['visible']) > 2 * (
             self.num_search_frames + self.num_template_frames) and len(
-                video_info['visible']) >= 20
+                video_info['visible']) >= self.min_num_frames
         enough_visible_frames = enough_visible_frames or not \
-            self.is_video_dataset
+            self.is_video_data
 
         if not enough_visible_frames:
             return None

@@ -16,7 +16,7 @@ class ConcatVideoReferences(object):
     dict to one dict from 2-nd dict of the input list.
 
     Note: the 'ConcatVideoReferences' class will be deprecated in the
-    future, please use 'ConcatVideo2TwoParts' instead
+    future, please use 'ConcatSameTypeFrames' instead
 
     Args:
         results (list[dict]): List of dict that contain keys such as 'img',
@@ -33,67 +33,24 @@ class ConcatVideoReferences(object):
     def __init__(self):
         warnings.warn(
             "The 'ConcatVideoReferences' class will be deprecated in the "
-            "future, please use 'ConcatVideo2TwoParts' instead")
+            "future, please use 'ConcatSameTypeFrames' instead")
+        self.ConcatSameTypeFrames = ConcatSameTypeFrames()
 
     def __call__(self, results):
-        assert (isinstance(results, list)), 'results must be list'
-        outs = results[:1]
-        for i, result in enumerate(results[1:], 1):
-            if 'img' in result:
-                img = result['img']
-                if len(img.shape) < 3:
-                    img = np.expand_dims(img, -1)
-                if i == 1:
-                    result['img'] = np.expand_dims(img, -1)
-                else:
-                    outs[1]['img'] = np.concatenate(
-                        (outs[1]['img'], np.expand_dims(img, -1)), axis=-1)
-            for key in ['img_metas', 'gt_masks']:
-                if key in result:
-                    if i == 1:
-                        result[key] = [result[key]]
-                    else:
-                        outs[1][key].append(result[key])
-            for key in [
-                    'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
-                    'gt_instance_ids'
-            ]:
-                if key not in result:
-                    continue
-                value = result[key]
-                if value.ndim == 1:
-                    value = value[:, None]
-                N = value.shape[0]
-                value = np.concatenate((np.full(
-                    (N, 1), i - 1, dtype=np.float32), value),
-                                       axis=1)
-                if i == 1:
-                    result[key] = value
-                else:
-                    outs[1][key] = np.concatenate((outs[1][key], value),
-                                                  axis=0)
-            if 'gt_semantic_seg' in result:
-                if i == 1:
-                    result['gt_semantic_seg'] = result['gt_semantic_seg'][...,
-                                                                          None,
-                                                                          None]
-                else:
-                    outs[1]['gt_semantic_seg'] = np.concatenate(
-                        (outs[1]['gt_semantic_seg'],
-                         result['gt_semantic_seg'][..., None, None]),
-                        axis=-1)
-            if i == 1:
-                outs.append(result)
-        return outs
+        return self.ConcatSameTypeFrames(results)
 
 
 @PIPELINES.register_module()
-class ConcatVideo2TwoParts(object):
-    """Concat video to two parts.
+class ConcatSameTypeFrames(object):
+    """Concat the frames of the same type. We divide all the frames into two
+    types: 'key' frames and 'reference' frames.
 
-    The input list contains as least two dicts, concat the first
-    `num_template_frames` dicts to one dict, and the rest of dicts are concated
+    The input list contains as least two dicts. We concat the first
+    `num_key_frames` dicts to one dict, and the rest of dicts are concated
     to another dict.
+
+    In SOT field, 'key' denotes template image and 'reference' denotes search
+    image.
 
     Args:
         results (list[dict]): list of dict that contain keys such as 'img',
@@ -102,13 +59,13 @@ class ConcatVideo2TwoParts(object):
             'gt_instance_ids', 'padding_mask'.
 
     Returns:
-        list[dict]: The first dict of outputs concats the dicts of 'template'
+        list[dict]: The first dict of outputs concats the dicts of 'key'
             information. The second dict of outputs concats the dicts of
-            'search' information.
+            'reference' information.
     """
 
-    def __init__(self, num_template_frames=1):
-        self.num_template_frames = num_template_frames
+    def __init__(self, num_key_frames=1):
+        self.num_key_frames = num_key_frames
 
     def concat_one_mode_results(self, results):
         out = dict()
@@ -172,20 +129,20 @@ class ConcatVideo2TwoParts(object):
 
     def __call__(self, results):
         assert (isinstance(results, list)), 'results must be list'
-        template_results = []
-        search_results = []
+        key_results = []
+        reference_results = []
         for i, result in enumerate(results):
-            if i < self.num_template_frames:
-                template_results.append(result)
+            if i < self.num_key_frames:
+                key_results.append(result)
             else:
-                search_results.append(result)
+                reference_results.append(result)
         outs = []
-        if self.num_template_frames == 1:
-            # if single template, not expand the dim of variables
-            outs.append(template_results[0])
+        if self.num_key_frames == 1:
+            # if single key, not expand the dim of variables
+            outs.append(key_results[0])
         else:
-            outs.append(self.concat_one_mode_results(template_results))
-        outs.append(self.concat_one_mode_results(search_results))
+            outs.append(self.concat_one_mode_results(key_results))
+        outs.append(self.concat_one_mode_results(reference_results))
 
         return outs
 

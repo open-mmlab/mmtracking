@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from mmdet.datasets.builder import PIPELINES
 
-from .formatting import (CheckPadMaskValidity, ConcatVideo2TwoParts,
+from .formatting import (CheckPadMaskValidity, ConcatSameTypeFrames,
                          ConcatVideoReferences, ReIDFormatBundle,
                          SeqDefaultFormatBundle, ToList, VideoCollect)
 from .loading import (LoadDetections, LoadMultiImagesFromFile,
@@ -21,5 +21,5 @@ __all__ = [
     'SeqPhotoMetricDistortion', 'SeqCropLikeSiamFC', 'SeqShiftScaleAug',
     'SeqBlurAug', 'SeqColorAug', 'ToList', 'ReIDFormatBundle', 'SeqGrayAug',
     'SeqBrightnessAug', 'SeqBboxJitter', 'SeqCropLikeStark', 'TridentSampling',
-    'ConcatVideo2TwoParts'
+    'ConcatSameTypeFrames'
 ]

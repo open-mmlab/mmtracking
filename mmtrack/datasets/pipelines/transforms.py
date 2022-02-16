@@ -4,6 +4,7 @@ import math
 import cv2
 import mmcv
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
@@ -333,7 +334,8 @@ class SeqBboxJitter(object):
             while crop_img_size < 1:
                 count += 1
                 if count > 100:
-                    print(f'-------- bbox {gt_bbox_cxcywh} is invalid -------')
+                    print_log(
+                        f'-------- bbox {gt_bbox_cxcywh} is invalid -------')
                     return None
                 jittered_wh = gt_bbox_cxcywh[2:4] * np.exp(
                     np.random.randn(2) * self.scale_jitter_factor[i])
