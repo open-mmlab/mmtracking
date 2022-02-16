@@ -9,38 +9,6 @@ from mmdet.datasets.pipelines import to_tensor
 
 
 @PIPELINES.register_module()
-class ConcatVideoReferences(object):
-    """Concat video references.
-
-    If the input list contains at least two dicts, concat the input list of
-    dict to one dict from 2-nd dict of the input list.
-
-    Note: the 'ConcatVideoReferences' class will be deprecated in the
-    future, please use 'ConcatSameTypeFrames' instead
-
-    Args:
-        results (list[dict]): List of dict that contain keys such as 'img',
-            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
-            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
-            'gt_instance_ids'.
-
-    Returns:
-        list[dict]: The first dict of outputs is the same as the first
-        dict of `results`. The second dict of outputs concats the
-        dicts in `results[1:]`.
-    """
-
-    def __init__(self):
-        warnings.warn(
-            "The 'ConcatVideoReferences' class will be deprecated in the "
-            "future, please use 'ConcatSameTypeFrames' instead")
-        self.ConcatSameTypeFrames = ConcatSameTypeFrames()
-
-    def __call__(self, results):
-        return self.ConcatSameTypeFrames(results)
-
-
-@PIPELINES.register_module()
 class ConcatSameTypeFrames(object):
     """Concat the frames of the same type. We divide all the frames into two
     types: 'key' frames and 'reference' frames.
@@ -145,6 +113,35 @@ class ConcatSameTypeFrames(object):
         outs.append(self.concat_one_mode_results(reference_results))
 
         return outs
+
+
+@PIPELINES.register_module()
+class ConcatVideoReferences(ConcatSameTypeFrames):
+    """Concat video references.
+
+    If the input list contains at least two dicts, concat the input list of
+    dict to one dict from 2-nd dict of the input list.
+
+    Note: the 'ConcatVideoReferences' class will be deprecated in the
+    future, please use 'ConcatSameTypeFrames' instead
+
+    Args:
+        results (list[dict]): List of dict that contain keys such as 'img',
+            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
+            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
+            'gt_instance_ids'.
+
+    Returns:
+        list[dict]: The first dict of outputs is the same as the first
+        dict of `results`. The second dict of outputs concats the
+        dicts in `results[1:]`.
+    """
+
+    def __init__(self):
+        warnings.warn(
+            "The 'ConcatVideoReferences' class will be deprecated in the "
+            "future, please use 'ConcatSameTypeFrames' instead")
+        super(ConcatVideoReferences, self).__init__(num_key_frames=1)
 
 
 @PIPELINES.register_module()
