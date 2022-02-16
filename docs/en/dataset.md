@@ -35,7 +35,9 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 
-- The `annotations` under `lvis` contains the official annotations can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
+- The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
+
+- The synset mapping file `coco_to_lvis_synset.json` used `lvis` training can be found [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
 
 #### 1.3 Single Object Tracking
 
@@ -115,6 +117,12 @@ mmtracking
 │   │   ├── val (the same as coco/val2017)
 │   │   ├── test (the same as coco/test2017)
 │   │   ├── annotations
+│   │   │   ├── lvis_v0.5_train.json
+│   │   │   ├── lvis_v0.5_val.json
+│   │   │   ├── lvis_v1_train.json
+│   │   │   ├── lvis_v1_val.json
+│   │   │   ├── lvis_v1_image_info_test_challenge.json
+│   │   │   ├── lvis_v1_image_info_test_dev.json
 │   │
 │   ├── tao
 │   │   ├── annotations
@@ -331,6 +339,12 @@ mmtracking
 │   │   ├── test (the same as coco/test2017)
 │   │   ├── annotations
 │   │   │   ├── lvisv0.5+coco_train.json
+│   │   │   ├── lvis_v0.5_train.json
+│   │   │   ├── lvis_v0.5_val.json
+│   │   │   ├── lvis_v1_train.json
+│   │   │   ├── lvis_v1_val.json
+│   │   │   ├── lvis_v1_image_info_test_challenge.json
+│   │   │   ├── lvis_v1_image_info_test_dev.json
 │   │
 │   ├── tao
 │   │   ├── annotations
@@ -535,10 +549,15 @@ There are 2 JSON files in `data/crowdhuman/annotations`:
 
 ### The folder of annotations in lvis
 
-There are 2 JSON files in `data/lvis/annotations`
+There are 7 JSON files in `data/lvis/annotations`
 
-`lvis_v0.5_train.json`: JSON file containing the annotations information of the training set in lvisv0.5.
 `lvisv0.5+coco_train.json`: JSON file containing the merged annotations.
+`lvis_v0.5_train.json`: JSON file containing the annotations information of the training set in lvisv0.5.
+`lvis_v0.5_val.json`: JSON file containing the annotations information of the validation set in lvisv0.5.
+`lvis_v1_train.json`: JSON file containing the annotations information of the training set in lvisv1.
+`lvis_v1_val.json`: JSON file containing the annotations information of the validation set in lvisv1.
+`lvis_v1_image_info_test_challenge.json`: JSON file containing the annotations information of the testing set in lvisv1 available for year-round evaluation.
+`lvis_v1_image_info_test_dev.json`: JSON file containing the annotations information of the testing set in lvisv1 only available once a year for LVIS Challenge.
 
 ### The folder of annotations in tao
 
