@@ -118,18 +118,25 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-8. Install extra dependencies for MOTChallenge evaluation.
+8. Install extra dependencies
+
+- For MOTChallenge evaluation:
 
     ```shell
 
     pip install git+https://github.com/JonathonLuiten/TrackEval.git
     ```
 
-9. Install extra dependencies for TAO evaluation.
+- For LVIS evaluation:
+
+    ```shell
+    pip install git+https://github.com/lvis-dataset/lvis-api.git
+    ```
+
+- For TAO evaluation:
 
     ```shell
     pip install git+https://github.com/TAO-Dataset/tao.git
-    pip install git+https://github.com/lvis-dataset/lvis-api.git
     ```
 
 Note:
@@ -163,8 +170,8 @@ cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
 pip install git+https://github.com/JonathonLuiten/TrackEval.git
-pip install git+https://github.com/TAO-Dataset/tao.git
 pip install git+https://github.com/lvis-dataset/lvis-api.git
+pip install git+https://github.com/TAO-Dataset/tao.git
 ```
 
 ### Developing with multiple MMTracking versions

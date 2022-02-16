@@ -7,7 +7,8 @@ This page provides the instructions for dataset preparation on existing benchmar
 - Multiple Object Tracking
   - [MOT Challenge](https://motchallenge.net/)
   - [CrowdHuman](https://www.crowdhuman.org/)
-  - [TAO](https://github.com/TAO-Dataset/tao)
+  - [LVIS](https://www.lvisdataset.org/)
+  - [TAO](https://taodataset.org/)
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -30,9 +31,11 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) and TAO are needed, and CrowdHuman can be served as comlementary dataset.
+- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) and TAO are needed, CrowdHuman and LVIS can be served as comlementary dataset.
 
 - The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
+
+- The `annotations` under `lvis` contains the official annotations can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)。
 
 #### 1.3 Single Object Tracking
 
@@ -106,6 +109,12 @@ mmtracking
 │   │   ├── val
 │   │   │   ├── Images
 │   │   │   ├── CrowdHuman_val.zip
+│   │
+│   ├── lvis
+│   │   ├── train (the same as coco/train2017)
+│   │   ├── val (the same as coco/val2017)
+│   │   ├── test (the same as coco/test2017)
+│   │   ├── annotations
 │   │
 │   ├── tao
 │   │   ├── annotations
@@ -217,6 +226,10 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
+# LVIS
+# Merge annotations from LVIS and COCO for training QDTrack
+python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/annotations/lvis_v0.5_train.json --coco ./data/coco/annotations/instances_train2017.json --mapping ./data/coco_to_lvis_synset.json --output-json ./data/lvis/annotations/lvisv0.5+coco_train.json
+
 # TAO
 # Generate filtered json file for QDTrack
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
@@ -311,6 +324,13 @@ mmtracking
 │   │   ├── annotations
 │   │   │   ├── crowdhuman_train.json
 │   │   │   ├── crowdhuman_val.json
+│   │
+│   ├── lvis
+│   │   ├── train (the same as coco/train2017)
+│   │   ├── val (the same as coco/val2017)
+│   │   ├── test (the same as coco/test2017)
+│   │   ├── annotations
+│   │   │   ├── lvisv0.5+coco_train.json
 │   │
 │   ├── tao
 │   │   ├── annotations
@@ -512,6 +532,13 @@ There are 2 JSON files in `data/crowdhuman/annotations`:
 
 `crowdhuman_train.json`:  JSON file containing the annotations information of the training set in CrowdHuman dataset.
 `crowdhuman_val.json`:  JSON file containing the annotations information of the validation set in CrowdHuman dataset.
+
+### The folder of annotations in lvis
+
+There are 2 JSON files in `data/tao/annotations`
+
+`lvis_v0.5_train.json`: JSON file containing the annotations information of the training set in lvisv0.5.
+`lvisv0.5+coco_train.json`: JSON file containing the merged annotations.
 
 ### The folder of annotations in tao
 
