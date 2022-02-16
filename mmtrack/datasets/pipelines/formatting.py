@@ -21,21 +21,15 @@ class ConcatSameTypeFrames(object):
     image.
 
     Args:
-        results (list[dict]): list of dict that contain keys such as 'img',
-            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
-            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
-            'gt_instance_ids', 'padding_mask'.
-
-    Returns:
-        list[dict]: The first dict of outputs concats the dicts of 'key'
-            information. The second dict of outputs concats the dicts of
-            'reference' information.
+        num_key_frames (int, optional): the number of key frames.
+            Defaults to 1.
     """
 
     def __init__(self, num_key_frames=1):
         self.num_key_frames = num_key_frames
 
     def concat_one_mode_results(self, results):
+        """Concatenate the results of the same mode."""
         out = dict()
         for i, result in enumerate(results):
             if 'img' in result:
@@ -96,6 +90,19 @@ class ConcatSameTypeFrames(object):
         return out
 
     def __call__(self, results):
+        """Call function.
+
+        Args:
+            results (list[dict]): list of dict that contain keys such as 'img',
+                'img_metas', 'gt_masks','proposals', 'gt_bboxes',
+                'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
+                'gt_instance_ids', 'padding_mask'.
+
+        Returns:
+            list[dict]: The first dict of outputs concats the dicts of 'key'
+                information. The second dict of outputs concats the dicts of
+                'reference' information.
+        """
         assert (isinstance(results, list)), 'results must be list'
         key_results = []
         reference_results = []
@@ -123,18 +130,7 @@ class ConcatVideoReferences(ConcatSameTypeFrames):
     dict to one dict from 2-nd dict of the input list.
 
     Note: the 'ConcatVideoReferences' class will be deprecated in the
-    future, please use 'ConcatSameTypeFrames' instead
-
-    Args:
-        results (list[dict]): List of dict that contain keys such as 'img',
-            'img_metas', 'gt_masks','proposals', 'gt_bboxes',
-            'gt_bboxes_ignore', 'gt_labels','gt_semantic_seg',
-            'gt_instance_ids'.
-
-    Returns:
-        list[dict]: The first dict of outputs is the same as the first
-        dict of `results`. The second dict of outputs concats the
-        dicts in `results[1:]`.
+    future, please use 'ConcatSameTypeFrames' instead.
     """
 
     def __init__(self):
