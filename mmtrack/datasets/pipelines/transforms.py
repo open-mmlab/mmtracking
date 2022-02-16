@@ -117,7 +117,7 @@ class SeqCropLikeSiamFC(object):
         outs = []
         for _results in results:
             image = _results['img']
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
 
             crop_img = self.crop_like_SiamFC(image, gt_bbox,
                                              self.context_amount,
@@ -131,7 +131,7 @@ class SeqCropLikeSiamFC(object):
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
-            _results[_results.get('bbox_fields', [])[0]] = generated_bbox
+            _results['gt_bboxes'] = generated_bbox
 
             outs.append(_results)
         return outs
@@ -265,9 +265,9 @@ class SeqCropLikeStark(object):
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
             jittered_bboxes = _results['jittered_bboxes'][0]
-            crop_img, resize_factor, att_mask = self.crop_like_stark(
+            crop_img, resize_factor, padding_mask = self.crop_like_stark(
                 image, jittered_bboxes, self.crop_size_factor[i],
                 self.output_size[i])
 
@@ -283,9 +283,9 @@ class SeqCropLikeStark(object):
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
-            _results[_results.get('bbox_fields', [])[0]] = generated_bbox
-            _results['seg_fields'] = ['att_mask']
-            _results[_results.get('seg_fields', [])[0]] = att_mask
+            _results['gt_bboxes'] = generated_bbox
+            _results['seg_fields'] = ['padding_mask']
+            _results['pdding_mask'] = padding_mask
             outs.append(_results)
         return outs
 
@@ -322,7 +322,7 @@ class SeqBboxJitter(object):
         """
         outs = []
         for i, _results in enumerate(results):
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
             x1, y1, x2, y2 = np.split(gt_bbox, 4, axis=-1)
             bbox_w, bbox_h = x2 - x1, y2 - y1
             gt_bbox_cxcywh = np.concatenate(
@@ -510,7 +510,7 @@ class SeqShiftScaleAug(object):
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
 
             crop_img, crop_bbox = self._shift_scale_aug(
                 image, gt_bbox, self.target_size[i], self.shift[i],
@@ -520,7 +520,7 @@ class SeqShiftScaleAug(object):
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
-            _results[_results.get('bbox_fields', [])[0]] = crop_bbox
+            _results['gt_bboxes'] = crop_bbox
             outs.append(_results)
         return outs
 
