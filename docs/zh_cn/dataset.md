@@ -35,9 +35,7 @@
 
 - `tao` 文件夹下包含官方标注的 `annotations` 可以从[这里](https://github.com/TAO-Dataset/annotations)获取。
 
-- `lvis` 文件夹下包含 lvis-v0.5 官方标注的 `annotations` 可以从[这里](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)获取。
-
-- `lvis` 训练需要用到的同义词映射文件 `coco_to_lvis_synset.json` 可以从[这里](https://github.com/TAO-Dataset/tao/tree/master/data)获取。
+- `lvis` 文件夹下包含 lvis-v0.5 官方标注的 `annotations` 可以从[这里](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)下载。`./tools/convert_datasets/tao/merge_coco_with_lvis.py` 脚本中需到的同义词映射文件 `coco_to_lvis_synset.json` 可以从[这里](https://github.com/TAO-Dataset/tao/tree/master/data)获取。
 
 #### 1.3 单目标跟踪
 
@@ -117,6 +115,7 @@ mmtracking
 │   │   ├── val (the same as coco/val2017)
 │   │   ├── test (the same as coco/test2017)
 │   │   ├── annotations
+│   │   │   ├── coco_to_lvis_synset.json
 │   │   │   ├── lvis_v0.5_train.json
 │   │   │   ├── lvis_v0.5_val.json
 │   │   │   ├── lvis_v1_train.json
@@ -237,7 +236,7 @@ python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o .
 
 # LVIS
 # 合并 LVIS 和 COCO 的标注来训练 QDTrack
-python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/annotations/lvis_v0.5_train.json --coco ./data/coco/annotations/instances_train2017.json --mapping ./data/coco_to_lvis_synset.json --output-json ./data/lvis/annotations/lvisv0.5+coco_train.json
+python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/annotations/lvis_v0.5_train.json --coco ./data/coco/annotations/instances_train2017.json --mapping ./data/lvis/annotations/coco_to_lvis_synset.json --output-json ./data/lvis/annotations/lvisv0.5+coco_train.json
 
 # TAO
 # 为 QDTrack 生成过滤后的json文件
@@ -339,6 +338,7 @@ mmtracking
 │   │   ├── val (the same as coco/val2017)
 │   │   ├── test (the same as coco/test2017)
 │   │   ├── annotations
+│   │   │   ├── coco_to_lvis_synset.json
 │   │   │   ├── lvisv0.5+coco_train.json
 │   │   │   ├── lvis_v0.5_train.json
 │   │   │   ├── lvis_v0.5_val.json
@@ -555,8 +555,9 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### lvis 的标注文件夹
 
-在`data/lvis/annotations` 中有 7 个 JSON 文件:
+在`data/lvis/annotations` 中有 8 个 JSON 文件:
 
+`coco_to_lvis_synset.json`: 包含 COCO 和 LVIS 类别映射关系的 JSON 文件。
 `lvisv0.5+coco_train.json`: 包含合并后标注的 JSON 文件。
 `lvis_v0.5_train.json`: 包含 lvisv0.5 训练集标注信息的 JSON 文件。
 `lvis_v0.5_val.json`: 包含 lvisv0.5 测试集标注信息的 JSON 文件。
