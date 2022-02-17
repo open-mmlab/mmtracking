@@ -113,10 +113,24 @@
     pip install -v -e .  # or "python setup.py develop"
     ```
 
-8. 为 MOTChallenge 数据集测试评估安装额外库：
+8. 安装额外的依赖：
+
+- 为 MOTChallenge 评估：
 
     ```shell
     pip install git+https://github.com/JonathonLuiten/TrackEval.git
+    ```
+
+- 为 LVIS 评估：
+
+    ```shell
+    pip install git+https://github.com/lvis-dataset/lvis-api.git
+    ```
+
+- 为 TAO 评估：
+
+    ```shell
+    pip install git+https://github.com/TAO-Dataset/tao.git
     ```
 
 注意：
@@ -149,6 +163,8 @@ cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
 pip install git+https://github.com/JonathonLuiten/TrackEval.git
+pip install git+https://github.com/lvis-dataset/lvis-api.git
+pip install git+https://github.com/TAO-Dataset/tao.git
 ```
 
 ### 使用多个 MMTracking 版本进行开发
