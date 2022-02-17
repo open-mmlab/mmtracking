@@ -1,7 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import math
+
 import cv2
 import mmcv
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets.builder import PIPELINES
 from mmdet.datasets.pipelines import Normalize, Pad, RandomFlip, Resize
 
@@ -58,7 +61,7 @@ class SeqCropLikeSiamFC(object):
         z_size = np.sqrt(z_width * z_height)
 
         z_scale = exemplar_size / z_size
-        d_search = (crop_size - exemplar_size) / 2
+        d_search = (crop_size - exemplar_size) / 2.
         pad = d_search / z_scale
         x_size = z_size + 2 * pad
         x_bbox = np.array([
@@ -114,7 +117,7 @@ class SeqCropLikeSiamFC(object):
         outs = []
         for _results in results:
             image = _results['img']
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
 
             crop_img = self.crop_like_SiamFC(image, gt_bbox,
                                              self.context_amount,
@@ -128,8 +131,263 @@ class SeqCropLikeSiamFC(object):
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
-            _results[_results.get('bbox_fields', [])[0]] = generated_bbox
+            _results['gt_bboxes'] = generated_bbox
 
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqCropLikeStark(object):
+    """Crop images as Stark did.
+
+    The way of cropping an image is proposed in
+    "Learning Spatio-Temporal Transformer for Visual Tracking."
+    `Stark <https://arxiv.org/abs/2103.17154>`_.
+
+    Args:
+        crop_size_factor (list[int | float]): contains the ratio of crop size
+            to bbox size.
+        output_size (list[int | float]): contains the size of resized image
+            (always square).
+    """
+
+    def __init__(self, crop_size_factor, output_size):
+        self.crop_size_factor = crop_size_factor
+        self.output_size = output_size
+
+    def crop_like_stark(self, img, bbox, crop_size_factor, output_size):
+        """Crop an image as Stark did.
+
+        Args:
+            image (ndarray): of shape (H, W, 3).
+            bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            crop_size_factor (float): the ratio of crop size to bbox size
+            output_size (int): the size of resized image (always square).
+
+        Returns:
+            img_crop_padded (ndarray): the cropped image of shape
+                (crop_size, crop_size, 3).
+            resize_factor (float): the ratio of original image scale to cropped
+                image scale.
+            pdding_mask (ndarray): the padding mask caused by cropping.
+        """
+        x1, y1, x2, y2 = np.split(bbox, 4, axis=-1)
+        bbox_w, bbox_h = x2 - x1, y2 - y1
+        cx, cy = x1 + bbox_w / 2., y1 + bbox_h / 2.
+
+        img_h, img_w, _ = img.shape
+        # 1. Crop image
+        # 1.1 calculate crop size and pad size
+        crop_size = math.ceil(math.sqrt(bbox_w * bbox_h) * crop_size_factor)
+        crop_size = max(crop_size, 1)
+
+        x1 = int(np.round(cx - crop_size * 0.5))
+        x2 = x1 + crop_size
+        y1 = int(np.round(cy - crop_size * 0.5))
+        y2 = y1 + crop_size
+
+        x1_pad = max(0, -x1)
+        x2_pad = max(x2 - img_w + 1, 0)
+        y1_pad = max(0, -y1)
+        y2_pad = max(y2 - img_h + 1, 0)
+
+        # 1.2 crop image
+        img_crop = img[y1 + y1_pad:y2 - y2_pad, x1 + x1_pad:x2 - x2_pad, :]
+
+        # 1.3 pad image
+        img_crop_padded = cv2.copyMakeBorder(img_crop, y1_pad, y2_pad, x1_pad,
+                                             x2_pad, cv2.BORDER_CONSTANT)
+        # 1.4 generate padding mask
+        img_h, img_w, _ = img_crop_padded.shape
+        pdding_mask = np.ones((img_h, img_w))
+        end_x, end_y = -x2_pad, -y2_pad
+        if y2_pad == 0:
+            end_y = None
+        if x2_pad == 0:
+            end_x = None
+        pdding_mask[y1_pad:end_y, x1_pad:end_x] = 0
+
+        # 2. Resize image and padding mask
+        resize_factor = output_size / crop_size
+        img_crop_padded = cv2.resize(img_crop_padded,
+                                     (output_size, output_size))
+        pdding_mask = cv2.resize(pdding_mask,
+                                 (output_size, output_size)).astype(np.bool_)
+
+        return img_crop_padded, resize_factor, pdding_mask
+
+    def generate_box(self,
+                     bbox_gt,
+                     bbox_cropped,
+                     resize_factor,
+                     output_size,
+                     normalize=False):
+        """Transform the box coordinates from the original image coordinates to
+        the coordinates of the cropped image.
+
+        Args:
+            bbox_gt (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            bbox_cropped (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            resize_factor (float): the ratio of original image scale to cropped
+                image scale.
+            output_size (float): the size of output image.
+            normalize (bool): whether to normalize the output box.
+                Default to True.
+
+        Returns:
+            ndarray: generated box of shape (4, ) in [x1, y1, x2, y2] format.
+        """
+        assert output_size > 0
+        bbox_gt_center = (bbox_gt[0:2] + bbox_gt[2:4]) * 0.5
+        bbox_cropped_center = (bbox_cropped[0:2] + bbox_cropped[2:4]) * 0.5
+
+        bbox_out_center = (output_size - 1) / 2. + (
+            bbox_gt_center - bbox_cropped_center) * resize_factor
+        bbox_out_wh = (bbox_gt[2:4] - bbox_gt[0:2]) * resize_factor
+        bbox_out = np.concatenate((bbox_out_center - 0.5 * bbox_out_wh,
+                                   bbox_out_center + 0.5 * bbox_out_wh),
+                                  axis=-1)
+
+        return bbox_out / output_size if normalize else bbox_out
+
+    def __call__(self, results):
+        """Call function. For each dict in results, crop image like Stark did.
+
+        Args:
+            results (list[dict]): list of dict from
+                :obj:`mmtrack.base_sot_dataset`.
+
+        Returns:
+            List[dict]: list of dict that contains cropped image and
+                the corresponding groundtruth bbox.
+        """
+        outs = []
+        for i, _results in enumerate(results):
+            image = _results['img']
+            gt_bbox = _results['gt_bboxes'][0]
+            jittered_bboxes = _results['jittered_bboxes'][0]
+            crop_img, resize_factor, padding_mask = self.crop_like_stark(
+                image, jittered_bboxes, self.crop_size_factor[i],
+                self.output_size[i])
+
+            generated_bbox = self.generate_box(
+                gt_bbox,
+                jittered_bboxes,
+                resize_factor,
+                self.output_size[i],
+                normalize=False)
+
+            generated_bbox = generated_bbox[None]
+
+            _results['img'] = crop_img
+            if 'img_shape' in _results:
+                _results['img_shape'] = crop_img.shape
+            _results['gt_bboxes'] = generated_bbox
+            _results['seg_fields'] = ['padding_mask']
+            _results['pdding_mask'] = padding_mask
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqBboxJitter(object):
+    """Bounding box jitter augmentation. The jittered bboxes are used for
+    subsequent image cropping, like `SeqCropLikeStark`.
+
+    Args:
+        scale_jitter_factor (list[int | float]): contains the factor of scale
+            jitter.
+        center_jitter_factor (list[int | float]): contains the factor of center
+            jitter.
+        crop_size_factor (list[int | float]): contains the ratio of crop size
+            to bbox size.
+    """
+
+    def __init__(self, scale_jitter_factor, center_jitter_factor,
+                 crop_size_factor):
+        self.scale_jitter_factor = scale_jitter_factor
+        self.center_jitter_factor = center_jitter_factor
+        self.crop_size_factor = crop_size_factor
+
+    def __call__(self, results):
+        """Call function.
+
+        Args:
+            results (list[dict]): list of dict from
+                :obj:`mmtrack.base_sot_dataset`.
+
+        Returns:
+            list[dict]: list of dict that contains augmented images.
+        """
+        outs = []
+        for i, _results in enumerate(results):
+            gt_bbox = _results['gt_bboxes'][0]
+            x1, y1, x2, y2 = np.split(gt_bbox, 4, axis=-1)
+            bbox_w, bbox_h = x2 - x1, y2 - y1
+            gt_bbox_cxcywh = np.concatenate(
+                [x1 + bbox_w / 2., y1 + bbox_h / 2., bbox_w, bbox_h], axis=-1)
+
+            crop_img_size = -1
+            # avoid croped image size too small.
+            count = 0
+            while crop_img_size < 1:
+                count += 1
+                if count > 100:
+                    print_log(
+                        f'-------- bbox {gt_bbox_cxcywh} is invalid -------')
+                    return None
+                jittered_wh = gt_bbox_cxcywh[2:4] * np.exp(
+                    np.random.randn(2) * self.scale_jitter_factor[i])
+                crop_img_size = np.ceil(
+                    np.sqrt(jittered_wh.prod()) * self.crop_size_factor[i])
+
+            max_offset = np.sqrt(
+                jittered_wh.prod()) * self.center_jitter_factor[i]
+            jittered_center = gt_bbox_cxcywh[0:2] + max_offset * (
+                np.random.rand(2) - 0.5)
+
+            jittered_bboxes = np.concatenate(
+                (jittered_center - 0.5 * jittered_wh,
+                 jittered_center + 0.5 * jittered_wh),
+                axis=-1)
+
+            _results['jittered_bboxes'] = jittered_bboxes[None]
+            outs.append(_results)
+        return outs
+
+
+@PIPELINES.register_module()
+class SeqBrightnessAug(object):
+    """Brightness augmention for images.
+
+    Args:
+        jitter_range (float): The range of brightness jitter.
+            Defaults to 0..
+    """
+
+    def __init__(self, jitter_range=0):
+        self.jitter_range = jitter_range
+
+    def __call__(self, results):
+        """Call function.
+
+        For each dict in results, perform brightness augmention for image in
+        the dict.
+
+        Args:
+            results (list[dict]): list of dict that from
+                :obj:`mmtrack.base_sot_dataset`.
+        Returns:
+            list[dict]: list of dict that contains augmented image.
+        """
+        brightness_factor = np.random.uniform(
+            max(0, 1 - self.jitter_range), 1 + self.jitter_range)
+        outs = []
+        for _results in results:
+            image = _results['img']
+            image = np.dot(image, brightness_factor).clip(0, 255.0)
+            _results['img'] = image
             outs.append(_results)
         return outs
 
@@ -139,8 +397,8 @@ class SeqGrayAug(object):
     """Gray augmention for images.
 
     Args:
-        prob (list[float]): The probability to perform gray augmention for
-            each image. Defaults to 0..
+        prob (float): The probability to perform gray augmention.
+            Defaults to 0..
     """
 
     def __init__(self, prob=0.):
@@ -252,7 +510,7 @@ class SeqShiftScaleAug(object):
         outs = []
         for i, _results in enumerate(results):
             image = _results['img']
-            gt_bbox = _results[_results.get('bbox_fields', [])[0]][0]
+            gt_bbox = _results['gt_bboxes'][0]
 
             crop_img, crop_bbox = self._shift_scale_aug(
                 image, gt_bbox, self.target_size[i], self.shift[i],
@@ -262,7 +520,7 @@ class SeqShiftScaleAug(object):
             _results['img'] = crop_img
             if 'img_shape' in _results:
                 _results['img_shape'] = crop_img.shape
-            _results[_results.get('bbox_fields', [])[0]] = crop_bbox
+            _results['gt_bboxes'] = crop_bbox
             outs.append(_results)
         return outs
 
