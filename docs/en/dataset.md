@@ -35,7 +35,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 
-- The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957). The synset mapping file `coco_to_lvis_synset.json` used in `./tools/convert_datasets/tao/merge_coco_with_lvis.py` script can be found [here](https://github.com/TAO-Dataset/tao/tree/master/data)。
+- The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957). The synset mapping file `coco_to_lvis_synset.json` used in `./tools/convert_datasets/tao/merge_coco_with_lvis.py` script can be found [here](https://github.com/TAO-Dataset/tao/tree/master/data).
 
 #### 1.3 Single Object Tracking
 
