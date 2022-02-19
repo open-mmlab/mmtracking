@@ -32,7 +32,7 @@ class DistributedQuotaSampler(Sampler):
 
     def __init__(self,
                  dataset,
-                 samples_per_epoch=1,
+                 samples_per_epoch,
                  num_replicas=None,
                  rank=None,
                  replacement=False,
