@@ -13,15 +13,13 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler
 
 from .base_sot_dataset import BaseSOTDataset
-from .samplers import (DistributedGroupQuotaSampler, DistributedVideoSampler,
-                       SOTVideoSampler)
+from .samplers import DistributedVideoSampler, SOTVideoSampler
 
 
 def build_dataloader(dataset,
                      samples_per_gpu,
                      workers_per_gpu,
                      num_gpus=1,
-                     samples_per_epoch=-1,
                      dist=True,
                      shuffle=True,
                      seed=None,
@@ -55,14 +53,8 @@ def build_dataloader(dataset,
     rank, world_size = get_dist_info()
     if dist:
         if shuffle:
-            if samples_per_epoch == -1:
-                sampler = DistributedGroupSampler(dataset, samples_per_gpu,
-                                                  world_size, rank)
-            else:
-                sampler = DistributedGroupQuotaSampler(dataset,
-                                                       samples_per_epoch,
-                                                       samples_per_gpu,
-                                                       world_size, rank)
+            sampler = DistributedGroupSampler(dataset, samples_per_gpu,
+                                              world_size, rank)
         else:
             if hasattr(dataset, 'load_as_video') and dataset.load_as_video:
                 sampler = DistributedVideoSampler(
