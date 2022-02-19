@@ -21,7 +21,7 @@ def build_dataloader(dataset,
                      samples_per_gpu,
                      workers_per_gpu,
                      num_gpus=1,
-                     samples_per_epoch=-1,
+                     samples_per_epoch=None,
                      dist=True,
                      shuffle=True,
                      seed=None,
@@ -39,9 +39,9 @@ def build_dataloader(dataset,
         workers_per_gpu (int): How many subprocesses to use for data loading
             for each GPU.
         num_gpus (int): Number of GPUs. Only used in non-distributed training.
-        samples_per_epoch (int, Optional): The number of samples per epoch.
-            If equal to -1, using all samples in the datasets per epoch.
-            Otherwise, using the `samples_per_epoch` samples. Default: -1.
+        samples_per_epoch (int | None, Optional): The number of samples per
+            epoch. If equal to -1, using all samples in the datasets per epoch.
+            Otherwise, using the `samples_per_epoch` samples. Default: None.
         dist (bool): Distributed training/test or not. Default: True.
         shuffle (bool): Whether to shuffle the data at every epoch.
             Default: True.
@@ -60,17 +60,18 @@ def build_dataloader(dataset,
         # ----- distributed train mode ------
         if shuffle:
             if isinstance(dataset, BaseSOTDataset):
-                if samples_per_epoch == -1:
+                if samples_per_epoch is None:
                     sampler = DistributedSampler(
                         dataset, world_size, rank, shuffle=True)
                 else:
                     # get fixed number of samples per epoch to train
+                    # sampling with no-replacement mode
                     sampler = DistributedQuotaSampler(
-                        samples_per_epoch,
                         dataset,
+                        samples_per_epoch,
                         world_size,
                         rank,
-                        shuffle=True)
+                        replacement=False)
             else:
                 sampler = DistributedGroupSampler(dataset, samples_per_gpu,
                                                   world_size, rank)
@@ -83,13 +84,22 @@ def build_dataloader(dataset,
             else:
                 sampler = DistributedSampler(
                     dataset, world_size, rank, shuffle=False)
+
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:
         # ----- non-distributed train mode ------
         if shuffle:
             if isinstance(dataset, BaseSOTDataset):
-                sampler = RandomSampler(dataset)
+                if samples_per_epoch is None:
+                    sampler = RandomSampler(dataset)
+                else:
+                    # get fixed number of samples per epoch to train
+                    # sampling with replacement mode
+                    sampler = RandomSampler(
+                        dataset,
+                        replacement=True,
+                        num_samples=samples_per_epoch)
             else:
                 sampler = GroupSampler(dataset, samples_per_gpu)
         # ----- non-distributed test mode ------
