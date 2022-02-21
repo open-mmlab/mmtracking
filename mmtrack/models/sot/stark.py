@@ -1,6 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from collections import defaultdict
-
 import torch
 import torch.nn.functional as F
 from mmdet.models.builder import build_backbone, build_head, build_neck
@@ -54,12 +52,12 @@ class Stark(BaseSingleObjectTracker):
         self.update_intervals = self.test_cfg['update_intervals']
         self.num_extra_template = len(self.update_intervals)
 
-        self.debug = False
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
         # We only train classification head in stage-2. The transformer and
         # bbox head are not trained in stage-2.
-        if self.head.run_cls_head and not self.head.run_bbox_head:
+        if (self.train and self.head.cls_head is not None
+                and not self.head.run_bbox_head):
             for name, module in self.head.named_parameters():
                 if 'cls_head' not in name:
                     module.requires_grad = False
@@ -80,50 +78,7 @@ class Stark(BaseSingleObjectTracker):
         if self.with_head:
             self.head.init_weights()
 
-    def _merge_template_search(self, inputs):
-        """Merge the data of template and search images.
-        The merge includes 3 steps: flatten, premute and concatenate.
-        Note: the data of search image must be in the last place.
-
-        args:
-            inputs (list[dict(Tensor)]):
-                The list contains the data of template and search images.
-                The dict is in the following format:
-                - 'feat': (1, C, H, W)
-                - 'mask': (1, H, W)
-                - 'pos_embed': (1, C, H, W)
-
-        Return:
-            dict(Tensor):
-                - 'feat': in [data_flatten_len, 1, C] format
-                - 'mask': in [1, data_flatten_len] format
-                - 'pos_embed': in [data_flatten_len, 1, C]
-                    format
-
-                Here, 'data_flatten_len' = z_h*z_w*2 + x_h*x_w.
-                'z_h' and 'z_w' denote the height and width of the
-                template images respectively.
-                'x_h' and 'x_w' denote the height and width of search image
-                respectively.
-        """
-        seq_dict = defaultdict(list)
-        # flatten and permute
-        for input_dic in inputs:
-            for name, x in input_dic.items():
-                if name == 'mask':
-                    seq_dict[name].append(x.flatten(1))
-                else:
-                    seq_dict[name].append(
-                        x.flatten(2).permute(2, 0, 1).contiguous())
-        # concatenate
-        for name, x in seq_dict.items():
-            if name == 'mask':
-                seq_dict[name] = torch.cat(x, dim=1)
-            else:
-                seq_dict[name] = torch.cat(x, dim=0)
-        return seq_dict
-
-    def forward_before_head(self, img, mask):
+    def extract_feats(self, img, mask):
         """Extract the features of the input image and resize mask to the shape
         of features.
 
@@ -136,8 +91,6 @@ class Stark(BaseSingleObjectTracker):
                 - 'feat': the multi-level feature map of shape
                     (N, C, H // stride, W // stride).
                 - 'mask': the mask of shape (N, H // stride, W // stride).
-                - 'pos_embed': of the position embedding of shape
-                    (N, C, H // stride, W // stride)
         """
         feat = self.backbone(img)
         feat = self.neck(feat)[0]
@@ -145,9 +98,8 @@ class Stark(BaseSingleObjectTracker):
         # official code uses default 'bilinear' interpolation.
         mask = F.interpolate(
             mask[None].float(), size=feat.shape[-2:]).to(torch.bool)[0]
-        pos_embed = self.head.positional_encoding(mask)
 
-        return {'feat': feat, 'mask': mask, 'pos_embed': pos_embed}
+        return {'feat': feat, 'mask': mask}
 
     def forward_train(self,
                       img,
@@ -208,12 +160,11 @@ class Stark(BaseSingleObjectTracker):
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        z1_dict = self.forward_before_head(img[:, 0], padding_mask[:, 0])
-        z2_dict = self.forward_before_head(img[:, 1], padding_mask[:, 1])
-        x_dict = self.forward_before_head(search_img[:, 0],
-                                          search_padding_mask[:, 0])
-        inputs = [z1_dict, z2_dict, x_dict]
-        head_dict_inputs = self._merge_template_search(inputs)
+        z1_dict = self.extract_feats(img[:, 0], padding_mask[:, 0])
+        z2_dict = self.extract_feats(img[:, 1], padding_mask[:, 1])
+        x_dict = self.extract_feats(search_img[:, 0], search_padding_mask[:,
+                                                                          0])
+        head_inputs = [z1_dict, z2_dict, x_dict]
         # run the transformer
         '''
         `track_results` is a dict containing the following keys:
@@ -222,22 +173,12 @@ class Stark(BaseSingleObjectTracker):
             - 'pred_logits': bboxes of (N, num_query, 1) shape.
         Typically `num_query` is equal to 1.
         '''
-        track_results = self.head(head_dict_inputs)
+        track_results = self.head(head_inputs)
 
         losses = dict()
-        if self.head.run_bbox_head:
-            img_size = search_img[:, 0].shape[2]
-            tracking_bboxes = track_results['pred_bboxes'][:, 0] / img_size
-            search_gt_bboxes = (
-                torch.cat(search_gt_bboxes, dim=0).type(torch.float32)[:, 1:] /
-                img_size).clamp(0., 1.)
-            head_losses = self.head.reg_loss(tracking_bboxes, search_gt_bboxes)
-        elif self.head.run_cls_head:
-            assert search_gt_labels is not None
-            pred_logits = track_results['pred_logits'][:, 0].squeeze()
-            search_gt_labels = torch.cat(
-                search_gt_labels, dim=0)[:, 1].squeeze()
-            head_losses = self.head.cls_loss(pred_logits, search_gt_labels)
+        head_losses = self.head.loss(track_results, search_gt_bboxes,
+                                     search_gt_labels, search_img[:,
+                                                                  0].shape[2])
 
         losses.update(head_losses)
 
