@@ -326,7 +326,7 @@ class StarkHead(BaseModule):
             for module in frozen_modules:
                 m = getattr(self, module)
                 # TODO: Study the influence of eval mode. The official code
-                # doesn't freeze BN of `frozen_modules`.
+                # doesn't freeze BN in `frozen_modules`.
                 for param in m.parameters():
                     param.requires_grad = False
 
@@ -498,7 +498,7 @@ class StarkHead(BaseModule):
             # regression IoU loss, default GIoU loss
             if (pred_bboxes[:, :2] >= pred_bboxes[:, 2:]).any() or (
                     gt_bboxes[:, :2] >= gt_bboxes[:, 2:]).any():
-                # the first several iterations of forward may return invalid
+                # the first several iterations of train may return invalid
                 # bbox coordinates.
                 losses['loss_iou'] = torch.tensor(0.0).to(pred_bboxes)
             else:

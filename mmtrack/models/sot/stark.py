@@ -75,7 +75,6 @@ class Stark(BaseSingleObjectTracker):
 
         Args:
             img (Tensor): image of shape (N, C, H, W).
-            # mask (Tensor): mask of shape (N, H, W).
 
         Returns:
             tuple(Tensor): the multi-level feature maps, and each of them is
@@ -137,7 +136,7 @@ class Stark(BaseSingleObjectTracker):
                 There are 1 padding masks of search image, and
                 H and W are both equal to that of search image.
 
-            search_gt_labels (list(Tensor), optional): Ground truth labels for
+            search_gt_labels (list[Tensor], optional): Ground truth labels for
                 search images with shape (N, 2).
 
         Returns:
