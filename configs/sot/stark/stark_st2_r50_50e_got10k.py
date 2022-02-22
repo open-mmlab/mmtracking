@@ -5,8 +5,14 @@ model = dict(
     type='Stark',
     head=dict(
         type='StarkHead',
-        run_bbox_head=False,
-        run_cls_head=True,
+        cls_head=dict(
+            type='ScoreHead',
+            input_dim=256,
+            hidden_dim=256,
+            output_dim=1,
+            num_layers=3,
+            BN=False),
+        frozen_module=['transformer', 'bbox_head'],
         loss_cls=dict(type='CrossEntropyLoss', use_sigmoid=True)),
     frozen_modules=['backbone', 'neck'])
 

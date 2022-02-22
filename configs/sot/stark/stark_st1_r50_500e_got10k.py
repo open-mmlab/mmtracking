@@ -25,8 +25,6 @@ model = dict(
     head=dict(
         type='StarkHead',
         num_querys=1,
-        run_bbox_head=True,
-        run_cls_head=False,
         transformer=dict(
             type='StarkTransformer',
             encoder=dict(
@@ -74,13 +72,6 @@ model = dict(
             channel=256,
             feat_size=20,
             stride=16),
-        cls_head=dict(
-            type='ScoreHead',
-            input_dim=256,
-            hidden_dim=256,
-            output_dim=1,
-            num_layers=3,
-            BN=False),
         loss_bbox=dict(type='L1Loss', loss_weight=5.0),
         loss_iou=dict(type='GIoULoss', loss_weight=2.0)),
     test_cfg=dict(

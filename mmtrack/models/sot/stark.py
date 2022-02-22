@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
-import torch.nn.functional as F
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
@@ -54,13 +53,6 @@ class Stark(BaseSingleObjectTracker):
 
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
-        # We only train classification head in stage-2. The transformer and
-        # bbox head are not trained in stage-2.
-        if (self.train and self.head.cls_head is not None
-                and not self.head.run_bbox_head):
-            for name, module in self.head.named_parameters():
-                if 'cls_head' not in name:
-                    module.requires_grad = False
 
     def init_weights(self):
         """Initialize the weights of modules in single object tracker."""
@@ -78,28 +70,20 @@ class Stark(BaseSingleObjectTracker):
         if self.with_head:
             self.head.init_weights()
 
-    def extract_feats(self, img, mask):
-        """Extract the features of the input image and resize mask to the shape
-        of features.
+    def extract_feat(self, img):
+        """Extract the features of the input image.
 
         Args:
             img (Tensor): image of shape (N, C, H, W).
-            mask (Tensor): mask of shape (N, H, W).
+            # mask (Tensor): mask of shape (N, H, W).
 
         Returns:
-            dict(Tensor):
-                - 'feat': the multi-level feature map of shape
-                    (N, C, H // stride, W // stride).
-                - 'mask': the mask of shape (N, H // stride, W // stride).
+            tuple(Tensor): the multi-level feature maps, and each of them is
+                    of shape (N, C, H // stride, W // stride).
         """
         feat = self.backbone(img)
-        feat = self.neck(feat)[0]
-
-        # official code uses default 'bilinear' interpolation.
-        mask = F.interpolate(
-            mask[None].float(), size=feat.shape[-2:]).to(torch.bool)[0]
-
-        return {'feat': feat, 'mask': mask}
+        feat = self.neck(feat)
+        return feat
 
     def forward_train(self,
                       img,
@@ -153,18 +137,20 @@ class Stark(BaseSingleObjectTracker):
                 There are 1 padding masks of search image, and
                 H and W are both equal to that of search image.
 
-            search_gt_labels (Tensor, optional): the categories of bbox:
-                positive(1) or negative(0). It's of shape (N, 2). We just use
-                search_gt_labels[:, 1].
+            search_gt_labels (list(Tensor), optional): Ground truth labels for
+                search images with shape (N, 2).
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        z1_dict = self.extract_feats(img[:, 0], padding_mask[:, 0])
-        z2_dict = self.extract_feats(img[:, 1], padding_mask[:, 1])
-        x_dict = self.extract_feats(search_img[:, 0], search_padding_mask[:,
-                                                                          0])
-        head_inputs = [z1_dict, z2_dict, x_dict]
+        head_inputs = []
+        for i in range(self.num_extra_template + 1):
+            z_feat = self.extract_feat(img[:, i])
+            z_dict = dict(feat=z_feat, mask=padding_mask[:, i])
+            head_inputs.append(z_dict)
+        x_feat = self.extract_feat(search_img[:, 0])
+        x_dict = dict(feat=x_feat, mask=search_padding_mask[:, 0])
+        head_inputs.append(x_dict)
         # run the transformer
         '''
         `track_results` is a dict containing the following keys:
@@ -176,9 +162,14 @@ class Stark(BaseSingleObjectTracker):
         track_results = self.head(head_inputs)
 
         losses = dict()
+        search_gt_bboxes = torch.cat(
+            search_gt_bboxes, dim=0).type(torch.float32)[:, 1:]
+        if search_gt_labels is not None:
+            search_gt_labels = torch.cat(
+                search_gt_labels, dim=0)[:, 1:].squeeze()
         head_losses = self.head.loss(track_results, search_gt_bboxes,
-                                     search_gt_labels, search_img[:,
-                                                                  0].shape[2])
+                                     search_gt_labels,
+                                     search_img[:, 0].shape[-2:])
 
         losses.update(head_losses)
 
