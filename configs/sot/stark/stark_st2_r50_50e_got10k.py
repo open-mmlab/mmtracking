@@ -11,7 +11,7 @@ model = dict(
             hidden_dim=256,
             output_dim=1,
             num_layers=3,
-            BN=False),
+            use_bn=False),
         frozen_module=['transformer', 'bbox_head'],
         loss_cls=dict(type='CrossEntropyLoss', use_sigmoid=True)),
     frozen_modules=['backbone', 'neck'])
@@ -26,7 +26,7 @@ train_pipeline = [
         max_frame_range=[200],
         cls_pos_prob=0.5,
         train_cls_head=True),
-    dict(type='LoadMultiImagesFromFile', to_float32=True, backend=None),
+    dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_label=True),
     dict(type='SeqGrayAug', prob=0.05),
     dict(

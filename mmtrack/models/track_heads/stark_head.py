@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from collections import defaultdict
 
 import torch
@@ -126,7 +127,7 @@ class ScoreHead(nn.Module):
         hidden_dim (int): the dim of hidden layers.
         output_dim (int): the dim of output.
         num_layers (int): the number of FC layers.
-        BN (bool, optional): whether to use BN after each FC layer.
+        use_bn (bool, optional): whether to use BN after each FC layer.
             Defaults to False.
     """
 
@@ -135,11 +136,11 @@ class ScoreHead(nn.Module):
                  hidden_dim,
                  output_dim,
                  num_layers,
-                 BN=False):
+                 use_bn=False):
         super(ScoreHead, self).__init__()
         self.num_layers = num_layers
         hidden_dims = [hidden_dim] * (num_layers - 1)
-        if BN:
+        if use_bn:
             self.layers = nn.ModuleList(
                 nn.Sequential(nn.Linear(n, k), nn.BatchNorm1d(k))
                 for n, k in zip([input_dim] + hidden_dims, hidden_dims +
@@ -455,15 +456,16 @@ class StarkHead(BaseModule):
         track_results = {}
         if not self.training:
             if self.cls_head is not None:
+                # forward the classification head
                 track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
             track_results['pred_bboxes'] = self.forward_bbox_head(
                 outs_dec, enc_mem)
         else:
             if self.cls_head is not None:
-                # forward the classification head
+                # stage-1 training: forward the classification head
                 track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
             else:
-                # forward the box prediction head
+                # stage-2 training: forward the box prediction head
                 track_results['pred_bboxes'] = self.forward_bbox_head(
                     outs_dec, enc_mem)
         return track_results
@@ -476,9 +478,10 @@ class StarkHead(BaseModule):
                 - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
                         [tl_x, tl_y, br_x, br_y] format.
                 - 'pred_logits': bboxes of (N, num_query, 1) shape.
-            search_gt_bboxes (Tensor): search gt_bboxes of shape (1, 4) in
-                [tl_x, tl_y, br_x, br_y] format.
-            search_gt_labels (Tensor): search gt_labels of shape (1, 1).
+            search_gt_bboxes (list[Tensor]): ground truth bboxes for images
+                with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y] format.
+            search_gt_labels (list[Tensor]): ground truth labels for
+                search images with shape (N, 2).
             img_size (tuple, optional): the size (h, w) of original
                 search image. Defaults to None.
 
@@ -486,12 +489,15 @@ class StarkHead(BaseModule):
             dict[str, Tensor]: a dictionary of loss components.
         """
         losses = dict()
+
         if self.cls_head is None:
             # the stage-1 training
             assert img_size is not None
             pred_bboxes = track_results['pred_bboxes'][:, 0]  # shape [N, 4]
             pred_bboxes[:, 0:4:2] = pred_bboxes[:, 0:4:2] / float(img_size[1])
             pred_bboxes[:, 1:4:2] = pred_bboxes[:, 1:4:2] / float(img_size[0])
+
+            gt_bboxes = torch.cat(gt_bboxes, dim=0).type(torch.float32)[:, 1:]
             gt_bboxes[:, 0:4:2] = gt_bboxes[:, 0:4:2] / float(img_size[1])
             gt_bboxes[:, 1:4:2] = gt_bboxes[:, 1:4:2] / float(img_size[0])
             gt_bboxes = gt_bboxes.clamp(0., 1.)
@@ -501,7 +507,7 @@ class StarkHead(BaseModule):
                     gt_bboxes[:, :2] >= gt_bboxes[:, 2:]).any():
                 # the first several iterations of train may return invalid
                 # bbox coordinates.
-                losses['loss_iou'] = torch.tensor(0.0).to(pred_bboxes)
+                losses['loss_iou'] = (pred_bboxes - gt_bboxes).sum() * 0.0
             else:
                 losses['loss_iou'] = self.loss_iou(pred_bboxes, gt_bboxes)
             # regression L1 loss
@@ -510,6 +516,8 @@ class StarkHead(BaseModule):
             # the stage-2 training
             assert gt_labels is not None
             pred_logits = track_results['pred_logits'][:, 0].squeeze()
+            gt_labels = torch.cat(
+                gt_labels, dim=0).type(torch.float32)[:, 1:].squeeze()
             losses['loss_cls'] = self.loss_cls(pred_logits, gt_labels)
 
         return losses

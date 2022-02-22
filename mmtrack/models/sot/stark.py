@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import torch
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
@@ -161,11 +160,6 @@ class Stark(BaseSingleObjectTracker):
         track_results = self.head(head_inputs)
 
         losses = dict()
-        search_gt_bboxes = torch.cat(
-            search_gt_bboxes, dim=0).type(torch.float32)[:, 1:]
-        if search_gt_labels is not None:
-            search_gt_labels = torch.cat(
-                search_gt_labels, dim=0)[:, 1:].squeeze()
         head_losses = self.head.loss(track_results, search_gt_bboxes,
                                      search_gt_labels,
                                      search_img[:, 0].shape[-2:])

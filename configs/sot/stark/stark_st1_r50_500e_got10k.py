@@ -90,7 +90,7 @@ train_pipeline = [
         max_frame_range=[200],
         cls_pos_prob=0.5,
         train_cls_head=False),
-    dict(type='LoadMultiImagesFromFile', to_float32=True, backend=None),
+    dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(type='SeqGrayAug', prob=0.05),
     dict(
@@ -146,15 +146,17 @@ data = dict(
     samples_per_gpu=16,
     workers_per_gpu=8,
     persistent_workers=True,
-    train=[
-        dict(datasets_sampling_prob=[1]),
-        dict(
-            type='GOT10kDataset',
-            img_prefix=data_root + 'got10k',
-            pipeline=train_pipeline,
-            split='train',
-            test_mode=False)
-    ],
+    train=dict(
+        type='RandomSampleConcatDataset',
+        dataset_sampling_weights=[1],
+        dataset_cfgs=[
+            dict(
+                type='GOT10kDataset',
+                img_prefix=data_root + 'got10k',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False)
+        ]),
     val=dict(
         type='GOT10kDataset',
         img_prefix=data_root + 'got10k',
