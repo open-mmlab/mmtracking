@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import multiprocessing as mp
 import os
 import platform
