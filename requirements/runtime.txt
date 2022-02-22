@@ -4,6 +4,7 @@ lap
 matplotlib
 mmcls>=0.16.0
 motmetrics
+opencv-python
 packaging
 pycocotools<=2.0.2
 seaborn
