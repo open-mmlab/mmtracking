@@ -454,7 +454,8 @@ class StarkHead(BaseModule):
         # 3. forward bbox head and classification head
         track_results = {}
         if not self.training:
-            track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
+            if self.cls_head is not None:
+                track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
             track_results['pred_bboxes'] = self.forward_bbox_head(
                 outs_dec, enc_mem)
         else:
