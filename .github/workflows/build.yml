@@ -227,7 +227,7 @@ jobs:
         run: |
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.8/index.html --only-binary mmcv-full
       - name: Install unittest dependencies
-        run: pip install -r requirements/tests.txt -r requirements/optional.txt
+        run: pip install -r requirements/tests.txt
       - name: Build and install
         run: pip install -e .
       - name: Run unittests
