@@ -422,7 +422,7 @@ class StarkHead(BaseModule):
                 multi-level features and masks of template or search images.
                     - 'feat': (tuple(Tensor)), the Tensor is of shape
                         (bs, c, h//stride, w//stride).
-                    - 'mask': (Tensor), of shape (bs, 1, h, w).
+                    - 'mask': (Tensor), of shape (bs, h, w).
 
                 Here, `h` and `w` denote the height and width of input
                 image respectively. `stride` is the stride of feature map.
@@ -478,9 +478,9 @@ class StarkHead(BaseModule):
                 - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
                         [tl_x, tl_y, br_x, br_y] format.
                 - 'pred_logits': bboxes of (N, num_query, 1) shape.
-            search_gt_bboxes (list[Tensor]): ground truth bboxes for images
+            gt_bboxes (list[Tensor]): ground truth bboxes for search images
                 with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y] format.
-            search_gt_labels (list[Tensor]): ground truth labels for
+            gt_labels (list[Tensor]): ground truth labels for
                 search images with shape (N, 2).
             img_size (tuple, optional): the size (h, w) of original
                 search image. Defaults to None.
