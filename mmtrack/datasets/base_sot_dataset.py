@@ -70,7 +70,6 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             self.get_len_per_video(video_ind)
             for video_ind in range(len(self.data_infos))
         ]
-        self.flag = np.zeros(len(self), dtype=np.uint8)
         # used to record the video information at the beginning of the video
         # test. Thus, we can avoid reloading the files of video information
         # repeatedly in all frames of one video.
