@@ -65,15 +65,9 @@ train_pipeline = [
 
 # dataset settings
 data = dict(
-    train=[
-        dict(datasets_sampling_prob=[1]),
-        dict(
-            type='GOT10kDataset',
-            img_prefix=data_root + 'got10k',
-            pipeline=train_pipeline,
-            split='train',
-            test_mode=False)
-    ], )
+    train=dict(
+        type='RandomSampleConcatDataset',
+        dataset_cfgs=[dict(pipeline=train_pipeline)]))
 
 # learning policy
 lr_config = dict(policy='step', step=[40])

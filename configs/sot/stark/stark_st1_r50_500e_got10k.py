@@ -146,6 +146,7 @@ data = dict(
     samples_per_gpu=16,
     workers_per_gpu=8,
     persistent_workers=True,
+    samples_per_epoch=6000,
     train=dict(
         type='RandomSampleConcatDataset',
         dataset_sampling_weights=[1],

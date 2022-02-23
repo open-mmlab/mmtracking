@@ -48,9 +48,6 @@ train_pipeline = [
 
 # dataset settings
 data = dict(
-    samples_per_gpu=16,
-    workers_per_gpu=8,
-    persistent_workers=True,
     train=dict(
         type='RandomSampleConcatDataset',
         dataset_sampling_weights=[1, 1, 1, 1],
