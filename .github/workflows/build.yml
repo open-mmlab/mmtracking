@@ -233,7 +233,7 @@ jobs:
           pip install mmdet
       - name: Install unittest dependencies
         run: |
-             pip install -r requirements/tests.txt
+             pip install -r requirements/tests.txt -r requirements/runtime.txt
              pip install git+https://github.com/JonathonLuiten/TrackEval.git
              pip install git+https://github.com/lvis-dataset/lvis-api.git
              pip install git+https://github.com/TAO-Dataset/tao.git
