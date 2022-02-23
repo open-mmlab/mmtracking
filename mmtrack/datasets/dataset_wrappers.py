@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import random
 
-import numpy as np
 from mmdet.datasets.builder import DATASETS, build_dataset
 from torch.utils.data.dataset import ConcatDataset
 
@@ -34,11 +33,6 @@ class RandomSampleConcatDataset(ConcatDataset):
 
         datasets = [build_dataset(cfg) for cfg in dataset_cfgs]
         self.CLASSES = datasets[0].CLASSES
-        if hasattr(datasets[0], 'flag'):
-            flags = []
-            for i in range(0, len(datasets)):
-                flags.append(datasets[i].flag)
-            self.flag = np.concatenate(flags)
 
         super().__init__(datasets)
 
