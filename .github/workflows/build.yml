@@ -223,6 +223,8 @@ jobs:
       - name: Install PyTorch
         # As a complement to Linux CI, we test on PyTorch LTS version
         run: pip install torch==1.8.2+${{ matrix.platform }} torchvision==0.9.2+${{ matrix.platform }} -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html
+      - name: Install votchallenge toolkit
+        run: pip install git+https://github.com/votchallenge/toolkit.git
       - name: Install MMCV
         run: |
           pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cpu/torch1.8/index.html --only-binary mmcv-full
@@ -230,7 +232,11 @@ jobs:
         run: |
           pip install mmdet
       - name: Install unittest dependencies
-        run: pip install -r requirements/tests.txt
+        run: |
+             pip install -r requirements/tests.txt
+             pip install git+https://github.com/JonathonLuiten/TrackEval.git
+             pip install git+https://github.com/lvis-dataset/lvis-api.git
+             pip install git+https://github.com/TAO-Dataset/tao.git
       - name: Build and install
         run: pip install -e .
       - name: Run unittests
