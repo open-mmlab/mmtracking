@@ -61,7 +61,7 @@ class CornerPredictorHead(BaseModule):
         Args:
             x (Tensor): of shape (bs, C, H, W).
         Returns:
-            (Tensor): of shape (bs, 4).
+            (Tensor): bbox of shape (bs, 4) in (tl_x, tl_y, br_x, br_y) format.
         """
         score_map_tl, score_map_br = self.get_score_map(x)
         coorx_tl, coory_tl = self.soft_argmax(score_map_tl)
@@ -155,14 +155,14 @@ class ScoreHead(nn.Module):
         """Forward function for `ScoreHead`.
 
         Args:
-            x (Tensor): of shape (bs, C, H, W).
+            x (Tensor): of shape (1, bs, num_query, c).
 
         Returns:
             Tensor: of shape (bs, num_query, 1).
         """
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
+        return x.squeeze(0)
 
 
 @TRANSFORMER.register_module()
@@ -436,12 +436,12 @@ class StarkHead(BaseModule):
         # 1. preprocess inputs for transformer
         all_inputs = []
         for input in inputs:
-            input['feat'] = input['feat'][0]
-            feat_size = input['feat'].shape[-2:]
-            input['mask'] = F.interpolate(
+            feat = input['feat'][0]
+            feat_size = feat.shape[-2:]
+            mask = F.interpolate(
                 input['mask'][None].float(), size=feat_size).to(torch.bool)[0]
-            input['pos_embed'] = self.positional_encoding(input['mask'])
-            all_inputs.append(input)
+            pos_embed = self.positional_encoding(mask)
+            all_inputs.append(dict(feat=feat, mask=mask, pos_embed=pos_embed))
         all_inputs = self._merge_template_search(all_inputs)
 
         # 2. forward transformer head
@@ -457,13 +457,13 @@ class StarkHead(BaseModule):
         if not self.training:
             if self.cls_head is not None:
                 # forward the classification head
-                track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
+                track_results['pred_logits'] = self.cls_head(outs_dec)
             track_results['pred_bboxes'] = self.forward_bbox_head(
                 outs_dec, enc_mem)
         else:
             if self.cls_head is not None:
                 # stage-1 training: forward the classification head
-                track_results['pred_logits'] = self.cls_head(outs_dec)[-1]
+                track_results['pred_logits'] = self.cls_head(outs_dec)
             else:
                 # stage-2 training: forward the box prediction head
                 track_results['pred_bboxes'] = self.forward_bbox_head(
