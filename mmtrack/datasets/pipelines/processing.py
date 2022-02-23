@@ -117,14 +117,11 @@ class TridentSampling(object):
                     else:
                         min_ind, max_ind = search_ind - max_frame_range, \
                             search_ind
-                    # TODO: invisible objects are not used, because their
-                    # bboxes must cause interruption in the subsequent
-                    # pipeline.
                     extra_template_index = self.random_sample_inds(
                         video_visibility,
                         num_samples=1,
                         frame_range=[min_ind, max_ind],
-                        allow_invisible=True)[0]
+                        allow_invisible=False)[0]
 
                     extra_template_inds.append(extra_template_index)
 
