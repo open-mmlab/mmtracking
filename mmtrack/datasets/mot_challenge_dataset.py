@@ -409,7 +409,7 @@ class MOTChallengeDataset(CocoVideoDataset):
 
             # tracker's name is set to 'track',
             # so this word needs to be splited out
-            output_folder = resfiles['track'].rsplit('/', 1)[0]
+            output_folder = resfiles['track'].rsplit(os.sep, 1)[0]
 
             dataset_config = self.get_dataset_cfg_for_hota(
                 output_folder, seqmap)

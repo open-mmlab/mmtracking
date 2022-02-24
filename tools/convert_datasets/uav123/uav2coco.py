@@ -50,7 +50,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
         # video_name is not the same as anno_name since one video may have
         # several fragments.
         # Example: video_name: "bird"   anno_name: "bird_1"
-        video_name = video_path.split('/')[-1]
+        video_name = video_path.split(os.sep)[-1]
         video = dict(id=records['vid_id'], name=video_name)
         uav123['videos'].append(video)
 

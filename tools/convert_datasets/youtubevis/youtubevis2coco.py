@@ -61,7 +61,7 @@ def convert_vis(ann_dir, save_dir, dataset_version, mode='train'):
 
     video_infos = official_anns['videos']
     for video_info in tqdm(video_infos):
-        video_name = video_info['file_names'][0].split('/')[0]
+        video_name = video_info['file_names'][0].split(os.sep)[0]
         video = dict(id=video_info['id'], name=video_name)
         VIS['videos'].append(video)
 
