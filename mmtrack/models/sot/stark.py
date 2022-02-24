@@ -155,11 +155,14 @@ class Stark(BaseSingleObjectTracker):
         # 2. Resize cropped image and padding mask
         resize_factor = output_size / crop_size
         img_crop_padded = F.interpolate(
-            img_crop_padded, (output_size, output_size), mode='bilinear')
+            img_crop_padded, (output_size, output_size),
+            mode='bilinear',
+            align_corners=False)
 
         padding_mask = F.interpolate(
             padding_mask[None, None], (output_size, output_size),
-            mode='bilinear').squeeze(dim=0).type(torch.bool)
+            mode='bilinear',
+            align_corners=False).squeeze(dim=0).type(torch.bool)
 
         return img_crop_padded, resize_factor, padding_mask
 
