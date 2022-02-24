@@ -1,3 +1,6 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+from collections import defaultdict
+
 import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
@@ -58,7 +61,7 @@ class CornerPredictorHead(BaseModule):
         Args:
             x (Tensor): of shape (bs, C, H, W).
         Returns:
-            (Tensor): of shape (bs, 4).
+            (Tensor): bbox of shape (bs, 4) in (tl_x, tl_y, br_x, br_y) format.
         """
         score_map_tl, score_map_br = self.get_score_map(x)
         coorx_tl, coory_tl = self.soft_argmax(score_map_tl)
@@ -124,7 +127,7 @@ class ScoreHead(nn.Module):
         hidden_dim (int): the dim of hidden layers.
         output_dim (int): the dim of output.
         num_layers (int): the number of FC layers.
-        BN (bool, optional): whether to use BN after each FC layer.
+        use_bn (bool, optional): whether to use BN after each FC layer.
             Defaults to False.
     """
 
@@ -133,11 +136,11 @@ class ScoreHead(nn.Module):
                  hidden_dim,
                  output_dim,
                  num_layers,
-                 BN=False):
+                 use_bn=False):
         super(ScoreHead, self).__init__()
         self.num_layers = num_layers
         hidden_dims = [hidden_dim] * (num_layers - 1)
-        if BN:
+        if use_bn:
             self.layers = nn.ModuleList(
                 nn.Sequential(nn.Linear(n, k), nn.BatchNorm1d(k))
                 for n, k in zip([input_dim] + hidden_dims, hidden_dims +
@@ -152,20 +155,21 @@ class ScoreHead(nn.Module):
         """Forward function for `ScoreHead`.
 
         Args:
-            x (Tensor): of shape (bs, C, H, W).
+            x (Tensor): of shape (1, bs, num_query, c).
 
         Returns:
             Tensor: of shape (bs, num_query, 1).
         """
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
+        return x.squeeze(0)
 
 
 @TRANSFORMER.register_module()
 class StarkTransformer(Transformer):
-    """The transformer head used in STARK.
-    `STARK <https://arxiv.org/abs/2103.17154>`_.
+    """The transformer head used in STARK. `STARK.
+
+    <https://arxiv.org/abs/2103.17154>`_.
 
     This module follows the official DETR implementation.
     See `paper: End-to-End Object Detection with Transformers
@@ -206,8 +210,8 @@ class StarkTransformer(Transformer):
                 x_feat_h*x_feat_w.
             'z_feat_h' and 'z_feat_w' denote the height and width of the
             template features respectively.
-            'x_feat_h' and 'x_feat_w' denote the height and width of search features
-            respectively.
+            'x_feat_h' and 'x_feat_w' denote the height and width of search
+            features respectively.
         Returns:
             tuple[Tensor]: results of decoder containing the following tensor.
                 - out_dec: Output from decoder. If return_intermediate_dec \
@@ -243,7 +247,8 @@ class StarkTransformer(Transformer):
 
 @HEADS.register_module()
 class StarkHead(BaseModule):
-    """STARK head.
+    """STARK head module for bounding box regression and prediction of
+    confidence score of tracking bbox.
 
     This module is proposed in
     "Learning Spatio-Temporal Transformer for Visual Tracking".
@@ -255,10 +260,6 @@ class StarkHead(BaseModule):
             Default: None.
         positional_encoding (obj:`mmcv.ConfigDict`|dict):
             Config for position encoding.
-        run_cls_head (bool, optional): whether to run classification head.
-            Defaults to False.
-        run_bbox_head (bool, optional): whether to run bboxes regression head.
-            Defaults to True.
         bbox_head (obj:`mmcv.ConfigDict`|dict, optional): Config for bbox head.
             Defaults to None.
         cls_head (obj:`mmcv.ConfigDict`|dict, optional): Config for
@@ -284,8 +285,6 @@ class StarkHead(BaseModule):
                      type='SinePositionalEncoding',
                      num_feats=128,
                      normalize=True),
-                 run_cls_head=False,
-                 run_bbox_head=True,
                  bbox_head=None,
                  cls_head=None,
                  loss_cls=dict(
@@ -298,18 +297,21 @@ class StarkHead(BaseModule):
                  train_cfg=None,
                  test_cfg=None,
                  init_cfg=None,
+                 frozen_modules=None,
                  **kwargs):
         super(StarkHead, self).__init__(init_cfg=init_cfg)
         self.transformer = build_transformer(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
-        self.run_bbox_head = run_bbox_head
-        self.run_cls_head = run_cls_head
+        assert bbox_head is not None
         self.bbox_head = build_head(bbox_head)
-        if self.run_bbox_head:
+        if cls_head is None:
+            # the stage-1 training
             self.loss_bbox = build_loss(loss_bbox)
             self.loss_iou = build_loss(loss_iou)
-        if self.run_cls_head:
+            self.cls_head = None
+        else:
+            # the stage-2 training
             self.cls_head = build_head(cls_head)
             self.loss_cls = build_loss(loss_cls)
         self.embed_dims = self.transformer.embed_dims
@@ -320,9 +322,61 @@ class StarkHead(BaseModule):
         self.test_cfg = test_cfg
         self.fp16_enabled = False
 
+        if frozen_modules is not None:
+            assert isinstance(frozen_modules, list)
+            for module in frozen_modules:
+                m = getattr(self, module)
+                # TODO: Study the influence of eval mode. The official code
+                # doesn't freeze BN in `frozen_modules`.
+                for param in m.parameters():
+                    param.requires_grad = False
+
     def init_weights(self):
-        """Parameters initialization"""
+        """Parameters initialization."""
         self.transformer.init_weights()
+
+    def _merge_template_search(self, inputs):
+        """Merge the data of template and search images.
+        The merge includes 3 steps: flatten, premute and concatenate.
+        Note: the data of search image must be in the last place.
+
+        args:
+            inputs (list[dict(Tensor)]):
+                The list contains the data of template and search images.
+                The dict is in the following format:
+                - 'feat': (N, C, H, W)
+                - 'mask': (N, H, W)
+                - 'pos_embed': (N, C, H, W)
+
+        Return:
+            dict(Tensor):
+                - 'feat': in [data_flatten_len, N, C] format
+                - 'mask': in [N, data_flatten_len] format
+                - 'pos_embed': in [data_flatten_len, N, C]
+                    format
+
+                Here, 'data_flatten_len' = z_h*z_w*2 + x_h*x_w.
+                'z_h' and 'z_w' denote the height and width of the
+                template images respectively.
+                'x_h' and 'x_w' denote the height and width of search image
+                respectively.
+        """
+        seq_dict = defaultdict(list)
+        # flatten and permute
+        for input_dic in inputs:
+            for name, x in input_dic.items():
+                if name == 'mask':
+                    seq_dict[name].append(x.flatten(1))
+                else:
+                    seq_dict[name].append(
+                        x.flatten(2).permute(2, 0, 1).contiguous())
+        # concatenate
+        for name, x in seq_dict.items():
+            if name == 'mask':
+                seq_dict[name] = torch.cat(x, dim=1)
+            else:
+                seq_dict[name] = torch.cat(x, dim=0)
+        return seq_dict
 
     def forward_bbox_head(self, feat, enc_mem):
         """
@@ -361,70 +415,109 @@ class StarkHead(BaseModule):
         outputs_coord = outputs_coord.view(bs, num_query, 4)
         return outputs_coord
 
-    def forward_head(self,
-                     feat,
-                     enc_mem,
-                     run_bbox_head=False,
-                     run_cls_head=False):
-        """
-        Args:
-            feat: the output embeddings of decoder, with shape
-                (1, bs, num_query, c)
-            enc_mem: the output embeddings of encoder, with shape
-                (feats_flatten_len, bs, c)
-
-                Here, 'feats_flatten_len' = z_feat_h*z_feat_w*2 + \
-                    x_feat_h*x_feat_w.
-                'z_feat_h' and 'z_feat_w' denote the height and width of the
-                template features respectively.
-                'x_feat_h' and 'x_feat_w' denote the height and width of search
-                features respectively.
-        Returns:
-            dict:
-                - 'pred_bboxes': of shape (bs, num_query, 4), in
-                    [tl_x, tl_y, br_x, br_y] format
-                - 'pred_logit': of shape (bs, num_query, 1)
-        """
-        out_dict = {}
-        if run_cls_head:
-            # forward the classification head
-            out_dict['pred_logits'] = self.cls_head(feat)[-1]
-        if run_bbox_head:
-            # forward the box prediction head
-            out_dict['pred_bboxes'] = self.forward_bbox_head(feat, enc_mem)
-
-        return out_dict
-
     def forward(self, inputs):
         """"
         Args:
-            inputs (dict(Tensor)):
-                - 'feat': (Tensor) of shape (bs, c, feats_flatten_len)
-                - 'mask': (Tensor) of shape (bs, 1, feats_flatten_len)
-                - 'pos_embed': (Tensor) of shape (feats_flatten_len, bs, c)
+            inputs (list[dict(tuple(Tensor))]): The list contains the
+                multi-level features and masks of template or search images.
+                    - 'feat': (tuple(Tensor)), the Tensor is of shape
+                        (bs, c, h//stride, w//stride).
+                    - 'mask': (Tensor), of shape (bs, h, w).
 
-                Here, 'feats_flatten_len' = z_feat_h*z_feat_w*2 + \
-                    x_feat_h*x_feat_w.
-                'z_feat_h' and 'z_feat_w' denote the height and width of the
-                template features respectively.
-                'x_feat_h' and 'x_feat_w' denote the height and width of
-                search features respectively.
+                Here, `h` and `w` denote the height and width of input
+                image respectively. `stride` is the stride of feature map.
 
         Returns:
              (dict):
                 - 'pred_bboxes': (Tensor) of shape (bs, num_query, 4), in
-                    [cx, cy, w, h] format
+                    [tl_x, tl_y, br_x, br_y] format
                 - 'pred_logit': (Tensor) of shape (bs, num_query, 1)
         """
+        # 1. preprocess inputs for transformer
+        all_inputs = []
+        for input in inputs:
+            feat = input['feat'][0]
+            feat_size = feat.shape[-2:]
+            mask = F.interpolate(
+                input['mask'][None].float(), size=feat_size).to(torch.bool)[0]
+            pos_embed = self.positional_encoding(mask)
+            all_inputs.append(dict(feat=feat, mask=mask, pos_embed=pos_embed))
+        all_inputs = self._merge_template_search(all_inputs)
+
+        # 2. forward transformer head
         # outs_dec is in (1, bs, num_query, c) shape
         # enc_mem is in (feats_flatten_len, bs, c) shape
-        outs_dec, enc_mem = self.transformer(inputs['feat'], inputs['mask'],
+        outs_dec, enc_mem = self.transformer(all_inputs['feat'],
+                                             all_inputs['mask'],
                                              self.query_embedding.weight,
-                                             inputs['pos_embed'])
+                                             all_inputs['pos_embed'])
 
-        track_results = self.forward_head(
-            outs_dec,
-            enc_mem,
-            run_bbox_head=self.run_bbox_head,
-            run_cls_head=self.run_cls_head)
+        # 3. forward bbox head and classification head
+        track_results = {}
+        if not self.training:
+            if self.cls_head is not None:
+                # forward the classification head
+                track_results['pred_logits'] = self.cls_head(outs_dec)
+            track_results['pred_bboxes'] = self.forward_bbox_head(
+                outs_dec, enc_mem)
+        else:
+            if self.cls_head is not None:
+                # stage-1 training: forward the classification head
+                track_results['pred_logits'] = self.cls_head(outs_dec)
+            else:
+                # stage-2 training: forward the box prediction head
+                track_results['pred_bboxes'] = self.forward_bbox_head(
+                    outs_dec, enc_mem)
         return track_results
+
+    def loss(self, track_results, gt_bboxes, gt_labels, img_size=None):
+        """Compute loss.
+
+        Args:
+            track_results (dict): it may contains the following keys:
+                - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
+                        [tl_x, tl_y, br_x, br_y] format.
+                - 'pred_logits': bboxes of (N, num_query, 1) shape.
+            gt_bboxes (list[Tensor]): ground truth bboxes for search images
+                with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y] format.
+            gt_labels (list[Tensor]): ground truth labels for
+                search images with shape (N, 2).
+            img_size (tuple, optional): the size (h, w) of original
+                search image. Defaults to None.
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components.
+        """
+        losses = dict()
+
+        if self.cls_head is None:
+            # the stage-1 training
+            assert img_size is not None
+            pred_bboxes = track_results['pred_bboxes'][:, 0]  # shape [N, 4]
+            pred_bboxes[:, 0:4:2] = pred_bboxes[:, 0:4:2] / float(img_size[1])
+            pred_bboxes[:, 1:4:2] = pred_bboxes[:, 1:4:2] / float(img_size[0])
+
+            gt_bboxes = torch.cat(gt_bboxes, dim=0).type(torch.float32)[:, 1:]
+            gt_bboxes[:, 0:4:2] = gt_bboxes[:, 0:4:2] / float(img_size[1])
+            gt_bboxes[:, 1:4:2] = gt_bboxes[:, 1:4:2] / float(img_size[0])
+            gt_bboxes = gt_bboxes.clamp(0., 1.)
+
+            # regression IoU loss, default GIoU loss
+            if (pred_bboxes[:, :2] >= pred_bboxes[:, 2:]).any() or (
+                    gt_bboxes[:, :2] >= gt_bboxes[:, 2:]).any():
+                # the first several iterations of train may return invalid
+                # bbox coordinates.
+                losses['loss_iou'] = (pred_bboxes - gt_bboxes).sum() * 0.0
+            else:
+                losses['loss_iou'] = self.loss_iou(pred_bboxes, gt_bboxes)
+            # regression L1 loss
+            losses['loss_bbox'] = self.loss_bbox(pred_bboxes, gt_bboxes)
+        else:
+            # the stage-2 training
+            assert gt_labels is not None
+            pred_logits = track_results['pred_logits'][:, 0].squeeze()
+            gt_labels = torch.cat(
+                gt_labels, dim=0).type(torch.float32)[:, 1:].squeeze()
+            losses['loss_cls'] = self.loss_cls(pred_logits, gt_labels)
+
+        return losses

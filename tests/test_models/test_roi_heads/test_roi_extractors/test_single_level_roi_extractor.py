@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch
 
 from mmtrack.models.roi_heads.roi_extractors import SingleRoIExtractor

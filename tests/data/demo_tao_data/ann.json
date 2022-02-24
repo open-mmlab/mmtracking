@@ -1,0 +1,253 @@
+{
+    "videos": [
+        {
+            "id": 0,
+            "width": 640,
+            "height": 480,
+            "neg_category_ids": [
+                342,
+                57,
+                651,
+                357,
+                738
+            ],
+            "not_exhaustive_category_ids": [
+                805,
+                95
+            ],
+            "name": "train/YFCC100M/v_f69ebe5b731d3e87c1a3992ee39c3b7e",
+            "metadata": {
+                "dataset": "YFCC100M",
+                "user_id": "22634709@N00",
+                "username": "Amsterdamized"
+            },
+            "frame_range": 30
+        }
+    ],
+    "annotations": [
+        {
+            "segmentation": [
+                [
+                    156,
+                    97,
+                    306,
+                    97,
+                    306,
+                    398,
+                    156,
+                    398
+                ]
+            ],
+            "bbox": [
+                156.0,
+                97.0,
+                150.0,
+                301.0
+            ],
+            "area": 45150,
+            "iscrowd": 0,
+            "id": 1,
+            "image_id": 0,
+            "category_id": 805,
+            "track_id": 1,
+            "_scale_uuid": "82addabd-8991-49f8-b63e-e0e767d4e695",
+            "scale_category": "moving object",
+            "video_id": 0,
+            "instance_id": 1
+        },
+        {
+            "segmentation": [
+                [
+                    162,
+                    240,
+                    296,
+                    240,
+                    296,
+                    480,
+                    162,
+                    480
+                ]
+            ],
+            "bbox": [
+                162.0,
+                240.0,
+                134.0,
+                240.0
+            ],
+            "area": 32160,
+            "iscrowd": 0,
+            "id": 3,
+            "image_id": 0,
+            "category_id": 95,
+            "track_id": 3,
+            "_scale_uuid": "040cfc07-5f1a-4736-b39f-b9d3a9e2a5ef",
+            "scale_category": "moving object",
+            "video_id": 0,
+            "instance_id": 3
+        },
+        {
+            "segmentation": [
+                [
+                    58,
+                    63,
+                    465,
+                    63,
+                    465,
+                    480,
+                    58,
+                    480
+                ]
+            ],
+            "bbox": [
+                58.0,
+                63.0,
+                407.0,
+                417.0
+            ],
+            "area": 169719,
+            "iscrowd": 0,
+            "id": 6,
+            "image_id": 1,
+            "category_id": 805,
+            "track_id": 1,
+            "_scale_uuid": "82addabd-8991-49f8-b63e-e0e767d4e695",
+            "scale_category": "moving object",
+            "video_id": 0,
+            "instance_id": 1
+        },
+        {
+            "segmentation": [
+                [
+                    332,
+                    377,
+                    440,
+                    377,
+                    440,
+                    480,
+                    332,
+                    480
+                ]
+            ],
+            "bbox": [
+                332.0,
+                377.0,
+                108.0,
+                103.0
+            ],
+            "area": 11124,
+            "iscrowd": 0,
+            "id": 7,
+            "image_id": 1,
+            "category_id": 95,
+            "track_id": 3,
+            "_scale_uuid": "040cfc07-5f1a-4736-b39f-b9d3a9e2a5ef",
+            "scale_category": "moving object",
+            "video_id": 0,
+            "instance_id": 3
+        }
+    ],
+    "tracks": [
+        {
+            "id": 1,
+            "category_id": 805,
+            "video_id": 0
+        },
+        {
+            "id": 3,
+            "category_id": 95,
+            "video_id": 0
+        }
+    ],
+    "images": [
+        {
+            "id": 0,
+            "video": "train/YFCC100M/v_f69ebe5b731d3e87c1a3992ee39c3b7e",
+            "_scale_task_id": "5de800eddb2c18001a56aa11",
+            "width": 640,
+            "height": 480,
+            "file_name": "train/YFCC100M/v_f69ebe5b731d3e87c1a3992ee39c3b7e/frame0391.jpg",
+            "frame_index": 390,
+            "license": 0,
+            "video_id": 0,
+            "frame_id": 0,
+            "neg_category_ids": [
+                342,
+                57,
+                651,
+                357,
+                738
+            ],
+            "not_exhaustive_category_ids": [
+                805,
+                95
+            ]
+        },
+        {
+            "id": 1,
+            "video": "train/YFCC100M/v_f69ebe5b731d3e87c1a3992ee39c3b7e",
+            "_scale_task_id": "5de800eddb2c18001a56aa11",
+            "width": 640,
+            "height": 480,
+            "file_name": "train/YFCC100M/v_f69ebe5b731d3e87c1a3992ee39c3b7e/frame0421.jpg",
+            "frame_index": 420,
+            "license": 0,
+            "video_id": 0,
+            "frame_id": 1,
+            "neg_category_ids": [
+                342,
+                57,
+                651,
+                357,
+                738
+            ],
+            "not_exhaustive_category_ids": [
+                805,
+                95
+            ]
+        }
+    ],
+    "info": {
+        "year": 2020,
+        "version": "0.1.20200120",
+        "description": "Annotations imported from Scale",
+        "contributor": "",
+        "url": "",
+        "date_created": "2020-01-20 15:49:53.519740"
+    },
+    "categories": [
+        {
+            "frequency": "c",
+            "id": 950,
+            "synset": "serving_dish.n.01",
+            "image_count": 0,
+            "instance_count": 0,
+            "synonyms": [
+                "serving_dish"
+            ],
+            "def": "a dish used for serving food",
+            "name": "serving_dish"
+        },
+        {
+            "frequency": "f",
+            "id": 805,
+            "synset": "person.n.01",
+            "image_count": 93,
+            "instance_count": 487,
+            "synonyms": [
+                "baby",
+                "child",
+                "boy",
+                "girl",
+                "man",
+                "woman",
+                "person",
+                "human"
+            ],
+            "def": "a human being",
+            "name": "baby"
+        }
+    ],
+    "licenses": [
+        "Unknown"
+    ]
+}

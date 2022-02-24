@@ -31,6 +31,12 @@ class TestFormatting(object):
         results = load(results)
         assert len(results) == len(img_names)
 
+        for _result in results:
+            _result['padding_mask'] = np.ones_like(_result['img'], dtype=bool)
+        check_data_validity = dict(type='CheckPadMaskValidity', stride=16)
+        check_data_validity = build_from_cfg(check_data_validity, PIPELINES)
+        assert results is not None
+
         for result in results:
             result['gt_bboxes'] = np.random.randn(num_objects, 4)
             result['gt_label'] = np.random.randint(0, 10)
@@ -88,6 +94,18 @@ class TestFormatting(object):
         with pytest.raises(AssertionError):
             reid_results = [copy.deepcopy(results[0])]
             reid_results = bundle(reid_results)
+
+        concat2twoparts = dict(type='ConcatSameTypeFrames', num_key_frames=2)
+        concat2twoparts = build_from_cfg(concat2twoparts, PIPELINES)
+        concat_video_results = concat2twoparts(copy.deepcopy(results))
+        assert len(concat_video_results) == 2
+        assert concat_video_results[0]['img'].ndim == 4
+        assert concat_video_results[0]['img'].shape[3] == 2
+        assert len(concat_video_results[0]['img_metas']) == 2
+        assert concat_video_results[0]['gt_bboxes'].ndim == 2
+        assert concat_video_results[0]['gt_bboxes'].shape[1] == 5
+        assert concat_video_results[0]['gt_bboxes'].shape[0] == (
+            num_ref_imgs * num_objects)
 
         concat_ref = dict(type='ConcatVideoReferences')
         concat_ref = build_from_cfg(concat_ref, PIPELINES)

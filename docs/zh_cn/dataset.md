@@ -7,6 +7,8 @@
 - 多目标跟踪
   - [MOT Challenge](https://motchallenge.net/)
   - [CrowdHuman](https://www.crowdhuman.org/)
+  - [LVIS](https://www.lvisdataset.org/)
+  - [TAO](https://taodataset.org/)
 - 单目标跟踪
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -29,7 +31,11 @@
 
 #### 1.2 多目标跟踪
 
-- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）， CrowdHuman 可以作为补充数据。
+- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）和 TAO ， CrowdHuman 和 LVIS 可以作为补充数据。
+
+- `tao` 文件夹下包含官方标注的 `annotations` 可以从[这里](https://github.com/TAO-Dataset/annotations)获取。
+
+- `lvis` 文件夹下包含 lvis-v0.5 官方标注的 `annotations` 可以从[这里](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957)下载。`./tools/convert_datasets/tao/merge_coco_with_lvis.py` 脚本中需到的同义词映射文件 `coco_to_lvis_synset.json` 可以从[这里](https://github.com/TAO-Dataset/tao/tree/master/data)获取。
 
 #### 1.3 单目标跟踪
 
@@ -103,6 +109,36 @@ mmtracking
 │   │   ├── val
 │   │   │   ├── Images
 │   │   │   ├── CrowdHuman_val.zip
+│   │
+│   ├── lvis
+│   │   ├── train (the same as coco/train2017)
+│   │   ├── val (the same as coco/val2017)
+│   │   ├── test (the same as coco/test2017)
+│   │   ├── annotations
+│   │   │   ├── coco_to_lvis_synset.json
+│   │   │   ├── lvis_v0.5_train.json
+│   │   │   ├── lvis_v0.5_val.json
+│   │   │   ├── lvis_v1_train.json
+│   │   │   ├── lvis_v1_val.json
+│   │   │   ├── lvis_v1_image_info_test_challenge.json
+│   │   │   ├── lvis_v1_image_info_test_dev.json
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── validation.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -198,6 +234,14 @@ python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
+# LVIS
+# 合并 LVIS 和 COCO 的标注来训练 QDTrack
+python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/annotations/lvis_v0.5_train.json --coco ./data/coco/annotations/instances_train2017.json --mapping ./data/lvis/annotations/coco_to_lvis_synset.json --output-json ./data/lvis/annotations/lvisv0.5+coco_train.json
+
+# TAO
+# 为 QDTrack 生成过滤后的json文件
+python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
+
 # LaSOT
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
@@ -288,6 +332,40 @@ mmtracking
 │   │   ├── annotations
 │   │   │   ├── crowdhuman_train.json
 │   │   │   ├── crowdhuman_val.json
+│   │
+│   ├── lvis
+│   │   ├── train (the same as coco/train2017)
+│   │   ├── val (the same as coco/val2017)
+│   │   ├── test (the same as coco/test2017)
+│   │   ├── annotations
+│   │   │   ├── coco_to_lvis_synset.json
+│   │   │   ├── lvisv0.5+coco_train.json
+│   │   │   ├── lvis_v0.5_train.json
+│   │   │   ├── lvis_v0.5_val.json
+│   │   │   ├── lvis_v1_train.json
+│   │   │   ├── lvis_v1_val.json
+│   │   │   ├── lvis_v1_image_info_test_challenge.json
+│   │   │   ├── lvis_v1_image_info_test_dev.json
+│   │
+│   ├── tao
+│   │   ├── annotations
+│   │   │   ├── test_482_classes.json
+│   │   │   ├── test_without_annotations.json
+│   │   │   ├── train.json
+│   │   │   ├── train_482_classes.json
+│   │   │   ├── validation.json
+│   │   │   ├── validation_482_classes.json
+│   │   │   ├── ......
+│   │   ├── test
+│   │   │   ├── ArgoVerse
+│   │   │   ├── AVA
+│   │   │   ├── BDD
+│   │   │   ├── Charades
+│   │   │   ├── HACS
+│   │   │   ├── LaSOT
+│   │   │   ├── YFCC100M
+│   │   ├── train
+│   │   ├── val
 │   │
 │   ├── lasot
 │   │   ├── LaSOTBenchmark
@@ -474,6 +552,33 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `crowdhuman_train.json`:  包含 CrowdHuman 训练集标注信息的 JSON 文件。
 `crowdhuman_val.json`:  包含 CrowdHuman 验证集标注信息的 JSON 文件。
+
+#### lvis 的标注文件夹
+
+在`data/lvis/annotations` 中有 8 个 JSON 文件:
+
+`coco_to_lvis_synset.json`: 包含 COCO 和 LVIS 类别映射关系的 JSON 文件。
+`lvisv0.5+coco_train.json`: 包含合并后标注的 JSON 文件。
+`lvis_v0.5_train.json`: 包含 lvisv0.5 训练集标注信息的 JSON 文件。
+`lvis_v0.5_val.json`: 包含 lvisv0.5 测试集标注信息的 JSON 文件。
+`lvis_v1_train.json`: 包含 lvisv1 训练集标注信息的 JSON 文件。
+`lvis_v1_val.json`: 包含 lvisv1 测试集标注信息的 JSON 文件。
+`lvis_v1_image_info_test_challenge.json`: 包含可全年使用的 lvisv1 测试集标注 JSON 文件。
+`lvis_v1_image_info_test_dev.json`: 包含仅一年一次供 LVIS Challenge 使用的 lvisv1 测试集标注 JSON 文件。
+
+#### tao 的标注文件夹
+
+在`data/tao/annotations` 中有 9 个 JSON 文件:
+
+`test_categories.json`: 包含在 TAO 测试集中会被评估的类别序列的 JSON 文件。
+`test_without_annotations.json`:  包含测试视频的 JSON 文件。 `images` 和 `videos` 域包含会在测试集中被评估的图片和视频。
+`test_482_classes.json`: 包含测试集转换结果的 JSON 文件。
+`train.json`: 包含 TAO 训练集中 LVIS 类别标注的 JSON 文件。
+`train_482_classes.json`: 包含训练集转换结果的 JSON 文件。
+`train_with_freeform.json`: 包含 TAO 训练集所有类别标注的 JSON 文件。
+`validation.json`: 包含 TAO 验证集中 LVIS 类别标注的 JSON 文件。
+`validation_482_classes.json`: 包含验证集转换结果的 JSON 文件。
+`validation_with_freeform.json`: 包含 TAO 验证集所有类别标注的 JSON 文件。
 
 #### lasot 的标注文件夹
 

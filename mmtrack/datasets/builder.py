@@ -10,8 +10,10 @@ from mmcv.utils import TORCH_VERSION, digit_version
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
+from torch.utils.data.dataset import ConcatDataset
 from torch.utils.data.sampler import RandomSampler
 
+from mmtrack.datasets.samplers.quota_sampler import DistributedQuotaSampler
 from .base_sot_dataset import BaseSOTDataset
 from .samplers import DistributedVideoSampler, SOTVideoSampler
 
@@ -20,6 +22,7 @@ def build_dataloader(dataset,
                      samples_per_gpu,
                      workers_per_gpu,
                      num_gpus=1,
+                     samples_per_epoch=None,
                      dist=True,
                      shuffle=True,
                      seed=None,
@@ -37,6 +40,9 @@ def build_dataloader(dataset,
         workers_per_gpu (int): How many subprocesses to use for data loading
             for each GPU.
         num_gpus (int): Number of GPUs. Only used in non-distributed training.
+        samples_per_epoch (int | None, Optional): The number of samples per
+            epoch. If equal to -1, using all samples in the datasets per epoch.
+            Otherwise, using the `samples_per_epoch` samples. Default: None.
         dist (bool): Distributed training/test or not. Default: True.
         shuffle (bool): Whether to shuffle the data at every epoch.
             Default: True.
@@ -51,26 +57,60 @@ def build_dataloader(dataset,
         DataLoader: A PyTorch dataloader.
     """
     rank, world_size = get_dist_info()
+    # We set specific data sampler for SOT datasets.
+    is_sot_dataset = isinstance(dataset, BaseSOTDataset) or (
+        isinstance(dataset, ConcatDataset)
+        and isinstance(dataset.datasets[0], BaseSOTDataset))
     if dist:
+        # ----- distributed train mode ------
         if shuffle:
-            sampler = DistributedGroupSampler(dataset, samples_per_gpu,
-                                              world_size, rank)
+            if is_sot_dataset:
+                if samples_per_epoch is None:
+                    sampler = DistributedSampler(
+                        dataset, world_size, rank, shuffle=True)
+                else:
+                    # get fixed number of samples per epoch to train
+                    # sampling with no-replacement mode
+                    sampler = DistributedQuotaSampler(
+                        dataset,
+                        samples_per_epoch,
+                        world_size,
+                        rank,
+                        replacement=False)
+            else:
+                sampler = DistributedGroupSampler(dataset, samples_per_gpu,
+                                                  world_size, rank)
+        # ----- distributed test mode ------
         else:
             if hasattr(dataset, 'load_as_video') and dataset.load_as_video:
+                # sample videos
                 sampler = DistributedVideoSampler(
                     dataset, world_size, rank, shuffle=False)
             else:
                 sampler = DistributedSampler(
                     dataset, world_size, rank, shuffle=False)
+
         batch_size = samples_per_gpu
         num_workers = workers_per_gpu
     else:
-        if isinstance(dataset, BaseSOTDataset):
-            sampler = SOTVideoSampler(
-                dataset) if not shuffle else RandomSampler(dataset)
+        # ----- non-distributed train mode ------
+        if shuffle:
+            if is_sot_dataset:
+                if samples_per_epoch is None:
+                    sampler = RandomSampler(dataset)
+                else:
+                    # get fixed number of samples per epoch to train
+                    # sampling with replacement mode
+                    sampler = RandomSampler(
+                        dataset,
+                        replacement=True,
+                        num_samples=samples_per_epoch)
+            else:
+                sampler = GroupSampler(dataset, samples_per_gpu)
+        # ----- non-distributed test mode ------
         else:
-            sampler = GroupSampler(dataset,
-                                   samples_per_gpu) if shuffle else None
+            sampler = SOTVideoSampler(dataset) if is_sot_dataset else None
+
         batch_size = num_gpus * samples_per_gpu
         num_workers = num_gpus * workers_per_gpu
 

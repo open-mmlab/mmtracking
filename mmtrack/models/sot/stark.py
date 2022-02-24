@@ -3,7 +3,6 @@ import math
 from collections import defaultdict
 from copy import deepcopy
 
-import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -61,15 +60,8 @@ class Stark(BaseSingleObjectTracker):
         self.update_intervals = self.test_cfg['update_intervals']
         self.num_extra_template = len(self.update_intervals)
 
-        self.debug = False
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
-        # We only train classification head in stage-2. The transformer and
-        # bbox head are not trained in stage-2.
-        if self.head.run_cls_head and not self.head.run_bbox_head:
-            for name, module in self.head.named_parameters():
-                if 'cls_head' not in name:
-                    module.requires_grad = False
 
     def init_weights(self):
         """Initialize the weights of modules in single object tracker."""
@@ -400,6 +392,101 @@ class Stark(BaseSingleObjectTracker):
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self, imgs, img_metas, search_img, search_img_metas,
+    def extract_feat(self, img):
+        """Extract the features of the input image.
+
+        Args:
+            img (Tensor): image of shape (N, C, H, W).
+
+        Returns:
+            tuple(Tensor): the multi-level feature maps, and each of them is
+                    of shape (N, C, H // stride, W // stride).
+        """
+        feat = self.backbone(img)
+        feat = self.neck(feat)
+        return feat
+
+    def forward_train(self,
+                      img,
+                      img_metas,
+                      search_img,
+                      search_img_metas,
+                      gt_bboxes,
+                      padding_mask,
+                      search_gt_bboxes,
+                      search_padding_mask,
+                      search_gt_labels=None,
                       **kwargs):
-        pass
+        """forward of training.
+
+        Args:
+            img (Tensor): template images of shape (N, num_templates, C, H, W).
+                Typically, there are 2 template images, and
+                H and W are both equal to 128.
+
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
+                images. 1 denotes there is only one search image for each
+                template image. Typically H and W are both equal to 320.
+
+            search_img_metas (list[list[dict]]): The second list only has one
+                element. The first list contains search image information dict
+                where each dict has: 'img_shape', 'scale_factor', 'flip', and
+                may also contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            gt_bboxes (list[Tensor]): Ground truth bboxes for template
+                images with shape (N, 4) in [tl_x, tl_y, br_x, br_y] format.
+
+            padding_mask (Tensor): padding mask of template images.
+                It's of shape (N, num_templates, H, W).
+                Typically, there are 2 padding masks of template images, and
+                H and W are both equal to that of template images.
+
+            search_gt_bboxes (list[Tensor]): Ground truth bboxes for search
+                images with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y]
+                format.
+
+            search_padding_mask (Tensor): padding mask of search images.
+                Its of shape (N, 1, H, W).
+                There are 1 padding masks of search image, and
+                H and W are both equal to that of search image.
+
+            search_gt_labels (list[Tensor], optional): Ground truth labels for
+                search images with shape (N, 2).
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components.
+        """
+        head_inputs = []
+        for i in range(self.num_extra_template + 1):
+            z_feat = self.extract_feat(img[:, i])
+            z_dict = dict(feat=z_feat, mask=padding_mask[:, i])
+            head_inputs.append(z_dict)
+        x_feat = self.extract_feat(search_img[:, 0])
+        x_dict = dict(feat=x_feat, mask=search_padding_mask[:, 0])
+        head_inputs.append(x_dict)
+        # run the transformer
+        '''
+        `track_results` is a dict containing the following keys:
+            - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
+                    [tl_x, tl_y, br_x, br_y] format.
+            - 'pred_logits': bboxes of (N, num_query, 1) shape.
+        Typically `num_query` is equal to 1.
+        '''
+        track_results = self.head(head_inputs)
+
+        losses = dict()
+        head_losses = self.head.loss(track_results, search_gt_bboxes,
+                                     search_gt_labels,
+                                     search_img[:, 0].shape[-2:])
+
+        losses.update(head_losses)
+
+        return losses
