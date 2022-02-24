@@ -79,6 +79,20 @@ class Stark(BaseSingleObjectTracker):
         if self.with_head:
             self.head.init_weights()
 
+    def extract_feat(self, img):
+        """Extract the features of the input image.
+
+        Args:
+            img (Tensor): image of shape (N, C, H, W).
+
+        Returns:
+            tuple(Tensor): the multi-level feature maps, and each of them is
+                    of shape (N, C, H // stride, W // stride).
+        """
+        feat = self.backbone(img)
+        feat = self.neck(feat)
+        return feat
+
     def get_cropped_img(self, img, target_bbox, search_area_factor,
                         output_size):
         """ Crop Image
@@ -149,81 +163,12 @@ class Stark(BaseSingleObjectTracker):
 
         return img_crop_padded, resize_factor, padding_mask
 
-    def _merge_template_search(self, inputs):
-        """Merge the data of template and search images.
-        The merge includes 3 steps: flatten, premute and concatenate.
-        Note: the data of search image must be in the last place.
-
-        args:
-            inputs (list[dict(Tensor)]):
-                The list contains the data of template and search images.
-                The dict is in the following format:
-                - 'feat': (1, C, H, W)
-                - 'mask': (1, H, W)
-                - 'pos_embed': (1, C, H, W)
-
-        Return:
-            dict(Tensor):
-                - 'feat': in [data_flatten_len, 1, C] format
-                - 'mask': in [1, data_flatten_len] format
-                - 'pos_embed': in [data_flatten_len, 1, C]
-                    format
-
-                Here, 'data_flatten_len' = z_h*z_w*2 + x_h*x_w.
-                'z_h' and 'z_w' denote the height and width of the
-                template images respectively.
-                'x_h' and 'x_w' denote the height and width of search image
-                respectively.
-        """
-        seq_dict = defaultdict(list)
-        # flatten and permute
-        for input_dic in inputs:
-            for name, x in input_dic.items():
-                if name == 'mask':
-                    seq_dict[name].append(x.flatten(1))
-                else:
-                    seq_dict[name].append(
-                        x.flatten(2).permute(2, 0, 1).contiguous())
-        # concatenate
-        for name, x in seq_dict.items():
-            if name == 'mask':
-                seq_dict[name] = torch.cat(x, dim=1)
-            else:
-                seq_dict[name] = torch.cat(x, dim=0)
-        return seq_dict
-
-    def extract_feat(self, img, mask):
-        """Extract the features of the input image and resize mask to the shape
-        of features.
-
-        Args:
-            img (Tensor): image of shape (N, C, H, W).
-            mask (Tensor): mask of shape (N, H, W).
-
-        Returns:
-            dict(Tensor):
-                - 'feat': the multi-level feature map of shape
-                    (N, C, H // stride, W // stride).
-                - 'mask': the mask of shape (N, H // stride, W // stride).
-                - 'pos_embed': of the position embedding of shape
-                    (N, C, H // stride, W // stride)
-        """
-        feat = self.backbone(img)
-        feat = self.neck(feat)
-
-        # official code uses default 'bilinear' interpolation.
-        mask = F.interpolate(
-            mask[None].float(), size=feat.shape[-2:]).to(torch.bool)[0]
-        pos_embed = self.head.positional_encoding(mask)
-
-        return {'feat': feat, 'mask': mask, 'pos_embed': pos_embed}
-
     def init(self, img, bbox):
         """Initialize the single object tracker in the first frame.
 
         Args:
             img (Tensor): input image of shape (1, C, H, W).
-            bbox (List | Tensor): in [cx, cy, w, h] format.
+            bbox (list | Tensor): in [cx, cy, w, h] format.
         """
         self.z_dict_list = []  # store templates
         # get the 1st template
@@ -237,7 +182,9 @@ class Stark(BaseSingleObjectTracker):
             std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
         with torch.no_grad():
-            self.z_dict = self.extract_feat(z_patch, z_mask)
+            z_feat = self.extract_feat(z_patch)
+
+        self.z_dict = dict(feat=z_feat, mask=z_mask)
         self.z_dict_list.append(self.z_dict)
 
         # get other templates
@@ -248,8 +195,8 @@ class Stark(BaseSingleObjectTracker):
         """Update the dymanic templates.
 
         Args:
-            img (Tensor): of shape (1, C, H, W)
-            bbox (list | ndarray): in [cx, cy, w, h] format
+            img (Tensor): of shape (1, C, H, W).
+            bbox (list | ndarray): in [cx, cy, w, h] format.
             conf_score (float): the confidence score of the predicted bbox.
         """
         for i, update_interval in enumerate(self.update_intervals):
@@ -264,21 +211,23 @@ class Stark(BaseSingleObjectTracker):
                     mean=[0.485, 0.456, 0.406],
                     std=[0.229, 0.224, 0.225]).unsqueeze(0)
                 with torch.no_grad():
-                    z_dict_dymanic = self.extract_feat(z_patch, z_mask)
+                    z_feat = self.extract_feat(z_patch)
                 # the 1st element of z_dict_list is the template from the 1st
                 # frame
-                self.z_dict_list[i + 1] = z_dict_dymanic
+                self.z_dict_list[i + 1] = dict(feat=z_feat, mask=z_mask)
 
     def mapping_bbox_back(self, pred_bboxes, prev_bbox, resize_factor):
-        """Mapping the `prediction bboxes` from resized croped image
+        """Mapping the `prediction bboxes` from resized cropped image
         to original image. The coordinate origins of them are both the top left
         corner.
 
         Args:
             pred_bboxes (Tensor): the predicted bbox of shape (B, Nq, 4), in
-                [tl_x, tl_y, br_x, br_y] format.
+                [tl_x, tl_y, br_x, br_y] format. The coordinates are based in
+                the resized cropped image.
             prev_bbox (Tensor): the previous bbox of shape (B, 4),
-                in [cx, cy, w, h] format.
+                in [cx, cy, w, h] format. The coordinates are based in the
+                original image.
             resize_factor (float): the ratio of original image scale to cropped
                 image scale.
         Returns:
@@ -289,27 +238,35 @@ class Stark(BaseSingleObjectTracker):
         # based in the original croped image
         pred_bbox = pred_bboxes.mean(dim=0) / resize_factor
 
-        # map the bbox to original image
+        # the half size of the original croped image
         cropped_img_half_size = 0.5 * self.test_cfg[
             'search_size'] / resize_factor
         # (x_shift, y_shift) is the coordinate of top left corner of the
-        # cropped image in the original image.
+        # cropped image based in the original image.
         x_shift, y_shift = prev_bbox[0] - cropped_img_half_size, prev_bbox[
             1] - cropped_img_half_size
-        pred_bbox[0] += x_shift
-        pred_bbox[1] += y_shift
-        pred_bbox[2] += x_shift
-        pred_bbox[3] += y_shift
+        pred_bbox[0:4:2] += x_shift
+        pred_bbox[1:4:2] += y_shift
 
         return pred_bbox
+
+    def _bbox_clip(self, bbox, img_h, img_w, margin=0):
+        """Clip the bbox in [tl_x, tl_y, br_x, br_y] format."""
+        bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        bbox[0] = bbox[0].clamp(0, img_w - margin)
+        bbox[1] = bbox[1].clamp(0, img_h - margin)
+        bbox_w = bbox_w.clamp(margin, img_w)
+        bbox_h = bbox_h.clamp(margin, img_h)
+        bbox[2] = bbox[0] + bbox_w
+        bbox[3] = bbox[1] + bbox_h
+        return bbox
 
     def track(self, img, bbox):
         """Track the box `bbox` of previous frame to current frame `img`.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding original input
-                image.
-            bbox (List | Tensor): The bbox in previous frame. The shape of the
+            img (Tensor): of shape (1, C, H, W).
+            bbox (list | Tensor): The bbox in previous frame. The shape of the
                 bbox is (4, ) in [x, y, w, h] format.
 
         Returns:
@@ -326,35 +283,24 @@ class Stark(BaseSingleObjectTracker):
             std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
         with torch.no_grad():
-            x_dict = self.extract_feat(x_patch, x_mask)
-            head_dict_inputs = self._merge_template_search(self.z_dict_list +
-                                                           [x_dict])
+            x_feat = self.extract_feat(x_patch)
+            x_dict = dict(feat=x_feat, mask=x_mask)
+            head_inputs = self.z_dict_list + [x_dict]
             # run the transformer
-            track_results = self.head(head_dict_inputs)
+            track_results = self.head(head_inputs)
 
         final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
                                             self.memo.bbox, resize_factor)
         final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
 
         conf_score = -1.
-        if self.head.run_cls_head:
+        if self.head.cls_head is not None:
             # get confidence score (whether the search region is reliable)
             conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
             crop_bbox = bbox_xyxy_to_cxcywh(final_bbox)
             self.update_template(img, crop_bbox, conf_score)
 
         return conf_score, final_bbox
-
-    def _bbox_clip(self, bbox, img_h, img_w, margin=0):
-        """Clip the bbox in [tl_x, tl_y, br_x, br_y] format."""
-        bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        bbox[0] = bbox[0].clamp(0, img_w - margin)
-        bbox[1] = bbox[1].clamp(0, img_h - margin)
-        bbox_w = bbox_w.clamp(margin, img_w)
-        bbox_h = bbox_h.clamp(margin, img_h)
-        bbox[2] = bbox[0] + bbox_w
-        bbox[3] = bbox[1] + bbox_h
-        return bbox
 
     def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
         """Test without augmentation.
@@ -391,20 +337,6 @@ class Stark(BaseSingleObjectTracker):
         results['track_bboxes'] = np.concatenate(
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
-
-    def extract_feat(self, img):
-        """Extract the features of the input image.
-
-        Args:
-            img (Tensor): image of shape (N, C, H, W).
-
-        Returns:
-            tuple(Tensor): the multi-level feature maps, and each of them is
-                    of shape (N, C, H // stride, W // stride).
-        """
-        feat = self.backbone(img)
-        feat = self.neck(feat)
-        return feat
 
     def forward_train(self,
                       img,
