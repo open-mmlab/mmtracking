@@ -97,7 +97,7 @@ class CornerPredictorHead(BaseModule):
         score_vec = score_map.view((-1, self.feat_size * self.feat_size))
         prob_vec = nn.functional.softmax(score_vec, dim=1)
 
-        if not hasattr(self, 'coord_x' | 'coord_y'):
+        if not hasattr(self, 'coord_x'):
             # generate coordinates and indexes
             self.indice = torch.arange(
                 0, self.feat_size, device=score_map.device).view(

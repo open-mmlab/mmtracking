@@ -200,7 +200,7 @@ class Stark(BaseSingleObjectTracker):
                 seq_dict[name] = torch.cat(x, dim=0)
         return seq_dict
 
-    def forward_before_head(self, img, mask):
+    def extract_feat(self, img, mask):
         """Extract the features of the input image and resize mask to the shape
         of features.
 
@@ -217,7 +217,7 @@ class Stark(BaseSingleObjectTracker):
                     (N, C, H // stride, W // stride)
         """
         feat = self.backbone(img)
-        feat = self.neck(feat)[0]
+        feat = self.neck(feat)
 
         # official code uses default 'bilinear' interpolation.
         mask = F.interpolate(
@@ -240,12 +240,12 @@ class Stark(BaseSingleObjectTracker):
             self.test_cfg['template_size']
         )  # z_patch of shape [1,C,H,W];  z_mask of shape [1,H,W]
         z_patch = normalize(
-            z_patch / 255.,
+            z_patch.squeeze() / 255.,
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225])
+            std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
         with torch.no_grad():
-            self.z_dict = self.forward_before_head(z_patch, z_mask)
+            self.z_dict = self.extract_feat(z_patch, z_mask)
         self.z_dict_list.append(self.z_dict)
 
         # get other templates
@@ -268,11 +268,11 @@ class Stark(BaseSingleObjectTracker):
                     self.test_cfg['template_factor'],
                     output_size=self.test_cfg['template_size'])
                 z_patch = normalize(
-                    z_patch / 255.,
+                    z_patch.squeeze() / 255.,
                     mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225])
+                    std=[0.229, 0.224, 0.225]).unsqueeze(0)
                 with torch.no_grad():
-                    z_dict_dymanic = self.forward_before_head(z_patch, z_mask)
+                    z_dict_dymanic = self.extract_feat(z_patch, z_mask)
                 # the 1st element of z_dict_list is the template from the 1st
                 # frame
                 self.z_dict_list[i + 1] = z_dict_dymanic
@@ -329,12 +329,12 @@ class Stark(BaseSingleObjectTracker):
             self.test_cfg['search_size']
         )  # bbox: of shape (x1, y1, w, h), x_mask: of shape (1, h, w)
         x_patch = normalize(
-            x_patch / 255.,
+            x_patch.squeeze() / 255.,
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225])
+            std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
         with torch.no_grad():
-            x_dict = self.forward_before_head(x_patch, x_mask)
+            x_dict = self.extract_feat(x_patch, x_mask)
             head_dict_inputs = self._merge_template_search(self.z_dict_list +
                                                            [x_dict])
             # run the transformer
@@ -399,3 +399,7 @@ class Stark(BaseSingleObjectTracker):
         results['track_bboxes'] = np.concatenate(
             (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
+
+    def forward_train(self, imgs, img_metas, search_img, search_img_metas,
+                      **kwargs):
+        pass
