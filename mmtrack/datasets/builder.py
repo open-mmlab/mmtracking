@@ -10,6 +10,7 @@ from mmcv.utils import TORCH_VERSION, digit_version
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
+from torch.utils.data.dataset import ConcatDataset
 from torch.utils.data.sampler import RandomSampler
 
 from mmtrack.datasets.samplers.quota_sampler import DistributedQuotaSampler
@@ -56,10 +57,14 @@ def build_dataloader(dataset,
         DataLoader: A PyTorch dataloader.
     """
     rank, world_size = get_dist_info()
+    # We set specific data sampler for SOT datasets.
+    is_sot_dataset = isinstance(dataset, BaseSOTDataset) or (
+        isinstance(dataset, ConcatDataset)
+        and isinstance(dataset.datasets[0], BaseSOTDataset))
     if dist:
         # ----- distributed train mode ------
         if shuffle:
-            if isinstance(dataset, BaseSOTDataset):
+            if is_sot_dataset:
                 if samples_per_epoch is None:
                     sampler = DistributedSampler(
                         dataset, world_size, rank, shuffle=True)
@@ -90,7 +95,7 @@ def build_dataloader(dataset,
     else:
         # ----- non-distributed train mode ------
         if shuffle:
-            if isinstance(dataset, BaseSOTDataset):
+            if is_sot_dataset:
                 if samples_per_epoch is None:
                     sampler = RandomSampler(dataset)
                 else:
@@ -104,10 +109,7 @@ def build_dataloader(dataset,
                 sampler = GroupSampler(dataset, samples_per_gpu)
         # ----- non-distributed test mode ------
         else:
-            if isinstance(dataset, BaseSOTDataset):
-                sampler = SOTVideoSampler(dataset)
-            else:
-                sampler = None
+            sampler = SOTVideoSampler(dataset) if is_sot_dataset else None
 
         batch_size = num_gpus * samples_per_gpu
         num_workers = num_gpus * workers_per_gpu

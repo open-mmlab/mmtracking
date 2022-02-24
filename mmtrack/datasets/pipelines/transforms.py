@@ -285,7 +285,7 @@ class SeqCropLikeStark(object):
                 _results['img_shape'] = crop_img.shape
             _results['gt_bboxes'] = generated_bbox
             _results['seg_fields'] = ['padding_mask']
-            _results['pdding_mask'] = padding_mask
+            _results['padding_mask'] = padding_mask
             outs.append(_results)
         return outs
 
