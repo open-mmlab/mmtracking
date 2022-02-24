@@ -1,17 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from collections import defaultdict
 from copy import deepcopy
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torchvision.transforms.functional import normalize
 from addict import Dict
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head, build_neck
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
+from torchvision.transforms.functional import normalize
 
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
@@ -220,8 +219,8 @@ class Stark(BaseSingleObjectTracker):
                 self.z_dict_list[i + 1] = dict(feat=z_feat, mask=z_mask)
 
     def mapping_bbox_back(self, pred_bboxes, prev_bbox, resize_factor):
-        """Mapping the `prediction bboxes` from resized cropped image
-        to original image. The coordinate origins of them are both the top left
+        """Mapping the `prediction bboxes` from resized cropped image to
+        original image. The coordinate origins of them are both the top left
         corner.
 
         Args:
