@@ -5,6 +5,7 @@ from collections import defaultdict
 import pytest
 import torch
 
+from mmtrack.models import build_model
 from .utils import _demo_mm_inputs, _get_config_module
 
 
@@ -16,7 +17,6 @@ def test_siamrpn_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
 
-    from mmtrack.models import build_model
     sot = build_model(model)
 
     # Test forward train with a non-empty truth batch
@@ -64,23 +64,6 @@ def test_siamrpn_forward(cfg_file):
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
-
-    # Test forward test
-    with torch.no_grad():
-        imgs = torch.cat([imgs, imgs.clone()], dim=0)
-        img_list = [g[None, :] for g in imgs]
-        img_metas.extend(copy.deepcopy(img_metas))
-        for i in range(len(img_metas)):
-            img_metas[i]['frame_id'] = i
-        gt_bboxes.extend(copy.deepcopy(gt_bboxes))
-        results = defaultdict(list)
-        for one_img, one_meta, one_gt_bboxes in zip(img_list, img_metas,
-                                                    gt_bboxes):
-            result = sot.forward([one_img], [[one_meta]],
-                                 gt_bboxes=[one_gt_bboxes],
-                                 return_loss=False)
-            for k, v in result.items():
-                results[k].append(v)
 
 
 def test_stark_forward():
@@ -153,3 +136,37 @@ def test_stark_forward():
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
     loss.backward()
+
+
+@pytest.mark.parametrize('cfg_file', [
+    'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
+    'sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py',
+    'sot/stark/stark_st2_r50_50e_got10k.py'
+])
+def test_sot_test_forward(cfg_file):
+    config = _get_config_module(cfg_file)
+    model = copy.deepcopy(config.model)
+    sot = build_model(model)
+    sot.eval()
+
+    input_shape = (1, 3, 127, 127)
+    mm_inputs = _demo_mm_inputs(input_shape, num_items=[1])
+    imgs = mm_inputs.pop('imgs')
+    img_metas = mm_inputs.pop('img_metas')
+    gt_bboxes = mm_inputs['gt_bboxes']
+
+    with torch.no_grad():
+        imgs = torch.cat([imgs, imgs.clone()], dim=0)
+        img_list = [g[None, :] for g in imgs]
+        img_metas.extend(copy.deepcopy(img_metas))
+        for i in range(len(img_metas)):
+            img_metas[i]['frame_id'] = i
+        gt_bboxes.extend(copy.deepcopy(gt_bboxes))
+        results = defaultdict(list)
+        for one_img, one_meta, one_gt_bboxes in zip(img_list, img_metas,
+                                                    gt_bboxes):
+            result = sot.forward([one_img], [[one_meta]],
+                                 gt_bboxes=[one_gt_bboxes],
+                                 return_loss=False)
+            for k, v in result.items():
+                results[k].append(v)

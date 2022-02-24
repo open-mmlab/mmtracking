@@ -1,4 +1,4 @@
-_base_ = ['./stark_st2_r50_500e_got10k.py']
+_base_ = ['./stark_st2_r50_50e_got10k.py']
 
 data_root = 'data/'
 data_root = 'data/'
