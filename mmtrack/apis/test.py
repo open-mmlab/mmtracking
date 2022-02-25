@@ -82,7 +82,7 @@ def single_gpu_test(model,
                 or i == len(dataset))
             if out_dir and need_write_video:
                 prev_img_prefix, prev_img_name = prev_img_meta[
-                    'ori_filename'].rsplit('/', 1)
+                    'ori_filename'].rsplit(os.sep, 1)
                 prev_img_idx, prev_img_type = prev_img_name.split('.')
                 prev_filename_tmpl = '{:0' + str(
                     len(prev_img_idx)) + 'd}.' + prev_img_type

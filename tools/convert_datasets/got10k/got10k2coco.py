@@ -53,7 +53,8 @@ def convert_got10k(ann_dir, save_dir, split='test'):
         gt_bboxes = mmcv.list_from_file(ann_file)
 
         img_files = glob.glob(osp.join(video_path, '*.jpg'))
-        img_files = sorted(img_files, key=lambda x: int(x.split('/')[-1][:-4]))
+        img_files = sorted(
+            img_files, key=lambda x: int(x.split(os.sep)[-1][:-4]))
         img = mmcv.imread(osp.join(video_path, '00000001.jpg'))
         height, width, _ = img.shape
         if split in ['train', 'val']:
@@ -70,7 +71,7 @@ def convert_got10k(ann_dir, save_dir, split='test'):
             cut_by_image_label = mmcv.list_from_file(
                 osp.join(video_path, 'cut_by_image.label'))
         for frame_id, img_file in enumerate(img_files):
-            img_name = img_file.split('/')[-1]
+            img_name = img_file.split(os.sep)[-1]
             # the images' root is not included in file_name
             file_name = osp.join(video_name, img_name)
             image = dict(

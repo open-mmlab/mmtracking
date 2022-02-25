@@ -45,7 +45,7 @@ def main():
             OUT_VIDEO = True
             out_dir = tempfile.TemporaryDirectory()
             out_path = out_dir.name
-            _out = args.output.rsplit('/', 1)
+            _out = args.output.rsplit(os.sep, 1)
             if len(_out) > 1:
                 os.makedirs(_out[0], exist_ok=True)
         else:
@@ -85,7 +85,7 @@ def main():
             if IN_VIDEO or OUT_VIDEO:
                 out_file = osp.join(out_path, f'{i:06d}.jpg')
             else:
-                out_file = osp.join(out_path, img.rsplit('/', 1)[-1])
+                out_file = osp.join(out_path, img.rsplit('os.sep', 1)[-1])
         else:
             out_file = None
         model.show_result(
