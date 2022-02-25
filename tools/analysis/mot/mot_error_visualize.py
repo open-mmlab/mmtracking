@@ -94,8 +94,9 @@ def main():
     # create index from frame_id to filename
     filenames_dict = dict()
     for data_info in dataset.data_infos:
-        video_name = data_info['filename'].split('/', 1)[0]
-        frame_id = int(data_info['filename'].rsplit('/', 1)[-1].split('.')[0])
+        video_name = data_info['filename'].split(os.sep, 1)[0]
+        frame_id = int(data_info['filename'].rsplit(os.sep,
+                                                    1)[-1].split('.')[0])
         if video_name not in filenames_dict:
             filenames_dict[video_name] = dict()
         filenames_dict[video_name][frame_id] = data_info['filename']
