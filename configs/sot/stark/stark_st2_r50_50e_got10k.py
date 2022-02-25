@@ -12,7 +12,7 @@ model = dict(
             output_dim=1,
             num_layers=3,
             use_bn=False),
-        frozen_module=['transformer', 'bbox_head'],
+        frozen_modules=['transformer', 'bbox_head', 'query_embedding'],
         loss_cls=dict(type='CrossEntropyLoss', use_sigmoid=True)),
     frozen_modules=['backbone', 'neck'])
 
@@ -20,7 +20,6 @@ data_root = 'data/'
 train_pipeline = [
     dict(
         type='TridentSampling',
-        max_gap=[200],
         num_search_frames=1,
         num_template_frames=2,
         max_frame_range=[200],
@@ -43,7 +42,7 @@ train_pipeline = [
         type='SeqCropLikeStark',
         crop_size_factor=[2, 2, 5],
         output_size=[128, 128, 320]),
-    dict(type='SeqBrightnessAug', brightness_jitter=0.2),
+    dict(type='SeqBrightnessAug', jitter_range=0.2),
     dict(
         type='SeqRandomFlip',
         share_params=False,
@@ -65,9 +64,14 @@ train_pipeline = [
 
 # dataset settings
 data = dict(
-    train=dict(
-        type='RandomSampleConcatDataset',
-        dataset_cfgs=[dict(pipeline=train_pipeline)]))
+    train=dict(dataset_cfgs=[
+        dict(
+            type='GOT10kDataset',
+            img_prefix=data_root + 'got10k',
+            pipeline=train_pipeline,
+            split='train',
+            test_mode=False)
+    ]))
 
 # learning policy
 lr_config = dict(policy='step', step=[40])
