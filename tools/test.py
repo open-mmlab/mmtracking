@@ -170,7 +170,7 @@ def main():
     if args.checkpoint is not None:
         checkpoint = load_checkpoint(
             model, args.checkpoint, map_location='cpu')
-        if 'CLASSES' in checkpoint['meta']:
+        if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
         model.CLASSES = dataset.CLASSES
