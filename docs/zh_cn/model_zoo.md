@@ -59,7 +59,7 @@
 
 ### STARK (ICCV 2021)
 
-Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark) for details.
+详情请参考 [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark)。
 
 ## 视频个例分割基线
 
