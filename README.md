@@ -90,7 +90,7 @@ Supported methods of multi object tracking:
 Supported methods of single object tracking:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [ ] STARK (ICCV 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/308))
+- [x] STARK (ICCV 2021) (https://github.com/open-mmlab/mmtracking/pull/308)
 
 Supported methods of video instance segmentation:
 

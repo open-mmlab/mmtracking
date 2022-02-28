@@ -57,6 +57,10 @@ Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master
 
 Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn) for details.
 
+### STARK (ICCV 2021)
+
+Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark) for details.
+
 ## Baselines of video instance segmentation
 
 ### MaskTrack R-CNN (ICCV 2019)
