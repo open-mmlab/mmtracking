@@ -1,11 +1,9 @@
 _base_ = ['./stark_st2_r50_50e_got10k.py']
 
 data_root = 'data/'
-data_root = 'data/'
 train_pipeline = [
     dict(
         type='TridentSampling',
-        max_gap=[200],
         num_search_frames=1,
         num_template_frames=2,
         max_frame_range=[200],
@@ -28,7 +26,7 @@ train_pipeline = [
         type='SeqCropLikeStark',
         crop_size_factor=[2, 2, 5],
         output_size=[128, 128, 320]),
-    dict(type='SeqBrightnessAug', brightness_jitter=0.2),
+    dict(type='SeqBrightnessAug', jitter_range=0.2),
     dict(
         type='SeqRandomFlip',
         share_params=False,
