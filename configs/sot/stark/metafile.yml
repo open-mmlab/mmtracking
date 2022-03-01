@@ -72,9 +72,9 @@ Models:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 65.3
-          Norm Precision: 74.9
-          Precision: 69.4
+          Success: 66.3
+          Norm Precision: 76.2
+          Precision: 70.4
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth
 
   - Name: stark_st1_r50_500e_trackingnet
@@ -102,7 +102,7 @@ Models:
       Epochs: 50
     Results:
       - Task: Single Object Tracking
-        Dataset: LaSOT
+        Dataset: TrackingNet
         Metrics:
           Success: 81.2
           Norm Precision: 86.0

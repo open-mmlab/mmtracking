@@ -4,24 +4,7 @@
 
 <!-- [ABSTRACT] -->
 
-In this paper, we present a new tracking architecture with
-an encoder-decoder transformer as the key component. The
-encoder models the global spatio-temporal feature depen-
-dencies between target objects and search regions, while
-the decoder learns a query embedding to predict the spa-
-tial positions of the target objects. Our method casts object
-tracking as a direct bounding box prediction problem, with-
-out using any proposals or predefined anchors. With the
-encoder-decoder transformer, the prediction of objects just
-uses a simple fully-convolutional network, which estimates
-the corners of objects directly. The whole method is end-
-to-end, does not need any postprocessing steps such as co-
-sine window and bounding box smoothing, thus largely sim-
-plifying existing tracking pipelines. The proposed tracker
-achieves state-of-the-art performance on five challenging
-short-term and long-term benchmarks, while running at
-real-time speed, being 6× faster than Siam R-CNN.
-Code and models are open-sourced at [here](https://github.com/researchmm/Stark).
+In this paper, we present a new tracking architecture with an encoder-decoder transformer as the key component. The encoder models the global spatio-temporal feature dependencies between target objects and search regions, while the decoder learns a query embedding to predict the spatial positions of the target objects. Our method casts object tracking as a direct bounding box prediction problem, without using any proposals or predefined anchors. With the encoder-decoder transformer, the prediction of objects just uses a simple fully-convolutional network, which estimates the corners of objects directly. The whole method is end-to-end, does not need any postprocessing steps such as cosine window and bounding box smoothing, thus largely simplifying existing tracking pipelines. The proposed tracker achieves state-of-the-art performance on five challenging short-term and long-term benchmarks, while running at real-time speed, being 6× faster than Siam R-CNN. Code and models are open-sourced at [here](https://github.com/researchmm/Stark).
 
 <!-- [IMAGE] -->
 
@@ -65,7 +48,7 @@ We provide the last-epoch model with its configuration and training log.
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :----: | :------: | :--------: |
 | STARK-ST1 |    R-50    |  -  |   500e    | 6.51        | -             | 65.7 | 75.4 |  69.7 | [config](stark_st1_r50_500e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220223_125402-934f290e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220223_125402.log.json) |
-| STARK-ST2 |    R-50    |  -  |   50e    | 0.51        | -              | 65.3 | 74.9 | 69.4  | [config](stark_st2_r50_50e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540.log.json) |
+| STARK-ST2 |    R-50    |  -  |   50e    | 0.51        | -              | 66.3 | 76.2 | 70.4  | [config](stark_st2_r50_50e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540.log.json) |
 
 ### TrackingNet
 
