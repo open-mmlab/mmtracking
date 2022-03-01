@@ -57,6 +57,10 @@
 
 详情请参考 [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn/README.md)。
 
+### STARK (ICCV 2021)
+
+详情请参考 [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark)。
+
 ## 视频个例分割基线
 
 ### MaskTrack R-CNN (ICCV 2019)

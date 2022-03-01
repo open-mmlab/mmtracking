@@ -1,0 +1,110 @@
+Collections:
+  - Name: STARK
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Techniques:
+        - AdamW
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+    Paper:
+        URL: https://arxiv.org/abs/2103.17154
+        Title: Learning Spatio-Temporal Transformer for Visual Tracking
+    README: configs/sot/stark/README.md
+
+Models:
+  - Name: stark_st1_r50_500e_got10k
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st1_r50_500e_got10k.py
+    Metadata:
+      Training Data: GOT10k
+      Training Memory (GB): 6.51
+      Epochs: 500
+    Results:
+      - Task: Single Object Tracking
+        Dataset: GOT10k
+        Metrics:
+          AO: 68.1
+          SR0.5: 77.4
+          SR0.75: 62.4
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_got10k/stark_st1_r50_500e_got10k_20220223_125400-40ead158.pth
+
+  - Name: stark_st2_r50_50e_got10k
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st2_r50_50e_got10k.py
+    Metadata:
+      Training Data: GOT10k
+      Training Memory (GB): 0.51
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: GOT10k
+        Metrics:
+          AO: 68.3
+          SR0.5: 77.6
+          SR0.75: 62.7
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_got10k/stark_st2_r50_50e_got10k_20220226_124213-ee39bbff.pth
+
+  - Name: stark_st1_r50_500e_lasot
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st1_r50_500e_lasot.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 6.51
+      Epochs: 500
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 65.7
+          Norm Precision: 75.4
+          Precision: 69.7
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220223_125402-934f290e.pth
+
+  - Name: stark_st2_r50_50e_lasot
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st2_r50_50e_lasot.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 0.51
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 66.3
+          Norm Precision: 76.2
+          Precision: 70.4
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth
+
+  - Name: stark_st1_r50_500e_trackingnet
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st1_r50_500e_trackingnet.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 6.51
+      Epochs: 500
+    Results:
+      - Task: Single Object Tracking
+        Dataset: TrackingNet
+        Metrics:
+          Success: 80.2
+          Norm Precision: 84.9
+          Precision: 77.4
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_trackingnet/stark_st1_r50_500e_lasot_20220223_125402-934f290e.pth
+
+  - Name: stark_st2_r50_50e_trackingnet
+    In Collection: STARK
+    Config: configs/sot/stark/stark_st2_r50_50e_trackingnet.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 0.51
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: TrackingNet
+        Metrics:
+          Success: 81.2
+          Norm Precision: 86.0
+          Precision: 78.5
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_trackingnet/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth

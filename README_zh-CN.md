@@ -86,7 +86,7 @@ v0.10.0版本已于2022年02月10日发布，可通过查阅[更新日志](docs/
 支持的单目标跟踪算法:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [ ] STARK (ICCV 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/308))
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
 
 支持的视频实例分割算法:
 

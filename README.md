@@ -65,7 +65,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
-Release [ByteTrack](configs/mot/bytetrack) pretrained models.
+Release [STARK](configs/sot/stark) pretrained models.
 
 v0.10.0 was released in 10/02/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -90,7 +90,7 @@ Supported methods of multi object tracking:
 Supported methods of single object tracking:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [ ] STARK (ICCV 2021) ([WIP](https://github.com/open-mmlab/mmtracking/pull/308))
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
 
 Supported methods of video instance segmentation:
 

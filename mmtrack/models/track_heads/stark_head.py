@@ -326,8 +326,9 @@ class StarkHead(BaseModule):
             assert isinstance(frozen_modules, list)
             for module in frozen_modules:
                 m = getattr(self, module)
-                # TODO: Study the influence of eval mode. The official code
-                # doesn't freeze BN in `frozen_modules`.
+                # TODO: Study the influence of freezing BN running_mean and
+                # running_variance of `frozen_modules` in the 2nd stage train.
+                # The official code doesn't freeze these.
                 for param in m.parameters():
                     param.requires_grad = False
 
