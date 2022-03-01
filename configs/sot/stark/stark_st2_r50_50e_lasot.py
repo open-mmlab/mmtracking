@@ -1,5 +1,8 @@
 _base_ = ['./stark_st2_r50_50e_got10k.py']
 
+# model setting
+model = dict(test_cfg=dict(update_intervals=[300]))
+
 data_root = 'data/'
 train_pipeline = [
     dict(
