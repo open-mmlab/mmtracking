@@ -204,8 +204,8 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
         if rescale:
             bboxes[:, :4] *= torch.tensor(img_metas[0]['scale_factor']).to(
                 bboxes.device)
-        bboxes[:, 0::2] = torch.clamp(bboxes[:, 0::2], min=0, max=w)
-        bboxes[:, 1::2] = torch.clamp(bboxes[:, 1::2], min=0, max=h)
+        bboxes[:, 0::2] = torch.clamp(bboxes[:, 0::2], min=0, max=w-1)
+        bboxes[:, 1::2] = torch.clamp(bboxes[:, 1::2], min=0, max=h-1)
 
         crop_imgs = []
         for bbox in bboxes:
