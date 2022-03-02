@@ -74,7 +74,7 @@ class RoIEmbedHead(BaseModule):
         if self.with_avg_pool:
             self.avg_pool = nn.AvgPool2d(self.roi_feat_size)
         # add convs and fcs
-        self.convs, self.fcs = self._add_conv_fc_branch(
+        self.convs, self.fcs, self.last_layer_dim = self._add_conv_fc_branch(
             self.num_convs, self.num_fcs, self.in_channels)
         self.relu = nn.ReLU(inplace=True)
 
@@ -113,7 +113,7 @@ class RoIEmbedHead(BaseModule):
                     nn.Linear(fc_in_channels, self.fc_out_channels))
             last_layer_dim = self.fc_out_channels
 
-        return branch_convs, branch_fcs
+        return branch_convs, branch_fcs, last_layer_dim
 
     @property
     def custom_activation(self):

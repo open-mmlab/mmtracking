@@ -14,7 +14,7 @@ from mmtrack.utils import get_root_logger
 class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
     """Base class for multiple object tracking."""
 
-    def __init__(self, init_cfg):
+    def __init__(self, init_cfg=None):
         super(BaseMultiObjectTracker, self).__init__(init_cfg)
         self.logger = get_root_logger()
         self.fp16_enabled = False

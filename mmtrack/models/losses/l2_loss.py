@@ -16,7 +16,7 @@ def l2_loss(pred, target):
     Returns:
         torch.Tensor: Calculated loss
     """
-    assert pred.size() == target.size() and target.numel() > 0
+    assert pred.size() == target.size()
     loss = torch.abs(pred - target)**2
     return loss
 
