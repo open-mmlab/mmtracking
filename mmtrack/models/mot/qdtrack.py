@@ -11,11 +11,13 @@ class QDTrack(BaseMultiObjectTracker):
 
     This multi object tracker is the implementation of `QDTrack
     <https://arxiv.org/abs/2006.06664>`_.
+
     Args:
         detector (dict): Configuration of detector. Defaults to None.
         track_head (dict): Configuration of track head. Defaults to None.
         tracker (dict): Configuration of tracker. Defaults to None.
         freeze_detector (bool): If True, freeze the detector weights.
+            Defaults to False.
     """
 
     def __init__(self,
@@ -26,7 +28,6 @@ class QDTrack(BaseMultiObjectTracker):
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
-        self.tracker_cfg = tracker
         if detector is not None:
             self.detector = build_detector(detector)
 
@@ -65,12 +66,8 @@ class QDTrack(BaseMultiObjectTracker):
                 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
             gt_bboxes (list[Tensor]): Ground truth bboxes of the image,
                 each item has a shape (num_gts, 4).
-            gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes to be
-                ignored, each item has a shape (num_ignored_gts, 4).
             gt_labels (list[Tensor]): Ground truth labels of all images.
                 each has a shape (num_gts,).
-            gt_masks (list[Tensor]) : Masks for each bbox, has a shape
-                (num_gts, h , w).
             gt_match_indices (list(Tensor)): Mapping from gt_instance_ids to
                 ref_gt_instance_ids of the same tracklet in a pair of images.
             ref_img (Tensor): of shape (N, C, H, W) encoding input reference
@@ -81,11 +78,15 @@ class QDTrack(BaseMultiObjectTracker):
                 and 'img_norm_cfg'.
             ref_gt_bboxes (list[Tensor]): Ground truth bboxes of the
                 reference image, each item has a shape (num_gts, 4).
+            ref_gt_labels (list[Tensor]): Ground truth labels of all
+                reference images, each has a shape (num_gts,).
+            gt_masks (list[Tensor]) : Masks for each bbox, has a shape
+                (num_gts, h , w).
+            gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes to be
+                ignored, each item has a shape (num_ignored_gts, 4).
             ref_gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes
                 of reference images to be ignored,
                 each item has a shape (num_ignored_gts, 4).
-            ref_gt_labels (list[Tensor]): Ground truth labels of all
-                reference images, each has a shape (num_gts,).
             ref_gt_masks (list[Tensor]) : Masks for each reference bbox,
                 has a shape (num_gts, h , w).
 
@@ -128,10 +129,6 @@ class QDTrack(BaseMultiObjectTracker):
         losses.update(track_losses)
 
         return losses
-
-    def init_tracker(self):
-        """Init tracker for every video."""
-        self.tracker = build_tracker(self.tracker_cfg)
 
     def simple_test(self):
         pass

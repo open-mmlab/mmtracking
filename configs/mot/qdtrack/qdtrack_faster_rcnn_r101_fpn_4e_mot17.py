@@ -1,4 +1,4 @@
-_base_ = '../qdtrack_faster_rcnn_r50_fpn.py'
+_base_ = './qdtrack_faster_rcnn_r50_fpn.py'
 
 model = dict(
     detector=dict(
@@ -52,32 +52,21 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
-mot_cfg = dict(
-    type='MOTChallengeDataset',
-    classes=('pedestrian', ),
-    visibility_thr=-1,
-    # track_visibility_thr=-1,
-    ann_file='data/MOT17/annotations/half-train_cocoformat.json',
-    img_prefix='data/MOT17/train',
-    ref_img_sampler=dict(num_ref_imgs=1, frame_range=10, method='uniform'),
-    pipeline=train_pipeline)
-crowdhuman_cfg = dict(
-    type='CocoVideoDataset',
-    load_as_video=False,
-    classes=('pedestrian', ),
-    ann_file='data/crowdhuman/annotations/crowdhuman_train.json',
-    img_prefix='data/crowdhuman/train',
-    pipeline=train_pipeline)
 
 dataset_type = 'MOTChallengeDataset'
 data_root = 'data/MOT17/'
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=1,
+    workers_per_gpu=0,
     train=dict(
-        type='ConcatDataset',
-        datasets=[mot_cfg, crowdhuman_cfg],
-        saparate_eval=False),
+        type=dataset_type,
+        classes=['pedestrian'],
+        visibility_thr=-1,
+        # track_visibility_thr=-1,
+        ann_file='data/MOT17/annotations/half-train_cocoformat.json',
+        img_prefix='data/MOT17/train/',
+        ref_img_sampler=dict(num_ref_imgs=1, frame_range=10, method='uniform'),
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file='data/MOT17/annotations/half-val_cocoformat.json',
@@ -104,8 +93,8 @@ log_config = dict(
 total_epochs = 4
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'ckpts/converted_faster_rcnn_r50_caffe_fpn_person_ap551.pth'
+load_from = 'ckpts/cfaster_rcnn_r50_caffe_fpn_person_ap551.pth'
 resume_from = None
 workflow = [('train', 1)]
 evaluation = dict(metric=['bbox', 'track'], interval=1)
-work_dir = 'work_dirs/mix'
+work_dir = 'work_dirs/mot17'

@@ -22,7 +22,8 @@ class MultiPosCrossEntropyLoss(nn.Module):
         """
         Args:
             pred (torch.Tensor): The prediction.
-            target (torch.Tensor): The learning target of the prediction.
+            label (torch.Tensor): The assigned label of the prediction.
+            weight (torch.Tensor): The element-wise weight.
             reduction (str): Same as built-in losses of PyTorch.
             avg_factor (float): Average factor when computing
                 the mean of losses.
@@ -60,7 +61,18 @@ class MultiPosCrossEntropyLoss(nn.Module):
                 avg_factor=None,
                 reduction_override=None,
                 **kwargs):
-        """Forward function."""
+        """Forward function.
+
+        Args:
+            cls_score (torch.Tensor): The classification score.
+            label (torch.Tensor): The assigned label of the prediction.
+            weight (torch.Tensor): The element-wise weight.
+            avg_factor (float): Average factor when computing
+                the mean of losses.
+            reduction (str): Same as built-in losses of PyTorch.
+        Returns:
+            torch.Tensor: Calculated loss
+        """
         assert cls_score.size() == label.size()
         assert reduction_override in (None, 'none', 'mean', 'sum')
         reduction = (
