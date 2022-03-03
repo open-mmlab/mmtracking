@@ -25,6 +25,17 @@ Multi-object tracking (MOT) aims at estimating bounding boxes and identities of 
 }
 ```
 
+## Results and models
+
+Note: We have to pass an extra parameter `load_from` from shell command to load the final model. Here is an example:
+
+```
+bash ./tools/dist_train.sh \
+    ${CONFIG_FILE} \
+    ${GPU_NUM} \
+    --load_from ${ByteTrack model}
+```
+
 ## Results and models on MOT17
 
 Please note that the performance on `MOT17-half-val` is comparable with the performance reported in the manuscript, while the performance on `MOT17-test` is lower than the performance reported in the manuscript.
