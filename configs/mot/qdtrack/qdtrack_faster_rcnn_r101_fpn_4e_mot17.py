@@ -57,7 +57,8 @@ model = dict(
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 # optimizer && learning policy
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+optimizer_config = dict(
+    _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
 lr_config = dict(policy='step', step=[3])
 # runtime settings
 total_epochs = 4

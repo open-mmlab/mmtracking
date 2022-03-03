@@ -1,7 +1,4 @@
-_base_ = [
-    './_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
-]
+_base_ = ['./qdtrack_faster_rcnn_r101_fpn_4e_mot17.py']
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
