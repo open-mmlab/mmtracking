@@ -67,7 +67,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 Release [STARK](configs/sot/stark) pretrained models.
 
-v0.10.0 was released in 10/02/2022.
+v0.11.0 was released in 04/03/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
 ## Benchmark and model zoo

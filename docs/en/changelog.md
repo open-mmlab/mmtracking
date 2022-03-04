@@ -1,5 +1,17 @@
 ## Changelog
 
+### v0.11.0 (04/03/2022)
+
+#### Highlights
+
+- Support STARK algorithm in SOT ([#443](https://github.com/open-mmlab/mmtracking/pull/443)), ([#440](https://github.com/open-mmlab/mmtracking/pull/440)), ([#434](https://github.com/open-mmlab/mmtracking/pull/434)), ([#438](https://github.com/open-mmlab/mmtracking/pull/438)), ([#435](https://github.com/open-mmlab/mmtracking/pull/435)), ([#426](https://github.com/open-mmlab/mmtracking/pull/426))
+
+- Support HOTA evaluation metrics for MOT ([#417](https://github.com/open-mmlab/mmtracking/pull/417))
+
+#### New Features
+
+- Support TAO dataset in MOT ([#415](https://github.com/open-mmlab/mmtracking/pull/415))
+
 ### v0.10.0 (10/02/2022)
 
 #### New Features
