@@ -54,8 +54,6 @@ model = dict(
                 add_gt_as_proposals=True,
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
                 neg_sampler=dict(type='RandomSampler')))))
-img_norm_cfg = dict(
-    mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 # optimizer && learning policy
 optimizer_config = dict(
     _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
