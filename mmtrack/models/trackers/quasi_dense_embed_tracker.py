@@ -8,6 +8,23 @@ from ..builder import TRACKERS
 
 @TRACKERS.register_module()
 class QuasiDenseEmbedTracker(object):
+    """Tracker for Quasi-Dense Tracking.
+
+    Args:
+        init_score_thr (float): The cls_score threshold to
+            initialize a new tracklet.
+        obj_score_thr (float): The cls_score threshold to
+            update a tracked tracklet.
+        match_score_thr (float): The match threshold.
+        memo_tracklet_frames (int): The most frames in a tracklet memory.
+        memo_backdrop_frames (int): The most frames in the backdrops.
+        memo_momentum (float): The momentum value for embeds updating.
+        nms_conf_thr (float): The nms threshold for confidence.
+        nms_backdrop_iou_thr (float): The nms threshold for backdrop IoU.
+        nms_class_iou_thr (float): The nms threshold for class IoU.
+        with_cats (bool): Whether to track with the same category.
+        match_metric (str): The match metric.
+    """
 
     def __init__(self,
                  init_score_thr=0.8,
@@ -53,12 +70,14 @@ class QuasiDenseEmbedTracker(object):
         self.backdrops = []
 
     def update_memo(self, ids, bboxes, embeds, labels, frame_id):
-        """Update the conditions of tracklets and backdrops memory.
+        """Tracking forward function.
 
         Args:
-            kwargs (dict[str: Tensor | int]): The `str` indicates the
-                name of the input variable. `ids` and `frame_ids` are
-                obligatory in the keys.
+            ids (Tensor): of shape(N, ).
+            bboxes (Tensor): of shape (N, 5).
+            embeds (Tensor): of shape (N, 256).
+            labels (Tensor): of shape (N, ).
+            frame_id (int): The id of current frame, 0-index.
         """
         tracklet_inds = ids > -1
 
@@ -117,6 +136,7 @@ class QuasiDenseEmbedTracker(object):
 
     @property
     def memo(self):
+        """Get tracklets memory."""
         memo_embeds = []
         memo_ids = []
         memo_bboxes = []
@@ -149,7 +169,17 @@ class QuasiDenseEmbedTracker(object):
             0), memo_vs
 
     def track(self, bboxes, labels, track_feats, frame_id, asso_tau=-1):
+        """Tracking forward function.
 
+        Args:
+            bboxes (Tensor): of shape (N, 5).
+            labels (Tensor): of shape (N, ).
+            track_feats (Tensor): of shape (N, 256).
+            frame_id (int): The id of current frame, 0-index.
+
+        Returns:
+            tuple: Tracking results.
+        """
         _, inds = bboxes[:, -1].sort(descending=True)
         bboxes = bboxes[inds, :]
         labels = labels[inds]
