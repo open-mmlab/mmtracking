@@ -13,7 +13,7 @@ from .utils import _demo_mm_inputs, _get_config_module
     'mot/qdtrack/qdtrack_faster_rcnn_r101_fpn_4e_mot17.py',
     'mot/qdtrack/qdtrack_faster_rcnn_r101_fpn_4e_mot17_crowdhuman.py'
 ])
-def test_qdtrack_forward(cfg_file):
+def test_mot_forward_train(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
 
