@@ -117,7 +117,7 @@ def test_mot_forward_train(cfg_file):
     'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
     'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
 ])
-def test_mot_forward(cfg_file):
+def test_mot_simple_test(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
 
