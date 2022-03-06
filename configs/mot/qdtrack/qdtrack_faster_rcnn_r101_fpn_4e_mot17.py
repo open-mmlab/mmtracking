@@ -53,7 +53,20 @@ model = dict(
                 neg_pos_ub=3,
                 add_gt_as_proposals=True,
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
-                neg_sampler=dict(type='RandomSampler')))))
+                neg_sampler=dict(type='RandomSampler')))),
+    tracker=dict(
+        type='QuasiDenseEmbedTracker',
+        init_score_thr=0.9,
+        obj_score_thr=0.5,
+        match_score_thr=0.5,
+        memo_tracklet_frames=30,
+        memo_backdrop_frames=1,
+        memo_momentum=0.8,
+        nms_conf_thr=0.5,
+        nms_backdrop_iou_thr=0.3,
+        nms_class_iou_thr=0.7,
+        with_cats=True,
+        match_metric='bisoftmax'))
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [

@@ -1,6 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import numpy as np
+import torch
+from mmdet.core import bbox2result
 from mmdet.models import build_detector, build_head
 
+from mmtrack.core import outs2results
 from mmtrack.models.mot import BaseMultiObjectTracker
 from ..builder import MODELS, build_tracker
 
@@ -130,5 +134,53 @@ class QDTrack(BaseMultiObjectTracker):
 
         return losses
 
-    def simple_test(self):
-        pass
+    def simple_test(self, img, img_metas, rescale=False):
+        # TODO inherit from a base tracker
+        assert self.with_track_head, 'track head must be implemented.'  # noqa
+        frame_id = img_metas[0].get('frame_id', -1)
+        if frame_id == 0:
+            self.tracker.reset()
+
+        x = self.detector.extract_feat(img)
+        proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+
+        det_bboxes, det_labels = self.detector.roi_head.simple_test_bboxes(
+            x,
+            img_metas,
+            proposal_list,
+            self.detector.test_cfg.rcnn,
+            rescale=rescale)
+
+        det_bboxes = det_bboxes[0]
+        det_labels = det_labels[0]
+
+        if det_bboxes.size(0) == 0:
+            track_feats = None
+        else:
+            track_bboxes = det_bboxes[:, :-1] * torch.tensor(
+                img_metas[0]['scale_factor']).to(det_bboxes.device)
+            track_feats = self.track_head.extract_bbox_feats(x, [track_bboxes])
+
+        if track_feats is not None:
+            bboxes, labels, ids = self.tracker.track(
+                bboxes=det_bboxes,
+                labels=det_labels,
+                track_feats=track_feats,
+                frame_id=frame_id)
+
+        det_bboxes = bbox2result(det_bboxes, det_labels,
+                                 self.detector.roi_head.bbox_head.num_classes)
+
+        if track_feats is not None:
+            track_bboxes = outs2results(
+                bboxes=bboxes,
+                labels=labels,
+                ids=ids,
+                num_classes=self.detector.roi_head.bbox_head.num_classes
+            )['bbox_results']
+        else:
+            track_bboxes = [
+                np.zeros((0, 6), dtype=np.float32)
+                for _ in range(self.detector.roi_head.bbox_head.num_classes)
+            ]
+        return dict(det_bboxes=det_bboxes, track_bboxes=track_bboxes)
