@@ -43,6 +43,7 @@ class QuasiDenseEmbedTracker(object):
 
     @property
     def empty(self):
+        """Judge the condition of tracklets."""
         return False if self.tracklets else True
 
     def reset(self):
@@ -52,9 +53,15 @@ class QuasiDenseEmbedTracker(object):
         self.backdrops = []
 
     def update_memo(self, ids, bboxes, embeds, labels, frame_id):
+        """Update the conditions of tracklets and backdrops memory.
+
+        Args:
+            kwargs (dict[str: Tensor | int]): The `str` indicates the
+                name of the input variable. `ids` and `frame_ids` are
+                obligatory in the keys.
+        """
         tracklet_inds = ids > -1
 
-        # update memo
         for id, bbox, embed, label in zip(ids[tracklet_inds],
                                           bboxes[tracklet_inds],
                                           embeds[tracklet_inds],
@@ -84,7 +91,7 @@ class QuasiDenseEmbedTracker(object):
                     acc_frame=0)
 
         backdrop_inds = torch.nonzero(ids == -1, as_tuple=False).squeeze(1)
-        ious = bbox_overlaps(bboxes[backdrop_inds, :-1], bboxes[:, :-1])
+        ious = bbox_overlaps(bboxes[backdrop_inds, :4], bboxes[:, :4])
         for i, ind in enumerate(backdrop_inds):
             if (ious[i, :ind] > self.nms_backdrop_iou_thr).any():
                 backdrop_inds[i] = -1
