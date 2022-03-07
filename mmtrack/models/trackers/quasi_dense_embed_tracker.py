@@ -1,8 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import numpy as np
 import torch
 import torch.nn.functional as F
 from mmdet.core import bbox_overlaps
 
+from mmtrack.core import outs2results
 from ..builder import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -165,7 +167,14 @@ class QuasiDenseEmbedTracker(BaseTracker):
         return memo_bboxes, memo_labels, memo_embeds, memo_ids.squeeze(
             0), memo_vs
 
-    def track(self, bboxes, labels, track_feats, frame_id, asso_tau=-1):
+    def track(self,
+              img_metas,
+              feats,
+              model,
+              bboxes,
+              labels,
+              frame_id,
+              asso_tau=-1):
         """Tracking forward function.
 
         Args:
@@ -177,6 +186,18 @@ class QuasiDenseEmbedTracker(BaseTracker):
         Returns:
             tuple: Tracking results.
         """
+        if bboxes.shape[0] == 0:
+            track_bboxes = [
+                np.zeros((0, 6), dtype=np.float32)
+                for _ in range(model.detector.roi_head.bbox_head.num_classes)
+            ]
+            return track_bboxes
+
+        track_bboxes = bboxes[:, :-1] * torch.tensor(
+            img_metas[0]['scale_factor']).to(bboxes.device)
+        track_feats = model.track_head.extract_bbox_feats(
+            feats, [track_bboxes])
+
         _, inds = bboxes[:, -1].sort(descending=True)
         bboxes = bboxes[inds, :]
         labels = labels[inds]
@@ -242,4 +263,10 @@ class QuasiDenseEmbedTracker(BaseTracker):
 
         self.update_memo(ids, bboxes, embeds, labels, frame_id)
 
-        return bboxes, labels, ids
+        track_bboxes = outs2results(
+            bboxes=bboxes,
+            labels=labels,
+            ids=ids,
+            num_classes=model.detector.roi_head.bbox_head.num_classes
+        )['bbox_results']
+        return track_bboxes
