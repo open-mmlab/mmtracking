@@ -14,18 +14,25 @@ class QuasiDenseEmbedTracker(BaseTracker):
 
     Args:
         init_score_thr (float): The cls_score threshold to
-            initialize a new tracklet.
+            initialize a new tracklet. Defaults to 0.8.
         obj_score_thr (float): The cls_score threshold to
-            update a tracked tracklet.
-        match_score_thr (float): The match threshold.
+            update a tracked tracklet. Defaults to 0.5.
+        match_score_thr (float): The match threshold. Defaults to 0.5.
         memo_tracklet_frames (int): The most frames in a tracklet memory.
+            Defaults to 10.
         memo_backdrop_frames (int): The most frames in the backdrops.
+            Defaults to 1.
         memo_momentum (float): The momentum value for embeds updating.
+            Defaults to 0.8.
         nms_conf_thr (float): The nms threshold for confidence.
+            Defaults to 0.5.
         nms_backdrop_iou_thr (float): The nms threshold for backdrop IoU.
+            Defaults to 0.3.
         nms_class_iou_thr (float): The nms threshold for class IoU.
+            Defaults to 0.7.
         with_cats (bool): Whether to track with the same category.
-        match_metric (str): The match metric.
+            Defaults to True.
+        match_metric (str): The match metric. Defaults to 'bisoftmax'.
     """
 
     def __init__(self,
@@ -85,6 +92,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
                                           embeds[tracklet_inds],
                                           labels[tracklet_inds]):
             id = int(id)
+            # update the tracked ones and initialize new tracks
             if id in self.tracks.keys():
                 velocity = (bbox - self.tracks[id]['bbox']) / (
                     frame_id - self.tracks[id]['last_frame'])
@@ -114,7 +122,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
             if (ious[i, :ind] > self.nms_backdrop_iou_thr).any():
                 backdrop_inds[i] = -1
         backdrop_inds = backdrop_inds[backdrop_inds > -1]
-
+        # old backdrops would be removed at first
         self.backdrops.insert(
             0,
             dict(
@@ -140,6 +148,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
         memo_ids = []
         memo_bboxes = []
         memo_labels = []
+        # velocity of tracks
         memo_vs = []
         # get tracks
         for k, v in self.tracks.items():
@@ -197,7 +206,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
             img_metas[0]['scale_factor']).to(bboxes.device)
         track_feats = model.track_head.extract_bbox_feats(
             feats, [track_bboxes])
-
+        # sort according to the object_score
         _, inds = bboxes[:, -1].sort(descending=True)
         bboxes = bboxes[inds, :]
         labels = labels[inds]
@@ -238,7 +247,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
                     F.normalize(memo_embeds, p=2, dim=1).t())
             else:
                 raise NotImplementedError
-
+            # track with the same category
             if self.with_cats:
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
                 scores *= cat_same.float().to(scores.device)
@@ -248,6 +257,8 @@ class QuasiDenseEmbedTracker(BaseTracker):
                 id = memo_ids[memo_ind]
                 if conf > self.match_score_thr:
                     if id > -1:
+                        # keep bboxes with high object score
+                        # and remove background bboxes
                         if bboxes[i, -1] > self.obj_score_thr:
                             ids[i] = id
                             scores[:i, memo_ind] = 0
