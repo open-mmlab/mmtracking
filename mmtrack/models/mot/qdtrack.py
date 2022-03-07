@@ -172,11 +172,11 @@ class QDTrack(BaseMultiObjectTracker):
             labels=det_labels,
             frame_id=frame_id)
 
-        track_results = outs2results(
+        track_bboxes = outs2results(
             bboxes=track_bboxes,
             labels=track_labels,
             ids=track_ids,
             num_classes=self.detector.roi_head.bbox_head.num_classes
         )['bbox_results']
 
-        return dict(det_bboxes=det_results[0], track_bboxes=track_results)
+        return dict(det_bboxes=bbox_results, track_bboxes=track_bboxes)

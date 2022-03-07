@@ -39,8 +39,9 @@ class QuasiDenseEmbedTracker(BaseTracker):
                  nms_backdrop_iou_thr=0.3,
                  nms_class_iou_thr=0.7,
                  with_cats=True,
-                 match_metric='bisoftmax'):
-        super().__init__()
+                 match_metric='bisoftmax',
+                 **kwargs):
+        super().__init__(**kwargs)
         assert 0 <= memo_momentum <= 1.0
         assert memo_tracklet_frames >= 0
         assert memo_backdrop_frames >= 0
@@ -67,7 +68,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
         self.tracks = dict()
         self.backdrops = []
 
-    def update_memo(self, ids, bboxes, embeds, labels, frame_id):
+    def update(self, ids, bboxes, embeds, labels, frame_id):
         """Tracking forward function.
 
         Args:
@@ -106,7 +107,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
                     last_frame=frame_id,
                     velocity=torch.zeros_like(bbox),
                     acc_frame=0)
-
+        # backdrop update according to IoU
         backdrop_inds = torch.nonzero(ids == -1, as_tuple=False).squeeze(1)
         ious = bbox_overlaps(bboxes[backdrop_inds, :4], bboxes[:, :4])
         for i, ind in enumerate(backdrop_inds):
@@ -140,6 +141,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
         memo_bboxes = []
         memo_labels = []
         memo_vs = []
+        # get tracks
         for k, v in self.tracks.items():
             memo_bboxes.append(v['bbox'][None, :])
             memo_embeds.append(v['embed'][None, :])
@@ -147,7 +149,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
             memo_labels.append(v['label'].view(1, 1))
             memo_vs.append(v['velocity'][None, :])
         memo_ids = torch.tensor(memo_ids, dtype=torch.long).view(1, -1)
-
+        # get backdrops
         for backdrop in self.backdrops:
             backdrop_ids = torch.full((1, backdrop['embeds'].size(0)),
                                       -1,
@@ -183,13 +185,14 @@ class QuasiDenseEmbedTracker(BaseTracker):
         Returns:
             list: Tracking results.
         """
+        # return zero bboxes if there is no track targets
         if bboxes.shape[0] == 0:
             track_bboxes = [
                 np.zeros((0, 6), dtype=np.float32)
                 for _ in range(model.detector.roi_head.bbox_head.num_classes)
             ]
             return track_bboxes
-
+        # get track feats
         track_bboxes = bboxes[:, :-1] * torch.tensor(
             img_metas[0]['scale_factor']).to(bboxes.device)
         track_feats = model.track_head.extract_bbox_feats(
@@ -239,7 +242,7 @@ class QuasiDenseEmbedTracker(BaseTracker):
             if self.with_cats:
                 cat_same = labels.view(-1, 1) == memo_labels.view(1, -1)
                 scores *= cat_same.float().to(scores.device)
-
+            # track according to scores
             for i in range(bboxes.size(0)):
                 conf, memo_ind = torch.max(scores[i, :], dim=0)
                 id = memo_ids[memo_ind]
@@ -252,12 +255,13 @@ class QuasiDenseEmbedTracker(BaseTracker):
                         else:
                             if conf > self.nms_conf_thr:
                                 ids[i] = -2
+        # initialize new tracks
         new_inds = (ids == -1) & (bboxes[:, 4] > self.init_score_thr).cpu()
         num_news = new_inds.sum()
         ids[new_inds] = torch.arange(
             self.num_tracks, self.num_tracks + num_news, dtype=torch.long)
         self.num_tracks += num_news
 
-        self.update_memo(ids, bboxes, embeds, labels, frame_id)
+        self.update(ids, bboxes, embeds, labels, frame_id)
 
         return bboxes, labels, ids
