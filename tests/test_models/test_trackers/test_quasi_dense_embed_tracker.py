@@ -35,25 +35,25 @@ class TestQuasiDenseEmbedTracker(object):
             ids=ids, bboxes=bboxes, embeds=embeds, labels=labels, frame_id=0)
 
         for tid in range(self.num_objs):
-            assert self.tracker.tracklets[tid]['bbox'].equal(bboxes[tid])
-            assert self.tracker.tracklets[tid]['embed'].equal(embeds[tid])
-            assert self.tracker.tracklets[tid]['label'].equal(labels[tid])
-            assert self.tracker.tracklets[tid]['acc_frame'] == 0
-            assert self.tracker.tracklets[tid]['last_frame'] == 0
-            assert len(self.tracker.tracklets[tid]['velocity']) == len(
+            assert self.tracker.tracks[tid]['bbox'].equal(bboxes[tid])
+            assert self.tracker.tracks[tid]['embed'].equal(embeds[tid])
+            assert self.tracker.tracks[tid]['label'].equal(labels[tid])
+            assert self.tracker.tracks[tid]['acc_frame'] == 0
+            assert self.tracker.tracks[tid]['last_frame'] == 0
+            assert len(self.tracker.tracks[tid]['velocity']) == len(
                 bboxes[tid])
 
         ids = torch.tensor([self.num_objs - 1])
         bboxes = random_boxes(1, 64)
         labels = torch.tensor([self.num_objs])
         embeds = torch.randn(1, 256)
-        new_embeds = (1 - self.tracker.memo_momentum) * self.tracker.tracklets[
+        new_embeds = (1 - self.tracker.memo_momentum) * self.tracker.tracks[
             ids.item()]['embed'] + self.tracker.memo_momentum * embeds
 
         self.tracker.update_memo(
             ids=ids, bboxes=bboxes, labels=labels, embeds=embeds, frame_id=1)
 
-        assert self.tracker.tracklets[ids.item()]['embed'].equal(
+        assert self.tracker.tracks[ids.item()]['embed'].equal(
             new_embeds[0]) == True  # noqa
 
     def test_memo(self):

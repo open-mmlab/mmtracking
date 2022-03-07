@@ -4,10 +4,11 @@ import torch.nn.functional as F
 from mmdet.core import bbox_overlaps
 
 from ..builder import TRACKERS
+from .base_tracker import BaseTracker
 
 
 @TRACKERS.register_module()
-class QuasiDenseEmbedTracker(object):
+class QuasiDenseEmbedTracker(BaseTracker):
     """Tracker for Quasi-Dense Tracking.
 
     Args:
@@ -38,6 +39,7 @@ class QuasiDenseEmbedTracker(object):
                  nms_class_iou_thr=0.7,
                  with_cats=True,
                  match_metric='bisoftmax'):
+        super().__init__()
         assert 0 <= memo_momentum <= 1.0
         assert memo_tracklet_frames >= 0
         assert memo_backdrop_frames >= 0
@@ -54,19 +56,14 @@ class QuasiDenseEmbedTracker(object):
         assert match_metric in ['bisoftmax', 'softmax', 'cosine']
         self.match_metric = match_metric
 
-        self.num_tracklets = 0
-        self.tracklets = dict()
+        self.num_tracks = 0
+        self.tracks = dict()
         self.backdrops = []
-
-    @property
-    def empty(self):
-        """Judge the condition of tracklets."""
-        return False if self.tracklets else True
 
     def reset(self):
         """Reset the buffer of the tracker."""
-        self.num_tracklets = 0
-        self.tracklets = dict()
+        self.num_tracks = 0
+        self.tracks = dict()
         self.backdrops = []
 
     def update_memo(self, ids, bboxes, embeds, labels, frame_id):
@@ -86,22 +83,22 @@ class QuasiDenseEmbedTracker(object):
                                           embeds[tracklet_inds],
                                           labels[tracklet_inds]):
             id = int(id)
-            if id in self.tracklets.keys():
-                velocity = (bbox - self.tracklets[id]['bbox']) / (
-                    frame_id - self.tracklets[id]['last_frame'])
-                self.tracklets[id]['bbox'] = bbox
-                self.tracklets[id]['embed'] = (
+            if id in self.tracks.keys():
+                velocity = (bbox - self.tracks[id]['bbox']) / (
+                    frame_id - self.tracks[id]['last_frame'])
+                self.tracks[id]['bbox'] = bbox
+                self.tracks[id]['embed'] = (
                     1 - self.memo_momentum
-                ) * self.tracklets[id]['embed'] + self.memo_momentum * embed
-                self.tracklets[id]['last_frame'] = frame_id
-                self.tracklets[id]['label'] = label
-                self.tracklets[id]['velocity'] = (
-                    self.tracklets[id]['velocity'] *
-                    self.tracklets[id]['acc_frame'] + velocity) / (
-                        self.tracklets[id]['acc_frame'] + 1)
-                self.tracklets[id]['acc_frame'] += 1
+                ) * self.tracks[id]['embed'] + self.memo_momentum * embed
+                self.tracks[id]['last_frame'] = frame_id
+                self.tracks[id]['label'] = label
+                self.tracks[id]['velocity'] = (
+                    self.tracks[id]['velocity'] * self.tracks[id]['acc_frame']
+                    + velocity) / (
+                        self.tracks[id]['acc_frame'] + 1)
+                self.tracks[id]['acc_frame'] += 1
             else:
-                self.tracklets[id] = dict(
+                self.tracks[id] = dict(
                     bbox=bbox,
                     embed=embed,
                     label=label,
@@ -125,24 +122,24 @@ class QuasiDenseEmbedTracker(object):
 
         # pop memo
         invalid_ids = []
-        for k, v in self.tracklets.items():
+        for k, v in self.tracks.items():
             if frame_id - v['last_frame'] >= self.memo_tracklet_frames:
                 invalid_ids.append(k)
         for invalid_id in invalid_ids:
-            self.tracklets.pop(invalid_id)
+            self.tracks.pop(invalid_id)
 
         if len(self.backdrops) > self.memo_backdrop_frames:
             self.backdrops.pop()
 
     @property
     def memo(self):
-        """Get tracklets memory."""
+        """Get tracks memory."""
         memo_embeds = []
         memo_ids = []
         memo_bboxes = []
         memo_labels = []
         memo_vs = []
-        for k, v in self.tracklets.items():
+        for k, v in self.tracks.items():
             memo_bboxes.append(v['bbox'][None, :])
             memo_embeds.append(v['embed'][None, :])
             memo_ids.append(k)
@@ -240,10 +237,8 @@ class QuasiDenseEmbedTracker(object):
         new_inds = (ids == -1) & (bboxes[:, 4] > self.init_score_thr).cpu()
         num_news = new_inds.sum()
         ids[new_inds] = torch.arange(
-            self.num_tracklets,
-            self.num_tracklets + num_news,
-            dtype=torch.long)
-        self.num_tracklets += num_news
+            self.num_tracks, self.num_tracks + num_news, dtype=torch.long)
+        self.num_tracks += num_news
 
         self.update_memo(ids, bboxes, embeds, labels, frame_id)
 
