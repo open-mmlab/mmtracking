@@ -27,13 +27,13 @@ class TestQuasiDenseEmbedTracker(object):
         cls.tracker = tracker(**cfg)
         cls.num_objs = 5
 
-    def test_update_memo(self):
+    def test_update(self):
         ids = torch.arange(self.num_objs)
         bboxes = random_boxes(self.num_objs, 64)
         labels = torch.arange(self.num_objs)
         embeds = torch.randn(self.num_objs, 256)
 
-        self.tracker.update_memo(
+        self.tracker.update(
             ids=ids, bboxes=bboxes, embeds=embeds, labels=labels, frame_id=0)
 
         for tid in range(self.num_objs):
@@ -52,7 +52,7 @@ class TestQuasiDenseEmbedTracker(object):
         new_embeds = (1 - self.tracker.memo_momentum) * self.tracker.tracks[
             ids.item()]['embed'] + self.tracker.memo_momentum * embeds
 
-        self.tracker.update_memo(
+        self.tracker.update(
             ids=ids, bboxes=bboxes, labels=labels, embeds=embeds, frame_id=1)
 
         assert self.tracker.tracks[ids.item()]['embed'].equal(
