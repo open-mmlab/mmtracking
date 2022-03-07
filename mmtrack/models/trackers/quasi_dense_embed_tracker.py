@@ -4,7 +4,6 @@ import torch
 import torch.nn.functional as F
 from mmdet.core import bbox_overlaps
 
-from mmtrack.core import outs2results
 from ..builder import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -261,10 +260,4 @@ class QuasiDenseEmbedTracker(BaseTracker):
 
         self.update_memo(ids, bboxes, embeds, labels, frame_id)
 
-        track_bboxes = outs2results(
-            bboxes=bboxes,
-            labels=labels,
-            ids=ids,
-            num_classes=model.detector.roi_head.bbox_head.num_classes
-        )['bbox_results']
-        return track_bboxes
+        return bboxes, labels, ids

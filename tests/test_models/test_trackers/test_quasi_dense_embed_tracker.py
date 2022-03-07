@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from unittest.mock import MagicMock
+
 import torch
 from mmdet.core.bbox.demodata import random_boxes
 
@@ -65,16 +67,28 @@ class TestQuasiDenseEmbedTracker(object):
 
     def test_track(self):
         self.tracker.reset()
+        img_size, feats_channel = 64, 256
+        img_metas = [dict(scale_factor=1.0)]
+
+        model = MagicMock()
+        model.track_head.extract_roi_feats = MagicMock(
+            return_value=(torch.rand(self.num_objs, feats_channel, 7, 7),
+                          [self.num_objs]))
+        model.track_head.simple_test = MagicMock(
+            return_value=torch.rand((self.num_objs, self.num_objs + 1)))
+
+        feats = torch.rand((1, feats_channel, img_size, img_size))
+
         bboxes = random_boxes(self.num_objs, 64)
         scores = torch.rand((self.num_objs, 1))
         bboxes = torch.cat((bboxes, scores), dim=1)
-        embeds = torch.randn(self.num_objs, 256)
 
         labels = torch.arange(self.num_objs)
 
         for frame_id in range(3):
-            bboxes, labels, ids = self.tracker.track(bboxes, labels, embeds,
-                                                     frame_id)
+            bboxes, labels, ids = self.tracker.track(img_metas, feats, model,
+                                                     bboxes, labels, frame_id)
 
             assert bboxes.shape[0] == labels.shape[0]
-            assert bboxes.shape[0] == ids.shape[0]
+            assert labels.shape[0] == labels.shape[0]
+            assert ids.shape[0] == labels.shape[0]

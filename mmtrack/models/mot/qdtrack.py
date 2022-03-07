@@ -2,7 +2,7 @@
 import torch
 from mmdet.models import build_detector, build_head
 
-from mmtrack.core import results2outs
+from mmtrack.core import outs2results, results2outs
 from mmtrack.models.mot import BaseMultiObjectTracker
 from ..builder import MODELS, build_tracker
 
@@ -164,11 +164,19 @@ class QDTrack(BaseMultiObjectTracker):
         det_bboxes = torch.tensor(outs_det['bboxes']).to(img)
         det_labels = torch.tensor(outs_det['labels']).to(img).long()
 
-        track_bboxes = self.tracker.track(
+        track_bboxes, track_labels, track_ids = self.tracker.track(
             img_metas=img_metas,
             feats=x,
             model=self,
             bboxes=det_bboxes,
             labels=det_labels,
             frame_id=frame_id)
-        return dict(det_bboxes=det_results[0], track_bboxes=track_bboxes)
+
+        track_results = outs2results(
+            bboxes=track_bboxes,
+            labels=track_labels,
+            ids=track_ids,
+            num_classes=self.detector.roi_head.bbox_head.num_classes
+        )['bbox_results']
+
+        return dict(det_bboxes=det_results[0], track_bboxes=track_results)
