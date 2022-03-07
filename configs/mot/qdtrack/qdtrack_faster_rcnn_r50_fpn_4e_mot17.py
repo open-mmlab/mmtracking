@@ -9,7 +9,7 @@ model = dict(
             norm_cfg=dict(requires_grad=False),
             style='caffe',
             init_cfg=dict(
-                type='Pretrained', checkpoint='torchvision://resnet101')),
+                type='Pretrained', checkpoint='torchvision://resnet50')),
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
             bbox_head=dict(
