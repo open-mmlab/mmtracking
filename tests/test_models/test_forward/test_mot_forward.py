@@ -10,8 +10,8 @@ from .utils import _demo_mm_inputs, _get_config_module
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'mot/qdtrack/qdtrack_faster_rcnn_r50_fpn_4e_mot17.py',
-    'mot/qdtrack/qdtrack_faster_rcnn_r50_fpn_4e_mot17_crowdhuman.py'
+    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py'
 ])
 def test_mot_forward_train(cfg_file):
     config = _get_config_module(cfg_file)
@@ -113,8 +113,8 @@ def test_mot_forward_train(cfg_file):
 
 
 @pytest.mark.parametrize('cfg_file', [
-    'mot/qdtrack/qdtrack_faster_rcnn_r50_fpn_4e_mot17.py',
-    'mot/qdtrack/qdtrack_faster_rcnn_r50_fpn_4e_mot17_crowdhuman.py',
+    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py',
     'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py',
     'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
     'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
