@@ -1,7 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from cProfile import label
-
-import numpy as np
 import torch
 from mmdet.models import build_detector, build_head
 
@@ -136,6 +133,19 @@ class QDTrack(BaseMultiObjectTracker):
         return losses
 
     def simple_test(self, img, img_metas, rescale=False):
+        """Test forward.
+
+         Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            rescale (bool): whether to rescale the bboxes.
+
+        Returns:
+            dict[str : Tensor]: Track results.
+        """
         # TODO inherit from a base tracker
         assert self.with_track_head, 'track head must be implemented.'  # noqa
         frame_id = img_metas[0].get('frame_id', -1)

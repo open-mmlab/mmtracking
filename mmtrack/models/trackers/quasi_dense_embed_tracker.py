@@ -167,24 +167,22 @@ class QuasiDenseEmbedTracker(BaseTracker):
         return memo_bboxes, memo_labels, memo_embeds, memo_ids.squeeze(
             0), memo_vs
 
-    def track(self,
-              img_metas,
-              feats,
-              model,
-              bboxes,
-              labels,
-              frame_id,
-              asso_tau=-1):
+    def track(self, img_metas, feats, model, bboxes, labels, frame_id):
         """Tracking forward function.
 
         Args:
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            feats (tuple): Backbone features of the input image.
+            model (nn.Module): The forward model.
             bboxes (Tensor): of shape (N, 5).
             labels (Tensor): of shape (N, ).
             track_feats (Tensor): of shape (N, 256).
             frame_id (int): The id of current frame, 0-index.
 
         Returns:
-            tuple: Tracking results.
+            list: Tracking results.
         """
         if bboxes.shape[0] == 0:
             track_bboxes = [
