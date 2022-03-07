@@ -1,6 +1,6 @@
 _base_ = [
     '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/default_runtime.py'
+    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 model = dict(
     type='QDTrack',
@@ -112,34 +112,10 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
-dataset_type = 'MOTChallengeDataset'
-data_root = 'data/MOT17/'
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
-        type=dataset_type,
-        visibility_thr=-1,
-        ann_file=data_root + 'annotations/half-train_cocoformat.json',
-        img_prefix=data_root + 'train',
-        ref_img_sampler=dict(
-            num_ref_imgs=1,
-            frame_range=10,
-            filter_key_img=True,
-            method='uniform'),
-        pipeline=train_pipeline),
-    val=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/half-val_cocoformat.json',
-        img_prefix=data_root + 'train',
-        ref_img_sampler=None,
-        pipeline=test_pipeline),
-    test=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/half-val_cocoformat.json',
-        img_prefix=data_root + 'train',
-        ref_img_sampler=None,
-        pipeline=test_pipeline))
+    train=dict(pipeline=train_pipeline),
+    val=dict(pipeline=test_pipeline),
+    test=dict(pipeline=test_pipeline))
 # optimizer && learning policy
 optimizer_config = dict(
     _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
