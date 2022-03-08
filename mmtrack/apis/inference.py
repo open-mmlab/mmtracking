@@ -40,8 +40,8 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
         if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
-        if hasattr(model, 'detector') and hasattr(model.detector, 'CLASSES'):
-            model.CLASSES = model.detector.CLASSES
+        if hasattr(model, 'detector'):
+            model.CLASSES = getattr(model.detector, 'CLASSES', None)
         else:
             print("Warning: The model doesn't have classes")
             model.CLASSES = None
@@ -130,8 +130,8 @@ def inference_sot(model, image, init_bbox, frame_id):
         data['img_metas'] = data['img_metas'][0].data
 
     # forward the model
-    with torch.no_grad():
-        result = model(return_loss=False, rescale=True, **data)
+    # with torch.no_grad():
+    result = model(return_loss=False, rescale=True, **data)
     return result
 
 
