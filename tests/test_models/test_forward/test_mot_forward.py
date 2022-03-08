@@ -9,10 +9,12 @@ from mmtrack.datasets.pipelines.processing import MatchInstances
 from .utils import _demo_mm_inputs, _get_config_module
 
 
-@pytest.mark.parametrize('cfg_file', [
-    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
-    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py'
-])
+@pytest.mark.parametrize(
+    'cfg_file',
+    [
+        'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+        'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py'  # noqa
+    ])
 def test_mot_forward_train(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
@@ -112,13 +114,15 @@ def test_mot_forward_train(cfg_file):
     loss.backward()
 
 
-@pytest.mark.parametrize('cfg_file', [
-    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
-    'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py',
-    'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py',
-    'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
-    'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
-])
+@pytest.mark.parametrize(
+    'cfg_file',
+    [
+        'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+        'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py',  # noqa
+        'mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private.py',
+        'mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
+        'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
+    ])
 def test_mot_simple_test(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
