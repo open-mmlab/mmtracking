@@ -1,6 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import torch
 from mmdet.models import build_detector, build_head
 
+from mmtrack.core import outs2results, results2outs
 from mmtrack.models.mot import BaseMultiObjectTracker
 from ..builder import MODELS, build_tracker
 
@@ -130,5 +132,51 @@ class QDTrack(BaseMultiObjectTracker):
 
         return losses
 
-    def simple_test(self):
-        pass
+    def simple_test(self, img, img_metas, rescale=False):
+        """Test forward.
+
+         Args:
+            img (Tensor): of shape (N, C, H, W) encoding input images.
+                Typically these should be mean centered and std scaled.
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            rescale (bool): whether to rescale the bboxes.
+
+        Returns:
+            dict[str : Tensor]: Track results.
+        """
+        # TODO inherit from a base tracker
+        assert self.with_track_head, 'track head must be implemented.'  # noqa
+        frame_id = img_metas[0].get('frame_id', -1)
+        if frame_id == 0:
+            self.tracker.reset()
+
+        x = self.detector.extract_feat(img)
+        proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+
+        det_results = self.detector.roi_head.simple_test(
+            x, proposal_list, img_metas, rescale=rescale)
+
+        bbox_results = det_results[0]
+        outs_det = results2outs(bbox_results=bbox_results)
+
+        det_bboxes = torch.tensor(outs_det['bboxes']).to(img)
+        det_labels = torch.tensor(outs_det['labels']).to(img).long()
+
+        track_bboxes, track_labels, track_ids = self.tracker.track(
+            img_metas=img_metas,
+            feats=x,
+            model=self,
+            bboxes=det_bboxes,
+            labels=det_labels,
+            frame_id=frame_id)
+
+        track_bboxes = outs2results(
+            bboxes=track_bboxes,
+            labels=track_labels,
+            ids=track_ids,
+            num_classes=self.detector.roi_head.bbox_head.num_classes
+        )['bbox_results']
+
+        return dict(det_bboxes=bbox_results, track_bboxes=track_bboxes)
