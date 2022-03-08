@@ -41,6 +41,7 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
             model.CLASSES = checkpoint['meta']['CLASSES']
     if not hasattr(model, 'CLASSES'):
         if hasattr(model, 'detector'):
+            # some detectors may don't have `CLASSES`.
             model.CLASSES = getattr(model.detector, 'CLASSES', None)
         else:
             print("Warning: The model doesn't have classes")
