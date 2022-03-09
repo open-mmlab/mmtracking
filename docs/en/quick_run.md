@@ -13,7 +13,7 @@ This note will show how to perform common tasks on existing models and standard 
 We provide demo scripts to inference a given video or a folder that contains continuous images.
 The source codes are available [here](https://github.com/open-mmlab/mmtracking/tree/master/demo/).
 
-Note that if you use a folder as the input, there should be only images in this folder and the image names must be **sortable**, which means we can re-order the images according to the filenames.
+Note that if you use a folder as the input, the image names there must be **sortable**, which means we can re-order the images according to the numbers contained in the filenames. We now only support reading the images whose filenames end with '.jpg', '.jpeg' and '.png'.
 
 #### Inference VID models
 

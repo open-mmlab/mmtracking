@@ -31,7 +31,10 @@ def main():
 
     # load images
     if osp.isdir(args.input):
-        imgs = sorted(os.listdir(args.input))
+        imgs = sorted(
+            filter(lambda x: x.endswith(('.jpg', '.png', '.jpeg')),
+                   os.listdir(args.input)),
+            key=lambda x: int(x.split('.')[0]))
         IN_VIDEO = False
     else:
         imgs = mmcv.VideoReader(args.input)
