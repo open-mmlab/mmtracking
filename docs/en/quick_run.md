@@ -298,7 +298,7 @@ We provide `tools/dist_train.sh` to launch training on multiple GPUs.
 The basic usage is as follows.
 
 ```shell
-sh ./tools/dist_train.sh \
+bash ./tools/dist_train.sh \
     ${CONFIG_FILE} \
     ${GPU_NUM} \
     [optional arguments]
@@ -323,13 +323,13 @@ If you launch with multiple machines simply connected with ethernet, you can sim
 On the first machine:
 
 ```shell
-NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
 ```
 
 On the second machine:
 
 ```shell
-NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
 ```
 
 Usually it is slow if you do not have high speed networking like InfiniBand.
@@ -384,7 +384,7 @@ When using Slurm, the port option need to be set in one of the following ways:
 1. Train DFF on ImageNet VID and ImageNet DET, then evaluate the bbox mAP at the last epoch.
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
+    bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -421,7 +421,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
     Here is an example to train a detector model on MOT17, and evaluate the bbox mAP after each epoch.
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -432,7 +432,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
     Here is an example to train a reid model on MOT17, then evaluate the mAP after each epoch.
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -443,7 +443,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 1. Train SiameseRPN++ on COCO, ImageNet VID and ImageNet DET, then evaluate the success, precision and normed precision from the 10-th epoch to 20-th epoch.
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -452,7 +452,7 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 1. Train MaskTrack R-CNN on YouTube-VIS 2019 dataset. There are no evaluation results during training, since the annotations of validation dataset in YouTube-VIS are not provided.
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
+    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
         --work-dir ./work_dirs/
     ```
 

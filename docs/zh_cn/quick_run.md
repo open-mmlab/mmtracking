@@ -292,7 +292,7 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 基本用法如下：
 
 ```shell
-sh ./tools/dist_train.sh \
+bash ./tools/dist_train.sh \
     ${CONFIG_FILE} \
     ${GPU_NUM} \
     [optional arguments]
@@ -317,13 +317,13 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 在第一台机器上:
 
 ```shell
-NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
 ```
 
 在第二台机器上:
 
 ```shell
-NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_train.sh $CONFIG $GPUS
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
 ```
 
 但是，如果您不使用高速网路连接这几台机器的话，训练将会非常慢。
@@ -378,7 +378,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR sh tools/dist_tr
 1. 在 ImageNet VID 和 ImageNet DET 上 训练 DFF，接着在最后一个 epoch 评估 bbox mAP.
 
 ```shell
-sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
+bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 --work-dir ./work_dirs/
 ```
 
 #### 训练 MOT 模型示例
@@ -412,7 +412,7 @@ sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetv
     这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -423,7 +423,7 @@ sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetv
     这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -434,7 +434,7 @@ sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetv
 1. 在 COCO、ImageNet VID 和 ImageNet DET 上训练 SiameseRPN++，然后从第 10 个 epoch 到第 20 个 epoch 评估其 success、precision 和 normed precision。
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
         --work-dir ./work_dirs/
     ```
 
@@ -443,7 +443,7 @@ sh ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetv
 1. 在 YouTube-VIS 2019 数据集上训练 MaskTrack R-CNN。由于 YouTube-VIS 没有提供 validation 集的注释文件，因此在训练过程中不会进行评估。
 
     ```shell
-    sh ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
+    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
         --work-dir ./work_dirs/
     ```
 
