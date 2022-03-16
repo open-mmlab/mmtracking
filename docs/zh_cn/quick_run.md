@@ -328,7 +328,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 
 但是，如果您不使用高速网路连接这几台机器的话，训练将会非常慢。
 
-如果您使用的是 slurm 来管理多台机器，您可以使用同在单台机器上一样的命令来启动任务，但是您必须得设置合适的环境变量和参数，具体可以参考[slurm_train.sh](../../tools/slurm_train.sh)。
+如果您使用的是 slurm 来管理多台机器，您可以使用同在单台机器上一样的命令来启动任务，但是您必须得设置合适的环境变量和参数，具体可以参考[slurm_train.sh](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh)。
 
 #### 使用 Slurm 管理任务
 
