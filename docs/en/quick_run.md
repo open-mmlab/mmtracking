@@ -318,8 +318,23 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 
 #### Training on multiple nodes
 
-MMTracking relies on `torch.distributed` package for distributed training.
-Thus, as a basic usage, one can launch distributed training via PyTorch's [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility).
+If you launch with multiple machines simply connected with ethernet, you can simply run following commands:
+
+On the first machine:
+
+```shell
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+On the second machine:
+
+```shell
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+Usually it is slow if you do not have high speed networking like InfiniBand.
+
+If you launch with slurm, the command is the same as that on single machine described above, but you need refer to [slurm_train.sh](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh) to set appropriate parameters and environment variables.
 
 #### Manage jobs with Slurm
 

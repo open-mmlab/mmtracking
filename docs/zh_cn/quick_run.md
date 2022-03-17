@@ -312,8 +312,23 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 
 #### 多节点训练
 
-MMTracking 依赖 `torch.distributed` 包进行分布式训练。
-因此，作为一种基本用法，可以通过 PyTorch 的 [launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility) 启动分布式训练。
+如果您想使用由 ethernet 连接起来的多台机器， 您可以使用以下命令:
+
+在第一台机器上:
+
+```shell
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+在第二台机器上:
+
+```shell
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+但是，如果您不使用高速网路连接这几台机器的话，训练将会非常慢。
+
+如果您使用的是 slurm 来管理多台机器，您可以使用同在单台机器上一样的命令来启动任务，但是您必须得设置合适的环境变量和参数，具体可以参考[slurm_train.sh](https://github.com/open-mmlab/mmtracking/blob/master/tools/slurm_train.sh)。
 
 #### 使用 Slurm 管理任务
 
