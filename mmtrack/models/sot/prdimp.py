@@ -107,7 +107,7 @@ class Prdimp(BaseSingleObjectTracker):
         # center of samples
         # TODO: simplify these code
         self.feature_sz = torch.Tensor(list(cls_feat.shape[-2:]))
-        self.kernel_size = self.classifier.kernel_size
+        self.filter_size = self.classifier.filter_size
 
         # Init memory
         self.classifier.init_memory(TensorList([cls_feat]))
@@ -237,7 +237,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Extract backbone features
         centered_sample_pos = self.bbox_yx + (
-            (self.feature_sz + self.kernel_size) % 2) * (
+            (self.feature_sz + self.filter_size) % 2) * (
                 self.target_scale * self.img_sample_sz) / (2 * self.feature_sz)
 
         # `im_patches` is of (num_scales, c, h, w) shape
@@ -523,6 +523,66 @@ class Prdimp(BaseSingleObjectTracker):
 
         return im_patch, patch_coord
 
-    def forward_train(self, imgs, img_metas, search_img, search_img_metas,
-                      **kwargs):
-        pass
+    def forward_train(self, img, img_metas, gt_bboxes, search_img,
+                      search_img_metas, search_gt_bboxes, **kwargs):
+        """forward of training.
+
+        Args:
+            img (Tensor): template images of shape (N, num_templates, C, H, W).
+                Typically, there are 2 template images, and
+                H and W are both equal to 128.
+
+            img_metas (list[dict]): list of image information dict where each
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            search_img (Tensor): of shape (N, num_searchs, C, H, W) encoding
+                input search images. Typically H and W are both equal to 320.
+
+            search_img_metas (list[list[dict]]): The second list only has one
+                element. The first list contains search image information dict
+                where each dict has: 'img_shape', 'scale_factor', 'flip', and
+                may also contain 'filename', 'ori_shape', 'pad_shape', and
+                'img_norm_cfg'. For details on the values of these keys see
+                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+
+            gt_bboxes (list[Tensor]): Ground truth bboxes for template
+                images with shape (N, 4) in [tl_x, tl_y, br_x, br_y] format.
+
+            search_gt_bboxes (list[Tensor]): Ground truth bboxes for search
+                images with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y]
+                format.
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components.
+        """
+
+        assert img.dim() == 5 and search_img.dim(
+        ) == 5, 'Expect 5 dimensional inputs'
+
+        img = img.transpose(1, 0).contiguous().view(-1, *img.shape[2:])
+        search_img = search_img.transpose(1, 0).contiguous().view(
+            -1, *search_img.shape[2:])
+        # bboxes are of [num_seq, bs, 5] shape
+        gt_bboxes = torch.stack(gt_bboxes, dim=1).type(torch.float32)
+        search_gt_bboxes = torch.stack(
+            search_gt_bboxes, dim=1).type(torch.float32)
+
+        train_feat = self.backbone(img)
+        test_feat = self.backbone(search_img)
+
+        losses = dict()
+        # `gt_bboxes` is used to train `filter`
+        loss_cls = self.classifier(train_feat[-1], test_feat[-1], gt_bboxes,
+                                   search_gt_bboxes)
+
+        # `gt_bboxes` is used to get modulation tensor about target
+        loss_bbox = self.bbox_regressor(
+            train_feat, test_feat, gt_bboxes, search_gt_bboxes, num_seq=3)
+
+        losses.update(loss_cls)
+        losses.update(loss_bbox)
+
+        return losses

@@ -262,6 +262,207 @@ class TridentSampling(object):
 
 
 @PIPELINES.register_module()
+class DimpSampling(object):
+    """Dimp-style sampling. It's firstly used in `DiMP <>`_.
+
+    Args:
+        num_search_frames (int, optional): the number of search frames
+        num_template_frames (int, optional): the number of template frames
+        max_frame_range (list[int], optional): the max frame range of sampling
+            a positive search image for the template image. Its length is equal
+            to the number of extra templates, i.e., `num_template_frames`-1.
+            Default length is 1.
+        cls_pos_prob (float, optional): the probility of sampling positive
+            samples in classification training.
+        train_cls_head (bool, optional): whether to train classification head.
+        min_num_frames (int, optional): the min number of frames to be sampled.
+    """
+
+    def __init__(self,
+                 num_search_frames=3,
+                 num_template_frames=3,
+                 max_frame_range=200,
+                 min_num_frames=20):
+        self.num_search_frames = num_search_frames
+        self.num_template_frames = num_template_frames
+        self.max_frame_range = max_frame_range
+        self.min_num_frames = min_num_frames
+
+    def random_sample_inds(self,
+                           video_visibility,
+                           num_samples=1,
+                           frame_range=None,
+                           allow_invisible=False,
+                           force_invisible=False):
+        """Random sampling a specific number of samples from the specified
+        frame range of the video. It also considers the visibility of each
+        frame.
+
+        Args:
+            video_visibility (ndarray): the visibility of each frame in the
+                video.
+            num_samples (int, optional): the number of samples. Defaults to 1.
+            frame_range (list | None, optional): the frame range of sampling.
+                Defaults to None.
+            allow_invisible (bool, optional): whether to allow to get invisible
+                samples. Defaults to False.
+            force_invisible (bool, optional): whether to force to get invisible
+                samples. Defaults to False.
+
+        Returns:
+            List: The sampled frame indexes.
+        """
+        assert num_samples > 0
+        if frame_range is None:
+            frame_range = [0, len(video_visibility)]
+        else:
+            assert isinstance(frame_range, list) and len(frame_range) == 2
+            frame_range[0] = max(0, frame_range[0])
+            frame_range[1] = min(len(video_visibility), frame_range[1])
+
+        video_visibility = np.asarray(video_visibility)
+        visibility_in_range = video_visibility[frame_range[0]:frame_range[1]]
+        # get indexes of valid samples
+        if force_invisible:
+            valid_inds = np.where(~visibility_in_range)[0] + frame_range[0]
+        else:
+            valid_inds = np.arange(
+                *frame_range) if allow_invisible else np.where(
+                    visibility_in_range)[0] + frame_range[0]
+
+        # No valid samples
+        if len(valid_inds) == 0:
+            return [None] * num_samples
+
+        return random.choices(valid_inds, k=num_samples)
+
+    def sampling_dimp(self, video_visibility):
+        """Sampling multiple template images and one search images in one
+        video.
+
+        Args:
+            video_visibility (ndarray): the visibility of each frame in the
+                video.
+
+        Returns:
+            List: the indexes of template and search images.
+        """
+        test_frame_inds = [None]
+        gap_increase = 0
+        if self.is_video_data:
+            while test_frame_inds[0] is None:
+                # first randomly sample two frames from a video
+                base_frame_ind = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=1,
+                    frame_range=[
+                        self.num_template_frames - 1,
+                        len(video_visibility) - self.num_search_frames
+                    ])
+
+                prev_frame_inds = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=self.num_template_frames - 1,
+                    frame_range=[
+                        base_frame_ind[0] - self.max_frame_range -
+                        gap_increase, base_frame_ind[0]
+                    ])
+
+                if prev_frame_inds[0] is None:
+                    gap_increase += 5
+                    continue
+
+                train_frame_inds = base_frame_ind + prev_frame_inds
+                test_frame_inds = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=self.num_search_frames,
+                    frame_range=[
+                        train_frame_inds[0] + 1, train_frame_inds[0] +
+                        self.max_frame_range + gap_increase
+                    ])
+
+                gap_increase += 5
+
+            sampled_inds = train_frame_inds + test_frame_inds
+        else:
+            sampled_inds = [0] * (
+                self.num_template_frames + self.num_search_frames)
+
+        return sampled_inds
+
+    def prepare_data(self, video_info, sampled_inds, with_label=False):
+        """Prepare sampled training data according to the sampled index.
+
+        Args:
+            video_info (dict): the video information. It contains the keys:
+                ['bboxes','bboxes_isvalid','filename','frame_ids',
+                'video_id','visible'].
+            sampled_inds (list[int]): the sampled frame indexes.
+            with_label (bool, optional): whether to recode labels in ann infos.
+                Only set True in classification training. Defaults to False.
+
+        Returns:
+            List[dict]: contains the information of sampled data.
+        """
+        extra_infos = {}
+        for key, info in video_info.items():
+            if key in [
+                    'bbox_fields', 'mask_fields', 'seg_fields', 'img_prefix'
+            ]:
+                extra_infos[key] = info
+
+        bboxes = video_info['bboxes']
+        results = []
+        for frame_ind in sampled_inds:
+            if with_label:
+                ann_info = dict(
+                    bboxes=np.expand_dims(bboxes[frame_ind], axis=0),
+                    labels=np.array([1.], dtype=np.float32))
+            else:
+                ann_info = dict(
+                    bboxes=np.expand_dims(bboxes[frame_ind], axis=0))
+            img_info = dict(
+                filename=video_info['filename'][frame_ind],
+                frame_id=video_info['frame_ids'][frame_ind],
+                video_id=video_info['video_id'])
+            result = dict(img_info=img_info, ann_info=ann_info, **extra_infos)
+            results.append(result)
+        return results
+
+    def __call__(self, pair_video_infos):
+        """
+        Args:
+            pair_video_infos (list[dict]): contains two video infos. Each video
+                info contains the keys: ['bboxes','bboxes_isvalid','filename',
+                'frame_ids','video_id','visible'].
+
+        Returns:
+            List[dict]: contains the information of sampled data.
+        """
+        video_info, video_info_another = pair_video_infos
+        self.is_video_data = len(video_info['frame_ids']) > 1 and len(
+            video_info_another['frame_ids']) > 1
+        enough_visible_frames = sum(video_info['visible']) > 2 * (
+            self.num_search_frames + self.num_template_frames) and len(
+                video_info['visible']) >= self.min_num_frames
+        enough_visible_frames = enough_visible_frames or not \
+            self.is_video_data
+
+        if not enough_visible_frames:
+            return None
+
+        sampled_inds = np.array(self.sampling_dimp(video_info['visible']))
+        # the sizes of some bboxes may be zero, because extral templates may
+        # get invalid bboxes.
+        if not video_info['bboxes_isvalid'][sampled_inds].all():
+            return None
+
+        results = self.prepare_data(video_info, sampled_inds)
+
+        return results
+
+
+@PIPELINES.register_module()
 class MatchInstances(object):
     """Matching objects on a pair of images.
 

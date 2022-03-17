@@ -96,3 +96,39 @@ def bbox_cxcyah_to_xyxy(bboxes):
     w = ratio * h
     x1y1x2y2 = [cx - w / 2.0, cy - h / 2.0, cx + w / 2.0, cy + h / 2.0]
     return torch.cat(x1y1x2y2, dim=-1)
+
+
+def rel_to_rect(bb, sz_norm=None):
+    """Inverts the effect of rect_to_rel.
+
+    See above.
+    """
+
+    sz = torch.exp(bb[..., 2:])
+    if sz_norm is None:
+        c = bb[..., :2] * sz
+    else:
+        c = bb[..., :2] * sz_norm
+    tl = c - 0.5 * sz
+    return torch.cat((tl, sz), dim=-1)
+
+
+def rect_to_rel(bb, sz_norm=None):
+    """Convert standard rectangular parametrization of the bounding box.
+
+    [x, y, w, h] to relative parametrization [cx/sw, cy/sh, log(w), log(h)],
+    where [cx, cy] is the center coordinate.
+    args:
+        bb  -  N x 4 tensor of boxes.
+        sz_norm  -  [N] x 2 tensor of value of [sw, sh] (optional).
+        sw=w and sh=h if not given.
+    """
+
+    c = bb[..., :2] + 0.5 * bb[..., 2:]
+    if sz_norm is None:
+        c_rel = c / bb[..., 2:]
+    else:
+        c_rel = c / sz_norm
+
+    sz_rel = torch.log(bb[..., 2:])
+    return torch.cat((c_rel, sz_rel), dim=-1)

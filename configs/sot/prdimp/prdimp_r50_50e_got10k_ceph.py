@@ -14,7 +14,11 @@ model = dict(
         out_indices=[1, 2],  # 0, 1, 2, 3
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=False,
-        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'openmmlab:s3://openmmlab/checkpoints/mmclassification/v0/resnet/resnet50_batch256_imagenet_20200708-cfb998bf.pth'  # noqa: E501
+        )),
     cls_head=dict(
         type='PrdimpClsHead',
         feat_dim=1024,
@@ -110,14 +114,34 @@ model = dict(
             augmentation_expansion_factor=2,
             random_shift_factor=1 / 3)))
 
+file_client_args = dict(
+    backend='petrel',
+    path_mapping=dict({
+        'data/got10k':
+        'openmmlab:s3://openmmlab/datasets/tracking/GOT10k',
+        'data/trackingnet':
+        'openmmlab:s3://openmmlab/datasets/tracking/TrackingNet',
+        'data/lasot':
+        'openmmlab:s3://openmmlab/datasets/tracking/LaSOT_full',
+        'data/coco':
+        'openmmlab:s3://openmmlab/datasets/tracking/LaSOT_full'
+    }))
+
 train_pipeline = [
     dict(
         type='DimpSampling',
         num_search_frames=3,
         num_template_frames=3,
         max_frame_range=200),
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
+    dict(
+        type='LoadMultiImagesFromFile',
+        to_float32=True,
+        file_client_args=file_client_args),
+    dict(
+        type='SeqLoadAnnotations',
+        with_bbox=True,
+        with_label=False,
+        file_client_args=file_client_args),
     dict(type='SeqGrayAug', prob=0.05),
     dict(
         type='SeqBboxJitter',
@@ -200,18 +224,21 @@ optimizer_config = dict(type='OptimizerHook')
 # learning policy
 lr_config = dict(policy='step', step=15, gamma=0.2)
 # checkpoint saving
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(
+    interval=10,
+    out_dir='sh1984:s3://zhangjingwei/mmtracking_others/mmtracking_0/prdimp')
 evaluation = dict(
     metric=['track'],
     interval=10,
     start=51,
     rule='greater',
-    save_best='success')
+    save_best='success',
+    out_dir='sh1984:s3://zhangjingwei/mmtracking_others/mmtracking_0/prdimp')
 # yapf:disable
 log_config = dict(
     interval=1,
     hooks=[
-        dict(type='TextLoggerHook'),
+        dict(type='TextLoggerHook', out_dir='sh1984:s3://zhangjingwei/mmtracking_others/mmtracking_0/prdimp')  # noqa: E501
         # dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable

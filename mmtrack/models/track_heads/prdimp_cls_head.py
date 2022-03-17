@@ -4,9 +4,10 @@ import math
 import torch
 import torch.nn.functional as F
 from mmdet.models import HEADS
-from mmdet.models.builder import build_head
+from mmdet.models.builder import build_head, build_loss
 from torch import nn
 
+from mmtrack.core.bbox import bbox_xyxy_to_x1y1wh
 from mmtrack.core.filter import filter as filter_layer
 from mmtrack.core.utils import TensorList
 
@@ -77,6 +78,8 @@ class PrdimpClsHead(nn.Module):
                  locate_cfg=None,
                  update_cfg=None,
                  optimizer_cfg=None,
+                 loss_cls=None,
+                 train_cfg=None,
                  **kwargs):
         super().__init__()
         filter_size = filter_initializer.filter_size
@@ -86,13 +89,200 @@ class PrdimpClsHead(nn.Module):
         self.cls_feature_extractor = nn.Sequential(
             nn.Conv2d(in_dim, out_dim, kernel_size=3, padding=1, bias=False),
             InstanceL2Norm(scale=norm_scale))
+        self.loss_cls = build_loss(loss_cls)
+        self.loss_weights = train_cfg['loss_weights']
 
-        self.kernel_size = torch.Tensor(
-            [filter_size, filter_size] if isinstance(filter_size, (
-                int, float)) else filter_size)
         self.locate_cfg = locate_cfg
         self.update_cfg = update_cfg
         self.optimizer_cfg = optimizer_cfg
+
+        if isinstance(filter_size, (int, float)):
+            filter_size = [filter_size, filter_size]
+        self.filter_size = torch.tensor(filter_size, dtype=torch.float32)
+        self.feat_size = torch.tensor(
+            train_cfg['feat_size'], dtype=torch.float32)
+        self.img_size = torch.tensor(
+            train_cfg['img_size'], dtype=torch.float32)
+        self.sigma_factor = train_cfg['sigma_factor']
+        self.end_pad_if_even = train_cfg['end_pad_if_even']
+
+        self.gauss_label_bias = train_cfg['gauss_label_bias']
+        self.use_gauss_density = train_cfg['use_gauss_density']
+        self.label_density_norm = train_cfg['label_density_norm']
+        self.label_density_threshold = train_cfg['label_density_threshold']
+        self.label_density_shrink = train_cfg['label_density_shrink']
+
+    def init_weights(self):
+        for m in self.cls_feature_extractor.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+        self.filter_initializer.init_weights()
+
+    def forward(self, train_feat, test_feat, gt_bboxes, search_gt_bboxes,
+                *args, **kwargs):
+        """Learns a target classification filter based on the train samples and
+            return the resulting classification scores on the test samples.
+            The forward function is ONLY used for training. Call the individual
+            functions during tracking.
+        args:
+            train_feat (Tensor):  of (num_template_seq * bs, C , H, W) shape
+            test_feat (Tensor):  of (num_search_seq*bs, C , H, W) shape
+            gt_bboxes (Tensor): ground truth bboxes for search images
+                with shape (num_template_seq, bs, 5) in
+                [0., tl_x, tl_y, br_x, br_y] format.
+            search_gt_bboxes (list[Tensor]): ground truth bboxes for search
+                images with shape (num_search_seq, bs, 5) in
+                [0., tl_x, tl_y, br_x, br_y] format.
+        """
+        train_num_seq = gt_bboxes.shape[0]
+        test_num_seq = search_gt_bboxes.shape[0]
+
+        # Extract features
+        train_feat = self.cls_feature_extractor(train_feat)
+        train_feat = train_feat.reshape(train_num_seq, -1,
+                                        *train_feat.shape[-3:])
+        test_feat = self.cls_feature_extractor(test_feat)
+        test_feat = test_feat.reshape(test_num_seq, -1, *test_feat.shape[-3:])
+
+        # Train filter
+        # convert the bbox from [x1, y1, x2, y2] to [x1, y1, w, h]
+        bboxes_xywh = bbox_xyxy_to_x1y1wh(gt_bboxes.view(-1, 5)[:, 1:])
+        bboxes_xywh = bboxes_xywh.view(train_num_seq, -1, 4)
+        # filter_iter is a list, and each of them is of shape
+        # (bs, C, self.filter_size, self.filter_size)
+        _, filter_iter, _ = self.get_filter(train_feat, bboxes_xywh, *args,
+                                            **kwargs)
+
+        # Classify samples using all filters
+        # each of target_scores is of shape
+        # (num_search_seq, bs, score_map_size, score_map_size)
+        target_scores = [self.classify(test_feat, f) for f in filter_iter]
+
+        search_gt_bboxes = search_gt_bboxes.view(-1,
+                                                 *search_gt_bboxes.shape[2:])
+        target_center = (search_gt_bboxes[:, 1:3] +
+                         search_gt_bboxes[:, 3:5]) / 2.
+        # of shape (num_template_seq*bs, score_map_size, score_map_size)
+        prob_labels_density = self.get_targets(target_center)
+        prob_labels_density = prob_labels_density.view(
+            test_num_seq, -1, *prob_labels_density.shape[-2:])
+
+        # compute loss
+        loss_cls_list = [
+            self.loss_cls(score, prob_labels_density, grid_dim=(-2, -1))
+            for score in target_scores
+        ]
+        loss_cls_final = self.loss_weights['cls_final'] * loss_cls_list[-1]
+        loss_cls_init = self.loss_weights['cls_init'] * loss_cls_list[0]
+
+        if isinstance(self.loss_weights['cls_iter'], list):
+            loss_cls_iter = sum([
+                a * b for a, b in zip(self.loss_weights['cls_iter'],
+                                      loss_cls_list[1:-1])
+            ])
+        else:
+            loss_cls_iter = (self.loss_weights['cls_iter'] /
+                             (len(loss_cls_list) - 2)) * sum(
+                                 loss_cls_list[1:-1])
+        losses = dict(
+            loss_cls_init=loss_cls_init,
+            loss_cls_iter=loss_cls_iter,
+            loss_cls_final=loss_cls_final)
+
+        return losses
+
+    def _gauss_1d(self, sz, sigma, center, end_pad=0, return_density=True):
+        k = torch.arange(-(sz - 1) / 2,
+                         (sz + 1) / 2 + end_pad).reshape(1,
+                                                         -1).to(center.device)
+        gauss = torch.exp(-1.0 / (2 * sigma**2) *
+                          (k - center.reshape(-1, 1))**2)
+        if not return_density:
+            return gauss
+        else:
+            return gauss / (math.sqrt(2 * math.pi) * sigma)
+
+    def _gauss_2d(self,
+                  sz,
+                  sigma,
+                  center,
+                  end_pad=(0, 0),
+                  return_density=True):
+        if isinstance(sigma, (float, int)):
+            sigma = (sigma, sigma)
+
+        gauss_1d_out1 = self._gauss_1d(
+            sz[0].item(),
+            sigma[0],
+            center[:, 0],
+            end_pad[0],
+            return_density=return_density)
+        gauss_1d_out1 = gauss_1d_out1.reshape(center.shape[0], 1, -1)
+
+        gauss_1d_out2 = self._gauss_1d(
+            sz[1].item(),
+            sigma[1],
+            center[:, 1],
+            end_pad[1],
+            return_density=return_density)
+        gauss_1d_out2 = gauss_1d_out2.reshape(center.shape[0], -1, 1)
+
+        return gauss_1d_out1 * gauss_1d_out2
+
+    def get_targets(self, target_center):
+        """_summary_
+
+        Args:
+            target_center (Tensor): [N, 2] in [cx, cy] format
+        """
+        self.img_size = self.img_size.to(target_center.device)
+        self.filter_size = self.filter_size.to(target_center.device)
+        self.feat_size = self.feat_size.to(target_center.device)
+
+        # set the center of image as coordinate origin
+        target_center_norm = (target_center -
+                              self.img_size / 2.) / self.img_size
+
+        center = self.feat_size * target_center_norm + 0.5 * torch.fmod(
+            self.filter_size + 1, 2)
+
+        sigma = self.sigma_factor * self.feat_size.prod().sqrt().item()
+
+        if self.end_pad_if_even:
+            end_pad = (torch.fmod(self.filter_size,
+                                  2) == 0).to(self.filter_size)
+        else:
+            end_pad = torch.zeros(2).to(self.filter_size)
+
+        # generate gauss labels and density
+        # Both of them are of shape (N, self.feat_size, self.feat_size)
+        gauss_label_density = self._gauss_2d(self.feat_size, sigma, center,
+                                             end_pad, self.use_gauss_density)
+        # continue to process label density
+        feat_area = (self.feat_size + end_pad).prod()
+        gauss_label_density = (
+            1.0 - self.gauss_label_bias
+        ) * gauss_label_density + self.gauss_label_bias / feat_area
+
+        mask = (gauss_label_density >
+                self.label_density_threshold).to(gauss_label_density)
+        gauss_label_density *= mask
+
+        if self.label_density_norm:
+            g_sum = gauss_label_density.sum(dim=(-2, -1))
+            valid = g_sum > 0.01
+            gauss_label_density[valid, :, :] /= g_sum[valid].reshape(-1, 1, 1)
+            gauss_label_density[~valid, :, :] = 1.0 / (
+                gauss_label_density.shape[-2] * gauss_label_density.shape[-1])
+        gauss_label_density *= 1.0 - self.label_density_shrink
+
+        return gauss_label_density
 
     def init_classifier(self, backbone_feats, target_bboxes, dropout_cfg=None):
 
@@ -116,7 +306,7 @@ class PrdimpClsHead(nn.Module):
         # Get target filter by running the discriminative model prediction
         # module
         with torch.no_grad():
-            self.target_filter, _, losses = self.get_filter(
+            self.target_filter, _, _ = self.get_filter(
                 cls_feat,
                 target_bboxes,
                 num_iter=self.optimizer_cfg['net_opt_iter'])
@@ -155,8 +345,8 @@ class PrdimpClsHead(nn.Module):
         """
 
         sz = scores.shape[-2:]
-        score_sz = torch.Tensor(list(sz))
-        output_sz = score_sz - (self.kernel_size + 1) % 2
+        score_sz = torch.tensor(list(sz))
+        output_sz = score_sz - (self.filter_size + 1) % 2
         score_center = (score_sz - 1) / 2
 
         max_score1, max_disp1 = max2d(scores)
@@ -375,10 +565,13 @@ class PrdimpClsHead(nn.Module):
                     bb=target_boxes,
                     sample_weight=sample_weights)
 
-    def classify(self, feat):
+    def classify(self, feat, filter=None):
         """Run classifier (filter) on the features (feat)."""
-
-        scores = filter_layer.apply_filter(feat, self.target_filter)
+        if filter is None:
+            scores = filter_layer.apply_filter(feat, self.target_filter)
+        else:
+            assert feat[0].shape[:2] == filter.shape[:2]
+            scores = filter_layer.apply_filter(feat, filter)
 
         return scores
 

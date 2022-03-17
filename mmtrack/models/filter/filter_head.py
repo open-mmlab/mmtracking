@@ -78,7 +78,7 @@ class FilterClassifierInitializer(nn.Module):
                  pool_square=False,
                  filter_norm=True,
                  conv_ksz=3,
-                 init_weights='default'):
+                 init_weights_type='default'):
         super().__init__()
 
         self.filter_conv = nn.Conv2d(
@@ -91,14 +91,16 @@ class FilterClassifierInitializer(nn.Module):
             feature_stride=feature_stride,
             pool_square=pool_square)
         self.filter_norm = filter_norm
+        self.init_weights_type = init_weights_type
 
+    def init_weights(self):
         # Init weights
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                if init_weights == 'default':
+                if self.init_weights_type == 'default':
                     n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                     m.weight.data.normal_(0, math.sqrt(2. / n))
-                elif init_weights == 'zero':
+                elif self.init_weights_type == 'zero':
                     m.weight.data.zero_()
                 if m.bias is not None:
                     m.bias.data.zero_()
