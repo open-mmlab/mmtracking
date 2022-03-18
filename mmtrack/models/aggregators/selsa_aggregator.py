@@ -75,5 +75,5 @@ class SelsaAggregator(BaseModule):
         # [roi_n, num_attention_blocks, C / num_attention_blocks]
         x_new = torch.bmm(weights, ref_x_new).permute(1, 0, 2).contiguous()
         # [roi_n, C]
-        x_new = self.fc(x_new.view(roi_n, num_C_per_attention_block))
+        x_new = self.fc(x_new.view(roi_n, C))
         return x_new
