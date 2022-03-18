@@ -16,8 +16,7 @@ model = dict(
         norm_eval=False,
         init_cfg=dict(
             type='Pretrained',
-            checkpoint=  # noqa: E251
-            'openmmlab:s3://openmmlab/checkpoints/mmclassification/v0/resnet/resnet50_batch256_imagenet_20200708-cfb998bf.pth'  # noqa: E501
+            checkpoint='torchvision://resnet50'
         )),
     cls_head=dict(
         type='PrdimpClsHead',
@@ -124,7 +123,7 @@ file_client_args = dict(
         'data/lasot':
         'openmmlab:s3://openmmlab/datasets/tracking/LaSOT_full',
         'data/coco':
-        'openmmlab:s3://openmmlab/datasets/tracking/LaSOT_full'
+        'openmmlab:s3://openmmlab/datasets/detection/coco'
     }))
 
 train_pipeline = [
@@ -182,17 +181,38 @@ data_root = 'data/'
 
 # dataset settings
 data = dict(
-    samples_per_gpu=4,
-    workers_per_gpu=0,
-    persistent_workers=False,
+    samples_per_gpu=10,
+    workers_per_gpu=8,
+    persistent_workers=True,
     samples_per_epoch=26000,
     train=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[1],
+        dataset_sampling_weights=[0.25,1,1],
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
                 img_prefix=data_root + 'got10k',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False),
+            dict(
+                type='LaSOTDataset',
+                ann_file='tools/convert_datasets/lasot/testing_set.txt',
+                img_prefix=data_root + 'lasot/LaSOTBenchmark',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False),
+            dict(
+                type='TrackingNetDataset',
+                img_prefix=data_root + 'trackingnet',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False),
+            dict(
+                type='SOTCocoDataset',
+                ann_file=data_root +
+                'coco/annotations/instances_train2014.json',
+                img_prefix=data_root + 'coco/train2014',
                 pipeline=train_pipeline,
                 split='train',
                 test_mode=False)
