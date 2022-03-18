@@ -48,10 +48,9 @@ class SelsaAggregator(BaseModule):
             Tensor: The aggregated features of key frame proposals with shape
             [N, C].
         """
-        C = x.shape[1]
-        num_C_per_attention_block = C // self.num_attention_blocks
-        roi_n = x.shape[0]
-        ref_roi_n = ref_x.shape[0]
+        roi_n, C = x.shape
+        ref_roi_n, _ = ref_x.shape
+        num_c_per_att_block = C // self.num_attention_blocks
 
         x_embed = self.fc_embed(x)
         # [num_attention_blocks, roi_n, C / num_attention_blocks]
