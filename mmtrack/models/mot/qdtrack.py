@@ -177,7 +177,6 @@ class QDTrack(BaseMultiObjectTracker):
             bboxes=track_bboxes,
             labels=track_labels,
             ids=track_ids,
-            num_classes=num_classes
-        )['bbox_results']
+            num_classes=num_classes)['bbox_results']
 
         return dict(det_bboxes=bbox_results, track_bboxes=track_bboxes)
