@@ -65,7 +65,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Changelog
 
-Release [STARK](configs/sot/stark) pretrained models.
+Release [QDTrack](configs/mot/qdtrack) pretrained models.
 
 v0.11.0 was released in 04/03/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -85,6 +85,7 @@ Supported methods of multi object tracking:
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
+- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 
 Supported methods of single object tracking:

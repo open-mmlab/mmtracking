@@ -196,11 +196,12 @@ class QuasiDenseEmbedTracker(BaseTracker):
         """
         # return zero bboxes if there is no track targets
         if bboxes.shape[0] == 0:
-            track_bboxes = [
+            ids = torch.zeros_like(labels)
+            bboxes = [
                 np.zeros((0, 6), dtype=np.float32)
                 for _ in range(model.detector.roi_head.bbox_head.num_classes)
             ]
-            return track_bboxes
+            return bboxes, labels, ids
         # get track feats
         track_bboxes = bboxes[:, :-1] * torch.tensor(
             img_metas[0]['scale_factor']).to(bboxes.device)
