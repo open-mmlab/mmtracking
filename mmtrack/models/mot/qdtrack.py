@@ -159,6 +159,7 @@ class QDTrack(BaseMultiObjectTracker):
             x, proposal_list, img_metas, rescale=rescale)
 
         bbox_results = det_results[0]
+        num_classes = len(bbox_results)
         outs_det = results2outs(bbox_results=bbox_results)
 
         det_bboxes = torch.tensor(outs_det['bboxes']).to(img)
@@ -176,7 +177,7 @@ class QDTrack(BaseMultiObjectTracker):
             bboxes=track_bboxes,
             labels=track_labels,
             ids=track_ids,
-            num_classes=self.detector.roi_head.bbox_head.num_classes
+            num_classes=num_classes
         )['bbox_results']
 
         return dict(det_bboxes=bbox_results, track_bboxes=track_bboxes)
