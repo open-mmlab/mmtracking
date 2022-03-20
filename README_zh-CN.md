@@ -81,6 +81,7 @@ v0.11.0版本已于2022年03月04日发布，可通过查阅[更新日志](docs/
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
+- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 
 支持的单目标跟踪算法:
