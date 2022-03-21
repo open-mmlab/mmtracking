@@ -43,6 +43,7 @@ def main():
         IN_VIDEO = True
 
     # define output
+    OUT_VIDEO = False
     if args.output is not None:
         if args.output.endswith('.mp4'):
             OUT_VIDEO = True
@@ -52,7 +53,6 @@ def main():
             if len(_out) > 1:
                 os.makedirs(_out[0], exist_ok=True)
         else:
-            OUT_VIDEO = False
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
     fps = args.fps
@@ -82,6 +82,7 @@ def main():
             # convert (x1, y1, w, h) to (x1, y1, x2, y2)
             init_bbox[2] += init_bbox[0]
             init_bbox[3] += init_bbox[1]
+            print(init_bbox)
 
         result = inference_sot(model, img, init_bbox, frame_id=i)
         if args.output is not None:
