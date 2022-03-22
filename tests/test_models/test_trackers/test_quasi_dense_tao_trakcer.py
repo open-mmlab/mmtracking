@@ -51,8 +51,7 @@ class TestQuasiDenseTAOTracker(object):
         self.tracker.update(
             ids=ids, bboxes=bboxes, labels=labels, embeds=embeds, frame_id=1)
 
-        assert self.tracker.tracks[ids.item()]['embeds'].equal(
-            new_embeds[0]) == True
+        assert self.tracker.tracks[ids.item()]['embeds'].equal(new_embeds[0])
 
     def test_memo(self):
         memo_bboxes, memo_labels, memo_embeds, memo_ids = self.tracker.memo  # noqa
@@ -63,7 +62,7 @@ class TestQuasiDenseTAOTracker(object):
 
     def test_track(self):
         self.tracker.reset()
-        img_size, feats_channel = 64, 256
+        feats_channel = 256
 
         model = MagicMock()
         model.track_head.extract_roi_feats = MagicMock(
@@ -81,7 +80,8 @@ class TestQuasiDenseTAOTracker(object):
         labels = torch.arange(self.num_objs)
 
         for frame_id in range(3):
-            bboxes, labels, ids = self.tracker.track(bboxes, labels, feats, frame_id)
+            bboxes, labels, ids = self.tracker.track(bboxes, labels, feats,
+                                                     frame_id)
 
             assert bboxes.shape[0] == labels.shape[0]
             assert labels.shape[0] == labels.shape[0]

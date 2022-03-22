@@ -1,11 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import os
 from collections import defaultdict
 
 import torch
 from mmdet.core import bbox_overlaps
 
-from mmtrack.core import embed_similarity, imshow_tracks
+from mmtrack.core import embed_similarity
 from ..builder import TRACKERS
 from .base_tracker import BaseTracker
 
@@ -212,8 +211,7 @@ class QuasiDenseTAOTracker(BaseTracker):
                 scores = cos_scores * cat_same.float().to(cos_scores.device)
             else:
                 raise NotImplementedError()
-            if 'metas' in kwargs:
-                raw_scores = scores.clone()
+
             # keep the object score consistency for detection of the same track
             obj_score_diffs = torch.abs(
                 bboxes[:, -1].view(-1, 1).expand_as(scores) -
