@@ -12,7 +12,7 @@ from .base_tracker import BaseTracker
 
 @TRACKERS.register_module()
 class QuasiDenseTAOTracker(BaseTracker):
-    """Tracker for Quasi-Dense Tracking.
+    """Tracker for Quasi-Dense Tracking Method with TAO Dataset.
 
     Args:
         init_score_thr (float): The cls_score threshold to

@@ -8,8 +8,8 @@ from .base_tracker import BaseTracker
 
 
 @TRACKERS.register_module()
-class QuasiDenseEmbedTracker(BaseTracker):
-    """Tracker for Quasi-Dense Tracking.
+class QuasiDenseTracker(BaseTracker):
+    """Tracker for Quasi-Dense Tracking Method with BDD and MOT17 Dataset.
 
     Args:
         init_score_thr (float): The cls_score threshold to

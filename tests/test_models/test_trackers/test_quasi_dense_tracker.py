@@ -7,7 +7,7 @@ from mmdet.core.bbox.demodata import random_boxes
 from mmtrack.models import TRACKERS
 
 
-class TestQuasiDenseEmbedTracker(object):
+class TestQuasiDenseTracker(object):
 
     @classmethod
     def setup_class(cls):
@@ -23,7 +23,7 @@ class TestQuasiDenseEmbedTracker(object):
             nms_class_iou_thr=0.7,
             with_cats=True,
             match_metric='bisoftmax')
-        tracker = TRACKERS.get('QuasiDenseEmbedTracker')
+        tracker = TRACKERS.get('QuasiDenseTracker')
         cls.tracker = tracker(**cfg)
         cls.num_objs = 5
 
