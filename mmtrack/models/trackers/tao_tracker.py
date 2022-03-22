@@ -11,7 +11,7 @@ from .base_tracker import BaseTracker
 
 
 @TRACKERS.register_module()
-class TaoTracker(BaseTracker):
+class QuasiDenseTAOTracker(BaseTracker):
     """Tracker for Quasi-Dense Tracking.
 
     Args:
@@ -245,124 +245,5 @@ class TaoTracker(BaseTracker):
         self.num_tracks += num_news
 
         self.update(ids, bboxes, labels, embeds, frame_id)
-
-        # show results of gt tracks and predicted tracks
-        if 'metas' in kwargs and kwargs['metas'].analyze:
-            metas = kwargs['metas']
-            gt_bboxes, gt_labels, gt_ids = [
-                metas['bboxes'], metas['labels'], metas['instance_ids']
-            ]
-            gt_bboxes = torch.cat(
-                (gt_bboxes, torch.zeros(gt_bboxes.size(0), 1)), dim=1)
-
-            if bboxes.size(0) == 0 or gt_bboxes.size(0) == 0:
-                return bboxes, labels, ids
-
-            fns = torch.ones(gt_bboxes.size(0), dtype=torch.long)
-            fps = torch.ones(bboxes.size(0), dtype=torch.long)
-            sw_fps = torch.zeros(bboxes.size(0), dtype=torch.long)
-            idsw = torch.zeros(bboxes.size(0), dtype=torch.long)
-
-            ious = bbox_overlaps(bboxes[:, :4], gt_bboxes[:, :4])
-            same_cat = labels.view(-1, 1) == gt_labels.view(1, -1)
-            ious *= same_cat.float().to(ious.device)
-            # get gt tracks
-            gt_inds = torch.full(ids.size(), -1, dtype=torch.long)
-            for i, bbox in enumerate(bboxes):
-                max_iou, j = ious[i].max(dim=0)
-                if max_iou > 0.5:
-                    fps[i], fns[j] = 0, 0
-                    gt_inds[i] = j
-                    ious[:, j] = -1
-
-                    gt_id = int(gt_ids[j])
-                    pred_id = int(ids[i])
-                    if len(self.gt_tracks[gt_id]['ids']) > 0:
-                        if pred_id != self.gt_tracks[gt_id]['ids'][-1]:
-                            idsw[i] = 1
-                    else:
-                        if pred_id in self.pred_tracks:
-                            idsw[i] = 1
-                    self.gt_tracks[gt_id]['scores'].append(
-                        float(f'{bbox[-1]:.3f}'))
-                    self.gt_tracks[gt_id]['ids'].append(pred_id)
-                    self.gt_tracks[gt_id]['frame_ids'].append(
-                        metas.img_info['frame_id'])
-            # get predicted tracks
-            for i, id in enumerate(ids):
-                id = int(id)
-
-                self.pred_tracks[id]['scores'].append(
-                    float(f'{bboxes[i, -1]:.3f}'))
-                if metas.img_info['frame_id'] > 0:
-                    memo_ind = torch.nonzero(
-                        memo_ids == id, as_tuple=False).squeeze(1)
-                else:
-                    memo_ind = []
-                if len(memo_ind) > 0:
-                    self.pred_tracks[id]['match_scores'].append(
-                        float(f'{raw_scores[i, memo_ind[0]]:.3f}'))
-                else:
-                    self.pred_tracks[id]['match_scores'].append(-1)
-                if gt_inds[i] == -1:
-                    self.pred_tracks[id]['ids'].append(-1)
-                else:
-                    self.pred_tracks[id]['ids'].append(int(gt_ids[gt_inds[i]]))
-                self.pred_tracks[id]['frame_ids'].append(
-                    metas.img_info['frame_id'])
-
-                if fps[i]:
-                    if id in self.valid_ids:
-                        sw_fps[i] = 1
-                    continue
-
-            fp_inds = sw_fps == 1  # red
-            fn_inds = fns == 1  # yellow
-            idsw_inds = idsw == 1  # cyan
-            tp_inds = fps == 0  # green
-            tp_inds[idsw_inds] = 0
-
-            os.makedirs(metas.out_file.rsplit('/', 1)[0], exist_ok=True)
-            img = metas.img_name
-            # black
-            if idsw_inds.any():
-                sw_ids = ids[idsw_inds]
-                memo_inds = (memo_ids.view(-1, 1) == sw_ids.view(
-                    1, -1)).sum(dim=1) > 0
-                img = imshow_tracks(
-                    img,
-                    memo_bboxes[memo_inds].numpy(),
-                    memo_labels[memo_inds].numpy(),
-                    memo_ids[memo_inds].numpy(),
-                    color='magenta',
-                    show=False)
-            img = imshow_tracks(
-                img,
-                bboxes[tp_inds].numpy(),
-                labels[tp_inds].numpy(),
-                ids[tp_inds].numpy(),
-                color='green',
-                show=False)
-            img = imshow_tracks(
-                img,
-                bboxes[fp_inds].numpy(),
-                labels[fp_inds].numpy(),
-                ids[fp_inds].numpy(),
-                color='red',
-                show=False)
-            img = imshow_tracks(
-                img,
-                bboxes=gt_bboxes[fn_inds, :].numpy(),
-                labels=gt_labels[fn_inds].numpy(),
-                color='yellow',
-                show=False)
-            img = imshow_tracks(
-                img,
-                bboxes[idsw_inds].numpy(),
-                labels[idsw_inds].numpy(),
-                ids[idsw_inds].numpy(),
-                color='cyan',
-                show=False,
-                out_file=metas.out_file)
 
         return bboxes, labels, ids

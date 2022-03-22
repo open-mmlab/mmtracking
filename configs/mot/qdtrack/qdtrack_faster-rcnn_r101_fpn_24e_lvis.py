@@ -58,7 +58,7 @@ model = dict(
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
                 neg_sampler=dict(type='RandomSampler')))),
     tracker=dict(
-        type='TaoTracker',
+        type='QuasiDenseTAOTracker',
         init_score_thr=0.0001,
         obj_score_thr=0.0001,
         match_score_thr=0.5,
