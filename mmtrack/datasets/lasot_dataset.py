@@ -54,7 +54,12 @@ class LaSOTDataset(BaseSOTDataset):
         if self.test_mode:
             videos_list = test_videos_list.tolist()
         else:
-            all_videos_list = glob.glob(self.img_prefix + '/*/*-[1-20]')
+            # all_videos_list = glob.glob(self.img_prefix + '/*/*-[1-20]')
+            all_videos_list = []
+            video_cats = self.file_client.list_dir_or_file(self.img_prefix, list_file=False)
+            for video_cat in video_cats:
+                all_videos_list.extend(self.file_client.list_dir_or_file(osp.join(self.img_prefix, video_cat),
+                list_file=False))
             test_videos = set(test_videos_list)
             videos_list = []
             for x in all_videos_list:
@@ -67,8 +72,9 @@ class LaSOTDataset(BaseSOTDataset):
             video_name = osp.join(video_name.split('-')[0], video_name)
             video_path = osp.join(video_name, 'img')
             ann_path = osp.join(video_name, 'groundtruth.txt')
-            img_names = glob.glob(
-                osp.join(self.img_prefix, video_name, 'img', '*.jpg'))
+            # img_names = glob.glob(
+            #     osp.join(self.img_prefix, video_name, 'img', '*.jpg'))
+            img_names = self.file_client.list_dir_or_file(osp.join(self.img_prefix, video_name, 'img'), list_dir=False, suffix='.jpg')
             end_frame_name = max(
                 img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
             end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
@@ -89,8 +95,8 @@ class LaSOTDataset(BaseSOTDataset):
                                        'full_occlusion.txt')
         out_of_view_file = osp.join(self.img_prefix, video_path,
                                     'out_of_view.txt')
-        full_occlusion = np.loadtxt(
+        full_occlusion = self.loadtxt(
             full_occlusion_file, dtype=bool, delimiter=',')
-        out_of_view = np.loadtxt(out_of_view_file, dtype=bool, delimiter=',')
+        out_of_view = self.loadtxt(out_of_view_file, dtype=bool, delimiter=',')
         visible = ~(full_occlusion | out_of_view)
         return dict(visible=visible)

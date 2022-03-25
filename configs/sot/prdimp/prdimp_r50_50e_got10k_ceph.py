@@ -164,8 +164,8 @@ train_pipeline = [
 
 img_norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1], to_rgb=True)
 test_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
+    dict(type='LoadImageFromFile', to_float32=True, file_client_args=file_client_args),
+    dict(type='LoadAnnotations', with_bbox=True, with_label=False, file_client_args=file_client_args),
     dict(
         type='MultiScaleFlipAug',
         scale_factor=1,
@@ -187,27 +187,31 @@ data = dict(
     samples_per_epoch=26000,
     train=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[0.25,1,1],
+        dataset_sampling_weights=[0.25,1,1,1],
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
                 img_prefix=data_root + 'got10k',
                 pipeline=train_pipeline,
                 split='train',
-                test_mode=False),
+                test_mode=False,
+                file_client_args=file_client_args),
             dict(
                 type='LaSOTDataset',
                 ann_file='tools/convert_datasets/lasot/testing_set.txt',
                 img_prefix=data_root + 'lasot/LaSOTBenchmark',
                 pipeline=train_pipeline,
                 split='train',
-                test_mode=False),
+                test_mode=False,
+                file_client_args=file_client_args),
             dict(
                 type='TrackingNetDataset',
+                chunks_list=[0,1,2,3],
                 img_prefix=data_root + 'trackingnet',
                 pipeline=train_pipeline,
                 split='train',
-                test_mode=False),
+                test_mode=False,
+                file_client_args=file_client_args),
             dict(
                 type='SOTCocoDataset',
                 ann_file=data_root +
@@ -215,20 +219,23 @@ data = dict(
                 img_prefix=data_root + 'coco/train2014',
                 pipeline=train_pipeline,
                 split='train',
-                test_mode=False)
+                test_mode=False,
+                file_client_args=file_client_args)
         ]),
     val=dict(
         type='GOT10kDataset',
         img_prefix=data_root + 'got10k',
         pipeline=test_pipeline,
         split='test',
-        test_mode=True),
+        test_mode=True,
+        file_client_args=file_client_args),
     test=dict(
         type='GOT10kDataset',
         img_prefix=data_root + 'got10k',
         pipeline=test_pipeline,
         split='test',
-        test_mode=True))
+        test_mode=True,
+        file_client_args=file_client_args))
 
 # optimizer
 optimizer = dict(
@@ -256,7 +263,7 @@ evaluation = dict(
     out_dir='sh1984:s3://zhangjingwei/mmtracking_others/mmtracking_0/prdimp')
 # yapf:disable
 log_config = dict(
-    interval=1,
+    interval=50,
     hooks=[
         dict(type='TextLoggerHook', out_dir='sh1984:s3://zhangjingwei/mmtracking_others/mmtracking_0/prdimp')  # noqa: E501
         # dict(type='TensorboardLoggerHook')

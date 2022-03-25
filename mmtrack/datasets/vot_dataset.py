@@ -64,12 +64,13 @@ class VOTDataset(BaseSOTDataset):
         start_time = time.time()
         data_infos = []
         ann_file = osp.join(self.img_prefix, 'list.txt')
-        videos_list = np.loadtxt(ann_file, dtype=np.str_)
+        videos_list = self.loadtxt(ann_file, dtype=np.str_)
         for video_name in videos_list:
             video_path = osp.join(video_name, 'color')
             ann_path = osp.join(video_name, 'groundtruth.txt')
-            img_names = glob.glob(
-                osp.join(self.img_prefix, video_path + '/*.jpg'))
+            # img_names = glob.glob(
+            #     osp.join(self.img_prefix, video_path + '/*.jpg'))
+            img_names = self.file_client.list_dir_or_file(osp.join(self.img_prefix, video_path), list_dir=False, suffix='.jpg')
             end_frame_id = max(
                 img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
             data_info = dict(

@@ -45,11 +45,11 @@ class GOT10kDataset(BaseSOTDataset):
         assert split in ['train', 'val', 'test', 'val_vot', 'train_vot']
         data_infos = []
         if split in ['train', 'val', 'test']:
-            videos_list = np.loadtxt(
+            videos_list = self.loadtxt(
                 osp.join(self.img_prefix, split, 'list.txt'), dtype=np.str_)
         else:
             split = '_'.join(split.split('_')[::-1])
-            vids_id_list = np.loadtxt(
+            vids_id_list = self.loadtxt(
                 osp.join(self.img_prefix, 'train',
                          f'got10k_{split}_split.txt'),
                 dtype=float)
@@ -65,8 +65,9 @@ class GOT10kDataset(BaseSOTDataset):
             else:
                 video_path = osp.join('train', video_name)
             ann_path = osp.join(video_path, 'groundtruth.txt')
-            img_names = glob.glob(
-                osp.join(self.img_prefix, video_path, '*.jpg'))
+            # img_names = glob.glob(
+            #     osp.join(self.img_prefix, video_path, '*.jpg'))
+            img_names = self.file_client.list_dir_or_file(osp.join(self.img_prefix, video_path), list_dir=False, suffix='.jpg')
             end_frame_name = max(
                 img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
             end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
@@ -89,13 +90,13 @@ class GOT10kDataset(BaseSOTDataset):
             cover_info_path = osp.join(
                 self.img_prefix, self.data_infos[video_ind]['video_path'],
                 'cover.label')
-            absense_info = np.loadtxt(absense_info_path, dtype=bool)
+            absense_info = self.loadtxt(absense_info_path, dtype=bool)
             # The values of key 'cover' are
             # int numbers in range [0,8], which correspond to
             # ranges of object visible ratios: 0%, (0%, 15%],
             # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
             # (75%, 90%], (90%, 100%) and 100% respectively
-            cover_info = np.loadtxt(cover_info_path, dtype=int)
+            cover_info = self.loadtxt(cover_info_path, dtype=int)
             visible = ~absense_info & (cover_info > 0)
             visible_ratio = cover_info / 8.
             return dict(visible=visible, visible_ratio=visible_ratio)

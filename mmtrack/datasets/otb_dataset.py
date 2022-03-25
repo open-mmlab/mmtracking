@@ -51,27 +51,29 @@ class OTB100Dataset(BaseSOTDataset):
         print('Loading OTB100 dataset...')
         start_time = time.time()
         data_infos = []
-        with open(self.ann_file, 'r') as f:
-            # the first line of annotation file is dataset comment.
-            for line in f.readlines()[1:]:
-                line = line.strip().split(',')
-                if line[0].split(os.sep)[0] == 'Board':
-                    framename_template = '%05d.jpg'
-                else:
-                    framename_template = '%04d.jpg'
-                data_info = dict(
-                    video_path=line[0],
-                    ann_path=line[1],
-                    start_frame_id=int(line[2]),
-                    end_frame_id=int(line[3]),
-                    framename_template=framename_template)
-                # Tracker initializatioin in `Tiger1` video will skip the first
-                # 5 frames. Details can be seen in the official file
-                # `tracker_benchmark_v1.0/initOmit/tiger1.txt`.
-                # Annotation loading will refer to this information.
-                if line[0].split(os.sep)[0] == 'Tiger1':
-                    data_info['init_skip_num'] = 5
-                data_infos.append(data_info)
+        # with open(self.ann_file, 'r') as f:
+        data_infos = []
+        ann_info = self.file_client.get_text(self.ann_file).strip().split('\n')
+        # the first line of annotation file is dataset comment.
+        for line_info in ann_info[1:]:
+            line = line_info.strip().split(',')
+            if line[0].split(os.sep)[0] == 'Board':
+                framename_template = '%05d.jpg'
+            else:
+                framename_template = '%04d.jpg'
+            data_info = dict(
+                video_path=line[0],
+                ann_path=line[1],
+                start_frame_id=int(line[2]),
+                end_frame_id=int(line[3]),
+                framename_template=framename_template)
+            # Tracker initializatioin in `Tiger1` video will skip the first
+            # 5 frames. Details can be seen in the official file
+            # `tracker_benchmark_v1.0/initOmit/tiger1.txt`.
+            # Annotation loading will refer to this information.
+            if line[0].split(os.sep)[0] == 'Tiger1':
+                data_info['init_skip_num'] = 5
+            data_infos.append(data_info)
         print(f'OTB100 dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -88,10 +90,11 @@ class OTB100Dataset(BaseSOTDataset):
         bboxes_file = osp.join(self.img_prefix,
                                self.data_infos[video_ind]['ann_path'])
         bboxes = []
-        with open(bboxes_file, 'r') as f:
-            for bbox in f.readlines():
-                bbox = list(map(int, re.findall(r'-?\d+', bbox)))
-                bboxes.append(bbox)
+        bboxes_info = self.file_client.get_text(bboxes_file).strip().split('\n')
+        # with open(bboxes_file, 'r') as f:
+        for bbox in bboxes_info:
+            bbox = list(map(int, re.findall(r'-?\d+', bbox)))
+            bboxes.append(bbox)
         bboxes = np.array(bboxes, dtype=float)
 
         if 'init_skip_num' in self.data_infos[video_ind]:

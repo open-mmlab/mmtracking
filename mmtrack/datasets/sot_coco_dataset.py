@@ -2,6 +2,7 @@
 import time
 
 import numpy as np
+import mmcv
 from mmdet.datasets import DATASETS
 from pycocotools.coco import COCO
 
@@ -22,7 +23,12 @@ class SOTCocoDataset(BaseSOTDataset):
             ann_file (str): The official coco annotation file. It will be
                 loaded and parsed in the `self.load_data_infos` function.
         """
-        self.coco = COCO(ann_file)
+        if 'file_client_args' in kwargs:
+            self.file_client = mmcv.FileClient(**kwargs['file_client_args'])
+            with self.file_client.get_local_path(ann_file) as local_path:
+                self.coco = COCO(local_path)
+        else:
+            self.coco = COCO(ann_file)
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='train'):

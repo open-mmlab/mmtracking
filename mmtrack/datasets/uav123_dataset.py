@@ -45,16 +45,16 @@ class UAV123Dataset(BaseSOTDataset):
         print('Loading UAV123 dataset...')
         start_time = time.time()
         data_infos = []
-        with open(self.ann_file, 'r') as f:
-            # the first line of annotation file is dataset comment.
-            for line in f.readlines()[1:]:
-                line = line.strip().split(',')
-                data_info = dict(
-                    video_path=line[0],
-                    ann_path=line[1],
-                    start_frame_id=int(line[2]),
-                    end_frame_id=int(line[3]),
-                    framename_template='%06d.jpg')
-                data_infos.append(data_info)
+        ann_info = self.file_client.get_text(self.ann_file).strip().split('\n')
+        # the first line of annotation file is dataset comment.
+        for line_info in ann_info[1:]:
+            line = line_info.strip().split(',')
+            data_info = dict(
+                video_path=line[0],
+                ann_path=line[1],
+                start_frame_id=int(line[2]),
+                end_frame_id=int(line[3]),
+                framename_template='%06d.jpg')
+            data_infos.append(data_info)
         print(f'UAV123 dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
