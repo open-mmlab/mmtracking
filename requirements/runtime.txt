@@ -8,6 +8,5 @@ opencv-python
 packaging
 pycocotools<=2.0.2
 seaborn
-six
 terminaltables
 tqdm
