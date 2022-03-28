@@ -15,7 +15,12 @@ model = dict(
             bbox_head=dict(
                 loss_bbox=dict(type='L1Loss', loss_weight=1.0),
                 bbox_coder=dict(clip_border=False),
-                num_classes=1))),
+                num_classes=1)),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth'  # noqa: E501
+        )),
     track_head=dict(
         type='QuasiDenseTrackHead',
         roi_extractor=dict(
