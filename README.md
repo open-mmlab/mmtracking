@@ -108,7 +108,7 @@ conda create -n open-mmlab python=3.8 pytorch=1.10 cudatoolkit=11.3 torchvision 
 conda activate open-mmlab
 pip3 install openmim
 mim install mmcv-full
-pip3 install mmdet
+mim install mmdet
 git clone https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
 pip3 install -e .
