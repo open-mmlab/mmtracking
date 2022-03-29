@@ -30,9 +30,6 @@ class TestLoading(object):
             assert results['img'].dtype == np.uint8
             assert results['img_shape'] == (256, 512, 3)
             assert results['ori_shape'] == (256, 512, 3)
-            assert repr(load) == load.__class__.__name__ + \
-                "(to_float32=False, color_type='color', " + \
-                "file_client_args={'backend': 'disk'})"
 
     def test_load_detections(self):
         results = dict()
