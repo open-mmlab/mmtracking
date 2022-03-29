@@ -104,10 +104,6 @@ def test_mot_forward_train(cfg_file):
         ref_gt_masks=ref_gt_masks,
         return_loss=True)
     assert isinstance(losses, dict)
-    assert torch.isnan(losses['loss_track'])
-    assert torch.isnan(losses['loss_track_aux'])
-    losses.pop('loss_track')
-    losses.pop('loss_track_aux')
     loss, _ = qdtrack._parse_losses(losses)
     loss.requires_grad_(True)
     assert float(loss.item()) > 0
