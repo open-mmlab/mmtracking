@@ -95,7 +95,19 @@ v0.11.0版本已于2022年03月04日发布，可通过查阅[更新日志](docs/
 
 ## 安装
 
-请参考[安装指南](docs/en/install.md)进行安装。
+MMTracking 依赖 [PyTorch](https://pytorch.org/)], [MMCV](https://github.com/open-mmlab/mmcv) and [MMDetection](https://github.com/open-mmlab/mmdetection)，以下是安装的简要步骤。
+更详细的安装指南请参考 [install.md](docs/en/install.rst)。
+
+```shell
+conda create -n open-mmlab python=3.8 pytorch=1.10 cudatoolkit=11.3 torchvision -c pytorch -y
+conda activate open-mmlab
+pip3 install openmim
+mim install mmcv-full
+pip3 install mmdet
+git clone https://github.com/open-mmlab/mmtracking.git
+cd mmtracking
+pip3 install -e .
+```
 
 ## 开始使用MMTracking
 
