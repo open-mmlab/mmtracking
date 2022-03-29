@@ -95,7 +95,7 @@ v0.11.0版本已于2022年03月04日发布，可通过查阅[更新日志](docs/
 
 ## 安装
 
-MMTracking 依赖 [PyTorch](https://pytorch.org/)], [MMCV](https://github.com/open-mmlab/mmcv) and [MMDetection](https://github.com/open-mmlab/mmdetection)，以下是安装的简要步骤。
+MMTracking 依赖 [PyTorch](https://pytorch.org/)], [MMCV](https://github.com/open-mmlab/mmcv) 和 [MMDetection](https://github.com/open-mmlab/mmdetection)，以下是安装的简要步骤。
 更详细的安装指南请参考 [install.md](docs/en/install.rst)。
 
 ```shell
