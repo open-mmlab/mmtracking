@@ -134,6 +134,36 @@ class IouNetHead(nn.Module):
                 m.weight.data.uniform_()
                 m.bias.data.zero_()
 
+    def get_stored_targets(self):
+        import sys
+
+        sys.path.insert(0, '/home/PJLAB/zhangjingwei/pytracking')
+        data_input_1 = torch.load(
+            '/home/PJLAB/zhangjingwei/pytracking/scripts/data_input_1')
+        data_input_2 = torch.load(
+            '/home/PJLAB/zhangjingwei/pytracking/scripts/data_input_2')
+        sys.path.pop(0)
+
+        proposal1_density = data_input_1['proposal_density']
+        proposal2_density = data_input_2['proposal_density']
+
+        proposal1 = data_input_1['test_proposals']
+        proposal2 = data_input_2['test_proposals']
+
+        gt1_density = data_input_1['gt_density']
+        gt2_density = data_input_2['gt_density']
+
+        proposal = torch.stack([proposal1, proposal2], dim=0)
+        proposal = proposal.transpose(1, 0).contiguous()
+
+        proposal_density = torch.stack([proposal1_density, proposal2_density],
+                                       dim=0)
+        proposal_density = proposal_density.transpose(1, 0).contiguous()
+
+        gt_density = torch.stack([gt1_density, gt2_density], dim=0)
+        gt_density = gt_density.transpose(1, 0).contiguous()
+        return proposal.cuda(), proposal_density.cuda(), gt_density.cuda()
+
     def forward(self, feat1, feat2, gt_bboxes, search_gt_bboxes, num_seq=3):
         """Runs the ATOM IoUNet during training operation.
 
@@ -157,6 +187,7 @@ class IouNetHead(nn.Module):
         gt_bboxes = gt_bboxes[0, ...][:, 1:]
 
         # Get modulation vector
+        gt_bboxes = bbox_xyxy_to_x1y1wh(gt_bboxes)
         modulation = self.get_modulation(feat1, gt_bboxes)
         iou_feat = self.get_iou_feat(feat2)
 
@@ -190,6 +221,8 @@ class IouNetHead(nn.Module):
 
         (proposals, proposals_density,
          search_gt_bboxes_density) = self.get_targets(search_gt_bboxes)
+        # (proposals, proposals_density,
+        #  search_gt_bboxes_density) = self.get_stored_targets()
 
         proposals = proposals.view(-1, self.num_samples, proposals.shape[-1])
         proposals_density = proposals_density.view(-1, self.num_samples)
