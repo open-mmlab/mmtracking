@@ -215,8 +215,8 @@ class TaoDataset(CocoVideoDataset):
         if 'track' in metrics:
             if tao is None:
                 raise ImportError(
-                    'Please run'
-                    'pip install git+https://github.com/TAO-Dataset/tao.git'
+                    'Please run '
+                    'pip install git+https://github.com/TAO-Dataset/tao.git '
                     'to manually install tao')
 
             print_log('Evaluating tracking results...', logger)
@@ -237,8 +237,8 @@ class TaoDataset(CocoVideoDataset):
         if 'bbox' in metrics:
             if lvis is None:
                 raise ImportError(
-                    'Please run'
-                    'pip install git+https://github.com/lvis-dataset/lvis-api.git'  # noqa
+                    'Please run '
+                    'pip install git+https://github.com/lvis-dataset/lvis-api.git '  # noqa
                     'to manually install lvis')
 
             print_log('Evaluating detection results...', logger)

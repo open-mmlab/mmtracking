@@ -80,6 +80,7 @@ class Prdimp(BaseSingleObjectTracker):
         self.max_scale_factor = torch.min(self.image_hw / self.base_target_sz)
 
         # generate bboxes on the resized input image
+        # `init_bboxes` is in [x,y,w,h] format
         init_bboxes = self.generate_bbox(self.bbox_yx, self.bbox_hw,
                                          self.bbox_yx.round(),
                                          self.target_scale)
@@ -215,6 +216,8 @@ class Prdimp(BaseSingleObjectTracker):
         pos: bbox center
         sz: the width and height of the image
         sample_pos: the center of the sampled image
+
+        # return bbox in [x,y,w,h] format
         """
         box_center = (pos - sample_pos) / sample_scale + (self.img_sample_sz -
                                                           1) / 2

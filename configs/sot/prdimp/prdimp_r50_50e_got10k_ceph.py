@@ -187,13 +187,13 @@ data = dict(
     samples_per_epoch=26000,
     train=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[0.25,1,1,1],
+        dataset_sampling_weights=[1,0.25,1,1],
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
                 img_prefix=data_root + 'got10k',
                 pipeline=train_pipeline,
-                split='train',
+                split='train_vot',
                 test_mode=False,
                 file_client_args=file_client_args),
             dict(
