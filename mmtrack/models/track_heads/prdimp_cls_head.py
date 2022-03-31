@@ -124,6 +124,23 @@ class PrdimpClsHead(nn.Module):
                 m.bias.data.zero_()
         self.filter_initializer.init_weights()
 
+    def get_stored_targets(self):
+        import sys
+
+        sys.path.insert(0, '/home/PJLAB/zhangjingwei/pytracking')
+        data_input_1 = torch.load(
+            '/home/PJLAB/zhangjingwei/pytracking/scripts/data_input_1')
+        data_input_2 = torch.load(
+            '/home/PJLAB/zhangjingwei/pytracking/scripts/data_input_2')
+        sys.path.pop(0)
+
+        labels1_density = data_input_1['test_label_density']
+        labels2_density = data_input_2['test_label_density']
+
+        targets = torch.stack([labels1_density, labels2_density], dim=0)
+        targets = targets.transpose(1, 0).contiguous()
+        return targets
+
     def forward(self, train_feat, test_feat, gt_bboxes, search_gt_bboxes,
                 *args, **kwargs):
         """Learns a target classification filter based on the train samples and
@@ -170,6 +187,8 @@ class PrdimpClsHead(nn.Module):
                          search_gt_bboxes[:, 3:5]) / 2.
         # of shape (num_template_seq*bs, score_map_size, score_map_size)
         prob_labels_density = self.get_targets(target_center)
+        # prob_labels_density = self.get_stored_targets().to(
+        #     target_center.device)
         prob_labels_density = prob_labels_density.view(
             test_num_seq, -1, *prob_labels_density.shape[-2:])
 
