@@ -13,6 +13,7 @@
 |  MMTracking version |       MMCV version       |      MMDetection version      |
 |:-------------------:|:------------------------:|:-----------------------------:|
 |        master       | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
+|        0.12.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.11.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.10.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |
 |        0.9.0        | mmcv-full>=1.3.17, <1.5.0 |       MMDetection>=2.19.1     |

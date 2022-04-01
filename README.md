@@ -67,7 +67,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 Release [QDTrack](configs/mot/qdtrack) pretrained models.
 
-v0.11.0 was released in 04/03/2022.
+v0.12.0 was released in 01/04/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
 ## Benchmark and model zoo

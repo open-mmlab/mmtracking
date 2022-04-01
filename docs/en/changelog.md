@@ -1,5 +1,15 @@
 ## Changelog
 
+### v0.12.0 (01/04/2022)
+
+#### Highlights
+
+- Support QDTrack algorithm in MOT ([#433](https://github.com/open-mmlab/mmtracking/pull/433)), ([#451](https://github.com/open-mmlab/mmtracking/pull/451)), ([#461](https://github.com/open-mmlab/mmtracking/pull/461)), ([#469](https://github.com/open-mmlab/mmtracking/pull/469))
+
+#### Bug Fixes
+
+- Support empty tensor for selsa aggregator ([#463](https://github.com/open-mmlab/mmtracking/pull/463))
+
 ### v0.11.0 (04/03/2022)
 
 #### Highlights
