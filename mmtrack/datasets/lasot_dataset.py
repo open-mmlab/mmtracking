@@ -54,7 +54,7 @@ class LaSOTDataset(BaseSOTDataset):
         if self.test_mode:
             videos_list = test_videos_list.tolist()
         else:
-            all_videos_list = glob.glob(self.img_prefix + '/*/*-[1-20]')
+            all_videos_list = glob.glob(self.img_prefix + '/*/*-*')
             test_videos = set(test_videos_list)
             videos_list = []
             for x in all_videos_list:
