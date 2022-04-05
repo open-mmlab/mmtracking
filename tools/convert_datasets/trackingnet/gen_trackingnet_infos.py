@@ -58,17 +58,17 @@ def gen_data_infos(data_root, save_dir, split='train', chunks=['all']):
         os.makedirs(save_dir, exist_ok=True)
 
     assert len(chunks_list) > 0
-    for chunk in chunks_list:
-        chunk_ann_dir = osp.join(data_root, chunk)
-        assert osp.isdir(
-            chunk_ann_dir
-        ), f'annotation directory {chunk_ann_dir} does not exist'
+    with open(osp.join(save_dir, f'trackingnet_{split}_infos.txt'), 'w') as f:
+        f.write(
+            'The format of each line in this txt is '
+            '(chunk,video_path,annotation_path,start_frame_id,end_frame_id)')
+        for chunk in chunks_list:
+            chunk_ann_dir = osp.join(data_root, chunk)
+            assert osp.isdir(
+                chunk_ann_dir
+            ), f'annotation directory {chunk_ann_dir} does not exist'
 
-        videos_list = sorted(os.listdir(osp.join(chunk_ann_dir, 'frames')))
-
-        with open(osp.join(save_dir, f'{chunk}_infos.txt'), 'w') as f:
-            f.write('The format of each line in this txt is '
-                    '(video_path,annotation_path,start_frame_id,end_frame_id)')
+            videos_list = sorted(os.listdir(osp.join(chunk_ann_dir, 'frames')))
             for video_name in videos_list:
                 video_path = osp.join(chunk, 'frames', video_name)
                 # avoid creating empty file folds by mistakes
@@ -80,7 +80,7 @@ def gen_data_infos(data_root, save_dir, split='train', chunks=['all']):
                     img_names,
                     key=lambda x: int(osp.basename(x).split('.')[0]))
                 end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
-                f.write(f'\n{video_path},{ann_path},0,{end_frame_id}')
+                f.write(f'\n{chunk},{video_path},{ann_path},0,{end_frame_id}')
 
     print(f'Done! ({time.time()-start_time:.2f} s)')
     print(f'The results are saved in {save_dir}')

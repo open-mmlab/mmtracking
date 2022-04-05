@@ -242,7 +242,11 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
+# there are two options for preprocessing the dataset.
+# choice 1: using the offline coco-format annotation and correspondingly the `SOTTrainDataset` class is used in training and `SOTTestDataset` is used in test.
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
+# choice 2: using the online annotation parsing and correspondingly the `LaSOTDataset` class is used in training and test.
+python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
 python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
@@ -251,7 +255,11 @@ python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/U
 # unzip files in 'data/trackingnet/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # generate annotations
+# there are two options for preprocessing the dataset.
+# choice 1: using the offline coco-format annotation and correspondingly the `SOTTrainDataset` class is used in training and `SOTTestDataset` is used in test.
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
+# choice 2: using the online annotation parsing and correspondingly the `TrackingNetDataset` class is used in training and test.
+python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
 # unzip files in 'data/otb100/zips/*.zip'
@@ -263,10 +271,14 @@ python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100 -o ./data/ot
 # unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # generate annotations
-python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
+python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
 
 # VOT2018
+# there are two options for preprocessing the dataset.
+# choice 1: using the offline coco-format annotation and correspondingly the `SOTTestDataset` is used in test.
 python ./tools/convert_datasets/vot/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
+# choice 2: using the online annotation parsing and correspondingly the `VOTDataset` class is used in test.
+python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
 python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
@@ -581,6 +593,11 @@ There are 2 JSON files in `data/lasot/annotations`:
 `lasot_train.json`:  JSON file containing the annotations information of the training set in LaSOT dataset.
 `lasot_test.json`:  JSON file containing the annotations information of the testing set in LaSOT dataset.
 
+There are 2 TEXT files in `data/lasot/annotations`:
+
+`lasot_train_infos.txt`:  TEXT file containing the annotations information of the training set in LaSOT dataset.
+`lasot_test_infos.txt`:  TEXT file containing the annotations information of the testing set in LaSOT dataset.
+
 #### The folder of annotations in UAV123
 
 There are only 1 JSON files in `data/UAV123/annotations`:
@@ -595,6 +612,11 @@ There are 2 JSON files in `data/trackingnet/annotations`:
 
 `trackingnet_test.json`:  JSON file containing the annotations information of the testing set in TrackingNet dataset.
 `trackingnet_train.json`:  JSON file containing the annotations information of the training set in TrackingNet dataset.
+
+There are 2 TEXT files in `data/trackingnet/annotations`:
+
+`trackingnet_test_infos.txt`:  TEXT file containing the information of the testing set in TrackingNet dataset.
+`trackingnet_train_infos.txt`:  TEXT file containing the information of the training set in TrackingNet dataset.
 
 #### The folder of data and annotations in OTB100
 
@@ -614,13 +636,25 @@ There are 3 JSON files in `data/got10k/annotations`:
 `got10k_test.json`:  JSON file containing the annotations information of the testing set in GOT10k dataset.
 `got10k_val.json`:  JSON file containing the annotations information of the valuation set in GOT10k dataset.
 
+There are 5 TEXT files in `data/got10k/annotations`:
+
+`got10k_train_infos.txt`:  TEXT file containing the information of the training set in GOT10k dataset.
+`got10k_test_infos.txt`:  TEXT file containing the information of the testing set in GOT10k dataset.
+`got10k_val_infos.txt`:  TEXT file containing the information of the valuation set in GOT10k dataset.
+`got10k_train_vot_infos.txt`:  TEXT file containing the information of the `train_vot` split in GOT10k dataset.
+`got10k_val_vot_infos.txt`:  TEXT file containing the information of the `val_vot` split in GOT10k dataset.
+
 #### The folder of data and annotations in VOT2018
 
 There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and the `color` folder under each video directory contains all images of the video.
 
-There are only 1 JSON files in `data/vot2018/annotations`:
+There are only 1 JSON files in `data/vot2018/annotations` if using the offline coco-format annotation:
 
 `vot2018.json`:  JSON file containing the annotations information of the VOT2018 dataset.
+
+There are only 1 TEXT files in `data/vot2018/annotations` if using the online annotation parsing:
+
+`vot2018_infos.txt`:  TEXT file containing the information of the VOT2018 dataset.
 
 #### The folder of annotations in youtube_vis_2019/youtube_vis2021
 

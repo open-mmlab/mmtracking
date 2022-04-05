@@ -44,9 +44,9 @@ def gen_data_infos(data_root, save_dir, split='train'):
         videos_list = np.loadtxt(
             osp.join(data_root, split, 'list.txt'), dtype=np.str_)
     else:
-        split = '_'.join(split.split('_')[::-1])
+        split_reverse = '_'.join(split.split('_')[::-1])
         vids_id_list = np.loadtxt(
-            osp.join(data_root, 'train', f'got10k_{split}_split.txt'),
+            osp.join(data_root, 'train', f'got10k_{split_reverse}_split.txt'),
             dtype=float)
         videos_list = [
             'GOT-10k_Train_%06d' % (int(video_id) + 1)
@@ -56,7 +56,7 @@ def gen_data_infos(data_root, save_dir, split='train'):
     if not osp.isdir(save_dir):
         os.makedirs(save_dir, exist_ok=True)
 
-    with open(osp.join(save_dir, f'{split}_infos.txt'), 'w') as f:
+    with open(osp.join(save_dir, f'got10k_{split}_infos.txt'), 'w') as f:
         f.write('The format of each line in this txt is '
                 '(video_path,annotation_path,start_frame_id,end_frame_id)')
         videos_list = sorted(videos_list)

@@ -58,7 +58,7 @@ def gen_data_infos(data_root, save_dir, split='train'):
         os.makedirs(save_dir, exist_ok=True)
 
     videos_list = sorted(videos_list)
-    with open(osp.join(save_dir, f'{split}_infos.txt'), 'w') as f:
+    with open(osp.join(save_dir, f'lasot_{split}_infos.txt'), 'w') as f:
         f.write('The format of each line in this txt is '
                 '(video_path,annotation_path,start_frame_id,end_frame_id)')
         for video_name in videos_list:
