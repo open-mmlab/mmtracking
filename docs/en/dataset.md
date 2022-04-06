@@ -249,7 +249,11 @@ python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchma
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
-python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+# download annotations
+# due to the annotations of all videos in UAV123 are inconsistent, we just download the information file generated in advance.
+mkdir data/uav123/annotations
+wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
+
 
 # TrackingNet
 # unzip files in 'data/trackingnet/*.zip'
@@ -264,8 +268,10 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 # OTB100
 # unzip files in 'data/otb100/zips/*.zip'
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
-# generate annotations
-python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100 -o ./data/otb100/annotations
+# download annotations
+# due to the annotations of all videos in OTB100 are inconsistent, we just need to download the information file generated in advance.
+mkdir data/otb100/annotations
+wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k
 # unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
@@ -274,10 +280,6 @@ bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
 
 # VOT2018
-# there are two options for preprocessing the dataset.
-# choice 1: using the offline coco-format annotation and correspondingly the `SOTTestDataset` is used in test.
-python ./tools/convert_datasets/vot/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
-# choice 2: using the online annotation parsing and correspondingly the `VOTDataset` class is used in test.
 python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019

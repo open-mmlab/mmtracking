@@ -22,7 +22,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         img_prefix (str): Prefix in the paths of image files.
         pipeline (list[dict]): Processing pipeline.
         split (str): Dataset split.
-        info_file (str, optional): The file contains data information. It will
+        ann_file (str, optional): The file contains data information. It will
             be loaded and parsed in the `self.load_data_infos` function.
         test_mode (bool, optional): Default to False.
         bbox_min_size (int, optional): Only bounding boxes whose sizes are
@@ -39,15 +39,15 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                  img_prefix,
                  pipeline,
                  split,
-                 info_file=None,
+                 ann_file=None,
                  test_mode=False,
                  bbox_min_size=0,
                  only_eval_visible=False,
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
-        self.info_file = info_file
         self.pipeline = Compose(pipeline)
+        self.ann_file = ann_file
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
         self.only_eval_visible = only_eval_visible

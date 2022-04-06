@@ -43,7 +43,7 @@ class GOT10kDataset(BaseSOTDataset):
         start_time = time.time()
         assert split in ['train', 'val', 'test', 'val_vot', 'train_vot']
         data_infos = []
-        with open(self.info_file, 'r') as f:
+        with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
                 line = line.strip().split(',')

@@ -12,10 +12,12 @@ data = dict(
     val=dict(
         type='VOTDataset',
         dataset_type='vot2018',
+        ann_file=data_root + 'vot2018/annotations/vot2018_infos.txt',
         img_prefix=data_root + 'vot2018/data'),
     test=dict(
         type='VOTDataset',
         dataset_type='vot2018',
+        ann_file=data_root + 'vot2018/annotations/vot2018_infos.txt',
         img_prefix=data_root + 'vot2018/data'))
 evaluation = dict(
     metric=['track'], interval=1, start=10, rule='greater', save_best='eao')

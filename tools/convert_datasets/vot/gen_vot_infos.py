@@ -5,8 +5,6 @@ import os
 import os.path as osp
 import time
 
-import numpy as np
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -42,8 +40,10 @@ def gen_data_infos(data_root, save_dir, dataset_type='vot2018'):
     print('Generate the information of VOT dataset...')
     start_time = time.time()
 
-    videos_list = np.loadtxt(
-        osp.join(data_root, 'data', 'list.txt'), dtype=str)
+    videos_list = os.listdir(osp.join(data_root, 'data'))
+    videos_list = [
+        x for x in videos_list if osp.isdir(osp.join(data_root, 'data', x))
+    ]
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir, exist_ok=True)

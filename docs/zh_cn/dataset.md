@@ -250,7 +250,10 @@ python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchma
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
-python ./tools/convert_datasets/uav123/uav2coco.py -i ./data/UAV123/ -o ./data/UAV123/annotations
+# 下载标注
+# 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
+mkdir data/uav123/annotations
+wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
 
 # TrackingNet
 # 解压目录 'data/trackingnet/' 下的所有 '*.zip' 文件
@@ -265,8 +268,10 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 # OTB100
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
-# 生成标注
-python ./tools/convert_datasets/otb100/otb2coco.py -i ./data/otb100 -o ./data/otb100/annotations
+# 下载标注
+# 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
+mkdir data/otb100/annotations
+wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k
 # 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件

@@ -80,7 +80,7 @@ def gen_data_infos(data_root, save_dir, split='train', chunks=['all']):
                     img_names,
                     key=lambda x: int(osp.basename(x).split('.')[0]))
                 end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
-                f.write(f'\n{chunk},{video_path},{ann_path},0,{end_frame_id}')
+                f.write(f'\n{video_path},{ann_path},0,{end_frame_id}')
 
     print(f'Done! ({time.time()-start_time:.2f} s)')
     print(f'The results are saved in {save_dir}')

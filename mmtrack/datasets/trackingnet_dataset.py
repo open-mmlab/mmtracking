@@ -66,16 +66,17 @@ class TrackingNetDataset(BaseSOTDataset):
         assert len(chunks) > 0
         chunks = set(chunks)
         data_infos = []
-        with open(self.info_file, 'r') as f:
+        with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
                 line = line.strip().split(',')
-                if line[0] in chunks:
+                chunk = line[0].split('/')[0]
+                if chunk in chunks:
                     data_info = dict(
-                        video_path=line[1],
-                        ann_path=line[2],
-                        start_frame_id=int(line[3]),
-                        end_frame_id=int(line[4]),
+                        video_path=line[0],
+                        ann_path=line[1],
+                        start_frame_id=int(line[2]),
+                        end_frame_id=int(line[3]),
                         framename_template='%d.jpg')
                     data_infos.append(data_info)
         print(f'TrackingNet dataset loaded! ({time.time()-start_time:.2f} s)')

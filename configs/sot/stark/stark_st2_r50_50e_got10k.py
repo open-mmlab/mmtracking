@@ -67,7 +67,7 @@ data = dict(
     train=dict(dataset_cfgs=[
         dict(
             type='GOT10kDataset',
-            info_file=data_root + 'got10k/annotations/got10k_train_infos.txt',
+            ann_file=data_root + 'got10k/annotations/got10k_train_infos.txt',
             img_prefix=data_root + 'got10k',
             pipeline=train_pipeline,
             split='train',
