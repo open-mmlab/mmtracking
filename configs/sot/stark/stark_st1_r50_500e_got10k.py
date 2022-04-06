@@ -153,6 +153,8 @@ data = dict(
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
+                info_file=data_root +
+                'got10k/annotations/got10k_train_infos.txt',
                 img_prefix=data_root + 'got10k',
                 pipeline=train_pipeline,
                 split='train',
@@ -160,12 +162,14 @@ data = dict(
         ]),
     val=dict(
         type='GOT10kDataset',
+        info_file=data_root + 'got10k/annotations/got10k_test_infos.txt',
         img_prefix=data_root + 'got10k',
         pipeline=test_pipeline,
         split='test',
         test_mode=True),
     test=dict(
         type='GOT10kDataset',
+        info_file=data_root + 'got10k/annotations/got10k_test_infos.txt',
         img_prefix=data_root + 'got10k',
         pipeline=test_pipeline,
         split='test',

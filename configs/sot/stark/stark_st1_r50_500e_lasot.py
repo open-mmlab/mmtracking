@@ -54,19 +54,24 @@ data = dict(
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
+                info_file=data_root +
+                'got10k/annotations/got10k_train_infos.txt',
                 img_prefix=data_root + 'got10k',
                 pipeline=train_pipeline,
                 split='train',
                 test_mode=False),
             dict(
                 type='LaSOTDataset',
-                ann_file='tools/convert_datasets/lasot/testing_set.txt',
+                info_file=data_root +
+                'lasot/annotations/lasot_train_infos.txt',
                 img_prefix=data_root + 'lasot/LaSOTBenchmark',
                 pipeline=train_pipeline,
                 split='train',
                 test_mode=False),
             dict(
                 type='TrackingNetDataset',
+                info_file=data_root +
+                'trackingnet/annotations/trackingnet_train_infos.txt',
                 img_prefix=data_root + 'trackingnet',
                 pipeline=train_pipeline,
                 split='train',

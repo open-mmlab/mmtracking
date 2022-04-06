@@ -13,14 +13,8 @@ class UAV123Dataset(BaseSOTDataset):
     The dataset is only used to test.
     """
 
-    def __init__(self, ann_file, *args, **kwargs):
-        """Initialization of SOT dataset class.
-
-        Args:
-            ann_file (str): The file contains data information. It will be
-                loaded and parsed in the `self.load_data_infos` function.
-        """
-        self.ann_file = ann_file
+    def __init__(self, *args, **kwargs):
+        """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='test'):
@@ -45,7 +39,7 @@ class UAV123Dataset(BaseSOTDataset):
         print('Loading UAV123 dataset...')
         start_time = time.time()
         data_infos = []
-        with open(self.ann_file, 'r') as f:
+        with open(self.info_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
                 line = line.strip().split(',')
