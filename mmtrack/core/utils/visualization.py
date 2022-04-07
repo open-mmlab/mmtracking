@@ -15,7 +15,7 @@ from mmcv.utils import mkdir_or_exist
 def random_color(seed):
     """Random a color according to the input seed."""
     random.seed(seed)
-    colors = sns.color_palette()
+    colors = sns.color_palette('hls',50)
     color = random.choice(colors)
     return color
 
