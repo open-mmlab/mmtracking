@@ -230,7 +230,7 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
                     out_file=None,
                     wait_time=0,
                     backend='cv2',
-                    trace=True,
+                    trace=False,
                     **kwargs):
         """Visualize tracking results.
 
@@ -264,22 +264,25 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
             bbox_results=track_bboxes,
             mask_results=track_masks,
             mask_shape=img.shape[:2])
-        img, trace_coord_frame = imshow_tracks(
-                                    img,
-                                    outs_track.get('bboxes', None),
-                                    outs_track.get('labels', None),
-                                    outs_track.get('ids', None),
-                                    outs_track.get('masks', None),
-                                    classes=self.CLASSES,
-                                    score_thr=score_thr,
-                                    thickness=thickness,
-                                    font_scale=font_scale,
-                                    show=show,
-                                    out_file=out_file,
-                                    wait_time=wait_time,
-                                    backend=backend,
-                                    trace=trace)
+        
+        img = imshow_tracks(
+                        img,
+                        outs_track.get('bboxes', None),
+                        outs_track.get('labels', None),
+                        outs_track.get('ids', None),
+                        outs_track.get('masks', None),
+                        classes=self.CLASSES,
+                        score_thr=score_thr,
+                        thickness=thickness,
+                        font_scale=font_scale,
+                        show=show,
+                        out_file=out_file,
+                        wait_time=wait_time,
+                        backend=backend,
+                        trace=trace)
+        
         if trace:
-            return img, trace_coord_frame
+            return img[0], img[1]
+        
         else:
             return img
