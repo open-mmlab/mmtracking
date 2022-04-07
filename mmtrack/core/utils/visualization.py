@@ -42,7 +42,7 @@ def _cv2_show_tracks(img,
                      show=False,
                      wait_time=0,
                      out_file=None,
-                     trace=True):
+                     trace=False):
     """Show the tracks with opencv."""
     assert bboxes.ndim == 2
     assert labels.ndim == 1
