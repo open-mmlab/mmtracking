@@ -41,7 +41,8 @@ def _cv2_show_tracks(img,
                      font_scale=0.4,
                      show=False,
                      wait_time=0,
-                     out_file=None):
+                     out_file=None,
+                     trace=True):
     """Show the tracks with opencv."""
     assert bboxes.ndim == 2
     assert labels.ndim == 1
@@ -65,6 +66,10 @@ def _cv2_show_tracks(img,
         assert masks.shape[0] == bboxes.shape[0]
 
     text_width, text_height = 9, 13
+    
+    # trace_coordinates of current frame
+    trace_coord_frame = []
+    
     for i, (bbox, label, id) in enumerate(zip(bboxes, labels, ids)):
         x1, y1, x2, y2 = bbox[:4].astype(np.int32)
         score = float(bbox[-1])
@@ -73,7 +78,12 @@ def _cv2_show_tracks(img,
         bbox_color = random_color(id)
         bbox_color = [int(255 * _c) for _c in bbox_color][::-1]
         cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, thickness=thickness)
-
+        
+        # trace_coordinates of current object
+        # trace_coord_obj = [id, [(x1+x2)//2, (y1+y2)//2, bbox_color]] # center trace
+        trace_coord_obj = [id, [(x1+x2)//2, y2, bbox_color]]           # foot trace
+        trace_coord_frame.append(trace_coord_obj)
+        
         # score
         text = '{:.02f}'.format(score)
         if classes is not None:
@@ -109,8 +119,10 @@ def _cv2_show_tracks(img,
         mmcv.imshow(img, wait_time=wait_time)
     if out_file is not None:
         mmcv.imwrite(img, out_file)
-
-    return img
+    if trace:
+        return img, trace_coord_frame
+    else:
+        return img
 
 
 def _plt_show_tracks(img,
