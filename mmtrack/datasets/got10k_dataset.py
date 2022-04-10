@@ -163,3 +163,6 @@ class GOT10kDataset(BaseSOTDataset):
 
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
+
+        print(
+            f'-------- The results are stored in {resfile_path}.zip --------')

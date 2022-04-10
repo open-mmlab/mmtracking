@@ -242,10 +242,7 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
-# there are two options for preprocessing the dataset.
-# choice 1: using the offline coco-format annotation and correspondingly the `SOTTrainDataset` class is used in training and `SOTTestDataset` is used in test.
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
-# choice 2: using the online annotation parsing and correspondingly the `LaSOTDataset` class is used in training and test.
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
@@ -259,10 +256,7 @@ wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav
 # unzip files in 'data/trackingnet/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # generate annotations
-# there are two options for preprocessing the dataset.
-# choice 1: using the offline coco-format annotation and correspondingly the `SOTTrainDataset` class is used in training and `SOTTestDataset` is used in test.
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
-# choice 2: using the online annotation parsing and correspondingly the `TrackingNetDataset` class is used in training and test.
 python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
@@ -606,6 +600,10 @@ There are only 1 JSON files in `data/UAV123/annotations`:
 
 `uav123.json`:  JSON file containing the annotations information of the UAV123 dataset.
 
+There are only 1 TEXT files in `data/UAV123/annotations`:
+
+`uav123_infos.txt`:  TEXT file containing the information of the UAV123 dataset.
+
 #### The folder of frames and annotations in TrackingNet
 
 There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video. Similar file structures can be seen in `data/trackingnet/TRAIN_{*}/frames`.
@@ -627,6 +625,10 @@ There are 98 video directories of OTB100 dataset in `data/otb100/data`, and the 
 There are only 1 JSON files in `data/otb100/annotations`:
 
 `otb100.json`:  JSON file containing the annotations information of the OTB100 dataset.
+
+There are only 1 TEXT files in `data/otb100/annotations`:
+
+`otb100_infos.txt`:  TEXT file containing the information of the OTB100 dataset.
 
 #### The folder of frames and annotations in GOT10k
 
@@ -650,11 +652,11 @@ There are 5 TEXT files in `data/got10k/annotations`:
 
 There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and the `color` folder under each video directory contains all images of the video.
 
-There are only 1 JSON files in `data/vot2018/annotations` if using the offline coco-format annotation:
+There are only 1 JSON files in `data/vot2018/annotations`:
 
 `vot2018.json`:  JSON file containing the annotations information of the VOT2018 dataset.
 
-There are only 1 TEXT files in `data/vot2018/annotations` if using the online annotation parsing:
+There are only 1 TEXT files in `data/vot2018/annotations`:
 
 `vot2018_infos.txt`:  TEXT file containing the information of the VOT2018 dataset.
 

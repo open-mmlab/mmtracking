@@ -610,14 +610,18 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 在 `data/lasot/annotations` 中有 2 个 TEXT 文件:
 
-`lasot_train_infos.txt`:  包含 LaSOT 训练集标注信息的 TEXT 文件。
-`lasot_test_infos.txt`:  包含 LaSOT 测试集标注信息的 TEXT 文件。
+`lasot_train_infos.txt`:  包含 LaSOT 训练集信息的 TEXT 文件。
+`lasot_test_infos.txt`:  包含 LaSOT 测试集信息的 TEXT 文件。
 
 #### UAV123 的标注文件夹
 
 在 `data/UAV123/annotations` 中只有 1 个 JSON 文件:
 
 `uav123.json`: 包含 UAV123 数据集标注信息的 JSON 文件。
+
+在 `data/UAV123/annotations` 中有 1 个 TEXT 文件:
+
+`uav123_infos.txt`:  包含 UAV123 数据集信息的 TEXT 文件。
 
 #### TrackingNet 的标注和视频帧文件夹
 
@@ -630,8 +634,8 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 在 `data/trackingnet/annotations` 中有 2 个 TEXT 文件：
 
-`trackingnet_train_infos.txt`： 包含 TrackingNet 训练集标注信息的 TEXT 文件。
-`trackingnet_test_infos.txt`： 包含 TrackingNet 测试集标注信息的 TEXT 文件。
+`trackingnet_train_infos.txt`： 包含 TrackingNet 训练集信息的 TEXT 文件。
+`trackingnet_test_infos.txt`： 包含 TrackingNet 测试集信息的 TEXT 文件。
 
 #### OTB100 的标注和视频帧文件夹
 
@@ -640,6 +644,10 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在 `data/otb100/data/annotations` 中只有 1 个 JSON 文件：
 
 `otb100.json`： 包含 OTB100 数据集标注信息的 JSON 文件
+
+在 `data/otb100/annotations` 中有 1 个 TEXT 文件:
+
+`otb100_infos.txt`:  包含 OTB100 数据信息的 TEXT 文件。
 
 #### GOT10k 的标注和视频帧文件夹
 
@@ -653,11 +661,11 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 在 `data/got10k/annotations` 中有 5 个 TEXT 文件：
 
-`got10k_train_infos.txt`： 包含 GOT10k 训练集标注信息的 TEXT 文件。
-`got10k_test_infos.txt`： 包含 GOT10k 测试集标注信息的 TEXT 文件。
-`got10k_val_infos.txt`： 包含 GOT10k 验证集标注信息的 TEXT 文件。
-`got10k_train_vot_infos.txt`： 包含 GOT10k `train_vot` 划分集标注信息的 TEXT 文件。
-`got10k_val_vot_infos.txt`： 包含 GOT10k `val_vot` 划分集标注信息的 TEXT 文件。
+`got10k_train_infos.txt`： 包含 GOT10k 训练集信息的 TEXT 文件。
+`got10k_test_infos.txt`： 包含 GOT10k 测试集信息的 TEXT 文件。
+`got10k_val_infos.txt`： 包含 GOT10k 验证集信息的 TEXT 文件。
+`got10k_train_vot_infos.txt`： 包含 GOT10k `train_vot` 划分集信息的 TEXT 文件。
+`got10k_val_vot_infos.txt`： 包含 GOT10k `val_vot` 划分集信息的 TEXT 文件。
 
 #### VOT2018的标注和视频帧文件夹
 
@@ -669,7 +677,7 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 在 `data/vot2018/data/annotations` 中只有一个 TEXT 文件：
 
-`vot2018_infos.txt`： 包含 VOT2018 数据集标注信息的 TEXT 文件。
+`vot2018_infos.txt`： 包含 VOT2018 数据集信息的 TEXT 文件。
 
 #### youtube_vis_2019/youtube_vis2021 的标注文件夹
 
