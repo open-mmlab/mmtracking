@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 import os.path as osp
 import tempfile
 
@@ -167,6 +168,8 @@ def test_format_results(dataset):
     dataset_object.format_results(track_results, resfile_path=tmp_dir.name)
     if osp.isdir(tmp_dir.name):
         tmp_dir.cleanup()
+    if osp.isfile(f'{tmp_dir.name}.zip'):
+        os.remove(f'{tmp_dir.name}.zip')
 
 
 def test_sot_ope_evaluation():
