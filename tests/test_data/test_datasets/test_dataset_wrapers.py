@@ -13,13 +13,17 @@ def test_random_sample_concatdataset():
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
-                img_prefix=PREFIX + 'got10k',
+                ann_file=PREFIX +
+                'trackingnet/annotations/trackingnet_train_infos.txt',
+                img_prefix=PREFIX + 'trackingnet',
                 pipeline=[],
                 split='train',
                 test_mode=False),
             dict(
                 type='TrackingNetDataset',
                 chunks_list=[0],
+                ann_file=PREFIX +
+                'trackingnet/annotations/trackingnet_train_infos.txt',
                 img_prefix=PREFIX + 'trackingnet',
                 pipeline=[],
                 split='train',

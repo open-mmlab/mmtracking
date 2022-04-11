@@ -17,14 +17,8 @@ class OTB100Dataset(BaseSOTDataset):
     The dataset is only used to test.
     """
 
-    def __init__(self, ann_file, *args, **kwargs):
-        """Initialization of SOT dataset class.
-
-        Args:
-            ann_file (str): The file contains data information. It will be
-                loaded and parsed in the `self.load_data_infos` function.
-        """
-        self.ann_file = ann_file
+    def __init__(self, *args, **kwargs):
+        """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='test'):
@@ -54,7 +48,8 @@ class OTB100Dataset(BaseSOTDataset):
         with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
-                line = line.strip().split(',')
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
                 if line[0].split(os.sep)[0] == 'Board':
                     framename_template = '%05d.jpg'
                 else:

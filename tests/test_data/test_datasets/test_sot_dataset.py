@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 import os.path as osp
 import tempfile
 
@@ -11,21 +12,38 @@ from mmtrack.datasets import DATASETS as DATASETS
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 DATASET_INFOS = dict(
-    GOT10kDataset=dict(img_prefix=osp.join(SOT_DATA_PREFIX, 'got10k')),
+    GOT10kDataset=dict(
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     VOTDataset=dict(
         dataset_type='vot2018',
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'vot2018')),
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     OTB100Dataset=dict(
-        ann_file='tools/convert_datasets/otb100/otb100_infos.txt',
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'otb100')),
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     UAV123Dataset=dict(
-        ann_file='tools/convert_datasets/uav123/uav123_infos.txt',
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'uav123')),
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     LaSOTDataset=dict(
-        ann_file=osp.join(SOT_DATA_PREFIX, 'lasot_full', 'testing_set.txt'),
-        img_prefix=osp.join(SOT_DATA_PREFIX, 'lasot_full')),
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     TrackingNetDataset=dict(
-        chunks_list=[0], img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
+        chunks_list=[0],
+        ann_file=osp.join(
+            SOT_DATA_PREFIX,
+            'trackingnet/annotations/trackingnet_train_infos.txt'),
+        img_prefix=osp.join(SOT_DATA_PREFIX, 'trackingnet')),
     SOTCocoDataset=dict(
         ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
         img_prefix=osp.join(PREFIX, 'demo_cocovid_data')),
@@ -58,10 +76,7 @@ def test_get_bboxes_from_video(dataset):
 
     bboxes = dataset_object.get_bboxes_from_video(0)
     assert bboxes.shape[0] == dataset_object.num_frames_per_video[0]
-    if dataset == 'VOTDataset':
-        assert bboxes.shape[1] == 8
-    else:
-        assert bboxes.shape[1] == 4
+    assert bboxes.shape[1] == 4
 
 
 @pytest.mark.parametrize('dataset', [
@@ -132,10 +147,10 @@ def test_format_results(dataset):
         **DATASET_INFOS[dataset], pipeline=[], split='train', test_mode=True)
 
     results = []
-    for video_name in ['airplane-1', 'airplane-2']:
+    for video_name in ['video-1', 'video-2']:
         results.extend(
             mmcv.list_from_file(
-                osp.join(SOT_DATA_PREFIX, 'lasot', video_name,
+                osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0', video_name,
                          'track_results.txt')))
 
     track_bboxes = []
@@ -153,6 +168,8 @@ def test_format_results(dataset):
     dataset_object.format_results(track_results, resfile_path=tmp_dir.name)
     if osp.isdir(tmp_dir.name):
         tmp_dir.cleanup()
+    if osp.isfile(f'{tmp_dir.name}.zip'):
+        os.remove(f'{tmp_dir.name}.zip')
 
 
 def test_sot_ope_evaluation():
@@ -166,18 +183,18 @@ def test_sot_ope_evaluation():
     dataset_object.num_frames_per_video = [25, 25]
     results = []
     data_infos = []
-    lasot_root = osp.join(SOT_DATA_PREFIX, 'lasot_full')
-    for video_name in ['airplane/airplane-1', 'basketball/basketball-2']:
+    data_root = osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0')
+    for video_name in ['video-1', 'video-2']:
         bboxes = np.loadtxt(
-            osp.join(lasot_root, video_name, 'track_results.txt'),
+            osp.join(data_root, video_name, 'track_results.txt'),
             delimiter=',')
         scores = np.zeros((len(bboxes), 1))
         bboxes = np.concatenate((bboxes, scores), axis=-1)
         results.extend(bboxes)
         data_infos.append(
             dict(
-                video_path=osp.join(lasot_root, video_name, 'img'),
-                ann_path=osp.join(lasot_root, video_name, 'gt_for_eval.txt'),
+                video_path=osp.join(data_root, video_name),
+                ann_path=osp.join(data_root, video_name, 'gt_for_eval.txt'),
                 start_frame_id=1,
                 end_frame_id=25,
                 framename_template='%06d.jpg'))
@@ -201,15 +218,16 @@ def test_sot_vot_evaluation():
     dataset_object.num_frames_per_video = [25, 25]
     data_infos = []
     results = []
-    vot_root = osp.join(SOT_DATA_PREFIX, 'vot2018')
-    for video_name in ['ants1', 'ants3']:
+    vot_root = osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0')
+    for video_name in ['video-1', 'video-2']:
         results.extend(
             mmcv.list_from_file(
-                osp.join(vot_root, video_name, 'track_results.txt')))
+                osp.join(vot_root, video_name, 'vot2018_track_results.txt')))
         data_infos.append(
             dict(
-                video_path=osp.join(vot_root, video_name, 'color'),
-                ann_path=osp.join(vot_root, video_name, 'gt_for_eval.txt'),
+                video_path=osp.join(vot_root, video_name),
+                ann_path=osp.join(vot_root, video_name,
+                                  'vot2018_gt_for_eval.txt'),
                 start_frame_id=1,
                 end_frame_id=25,
                 framename_template='%08d.jpg'))

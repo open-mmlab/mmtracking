@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import glob
 import os
 import os.path as osp
 import shutil
 import time
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -44,39 +44,18 @@ class GOT10kDataset(BaseSOTDataset):
         start_time = time.time()
         assert split in ['train', 'val', 'test', 'val_vot', 'train_vot']
         data_infos = []
-        if split in ['train', 'val', 'test']:
-            videos_list = np.loadtxt(
-                osp.join(self.img_prefix, split, 'list.txt'), dtype=np.str_)
-        else:
-            split = '_'.join(split.split('_')[::-1])
-            vids_id_list = np.loadtxt(
-                osp.join(self.img_prefix, 'train',
-                         f'got10k_{split}_split.txt'),
-                dtype=float)
-            videos_list = [
-                'GOT-10k_Train_%06d' % (int(video_id) + 1)
-                for video_id in vids_id_list
-            ]
-
-        videos_list = sorted(videos_list)
-        for video_name in videos_list:
-            if split in ['val', 'test']:
-                video_path = osp.join(split, video_name)
-            else:
-                video_path = osp.join('train', video_name)
-            ann_path = osp.join(video_path, 'groundtruth.txt')
-            img_names = glob.glob(
-                osp.join(self.img_prefix, video_path, '*.jpg'))
-            end_frame_name = max(
-                img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
-            end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
-            data_infos.append(
-                dict(
-                    video_path=video_path,
-                    ann_path=ann_path,
-                    start_frame_id=1,
-                    end_frame_id=end_frame_id,
-                    framename_template='%08d.jpg'))
+        with open(self.ann_file, 'r') as f:
+            # the first line of annotation file is dataset comment.
+            for line in f.readlines()[1:]:
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
+                data_info = dict(
+                    video_path=line[0],
+                    ann_path=line[1],
+                    start_frame_id=int(line[2]),
+                    end_frame_id=int(line[3]),
+                    framename_template='%08d.jpg')
+                data_infos.append(data_info)
         print(f'GOT10k dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -135,13 +114,14 @@ class GOT10kDataset(BaseSOTDataset):
         results = self.pipeline(results)
         return results
 
-    def format_results(self, results, resfile_path=None):
+    def format_results(self, results, resfile_path=None, logger=None):
         """Format the results to txts (standard format for GOT10k Challenge).
 
         Args:
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str): Path to save the formatted results.
                 Defaults to None.
+            logger (logging.Logger | str | None, optional): defaults to None.
         """
         # prepare saved dir
         assert resfile_path is not None, 'Please give key-value pair \
@@ -153,8 +133,9 @@ class GOT10kDataset(BaseSOTDataset):
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
         track_bboxes = results['track_bboxes']
-        print('-------- There are total {} images --------'.format(
-            len(track_bboxes)))
+        print_log(
+            f'-------- There are total {len(track_bboxes)} images --------',
+            logger=logger)
 
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
@@ -186,3 +167,7 @@ class GOT10kDataset(BaseSOTDataset):
 
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
+
+        print_log(
+            f'-------- The results are stored in {resfile_path}.zip --------',
+            logger=logger)

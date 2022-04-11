@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import glob
 import os
 import os.path as osp
 import shutil
 import time
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -65,33 +65,22 @@ class TrackingNetDataset(BaseSOTDataset):
             raise NotImplementedError
 
         assert len(chunks) > 0
+        chunks = set(chunks)
         data_infos = []
-        for chunk in chunks:
-            chunk_ann_dir = osp.join(self.img_prefix, chunk)
-            assert osp.isdir(
-                chunk_ann_dir
-            ), f'annotation directory {chunk_ann_dir} does not exist'
-
-            videos_list = sorted(os.listdir(osp.join(chunk_ann_dir, 'frames')))
-            for video_name in videos_list:
-                video_path = osp.join(chunk, 'frames', video_name)
-                # avoid creating empty file folds by mistakes
-                if not os.listdir(osp.join(self.img_prefix, video_path)):
-                    continue
-                ann_path = osp.join(chunk, 'anno', video_name + '.txt')
-                img_names = glob.glob(
-                    osp.join(self.img_prefix, video_path, '*.jpg'))
-                end_frame_name = max(
-                    img_names,
-                    key=lambda x: int(osp.basename(x).split('.')[0]))
-                end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
-                data_info = dict(
-                    video_path=video_path,
-                    ann_path=ann_path,
-                    start_frame_id=0,
-                    end_frame_id=end_frame_id,
-                    framename_template='%d.jpg')
-                data_infos.append(data_info)
+        with open(self.ann_file, 'r') as f:
+            # the first line of annotation file is dataset comment.
+            for line in f.readlines()[1:]:
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
+                chunk = line[0].split(os.sep)[0]
+                if chunk in chunks:
+                    data_info = dict(
+                        video_path=line[0],
+                        ann_path=line[1],
+                        start_frame_id=int(line[2]),
+                        end_frame_id=int(line[3]),
+                        framename_template='%d.jpg')
+                    data_infos.append(data_info)
         print(f'TrackingNet dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -127,7 +116,7 @@ class TrackingNetDataset(BaseSOTDataset):
         results = self.pipeline(results)
         return results
 
-    def format_results(self, results, resfile_path=None):
+    def format_results(self, results, resfile_path=None, logger=None):
         """Format the results to txts (standard format for TrackingNet
         Challenge).
 
@@ -135,6 +124,7 @@ class TrackingNetDataset(BaseSOTDataset):
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str): Path to save the formatted results.
                 Defaults to None.
+            logger (logging.Logger | str | None, optional): defaults to None.
         """
         # prepare saved dir
         assert resfile_path is not None, 'Please give key-value pair \
@@ -143,8 +133,10 @@ class TrackingNetDataset(BaseSOTDataset):
         if not osp.isdir(resfile_path):
             os.makedirs(resfile_path, exist_ok=True)
 
-        print('-------- There are total {} images --------'.format(
-            len(results['track_bboxes'])))
+        print_log(
+            f"-------- There are total {len(results['track_bboxes'])} images "
+            '--------',
+            logger=logger)
 
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
@@ -167,3 +159,7 @@ class TrackingNetDataset(BaseSOTDataset):
 
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
+
+        print_log(
+            f'-------- The results are stored in {resfile_path}.zip --------',
+            logger=logger)
