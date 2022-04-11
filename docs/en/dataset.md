@@ -242,7 +242,6 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
@@ -256,7 +255,6 @@ wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav
 # unzip files in 'data/trackingnet/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # generate annotations
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
