@@ -48,7 +48,8 @@ class OTB100Dataset(BaseSOTDataset):
         with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
-                line = line.strip().split(',')
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
                 if line[0].split(os.sep)[0] == 'Board':
                     framename_template = '%05d.jpg'
                 else:

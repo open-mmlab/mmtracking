@@ -5,6 +5,7 @@ import shutil
 import time
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -69,8 +70,9 @@ class TrackingNetDataset(BaseSOTDataset):
         with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
-                line = line.strip().split(',')
-                chunk = line[0].split('/')[0]
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
+                chunk = line[0].split(os.sep)[0]
                 if chunk in chunks:
                     data_info = dict(
                         video_path=line[0],
@@ -114,7 +116,7 @@ class TrackingNetDataset(BaseSOTDataset):
         results = self.pipeline(results)
         return results
 
-    def format_results(self, results, resfile_path=None):
+    def format_results(self, results, resfile_path=None, logger=None):
         """Format the results to txts (standard format for TrackingNet
         Challenge).
 
@@ -122,6 +124,7 @@ class TrackingNetDataset(BaseSOTDataset):
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str): Path to save the formatted results.
                 Defaults to None.
+            logger (logging.Logger | str | None, optional): defaults to None.
         """
         # prepare saved dir
         assert resfile_path is not None, 'Please give key-value pair \
@@ -130,15 +133,17 @@ class TrackingNetDataset(BaseSOTDataset):
         if not osp.isdir(resfile_path):
             os.makedirs(resfile_path, exist_ok=True)
 
-        print('-------- There are total {} images --------'.format(
-            len(results['track_bboxes'])))
+        print_log(
+            f"-------- There are total {len(results['track_bboxes'])} images "
+            '--------',
+            logger=logger)
 
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split('/')[-1]
+            video_name = video_info['video_path'].split(os.sep)[-1]
             video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
             with open(video_txt, 'w') as f:
                 for bbox in results['track_bboxes'][start_ind:end_ind]:
@@ -155,5 +160,6 @@ class TrackingNetDataset(BaseSOTDataset):
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
 
-        print(
-            f'-------- The results are stored in {resfile_path}.zip --------')
+        print_log(
+            f'-------- The results are stored in {resfile_path}.zip --------',
+            logger=logger)

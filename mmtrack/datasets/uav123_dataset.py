@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 import time
 
 from mmdet.datasets import DATASETS
@@ -42,7 +43,8 @@ class UAV123Dataset(BaseSOTDataset):
         with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
-                line = line.strip().split(',')
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
                 data_info = dict(
                     video_path=line[0],
                     ann_path=line[1],

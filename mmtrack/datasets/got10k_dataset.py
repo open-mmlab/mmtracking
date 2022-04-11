@@ -5,6 +5,7 @@ import shutil
 import time
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -46,7 +47,8 @@ class GOT10kDataset(BaseSOTDataset):
         with open(self.ann_file, 'r') as f:
             # the first line of annotation file is dataset comment.
             for line in f.readlines()[1:]:
-                line = line.strip().split(',')
+                # compatible with different OS.
+                line = line.strip().replace('/', os.sep).split(',')
                 data_info = dict(
                     video_path=line[0],
                     ann_path=line[1],
@@ -112,13 +114,14 @@ class GOT10kDataset(BaseSOTDataset):
         results = self.pipeline(results)
         return results
 
-    def format_results(self, results, resfile_path=None):
+    def format_results(self, results, resfile_path=None, logger=None):
         """Format the results to txts (standard format for GOT10k Challenge).
 
         Args:
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str): Path to save the formatted results.
                 Defaults to None.
+            logger (logging.Logger | str | None, optional): defaults to None.
         """
         # prepare saved dir
         assert resfile_path is not None, 'Please give key-value pair \
@@ -130,13 +133,14 @@ class GOT10kDataset(BaseSOTDataset):
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
         track_bboxes = results['track_bboxes']
-        print('-------- There are total {} images --------'.format(
-            len(track_bboxes)))
+        print_log(
+            f'-------- There are total {len(track_bboxes)} images --------',
+            logger=logger)
 
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split('/')[-1]
+            video_name = video_info['video_path'].split(os.sep)[-1]
             video_resfiles_path = osp.join(resfile_path, video_name)
             if not osp.isdir(video_resfiles_path):
                 os.makedirs(video_resfiles_path, exist_ok=True)
@@ -164,5 +168,6 @@ class GOT10kDataset(BaseSOTDataset):
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
 
-        print(
-            f'-------- The results are stored in {resfile_path}.zip --------')
+        print_log(
+            f'-------- The results are stored in {resfile_path}.zip --------',
+            logger=logger)
