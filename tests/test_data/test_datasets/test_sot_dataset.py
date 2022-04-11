@@ -150,7 +150,7 @@ def test_format_results(dataset):
     for video_name in ['video-1', 'video-2']:
         results.extend(
             mmcv.list_from_file(
-                osp.join(SOT_DATA_PREFIX, 'trackingnet/TRAIN_0', video_name,
+                osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0', video_name,
                          'track_results.txt')))
 
     track_bboxes = []
@@ -183,8 +183,8 @@ def test_sot_ope_evaluation():
     dataset_object.num_frames_per_video = [25, 25]
     results = []
     data_infos = []
-    data_root = osp.join(SOT_DATA_PREFIX, 'trackingnet')
-    for video_name in ['TRAIN_0/video-1', 'TRAIN_0/video-2']:
+    data_root = osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0')
+    for video_name in ['video-1', 'video-2']:
         bboxes = np.loadtxt(
             osp.join(data_root, video_name, 'track_results.txt'),
             delimiter=',')
@@ -218,8 +218,8 @@ def test_sot_vot_evaluation():
     dataset_object.num_frames_per_video = [25, 25]
     data_infos = []
     results = []
-    vot_root = osp.join(SOT_DATA_PREFIX, 'trackingnet')
-    for video_name in ['TRAIN_0/video-1', 'TRAIN_0/video-2']:
+    vot_root = osp.join(SOT_DATA_PREFIX, 'trackingnet', 'TRAIN_0')
+    for video_name in ['video-1', 'video-2']:
         results.extend(
             mmcv.list_from_file(
                 osp.join(vot_root, video_name, 'vot2018_track_results.txt')))
