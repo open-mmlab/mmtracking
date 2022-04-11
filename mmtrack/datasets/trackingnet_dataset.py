@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import glob
 import os
 import os.path as osp
 import shutil
@@ -65,33 +64,21 @@ class TrackingNetDataset(BaseSOTDataset):
             raise NotImplementedError
 
         assert len(chunks) > 0
+        chunks = set(chunks)
         data_infos = []
-        for chunk in chunks:
-            chunk_ann_dir = osp.join(self.img_prefix, chunk)
-            assert osp.isdir(
-                chunk_ann_dir
-            ), f'annotation directory {chunk_ann_dir} does not exist'
-
-            videos_list = sorted(os.listdir(osp.join(chunk_ann_dir, 'frames')))
-            for video_name in videos_list:
-                video_path = osp.join(chunk, 'frames', video_name)
-                # avoid creating empty file folds by mistakes
-                if not os.listdir(osp.join(self.img_prefix, video_path)):
-                    continue
-                ann_path = osp.join(chunk, 'anno', video_name + '.txt')
-                img_names = glob.glob(
-                    osp.join(self.img_prefix, video_path, '*.jpg'))
-                end_frame_name = max(
-                    img_names,
-                    key=lambda x: int(osp.basename(x).split('.')[0]))
-                end_frame_id = int(osp.basename(end_frame_name).split('.')[0])
-                data_info = dict(
-                    video_path=video_path,
-                    ann_path=ann_path,
-                    start_frame_id=0,
-                    end_frame_id=end_frame_id,
-                    framename_template='%d.jpg')
-                data_infos.append(data_info)
+        with open(self.ann_file, 'r') as f:
+            # the first line of annotation file is dataset comment.
+            for line in f.readlines()[1:]:
+                line = line.strip().split(',')
+                chunk = line[0].split('/')[0]
+                if chunk in chunks:
+                    data_info = dict(
+                        video_path=line[0],
+                        ann_path=line[1],
+                        start_frame_id=int(line[2]),
+                        end_frame_id=int(line[3]),
+                        framename_template='%d.jpg')
+                    data_infos.append(data_info)
         print(f'TrackingNet dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -151,7 +138,7 @@ class TrackingNetDataset(BaseSOTDataset):
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split(os.sep)[-1]
+            video_name = video_info['video_path'].split('/')[-1]
             video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
             with open(video_txt, 'w') as f:
                 for bbox in results['track_bboxes'][start_ind:end_ind]:
@@ -167,3 +154,6 @@ class TrackingNetDataset(BaseSOTDataset):
 
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
+
+        print(
+            f'-------- The results are stored in {resfile_path}.zip --------')

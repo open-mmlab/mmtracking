@@ -5,4 +5,8 @@ model = dict(test_cfg=dict(update_intervals=[25]))
 
 data_root = 'data/'
 data = dict(
-    test=dict(type='TrackingNetDataset', img_prefix=data_root + 'trackingnet'))
+    test=dict(
+        type='TrackingNetDataset',
+        ann_file=data_root +
+        'trackingnet/annotations/trackingnet_test_infos.txt',
+        img_prefix=data_root + 'trackingnet'))

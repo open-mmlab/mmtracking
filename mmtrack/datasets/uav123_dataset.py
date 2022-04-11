@@ -13,14 +13,8 @@ class UAV123Dataset(BaseSOTDataset):
     The dataset is only used to test.
     """
 
-    def __init__(self, ann_file, *args, **kwargs):
-        """Initialization of SOT dataset class.
-
-        Args:
-            ann_file (str): The file contains data information. It will be
-                loaded and parsed in the `self.load_data_infos` function.
-        """
-        self.ann_file = ann_file
+    def __init__(self, *args, **kwargs):
+        """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='test'):

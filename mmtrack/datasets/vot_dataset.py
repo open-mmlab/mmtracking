@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import glob
 import os.path as osp
 import time
 
@@ -63,22 +62,17 @@ class VOTDataset(BaseSOTDataset):
         print('Loading VOT dataset...')
         start_time = time.time()
         data_infos = []
-        ann_file = osp.join(self.img_prefix, 'list.txt')
-        videos_list = np.loadtxt(ann_file, dtype=np.str_)
-        for video_name in videos_list:
-            video_path = osp.join(video_name, 'color')
-            ann_path = osp.join(video_name, 'groundtruth.txt')
-            img_names = glob.glob(
-                osp.join(self.img_prefix, video_path + '/*.jpg'))
-            end_frame_id = max(
-                img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
-            data_info = dict(
-                video_path=video_path,
-                ann_path=ann_path,
-                start_frame_id=1,
-                end_frame_id=int(osp.basename(end_frame_id).split('.')[0]),
-                framename_template='%08d.jpg')
-            data_infos.append(data_info)
+        with open(self.ann_file, 'r') as f:
+            # the first line of annotation file is dataset comment.
+            for line in f.readlines()[1:]:
+                line = line.strip().split(',')
+                data_info = dict(
+                    video_path=line[0],
+                    ann_path=line[1],
+                    start_frame_id=int(line[2]),
+                    end_frame_id=int(line[3]),
+                    framename_template='%08d.jpg')
+                data_infos.append(data_info)
         print(f'VOT dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
