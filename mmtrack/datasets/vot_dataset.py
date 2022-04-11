@@ -62,17 +62,18 @@ class VOTDataset(BaseSOTDataset):
         print('Loading VOT dataset...')
         start_time = time.time()
         data_infos = []
-        with open(self.ann_file, 'r') as f:
-            # the first line of annotation file is dataset comment.
-            for line in f.readlines()[1:]:
-                line = line.strip().split(',')
-                data_info = dict(
-                    video_path=line[0],
-                    ann_path=line[1],
-                    start_frame_id=int(line[2]),
-                    end_frame_id=int(line[3]),
-                    framename_template='%08d.jpg')
-                data_infos.append(data_info)
+        data_infos_str = self.file_client.get_text(
+            self.ann_file).strip().split('\n')
+        # the first line of annotation file is a dataset comment.
+        for line in data_infos_str[1:]:
+            line = line.strip().split(',')
+            data_info = dict(
+                video_path=line[0],
+                ann_path=line[1],
+                start_frame_id=int(line[2]),
+                end_frame_id=int(line[3]),
+                framename_template='%08d.jpg')
+            data_infos.append(data_info)
         print(f'VOT dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
