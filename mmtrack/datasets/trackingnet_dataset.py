@@ -138,7 +138,7 @@ class TrackingNetDataset(BaseSOTDataset):
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split(os.sep)[-1]
+            video_name = video_info['video_path'].split('/')[-1]
             video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
             with open(video_txt, 'w') as f:
                 for bbox in results['track_bboxes'][start_ind:end_ind]:

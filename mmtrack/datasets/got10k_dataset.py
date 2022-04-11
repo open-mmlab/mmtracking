@@ -136,7 +136,7 @@ class GOT10kDataset(BaseSOTDataset):
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split(os.sep)[-1]
+            video_name = video_info['video_path'].split('/')[-1]
             video_resfiles_path = osp.join(resfile_path, video_name)
             if not osp.isdir(video_resfiles_path):
                 os.makedirs(video_resfiles_path, exist_ok=True)
