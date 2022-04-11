@@ -6,7 +6,9 @@ mmcls>=0.16.0
 motmetrics
 opencv-python
 packaging
+pandas<=1.3.5
 pycocotools<=2.0.2
+scipy<=1.7.3
 seaborn
 terminaltables
 tqdm
