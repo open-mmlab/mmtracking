@@ -247,9 +247,7 @@ python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBe
 # UAV123
 # download annotations
 # due to the annotations of all videos in UAV123 are inconsistent, we just download the information file generated in advance.
-mkdir data/uav123/annotations
 wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
-
 
 # TrackingNet
 # unzip files in 'data/trackingnet/*.zip'
@@ -262,7 +260,6 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # download annotations
 # due to the annotations of all videos in OTB100 are inconsistent, we just need to download the information file generated in advance.
-mkdir data/otb100/annotations
 wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k

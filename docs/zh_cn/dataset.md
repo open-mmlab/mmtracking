@@ -248,7 +248,6 @@ python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBe
 # UAV123
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-mkdir data/uav123/annotations
 wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
 
 # TrackingNet
@@ -262,7 +261,6 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-mkdir data/otb100/annotations
 wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k
