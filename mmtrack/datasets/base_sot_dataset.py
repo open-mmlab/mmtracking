@@ -1,12 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import random
-from io import StringIO
 from abc import ABCMeta, abstractmethod
+from io import StringIO
 
+import mmcv
 import numpy as np
 from addict import Dict
-import mmcv
 from mmcv.utils import print_log
 from mmdet.datasets.pipelines import Compose
 from torch.utils.data import Dataset
