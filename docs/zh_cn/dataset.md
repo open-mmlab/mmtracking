@@ -243,35 +243,17 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
-<<<<<<< HEAD
-# 有两种预处理数据集的选择:
-# 选择1: 使用离线的coco格式的标注。相应地，在训练中会使用 `SOTTrainDataset` 类, 在测试中会使用 `SOTTestDataset` 类
-python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
-# 选择2: 使用标注在线解析方法。相应地，在训练和测试中都使用 `LaSOTDataset` 类。
-=======
->>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-<<<<<<< HEAD
-mkdir data/uav123/annotations
-=======
->>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
 
 # TrackingNet
 # 解压目录 'data/trackingnet/' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # 生成标注
-<<<<<<< HEAD
-# 有两种预处理数据集的选择:
-# 选择1: 使用离线的coco格式的标注。相应地，在训练中会使用 `SOTTrainDataset` 类, 在测试中会使用 `SOTTestDataset` 类。
-python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
-# 选择2: 使用标注在线解析方法。相应地，在训练和测试中都使用 `TrackingNetDataset` 类。
-=======
->>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
@@ -279,33 +261,15 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-<<<<<<< HEAD
-mkdir data/otb100/annotations
-=======
->>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k
 # 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
 # 生成标注
-<<<<<<< HEAD
-# 有两种预处理数据集的选择:
-# 选择1: 使用离线的coco格式的标注。相应地，在训练中会使用 `SOTTrainDataset` 类, 在测试中会使用 `SOTTestDataset` 类。
-python ./tools/convert_datasets/got10k/got10k2coco.py -i ./data/got10k -o ./data/got10k/annotations
-# 选择2: 使用标注在线解析方法。相应地，在训练和测试中都使用 `GOT10kDataset` 类。
 python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
 
 # VOT2018
-# 有两种预处理数据集的选择:
-# 选择1: 使用离线的coco格式的标注。相应地，在测试中会使用 `SOTTestDataset` 类。
-python ./tools/convert_datasets/vot/vot2coco.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
-# 选择2: 使用标注在线解析方法。相应地，在训练和测试中都使用 `VOTDataset` 类。
-=======
-python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
-
-# VOT2018
->>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
