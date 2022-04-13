@@ -173,7 +173,8 @@ class VOTDataset(BaseSOTDataset):
                 # read one image in the video to get video width and height
                 filename = osp.join(self.img_prefix, data_info['video_path'],
                                     data_info['framename_template'] % 1)
-                img = mmcv.imread(filename)
+                img = mmcv.imread(
+                    filename, file_client_args=self.file_client_args)
                 videos_wh.append((img.shape[1], img.shape[0]))
 
             interval = self.INTERVAL[self.dataset_type] if interval is None \

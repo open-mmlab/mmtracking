@@ -54,6 +54,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
         self.only_eval_visible = only_eval_visible
+        self.file_client_args = file_client_args
         self.file_client = mmcv.FileClient(**file_client_args)
         # 'self.load_as_video' must be set to True in order to using
         # distributed video sampler to load dataset when testing.
