@@ -22,7 +22,8 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
                 Dataset. It will be loaded and parsed in the
                 `self.load_data_infos` function.
         """
-        if 'file_client_args' in kwargs:
+        if 'file_client_args' in kwargs and kwargs['file_client_args'][
+                'backend'] != 'disk':
             self.file_client = mmcv.FileClient(**kwargs['file_client_args'])
             with self.file_client.get_local_path(ann_file) as local_path:
                 self.coco = CocoVID(local_path)

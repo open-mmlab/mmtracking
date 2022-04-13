@@ -31,6 +31,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             larger than `bbox_min_size` can be regarded as valid. Default to 0.
         only_eval_visible (bool, optional): Whether to only evaluate frames
             where object are visible. Default to False.
+        file_client_args (dict, optional): Arguments to instantiate a
+                FileClient. Default: dict(backend='disk').
     """
 
     # Compatible with MOT and VID Dataset class. The 'CLASSES' attribute will
@@ -97,13 +99,21 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
     def load_data_infos(self, split='train'):
         pass
 
-    def loadtxt(self, filepath, dtype=float, delimiter=None, skiprows=0):
+    def loadtxt(self,
+                filepath,
+                dtype=float,
+                delimiter=None,
+                skiprows=0,
+                return_array=True):
         file_string = self.file_client.get_text(filepath)
-        return np.loadtxt(
-            StringIO(file_string),
-            dtype=dtype,
-            delimiter=delimiter,
-            skiprows=skiprows)
+        if return_array:
+            return np.loadtxt(
+                StringIO(file_string),
+                dtype=dtype,
+                delimiter=delimiter,
+                skiprows=skiprows)
+        else:
+            return file_string.strip()
 
     def get_bboxes_from_video(self, video_ind):
         """Get bboxes annotation about the instance in a video.

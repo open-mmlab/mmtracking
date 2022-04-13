@@ -45,8 +45,7 @@ class OTB100Dataset(BaseSOTDataset):
         print('Loading OTB100 dataset...')
         start_time = time.time()
         data_infos = []
-        data_infos_str = self.file_client.get_text(
-            self.ann_file).strip().split('\n')
+        data_infos_str = self.loadtxt(self.ann_file).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.
