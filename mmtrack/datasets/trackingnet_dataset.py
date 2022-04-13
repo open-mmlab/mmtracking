@@ -71,8 +71,9 @@ class TrackingNetDataset(BaseSOTDataset):
             self.ann_file).strip().split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
-            line = line.strip().split(',')
-            chunk = line[0].split('/')[0]
+            # compatible with different OS.
+            line = line.strip().replace('/', os.sep).split(',')
+            chunk = line[0].split(os.sep)[0]
             if chunk in chunks:
                 data_info = dict(
                     video_path=line[0],
@@ -143,7 +144,7 @@ class TrackingNetDataset(BaseSOTDataset):
         start_ind = end_ind = 0
         for num, video_info in zip(self.num_frames_per_video, self.data_infos):
             end_ind += num
-            video_name = video_info['video_path'].split('/')[-1]
+            video_name = video_info['video_path'].split(os.sep)[-1]
             video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
             with open(video_txt, 'w') as f:
                 for bbox in results['track_bboxes'][start_ind:end_ind]:

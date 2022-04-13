@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 import os.path as osp
 import re
 import time
@@ -48,8 +49,9 @@ class OTB100Dataset(BaseSOTDataset):
             self.ann_file).strip().split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
-            line = line.strip().split(',')
-            if line[0].split('/')[0] == 'Board':
+            # compatible with different OS.
+            line = line.strip().replace('/', os.sep).split(',')
+            if line[0].split(os.sep)[0] == 'Board':
                 framename_template = '%05d.jpg'
             else:
                 framename_template = '%04d.jpg'
@@ -63,7 +65,7 @@ class OTB100Dataset(BaseSOTDataset):
             # 5 frames. Details can be seen in the official file
             # `tracker_benchmark_v1.0/initOmit/tiger1.txt`.
             # Annotation loading will refer to this information.
-            if line[0].split('/')[0] == 'Tiger1':
+            if line[0].split(os.sep)[0] == 'Tiger1':
                 data_info['init_skip_num'] = 5
             data_infos.append(data_info)
         print(f'OTB100 dataset loaded! ({time.time()-start_time:.2f} s)')
