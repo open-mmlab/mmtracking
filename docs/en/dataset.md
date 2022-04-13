@@ -550,17 +550,24 @@ There are 2 JSON files in `data/crowdhuman/annotations`:
 `crowdhuman_train.json`:  JSON file containing the annotations information of the training set in CrowdHuman dataset.
 `crowdhuman_val.json`:  JSON file containing the annotations information of the validation set in CrowdHuman dataset.
 
-### The folder of annotations in lvis
+#### The folder of annotations in lvis
 
 There are 8 JSON files in `data/lvis/annotations`
 
 `coco_to_lvis_synset.json`: JSON file containing the mapping relationship between COCO and LVIS categories.
+
 `lvisv0.5+coco_train.json`: JSON file containing the merged annotations.
+
 `lvis_v0.5_train.json`: JSON file containing the annotations information of the training set in lvisv0.5.
+
 `lvis_v0.5_val.json`: JSON file containing the annotations information of the validation set in lvisv0.5.
+
 `lvis_v1_train.json`: JSON file containing the annotations information of the training set in lvisv1.
+
 `lvis_v1_val.json`: JSON file containing the annotations information of the validation set in lvisv1.
+
 `lvis_v1_image_info_test_challenge.json`: JSON file containing the annotations information of the testing set in lvisv1 available for year-round evaluation.
+
 `lvis_v1_image_info_test_dev.json`: JSON file containing the annotations information of the testing set in lvisv1 available only once a year for LVIS Challenge.
 
 ### The folder of annotations in tao
@@ -568,13 +575,21 @@ There are 8 JSON files in `data/lvis/annotations`
 There are 9 JSON files in `data/tao/annotations`:
 
 `test_categories.json`: JSON file containing a list of categories which will be evaluated on the TAO test set.
+
 `test_without_annotations.json`:  JSON for test videos. The 'images' and 'videos' fields contain the images and videos that will be evaluated on the test set.
+
 `test_482_classes.json`: JSON file containing the converted results for test set.
+
 `train.json`: JSON file containing annotations for LVIS categories in TAO train.
+
 `train_482_classes.json`: JSON file containing the converted results for train set.
+
 `train_with_freeform.json`: JSON file containing annotations for all categories in TAO train.
+
 `validation.json`: JSON file containing annotations for LVIS categories in TAO train.
+
 `validation_482_classes.json`: JSON file containing the converted results for validation set.
+
 `validation_with_freeform.json`: JSON file containing annotations for all categories in TAO validation.
 
 #### The folder of annotations in lasot
@@ -632,15 +647,21 @@ There are training video directories in `data/got10k/train`, and each video dire
 There are 3 JSON files in `data/got10k/annotations`:
 
 `got10k_train.json`:  JSON file containing the annotations information of the training set in GOT10k dataset.
+
 `got10k_test.json`:  JSON file containing the annotations information of the testing set in GOT10k dataset.
+
 `got10k_val.json`:  JSON file containing the annotations information of the valuation set in GOT10k dataset.
 
 There are 5 TEXT files in `data/got10k/annotations`:
 
 `got10k_train_infos.txt`:  TEXT file containing the information of the training set in GOT10k dataset.
+
 `got10k_test_infos.txt`:  TEXT file containing the information of the testing set in GOT10k dataset.
+
 `got10k_val_infos.txt`:  TEXT file containing the information of the valuation set in GOT10k dataset.
+
 `got10k_train_vot_infos.txt`:  TEXT file containing the information of the `train_vot` split in GOT10k dataset.
+
 `got10k_val_vot_infos.txt`:  TEXT file containing the information of the `val_vot` split in GOT10k dataset.
 
 #### The folder of data and annotations in VOT2018
