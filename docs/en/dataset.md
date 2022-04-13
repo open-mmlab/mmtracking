@@ -570,7 +570,7 @@ There are 8 JSON files in `data/lvis/annotations`
 
 `lvis_v1_image_info_test_dev.json`: JSON file containing the annotations information of the testing set in lvisv1 available only once a year for LVIS Challenge.
 
-### The folder of annotations in tao
+#### The folder of annotations in tao
 
 There are 9 JSON files in `data/tao/annotations`:
 
