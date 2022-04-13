@@ -5,6 +5,7 @@ import shutil
 import time
 
 import numpy as np
+from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
@@ -115,7 +116,7 @@ class TrackingNetDataset(BaseSOTDataset):
         results = self.pipeline(results)
         return results
 
-    def format_results(self, results, resfile_path=None):
+    def format_results(self, results, resfile_path=None, logger=None):
         """Format the results to txts (standard format for TrackingNet
         Challenge).
 
@@ -123,6 +124,7 @@ class TrackingNetDataset(BaseSOTDataset):
             results (dict(list[ndarray])): Testing results of the dataset.
             resfile_path (str): Path to save the formatted results.
                 Defaults to None.
+            logger (logging.Logger | str | None, optional): defaults to None.
         """
         # prepare saved dir
         assert resfile_path is not None, 'Please give key-value pair \
@@ -131,8 +133,10 @@ class TrackingNetDataset(BaseSOTDataset):
         if not osp.isdir(resfile_path):
             os.makedirs(resfile_path, exist_ok=True)
 
-        print('-------- There are total {} images --------'.format(
-            len(results['track_bboxes'])))
+        print_log(
+            f"-------- There are total {len(results['track_bboxes'])} images "
+            '--------',
+            logger=logger)
 
         # transform tracking results format
         # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
@@ -156,5 +160,6 @@ class TrackingNetDataset(BaseSOTDataset):
         shutil.make_archive(resfile_path, 'zip', resfile_path)
         shutil.rmtree(resfile_path)
 
-        print(
-            f'-------- The results are stored in {resfile_path}.zip --------')
+        print_log(
+            f'-------- The results are stored in {resfile_path}.zip --------',
+            logger=logger)

@@ -242,21 +242,31 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
+<<<<<<< HEAD
 python ./tools/convert_datasets/lasot/lasot2coco.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
+=======
+>>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
 
 # UAV123
 # download annotations
 # due to the annotations of all videos in UAV123 are inconsistent, we just download the information file generated in advance.
+<<<<<<< HEAD
 mkdir data/uav123/annotations
 wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
 
+=======
+wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
+>>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 
 # TrackingNet
 # unzip files in 'data/trackingnet/*.zip'
 bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
 # generate annotations
+<<<<<<< HEAD
 python ./tools/convert_datasets/trackingnet/trackingnet2coco.py -i ./data/trackingnet -o ./data/trackingnet/annotations
+=======
+>>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
 
 # OTB100
@@ -264,7 +274,10 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # download annotations
 # due to the annotations of all videos in OTB100 are inconsistent, we just need to download the information file generated in advance.
+<<<<<<< HEAD
 mkdir data/otb100/annotations
+=======
+>>>>>>> c6e1e856fa2f154d3f90d1ee3246abbac8053fab
 wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k

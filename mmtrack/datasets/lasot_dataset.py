@@ -2,7 +2,6 @@
 import os.path as osp
 import time
 
-import numpy as np
 from mmdet.datasets import DATASETS
 
 from .base_sot_dataset import BaseSOTDataset
