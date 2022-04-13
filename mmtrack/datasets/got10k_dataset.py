@@ -44,18 +44,19 @@ class GOT10kDataset(BaseSOTDataset):
         start_time = time.time()
         assert split in ['train', 'val', 'test', 'val_vot', 'train_vot']
         data_infos = []
-        with open(self.ann_file, 'r') as f:
-            # the first line of annotation file is dataset comment.
-            for line in f.readlines()[1:]:
-                # compatible with different OS.
-                line = line.strip().replace('/', os.sep).split(',')
-                data_info = dict(
-                    video_path=line[0],
-                    ann_path=line[1],
-                    start_frame_id=int(line[2]),
-                    end_frame_id=int(line[3]),
-                    framename_template='%08d.jpg')
-                data_infos.append(data_info)
+        data_infos_str = self.file_client.get_text(
+            self.ann_file).strip().split('\n')
+        # the first line of annotation file is a dataset comment.
+        for line in data_infos_str[1:]:
+            # compatible with different OS.
+            line = line.strip().replace('/', os.sep).split(',')
+            data_info = dict(
+                video_path=line[0],
+                ann_path=line[1],
+                start_frame_id=int(line[2]),
+                end_frame_id=int(line[3]),
+                framename_template='%08d.jpg')
+            data_infos.append(data_info)
         print(f'GOT10k dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -68,13 +69,13 @@ class GOT10kDataset(BaseSOTDataset):
             cover_info_path = osp.join(
                 self.img_prefix, self.data_infos[video_ind]['video_path'],
                 'cover.label')
-            absense_info = np.loadtxt(absense_info_path, dtype=bool)
+            absense_info = self.loadtxt(absense_info_path, dtype=bool)
             # The values of key 'cover' are
             # int numbers in range [0,8], which correspond to
             # ranges of object visible ratios: 0%, (0%, 15%],
             # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
             # (75%, 90%], (90%, 100%) and 100% respectively
-            cover_info = np.loadtxt(cover_info_path, dtype=int)
+            cover_info = self.loadtxt(cover_info_path, dtype=int)
             visible = ~absense_info & (cover_info > 0)
             visible_ratio = cover_info / 8.
             return dict(visible=visible, visible_ratio=visible_ratio)

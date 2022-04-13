@@ -63,18 +63,19 @@ class VOTDataset(BaseSOTDataset):
         print('Loading VOT dataset...')
         start_time = time.time()
         data_infos = []
-        with open(self.ann_file, 'r') as f:
-            # the first line of annotation file is dataset comment.
-            for line in f.readlines()[1:]:
-                # compatible with different OS.
-                line = line.strip().replace('/', os.sep).split(',')
-                data_info = dict(
-                    video_path=line[0],
-                    ann_path=line[1],
-                    start_frame_id=int(line[2]),
-                    end_frame_id=int(line[3]),
-                    framename_template='%08d.jpg')
-                data_infos.append(data_info)
+        data_infos_str = self.file_client.get_text(
+            self.ann_file).strip().split('\n')
+        # the first line of annotation file is a dataset comment.
+        for line in data_infos_str[1:]:
+            # compatible with different OS.
+            line = line.strip().replace('/', os.sep).split(',')
+            data_info = dict(
+                video_path=line[0],
+                ann_path=line[1],
+                start_frame_id=int(line[2]),
+                end_frame_id=int(line[3]),
+                framename_template='%08d.jpg')
+            data_infos.append(data_info)
         print(f'VOT dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
@@ -172,7 +173,8 @@ class VOTDataset(BaseSOTDataset):
                 # read one image in the video to get video width and height
                 filename = osp.join(self.img_prefix, data_info['video_path'],
                                     data_info['framename_template'] % 1)
-                img = mmcv.imread(filename)
+                img = mmcv.imread(
+                    filename, file_client_args=self.file_client_args)
                 videos_wh.append((img.shape[1], img.shape[0]))
 
             interval = self.INTERVAL[self.dataset_type] if interval is None \

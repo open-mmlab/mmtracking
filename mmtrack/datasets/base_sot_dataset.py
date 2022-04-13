@@ -2,7 +2,9 @@
 import os.path as osp
 import random
 from abc import ABCMeta, abstractmethod
+from io import StringIO
 
+import mmcv
 import numpy as np
 from addict import Dict
 from mmcv.utils import print_log
@@ -43,6 +45,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
                  test_mode=False,
                  bbox_min_size=0,
                  only_eval_visible=False,
+                 file_client_args=dict(backend='disk'),
                  **kwargs):
         self.img_prefix = img_prefix
         self.split = split
@@ -51,6 +54,8 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
         self.only_eval_visible = only_eval_visible
+        self.file_client_args = file_client_args
+        self.file_client = mmcv.FileClient(**file_client_args)
         # 'self.load_as_video' must be set to True in order to using
         # distributed video sampler to load dataset when testing.
         self.load_as_video = True
@@ -92,6 +97,14 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
     def load_data_infos(self, split='train'):
         pass
 
+    def loadtxt(self, filepath, dtype=float, delimiter=None, skiprows=0):
+        file_string = self.file_client.get_text(filepath)
+        return np.loadtxt(
+            StringIO(file_string),
+            dtype=dtype,
+            delimiter=delimiter,
+            skiprows=skiprows)
+
     def get_bboxes_from_video(self, video_ind):
         """Get bboxes annotation about the instance in a video.
 
@@ -104,7 +117,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         """
         bbox_path = osp.join(self.img_prefix,
                              self.data_infos[video_ind]['ann_path'])
-        bboxes = np.loadtxt(bbox_path, dtype=float, delimiter=',')
+        bboxes = self.loadtxt(bbox_path, dtype=float, delimiter=',')
         if len(bboxes.shape) == 1:
             bboxes = np.expand_dims(bboxes, axis=0)
 
