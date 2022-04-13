@@ -68,13 +68,34 @@ model = dict(
         center_size=7,
         rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
 
+file_client_args = dict(
+    backend='petrel',
+    path_mapping=dict({
+        'data/got10k':
+        'openmmlab:s3://openmmlab/datasets/tracking/GOT10k',
+        'data/trackingnet':
+        'openmmlab:s3://openmmlab/datasets/tracking/TrackingNet',
+        'data/lasot':
+        'openmmlab:s3://openmmlab/datasets/tracking/LaSOT_full',
+        'data/coco':
+        'openmmlab:s3://openmmlab/datasets/detection/coco',
+        'data/ILSVRC':
+        'openmmlab:s3://openmmlab/datasets/tracking/ILSVRC',
+        'data/otb100':
+        'openmmlab:s3://openmmlab/datasets/tracking/OTB100',
+        'data/UAV123':
+        'openmmlab:s3://openmmlab/datasets/tracking/UAV123',
+        'data/vot2018':
+        'openmmlab:s3://openmmlab/datasets/tracking/VOT2018'
+    }))
+
 data_root = 'data/'
 train_pipeline = [
     dict(
         type='PairSampling', frame_range=5, pos_prob=0.8,
         filter_key_img=False),
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
+    dict(type='LoadMultiImagesFromFile', to_float32=True, file_client_args=file_client_args),
+    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False, file_client_args=file_client_args),
     dict(
         type='SeqCropLikeSiamFC',
         context_amount=0.5,
@@ -92,8 +113,8 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
+    dict(type='LoadImageFromFile', to_float32=True, file_client_args=file_client_args),
+    dict(type='LoadAnnotations', with_bbox=True, with_label=False, file_client_args=file_client_args),
     dict(
         type='MultiScaleFlipAug',
         scale_factor=1,
@@ -118,14 +139,16 @@ data = dict(
         #         img_prefix=data_root + 'ILSVRC/Data/VID',
         #         pipeline=train_pipeline,
         #         split='train',
-        #         test_mode=False)),
+        #         test_mode=False,
+        #         file_client_args=file_client_args)),
         dict(
             type='SOTCocoDataset',
             ann_file=data_root + 'coco/annotations/instances_train2017.json',
             img_prefix=data_root + 'coco/train2017',
             pipeline=train_pipeline,
             split='train',
-            test_mode=False),
+            test_mode=False,
+            file_client_args=file_client_args),
         # dict(
         #     type='SOTImageNetVIDDataset',
         #     ann_file=data_root +
@@ -133,7 +156,8 @@ data = dict(
         #     img_prefix=data_root + 'ILSVRC/Data/DET',
         #     pipeline=train_pipeline,
         #     split='train',
-        #     test_mode=False)
+        #     test_mode=False,
+        #     file_client_args=file_client_args)
     ],
     val=dict(
         type='LaSOTDataset',
