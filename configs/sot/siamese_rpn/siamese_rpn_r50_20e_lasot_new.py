@@ -129,18 +129,18 @@ data = dict(
     samples_per_gpu=28,
     workers_per_gpu=2,
     train=[
-        # dict(
-        #     type='RepeatDataset',
-        #     times=39,
-        #     dataset=dict(
-        #         type='SOTImageNetVIDDataset',
-        #         ann_file=data_root +
-        #         'ILSVRC/annotations/imagenet_vid_train.json',
-        #         img_prefix=data_root + 'ILSVRC/Data/VID',
-        #         pipeline=train_pipeline,
-        #         split='train',
-        #         test_mode=False,
-        #         file_client_args=file_client_args)),
+        dict(
+            type='RepeatDataset',
+            times=39,
+            dataset=dict(
+                type='SOTImageNetVIDDataset',
+                ann_file=data_root +
+                'ILSVRC/annotations/imagenet_vid_train.json',
+                img_prefix=data_root + 'ILSVRC/Data/VID',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False,
+                file_client_args=file_client_args)),
         dict(
             type='SOTCocoDataset',
             ann_file=data_root + 'coco/annotations/instances_train2017.json',
@@ -149,15 +149,15 @@ data = dict(
             split='train',
             test_mode=False,
             file_client_args=file_client_args),
-        # dict(
-        #     type='SOTImageNetVIDDataset',
-        #     ann_file=data_root +
-        #     'ILSVRC/annotations/imagenet_det_30plus1cls.json',
-        #     img_prefix=data_root + 'ILSVRC/Data/DET',
-        #     pipeline=train_pipeline,
-        #     split='train',
-        #     test_mode=False,
-        #     file_client_args=file_client_args)
+        dict(
+            type='SOTCocoDataset',
+            ann_file=data_root +
+            'ILSVRC/annotations/imagenet_det_30plus1cls.json',
+            img_prefix=data_root + 'ILSVRC/Data/DET',
+            pipeline=train_pipeline,
+            split='train',
+            test_mode=False,
+            file_client_args=file_client_args)
     ],
     val=dict(
         type='LaSOTDataset',

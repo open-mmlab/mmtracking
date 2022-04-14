@@ -319,43 +319,44 @@ class PairSampling(object):
 
     def __call__(self, pair_video_infos):
         video_info, video_info_another = pair_video_infos
-        self.is_video_data = len(video_info['frame_ids']) > 1 and len(
-            video_info_another['frame_ids']) > 1
-
-        if len(video_info['frame_ids']) > 1 and len(
-                video_info_another['frame_ids']) > 1:
-            key_frame_ind = np.random.choice(len(video_info))[0]
-            if self.pos_prob > np.random.random():
-                left_ind = max(key_frame_ind + self.frame_range[0], 0)
-                right_ind = min(key_frame_ind + self.frame_range[1],
-                                len(video_info))
-                if self.filter_key_img:
-                    ref_frames_inds = list(range(
-                        left_ind, key_frame_ind)) + list(
-                            range(key_frame_ind + 1, right_ind))
+        try:
+            if len(video_info['frame_ids']) > 1 and len(
+                    video_info_another['frame_ids']) > 1:
+                key_frame_ind = np.random.choice(len(video_info))
+                if self.pos_prob > np.random.random():
+                    left_ind = max(key_frame_ind + self.frame_range[0], 0)
+                    right_ind = min(key_frame_ind + self.frame_range[1],
+                                    len(video_info))
+                    if self.filter_key_img:
+                        ref_frames_inds = list(range(
+                            left_ind, key_frame_ind)) + list(
+                                range(key_frame_ind + 1, right_ind))
+                    else:
+                        ref_frames_inds = list(range(left_ind, right_ind))
+                    ref_frame_ind = np.random.choice(ref_frames_inds)
+                    results = self.prepare_data(
+                        video_info, [key_frame_ind, ref_frame_ind],
+                        is_positive_pairs=True)
                 else:
-                    ref_frames_inds = list(range(left_ind, right_ind))
-                ref_frame_ind = np.random.choice(ref_frames_inds)[0]
-                results = self.prepare_data(
-                    video_info, [key_frame_ind, ref_frame_ind],
-                    is_positive_pairs=True)
+                    ref_frame_ind = np.random.choice(len(video_info_another))
+                    results = self.prepare_data(
+                        video_info, [key_frame_ind], is_positive_pairs=False)
+                    results.extend(
+                        self.prepare_data(
+                            video_info_another, [ref_frame_ind],
+                            is_positive_pairs=False))
             else:
-                ref_frame_ind = np.random.choice(len(video_info_another))[0]
-                results = self.prepare_data(
-                    video_info, [key_frame_ind], is_positive_pairs=False)
-                results.extend(
-                    self.prepare_data(
-                        video_info_another, [ref_frame_ind],
-                        is_positive_pairs=False))
-        else:
-            if self.pos_prob > np.random.random():
-                results = self.prepare_data(
-                    video_info, [0, 0], is_positive_pairs=True)
-            else:
-                results = self.prepare_data(video_info, [0])
-                results.extend(
-                    self.prepare_data(
-                        video_info_another, [0], is_positive_pairs=False))
+                if self.pos_prob > np.random.random():
+                    results = self.prepare_data(
+                        video_info, [0, 0], is_positive_pairs=True)
+                else:
+                    results = self.prepare_data(video_info, [0],  is_positive_pairs=False)
+                    results.extend(
+                        self.prepare_data(
+                            video_info_another, [0], is_positive_pairs=False))
+        except:
+            import pdb
+            pdb.set_trace()
 
         return results
 

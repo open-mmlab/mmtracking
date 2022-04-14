@@ -58,10 +58,15 @@ def build_dataloader(dataset,
         DataLoader: A PyTorch dataloader.
     """
     rank, world_size = get_dist_info()
+    def is_base_sot_dataset(_dataset):
+        if hasattr(_dataset, 'dataset'):
+            return is_base_sot_dataset(_dataset.dataset)
+        else:
+            return isinstance(_dataset, BaseSOTDataset)
     # We set specific data sampler for SOT datasets.
-    is_sot_dataset = isinstance(dataset, BaseSOTDataset) or (
+    is_sot_dataset = is_base_sot_dataset(dataset) or (
         isinstance(dataset, ConcatDataset)
-        and isinstance(dataset.datasets[0], BaseSOTDataset))
+        and is_base_sot_dataset(dataset.datasets[0]))
     if dist:
         # ----- distributed train mode ------
         if shuffle:
