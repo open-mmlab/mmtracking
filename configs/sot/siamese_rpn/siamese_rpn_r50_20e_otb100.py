@@ -11,8 +11,10 @@ model = dict(
 data_root = 'data/'
 train_pipeline = [
     dict(
-        type='PairSampling', frame_range=5, pos_prob=0.8,
-        filter_key_img=False),
+        type='PairSampling',
+        frame_range=5,
+        pos_prob=0.8,
+        filter_template_img=False),
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(
