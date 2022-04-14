@@ -75,6 +75,11 @@ model = dict(
 
 data_root = 'data/'  # 数据集路径
 train_pipeline = [
+    dict(
+        type='PairSampling',  # 训练时的样本采样方法
+        frame_range=5,  # 在和模板帧同一视频中搜索帧的采样范围
+        pos_prob=0.8,  # 采样正样本对的概率
+        filter_template_img=False), # 采样搜索帧时是否滤除模板帧
     dict(type='LoadMultiImagesFromFile',  # 第一步：从文件路径中载入多张图像
         to_float32=True),  # 将图片转换成 np.float32 格式
     dict(type='SeqLoadAnnotations',  # 第二步：载入图片的标注文件路径
@@ -119,57 +124,45 @@ data = dict(
             type='RepeatDataset',  # 数据集类型
             times=39,  # 重复次数
             dataset=dict(
-                type='SOTTrainDataset',  # 数据集类型
+                type='SOTImageNetVIDDataset',  # 数据集类型
                 ann_file=data_root +
                 'ILSVRC/annotations/imagenet_vid_train.json',  # 标注文件路径
                 img_prefix=data_root + 'ILSVRC/Data/VID',  # 图片路径前缀
                 pipeline=train_pipeline,  # 训练时的流水线
-                ref_img_sampler=dict(  # 采样引用图片的配置
-                    frame_range=100,
-                    pos_prob=0.8,
-                    filter_key_img=False,
-                    return_key_img=True),
-            )),
+                split='train',  # 数据集的划分子集
+                test_mode=False)),  # 是否为测试模式
         dict(
             type='SOTTrainDataset',  # 数据集类型
             ann_file=data_root + 'coco/annotations/instances_train2017.json',  # 标注文件路径
             img_prefix=data_root + 'coco/train2017',  # 图片路径前缀
             pipeline=train_pipeline, # 训练时的流水线
-            ref_img_sampler=dict(  # 采样引用图片的配置
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            split='train',  # 数据集的划分子集
+            test_mode=False),  # 是否为测试模式
         dict(
-            type='SOTTrainDataset', # 数据集类型
+            type='SOTTrainDataset',  # 数据集类型
             ann_file=data_root +
             'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # 标注文件路径
             img_prefix=data_root + 'ILSVRC/Data/DET',  # 图片路径前缀
             pipeline=train_pipeline, # 训练时的流水线
-            ref_img_sampler=dict(  # 采样引用图片的配置
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            split='train',  # 数据集的划分子集
+            test_mode=False)  # 是否为测试模式
     ],
     val=dict(  # 验证集配置
-        type='LaSOTDataset',
-        test_load_ann=True,  # 测试时是否导入验证集的标注文件
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTBenchmark',
+        type='LaSOTDataset',  # 数据集类型
+        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # 数据集信息文件的路径
+        img_prefix=data_root + 'lasot/LaSOTBenchmark',  # 图片路径前缀
         pipeline=test_pipeline,  # 验证时的流水线
-        ref_img_sampler=None,
-        test_mode=True),
+        split='test',   # 数据集的划分子集
+        test_mode=True,  # 是否为测试模式
+        only_eval_visible=True),  # 在LaSOT上，是否仅在物体可见帧上评估方法
     test=dict(  # 测试集配置
-        type='LaSOTDataset',
-        test_load_ann=True,  # 测试时是否导入测试集的标注文件
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTBenchmark',
+        type='LaSOTDataset',  # 数据集类型
+        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # 数据集信息文件的路径
+        img_prefix=data_root + 'lasot/LaSOTBenchmark'  # 图片路径前缀
         pipeline=test_pipeline,  # 测试时的流水线
-        ref_img_sampler=None,
-        test_mode=True))
+        split='test',   # 数据集的划分子集
+        test_mode=True,  # 是否为测试模式
+        only_eval_visible=True))  # 在LaSOT上，是否仅在物体可见帧上评估方法
 # 优化器
 optimizer = dict(  # 优化器配置
     type='SGD',

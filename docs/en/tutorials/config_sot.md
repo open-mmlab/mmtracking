@@ -75,6 +75,11 @@ model = dict(
 
 data_root = 'data/'  # Dataset type, this will be used to define the dataset
 train_pipeline = [
+    dict(
+        type='PairSampling',  # sampling method in training
+        frame_range=5,  # the sampling range of search frames in the same video for template frame
+        pos_prob=0.8,  # the probility of sampling positive sample pairs
+        filter_template_img=False), # whether to exclude template frame when sampling search frame
     dict(type='LoadMultiImagesFromFile',  # First pipeline to load multi images from files path
         to_float32=True),  # convert the image to np.float32
     dict(type='SeqLoadAnnotations',  # Second pipeline to load annotations for multi images
@@ -119,57 +124,45 @@ data = dict(
             type='RepeatDataset',  # Type of dataset
             times=39,  # repeat dataset times
             dataset=dict(
-                type='SOTTrainDataset',  # Type of dataset
+                type='SOTImageNetVIDDataset',  # Type of dataset
                 ann_file=data_root +
                 'ILSVRC/annotations/imagenet_vid_train.json',  # Path of annotation file
                 img_prefix=data_root + 'ILSVRC/Data/VID',  # Prefix of image path
                 pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
-                ref_img_sampler=dict(  # configuration for sampling reference image
-                    frame_range=100,
-                    pos_prob=0.8,
-                    filter_key_img=False,
-                    return_key_img=True),
-            )),
+                split='train',  # Split of dataset
+                test_mode=False)),  # Whether test mode
         dict(
-            type='SOTTrainDataset',  # Type of dataset
+            type='SOTCocoDataset',  # Type of dataset
             ann_file=data_root + 'coco/annotations/instances_train2017.json',  # Path of annotation file
             img_prefix=data_root + 'coco/train2017',  # Prefix of image path
             pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
-            ref_img_sampler=dict(  # configuration for sampling reference image
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            split='train',  # Split of dataset
+            test_mode=False),  # Whether test mode
         dict(
-            type='SOTTrainDataset',  # Type of dataset
+            type='SOTCocoDataset',  # Type of dataset
             ann_file=data_root +
             'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # Path of annotation file
             img_prefix=data_root + 'ILSVRC/Data/DET',  # Prefix of image path
             pipeline=train_pipeline, # pipeline, this is passed by the train_pipeline created before.
-            ref_img_sampler=dict(  # configuration for sampling reference image
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            split='train',  # Split of dataset
+            test_mode=False)  # Whether test mode
     ],
     val=dict(  # Validation dataset config
         type='LaSOTDataset',
-        test_load_ann=True,  # load test annotations during testing
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTTesting',
+        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # Path of dataset information file
+        img_prefix=data_root + 'lasot/LaSOTBenchmark',  # Prefix of image path
         pipeline=test_pipeline,  # Pipeline is passed by test_pipeline created before
-        ref_img_sampler=None,
-        test_mode=True),
+        split='test',   # split of dataset
+        test_mode=True,  # whether test mode
+        only_eval_visible=True),  # whether to only evaluate the method on frames where the object is visible in LaSOT
     test=dict(  # Test dataset config, modify the ann_file for test-dev/test submission
         type='LaSOTDataset',
-        test_load_ann=True,  # load test annotations during testing
-        ann_file=data_root + 'lasot/annotations/lasot_test.json',
-        img_prefix=data_root + 'lasot/LaSOTTesting',
+        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # Path of dataset information file
+        img_prefix=data_root + 'lasot/LaSOTBenchmark',  # Prefix of image path
         pipeline=test_pipeline,  # Pipeline is passed by test_pipeline created before
-        ref_img_sampler=None,
-        test_mode=True))
+        split='test',   # Split of dataset
+        test_mode=True,  # Whether test mode
+        only_eval_visible=True))  # whether to only evaluate the method on frames where the object is visible in LaSOT
 # optimizer
 optimizer = dict(  # Config used to build optimizer, support all the optimizers in PyTorch whose arguments are also the same as those in PyTorch
     type='SGD',
