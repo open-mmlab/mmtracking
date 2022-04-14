@@ -1,4 +1,4 @@
-_base_ = ['./siamese_rpn_r50_20e_lasot_new.py']
+_base_ = ['./siamese_rpn_r50_20e_lasot.py']
 
 data_root = 'data/'
 # dataset settings
