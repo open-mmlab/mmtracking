@@ -322,11 +322,11 @@ class PairSampling(object):
         try:
             if len(video_info['frame_ids']) > 1 and len(
                     video_info_another['frame_ids']) > 1:
-                key_frame_ind = np.random.choice(len(video_info))
+                key_frame_ind = np.random.choice(len(video_info['frame_ids']))
                 if self.pos_prob > np.random.random():
                     left_ind = max(key_frame_ind + self.frame_range[0], 0)
                     right_ind = min(key_frame_ind + self.frame_range[1],
-                                    len(video_info))
+                                    len(video_info['frame_ids']))
                     if self.filter_key_img:
                         ref_frames_inds = list(range(
                             left_ind, key_frame_ind)) + list(
@@ -338,7 +338,7 @@ class PairSampling(object):
                         video_info, [key_frame_ind, ref_frame_ind],
                         is_positive_pairs=True)
                 else:
-                    ref_frame_ind = np.random.choice(len(video_info_another))
+                    ref_frame_ind = np.random.choice(len(video_info_another['frame_ids']))
                     results = self.prepare_data(
                         video_info, [key_frame_ind], is_positive_pairs=False)
                     results.extend(
