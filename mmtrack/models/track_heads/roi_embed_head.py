@@ -216,7 +216,7 @@ class RoIEmbedHead(BaseModule):
                 if id in ref_gt_instance_id:
                     pos_match_id[i] = ref_gt_instance_id.tolist().index(id) + 1
 
-            track_id_target = gt_instance_id.new_zeros(len(res.bboxes))
+            track_id_target = gt_instance_id.new_zeros(len(res.bboxes), dtype=torch.int64)
             track_id_target[:len(res.pos_bboxes)] = pos_match_id
             track_id_weight = res.bboxes.new_zeros(len(res.bboxes))
             track_id_weight[:len(res.pos_bboxes)] = 1.0
