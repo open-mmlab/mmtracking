@@ -63,7 +63,8 @@ class VOTDataset(BaseSOTDataset):
         print('Loading VOT dataset...')
         start_time = time.time()
         data_infos = []
-        data_infos_str = self.loadtxt(self.ann_file).split('\n')
+        data_infos_str = self.loadtxt(
+            self.ann_file, return_array=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.

@@ -45,7 +45,8 @@ class OTB100Dataset(BaseSOTDataset):
         print('Loading OTB100 dataset...')
         start_time = time.time()
         data_infos = []
-        data_infos_str = self.loadtxt(self.ann_file).split('\n')
+        data_infos_str = self.loadtxt(
+            self.ann_file, return_array=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.
@@ -83,8 +84,7 @@ class OTB100Dataset(BaseSOTDataset):
         bboxes_file = osp.join(self.img_prefix,
                                self.data_infos[video_ind]['ann_path'])
         bboxes = []
-        bboxes_info = self.file_client.get_text(bboxes_file).strip().split(
-            '\n')
+        bboxes_info = self.loadtxt(bboxes_file, return_array=False).split('\n')
         for bbox in bboxes_info:
             bbox = list(map(int, re.findall(r'-?\d+', bbox)))
             bboxes.append(bbox)
