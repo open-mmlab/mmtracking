@@ -42,8 +42,8 @@ class LaSOTDataset(BaseSOTDataset):
         start_time = time.time()
         assert split in ['train', 'test']
         data_infos = []
-        data_infos_str = self.file_client.get_text(
-            self.ann_file).strip().split('\n')
+        data_infos_str = self.loadtxt(
+            self.ann_file, return_array=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.

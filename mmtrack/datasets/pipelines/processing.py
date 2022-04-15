@@ -338,7 +338,8 @@ class PairSampling(object):
                         video_info, [key_frame_ind, ref_frame_ind],
                         is_positive_pairs=True)
                 else:
-                    ref_frame_ind = np.random.choice(len(video_info_another['frame_ids']))
+                    ref_frame_ind = np.random.choice(
+                        len(video_info_another['frame_ids']))
                     results = self.prepare_data(
                         video_info, [key_frame_ind], is_positive_pairs=False)
                     results.extend(
@@ -350,7 +351,8 @@ class PairSampling(object):
                     results = self.prepare_data(
                         video_info, [0, 0], is_positive_pairs=True)
                 else:
-                    results = self.prepare_data(video_info, [0],  is_positive_pairs=False)
+                    results = self.prepare_data(
+                        video_info, [0], is_positive_pairs=False)
                     results.extend(
                         self.prepare_data(
                             video_info_another, [0], is_positive_pairs=False))
