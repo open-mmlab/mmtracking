@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import mmcv
 import numpy as np
 from mmdet.datasets import DATASETS
 
@@ -21,7 +22,10 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
                 Dataset. It will be loaded and parsed in the
                 `self.load_data_infos` function.
         """
-        self.coco = CocoVID(ann_file)
+        file_client_args = kwargs.get('file_client_args', dict(backend='disk'))
+        self.file_client = mmcv.FileClient(**file_client_args)
+        with self.file_client.get_local_path(ann_file) as local_path:
+            self.coco = CocoVID(local_path)
         super().__init__(*args, **kwargs)
 
     def load_data_infos(self, split='train'):
