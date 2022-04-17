@@ -8,7 +8,7 @@ import numpy as np
 from mmcv.utils import print_log
 from mmdet.datasets import DATASETS
 
-from mmtrack.core import results2outs
+from mmtrack.core import eval_vis, results2outs
 from .coco_video_dataset import CocoVideoDataset
 
 
@@ -53,7 +53,8 @@ class YouTubeVISDataset(CocoVideoDataset):
     def format_results(self,
                        results,
                        resfile_path=None,
-                       metrics=['track_segm']):
+                       metrics=['track_segm'],
+                       save_zip=True):
         """Format the results to a zip file (standard format for YouTube-VIS
         Challenge).
 
@@ -63,6 +64,9 @@ class YouTubeVISDataset(CocoVideoDataset):
                 Defaults to None.
             metrics (list[str], optional): The results of the specific metrics
                 will be formatted. Defaults to ['track_segm'].
+            save_zip (bool, optional): Whether to save the .zip file.
+                Defaults to True.
+
 
         Returns:
             tuple: (resfiles, tmp_dir), resfiles is the path of the result
@@ -100,15 +104,15 @@ class YouTubeVISDataset(CocoVideoDataset):
                 ids = outs_track['ids']
                 masks = mmcv.concat_list(mask_res)
                 assert len(masks) == len(bboxes)
-                for i, id in enumerate(ids):
+                for ii, id in enumerate(ids):
                     if id not in collect_data:
                         collect_data[id] = dict(
                             category_ids=[], scores=[], segmentations=dict())
-                    collect_data[id]['category_ids'].append(labels[i])
-                    collect_data[id]['scores'].append(bboxes[i][4])
-                    if isinstance(masks[i]['counts'], bytes):
-                        masks[i]['counts'] = masks[i]['counts'].decode()
-                    collect_data[id]['segmentations'][frame_id] = masks[i]
+                    collect_data[id]['category_ids'].append(labels[ii])
+                    collect_data[id]['scores'].append(bboxes[ii][4])
+                    if isinstance(masks[ii]['counts'], bytes):
+                        masks[ii]['counts'] = masks[ii]['counts'].decode()
+                    collect_data[id]['segmentations'][frame_id] = masks[ii]
 
             # transform the collected data into official format
             for id, id_data in collect_data.items():
@@ -129,11 +133,48 @@ class YouTubeVISDataset(CocoVideoDataset):
         mmcv.dump(json_results, resfiles)
 
         # zip the json file in order to submit to the test server.
-        zip_file_name = osp.join(resfile_path, 'submission_file.zip')
-        zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-        print_log(f"zip the 'results.json' into '{zip_file_name}', "
-                  'please submmit the zip file to the test server')
-        zf.write(resfiles, 'results.json')
-        zf.close()
+        if save_zip:
+            zip_file_name = osp.join(resfile_path, 'submission_file.zip')
+            zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+            print_log(f"zip the 'results.json' into '{zip_file_name}', "
+                      'please submmit the zip file to the test server')
+            zf.write(resfiles, 'results.json')
+            zf.close()
 
         return resfiles, tmp_dir
+
+    def evaluate(
+        self,
+        results,
+        metric=['track_segm'],
+        logger=None,
+    ):
+        """Evaluation in COCO protocol.
+
+        Args:
+            results (dict): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated. Options are
+                'track_segm'.
+            logger (logging.Logger | str | None): Logger used for printing
+                related information during evaluation. Default: None.
+
+        Returns:
+            dict[str, float]: COCO style evaluation metric.
+        """
+        if isinstance(metric, list):
+            metrics = metric
+        elif isinstance(metric, str):
+            metrics = [metric]
+        else:
+            raise TypeError('metric must be a list or a str.')
+        allowed_metrics = ['track_segm']
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported.')
+
+        eval_results = dict()
+        resfiles, tmp_dir = self.format_results(results, save_zip=False)
+        track_segm_results = eval_vis(resfiles, self.ann_file, logger)
+        eval_results.update(track_segm_results)
+
+        return eval_results

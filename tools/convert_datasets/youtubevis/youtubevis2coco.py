@@ -60,9 +60,14 @@ def convert_vis(ann_dir, save_dir, dataset_version, mode='train'):
             vid_to_anns[ann_info['video_id']].append(ann_info)
 
     video_infos = official_anns['videos']
+
     for video_info in tqdm(video_infos):
         video_name = video_info['file_names'][0].split(os.sep)[0]
-        video = dict(id=video_info['id'], name=video_name)
+        video = dict(
+            id=video_info['id'],
+            name=video_name,
+            width=video_info['width'],
+            height=video_info['height'])
         VIS['videos'].append(video)
 
         num_frames = len(video_info['file_names'])
