@@ -22,7 +22,7 @@ class YTVIS(YTVOS):
         self.dataset, self.anns, self.cats, self.vids = dict(), dict(), dict(
         ), dict()
         self.vidToAnns, self.catToVids = defaultdict(list), defaultdict(list)
-        if json_result is None:
+        if json_result is not None:
             dataset = json_result
             assert type(
                 dataset
@@ -45,8 +45,8 @@ def eval_vis(result_file, own_anns_file, logger):
     Returns:
         dict[str, float]: Evaluation results.
     """
-    ytvos = get_vis_json(own_anns_file)
-    ytvos = YTVIS(ytvos)
+    VIS = get_vis_json(own_anns_file)
+    ytvos = YTVIS(VIS)
     assert isinstance(ytvos, YTVIS)
 
     if len(ytvos.anns) == 0:
@@ -103,6 +103,13 @@ def get_vis_json(own_anns_file):
     Returns:
         dict: A dict with 3 keys, ``categories``, ``annotations``
             and ``videos``.
+        - | ``categories`` (dict{list[dict]}): Each list has a dict
+            with 2 keys, ``id`` and ``name``.
+        - | ``videos`` (dict{list[dict]}): Each list has a dict with
+            4 keys of video info, ``id``, ``name``, ``width`` and ``height``.
+        - | ``annotations`` (dict{list[dict]}): Each list has a dict with
+            7 keys of video info, ``category_id``, ``segmentations``,
+            ``bboxes``, ``video_id``, ``areas``, ``id`` and ``iscrowd``.
     """
 
     VIS = defaultdict(list)
