@@ -42,6 +42,7 @@ def main():
         imgs = mmcv.VideoReader(args.input)
         IN_VIDEO = True
 
+    OUT_VIDEO = False
     # define output
     if args.output is not None:
         if args.output.endswith('.mp4'):
