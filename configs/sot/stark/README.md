@@ -48,7 +48,7 @@ We provide the last-epoch model with its configuration and training log.
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :----: | :------: | :--------: |
 | STARK-ST1 |    R-50    |  -  |   500e    | 8.45        | -             | 67.0 | 77.3 |  71.7 | [config](stark_st1_r50_500e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220414_185654.log.json) |
-| STARK-ST2 |    R-50    |  -  |   50e    | 2.31        | -              | 67.8 | 78.5 | 73.0  | [config](stark_st2_r50_50e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot//stark_st2_r50_50e_lasot_20220416_170201.log.json) |
+| STARK-ST2 |    R-50    |  -  |   50e    | 2.31        | -              | 67.8 | 78.5 | 73.0  | [config](stark_st2_r50_50e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220416_170201.log.json) |
 
 ### TrackingNet
 
