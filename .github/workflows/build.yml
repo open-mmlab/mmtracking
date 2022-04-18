@@ -57,6 +57,7 @@ jobs:
           pip install git+https://github.com/JonathonLuiten/TrackEval.git
           pip install git+https://github.com/lvis-dataset/lvis-api.git
           pip install git+https://github.com/TAO-Dataset/tao.git
+          pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
       - name: Run unittests and generate coverage report
@@ -118,6 +119,7 @@ jobs:
           python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
           python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install git+https://github.com/TAO-Dataset/tao.git
+          python -m pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: |
           rm -rf .eggs
@@ -187,6 +189,7 @@ jobs:
           python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
           python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install git+https://github.com/TAO-Dataset/tao.git
+          python -m pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: |
           rm -rf .eggs
@@ -237,6 +240,7 @@ jobs:
              pip install git+https://github.com/JonathonLuiten/TrackEval.git
              pip install git+https://github.com/lvis-dataset/lvis-api.git
              pip install git+https://github.com/TAO-Dataset/tao.git
+             pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: pip install -e .
       - name: Run unittests
