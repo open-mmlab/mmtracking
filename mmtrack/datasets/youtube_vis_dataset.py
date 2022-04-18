@@ -100,15 +100,15 @@ class YouTubeVISDataset(CocoVideoDataset):
                 ids = outs_track['ids']
                 masks = mmcv.concat_list(mask_res)
                 assert len(masks) == len(bboxes)
-                for i, id in enumerate(ids):
+                for ii, id in enumerate(ids):
                     if id not in collect_data:
                         collect_data[id] = dict(
                             category_ids=[], scores=[], segmentations=dict())
-                    collect_data[id]['category_ids'].append(labels[i])
-                    collect_data[id]['scores'].append(bboxes[i][4])
-                    if isinstance(masks[i]['counts'], bytes):
-                        masks[i]['counts'] = masks[i]['counts'].decode()
-                    collect_data[id]['segmentations'][frame_id] = masks[i]
+                    collect_data[id]['category_ids'].append(labels[ii])
+                    collect_data[id]['scores'].append(bboxes[ii][4])
+                    if isinstance(masks[ii]['counts'], bytes):
+                        masks[ii]['counts'] = masks[ii]['counts'].decode()
+                    collect_data[id]['segmentations'][frame_id] = masks[ii]
 
             # transform the collected data into official format
             for id, id_data in collect_data.items():
