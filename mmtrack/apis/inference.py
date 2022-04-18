@@ -26,9 +26,8 @@ def init_model(config,
         checkpoint (str, optional): Checkpoint path. Default as None.
         cfg_options (dict, optional): Options to override some settings in
             the used config. Default to None.
-        verbose_init_params (bool, optional): Whether print the information of
-            information of initialized parameters to the console. Default to
-            False.
+        verbose_init_params (bool, optional): Whether to print the information
+            of initialized parameters to the console. Default to False.
 
     Returns:
         nn.Module: The constructed detector.
