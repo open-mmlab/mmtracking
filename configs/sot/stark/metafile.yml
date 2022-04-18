@@ -18,7 +18,7 @@ Models:
     Config: configs/sot/stark/stark_st1_r50_500e_got10k.py
     Metadata:
       Training Data: GOT10k
-      Training Memory (GB): 6.51
+      Training Memory (GB): 8.45
       Epochs: 500
     Results:
       - Task: Single Object Tracking
@@ -34,7 +34,7 @@ Models:
     Config: configs/sot/stark/stark_st2_r50_50e_got10k.py
     Metadata:
       Training Data: GOT10k
-      Training Memory (GB): 0.51
+      Training Memory (GB): 2.31
       Epochs: 50
     Results:
       - Task: Single Object Tracking
@@ -50,61 +50,61 @@ Models:
     Config: configs/sot/stark/stark_st1_r50_500e_lasot.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
-      Training Memory (GB): 6.51
+      Training Memory (GB): 8.45
       Epochs: 500
     Results:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 65.7
-          Norm Precision: 75.4
-          Precision: 69.7
-    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220223_125402-934f290e.pth
+          Success: 67.0
+          Norm Precision: 77.3
+          Precision: 71.7
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
 
   - Name: stark_st2_r50_50e_lasot
     In Collection: STARK
     Config: configs/sot/stark/stark_st2_r50_50e_lasot.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
-      Training Memory (GB): 0.51
+      Training Memory (GB): 2.31
       Epochs: 50
     Results:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 66.3
-          Norm Precision: 76.2
-          Precision: 70.4
-    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth
+          Success: 67.8
+          Norm Precision: 78.5
+          Precision: 73.0
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
 
   - Name: stark_st1_r50_500e_trackingnet
     In Collection: STARK
     Config: configs/sot/stark/stark_st1_r50_500e_trackingnet.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
-      Training Memory (GB): 6.51
+      Training Memory (GB): 8.45
       Epochs: 500
     Results:
       - Task: Single Object Tracking
         Dataset: TrackingNet
         Metrics:
-          Success: 80.2
-          Norm Precision: 84.9
-          Precision: 77.4
-    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_trackingnet/stark_st1_r50_500e_lasot_20220223_125402-934f290e.pth
+          Success: 80.5
+          Norm Precision: 85.0
+          Precision: 77.7
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_trackingnet/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
 
   - Name: stark_st2_r50_50e_trackingnet
     In Collection: STARK
     Config: configs/sot/stark/stark_st2_r50_50e_trackingnet.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
-      Training Memory (GB): 0.51
+      Training Memory (GB): 2.31
       Epochs: 50
     Results:
       - Task: Single Object Tracking
         Dataset: TrackingNet
         Metrics:
-          Success: 81.2
-          Norm Precision: 86.0
-          Precision: 78.5
-    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_trackingnet/stark_st2_r50_50e_lasot_20220225_122540-61498aa1.pth
+          Success: 81.4
+          Norm Precision: 86.2
+          Precision: 79.0
+    Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_trackingnet/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
