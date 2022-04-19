@@ -379,9 +379,15 @@ class MOTChallengeDataset(CocoVideoDataset):
                 res_file = osp.join(resfiles['track'], f'{name}.txt')
                 # copy gt file from ceph to local temporary directory
                 gt_dir_path = local_dir.name + osp.sep + self.img_prefix
+                print('************************************************************************')
+                print(gt_dir_path, 1)
+                print('************************************************************************')
                 gt_dir_path = osp.join(gt_dir_path, name, 'gt')
                 # gt_dir_path = osp.join(local_dir.name, self.img_prefix, name,
                 #                        'gt')
+                print('************************************************************************')
+                print(gt_dir_path, 2)
+                print('************************************************************************')
                 os.makedirs(gt_dir_path)
 
                 f = open(local_dir.name + osp.sep + gt_file, 'wb')
