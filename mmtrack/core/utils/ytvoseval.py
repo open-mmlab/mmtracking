@@ -13,8 +13,8 @@ from pycocotools import mask as maskUtils
 
 
 class YTVOSeval:
-    # Interface for evaluating video instance segmentation
-    # on the YouTubeVIS dataset.
+    # Interface for evaluating video instance segmentation on
+    # the YouTubeVIS dataset.
     #
     # The usage for YTVOSeval is as follows:
     #  cocoGt=..., cocoDt=...       # load dataset and results
@@ -139,8 +139,8 @@ class YTVOSeval:
 
     def evaluate(self):
         '''
-        Run per image evaluation on given images and
-        store results (a list of dict) in self.evalVids
+        Run per image evaluation on given images and store
+        results (a list of dict) in self.evalVids
         :return: None
         '''
         tic = time.time()
@@ -231,7 +231,7 @@ class YTVOSeval:
 
     def computeOks(self, imgId, catId):
         p = self.params
-        # dimension here should be Nxm
+
         gts = self._gts[imgId, catId]
         dts = self._dts[imgId, catId]
         inds = np.argsort([-d['score'] for d in dts], kind='mergesort')
@@ -266,7 +266,7 @@ class YTVOSeval:
                 xd = d[0::3]
                 yd = d[1::3]
                 if k1 > 0:
-                    # measure the per-keypoint distance if visible
+                    # measure the per-keypoint distance if keypoints visible
                     dx = xd - xg
                     dy = yd - yg
                 else:
@@ -338,8 +338,8 @@ class YTVOSeval:
                         # continue to next gt unless better match made
                         if ious[dind, gind] < iou:
                             continue
-                        # if match successful and best so far, store
-                        #   appropriately
+                        # if match successful and best so far,
+                        # store appropriately
                         iou = ious[dind, gind]
                         m = gind
                     # if match made store id of match for both dt and gt
@@ -466,11 +466,12 @@ class YTVOSeval:
                                 pr[i - 1] = pr[i]
 
                         inds = np.searchsorted(rc, p.recThrs, side='left')
-
-                        for ri, pi in enumerate(inds):
-                            q[ri] = pr[pi]
-                            ss[ri] = dtScoresSorted[pi]
-
+                        try:
+                            for ri, pi in enumerate(inds):
+                                q[ri] = pr[pi]
+                                ss[ri] = dtScoresSorted[pi]
+                        except Exception:
+                            pass
                         precision[t, :, k, a, m] = np.array(q)
                         scores[t, :, k, a, m] = np.array(ss)
         self.eval = {
@@ -493,8 +494,8 @@ class YTVOSeval:
 
         def _summarize(ap=1, iouThr=None, areaRng='all', maxDets=100):
             p = self.params
-            iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} ' \
-                   '| maxDets={:>3d} ] = {:0.3f}'
+            iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} | ' \
+                   'maxDets={:>3d} ] = {:0.3f}'
             titleStr = 'Average Precision' if ap == 1 else 'Average Recall'
             typeStr = '(AP)' if ap == 1 else '(AR)'
             iouStr = '{:0.2f}:{:0.2f}'.format(p.iouThrs[0], p.iouThrs[-1]) \
@@ -584,7 +585,8 @@ class Params:
     def setDetParams(self):
         self.vidIds = []
         self.catIds = []
-        # np.arange causes trouble.
+        # np.arange causes trouble.  the data point on arange
+        # is slightly larger than the true value
         self.iouThrs = np.linspace(
             .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         self.recThrs = np.linspace(
@@ -598,7 +600,8 @@ class Params:
     def setKpParams(self):
         self.vidIds = []
         self.catIds = []
-        # np.arange causes trouble.
+        # np.arange causes trouble.  the data point on arange
+        # is slightly larger than the true value
         self.iouThrs = np.linspace(
             .5, 0.95, int(np.round((0.95 - .5) / .05)) + 1, endpoint=True)
         self.recThrs = np.linspace(
