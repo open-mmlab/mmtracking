@@ -14,10 +14,7 @@ model = dict(
         out_indices=[1, 2],  # 0, 1, 2, 3
         norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=False,
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint='torchvision://resnet50'
-        )),
+        init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     cls_head=dict(
         type='PrdimpClsHead',
         feat_dim=1024,
@@ -164,8 +161,15 @@ train_pipeline = [
 
 img_norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1], to_rgb=True)
 test_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True, file_client_args=file_client_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_label=False, file_client_args=file_client_args),
+    dict(
+        type='LoadImageFromFile',
+        to_float32=True,
+        file_client_args=file_client_args),
+    dict(
+        type='LoadAnnotations',
+        with_bbox=True,
+        with_label=False,
+        file_client_args=file_client_args),
     dict(
         type='MultiScaleFlipAug',
         scale_factor=1,
@@ -187,7 +191,7 @@ data = dict(
     samples_per_epoch=26000,
     train=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[1,0.25,1,1],
+        dataset_sampling_weights=[1, 0.25, 1, 1],
         dataset_cfgs=[
             dict(
                 type='GOT10kDataset',
@@ -206,7 +210,7 @@ data = dict(
                 file_client_args=file_client_args),
             dict(
                 type='TrackingNetDataset',
-                chunks_list=[0,1,2,3],
+                chunks_list=[0, 1, 2, 3],
                 img_prefix=data_root + 'trackingnet',
                 pipeline=train_pipeline,
                 split='train',

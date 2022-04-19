@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import glob
 import os
 import os.path as osp
 import shutil
@@ -72,18 +71,23 @@ class TrackingNetDataset(BaseSOTDataset):
                 chunk_ann_dir
             ), f'annotation directory {chunk_ann_dir} does not exist'
 
-            # videos_list = sorted(os.listdir(osp.join(chunk_ann_dir, 'frames')))
-            videos_list = sorted(self.file_client.list_dir_or_file(osp.join(chunk_ann_dir, 'frames'), list_file=False))
+            videos_list = sorted(
+                self.file_client.list_dir_or_file(
+                    osp.join(chunk_ann_dir, 'frames'), list_file=False))
             for video_name in videos_list:
                 video_path = osp.join(chunk, 'frames', video_name)
                 # avoid creating empty file folds by mistakes
                 # if not os.listdir(osp.join(self.img_prefix, video_path)):
-                if not self.file_client.isfile(osp.join(self.img_prefix, video_path, '0.jpg')):
+                if not self.file_client.isfile(
+                        osp.join(self.img_prefix, video_path, '0.jpg')):
                     continue
                 ann_path = osp.join(chunk, 'anno', video_name + '.txt')
                 # img_names = glob.glob(
                 #     osp.join(self.img_prefix, video_path, '*.jpg'))
-                img_names = self.file_client.list_dir_or_file(osp.join(self.img_prefix, video_path), list_dir=False, suffix='.jpg')
+                img_names = self.file_client.list_dir_or_file(
+                    osp.join(self.img_prefix, video_path),
+                    list_dir=False,
+                    suffix='.jpg')
                 end_frame_name = max(
                     img_names,
                     key=lambda x: int(osp.basename(x).split('.')[0]))

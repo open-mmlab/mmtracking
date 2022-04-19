@@ -504,25 +504,27 @@ class IouNetHead(nn.Module):
 
         sz_norm = output_boxes[:, :1, 2:].clone()
         output_boxes_rel = rect_to_rel(output_boxes, sz_norm)
-        for i_ in range(self.bbox_cfg['box_refinement_iter']):
-            # forward pass
-            bb_init_rel = output_boxes_rel.clone().detach()
-            bb_init_rel.requires_grad = True
 
-            bb_init = rel_to_rect(bb_init_rel, sz_norm)
-            outputs = self.predict_iou(self.iou_modulation, iou_features,
-                                       bb_init)
+        with torch.set_grad_enabled(True):
+            for i_ in range(self.bbox_cfg['box_refinement_iter']):
+                # forward pass
+                bb_init_rel = output_boxes_rel.clone().detach()
+                bb_init_rel.requires_grad = True
 
-            if isinstance(outputs, (list, tuple)):
-                outputs = outputs[0]
+                bb_init = rel_to_rect(bb_init_rel, sz_norm)
+                outputs = self.predict_iou(self.iou_modulation, iou_features,
+                                           bb_init)
 
-            outputs.backward(gradient=torch.ones_like(outputs))
+                if isinstance(outputs, (list, tuple)):
+                    outputs = outputs[0]
 
-            # Update proposal
-            output_boxes_rel = bb_init_rel + step_length * bb_init_rel.grad
-            output_boxes_rel.detach_()
+                outputs.backward(gradient=torch.ones_like(outputs))
 
-            step_length *= self.bbox_cfg['box_refinement_step_decay']
+                # Update proposal
+                output_boxes_rel = bb_init_rel + step_length * bb_init_rel.grad
+                output_boxes_rel.detach_()
+
+                step_length *= self.bbox_cfg['box_refinement_step_decay']
 
         output_boxes = rel_to_rect(output_boxes_rel, sz_norm)
 

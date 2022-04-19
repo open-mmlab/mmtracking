@@ -481,8 +481,8 @@ class Prdimp(BaseSingleObjectTracker):
         szl = torch.max(sz.round(), torch.Tensor([2])).long()
 
         # Extract top and bottom coordinates
-        tl = crop_center_copy - (szl - 1) // 2
-        br = crop_center_copy + szl // 2 + 1
+        tl = crop_center_copy - torch.div(szl - 1, 2, rounding_mode='floor')
+        br = crop_center_copy + torch.div(szl, 2, rounding_mode='floor') + 1
 
         # Shift the crop to inside
         if mode == 'inside' or mode == 'inside_major':
