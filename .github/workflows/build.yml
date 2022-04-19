@@ -119,7 +119,6 @@ jobs:
           python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
           python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install git+https://github.com/TAO-Dataset/tao.git
-          python -m pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: |
           rm -rf .eggs
@@ -189,7 +188,6 @@ jobs:
           python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
           python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
           python -m pip install git+https://github.com/TAO-Dataset/tao.git
-          python -m pip install git+https://github.com/youtubevos/cocoapi.git#"egg=pycocotools&subdirectory=PythonAPI"
       - name: Build and install
         run: |
           rm -rf .eggs
