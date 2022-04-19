@@ -7,8 +7,8 @@ from collections import OrderedDict, defaultdict
 
 import mmcv
 from mmcv.utils import print_log
-from pycocotools.ytvos import YTVOS
-from pycocotools.ytvoseval import YTVOSeval
+
+from mmtrack.core.utils import YTVOS, YTVOSeval
 
 
 class YTVIS(YTVOS):
