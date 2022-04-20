@@ -12,7 +12,7 @@ data_root = 'data/'
 train_pipeline = [
     dict(
         type='PairSampling',
-        frame_range=5,
+        frame_range=100,
         pos_prob=0.8,
         filter_template_img=False),
     dict(type='LoadMultiImagesFromFile', to_float32=True),
