@@ -561,12 +561,19 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在`data/lvis/annotations` 中有 8 个 JSON 文件:
 
 `coco_to_lvis_synset.json`: 包含 COCO 和 LVIS 类别映射关系的 JSON 文件。
+
 `lvisv0.5+coco_train.json`: 包含合并后标注的 JSON 文件。
+
 `lvis_v0.5_train.json`: 包含 lvisv0.5 训练集标注信息的 JSON 文件。
+
 `lvis_v0.5_val.json`: 包含 lvisv0.5 测试集标注信息的 JSON 文件。
+
 `lvis_v1_train.json`: 包含 lvisv1 训练集标注信息的 JSON 文件。
+
 `lvis_v1_val.json`: 包含 lvisv1 测试集标注信息的 JSON 文件。
+
 `lvis_v1_image_info_test_challenge.json`: 包含可全年使用的 lvisv1 测试集标注 JSON 文件。
+
 `lvis_v1_image_info_test_dev.json`: 包含仅一年一次供 LVIS Challenge 使用的 lvisv1 测试集标注 JSON 文件。
 
 #### tao 的标注文件夹
@@ -574,13 +581,21 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在`data/tao/annotations` 中有 9 个 JSON 文件:
 
 `test_categories.json`: 包含在 TAO 测试集中会被评估的类别序列的 JSON 文件。
+
 `test_without_annotations.json`:  包含测试视频的 JSON 文件。 `images` 和 `videos` 域包含会在测试集中被评估的图片和视频。
+
 `test_482_classes.json`: 包含测试集转换结果的 JSON 文件。
+
 `train.json`: 包含 TAO 训练集中 LVIS 类别标注的 JSON 文件。
+
 `train_482_classes.json`: 包含训练集转换结果的 JSON 文件。
+
 `train_with_freeform.json`: 包含 TAO 训练集所有类别标注的 JSON 文件。
+
 `validation.json`: 包含 TAO 验证集中 LVIS 类别标注的 JSON 文件。
+
 `validation_482_classes.json`: 包含验证集转换结果的 JSON 文件。
+
 `validation_with_freeform.json`: 包含 TAO 验证集所有类别标注的 JSON 文件。
 
 #### lasot 的标注文件夹
@@ -638,15 +653,21 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 在 `data/got10k/annotations` 中有 3 个 JSON 文件：
 
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 JSON 文件。
+
 `got10k_test.json`： 包含 GOT10k 测试集标注信息的 JSON 文件。
+
 `got10k_val.json`： 包含 GOT10k 验证集标注信息的 JSON 文件。
 
 在 `data/got10k/annotations` 中有 5 个 TEXT 文件：
 
 `got10k_train_infos.txt`： 包含 GOT10k 训练集信息的 TEXT 文件。
+
 `got10k_test_infos.txt`： 包含 GOT10k 测试集信息的 TEXT 文件。
+
 `got10k_val_infos.txt`： 包含 GOT10k 验证集信息的 TEXT 文件。
+
 `got10k_train_vot_infos.txt`： 包含 GOT10k `train_vot` 划分集信息的 TEXT 文件。
+
 `got10k_val_vot_infos.txt`： 包含 GOT10k `val_vot` 划分集信息的 TEXT 文件。
 
 #### VOT2018的标注和视频帧文件夹
