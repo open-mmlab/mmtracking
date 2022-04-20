@@ -58,7 +58,7 @@ data = dict(
                 'got10k/annotations/got10k_train_infos.txt',
                 img_prefix=data_root + 'got10k',
                 pipeline=train_pipeline,
-                split='train',
+                split='train_vot',
                 test_mode=False),
             dict(
                 type='LaSOTDataset',
