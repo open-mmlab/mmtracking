@@ -3,7 +3,6 @@ import time
 
 import mmcv
 import numpy as np
-import mmcv
 from mmdet.datasets import DATASETS
 from pycocotools.coco import COCO
 

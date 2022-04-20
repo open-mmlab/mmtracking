@@ -263,8 +263,21 @@ class TridentSampling(object):
 
 @PIPELINES.register_module()
 class PairSampling(object):
+    """Pair-style sampling. It's used in `SiameseRPN++
 
-    def __init__(self, frame_range=5, pos_prob=0.8, filter_key_img=False):
+    <https://arxiv.org/abs/1812.11703.>`_.
+
+    Args:
+        frame_range (List(int) | int): the sampling range of search
+            frames in the same video for template frame. Defaults to 5.
+        pos_prob (float, optional):  the probility of sampling positive
+            sample pairs. Defaults to 0.8.
+        filter_template_img (bool, optional): if False, the template image will
+            be in the sampling search candidates, otherwise, it is exclude.
+            Defaults to False.
+    """
+
+    def __init__(self, frame_range=5, pos_prob=0.8, filter_template_img=False):
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
             assert frame_range >= 0, 'frame_range can not be a negative value.'
@@ -278,7 +291,7 @@ class PairSampling(object):
             raise TypeError('The type of frame_range must be int or list.')
         self.frame_range = frame_range
         self.pos_prob = pos_prob
-        self.filter_key_img = filter_key_img
+        self.filter_template_img = filter_template_img
 
     def prepare_data(self, video_info, sampled_inds, is_positive_pairs=False):
         """Prepare sampled training data according to the sampled index.
@@ -288,8 +301,8 @@ class PairSampling(object):
                 ['bboxes','bboxes_isvalid','filename','frame_ids',
                 'video_id','visible'].
             sampled_inds (list[int]): the sampled frame indexes.
-            with_label (bool, optional): whether to recode labels in ann infos.
-                Only set True in classification training. Defaults to False.
+            is_positive_pairs (bool, optional): whether it's the positive
+                pairs. Defaults to False.
 
         Returns:
             List[dict]: contains the information of sampled data.
@@ -318,48 +331,52 @@ class PairSampling(object):
         return results
 
     def __call__(self, pair_video_infos):
-        video_info, video_info_another = pair_video_infos
-        try:
-            if len(video_info['frame_ids']) > 1 and len(
-                    video_info_another['frame_ids']) > 1:
-                key_frame_ind = np.random.choice(len(video_info['frame_ids']))
-                if self.pos_prob > np.random.random():
-                    left_ind = max(key_frame_ind + self.frame_range[0], 0)
-                    right_ind = min(key_frame_ind + self.frame_range[1],
-                                    len(video_info['frame_ids']))
-                    if self.filter_key_img:
-                        ref_frames_inds = list(range(
-                            left_ind, key_frame_ind)) + list(
-                                range(key_frame_ind + 1, right_ind))
-                    else:
-                        ref_frames_inds = list(range(left_ind, right_ind))
-                    ref_frame_ind = np.random.choice(ref_frames_inds)
-                    results = self.prepare_data(
-                        video_info, [key_frame_ind, ref_frame_ind],
-                        is_positive_pairs=True)
-                else:
-                    ref_frame_ind = np.random.choice(
-                        len(video_info_another['frame_ids']))
-                    results = self.prepare_data(
-                        video_info, [key_frame_ind], is_positive_pairs=False)
-                    results.extend(
-                        self.prepare_data(
-                            video_info_another, [ref_frame_ind],
-                            is_positive_pairs=False))
-            else:
-                if self.pos_prob > np.random.random():
-                    results = self.prepare_data(
-                        video_info, [0, 0], is_positive_pairs=True)
-                else:
-                    results = self.prepare_data(
-                        video_info, [0], is_positive_pairs=False)
-                    results.extend(
-                        self.prepare_data(
-                            video_info_another, [0], is_positive_pairs=False))
-        except:
-            import pdb
-            pdb.set_trace()
+        """
+        Args:
+            pair_video_infos (list[dict]): contains two video infos. Each video
+                info contains the keys: ['bboxes','bboxes_isvalid','filename',
+                'frame_ids','video_id','visible'].
 
+        Returns:
+            List[dict]: contains the information of sampled data.
+        """
+        video_info, video_info_another = pair_video_infos
+        if len(video_info['frame_ids']) > 1 and len(
+                video_info_another['frame_ids']) > 1:
+            template_frame_ind = np.random.choice(len(video_info['frame_ids']))
+            if self.pos_prob > np.random.random():
+                left_ind = max(template_frame_ind + self.frame_range[0], 0)
+                right_ind = min(template_frame_ind + self.frame_range[1],
+                                len(video_info['frame_ids']))
+                if self.filter_template_img:
+                    ref_frames_inds = list(
+                        range(left_ind, template_frame_ind)) + list(
+                            range(template_frame_ind + 1, right_ind))
+                else:
+                    ref_frames_inds = list(range(left_ind, right_ind))
+                search_frame_ind = np.random.choice(ref_frames_inds)
+                results = self.prepare_data(
+                    video_info, [template_frame_ind, search_frame_ind],
+                    is_positive_pairs=True)
+            else:
+                search_frame_ind = np.random.choice(
+                    len(video_info_another['frame_ids']))
+                results = self.prepare_data(
+                    video_info, [template_frame_ind], is_positive_pairs=False)
+                results.extend(
+                    self.prepare_data(
+                        video_info_another, [search_frame_ind],
+                        is_positive_pairs=False))
+        else:
+            if self.pos_prob > np.random.random():
+                results = self.prepare_data(
+                    video_info, [0, 0], is_positive_pairs=True)
+            else:
+                results = self.prepare_data(
+                    video_info, [0], is_positive_pairs=False)
+                results.extend(
+                    self.prepare_data(
+                        video_info_another, [0], is_positive_pairs=False))
         return results
 
 

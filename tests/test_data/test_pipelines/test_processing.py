@@ -47,7 +47,10 @@ def test_trident_sampling():
 
 def test_pair_sampling():
     process = dict(
-        type='PairSampling', frame_range=5, pos_prob=0.8, filter_key_img=False)
+        type='PairSampling',
+        frame_range=5,
+        pos_prob=0.8,
+        filter_template_img=False)
     process = build_from_cfg(process, PIPELINES)
 
     num_frames = 60

@@ -11,7 +11,6 @@ from mmcv.utils import TORCH_VERSION, digit_version
 from mmdet.datasets.samplers import (DistributedGroupSampler,
                                      DistributedSampler, GroupSampler)
 from torch.utils.data import DataLoader
-from torch.utils.data.dataset import ConcatDataset
 from torch.utils.data.sampler import RandomSampler
 
 from mmtrack.datasets.samplers.quota_sampler import DistributedQuotaSampler
@@ -58,15 +57,21 @@ def build_dataloader(dataset,
         DataLoader: A PyTorch dataloader.
     """
     rank, world_size = get_dist_info()
+
     def is_base_sot_dataset(_dataset):
+        # handle the case: `_dataset` is a wrapper of normal dataset, such as
+        # 'RepeatDataset', 'ClassBalancedDataset' and so on.
         if hasattr(_dataset, 'dataset'):
             return is_base_sot_dataset(_dataset.dataset)
+        # handle the case: `_dataset` is a wrapper of concatenated dataset,
+        # such as `ConcatDataset`, `RandomSampleConcatDataset` and so on.
+        elif hasattr(_dataset, 'datasets'):
+            return is_base_sot_dataset(_dataset.datasets[0])
         else:
             return isinstance(_dataset, BaseSOTDataset)
+
     # We set specific data sampler for SOT datasets.
-    is_sot_dataset = is_base_sot_dataset(dataset) or (
-        isinstance(dataset, ConcatDataset)
-        and is_base_sot_dataset(dataset.datasets[0]))
+    is_sot_dataset = is_base_sot_dataset(dataset)
     if dist:
         # ----- distributed train mode ------
         if shuffle:

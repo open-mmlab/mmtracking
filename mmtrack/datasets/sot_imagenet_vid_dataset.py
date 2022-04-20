@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import mmcv
 import numpy as np
-import mmcv
 from mmdet.datasets import DATASETS
 
 from mmtrack.datasets.parsers import CocoVID
