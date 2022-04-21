@@ -97,14 +97,6 @@ class YTVOS:
         self.vids = vids
         self.cats = cats
 
-    def info(self):
-        """Print information about the annotation file.
-
-        :return:
-        """
-        for key, value in self.dataset['info'].items():
-            print('{}: {}'.format(key, value))
-
     def getAnnIds(self, vidIds=[], catIds=[], areaRng=[], iscrowd=None):
         """Get ann ids that satisfy given filter conditions. default skips that
         filter.
