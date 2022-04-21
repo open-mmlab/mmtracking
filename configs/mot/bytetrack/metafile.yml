@@ -37,3 +37,16 @@ Models:
           MOTA: 78.1
           IDF1: 74.8
     Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+
+  - Name: bytetrack_yolox_x_crowdhuman_mot20-private-half
+    In Collection: ByteTrack
+    Config: configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot20-private-half.py
+    Metadata:
+      Training Data: CrowdHuman + MOT20-half-train
+    Results:
+      - Task: Multiple Object Tracking
+        Dataset: MOT20-test
+        Metrics:
+          MOTA: 76.4
+          IDF1: 73.4
+    Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private-half_20220420_114141-40a49ff7.pth
