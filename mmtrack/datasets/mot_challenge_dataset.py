@@ -256,6 +256,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
 
         Args:
+            gt_folder (str): the name of the GT folder
             tracker_folder (str): the name of the tracker folder
             seqmap (str): the file that contains the sequence of video names
 
@@ -367,8 +368,12 @@ class MOTChallengeDataset(CocoVideoDataset):
             client = self.file_client.client
             local_dir = tempfile.TemporaryDirectory()
             # avoid using root paths
-            tmp_prefix = '/mmtracking' + os.sep + self.img_prefix.split(
-                'mmtracking')[1]
+            # use self.img_prefix.split('mmtracking')[1][1:] to del the
+            # beginning '/'
+            # when both paths begin with '/', use osp.join will
+            # ignore the first part
+            tmp_prefix = osp.join('mmtracking',
+                                  self.img_prefix.split('mmtracking')[1][1:])
             for name in names:
                 if 'half-train' in self.ann_file:
                     gt_file = osp.join(self.img_prefix,
@@ -436,8 +441,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 f.close()
 
             eval_config = trackeval.Evaluator.get_default_eval_config()
-
-            gt_folder = local_dir.name + osp.sep + tmp_prefix
+            gt_folder = osp.join(local_dir.name, tmp_prefix)
             # tracker's name is set to 'track',
             # so this word needs to be splited out
             output_folder = resfiles['track'].rsplit(os.sep, 1)[0]
