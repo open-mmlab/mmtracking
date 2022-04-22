@@ -119,34 +119,37 @@ test_pipeline = [
 data = dict(
     samples_per_gpu=28,  # 每个 GPU 中批量的大小
     workers_per_gpu=2,  # 为每个 GPU 预取数据的 Worker 的数目
-    train=[  # 训练集配置
-        dict(
-            type='RepeatDataset',  # 数据集类型
-            times=39,  # 重复次数
-            dataset=dict(
+    persistent_workers=True,  # persistent workers 设置
+    samples_per_epoch=600000,  # 每个epoch的训练样本数量
+    train=dict(
+        type='RandomSampleConcatDataset',  # 随机采样联合数据集类
+        dataset_sampling_weights=[0.25, 0.2, 0.55],  # 联合数据采样概率
+        dataset_cfgs=[
+            dict(
                 type='SOTImageNetVIDDataset',  # 数据集类型
                 ann_file=data_root +
                 'ILSVRC/annotations/imagenet_vid_train.json',  # 标注文件路径
                 img_prefix=data_root + 'ILSVRC/Data/VID',  # 图片路径前缀
-                pipeline=train_pipeline,  # 训练时的流水线
-                split='train',  # 数据集的划分子集
-                test_mode=False)),  # 是否为测试模式
-        dict(
-            type='SOTTrainDataset',  # 数据集类型
-            ann_file=data_root + 'coco/annotations/instances_train2017.json',  # 标注文件路径
-            img_prefix=data_root + 'coco/train2017',  # 图片路径前缀
-            pipeline=train_pipeline, # 训练时的流水线
-            split='train',  # 数据集的划分子集
-            test_mode=False),  # 是否为测试模式
-        dict(
-            type='SOTTrainDataset',  # 数据集类型
-            ann_file=data_root +
-            'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # 标注文件路径
-            img_prefix=data_root + 'ILSVRC/Data/DET',  # 图片路径前缀
-            pipeline=train_pipeline, # 训练时的流水线
-            split='train',  # 数据集的划分子集
-            test_mode=False)  # 是否为测试模式
-    ],
+                pipeline=train_pipeline,  # 训练的数据流水线
+                split='train',  # 数据集划分集
+                test_mode=False),  # 是否为测试模式
+            dict(
+                type='SOTCocoDataset',  # 数据集类型
+                ann_file=data_root +
+                'coco/annotations/instances_train2017.json',  # 标注文件路径
+                img_prefix=data_root + 'coco/train2017',  # 图片路径前缀
+                pipeline=train_pipeline,  # 训练的数据流水线
+                split='train',  # 数据集划分集
+                test_mode=False),  # 是否为测试模式
+            dict(
+                type='SOTCocoDataset',  # 数据集类型
+                ann_file=data_root +
+                'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # 标注文件路径
+                img_prefix=data_root + 'ILSVRC/Data/DET',  # 图片路径前缀
+                pipeline=train_pipeline,  # 训练的数据流水线
+                split='train',  # 数据集划分集
+                test_mode=False)  # 是否为测试模式
+        ]),
     val=dict(  # 验证集配置
         type='LaSOTDataset',  # 数据集类型
         ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # 数据集信息文件的路径

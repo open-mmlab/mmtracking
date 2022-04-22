@@ -118,35 +118,38 @@ test_pipeline = [
 # dataset settings
 data = dict(
     samples_per_gpu=28,  # Batch size of a single GPU
-    workers_per_gpu=2,  # Worker to pre-fetch data for each single GPU
-    train=[  # Train dataset config
-        dict(
-            type='RepeatDataset',  # Type of dataset
-            times=39,  # repeat dataset times
-            dataset=dict(
+    workers_per_gpu=8,  # Worker to pre-fetch data for each single GPU
+    persistent_workers=True,  # Setting of persistent workers
+    samples_per_epoch=600000,  # The number of training samples per epoch
+    train=dict(
+        type='RandomSampleConcatDataset',  # Sampling the comcatenated datasets ramdomly
+        dataset_sampling_weights=[0.25, 0.2, 0.55],  # The sampling weights of concatenated dataset
+        dataset_cfgs=[
+            dict(
                 type='SOTImageNetVIDDataset',  # Type of dataset
                 ann_file=data_root +
                 'ILSVRC/annotations/imagenet_vid_train.json',  # Path of annotation file
                 img_prefix=data_root + 'ILSVRC/Data/VID',  # Prefix of image path
                 pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
                 split='train',  # Split of dataset
-                test_mode=False)),  # Whether test mode
-        dict(
-            type='SOTCocoDataset',  # Type of dataset
-            ann_file=data_root + 'coco/annotations/instances_train2017.json',  # Path of annotation file
-            img_prefix=data_root + 'coco/train2017',  # Prefix of image path
-            pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
-            split='train',  # Split of dataset
-            test_mode=False),  # Whether test mode
-        dict(
-            type='SOTCocoDataset',  # Type of dataset
-            ann_file=data_root +
-            'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # Path of annotation file
-            img_prefix=data_root + 'ILSVRC/Data/DET',  # Prefix of image path
-            pipeline=train_pipeline, # pipeline, this is passed by the train_pipeline created before.
-            split='train',  # Split of dataset
-            test_mode=False)  # Whether test mode
-    ],
+                test_mode=False),  # Whether test mode
+            dict(
+                type='SOTCocoDataset',  # Type of dataset
+                ann_file=data_root +
+                'coco/annotations/instances_train2017.json',  # Path of annotation file
+                img_prefix=data_root + 'coco/train2017',  # Prefix of image path
+                pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
+                split='train',  # Split of dataset
+                test_mode=False),  # Whether test mode
+            dict(
+                type='SOTCocoDataset',  # Type of dataset
+                ann_file=data_root +
+                'ILSVRC/annotations/imagenet_det_30plus1cls.json',  # Path of annotation file
+                img_prefix=data_root + 'ILSVRC/Data/DET',  # Prefix of image path
+                pipeline=train_pipeline,  # pipeline, this is passed by the train_pipeline created before.
+                split='train',  # Split of dataset
+                test_mode=False)  # Whether test mode
+        ]),
     val=dict(  # Validation dataset config
         type='LaSOTDataset',
         ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',  # Path of dataset information file
