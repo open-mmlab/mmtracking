@@ -1,3 +1,3 @@
 cython
-numba==0.55.0
+numba==0.53.0
 numpy
