@@ -31,7 +31,7 @@ train_pipeline = [
     dict(type='SeqColorAug', prob=[1.0, 1.0]),
     dict(type='SeqBlurAug', prob=[0.0, 0.2]),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pairs']),
-    dict(type='ConcatVideoReferences'),
+    dict(type='ConcatSameTypeFrames'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 # dataset settings
@@ -68,10 +68,10 @@ data = dict(
     val=dict(
         type='OTB100Dataset',
         ann_file=data_root + 'otb100/annotations/otb100_infos.txt',
-        img_prefix=data_root + 'otb100/data',
+        img_prefix=data_root + 'otb100',
         only_eval_visible=False),
     test=dict(
         type='OTB100Dataset',
         ann_file=data_root + 'otb100/annotations/otb100_infos.txt',
-        img_prefix=data_root + 'otb100/data',
+        img_prefix=data_root + 'otb100',
         only_eval_visible=False))

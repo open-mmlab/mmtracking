@@ -90,7 +90,7 @@ train_pipeline = [
     dict(type='SeqColorAug', prob=[1.0, 1.0]),
     dict(type='SeqBlurAug', prob=[0.0, 0.2]),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pairs']),
-    dict(type='ConcatVideoReferences'),
+    dict(type='ConcatSameTypeFrames'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 test_pipeline = [
