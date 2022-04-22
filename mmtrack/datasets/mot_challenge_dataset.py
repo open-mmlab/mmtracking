@@ -374,22 +374,20 @@ class MOTChallengeDataset(CocoVideoDataset):
                     gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
                 res_file = osp.join(resfiles['track'], f'{name}.txt')
                 # copy gt file from ceph to local temporary directory
-                gt_dir_path = local_dir.name + osp.sep + self.img_prefix
-                gt_dir_path = osp.join(gt_dir_path, name, 'gt')
-                # gt_dir_path = osp.join(local_dir.name, self.img_prefix, name,
-                #                        'gt')
+                # no 'self.img_prefix'
+                gt_dir_path = osp.join(local_dir.name, name, 'gt')
                 os.makedirs(gt_dir_path)
+                gt_file_tmp = local_dir.name + gt_file.replace(
+                    self.img_prefix, '')
 
-                f = open(local_dir.name + osp.sep + gt_file, 'wb')
+                f = open(gt_file_tmp, 'wb')
                 gt_content = client.get(gt_file)
                 if hasattr(gt_content, 'tobytes'):
                     gt_content = gt_content.tobytes()
                 f.write(gt_content)
                 f.close()
                 # copy sequence file from ceph to local temporary directory
-                seqinfo_path = osp.join(
-                    local_dir.name + osp.sep + self.img_prefix, name,
-                    'seqinfo.ini')
+                seqinfo_path = osp.join(local_dir.name, name, 'seqinfo.ini')
                 f = open(seqinfo_path, 'wb')
                 seq_content = client.get(
                     osp.join(self.img_prefix, name, 'seqinfo.ini'))
@@ -398,7 +396,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 f.write(seq_content)
                 f.close()
 
-                gt = mm.io.loadtxt(osp.join(local_dir.name, gt_file))
+                gt = mm.io.loadtxt(gt_file_tmp)
                 res = mm.io.loadtxt(res_file)
                 if osp.exists(seqinfo_path) and 'MOT15' not in self.img_prefix:
                     acc, ana = mm.utils.CLEAR_MOT_M(
@@ -430,7 +428,7 @@ class MOTChallengeDataset(CocoVideoDataset):
 
             eval_config = trackeval.Evaluator.get_default_eval_config()
 
-            gt_folder = local_dir.name + osp.sep + self.img_prefix
+            gt_folder = local_dir.name
             # tracker's name is set to 'track',
             # so this word needs to be splited out
             output_folder = resfiles['track'].rsplit(os.sep, 1)[0]
