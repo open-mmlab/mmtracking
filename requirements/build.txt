@@ -1,2 +1,2 @@
 cython
-numpy
+numpy<1.22
