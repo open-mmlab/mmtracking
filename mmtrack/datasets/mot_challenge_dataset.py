@@ -373,7 +373,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             # when both paths begin with '/', use osp.join will
             # ignore the first part
             tmp_prefix = osp.join('mmtracking',
-                                  self.img_prefix.split('mmtracking')[1][1:])
+                                  self.img_prefix.split('mmtracking/')[1])
             for name in names:
                 if 'half-train' in self.ann_file:
                     gt_file = osp.join(self.img_prefix,
