@@ -37,18 +37,14 @@ train_pipeline = [
 # dataset settings
 data = dict(
     samples_per_gpu=16,
-    train=[
+    train=dict(dataset_cfgs=[
         dict(
-            type='RepeatDataset',
-            times=39,
-            dataset=dict(
-                type='SOTImageNetVIDDataset',
-                ann_file=data_root +
-                'ILSVRC/annotations/imagenet_vid_train.json',
-                img_prefix=data_root + 'ILSVRC/Data/VID',
-                pipeline=train_pipeline,
-                split='train',
-                test_mode=False)),
+            type='SOTImageNetVIDDataset',
+            ann_file=data_root + 'ILSVRC/annotations/imagenet_vid_train.json',
+            img_prefix=data_root + 'ILSVRC/Data/VID',
+            pipeline=train_pipeline,
+            split='train',
+            test_mode=False),
         dict(
             type='SOTCocoDataset',
             ann_file=data_root + 'coco/annotations/instances_train2017.json',
@@ -64,7 +60,7 @@ data = dict(
             pipeline=train_pipeline,
             split='train',
             test_mode=False)
-    ],
+    ]),
     val=dict(
         type='OTB100Dataset',
         ann_file=data_root + 'otb100/annotations/otb100_infos.txt',

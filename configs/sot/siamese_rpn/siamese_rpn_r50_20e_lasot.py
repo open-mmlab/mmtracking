@@ -108,35 +108,38 @@ test_pipeline = [
 # dataset settings
 data = dict(
     samples_per_gpu=28,
-    workers_per_gpu=2,
-    train=[
-        dict(
-            type='RepeatDataset',
-            times=39,
-            dataset=dict(
+    workers_per_gpu=8,
+    persistent_workers=True,
+    samples_per_epoch=600000,
+    train=dict(
+        type='RandomSampleConcatDataset',
+        dataset_sampling_weights=[0.25, 0.2, 0.55],
+        dataset_cfgs=[
+            dict(
                 type='SOTImageNetVIDDataset',
                 ann_file=data_root +
                 'ILSVRC/annotations/imagenet_vid_train.json',
                 img_prefix=data_root + 'ILSVRC/Data/VID',
                 pipeline=train_pipeline,
                 split='train',
-                test_mode=False)),
-        dict(
-            type='SOTCocoDataset',
-            ann_file=data_root + 'coco/annotations/instances_train2017.json',
-            img_prefix=data_root + 'coco/train2017',
-            pipeline=train_pipeline,
-            split='train',
-            test_mode=False),
-        dict(
-            type='SOTCocoDataset',
-            ann_file=data_root +
-            'ILSVRC/annotations/imagenet_det_30plus1cls.json',
-            img_prefix=data_root + 'ILSVRC/Data/DET',
-            pipeline=train_pipeline,
-            split='train',
-            test_mode=False)
-    ],
+                test_mode=False),
+            dict(
+                type='SOTCocoDataset',
+                ann_file=data_root +
+                'coco/annotations/instances_train2017.json',
+                img_prefix=data_root + 'coco/train2017',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False),
+            dict(
+                type='SOTCocoDataset',
+                ann_file=data_root +
+                'ILSVRC/annotations/imagenet_det_30plus1cls.json',
+                img_prefix=data_root + 'ILSVRC/Data/DET',
+                pipeline=train_pipeline,
+                split='train',
+                test_mode=False)
+        ]),
     val=dict(
         type='LaSOTDataset',
         ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',
