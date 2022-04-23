@@ -104,6 +104,7 @@ Models:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 49.1
-          Norm precision: 57.0
-    Weights: https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth
+          Success: 50.4
+          Norm precision: 59.6
+          Precision: 49.2
+    Weights: https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_20e_lasot_20220422_181501-ce30fdfd.pth

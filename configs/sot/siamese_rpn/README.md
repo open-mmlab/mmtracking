@@ -37,7 +37,7 @@ We provide the best model with its configuration and training log.
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :----: | :------: | :--------: |
 | SiamRPN++ |    R-50    |  -  |   20e    | 7.54        | 50.0              | 50.4 | 59.6 |  49.7 | [config](siamese_rpn_r50_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845.log.json) |
-| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 49.1 | 57.0 | -  | [config](siamese_rpn_r50_fp16_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245.log.json) |
+| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 50.4 | 59.6 | 49.2  | [config](siamese_rpn_r50_fp16_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_20e_lasot_20220422_181501-ce30fdfd.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_20e_lasot_20220422_181501.log.json) |
 
 Note:
 
