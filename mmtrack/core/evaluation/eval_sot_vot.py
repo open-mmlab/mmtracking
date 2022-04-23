@@ -24,7 +24,7 @@ def bbox2region(bbox):
     if vot is None:
         raise ImportError(
             'Please run'
-            'pip install git+https://github.com/votchallenge/toolkit.git'
+            ' pip install git+https://github.com/votchallenge/toolkit.git '
             'to manually install vot-toolkit')
 
     if len(bbox) == 1:
