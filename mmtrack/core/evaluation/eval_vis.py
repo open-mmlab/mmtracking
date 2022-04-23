@@ -1,29 +1,27 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import contextlib
-import copy
 import io
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
-import mmcv
 from mmcv.utils import print_log
 
 from mmtrack.core.utils import YTVIS, YTVISeval
 
 
-def eval_vis(json_results, vis_anns_file, logger=None):
-    """Evaluation VIS metrics.
+def eval_vis(json_results, vis_results, logger=None):
+    """Evaluation on VIS metrics.
 
     Args:
         json_results (dict(list[dict])): Testing results of the VIS dataset.
-        vis_anns_file (str): The path of COCO style annotation file.
+        vis_results (dict(list[dict])): The annotation in the format
+                of YouTube-VIS.
         logger (logging.Logger | str | None): Logger used for printing
                 related information during evaluation. Default: None.
 
     Returns:
         dict[str, float]: Evaluation results.
     """
-    VIS = convert_vis_fmt(vis_anns_file)
-    ytvis = YTVIS(VIS)
+    ytvis = YTVIS(vis_results)
 
     if len(ytvis.anns) == 0:
         print('Annotations does not exist')
@@ -32,8 +30,7 @@ def eval_vis(json_results, vis_anns_file, logger=None):
     ytvis_dets = ytvis.loadRes(json_results)
     vid_ids = ytvis.getVidIds()
 
-    metric = 'segm'
-    iou_type = metric
+    iou_type = metric = 'segm'
     eval_results = OrderedDict()
     ytvisEval = YTVISeval(ytvis, ytvis_dets, iou_type)
     ytvisEval.params.vidIds = vid_ids
@@ -68,59 +65,3 @@ def eval_vis(json_results, vis_anns_file, logger=None):
         f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
         f'{ap[4]:.3f} {ap[5]:.3f}')
     return eval_results
-
-
-def convert_vis_fmt(vis_anns_file):
-    """Convert the annotation to the format of YouTube-VIS.
-
-    Args:
-        vis_anns_file: The path of COCO style annotation file.
-
-    Returns:
-        dict: A dict with 3 keys, ``categories``, ``annotations``
-            and ``videos``.
-        - | ``categories`` (dict{list[dict]}): Each list has a dict
-            with 2 keys, ``id`` and ``name``.
-        - | ``videos`` (dict{list[dict]}): Each list has a dict with
-            4 keys of video info, ``id``, ``name``, ``width`` and ``height``.
-        - | ``annotations`` (dict{list[dict]}): Each list has a dict with
-            7 keys of video info, ``category_id``, ``segmentations``,
-            ``bboxes``, ``video_id``, ``areas``, ``id`` and ``iscrowd``.
-    """
-
-    VIS = defaultdict(list)
-    ori_anns = mmcv.load(vis_anns_file)
-    VIS['categories'] = copy.deepcopy(ori_anns['categories'])
-    VIS['videos'] = copy.deepcopy(ori_anns['videos'])
-
-    instance_info = defaultdict(list)
-    frame_id = defaultdict(list)
-    len_video = defaultdict(list)
-    for ann_info in ori_anns['annotations']:
-        instance_info[ann_info['instance_id']].append(ann_info)
-
-    for img_info in ori_anns['images']:
-        frame_id[img_info['id']] = img_info['frame_id']
-
-        len_video[img_info['video_id']] = max(1, img_info['frame_id'] + 1)
-    for idx in instance_info:
-        cur_video_len = len_video[instance_info[idx][0]['video_id']]
-        segm = [None] * cur_video_len
-        bbox = [None] * cur_video_len
-        area = [None] * cur_video_len
-
-        for ann_info in instance_info[idx]:
-            segm[frame_id[ann_info['image_id']]] = ann_info['segmentation']
-            bbox[frame_id[ann_info['image_id']]] = ann_info['bbox']
-            area[frame_id[ann_info['image_id']]] = ann_info['area']
-
-        instance = dict(
-            category_id=instance_info[idx][0]['category_id'],
-            segmentations=segm,
-            bboxes=bbox,
-            video_id=instance_info[idx][0]['video_id'],
-            areas=area,
-            id=instance_info[idx][0]['instance_id'],
-            iscrowd=instance_info[idx][0]['iscrowd'])
-        VIS['annotations'].append(instance)
-    return dict(VIS)
