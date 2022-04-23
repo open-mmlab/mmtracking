@@ -2,8 +2,10 @@
 
 import os.path as osp
 
+import mmcv
+
 from mmtrack.core.evaluation import eval_vis
-from mmtrack.core.utils import YTVOS
+from mmtrack.core.utils import YTVIS
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
 
@@ -12,20 +14,21 @@ DEMO_RES_FILE = f'{PREFIX}/demo_vis_data/results.json'
 
 
 def test_eval_vis():
-    eval_results = eval_vis(DEMO_RES_FILE, DEMO_ANN_FILE, None)
+    json_results = mmcv.load(DEMO_RES_FILE)
+    eval_results = eval_vis(json_results, DEMO_ANN_FILE, None)
     assert eval_results is not None
     assert len(eval_results) == 7
 
-    ytvos = YTVOS(DEMO_ANN_FILE)
-    assert isinstance(ytvos, YTVOS)
+    ytvis = YTVIS(DEMO_ANN_FILE)
+    assert isinstance(ytvis, YTVIS)
 
-    ytvos.anns[1]['iscrowd'] = 1
-    ids = ytvos.getAnnIds()
+    ytvis.anns[1]['iscrowd'] = 1
+    ids = ytvis.getAnnIds()
     assert ids is not None
 
-    res = ytvos.loadAnns(1)
+    res = ytvis.loadAnns(1)
     assert res is not None
-    res = ytvos.loadCats(1)
+    res = ytvis.loadCats(1)
     assert res is not None
-    res = ytvos.loadVids(1)
+    res = ytvis.loadVids(1)
     assert res is not None

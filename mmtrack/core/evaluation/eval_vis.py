@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
 import contextlib
 import copy
 import io
@@ -8,64 +7,41 @@ from collections import OrderedDict, defaultdict
 import mmcv
 from mmcv.utils import print_log
 
-from mmtrack.core.utils import YTVOS, YTVOSeval
+from mmtrack.core.utils import YTVIS, YTVISeval
 
 
-class YTVIS(YTVOS):
-    """Override the init of VTVOS to accept dict result.
-
-    Args:
-        json_result (dict): YouTube-VIS format json result.
-    """
-
-    def __init__(self, json_result):
-        self.dataset, self.anns, self.cats, self.vids = dict(), dict(), dict(
-        ), dict()
-        self.vidToAnns, self.catToVids = defaultdict(list), defaultdict(list)
-        if json_result is not None:
-            dataset = json_result
-            assert type(
-                dataset
-            ) == dict, 'annotation file format {} not supported'.format(
-                type(dataset))
-            self.dataset = dataset
-            self.createIndex()
-
-
-def eval_vis(result_file, own_anns_file, logger):
+def eval_vis(json_results, vis_anns_file, logger=None):
     """Evaluation VIS metrics.
 
     Args:
-        result_file (str): The path of json file which has been
-            converted to YouTube-VIS format.
-        own_anns_file (str): The path of COCO style annotation file.
+        json_results (dict(list[dict])): Testing results of the VIS dataset.
+        vis_anns_file (str): The path of COCO style annotation file.
         logger (logging.Logger | str | None): Logger used for printing
                 related information during evaluation. Default: None.
 
     Returns:
         dict[str, float]: Evaluation results.
     """
-    VIS = get_vis_json(own_anns_file)
-    ytvos = YTVIS(VIS)
-    assert isinstance(ytvos, YTVIS)
+    VIS = convert_vis_fmt(vis_anns_file)
+    ytvis = YTVIS(VIS)
 
-    if len(ytvos.anns) == 0:
+    if len(ytvis.anns) == 0:
         print('Annotations does not exist')
         return
-    assert result_file.endswith('.json')
-    ytvos_dets = ytvos.loadRes(result_file)
-    vid_ids = ytvos.getVidIds()
+
+    ytvis_dets = ytvis.loadRes(json_results)
+    vid_ids = ytvis.getVidIds()
 
     metric = 'segm'
     iou_type = metric
     eval_results = OrderedDict()
-    ytvosEval = YTVOSeval(ytvos, ytvos_dets, iou_type)
-    ytvosEval.params.vidIds = vid_ids
-    ytvosEval.evaluate()
-    ytvosEval.accumulate()
+    ytvisEval = YTVISeval(ytvis, ytvis_dets, iou_type)
+    ytvisEval.params.vidIds = vid_ids
+    ytvisEval.evaluate()
+    ytvisEval.accumulate()
     redirect_string = io.StringIO()
     with contextlib.redirect_stdout(redirect_string):
-        ytvosEval.summarize()
+        ytvisEval.summarize()
     print_log('\n' + redirect_string.getvalue(), logger=logger)
 
     metric_items = ['mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l']
@@ -76,29 +52,29 @@ def eval_vis(result_file, own_anns_file, logger):
         'mAP_s': 3,
         'mAP_m': 4,
         'mAP_l': 5,
-        'AR@100': 6,
-        'AR@300': 7,
-        'AR@1000': 8,
-        'AR_s@1000': 9,
-        'AR_m@1000': 10,
-        'AR_l@1000': 11
+        'AR@1': 6,
+        'AR@10': 7,
+        'AR@100': 8,
+        'AR_s@100': 9,
+        'AR_m@100': 10,
+        'AR_l@100': 11
     }
     for metric_item in metric_items:
         key = f'{metric}_{metric_item}'
-        val = float(f'{ytvosEval.stats[coco_metric_names[metric_item]]:.3f}')
+        val = float(f'{ytvisEval.stats[coco_metric_names[metric_item]]:.3f}')
         eval_results[key] = val
-    ap = ytvosEval.stats[:6]
+    ap = ytvisEval.stats[:6]
     eval_results[f'{metric}_mAP_copypaste'] = (
         f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
         f'{ap[4]:.3f} {ap[5]:.3f}')
     return eval_results
 
 
-def get_vis_json(own_anns_file):
+def convert_vis_fmt(vis_anns_file):
     """Convert the annotation to the format of YouTube-VIS.
 
     Args:
-        own_anns_file: The path of COCO style annotation file.
+        vis_anns_file: The path of COCO style annotation file.
 
     Returns:
         dict: A dict with 3 keys, ``categories``, ``annotations``
@@ -113,17 +89,17 @@ def get_vis_json(own_anns_file):
     """
 
     VIS = defaultdict(list)
-    own_anns = mmcv.load(own_anns_file)
-    VIS['categories'] = copy.deepcopy(own_anns['categories'])
-    VIS['videos'] = copy.deepcopy(own_anns['videos'])
+    ori_anns = mmcv.load(vis_anns_file)
+    VIS['categories'] = copy.deepcopy(ori_anns['categories'])
+    VIS['videos'] = copy.deepcopy(ori_anns['videos'])
 
     instance_info = defaultdict(list)
     frame_id = defaultdict(list)
     len_video = defaultdict(list)
-    for ann_info in own_anns['annotations']:
+    for ann_info in ori_anns['annotations']:
         instance_info[ann_info['instance_id']].append(ann_info)
 
-    for img_info in own_anns['images']:
+    for img_info in ori_anns['images']:
         frame_id[img_info['id']] = img_info['frame_id']
 
         len_video[img_info['video_id']] = max(1, img_info['frame_id'] + 1)

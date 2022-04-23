@@ -12,13 +12,13 @@ import numpy as np
 from pycocotools import mask as maskUtils
 
 
-class YTVOSeval:
+class YTVISeval:
     # Interface for evaluating video instance segmentation on
     # the YouTubeVIS dataset.
     #
-    # The usage for YTVOSeval is as follows:
+    # The usage for YTVISeval is as follows:
     #  cocoGt=..., cocoDt=...       # load dataset and results
-    #  E = YTVOSeval(cocoGt,cocoDt); # initialize YTVOSeval object
+    #  E = YTVISeval(cocoGt,cocoDt); # initialize YTVISeval object
     #  E.params.recThrs = ...;      # set parameters as desired
     #  E.evaluate();                # run per image evaluation
     #  E.accumulate();              # accumulate per image results

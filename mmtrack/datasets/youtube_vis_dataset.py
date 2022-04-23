@@ -54,7 +54,7 @@ class YouTubeVISDataset(CocoVideoDataset):
                        results,
                        resfile_path=None,
                        metrics=['track_segm'],
-                       save_zip=True):
+                       return_json=False):
         """Format the results to a zip file (standard format for YouTube-VIS
         Challenge).
 
@@ -64,8 +64,8 @@ class YouTubeVISDataset(CocoVideoDataset):
                 Defaults to None.
             metrics (list[str], optional): The results of the specific metrics
                 will be formatted. Defaults to ['track_segm'].
-            save_zip (bool, optional): Whether to save the .zip file.
-                Defaults to True.
+            return_json (bool, optional): Whether to return the
+                json results file directly. Defaults to False.
 
 
         Returns:
@@ -130,25 +130,22 @@ class YouTubeVISDataset(CocoVideoDataset):
                     else:
                         output['segmentations'].append(None)
                 json_results.append(output)
+
+        if return_json:
+            return json_results
         mmcv.dump(json_results, resfiles)
 
         # zip the json file in order to submit to the test server.
-        if save_zip:
-            zip_file_name = osp.join(resfile_path, 'submission_file.zip')
-            zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-            print_log(f"zip the 'results.json' into '{zip_file_name}', "
-                      'please submmit the zip file to the test server')
-            zf.write(resfiles, 'results.json')
-            zf.close()
+        zip_file_name = osp.join(resfile_path, 'submission_file.zip')
+        zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
+        print_log(f"zip the 'results.json' into '{zip_file_name}', "
+                  'please submmit the zip file to the test server')
+        zf.write(resfiles, 'results.json')
+        zf.close()
 
         return resfiles, tmp_dir
 
-    def evaluate(
-        self,
-        results,
-        metric=['track_segm'],
-        logger=None,
-    ):
+    def evaluate(self, results, metric=['track_segm'], logger=None):
         """Evaluation in COCO protocol.
 
         Args:
@@ -173,8 +170,8 @@ class YouTubeVISDataset(CocoVideoDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         eval_results = dict()
-        resfiles, tmp_dir = self.format_results(results, save_zip=False)
-        track_segm_results = eval_vis(resfiles, self.ann_file, logger)
+        json_results = self.format_results(results, return_json=True)
+        track_segm_results = eval_vis(json_results, self.ann_file, logger)
         eval_results.update(track_segm_results)
 
         return eval_results

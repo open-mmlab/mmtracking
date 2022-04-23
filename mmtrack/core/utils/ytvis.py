@@ -5,7 +5,7 @@ __author__ = 'ychfan'
 # Interface for accessing the YouTubeVIS dataset.
 
 # The following API functions are defined:
-#  YTVOS       - YTVOS api class that loads YouTubeVIS annotation file
+#  YTVIS       - YTVIS api class that loads YouTubeVIS annotation file
 #  and prepare data structures.
 #  decodeMask - Decode binary mask M encoded via run-length encoding.
 #  encodeMask - Encode binary mask M using run-length encoding.
@@ -40,7 +40,7 @@ def _isArrayLike(obj):
     return hasattr(obj, '__iter__') and hasattr(obj, '__len__')
 
 
-class YTVOS:
+class YTVIS:
 
     def __init__(self, annotation_file=None):
         """Constructor of Microsoft COCO helper class for reading and
@@ -57,7 +57,10 @@ class YTVOS:
         if annotation_file is not None:
             print('loading annotations into memory...')
             tic = time.time()
-            dataset = json.load(open(annotation_file, 'r'))
+            if type(annotation_file) == str:
+                dataset = json.load(open(annotation_file, 'r'))
+            else:
+                dataset = annotation_file
             assert type(
                 dataset
             ) == dict, 'annotation file format {} not supported'.format(
@@ -222,7 +225,7 @@ class YTVOS:
         :param   resFile (str)     : file name of result file
         :return: res (obj)         : result api object
         """
-        res = YTVOS()
+        res = YTVIS()
         res.dataset['videos'] = [img for img in self.dataset['videos']]
 
         print('Loading and preparing results...')
