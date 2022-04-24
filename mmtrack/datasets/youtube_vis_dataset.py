@@ -69,7 +69,6 @@ class YouTubeVISDataset(CocoVideoDataset):
             return_json (bool, optional): Whether to return the
                 json results file directly. Defaults to False.
 
-
         Returns:
             tuple: (resfiles, tmp_dir), resfiles is the path of the result
             json file, tmp_dir is the temporal directory created for saving
