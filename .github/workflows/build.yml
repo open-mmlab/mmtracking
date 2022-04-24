@@ -64,6 +64,7 @@ jobs:
           coverage run --branch --source mmtrack -m pytest tests/
           coverage xml
           coverage report -m
+          
   build_cuda101:
     runs-on: ubuntu-18.04
     container:
