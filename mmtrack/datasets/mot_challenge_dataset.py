@@ -22,6 +22,7 @@ except ImportError:
 @DATASETS.register_module()
 class MOTChallengeDataset(CocoVideoDataset):
     """Dataset for MOTChallenge.
+
     Args:
         visibility_thr (float, optional): The minimum visibility
             for the objects during training. Default to -1.
@@ -360,7 +361,6 @@ class MOTChallengeDataset(CocoVideoDataset):
             distth = 1 - track_iou_thr
             accs = []
             # support loading data from ceph
-            client = self.file_client
             local_dir = tempfile.TemporaryDirectory()
 
             for name in names:
@@ -377,11 +377,12 @@ class MOTChallengeDataset(CocoVideoDataset):
                 # no 'self.img_prefix'
                 gt_dir_path = osp.join(local_dir.name, name, 'gt')
                 os.makedirs(gt_dir_path)
-                gt_file_tmp = local_dir.name + gt_file.replace(
-                    self.img_prefix, '')
+                gt_file_tmp = osp.join(
+                    local_dir.name,
+                    gt_file.replace(gt_file.split(name)[0], ''))
 
                 f = open(gt_file_tmp, 'wb')
-                gt_content = client.get(gt_file)
+                gt_content = self.file_client.get(gt_file)
                 if hasattr(gt_content, 'tobytes'):
                     gt_content = gt_content.tobytes()
                 f.write(gt_content)
@@ -389,7 +390,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 # copy sequence file from ceph to local temporary directory
                 seqinfo_path = osp.join(local_dir.name, name, 'seqinfo.ini')
                 f = open(seqinfo_path, 'wb')
-                seq_content = client.get(
+                seq_content = self.file_client.get(
                     osp.join(self.img_prefix, name, 'seqinfo.ini'))
                 if hasattr(seq_content, 'tobytes'):
                     seq_content = seq_content.tobytes()
@@ -428,12 +429,11 @@ class MOTChallengeDataset(CocoVideoDataset):
 
             eval_config = trackeval.Evaluator.get_default_eval_config()
 
-            gt_folder = local_dir.name
             # tracker's name is set to 'track',
             # so this word needs to be splited out
             output_folder = resfiles['track'].rsplit(os.sep, 1)[0]
             dataset_config = self.get_dataset_cfg_for_hota(
-                gt_folder, output_folder, seqmap)
+                local_dir.name, output_folder, seqmap)
 
             evaluator = trackeval.Evaluator(eval_config)
             dataset = [trackeval.datasets.MotChallenge2DBox(dataset_config)]
