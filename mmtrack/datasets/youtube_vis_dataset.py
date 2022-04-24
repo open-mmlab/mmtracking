@@ -179,9 +179,9 @@ class YouTubeVISDataset(CocoVideoDataset):
         return eval_results
 
     def convert_vis_format(self):
-        """Convert the annotation to the format of YouTube-VIS.
-        The main difference between the two is the format of 'annotation'.
-        Before modification, it is recorded in the unit of images, and after
+        """Convert the annotation to the format of YouTube-VIS. The main
+        difference between the two is the format of 'annotation'. Before
+        modification, it is recorded in the unit of images, and after
         modification, it is recorded in the unit of instances.
 
         Returns:
@@ -218,12 +218,10 @@ class YouTubeVISDataset(CocoVideoDataset):
             area = [None] * cur_video_len
 
             for ann_info in instance_infos[ins_id]:
-                segm[frame_id_mapping[ann_info['image_id']]] = \
-                    ann_info['segmentation']
-                bbox[frame_id_mapping[ann_info['image_id']]] = \
-                    ann_info['bbox']
-                area[frame_id_mapping[ann_info['image_id']]] = \
-                    ann_info['area']
+                segm[frame_id_mapping[
+                    ann_info['image_id']]] = ann_info['segmentation']
+                bbox[frame_id_mapping[ann_info['image_id']]] = ann_info['bbox']
+                area[frame_id_mapping[ann_info['image_id']]] = ann_info['area']
 
             instance = dict(
                 category_id=instance_infos[ins_id][0]['category_id'],
