@@ -89,7 +89,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         Args:
             ann_info (list[dict]): Annotation info of an image.
             with_mask (bool): Whether to parse mask annotations.
-            
+
         Returns:
             dict: A dict containing the following keys: bboxes, bboxes_ignore,
             labels, masks, seg_map. "masks" are raw annotations and not
@@ -153,7 +153,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 Defaults to None.
             metrics (list[str], optional): The results of the specific metrics
                 will be formatted.. Defaults to ['track'].
-                
+
         Returns:
             tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
             the filepaths, names is a list containing the name of the
@@ -259,7 +259,7 @@ class MOTChallengeDataset(CocoVideoDataset):
             gt_folder (str): the name of the GT folder
             tracker_folder (str): the name of the tracker folder
             seqmap (str): the file that contains the sequence of video names
-            
+
         Returns:
             Dataset Configs for MotChallenge2DBox.
         """
@@ -342,7 +342,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 evaluation. Defaults to 0.5.
             track_iou_thr (float, optional): IoU threshold for tracking
                 evaluation.. Defaults to 0.5.
-                
+
         Returns:
             dict[str, float]: MOTChallenge style evaluation metric.
         """
