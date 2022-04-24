@@ -36,8 +36,8 @@ We provide the best model with its configuration and training log.
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :----: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    | 7.54        | 50.0              | 50.1 | 59.1 |  48.7 | [config](siamese_rpn_r50_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612.log.json) |
-| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 49.1 | 57.0 | -  | [config](siamese_rpn_r50_fp16_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245-6733c67e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_1x_lasot_20210731_110245.log.json) |
+| SiamRPN++ |    R-50    |  -  |   20e    | 7.54        | 50.0              | 50.4 | 59.6 |  49.7 | [config](siamese_rpn_r50_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845.log.json) |
+| SiamRPN++ <br> (FP16) |    R-50    |  -  |   20e    | -        | -              | 50.4 | 59.6 | 49.2  | [config](siamese_rpn_r50_fp16_20e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_20e_lasot_20220422_181501-ce30fdfd.pth) &#124; [log](https://download.openmmlab.com/mmtracking/fp16/siamese_rpn_r50_fp16_20e_lasot_20220422_181501.log.json) |
 
 Note:
 
@@ -54,7 +54,7 @@ The results below are achieved without hyperparameters search.
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm Precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    | 7.54     | -             | 59.8 | 77.3 | 80 | [config](siamese_rpn_r50_20e_uav123.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20211203_153949-6d82f39e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_1x_uav123_20211203_153949.log.json) |
+| SiamRPN++ |    R-50    |  -  |   20e    | 7.54     | -             | 60 | 77.3 | 80.3 | [config](siamese_rpn_r50_20e_uav123.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_20e_uav123_20220420_181845-dc2d4831.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_20e_uav123_20220420_181845.log.json) |
 
 ### TrackingNet
 
@@ -62,7 +62,7 @@ The results of SiameseRPN++ in TrackingNet are reimplemented by ourselves. The b
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision |Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    |  7.54     | -             | 69 | 75.8 | 63.2 | [config](siamese_rpn_r50_20e_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_1x_lasot_20211203_151612.log.json) |
+| SiamRPN++ |    R-50    |  -  |   20e    |  7.54     | -             | 68.8 | 75.9 | 63.2 | [config](siamese_rpn_r50_20e_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845.log.json) |
 
 ### OTB100
 
@@ -74,7 +74,7 @@ If you want to get better results, you can use the best checkpoint to search the
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm Precision | Precision | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    |  -   | -              | 65.1 | 82 | 86.1 | [config](siamese_rpn_r50_20e_otb100.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20211203_154048-9dfde4fa.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_1x_otb100_20211203_154048.log.json) |
+| SiamRPN++ |    R-50    |  -  |   20e    |  -   | -              | 64.9 | 82.4 | 86.3 | [config](siamese_rpn_r50_20e_otb100.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_20e_otb100_20220421_144232-6b8f1730.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_20e_otb100_20220421_144232.log.json) |
 
 ### VOT2018
 
@@ -86,4 +86,4 @@ If you want to get better results, you can use the best checkpoint to search the
 
 | Method |    Backbone     |  Style  | Lr schd | Mem (GB) | Inf time (fps) | EAO | Accuracy | Robustness | Config | Download |
 | :-------------: | :-------------: | :-----: | :-----: | :------: | :------------: | :----: | :----: | :------: | :------: | :--------: |
-| SiamRPN++ |    R-50    |  -  |   20e    |  -   | -              | 0.348 | 0.578 | 0.272 | [config](siamese_rpn_r50_20e_vot2018.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_1x_vot2018_20211206_211710-10e082cd.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_1x_vot2018_20211206_211710.log.json) |
+| SiamRPN++ |    R-50    |  -  |   20e    |  -   | -              | 0.348 | 0.588 | 0.295 | [config](siamese_rpn_r50_20e_vot2018.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_20e_vot2018_20220420_181845-1111f25e.pth) &#124; [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_20e_vot2018_20220420_181845.log.json) |
