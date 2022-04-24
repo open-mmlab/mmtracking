@@ -172,26 +172,28 @@ class YouTubeVISDataset(CocoVideoDataset):
 
         eval_results = dict()
         json_results = self.format_results(results, return_json=True)
-        vis_results = self.convert_vis_fmt()
+        vis_results = self.convert_vis_format()
         track_segm_results = eval_vis(json_results, vis_results, logger)
         eval_results.update(track_segm_results)
 
         return eval_results
 
-    def convert_vis_fmt(self):
+    def convert_vis_format(self):
         """Convert the annotation to the format of YouTube-VIS.
+        The main difference between the two is the format of 'annotation'.
+        Before modification, it is recorded in the unit of images, and after
+        modification, it is recorded in the unit of instances.
 
         Returns:
             dict: A dict with 3 keys, ``categories``, ``annotations``
                 and ``videos``.
-            - | ``categories`` (dict{list[dict]}): Each list has a dict
-                with 2 keys, ``id`` and ``name``.
-            - | ``videos`` (dict{list[dict]}): Each list has a dict with
-                4 keys of video info, ``id``, ``name``, ``width`` and
-                ``height``.
-            - | ``annotations`` (dict{list[dict]}): Each list has a dict with
-                7 keys of video info, ``category_id``, ``segmentations``,
-                ``bboxes``, ``video_id``, ``areas``, ``id`` and ``iscrowd``.
+            - | ``categories`` (list[dict]): Each dict has 2 keys,
+                ``id`` and ``name``.
+            - | ``videos`` (list[dict]): Each dict has 4 keys of video info,
+                ``id``, ``name``, ``width`` and ``height``.
+            - | ``annotations`` (list[dict]): Each dict has 7 keys of video info,
+                ``category_id``, ``segmentations``, ``bboxes``, ``video_id``,
+                ``areas``, ``id`` and ``iscrowd``.
         """
 
         VIS = defaultdict(list)
@@ -199,34 +201,34 @@ class YouTubeVISDataset(CocoVideoDataset):
         VIS['categories'] = copy.deepcopy(ori_anns['categories'])
         VIS['videos'] = copy.deepcopy(ori_anns['videos'])
 
-        instance_info = defaultdict(list)
-        frame_id = defaultdict(list)
-        len_video = defaultdict(list)
+        instance_infos = defaultdict(list)
+        frame_id_mapping = dict() # mapping from image_id to frame_id
+        len_videos = dict() # mapping from video_id to video_length
         for ann_info in ori_anns['annotations']:
-            instance_info[ann_info['instance_id']].append(ann_info)
+            instance_infos[ann_info['instance_id']].append(ann_info)
 
         for img_info in ori_anns['images']:
-            frame_id[img_info['id']] = img_info['frame_id']
+            frame_id_mapping[img_info['id']] = img_info['frame_id']
 
-            len_video[img_info['video_id']] = max(1, img_info['frame_id'] + 1)
-        for idx in instance_info:
-            cur_video_len = len_video[instance_info[idx][0]['video_id']]
+            len_videos[img_info['video_id']] = max(1, img_info['frame_id'] + 1)
+        for ins_id in instance_infos:
+            cur_video_len = len_videos[instance_infos[ins_id][0]['video_id']]
             segm = [None] * cur_video_len
             bbox = [None] * cur_video_len
             area = [None] * cur_video_len
 
-            for ann_info in instance_info[idx]:
-                segm[frame_id[ann_info['image_id']]] = ann_info['segmentation']
-                bbox[frame_id[ann_info['image_id']]] = ann_info['bbox']
-                area[frame_id[ann_info['image_id']]] = ann_info['area']
+            for ann_info in instance_infos[ins_id]:
+                segm[frame_id_mapping[ann_info['image_id']]] = ann_info['segmentation']
+                bbox[frame_id_mapping[ann_info['image_id']]] = ann_info['bbox']
+                area[frame_id_mapping[ann_info['image_id']]] = ann_info['area']
 
             instance = dict(
-                category_id=instance_info[idx][0]['category_id'],
+                category_id=instance_infos[ins_id][0]['category_id'],
                 segmentations=segm,
                 bboxes=bbox,
-                video_id=instance_info[idx][0]['video_id'],
+                video_id=instance_infos[ins_id][0]['video_id'],
                 areas=area,
-                id=instance_info[idx][0]['instance_id'],
-                iscrowd=instance_info[idx][0]['iscrowd'])
+                id=instance_infos[ins_id][0]['instance_id'],
+                iscrowd=instance_infos[ins_id][0]['iscrowd'])
             VIS['annotations'].append(instance)
         return dict(VIS)
