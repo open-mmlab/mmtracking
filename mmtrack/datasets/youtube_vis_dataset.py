@@ -191,9 +191,9 @@ class YouTubeVISDataset(CocoVideoDataset):
                 ``id`` and ``name``.
             - | ``videos`` (list[dict]): Each dict has 4 keys of video info,
                 ``id``, ``name``, ``width`` and ``height``.
-            - | ``annotations`` (list[dict]): Each dict has 7 keys of video info,
-                ``category_id``, ``segmentations``, ``bboxes``, ``video_id``,
-                ``areas``, ``id`` and ``iscrowd``.
+            - | ``annotations`` (list[dict]): Each dict has 7 keys of video
+                info, ``category_id``, ``segmentations``, ``bboxes``,
+                ``video_id``, ``areas``, ``id`` and ``iscrowd``.
         """
 
         VIS = defaultdict(list)
@@ -202,8 +202,8 @@ class YouTubeVISDataset(CocoVideoDataset):
         VIS['videos'] = copy.deepcopy(ori_anns['videos'])
 
         instance_infos = defaultdict(list)
-        frame_id_mapping = dict() # mapping from image_id to frame_id
-        len_videos = dict() # mapping from video_id to video_length
+        frame_id_mapping = dict()  # mapping from image_id to frame_id
+        len_videos = dict()  # mapping from video_id to video_length
         for ann_info in ori_anns['annotations']:
             instance_infos[ann_info['instance_id']].append(ann_info)
 
@@ -218,9 +218,12 @@ class YouTubeVISDataset(CocoVideoDataset):
             area = [None] * cur_video_len
 
             for ann_info in instance_infos[ins_id]:
-                segm[frame_id_mapping[ann_info['image_id']]] = ann_info['segmentation']
-                bbox[frame_id_mapping[ann_info['image_id']]] = ann_info['bbox']
-                area[frame_id_mapping[ann_info['image_id']]] = ann_info['area']
+                segm[frame_id_mapping[ann_info['image_id']]] = \
+                    ann_info['segmentation']
+                bbox[frame_id_mapping[ann_info['image_id']]] = \
+                    ann_info['bbox']
+                area[frame_id_mapping[ann_info['image_id']]] = \
+                    ann_info['area']
 
             instance = dict(
                 category_id=instance_infos[ins_id][0]['category_id'],
