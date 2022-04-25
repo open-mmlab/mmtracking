@@ -380,19 +380,20 @@ class MOTChallengeDataset(CocoVideoDataset):
                 # copy gt file from ceph to local temporary directory
                 gt_dir_path = osp.join(local_dir.name, name, 'gt')
                 os.makedirs(gt_dir_path)
-                gt_file_tmp = osp.join(
+                copied_gt_file = osp.join(
                     local_dir.name,
                     gt_file.replace(gt_file.split(name)[0], ''))
 
-                f = open(gt_file_tmp, 'wb')
+                f = open(copied_gt_file, 'wb')
                 gt_content = self.file_client.get(gt_file)
                 if hasattr(gt_content, 'tobytes'):
                     gt_content = gt_content.tobytes()
                 f.write(gt_content)
                 f.close()
                 # copy sequence file from ceph to local temporary directory
-                seqinfo_path = osp.join(local_dir.name, name, 'seqinfo.ini')
-                f = open(seqinfo_path, 'wb')
+                copied_seqinfo_path = osp.join(local_dir.name, name,
+                                               'seqinfo.ini')
+                f = open(copied_seqinfo_path, 'wb')
                 seq_content = self.file_client.get(
                     osp.join(self.img_prefix, name, 'seqinfo.ini'))
                 if hasattr(seq_content, 'tobytes'):
@@ -400,11 +401,12 @@ class MOTChallengeDataset(CocoVideoDataset):
                 f.write(seq_content)
                 f.close()
 
-                gt = mm.io.loadtxt(gt_file_tmp)
+                gt = mm.io.loadtxt(copied_gt_file)
                 res = mm.io.loadtxt(res_file)
-                if osp.exists(seqinfo_path) and 'MOT15' not in self.img_prefix:
+                if osp.exists(copied_seqinfo_path
+                              ) and 'MOT15' not in self.img_prefix:
                     acc, ana = mm.utils.CLEAR_MOT_M(
-                        gt, res, seqinfo_path, distth=distth)
+                        gt, res, copied_seqinfo_path, distth=distth)
                 else:
                     acc = mm.utils.compare_to_groundtruth(
                         gt, res, distth=distth)
