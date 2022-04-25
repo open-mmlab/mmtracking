@@ -208,6 +208,10 @@ class YouTubeVISDataset(CocoVideoDataset):
         for video_id, ins_ids in self.coco.vidToInstances.items():
             cur_video_len = len_videos[video_id]
             for ins_id in ins_ids:
+                # In the official format, no instances are represented by
+                # 'None', however, only images with instances are recorded
+                # in the current annotations, so we need to use 'None' to
+                # initialize these lists.
                 segm = [None] * cur_video_len
                 bbox = [None] * cur_video_len
                 area = [None] * cur_video_len
