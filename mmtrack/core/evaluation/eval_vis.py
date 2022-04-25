@@ -36,6 +36,7 @@ def eval_vis(json_results, vis_results, logger=None):
     ytvisEval.params.vidIds = vid_ids
     ytvisEval.evaluate()
     ytvisEval.accumulate()
+
     redirect_string = io.StringIO()
     with contextlib.redirect_stdout(redirect_string):
         ytvisEval.summarize()
@@ -56,10 +57,12 @@ def eval_vis(json_results, vis_results, logger=None):
         'AR_m@100': 10,
         'AR_l@100': 11
     }
+
     for metric_item in metric_items:
         key = f'{metric}_{metric_item}'
         val = float(f'{ytvisEval.stats[coco_metric_names[metric_item]]:.3f}')
         eval_results[key] = val
+
     ap = ytvisEval.stats[:6]
     eval_results[f'{metric}_mAP_copypaste'] = (
         f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
