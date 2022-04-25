@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import copy
 import os.path as osp
 import tempfile
 import zipfile
@@ -196,40 +195,43 @@ class YouTubeVISDataset(CocoVideoDataset):
                 ``video_id``, ``areas``, ``id`` and ``iscrowd``.
         """
 
-        VIS = defaultdict(list)
-        ori_anns = mmcv.load(self.ann_file)
-        VIS['categories'] = copy.deepcopy(ori_anns['categories'])
-        VIS['videos'] = copy.deepcopy(ori_anns['videos'])
+        vis_anns = defaultdict(list)
 
-        instance_infos = defaultdict(list)
-        frame_id_mapping = dict()  # mapping from image_id to frame_id
+        for cat_info in self.coco.cats.values():
+            vis_anns['categories'].append(cat_info)
+        for video_info in self.coco.videos.values():
+            vis_anns['videos'].append(video_info)
+
         len_videos = dict()  # mapping from video_id to video_length
-        for ann_info in ori_anns['annotations']:
-            instance_infos[ann_info['instance_id']].append(ann_info)
+        for video_id, video_infos in self.coco.vidToImgs.items():
+            len_videos[video_id] = len(video_infos)
 
-        for img_info in ori_anns['images']:
-            frame_id_mapping[img_info['id']] = img_info['frame_id']
+        for video_id, ins_ids in self.coco.vidToInstances.items():
+            cur_video_len = len_videos[video_id]
+            for ins_id in ins_ids:
+                segm = [None] * cur_video_len
+                bbox = [None] * cur_video_len
+                area = [None] * cur_video_len
+                category_id = None
+                iscrowd = None
+                for img_id in self.coco.instancesToImgs.get(ins_id):
+                    frame_id = self.coco.imgs[img_id]['frame_id']
+                    for ann in self.coco.imgToAnns[img_id]:
+                        if ann['instance_id'] == ins_id:
+                            segm[frame_id] = ann['segmentation']
+                            bbox[frame_id] = ann['bbox']
+                            area[frame_id] = ann['area']
+                            category_id = ann['category_id']
+                            iscrowd = ann['iscrowd']
+                assert category_id is not None
+                instance = dict(
+                    category_id=category_id,
+                    segmentations=segm,
+                    bboxes=bbox,
+                    video_id=video_id,
+                    areas=area,
+                    id=ins_id,
+                    iscrowd=iscrowd)
+                vis_anns['annotations'].append(instance)
 
-            len_videos[img_info['video_id']] = max(1, img_info['frame_id'] + 1)
-        for ins_id in instance_infos:
-            cur_video_len = len_videos[instance_infos[ins_id][0]['video_id']]
-            segm = [None] * cur_video_len
-            bbox = [None] * cur_video_len
-            area = [None] * cur_video_len
-
-            for ann_info in instance_infos[ins_id]:
-                segm[frame_id_mapping[
-                    ann_info['image_id']]] = ann_info['segmentation']
-                bbox[frame_id_mapping[ann_info['image_id']]] = ann_info['bbox']
-                area[frame_id_mapping[ann_info['image_id']]] = ann_info['area']
-
-            instance = dict(
-                category_id=instance_infos[ins_id][0]['category_id'],
-                segmentations=segm,
-                bboxes=bbox,
-                video_id=instance_infos[ins_id][0]['video_id'],
-                areas=area,
-                id=instance_infos[ins_id][0]['instance_id'],
-                iscrowd=instance_infos[ins_id][0]['iscrowd'])
-            VIS['annotations'].append(instance)
-        return dict(VIS)
+        return dict(vis_anns)
