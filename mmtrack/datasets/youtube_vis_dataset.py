@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import copy
 import os.path as osp
 import tempfile
 import zipfile
@@ -170,9 +171,9 @@ class YouTubeVISDataset(CocoVideoDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         eval_results = dict()
-        json_results = self.format_results(results, return_json=True)
+        test_results = self.format_results(results, return_json=True)
         vis_results = self.convert_vis_format()
-        track_segm_results = eval_vis(json_results, vis_results, logger)
+        track_segm_results = eval_vis(test_results, vis_results, logger)
         eval_results.update(track_segm_results)
 
         return eval_results
@@ -197,10 +198,8 @@ class YouTubeVISDataset(CocoVideoDataset):
 
         vis_anns = defaultdict(list)
 
-        for cat_info in self.coco.cats.values():
-            vis_anns['categories'].append(cat_info)
-        for video_info in self.coco.videos.values():
-            vis_anns['videos'].append(video_info)
+        vis_anns['categories'] = copy.deepcopy(self.coco.dataset['categories'])
+        vis_anns['videos'] = copy.deepcopy(self.coco.dataset['videos'])
 
         len_videos = dict()  # mapping from video_id to video_length
         for video_id, video_infos in self.coco.vidToImgs.items():

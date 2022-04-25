@@ -5,15 +5,16 @@ from collections import OrderedDict
 
 from mmcv.utils import print_log
 
-from mmtrack.core.utils import YTVIS, YTVISeval
+from .ytvis import YTVIS
+from .ytviseval import YTVISeval
 
 
-def eval_vis(json_results, vis_results, logger=None):
+def eval_vis(test_results, vis_anns, logger=None):
     """Evaluation on VIS metrics.
 
     Args:
-        json_results (dict(list[dict])): Testing results of the VIS dataset.
-        vis_results (dict(list[dict])): The annotation in the format
+        test_results (dict(list[dict])): Testing results of the VIS dataset.
+        vis_anns (dict(list[dict])): The annotation in the format
                 of YouTube-VIS.
         logger (logging.Logger | str | None): Logger used for printing
                 related information during evaluation. Default: None.
@@ -21,13 +22,13 @@ def eval_vis(json_results, vis_results, logger=None):
     Returns:
         dict[str, float]: Evaluation results.
     """
-    ytvis = YTVIS(vis_results)
+    ytvis = YTVIS(vis_anns)
 
     if len(ytvis.anns) == 0:
         print('Annotations does not exist')
         return
 
-    ytvis_dets = ytvis.loadRes(json_results)
+    ytvis_dets = ytvis.loadRes(test_results)
     vid_ids = ytvis.getVidIds()
 
     iou_type = metric = 'segm'
@@ -37,6 +38,7 @@ def eval_vis(json_results, vis_results, logger=None):
     ytvisEval.evaluate()
     ytvisEval.accumulate()
 
+    # Save coco summarize print information to logger
     redirect_string = io.StringIO()
     with contextlib.redirect_stdout(redirect_string):
         ytvisEval.summarize()

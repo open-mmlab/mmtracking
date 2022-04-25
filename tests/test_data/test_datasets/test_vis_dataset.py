@@ -20,13 +20,13 @@ def test_vis_evaluation():
     results_json = mmcv.load(DEMO_RES_FILE)
 
     results = defaultdict(list)
-    np_fmt = []
-    for i in results_json['track_bboxes']:
+    track_bboxes_numpy = []
+    for frame_bboxes in results_json['track_bboxes']:
         tmp = []
-        for j in i:
-            tmp.append(np.array(j).reshape(-1, 6))
-        np_fmt.append(tmp)
-    results['track_bboxes'] = np_fmt
+        for bbox in frame_bboxes:
+            tmp.append(np.array(bbox).reshape(-1, 6))
+        track_bboxes_numpy.append(tmp)
+    results['track_bboxes'] = track_bboxes_numpy
     results['track_masks'] = results_json['track_masks']
 
     eval_results = dataset_object.evaluate(results, metric=['track_segm'])

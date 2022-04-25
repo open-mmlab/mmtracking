@@ -46,7 +46,8 @@ class YTVIS:
         """Constructor of Microsoft COCO helper class for reading and
         visualizing annotations.
 
-        :param annotation_file (str): location of annotation file
+        :param annotation_file (str | dict): location of annotation file or
+            dict results.
         :param image_folder (str): location to the folder that hosts images.
         :return:
         """
