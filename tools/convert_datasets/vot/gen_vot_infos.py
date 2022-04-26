@@ -53,10 +53,9 @@ def gen_data_infos(data_root, save_dir, dataset_type='vot2018'):
         f.write('The format of each line in this txt is '
                 '(video_path,annotation_path,start_frame_id,end_frame_id)')
         for video_name in videos_list:
-            video_path = osp.join(data_root, 'data', video_name, 'color')
-            ann_path = osp.join(data_root, 'data', video_name,
-                                'groundtruth.txt')
-            img_names = glob.glob(osp.join(video_path, '*.jpg'))
+            video_path = osp.join('data', video_name, 'color')
+            ann_path = osp.join('data', video_name, 'groundtruth.txt')
+            img_names = glob.glob(osp.join(data_root, video_path, '*.jpg'))
             end_frame_name = max(
                 img_names, key=lambda x: int(osp.basename(x).split('.')[0]))
             end_frame_id = int(osp.basename(end_frame_name).split('.')[0])

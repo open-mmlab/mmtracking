@@ -10,6 +10,11 @@ model = dict(
 
 data_root = 'data/'
 train_pipeline = [
+    dict(
+        type='PairSampling',
+        frame_range=100,
+        pos_prob=0.8,
+        filter_template_img=False),
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(
@@ -26,59 +31,43 @@ train_pipeline = [
     dict(type='SeqColorAug', prob=[1.0, 1.0]),
     dict(type='SeqBlurAug', prob=[0.0, 0.2]),
     dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pairs']),
-    dict(type='ConcatVideoReferences'),
+    dict(type='ConcatSameTypeFrames'),
     dict(type='SeqDefaultFormatBundle', ref_prefix='search')
 ]
 # dataset settings
 data = dict(
     samples_per_gpu=16,
-    train=[
+    train=dict(dataset_cfgs=[
         dict(
-            type='RepeatDataset',
-            times=39,
-            dataset=dict(
-                type='SOTTrainDataset',
-                ann_file=data_root +
-                'ILSVRC/annotations/imagenet_vid_train.json',
-                img_prefix=data_root + 'ILSVRC/Data/VID',
-                pipeline=train_pipeline,
-                ref_img_sampler=dict(
-                    frame_range=100,
-                    pos_prob=0.8,
-                    filter_key_img=False,
-                    return_key_img=True),
-            )),
+            type='SOTImageNetVIDDataset',
+            ann_file=data_root + 'ILSVRC/annotations/imagenet_vid_train.json',
+            img_prefix=data_root + 'ILSVRC/Data/VID',
+            pipeline=train_pipeline,
+            split='train',
+            test_mode=False),
         dict(
-            type='SOTTrainDataset',
+            type='SOTCocoDataset',
             ann_file=data_root + 'coco/annotations/instances_train2017.json',
             img_prefix=data_root + 'coco/train2017',
             pipeline=train_pipeline,
-            ref_img_sampler=dict(
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
+            split='train',
+            test_mode=False),
         dict(
-            type='SOTTrainDataset',
+            type='SOTCocoDataset',
             ann_file=data_root +
             'ILSVRC/annotations/imagenet_det_30plus1cls.json',
             img_prefix=data_root + 'ILSVRC/Data/DET',
             pipeline=train_pipeline,
-            ref_img_sampler=dict(
-                frame_range=0,
-                pos_prob=0.8,
-                filter_key_img=False,
-                return_key_img=True),
-        ),
-    ],
+            split='train',
+            test_mode=False)
+    ]),
     val=dict(
         type='OTB100Dataset',
         ann_file=data_root + 'otb100/annotations/otb100_infos.txt',
-        img_prefix=data_root + 'otb100/data',
+        img_prefix=data_root + 'otb100',
         only_eval_visible=False),
     test=dict(
         type='OTB100Dataset',
         ann_file=data_root + 'otb100/annotations/otb100_infos.txt',
-        img_prefix=data_root + 'otb100/data',
+        img_prefix=data_root + 'otb100',
         only_eval_visible=False))

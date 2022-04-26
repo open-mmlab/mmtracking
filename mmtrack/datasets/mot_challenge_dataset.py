@@ -91,8 +91,8 @@ class MOTChallengeDataset(CocoVideoDataset):
             with_mask (bool): Whether to parse mask annotations.
 
         Returns:
-            dict: A dict containing the following keys: bboxes, bboxes_ignore,\
-            labels, masks, seg_map. "masks" are raw annotations and not \
+            dict: A dict containing the following keys: bboxes, bboxes_ignore,
+            labels, masks, seg_map. "masks" are raw annotations and not
             decoded into binary masks.
         """
         gt_bboxes = []
@@ -252,10 +252,11 @@ class MOTChallengeDataset(CocoVideoDataset):
             if benchamrk in self.img_prefix.upper():
                 return benchamrk
 
-    def get_dataset_cfg_for_hota(self, tracker_folder, seqmap):
+    def get_dataset_cfg_for_hota(self, gt_folder, tracker_folder, seqmap):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
 
         Args:
+            gt_folder (str): the name of the GT folder
             tracker_folder (str): the name of the tracker folder
             seqmap (str): the file that contains the sequence of video names
 
@@ -264,7 +265,7 @@ class MOTChallengeDataset(CocoVideoDataset):
         """
         dataset_config = dict(
             # Location of GT data
-            GT_FOLDER=self.img_prefix,
+            GT_FOLDER=gt_folder,
             # Trackers location
             TRACKERS_FOLDER=tracker_folder,
             # Where to save eval results
@@ -362,8 +363,10 @@ class MOTChallengeDataset(CocoVideoDataset):
                 results, resfile_path, metrics)
             print_log('Evaluate CLEAR MOT results.', logger=logger)
             distth = 1 - track_iou_thr
-
             accs = []
+            # support loading data from ceph
+            local_dir = tempfile.TemporaryDirectory()
+
             for name in names:
                 if 'half-train' in self.ann_file:
                     gt_file = osp.join(self.img_prefix,
@@ -374,12 +377,36 @@ class MOTChallengeDataset(CocoVideoDataset):
                 else:
                     gt_file = osp.join(self.img_prefix, f'{name}/gt/gt.txt')
                 res_file = osp.join(resfiles['track'], f'{name}.txt')
-                gt = mm.io.loadtxt(gt_file)
+                # copy gt file from ceph to local temporary directory
+                gt_dir_path = osp.join(local_dir.name, name, 'gt')
+                os.makedirs(gt_dir_path)
+                copied_gt_file = osp.join(
+                    local_dir.name,
+                    gt_file.replace(gt_file.split(name)[0], ''))
+
+                f = open(copied_gt_file, 'wb')
+                gt_content = self.file_client.get(gt_file)
+                if hasattr(gt_content, 'tobytes'):
+                    gt_content = gt_content.tobytes()
+                f.write(gt_content)
+                f.close()
+                # copy sequence file from ceph to local temporary directory
+                copied_seqinfo_path = osp.join(local_dir.name, name,
+                                               'seqinfo.ini')
+                f = open(copied_seqinfo_path, 'wb')
+                seq_content = self.file_client.get(
+                    osp.join(self.img_prefix, name, 'seqinfo.ini'))
+                if hasattr(seq_content, 'tobytes'):
+                    seq_content = seq_content.tobytes()
+                f.write(seq_content)
+                f.close()
+
+                gt = mm.io.loadtxt(copied_gt_file)
                 res = mm.io.loadtxt(res_file)
-                ini_file = osp.join(self.img_prefix, f'{name}/seqinfo.ini')
-                if osp.exists(ini_file) and 'MOT15' not in self.img_prefix:
+                if osp.exists(copied_seqinfo_path
+                              ) and 'MOT15' not in self.img_prefix:
                     acc, ana = mm.utils.CLEAR_MOT_M(
-                        gt, res, ini_file, distth=distth)
+                        gt, res, copied_seqinfo_path, distth=distth)
                 else:
                     acc = mm.utils.compare_to_groundtruth(
                         gt, res, distth=distth)
@@ -403,16 +430,15 @@ class MOTChallengeDataset(CocoVideoDataset):
                 f.write('name\n')
                 for name in names:
                     f.write(name + '\n')
-                f.close
+                f.close()
 
             eval_config = trackeval.Evaluator.get_default_eval_config()
 
             # tracker's name is set to 'track',
             # so this word needs to be splited out
             output_folder = resfiles['track'].rsplit(os.sep, 1)[0]
-
             dataset_config = self.get_dataset_cfg_for_hota(
-                output_folder, seqmap)
+                local_dir.name, output_folder, seqmap)
 
             evaluator = trackeval.Evaluator(eval_config)
             dataset = [trackeval.datasets.MotChallenge2DBox(dataset_config)]
@@ -445,6 +471,7 @@ class MOTChallengeDataset(CocoVideoDataset):
                 formatters=mh.formatters,
                 namemap=mm.io.motchallenge_metric_names)
             print(str_summary)
+            local_dir.cleanup()
             if tmp_dir is not None:
                 tmp_dir.cleanup()
 

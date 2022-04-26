@@ -42,6 +42,7 @@ def main():
         imgs = mmcv.VideoReader(args.input)
         IN_VIDEO = True
 
+    OUT_VIDEO = False
     # define output
     if args.output is not None:
         if args.output.endswith('.mp4'):
@@ -52,7 +53,6 @@ def main():
             if len(_out) > 1:
                 os.makedirs(_out[0], exist_ok=True)
         else:
-            OUT_VIDEO = False
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
     fps = args.fps

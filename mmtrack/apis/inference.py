@@ -1,4 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
+import tempfile
+
 import mmcv
 import numpy as np
 import torch
@@ -10,7 +13,11 @@ from mmdet.datasets.pipelines import Compose
 from mmtrack.models import build_model
 
 
-def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
+def init_model(config,
+               checkpoint=None,
+               device='cuda:0',
+               cfg_options=None,
+               verbose_init_params=False):
     """Initialize a model from config file.
 
     Args:
@@ -19,6 +26,8 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
         checkpoint (str, optional): Checkpoint path. Default as None.
         cfg_options (dict, optional): Options to override some settings in
             the used config. Default to None.
+        verbose_init_params (bool, optional): Whether to print the information
+            of initialized parameters to the console. Default to False.
 
     Returns:
         nn.Module: The constructed detector.
@@ -33,8 +42,25 @@ def init_model(config, checkpoint=None, device='cuda:0', cfg_options=None):
     if 'detector' in config.model:
         config.model.detector.pretrained = None
     model = build_model(config.model)
-    # We need call `init_weights()` to load pretained weights in MOT task.
-    model.init_weights()
+
+    if not verbose_init_params:
+        # Creating a temporary file to record the information of initialized
+        # parameters. If not, the information of initialized parameters will be
+        # printed to the console because of the call of
+        # `mmcv.runner.BaseModule.init_weights`.
+        with tempfile.NamedTemporaryFile(mode='w+t') as tmp_init_params_file:
+            file_handler = logging.FileHandler(
+                tmp_init_params_file.name, mode='w')
+            model.logger.addHandler(file_handler)
+            # We need call `init_weights()` to load pretained weights in MOT
+            # task.
+            model.init_weights()
+            file_handler.close()
+            model.logger.removeHandler(file_handler)
+    else:
+        # We need call `init_weights()` to load pretained weights in MOT task.
+        model.init_weights()
+
     if checkpoint is not None:
         checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
         if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:

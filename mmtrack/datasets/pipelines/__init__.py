@@ -6,7 +6,7 @@ from .formatting import (CheckPadMaskValidity, ConcatSameTypeFrames,
                          SeqDefaultFormatBundle, ToList, VideoCollect)
 from .loading import (LoadDetections, LoadMultiImagesFromFile,
                       SeqLoadAnnotations)
-from .processing import MatchInstances, TridentSampling
+from .processing import MatchInstances, PairSampling, TridentSampling
 from .transforms import (SeqBboxJitter, SeqBlurAug, SeqBrightnessAug,
                          SeqColorAug, SeqCropLikeSiamFC, SeqCropLikeStark,
                          SeqGrayAug, SeqNormalize, SeqPad,
@@ -21,5 +21,5 @@ __all__ = [
     'SeqPhotoMetricDistortion', 'SeqCropLikeSiamFC', 'SeqShiftScaleAug',
     'SeqBlurAug', 'SeqColorAug', 'ToList', 'ReIDFormatBundle', 'SeqGrayAug',
     'SeqBrightnessAug', 'SeqBboxJitter', 'SeqCropLikeStark', 'TridentSampling',
-    'ConcatSameTypeFrames'
+    'ConcatSameTypeFrames', 'PairSampling'
 ]
