@@ -25,7 +25,7 @@ def eval_vis(test_results, vis_anns, logger=None):
     ytvis = YTVIS(vis_anns)
 
     if len(ytvis.anns) == 0:
-        print('Annotations does not exist')
+        print_log('Annotations does not exist', logger=logger)
         return
 
     ytvis_dets = ytvis.loadRes(test_results)

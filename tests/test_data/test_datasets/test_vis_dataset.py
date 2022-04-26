@@ -31,4 +31,4 @@ def test_vis_evaluation():
 
     eval_results = dataset_object.evaluate(results, metric=['track_segm'])
     assert eval_results['segm_mAP_50'] == 1.0
-    assert eval_results['segm_mAP'] == 0.65
+    assert eval_results['segm_mAP'] == 1.0
