@@ -56,7 +56,7 @@ class YouTubeVISDataset(CocoVideoDataset):
                        results,
                        resfile_path=None,
                        metrics=['track_segm'],
-                       return_json=False):
+                       save_as_json=True):
         """Format the results to a zip file (standard format for YouTube-VIS
         Challenge).
 
@@ -66,8 +66,8 @@ class YouTubeVISDataset(CocoVideoDataset):
                 Defaults to None.
             metrics (list[str], optional): The results of the specific metrics
                 will be formatted. Defaults to ['track_segm'].
-            return_json (bool, optional): Whether to return the
-                json results file directly. Defaults to False.
+            save_as_json (bool, optional): Whether to save the
+                json results file. Defaults to True.
 
         Returns:
             tuple: (resfiles, tmp_dir), resfiles is the path of the result
@@ -132,7 +132,7 @@ class YouTubeVISDataset(CocoVideoDataset):
                         output['segmentations'].append(None)
                 json_results.append(output)
 
-        if return_json:
+        if not save_as_json:
             return json_results
         mmcv.dump(json_results, resfiles)
 
@@ -171,18 +171,19 @@ class YouTubeVISDataset(CocoVideoDataset):
                 raise KeyError(f'metric {metric} is not supported.')
 
         eval_results = dict()
-        test_results = self.format_results(results, return_json=True)
-        vis_results = self.convert_vis_format()
+        test_results = self.format_results(results, save_as_json=False)
+        vis_results = self.convert_back_to_vis_format()
         track_segm_results = eval_vis(test_results, vis_results, logger)
         eval_results.update(track_segm_results)
 
         return eval_results
 
-    def convert_vis_format(self):
-        """Convert the annotation to the format of YouTube-VIS. The main
+    def convert_back_to_vis_format(self):
+        """Convert the annotation back to the format of YouTube-VIS. The main
         difference between the two is the format of 'annotation'. Before
         modification, it is recorded in the unit of images, and after
-        modification, it is recorded in the unit of instances.
+        modification, it is recorded in the unit of instances.This operation is
+        to make it easier to use the official eval API.
 
         Returns:
             dict: A dict with 3 keys, ``categories``, ``annotations``
