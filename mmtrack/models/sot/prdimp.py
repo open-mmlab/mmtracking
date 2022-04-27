@@ -131,46 +131,41 @@ class Prdimp(BaseSingleObjectTracker):
 
         im ():
         """
-        self.init_sample_scale = self.target_scale
-        global_shift = torch.zeros(2)
-
-        self.init_sample_pos = self.bbox_center_yx.round()
-
         # Compute augmentation size
         aug_expansion_factor = self.test_cfg['init_aug_cfg'].get(
-            'augmentation_expansion_factor', None)
+            'aug_expansion_factor', None)
         aug_expansion_sz = self.img_sample_sz.clone()
         aug_output_sz = None
         if aug_expansion_factor is not None and aug_expansion_factor != 1:
             aug_expansion_sz = (self.img_sample_sz *
                                 aug_expansion_factor).long()
+            # keep the same parity with `self.img_sample_sz`
+            # TODO: verifiy the necessity of these code
             aug_expansion_sz += (aug_expansion_sz -
                                  self.img_sample_sz.long()) % 2
             aug_expansion_sz = aug_expansion_sz.float()
             aug_output_sz = self.img_sample_sz.long().tolist()
 
-        # Random shift for each sample
         random_shift_factor = self.test_cfg['init_aug_cfg'].get(
             'random_shift_factor', 0)
 
-        get_rand_shift = (
-            (torch.rand(2) - 0.5) * self.img_sample_sz * random_shift_factor +
-            global_shift).long().tolist() if random_shift_factor > 0 else None
+        def get_rand_shift():
+            return ((torch.rand(2) - 0.5) * self.img_sample_sz *
+                    random_shift_factor).long().tolist()
+
+        # max_rand_shift = self.img_sample_sz.prod().sqrt() * \
+        # random_shift_factor * 0.5
 
         # Always put identity transformation first, since it is the
         # unaugmented sample that is always used
-        self.transforms = [
-            augmentation.Identity(aug_output_sz,
-                                  global_shift.long().tolist())
-        ]
+        self.transforms = [augmentation.Identity(aug_output_sz)]
 
         augs = self.test_cfg['init_aug_cfg']['augmentation']
 
         # Add all augmentations
         if 'shift' in augs:
             self.transforms.extend([
-                augmentation.Translation(shift, aug_output_sz,
-                                         global_shift.long().tolist())
+                augmentation.Translation(shift, aug_output_sz)
                 for shift in augs['shift']
             ])
         if 'relativeshift' in augs:
@@ -178,31 +173,32 @@ class Prdimp(BaseSingleObjectTracker):
                 absulute_shift = (torch.Tensor(shift) * self.img_sample_sz /
                                   2).long().tolist()
                 self.transforms.append(
-                    augmentation.Translation(absulute_shift, aug_output_sz,
-                                             global_shift.long().tolist()))
+                    augmentation.Translation(absulute_shift, aug_output_sz))
+
         if 'fliplr' in augs and augs['fliplr']:
             self.transforms.append(
-                augmentation.FlipHorizontal(aug_output_sz, get_rand_shift))
+                augmentation.FlipHorizontal(aug_output_sz, get_rand_shift()))
         if 'blur' in augs:
             self.transforms.extend([
-                augmentation.Blur(sigma, aug_output_sz, get_rand_shift)
+                augmentation.Blur(sigma, aug_output_sz, get_rand_shift())
                 for sigma in augs['blur']
             ])
         if 'scale' in augs:
             self.transforms.extend([
-                augmentation.Scale(scale_factor, aug_output_sz, get_rand_shift)
+                augmentation.Scale(scale_factor, aug_output_sz,
+                                   get_rand_shift())
                 for scale_factor in augs['scale']
             ])
         if 'rotate' in augs:
             self.transforms.extend([
-                augmentation.Rotate(angle, aug_output_sz, get_rand_shift)
+                augmentation.Rotate(angle, aug_output_sz, get_rand_shift())
                 for angle in augs['rotate']
             ])
 
         # Crop image patches
         img_patch, _ = self.get_cropped_img(
-            im, self.init_sample_pos,
-            self.init_sample_scale * aug_expansion_sz, aug_expansion_sz)
+            im, self.bbox_center_yx.round(),
+            self.target_scale * aug_expansion_sz, aug_expansion_sz)
 
         # Perform augmentation on the image patches
         aug_img_patches = torch.cat(
@@ -393,7 +389,14 @@ class Prdimp(BaseSingleObjectTracker):
                         mode: str = 'replicate',
                         max_scale_change=None,
                         is_mask=False):
-        """Crop an image patch from the original image.
+        """Crop an image patch from the original image. The target is centered
+            at the cropped image patch.
+        There are 3 steps:
+            1. Downsample the image according to the ratio of `crop_size` to
+                `output_size`
+            2. Crop the image to a designated size (by the way of
+                `torch.nn.functional.pad`)
+            3. Reize the image to the `output_size`
 
         Args:
             img: Image
@@ -435,7 +438,7 @@ class Prdimp(BaseSingleObjectTracker):
             df = int(max(int(resize_factor - 0.1), 1))
         else:
             df = int(1)
-        sz = crop_size.float() / df  # new output size
+        sz = crop_size.float() / df  # new image size
 
         # Do downsampling
         if df > 1:
