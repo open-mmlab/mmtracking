@@ -1,8 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from .augmentation import (Blur, FlipHorizontal, FlipVertical, Identity,
+                           Rotate, Scale, Translation)
 from .image import crop_image
 from .misc import setup_multi_processes
 from .visualization import imshow_mot_errors, imshow_tracks
 
 __all__ = [
-    'crop_image', 'imshow_tracks', 'imshow_mot_errors', 'setup_multi_processes'
+    'crop_image', 'imshow_tracks', 'imshow_mot_errors',
+    'setup_multi_processes', 'Identity', 'Translation', 'FlipHorizontal',
+    'FlipVertical', 'Blur', 'Scale', 'Rotate'
 ]
