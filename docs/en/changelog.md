@@ -1,5 +1,27 @@
 ## Changelog
 
+### v0.13.0 (29/04/2022)
+
+#### Highlights
+
+- Support tracking colab tutorial ([#511](https://github.com/open-mmlab/mmtracking/pull/511))
+
+#### New Features
+
+- Refactor the training datasets of SiamRPN++ ([#496](https://github.com/open-mmlab/mmtracking/pull/496)), ([#518](https://github.com/open-mmlab/mmtracking/pull/518))
+
+- Support loading data from ceph for SOT datasets ([#494](https://github.com/open-mmlab/mmtracking/pull/494))
+
+- Support loading data from ceph for MOT challenge dataset ([#517](https://github.com/open-mmlab/mmtracking/pull/517))
+
+- Support evaluation metric for VIS task ([#501](https://github.com/open-mmlab/mmtracking/pull/501))
+
+#### Bug Fixes
+
+- Fix a bug in the LaSOT datasets and update the pretrained models of STARK ([#483](https://github.com/open-mmlab/mmtracking/pull/483)), ([#503](https://github.com/open-mmlab/mmtracking/pull/503))
+
+- Fix a bug in the format_results function of VIS task ([#504](https://github.com/open-mmlab/mmtracking/pull/504))
+
 ### v0.12.0 (01/04/2022)
 
 #### Highlights
