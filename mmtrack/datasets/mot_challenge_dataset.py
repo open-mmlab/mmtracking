@@ -155,9 +155,10 @@ class MOTChallengeDataset(CocoVideoDataset):
                 will be formatted.. Defaults to ['track'].
 
         Returns:
-            tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
-            the filepaths, names is a list containing the name of the
-            videos, tmp_dir is the temporal directory created for saving
+            tuple: (resfile_path, resfiles, names, tmp_dir), resfile_path is
+            the path to save the formatted results, resfiles is a dict
+            containing the filepaths, names is a list containing the name of
+            the videos, tmp_dir is the temporal directory created for saving
             files.
         """
         assert isinstance(results, dict), 'results must be a dict.'
