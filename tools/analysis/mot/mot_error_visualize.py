@@ -102,7 +102,7 @@ def main():
         filenames_dict[video_name][frame_id] = data_info['filename']
 
     # format the results to txts
-    resfiles, video_names, tmp_dir = dataset.format_results(
+    resfile_path, resfiles, video_names, tmp_dir = dataset.format_results(
         results, None, ['track'])
 
     for video_name in video_names:
