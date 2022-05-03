@@ -32,8 +32,7 @@ Documentation: https://mmtracking.readthedocs.io/
 
 ## Introduction
 
-MMTracking is an open source video perception toolbox based on PyTorch.
-It is a part of the OpenMMLab project.
+MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
 
 The master branch works with **PyTorch1.5+**.
 
@@ -109,7 +108,7 @@ There are also usage [tutorials](docs/en/tutorials/), such as [learning about co
 
 ## Contributing
 
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
+We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the guidelines and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
 
 ## Acknowledgement
 
