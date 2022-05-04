@@ -227,3 +227,60 @@ class KalmanFilter(object):
         costs = np.stack(costs, 0)
         costs[costs > self.gating_threshold] = np.nan
         return tracks, costs
+
+
+@MOTION.register_module()
+class OCKalmanFilter(KalmanFilter):
+    """Observation-Centric Kalman filter for tracking bounding boxes in image
+    space.
+
+    This is proposed in OC-SORT paper: https://arxiv.org/abs/2203.14360. The
+    implementation is referred to https://github.com/noahcao/OC_SORT.
+    """
+    chi2inv95 = {
+        1: 3.8415,
+        2: 5.9915,
+        3: 7.8147,
+        4: 9.4877,
+        5: 11.070,
+        6: 12.592,
+        7: 14.067,
+        8: 15.507,
+        9: 16.919
+    }
+
+    def __init__(self, center_only=False):
+        self.center_only = center_only
+        if self.center_only:
+            self.gating_threshold = self.chi2inv95[2]
+        else:
+            self.gating_threshold = self.chi2inv95[4]
+
+        ndim, dt = 4, 1.
+
+        # Create Kalman filter model matrices.
+        self._motion_mat = np.eye(2 * ndim, 2 * ndim)
+        for i in range(ndim):
+            self._motion_mat[i, ndim + i] = dt
+        self._update_mat = np.eye(ndim, 2 * ndim)
+
+        # Motion and observation uncertainty are chosen relative to the current
+        # state estimate. These weights control the amount of uncertainty in
+        # the model. This is a bit hacky.
+        self._std_weight_position = 1. / 20
+        self._std_weight_velocity = 1. / 160
+
+        # parameter placeholder for saved parameters
+        self.aatr_saved = None
+        # a trick to monitor whether a track is associated to an observation or
+        # not: on each step, kf must do `predict`, but only calls `update` when
+        # it is associated to an observation. So if a kf experiences two
+        # consecutive `predict`, it misses being associated for one frame
+        self.last_op = None
+        # the track is being broken or consistently updated
+        self.broken = True
+
+    def online_smoooth(self, track, obj):
+        # perform observation-centric online smoothing to recover a track from
+        # being lost with lower shift of parameter estimates
+        pass

@@ -2,6 +2,7 @@
 import lap
 import numpy as np
 import torch
+from addict import Dict
 from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
 
@@ -11,42 +12,48 @@ from .base_tracker import BaseTracker
 
 
 @TRACKERS.register_module()
-class ByteTracker(BaseTracker):
+class OCSORT_Tracker(BaseTracker):
     """Tracker for ByteTrack.
+
     Args:
-        obj_score_thrs (dict): Detection score threshold for matching objects.
-            - high (float): Threshold of the first matching. Defaults to 0.6.
-            - low (float): Threshold of the second matching. Defaults to 0.1.
+        obj_score_thrs (float): Detection score threshold for matching objects.
+            Defaults to 0.3.
         init_track_thr (float): Detection score threshold for initializing a
             new tracklet. Defaults to 0.7.
         weight_iou_with_det_scores (bool): Whether using detection scores to
             weight IOU which is used for matching. Defaults to True.
-        match_iou_thrs (dict): IOU distance threshold for matching between two
-            frames.
-            - high (float): Threshold of the first matching. Defaults to 0.1.
-            - low (float): Threshold of the second matching. Defaults to 0.5.
-            - tentative (float): Threshold of the matching for tentative
-                tracklets. Defaults to 0.3.
+        match_iou_thr (float): IOU distance threshold for matching between two
+            frames. Defaults to 0.3.
         num_tentatives (int, optional): Number of continuous frames to confirm
             a track. Defaults to 3.
+        vel_consist_weight (float): Weight of the velocity consistency term in
+            association (OCM term in the paper).
+        vel_delta_t (int): The difference of time step for calculating of the
+            velocity direction of tracklets.
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Defaults to None.
+
+    refer to mmtrack/models/mot/motion/kalman_filter.py for details.
     """
 
     def __init__(self,
-                 obj_score_thrs=dict(high=0.6, low=0.1),
+                 obj_score_thr=0.3,
                  init_track_thr=0.7,
                  weight_iou_with_det_scores=True,
-                 match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
+                 match_iou_thr=0.3,
                  num_tentatives=3,
+                 vel_consist_weight=0.2,
+                 vel_delta_t=3,
                  init_cfg=None,
                  **kwargs):
         super().__init__(init_cfg=init_cfg, **kwargs)
-        self.obj_score_thrs = obj_score_thrs
+        self.obj_score_thr = obj_score_thr
         self.init_track_thr = init_track_thr
 
         self.weight_iou_with_det_scores = weight_iou_with_det_scores
-        self.match_iou_thrs = match_iou_thrs
+        self.match_iou_thr = match_iou_thr
+        self.vel_consist_weight = vel_consist_weight
+        self.vel_delta_t = vel_delta_t
 
         self.num_tentatives = num_tentatives
 
@@ -74,6 +81,12 @@ class ByteTracker(BaseTracker):
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
+        self.tracks[id].obs = []
+        self.tracks[id].obs.append(obj)
+        # a placefolder to save mean/covariance before losing tracking it
+        # parameters to save: mean, covariance, measurement
+        self.tracks[id].tracked = True
+        self.tracks[id].saved_attr = Dict()
 
     def update_track(self, id, obj):
         """Update a track."""
@@ -86,6 +99,8 @@ class ByteTracker(BaseTracker):
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
+        self.tracks[id].tracked = True
+        self.tracks[id].obs.append(obj)
 
     def pop_invalid_tracks(self, frame_id):
         """Pop out invalid tracks."""
@@ -115,6 +130,7 @@ class ByteTracker(BaseTracker):
                 Defaults to False.
             match_iou_thr (float, optional): Matching threshold.
                 Defaults to 0.5.
+
         Returns:
             tuple(int): The assigning ids.
         """
@@ -201,7 +217,7 @@ class ByteTracker(BaseTracker):
             second_det_labels = labels[second_det_inds]
             second_det_ids = ids[second_det_inds]
 
-            # 1. use Kalman Filter to predict current location
+            # use Kalman Filter to predict current location
             for id in self.confirmed_ids:
                 # track is lost in previous frame
                 if self.tracks[id].frame_ids[-1] != frame_id - 1:
@@ -210,10 +226,11 @@ class ByteTracker(BaseTracker):
                  self.tracks[id].covariance) = self.kf.predict(
                      self.tracks[id].mean, self.tracks[id].covariance)
 
-            # 2. first match
+            # match detections and tracks' predicted locations
+            # TODO: add support for velocity consistency
             first_match_track_inds, first_match_det_inds = self.assign_ids(
                 self.confirmed_ids, first_det_bboxes,
-                self.weight_iou_with_det_scores, self.match_iou_thrs['high'])
+                self.weight_iou_with_det_scores, self.match_iou_thr)
             # '-1' mean a detection box is not matched with tracklets in
             # previous frame
             valid = first_match_det_inds > -1
@@ -225,38 +242,57 @@ class ByteTracker(BaseTracker):
             first_match_det_ids = first_det_ids[valid]
             assert (first_match_det_ids > -1).all()
 
+            # unmatched tracks and detections
             first_unmatch_det_bboxes = first_det_bboxes[~valid]
             first_unmatch_det_labels = first_det_labels[~valid]
             first_unmatch_det_ids = first_det_ids[~valid]
             assert (first_unmatch_det_ids == -1).all()
 
+            # Observation-Centeric Recovery for remaining tracks and dets
+            unmatched_ids = self.confirmed_ids - first_match_track_inds
+            last_observations = [
+                self.last_obs(self.tracks[id]) for id in unmatched_ids
+            ]
+            ocr_matched_track_inds, ocr_match_det_inds = self.ocr_assign_ids(
+                last_observations, first_unmatch_det_bboxes,
+                self.weight_iou_with_det_scores, self.match_iou_thr)
+
+            for i, id in enumerate(self.confirmed_ids):
+                case_1 = first_match_track_inds[i] == -1
+                case_2 = ocr_matched_track_inds[id] = -1
+                if case_1 and case_2:
+                    # this track is not associated to any observation
+                    self.tracks[id].tracked = False
+                    self.tracks[id].obs.append(None)
+
             # 3. use unmatched detection bboxes from the first match to match
             # the unconfirmed tracks
-            (tentative_match_track_inds,
-             tentative_match_det_inds) = self.assign_ids(
-                 self.unconfirmed_ids, first_unmatch_det_bboxes,
-                 self.weight_iou_with_det_scores,
-                 self.match_iou_thrs['tentative'])
-            valid = tentative_match_det_inds > -1
-            first_unmatch_det_ids[valid] = torch.tensor(self.unconfirmed_ids)[
-                tentative_match_det_inds[valid]].to(labels)
+            # (tentative_match_track_inds,
+            #  tentative_match_det_inds) = self.assign_ids(
+            #      self.unconfirmed_ids, first_unmatch_det_bboxes,
+            #      self.weight_iou_with_det_scores,
+            #      self.match_iou_thr['tentative'])
+            # valid = tentative_match_det_inds > -1
+            # first_unmatch_det_ids[valid] = torch.tensor(\
+            #       self.unconfirmed_ids)[
+            #     tentative_match_det_inds[valid]].to(labels)
 
-            # 4. second match for unmatched tracks from the first match
-            first_unmatch_track_ids = []
-            for i, id in enumerate(self.confirmed_ids):
-                # tracklet is not matched in the first match
-                case_1 = first_match_track_inds[i] == -1
-                # tracklet is not lost in the previous frame
-                case_2 = self.tracks[id].frame_ids[-1] == frame_id - 1
-                if case_1 and case_2:
-                    first_unmatch_track_ids.append(id)
+            # # 4. second match for unmatched tracks from the first match
+            # first_unmatch_track_ids = []
+            # for i, id in enumerate(self.confirmed_ids):
+            #     # tracklet is not matched in the first match
+            #     case_1 = first_match_track_inds[i] == -1
+            #     # tracklet is not lost in the previous frame
+            #     case_2 = self.tracks[id].frame_ids[-1] == frame_id - 1
+            #     if case_1 and case_2:
+            #         first_unmatch_track_ids.append(id)
 
-            second_match_track_inds, second_match_det_inds = self.assign_ids(
-                first_unmatch_track_ids, second_det_bboxes, False,
-                self.match_iou_thrs['low'])
-            valid = second_match_det_inds > -1
-            second_det_ids[valid] = torch.tensor(first_unmatch_track_ids)[
-                second_match_det_inds[valid]].to(ids)
+            # second_match_track_inds, second_match_det_inds = self.assign_ids(
+            #     first_unmatch_track_ids, second_det_bboxes, False,
+            #     self.match_iou_thr['low'])
+            # valid = second_match_det_inds > -1
+            # second_det_ids[valid] = torch.tensor(first_unmatch_track_ids)[
+            #     second_match_det_inds[valid]].to(ids)
 
             # 5. gather all matched detection bboxes from step 2-4
             # we only keep matched detection bboxes in second match, which
