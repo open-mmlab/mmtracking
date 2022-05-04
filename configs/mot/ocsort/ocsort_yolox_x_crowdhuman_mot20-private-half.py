@@ -6,7 +6,7 @@ model = dict(
     detector=dict(input_size=img_scale, random_size_range=(20, 36)),
     tracker=dict(
         weight_iou_with_det_scores=False,
-        match_iou_thrs=dict(high=0.3),
+        match_iou_thr=0.3,
     ))
 
 train_pipeline = [

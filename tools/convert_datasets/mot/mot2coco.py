@@ -130,6 +130,7 @@ def main():
             det_file = osp.join(args.output, f'{subset}_detections.pkl')
             detections = dict(det_bboxes=dict())
         video_names = os.listdir(in_folder)
+        video_names = [d for d in video_names if d != '.DS_Store']
         for video_name in tqdm(video_names):
             # basic params
             parse_gt = 'test' not in subset
@@ -142,6 +143,7 @@ def main():
             img_folder = infos[2].strip().split('=')[1]
             img_names = os.listdir(f'{video_folder}/{img_folder}')
             img_names = sorted(img_names)
+            img_names = [d for d in img_names if d != '.DS_Store']
             fps = int(infos[3].strip().split('=')[1])
             num_imgs = int(infos[4].strip().split('=')[1])
             assert num_imgs == len(img_names)
