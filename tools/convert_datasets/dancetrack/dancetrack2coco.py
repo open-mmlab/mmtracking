@@ -77,22 +77,6 @@ def parse_gts(gts, is_mot15):
     return outputs
 
 
-def parse_dets(dets):
-    outputs = defaultdict(list)
-    for det in dets:
-        det = det.strip().split(',')
-        frame_id, ins_id = map(int, det[:2])
-        assert ins_id == -1
-        bbox = list(map(float, det[2:7]))
-        # [x1, y1, x2, y2] to be consistent with mmdet
-        bbox = [
-            bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3], bbox[4]
-        ]
-        outputs[frame_id].append(bbox)
-
-    return outputs
-
-
 def main():
     args = parse_args()
     if not osp.isdir(args.output):

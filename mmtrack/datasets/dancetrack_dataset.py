@@ -11,7 +11,7 @@ from mmdet.core import eval_map
 from mmdet.datasets import DATASETS
 
 from mmtrack.core import interpolate_tracks, results2outs
-from .coco_video_dataset import CocoVideoDataset
+from .mot_challenge_dataset import MOTChallengeDataset
 
 try:
     import trackeval
@@ -20,7 +20,7 @@ except ImportError:
 
 
 @DATASETS.register_module()
-class DanceTrackDataset(CocoVideoDataset):
+class DanceTrackDataset(MOTChallengeDataset):
     """Dataset for DanceTrack: https://github.com/DanceTrack/DanceTrack.
 
     Args:
