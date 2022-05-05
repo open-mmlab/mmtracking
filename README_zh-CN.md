@@ -105,7 +105,7 @@ MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置�
 
 ## 参与贡献
 
-我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节。
+我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节和在这个[讨论](https://github.com/open-mmlab/mmtracking/issues/73)中规划MMTracking的开发计划。
 
 ## 致谢
 
