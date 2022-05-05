@@ -1,37 +1,30 @@
-# ByteTrack: Multi-Object Tracking by Associating Every Detection Box
+# Observation-Centric SORT: Rethinking SORT for Robust Multi-Object Tracking
 
 ## Abstract
 
 <!-- [ABSTRACT] -->
 
-Multi-object tracking (MOT) aims at estimating bounding boxes and identities of objects in videos. Most methods obtain identities by associating detection boxes whose scores are higher than a threshold. The objects with low detection scores, e.g. occluded objects, are simply thrown away, which brings non-negligible true object missing and fragmented trajectories. To solve this problem, we present a simple, effective and generic association method, tracking by associating every detection box instead of only the high score ones. For the low score detection boxes, we utilize their similarities with tracklets to recover true objects and filter out the background detections. When applied to 9 different state-of-the-art trackers, our method achieves consistent improvement on IDF1 score ranging from 1 to 10 points. To put forwards the state-of-the-art performance of MOT, we design a simple and strong tracker, named ByteTrack. For the first time, we achieve 80.3 MOTA, 77.3 IDF1 and 63.1 HOTA on the test set of MOT17 with 30 FPS running speed on a single V100 GPU.
+Multi-Object Tracking (MOT) has rapidly progressed with the development of object detection and re-identification. However, motion modeling, which facilitates object association by forecasting short-term trajec- tories with past observations, has been relatively under-explored in recent years. Current motion models in MOT typically assume that the object motion is linear in a small time window and needs continuous observations, so these methods are sensitive to occlusions and non-linear motion and require high frame-rate videos. In this work, we show that a simple motion model can obtain state-of-the-art tracking performance without other cues like appearance. We emphasize the role of “observation” when recovering tracks from being lost and reducing the error accumulated by linear motion models during the lost period. We thus name the proposed method as Observation-Centric SORT, OC-SORT for short. It remains simple, online, and real-time but improves robustness over occlusion and non-linear motion. It achieves 63.2 and 62.1 HOTA on MOT17 and MOT20, respectively, surpassing all published methods. It also sets new states of the art on KITTI Pedestrian Tracking and DanceTrack where the object motion is highly non-linear
 
 <!-- [IMAGE] -->
-
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/26813582/147467498-b8d16d8c-8472-4830-8bac-b107c49f7c6f.png"/>
-</div>
 
 ## Citation
 
 <!-- [ALGORITHM] -->
 
 ```latex
-@inproceedings{zhang2021bytetrack,
-  title={ByteTrack: Multi-Object Tracking by Associating Every Detection Box},
-  author={Zhang, Yifu and Sun, Peize and Jiang, Yi and Yu, Dongdong and Yuan, Zehuan and Luo, Ping and Liu, Wenyu and Wang, Xinggang},
-  journal={arXiv preprint arXiv:2110.06864},
-  year={2021}
+@article{cao2022observation,
+  title={Observation-Centric SORT: Rethinking SORT for Robust Multi-Object Tracking},
+  author={Cao, Jinkun and Weng, Xinshuo and Khirodkar, Rawal and Pang, Jiangmiao and Kitani, Kris},
+  journal={arXiv preprint arXiv:2203.14360},
+  year={2022}
 }
 ```
 
 ## Results and models on MOT17
 
-Please note that the performance on `MOT17-half-val` is comparable with the performance reported in the manuscript, while the performance on `MOT17-test` is lower than the performance reported in the manuscript.
+The performance on `MOT17-half-val` is comparable with the performance from [the OC-SORT official implementation](https://github.com/noahcao/OC_SORT). We use the same YOLO-X detector weights as in [ByteTrack](https://github.com/open-mmlab/mmtracking/tree/master/configs/mot/bytetrack).
 
-The reason is that ByteTrack tunes customized hyper-parameters (e.g., image resolution and the high threshold of detection score) for each video in `MOT17-test` set, while we use unified parameters.
-
-|    Method     |      Detector     |     Train Set     | Test Set | Public | Inf time (fps) | HOTA | MOTA | IDF1 | FP | FN | IDSw. | Config | Download |
-| :-------------: | :-----------------: | :------------: | :------: | :----: | :------------: | :--: | :--: | :--: |:--:|:--:| :---: | :----: | :------: |
-| ByteTrack | YOLOX-X | CrowdHuman + half-train | half-val | N     | - | 67.7 | 78.6 | 79.2 | 12909 | 21024 | 666 | [config](bytetrack_yolox_x_crowdhuman_mot17-private-half.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
-| ByteTrack | YOLOX-X | CrowdHuman + half-train | test | N     | - | 61.7 | 78.1 | 74.8 | 36705 | 85032 | 2049 | [config](bytetrack_yolox_x_crowdhuman_mot17-private.py) |  [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
+| Method  | Detector |        Train Set        | Test Set | Public | Inf time (fps) | HOTA  | MOTA  | IDF1  |  FP   |  FN   | IDSw. |                          Config                           |                                                                                  Download                                                                                  |
+| :-----: | :------: | :---------------------: | :------: | :----: | :------------: | :---: | :---: | :---: | :---: | :---: | :---: | :-------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| OC-SORT | YOLOX-X  | CrowdHuman + half-train | half-val |   N    |       -        | 67.7  | 76.4  | 77.5  | 18516 | 19014 |  909  | [config](ocsort_yolox_x_crowdhuman_mot17-private-half.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) &#124; log |
