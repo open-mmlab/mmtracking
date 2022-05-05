@@ -1,225 +1,90 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import torch
+# The codes are modified from https://github.com/visionml/pytracking/blob/master/ltr/models/layers/filter.py # noqa: E501
 import torch.nn.functional as F
 
 
-def apply_filter(feat, filter, dilation_factors=None):
-    """Applies the filter on the input features (feat).
+def apply_filter(feat, filter):
+    """Applies the filter on the input features.
 
-    The number of groups is
-        automatically calculated.
+    The number of groups is automatically calculated.
     args:
-        feat: These are the input features. Must have dimensions
-            (images_in_sequence, sequences, feat_dim, H, W)
-        filter: The filter to apply. Must have dimensions
-            (sequences, feat_dim, fH, fW) or
-            (sequences, filters, feat_dim/groups, fH, fW)
+        feat (Tensor): The input features with two possible shapes in the
+            different modes:
+            - training mode: of shape (num_img_per_seq, bs, c, h, w)
+            - test mode: of shape (num_img_per_seq, c, h, w).
+        filter (Tensor): The filter to be applied on the `feat`. There are two
+            possible shapes in the different modes:
+            - training mode: of shape (num_img_per_seq, c, filter_h, filter_w)
+            - test mode: of shape (1, c, filter_h, filter_w)
     output:
-        scores: Output of filtering. Dimensions
-            (images_in_sequence, sequences, yH, yW) or
-            (images_in_sequence, sequences, filters, yH, yW)
+        scores (Tenosr): Output of filtering.
+            - train mode: (num_img_per_seq, bs, h, w)
+            - test mode: (num_img_per_seq, 1, h, w)
     """
-
-    multiple_filters = (filter.dim() == 5)
-
     padding = (filter.shape[-2] // 2, filter.shape[-1] // 2)
-
-    num_images = feat.shape[0]
-    num_sequences = feat.shape[1] if feat.dim() == 5 else 1
-    num_filters = filter.shape[1] if multiple_filters else 1
-    num_channels = feat.shape[-3]
-    groups = num_channels // filter.shape[-3]
-
-    assert num_filters % groups == 0 and num_channels % groups == 0
-
-    if multiple_filters:
-        if dilation_factors is None:
-            scores = F.conv2d(
-                feat.reshape(num_images, -1, feat.shape[-2], feat.shape[-1]),
-                filter.view(-1, *filter.shape[-3:]),
-                padding=padding,
-                groups=num_sequences * groups)
-
-            return scores.view(num_images, num_sequences, -1, scores.shape[-2],
-                               scores.shape[-1])
-        else:
-            scores_all = []
-            start_id = 0
-
-            for d_factor, num_filters_with_d in dilation_factors.items():
-                f_d = filter[:, start_id:start_id + num_filters_with_d,
-                             ...].contiguous()
-
-                padding_d = [p + d_factor - 1 for p in padding]
-                scores_d = F.conv2d(
-                    feat.reshape(num_images, -1, feat.shape[-2],
-                                 feat.shape[-1]),
-                    f_d.view(-1, *f_d.shape[-3:]),
-                    padding=padding_d,
-                    groups=num_sequences * groups,
-                    dilation=d_factor)
-                scores_d = scores_d.view(num_images, num_sequences, -1,
-                                         scores_d.shape[-2],
-                                         scores_d.shape[-1])
-                scores_all.append(scores_d)
-                start_id += num_filters_with_d
-
-            scores = torch.cat(scores_all, dim=2)
-            return scores
-
+    num_groups = feat.shape[1] if feat.dim() == 5 else 1
     scores = F.conv2d(
-        feat.reshape(num_images, -1, feat.shape[-2], feat.shape[-1]),
+        feat.reshape(feat.shape[0], -1, feat.shape[-2], feat.shape[-1]),
         filter,
         padding=padding,
-        groups=num_sequences)
-
-    return scores.view(num_images, num_sequences, scores.shape[-2],
-                       scores.shape[-1])
+        groups=num_groups)
+    return scores
 
 
-def apply_feat_transpose(feat, input, filter_ksz, training=True, groups=1):
-    """Applies the transposed operation off apply_filter w.r.t.
+def apply_feat_transpose(feat, activation, filter_size, training=True):
+    """The transposed operation of `apply_filter` w.r.t the filter. It can be
+    used to compute the filter gradient. There are two implements: the one
+    forwards slowly and backwards fast, which used in training, and the other
+    is the opposite, which used in test.
 
-    filter itself.
-        Can be used to compute the filter gradient.
-    args:
-        feat: These are the input features. Must have dimensions
-            (images_in_sequence, sequences, feat_dim, H, W)
-        input: Input activation (e.g. residuals). Must have dimensions
-            (images_in_sequence, sequences, yH, yW) or
-            (images_in_sequence, sequences, filters, yH, yW)
-        training: Choose the faster implementation whether training or not.
-    output:
-        Output of transposed operation. Dimensions
-            (sequences, feat_dim, fH, fW)
+    Args:
+        feat (Tensor): The input features with two possible shapes in the
+            different modes:
+            - training mode: of shape (num_img_per_seq, bs, c, h, w)
+            - test mode: of shape (num_img_per_seq, c, h, w).
+        activation (Tensor): The activation (e.g. residuals between output and
+            label). There are two possible shapes in the different modes:
+            - training mode: of shape (num_img_per_seq, bs, size_h, size_w)
+            - test mode: of shape (num_img_per_seq, 1, size_h, size_w)
+        training (bool, optional): Whether training mode or not. The faster
+            implementation is chose according to this.
+
+    Returns:
+        (Tensor). There are two possible shape in the
+            different mode:
+            - training mode: of shape (bs, c, out_h, out_w).
+            - test mode: of shape (1, c, out_h, out_w).
     """
 
-    if groups != 1:
-        raise NotImplementedError('Not implemented other values of group.')
+    if isinstance(filter_size, int):
+        filter_size = (filter_size, filter_size)
+    transpose_pad = [(sz - 1) // 2 for sz in filter_size]
 
-    if training or input.dim() == 5:
-        return _apply_feat_transpose_v3(feat, input, filter_ksz)
-    return _apply_feat_transpose_v2(feat, input, filter_ksz)
+    if training:
+        # slow forward and fast backward
+        num_img_per_seq = feat.shape[0]
+        batch_size = feat.shape[1] if feat.dim() == 5 else 1
 
-
-def _apply_feat_transpose_v2(feat, input, filter_ksz):
-    """Fast forward and slow backward."""
-
-    multiple_filters = (input.dim() == 5)
-
-    num_images = feat.shape[0]
-    num_sequences = feat.shape[1] if feat.dim() == 5 else 1
-    num_filters = input.shape[2] if multiple_filters else 1
-    if isinstance(filter_ksz, int):
-        filter_ksz = (filter_ksz, filter_ksz)
-
-    trans_pad = [(ksz - 1) // 2 for ksz in filter_ksz]
-
-    if multiple_filters:
         filter_grad = F.conv2d(
-            input.reshape(-1, num_filters, input.shape[-2],
-                          input.shape[-1]).permute(1, 0, 2, 3),
-            feat.reshape(-1, 1, feat.shape[-2], feat.shape[-1]),
-            padding=trans_pad,
-            groups=num_images * num_sequences)
+            feat.reshape(-1, *feat.shape[-3:]).permute(1, 0, 2, 3),
+            activation.reshape(-1, 1, *activation.shape[-2:]),
+            padding=transpose_pad,
+            groups=num_img_per_seq * batch_size)
 
-        if num_images == 1:
-            return filter_grad.view(num_filters, num_sequences, -1,
-                                    filter_grad.shape[-2],
-                                    filter_grad.shape[-1]).flip(
-                                        (3, 4)).permute(1, 0, 2, 3, 4)
-        return filter_grad.view(num_filters, num_images, num_sequences, -1,
-                                filter_grad.shape[-2],
-                                filter_grad.shape[-1]).sum(dim=1).flip(
-                                    (3, 4)).permute(1, 0, 2, 3, 4)
+        if num_img_per_seq == 1:
+            return filter_grad.permute(1, 0, 2, 3)
+        return filter_grad.view(-1, num_img_per_seq, batch_size,
+                                *filter_grad.shape[-2:]).sum(dim=1).permute(
+                                    1, 0, 2, 3)
+    else:
+        # fast forwward and slow backward
+        batch_size = feat.shape[0]
+        filter_grad = F.conv2d(
+            activation.reshape(1, -1, *activation.shape[-2:]),
+            feat.reshape(-1, 1, *feat.shape[-2:]),
+            padding=transpose_pad,
+            groups=batch_size)
 
-    filter_grad = F.conv2d(
-        input.reshape(1, -1, input.shape[-2], input.shape[-1]),
-        feat.reshape(-1, 1, feat.shape[-2], feat.shape[-1]),
-        padding=trans_pad,
-        groups=num_images * num_sequences)
-
-    return filter_grad.view(num_images, num_sequences, -1,
-                            filter_grad.shape[-2],
-                            filter_grad.shape[-1]).sum(dim=0).flip((2, 3))
-
-
-def _apply_feat_transpose_v3(feat, input, filter_ksz):
-    """Slow forward fast backward."""
-
-    multiple_filters = (input.dim() == 5)
-
-    num_images = feat.shape[0]
-    num_sequences = feat.shape[1] if feat.dim() == 5 else 1
-    num_filters = input.shape[2] if multiple_filters else 1
-    if isinstance(filter_ksz, int):
-        filter_ksz = (filter_ksz, filter_ksz)
-
-    trans_pad = [ksz // 2 for ksz in filter_ksz]
-
-    filter_grad = F.conv2d(
-        feat.reshape(-1, feat.shape[-3], feat.shape[-2],
-                     feat.shape[-1]).permute(1, 0, 2, 3),
-        input.reshape(-1, 1, input.shape[-2], input.shape[-1]),
-        padding=trans_pad,
-        groups=num_images * num_sequences)
-
-    if multiple_filters:
-        if num_images == 1:
-            return filter_grad.view(-1, num_sequences, num_filters,
-                                    filter_grad.shape[-2],
-                                    filter_grad.shape[-1]).permute(
-                                        1, 2, 0, 3, 4)
-        return filter_grad.view(-1, num_images, num_sequences, num_filters,
-                                filter_grad.shape[-2],
-                                filter_grad.shape[-1]).sum(dim=1).permute(
-                                    1, 2, 0, 3, 4)
-
-    if num_images == 1:
-        return filter_grad.permute(1, 0, 2, 3)
-    return filter_grad.view(-1, num_images, num_sequences,
-                            filter_grad.shape[-2],
-                            filter_grad.shape[-1]).sum(dim=1).permute(
-                                1, 0, 2, 3)
-
-
-def _apply_feat_transpose_v4(feat, input, filter_ksz):
-    """Slow forward fast backward."""
-
-    num_sequences = feat.shape[1] if feat.dim() == 5 else 1
-    if isinstance(filter_ksz, int):
-        filter_ksz = (filter_ksz, filter_ksz)
-
-    trans_pad = [ksz // 2 for ksz in filter_ksz]
-
-    filter_grad = F.conv2d(
-        feat.permute(2, 1, 0, 3, 4).reshape(feat.shape[-3], -1, feat.shape[-2],
-                                            feat.shape[-1]),
-        input.permute(1, 0, 2, 3),
-        padding=trans_pad,
-        groups=num_sequences)
-
-    return filter_grad.permute(1, 0, 2, 3)
-
-
-def filter_gradient(feat, filter, label=None, training=True):
-    """Computes gradient of the filter when applied on the input features and
-    ground truth label.
-
-    args:
-        feat: These are the input features. Must have dimensions
-            (images_in_sequence, sequences, feat_dim, H, W)
-        filter: The filter to apply. Must have dimensions
-            (sequences, feat_dim, fH, fW)
-        label: Ground truth label in the L2 loss. Dimensions
-            (images_in_sequence, sequences, yH, yW)
-    output:
-        filter_gradient: Dimensions same as input filter
-            (sequences, feat_dim, fH, fW)
-    """
-
-    residuals = apply_filter(feat, filter)
-    if label is not None:
-        residuals = residuals - label
-    filter_ksz = (filter.shape[-2], filter.shape[-1])
-    return apply_feat_transpose(feat, residuals, filter_ksz, training=training)
+        return filter_grad.view(batch_size, 1, -1,
+                                *filter_grad.shape[-2:]).sum(dim=0).flip(
+                                    (2, 3))

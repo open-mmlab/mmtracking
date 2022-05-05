@@ -8,79 +8,49 @@ from mmdet.models import HEADS
 from mmtrack.core.filter import filter as filter_layer
 
 
-def softmax_reg_fun(x: torch.Tensor, dim, reg=None):
-    """Softmax with optional denominator regularization."""
-    if reg is None:
-        return torch.softmax(x, dim=dim)
-    dim %= x.dim()
-    if isinstance(reg, (float, int)):
-        reg = x.new_tensor([reg])
-    reg = reg.expand([1 if d == dim else x.shape[d] for d in range(x.dim())])
-    x = torch.cat((x, reg), dim=dim)
-    return torch.softmax(
-        x, dim=dim)[[
-            slice(-1) if d == dim else slice(None) for d in range(x.dim())
-        ]]
-
-
 @HEADS.register_module()
 class PrDiMPSteepestDescentNewton(nn.Module):
     """Optimizer module for PrDiMP.
 
     It unrolls the steepest descent with Newton iterations to optimize the
-        target filter. See the PrDiMP paper.
-    args:
-        num_iter:  Number of default optimization iterations.
+        target filter. It's used on PrDiMP.
+
+    Args:
+        num_iters:  Number of default optimization iterations.
         feat_stride:  The stride of the input feature.
         init_step_length:  Initial scaling of the step length
             (which is then learned).
-        init_filter_reg:  Initial filter regularization weight
+        init_filter_regular:  Initial filter regularization weight
             (which is then learned).
         gauss_sigma:  The standard deviation to use for the label density
             function.
-        min_filter_reg:  Enforce a minimum value on the regularization
+        min_filter_regular:  Enforce a minimum value on the regularization
             (helps stability sometimes).
-        detach_length:  Detach the filter every n-th iteration.
-            Default is to never detech, i.e. 'Inf'.
         alpha_eps:  Term in the denominator of the steepest descent that
             stabalizes learning.
-        init_uni_weight:  Weight of uniform label distribution.
-        normalize_label:  Whether to normalize the label distribution.
-        label_shrink:  How much to shrink to label distribution.
-        softmax_reg:  Regularization in the denominator of the SoftMax.
-        label_threshold:  Threshold probabilities smaller than this.
+        label_thres:  Threshold probabilities smaller than this.
     """
 
     def __init__(self,
-                 num_iter=1,
+                 num_iters=1,
                  feat_stride=16,
                  init_step_length=1.0,
-                 init_filter_reg=1e-2,
+                 init_filter_regular=1e-2,
                  gauss_sigma=1.0,
-                 min_filter_reg=1e-3,
-                 detach_length=float('Inf'),
+                 min_filter_regular=1e-3,
                  alpha_eps=0.0,
-                 init_uni_weight=None,
-                 normalize_label=False,
-                 label_shrink=0,
-                 softmax_reg=None,
-                 label_threshold=0.0):
+                 label_thres=0.0):
         super().__init__()
 
-        self.num_iter = num_iter
+        self.num_iters = num_iters
         self.feat_stride = feat_stride
         self.log_step_length = nn.Parameter(
             math.log(init_step_length) * torch.ones(1))
-        self.filter_reg = nn.Parameter(init_filter_reg * torch.ones(1))
+        self.filter_regular = nn.Parameter(init_filter_regular * torch.ones(1))
         self.gauss_sigma = gauss_sigma
-        self.min_filter_reg = min_filter_reg
-        self.detach_length = detach_length
+        self.min_filter_regular = min_filter_regular
         self.alpha_eps = alpha_eps
-        self.uni_weight = 0 if init_uni_weight is None else init_uni_weight
-        self.normalize_label = normalize_label
-        self.label_shrink = label_shrink
-        self.softmax_reg = softmax_reg
-        self.label_threshold = label_threshold
+        self.label_thres = label_thres
 
     def get_label_density(self, center, output_sz):
         center = center.reshape(center.shape[0], -1, center.shape[-1])
@@ -107,129 +77,165 @@ class PrDiMPSteepestDescentNewton(nn.Module):
             g0 = torch.exp(-1.0 / (2 * self.gauss_sigma**2) * dist0)
             g1 = torch.exp(-1.0 / (2 * self.gauss_sigma**2) * dist1)
             gauss = (g0 / (2 * math.pi * self.gauss_sigma**2)) * g1
-        gauss = gauss * (gauss > self.label_threshold).float()
-        if self.normalize_label:
-            gauss /= (gauss.sum(dim=(-2, -1), keepdim=True) + 1e-8)
-        label_dens = (1.0 - self.label_shrink) * (
-            (1.0 - self.uni_weight) * gauss + self.uni_weight /
-            (output_sz[0] * output_sz[1]))
-        return label_dens
+        gauss = gauss * (gauss > self.label_thres).float()
+        gauss_density = gauss / (gauss.sum(dim=(-2, -1), keepdim=True) + 1e-8)
+        return gauss_density
 
     def forward(self,
-                weights,
+                filter,
                 feat,
-                bb,
-                sample_weight=None,
-                num_iter=None,
-                compute_losses=True):
+                bboxes,
+                num_iters=None,
+                sample_weights=None):
         """Runs the optimizer module.
 
-        Note that [] denotes an optional dimension.
+        Note that [] denotes an optional dimension. Generally speaking, inputs
+        in test mode don't have the dim of [].
+
         args:
-            weights:  Initial weights. Dims (sequences, feat_dim, wH, wW).
-            feat:  Input feature maps.
-                Dims (images_in_sequence, [sequences], feat_dim, H, W).
-            bb:  Target bounding boxes (x, y, w, h) in the image coords.
-                Dims (images_in_sequence, [sequences], 4).
-            sample_weight:  Optional weight for each sample.
-                Dims: (images_in_sequence, [sequences]).
-            num_iter:  Number of iterations to run.
-            compute_losses:  Whether to compute the (train) loss in each
-                iteration.
+            filter:  Initial filter with shape
+                (num_img_per_seq, c, fitler_h, filter_w).
+            feat:  Input feature maps with shape
+                (num_img_per_seq, [bs], feat_dim, H, W).
+            bboxes:  Target bounding boxes with shape
+                (num_img_per_seq, [bs], 4). in (x, y, w, h) format.
+            sample_weights:  Optional weight for each sample.
+                Dims: (num_img_per_seq, [bs]).
+            num_iters:  Number of iterations to run.
+
         returns:
-            weights:  The final oprimized weights.
-            weight_iterates:  The weights computed in each iteration
-                (including initial input and final output).
-            losses:  Train losses.
+            filter (Tensor):  The final oprimized filter.
+            filter_iters (Tensor, optional):  The filter computed in each
+                iteration (including initial input and final output), returned
+                only in training
+            losses (Tensor, optional): losses in all optimizer iterations,
+                returned only in training
         """
 
         # Sizes
-        num_iter = self.num_iter if num_iter is None else num_iter
-        num_images = feat.shape[0]
-        num_sequences = feat.shape[1] if feat.dim() == 5 else 1
-        filter_sz = (weights.shape[-2], weights.shape[-1])
-        output_sz = (feat.shape[-2] + (weights.shape[-2] + 1) % 2,
-                     feat.shape[-1] + (weights.shape[-1] + 1) % 2)
+        num_iters = self.num_iters if num_iters is None else num_iters
+        num_img_per_seq = feat.shape[0]
+        batch_size = feat.shape[1] if feat.dim() == 5 else 1
+        filter_sz = (filter.shape[-2], filter.shape[-1])
+        output_sz = (feat.shape[-2] + (filter.shape[-2] + 1) % 2,
+                     feat.shape[-1] + (filter.shape[-1] + 1) % 2)
 
         # Get learnable scalars
         step_length_factor = torch.exp(self.log_step_length)
-        reg_weight = (self.filter_reg *
-                      self.filter_reg).clamp(min=self.min_filter_reg**2)
+        filter_regular = (self.filter_regular**2).clamp(
+            min=self.min_filter_regular**2)
 
         # Compute label density
-        offset = (torch.Tensor(filter_sz).to(bb.device) % 2) / 2.0
-        center = ((bb[..., :2] + bb[..., 2:] / 2) / self.feat_stride).flip(
-            (-1, )) - offset
+        offset = (torch.Tensor(filter_sz).to(bboxes.device) % 2) / 2.0
+        center = ((bboxes[..., :2] + bboxes[..., 2:] / 2) / self.feat_stride)
+        center = center.flip((-1, )) - offset
         label_density = self.get_label_density(center, output_sz)
 
-        # Get total sample weights
-        if sample_weight is None:
-            sample_weight = torch.Tensor([1.0 / num_images]).to(feat.device)
-        elif isinstance(sample_weight, torch.Tensor):
-            sample_weight = sample_weight.reshape(num_images, num_sequences, 1,
-                                                  1)
+        # Get total sample filter
+        if sample_weights is None:
+            sample_weights = torch.Tensor([1.0 / num_img_per_seq
+                                           ]).to(feat.device)
+        elif isinstance(sample_weights, torch.Tensor):
+            sample_weights = sample_weights.reshape(num_img_per_seq,
+                                                    batch_size, 1, 1)
 
-        exp_reg = 0 if self.softmax_reg is None else math.exp(self.softmax_reg)
-
-        def _compute_loss(scores, weights):
-            sample_weight_reshape = sample_weight.reshape(
-                sample_weight.shape[0], -1)
-            score_log_sum_exp = torch.log(scores.exp().sum(dim=(-2, -1)) +
-                                          exp_reg)
-            sum_scores = (label_density * scores).sum(dim=(-2, -1))
-            return torch.sum(
-                sample_weight_reshape * (score_log_sum_exp - sum_scores)
-            ) / num_sequences + reg_weight * (weights**2).sum() / num_sequences
-
-        weight_iterates = [weights]
+        filter_iters = []
         losses = []
 
-        for i in range(num_iter):
-            if i > 0 and i % self.detach_length == 0:
-                weights = weights.detach()
+        for i in range(num_iters):
+            # Get scores by applying the filter on the features
+            scores = filter_layer.apply_filter(feat, filter)
+            scores = torch.softmax(
+                scores.reshape(num_img_per_seq, batch_size, -1),
+                dim=2).reshape(scores.shape)
 
-            # Compute "residuals"
-            scores = filter_layer.apply_filter(feat, weights)
-            scores_softmax = softmax_reg_fun(
-                scores.reshape(num_images, num_sequences, -1),
-                dim=2,
-                reg=self.softmax_reg).reshape(scores.shape)
-            res = sample_weight * (scores_softmax - label_density)
+            # Compute loss and record the filter of each iteration in training
+            # mode.
+            if self.training:
+                filter_iters.append(filter)
+                losses.append(
+                    self._compute_loss(scores, sample_weights, label_density,
+                                       filter, filter_regular))
 
-            if compute_losses:
-                losses.append(_compute_loss(scores, weights))
-
-            # Compute gradient
-            weights_grad = filter_layer.apply_feat_transpose(
+            # Compute gradient and step_length
+            res = sample_weights * (scores - label_density)
+            filter_grad = filter_layer.apply_feat_transpose(
                 feat, res, filter_sz,
-                training=self.training) + reg_weight * weights
+                training=self.training) + filter_regular * filter
 
-            # Map the gradient with the Hessian
-            scores_grad = filter_layer.apply_filter(feat, weights_grad)
-            sm_scores_grad = scores_softmax * scores_grad
-            hes_scores_grad = sm_scores_grad - scores_softmax * torch.sum(
-                sm_scores_grad, dim=(-2, -1), keepdim=True)
-            grad_hes_grad = (scores_grad * hes_scores_grad).reshape(
-                num_images, num_sequences, -1).sum(dim=2).clamp(min=0)
-            grad_hes_grad = (
-                sample_weight.reshape(sample_weight.shape[0], -1) *
-                grad_hes_grad).sum(dim=0)
-
-            # Compute optimal step length
-            alpha_num = (weights_grad * weights_grad).sum(dim=(1, 2, 3))
-            alpha_den = (grad_hes_grad +
-                         (reg_weight + self.alpha_eps) * alpha_num).clamp(1e-8)
-            alpha = alpha_num / alpha_den
+            step_length = self.get_step_length(feat, sample_weights, scores,
+                                               filter_grad, filter_regular)
 
             # Update filter
-            weights = weights - (step_length_factor *
-                                 alpha.reshape(-1, 1, 1, 1)) * weights_grad
+            filter = filter - (step_length_factor *
+                               step_length.reshape(-1, 1, 1, 1)) * filter_grad
 
-            # Add the weight iterate
-            weight_iterates.append(weights)
+        if self.training:
+            filter_iters.append(filter)
+            # Get scores by applying the final filter on the feature map
+            scores = filter_layer.apply_filter(feat, filter)
+            losses.append(
+                self._compute_loss(scores, sample_weights, label_density,
+                                   filter, filter_regular))
+            return filter, filter_iters, losses
+        else:
+            return filter
 
-        if compute_losses:
-            scores = filter_layer.apply_filter(feat, weights)
-            losses.append(_compute_loss(scores, weights))
+    def get_step_length(self, feat, sample_weights, scores, filter_grad,
+                        filter_regular):
+        """Compute the step length of updating the filter.
 
-        return weights, weight_iterates, losses
+        Args:
+            feat (Tensor): Input feature map with shape.
+            sample_weights (Tensor): The weights of all samples with shape ()
+            scores (Tensor): The score map with shaoe ().
+            filter_grad (Tensor): The gradient of the filter with shape ().
+            filter_regular (Tensor): The regulazation item of the filter, with
+                shape ().
+
+        Returns:
+            alpha (Tensor): The updating factor with shape ().
+        """
+        num_img_per_seq = feat.shape[0]
+        batch_size = feat.shape[1] if feat.dim() == 5 else 1
+        # Map the gradient with the Hessian
+        scores_grad = filter_layer.apply_filter(feat, filter_grad)
+        sm_scores_grad = scores * scores_grad
+        hes_scores_grad = sm_scores_grad - scores * torch.sum(
+            sm_scores_grad, dim=(-2, -1), keepdim=True)
+        grad_hes_grad = (scores_grad * hes_scores_grad).reshape(
+            num_img_per_seq, batch_size, -1).sum(dim=2).clamp(min=0)
+        grad_hes_grad = (sample_weights.reshape(sample_weights.shape[0], -1) *
+                         grad_hes_grad).sum(dim=0)
+
+        # Compute optimal step length
+        alpha_num = (filter_grad * filter_grad).sum(dim=(1, 2, 3))
+        alpha_den = (grad_hes_grad +
+                     (filter_regular + self.alpha_eps) * alpha_num).clamp(1e-8)
+        alpha = alpha_num / alpha_den
+
+        return alpha
+
+    def _compute_loss(scores, sample_weights, label_density, filter,
+                      filter_regular):
+        """Compute loss in the box optimization.
+
+        Args:
+            scores (Tensor): _description_
+            sample_weights (Tensor): _description_
+            label_density (Tensor): _description_
+            filter (Tensor): _description_
+            filter_regular (Tensor): _description_
+
+        Returns:
+            (Tensor):
+        """
+
+        num_samples = sample_weights.shape[0]
+        sample_weights = sample_weights.reshape(sample_weights.shape[0], -1)
+        score_log_sum_exp = torch.log(scores.exp().sum(dim=(-2, -1)))
+        sum_scores = (label_density * scores).sum(dim=(-2, -1))
+
+        return torch.sum(
+            sample_weights * (score_log_sum_exp - sum_scores)
+        ) / num_samples + filter_regular * (filter**2).sum() / num_samples

@@ -212,14 +212,16 @@ class Prdimp(BaseSingleObjectTracker):
     def generate_bbox(self, pos, sz, sample_pos, sample_scale):
         """All inputs in original image coordinates.
 
-        Generates a box in the cropped image sample reference frame, in the
-            format used by the IoUNet.
-        pos: bbox center
-        sz: the width and height of the image, with shape (2, )
-        sample_pos (Tensor): of shape (2,) the center of the sampled image
-        sample_scale (int):
+        Args:
+            Generates a box in the cropped image sample reference frame, in the
+                format used by the IoUNet.
+            pos: bbox center
+            sz: the width and height of the image, with shape (2, )
+            sample_pos (Tensor): of shape (2,) the center of the sampled image
+            sample_scale (int):
 
-        # return bbox in [x,y,w,h] format
+        Return:
+            bbox in [x,y,w,h] format
         """
         box_center = (pos - sample_pos) / sample_scale + (self.img_sample_sz -
                                                           1) / 2
@@ -229,13 +231,13 @@ class Prdimp(BaseSingleObjectTracker):
 
     def init_cls_bboxes(self, init_bboxes):
         """Get the target bounding boxes for the initial augmented samples."""
-        init_target_boxes = []
+        init_target_bboxes = []
         for T in self.transforms:
-            init_target_boxes.append(
+            init_target_bboxes.append(
                 init_bboxes + torch.Tensor([T.shift[1], T.shift[0], 0, 0]))
-        init_target_boxes = torch.stack(init_target_boxes)
+        init_target_bboxes = torch.stack(init_target_bboxes)
 
-        return init_target_boxes
+        return init_target_bboxes
 
     def track(self, img):
         self.frame_num += 1
@@ -281,45 +283,35 @@ class Prdimp(BaseSingleObjectTracker):
             self.bbox_hw, self.bbox_center_yx)
         new_pos = sample_pos[0, :] + translation_vec
 
-        # Refine position, size and  scale
+        # Refine position, size and get new target scale
         if flag != 'not_found':
             self.update_state(new_pos)
             cls_bboxes = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
                                             sample_pos[0], sample_scales[0])
-            new_pos, new_target_sz = self.bbox_regressor.refine_target_box(
-                cls_bboxes, backbone_feat, sample_pos, sample_scales)
+            new_pos, new_target_sz = self.bbox_regressor.refine_target_bbox(
+                cls_bboxes, backbone_feat, sample_pos, sample_scales,
+                self.img_sample_sz)
             if new_pos is not None:
                 new_scale = torch.sqrt(new_target_sz.prod() /
                                        self.base_target_sz.prod())
-                self.bbox_center_yx_iounet = new_pos.clone()
                 self.bbox_center_yx = new_pos.clone()
                 self.bbox_hw = new_target_sz
                 self.target_scale = new_scale
 
-        # ------- UPDATE ------- #
+        # Update the classifier
         update_flag = flag not in ['not_found', 'uncertain']
-        hard_negative = (flag == 'hard_negative')
-        learning_rate = self.test_cfg.get('hard_negative_learning_rate',
-                                          None) if hard_negative else None
-
         # Update the classifier filter using the latest position and size of
         # target
         if update_flag:
-            # Create the target_box using the refined predicted boxes
-            target_box = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
-                                            sample_pos[0], sample_scales[0])
-
+            # Create the target_bbox using the refined predicted boxes
+            target_bbox = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
+                                             sample_pos[0], sample_scales[0])
+            hard_neg_flag = (flag == 'hard_negative')
             # Update the classifier model using it's optimizer module
-            self.classifier.update_classifier(test_x, target_box,
-                                              self.frame_num, learning_rate,
-                                              scores)
+            self.classifier.update_classifier(test_x, target_bbox,
+                                              self.frame_num, hard_neg_flag)
 
-        # Set the pos of the tracker to iounet pos
-        if flag != 'not_found' and hasattr(self, 'bbox_yx_iounet'):
-            self.bbox_center_yx = self.bbox_center_yx_iounet.clone()
-
-        max_score = torch.max(scores[0, ...]).item()
-
+        max_score = torch.max(scores[0]).item()
         # Compute output bounding box
         new_state = torch.cat(
             (self.bbox_center_yx[[1, 0]] - (self.bbox_hw[[1, 0]] - 1) / 2,
@@ -411,7 +403,7 @@ class Prdimp(BaseSingleObjectTracker):
         Returns:
             img_patch (Tensor): of shape (1, c, h, w)
             patch_coord (Tensor): the coordinate of image patch among the
-                original image. It's of shape (1, 4)
+                original image. It's of shape (1, 4) in [x1,y1,x2,y2] format.
         """
         # copy and convert
         crop_center_copy = crop_center.long().clone()
@@ -468,10 +460,6 @@ class Prdimp(BaseSingleObjectTracker):
             shift = (-tl - outside) * (outside > 0).long()
             tl += shift
             br += shift
-
-            # Get image patch
-            # img_patch =
-            # img2[...,tl[0].item():br[0].item(),tl[1].item():br[1].item()]
 
         # Get image patch
         if not is_mask:
