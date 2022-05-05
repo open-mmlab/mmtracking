@@ -50,9 +50,9 @@ class Prdimp(BaseSingleObjectTracker):
 
         # generate bboxes on the resized input image
         # `init_bboxes` is in [x,y,w,h] format
-        # TODO simplify this code
-        init_bboxes = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
-                                         self.bbox_center_yx.round(),
+        # TODO: simplify this code
+        init_bboxes = self.generate_bbox(self.bbox_center, self.bbox_size,
+                                         self.bbox_center.round(),
                                          self.target_scale)
 
         # Crop patches from the image and perform augmentation on the image
@@ -80,7 +80,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Get feature size and kernel sizes used for calculating the
         # center of samples
-        self.feature_sz = torch.Tensor(cls_feat_size)
+        self.cls_feat_size = torch.Tensor(cls_feat_size)
         self.filter_size = self.classifier.filter_size
 
         # Initialize IoUNet
@@ -97,33 +97,35 @@ class Prdimp(BaseSingleObjectTracker):
             init_bbox (ndarray | list): in [x,y,w,h] format
         """
         # Set center and size for bbox
-        self.bbox_center_yx = torch.Tensor([
+        # bbox_center is in [x, y] format
+        self.bbox_center = torch.Tensor([
+            init_bbox[0] + (init_bbox[2] - 1) / 2,
             init_bbox[1] + (init_bbox[3] - 1) / 2,
-            init_bbox[0] + (init_bbox[2] - 1) / 2
         ])
-        self.bbox_hw = torch.Tensor([init_bbox[3], init_bbox[2]])
+        # bbox_size is in [w, h] format
+        self.bbox_size = torch.Tensor([init_bbox[2], init_bbox[3]])
 
-        # Set size for image
-        self.image_hw = torch.Tensor([img_hw[0], img_hw[1]])
+        # Set size for image. img_size is in [w, h] format.
+        self.img_size = torch.Tensor([img_hw[1], img_hw[0]])
         sample_size = self.test_cfg['image_sample_size']
         self.img_sample_sz = torch.Tensor(
             [sample_size, sample_size] if isinstance(sample_size, int
                                                      ) else sample_size)
 
         # Set search area
-        search_area = torch.prod(self.bbox_hw *
+        search_area = torch.prod(self.bbox_size *
                                  self.test_cfg['search_area_scale']).item()
-        # target_scale is the ratio of the size of cropped image to the size
-        # of resized image
+        # target_scale is the ratio of the size of original bbox to that
+        # of the resized bbox in the resized image
         self.target_scale = math.sqrt(
             search_area) / self.img_sample_sz.prod().sqrt()
 
         # base_target_sz is the size of the init bbox in resized image
-        self.base_target_sz = self.bbox_hw / self.target_scale
+        self.base_target_sz = self.bbox_size / self.target_scale
 
         # Set scale bounds
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
-        self.max_scale_factor = torch.min(self.image_hw / self.base_target_sz)
+        self.max_scale_factor = torch.min(self.img_size / self.base_target_sz)
 
     def gen_aug_patches(self, im):
         """Perform data augmentation to generate initial training samples and
@@ -152,9 +154,6 @@ class Prdimp(BaseSingleObjectTracker):
         def get_rand_shift():
             return ((torch.rand(2) - 0.5) * self.img_sample_sz *
                     random_shift_factor).long().tolist()
-
-        # max_rand_shift = self.img_sample_sz.prod().sqrt() * \
-        # random_shift_factor * 0.5
 
         # Always put identity transformation first, since it is the
         # unaugmented sample that is always used
@@ -197,8 +196,8 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Crop image patches
         img_patch, _ = self.get_cropped_img(
-            im, self.bbox_center_yx.round(),
-            self.target_scale * aug_expansion_sz, aug_expansion_sz)
+            im, self.bbox_center.round(), self.target_scale * aug_expansion_sz,
+            aug_expansion_sz)
 
         # Perform augmentation on the image patches
         aug_img_patches = torch.cat(
@@ -209,25 +208,28 @@ class Prdimp(BaseSingleObjectTracker):
 
         return aug_img_patches
 
-    def generate_bbox(self, pos, sz, sample_pos, sample_scale):
-        """All inputs in original image coordinates.
+    def generate_bbox(self, bbox_center, bbox_size, sample_center,
+                      sample_scale):
+        """All inputs are based in original image coordinates and the outputs
+        are based on the resized cropped image sample.
 
         Args:
             Generates a box in the cropped image sample reference frame, in the
                 format used by the IoUNet.
-            pos: bbox center
-            sz: the width and height of the image, with shape (2, )
-            sample_pos (Tensor): of shape (2,) the center of the sampled image
+            bbox_center: the bbox center in [x,y] format.
+            bbox_size: the width and height of the image, with shape (2, ) in
+                [w, h] format.
+            sample_center (Tensor): of shape (2,)
             sample_scale (int):
 
         Return:
-            bbox in [x,y,w,h] format
+            bbox: in [x,y,w,h] format
         """
-        box_center = (pos - sample_pos) / sample_scale + (self.img_sample_sz -
-                                                          1) / 2
-        box_sz = sz / sample_scale
-        target_ul = box_center - (box_sz - 1) / 2
-        return torch.cat([target_ul.flip((0, )), box_sz.flip((0, ))])
+        bbox_center = (bbox_center - sample_center) / sample_scale + (
+            self.img_sample_sz - 1) / 2
+        bbox_size = bbox_size / sample_scale
+        target_tl = bbox_center - (bbox_size - 1) / 2
+        return torch.cat([target_tl, bbox_size])
 
     def init_cls_bboxes(self, init_bboxes):
         """Get the target bounding boxes for the initial augmented samples."""
@@ -243,15 +245,16 @@ class Prdimp(BaseSingleObjectTracker):
         self.frame_num += 1
 
         # Extract backbone features
-        centered_sample_pos = self.bbox_center_yx + (
-            (self.feature_sz + self.filter_size) % 2) * (
-                self.target_scale * self.img_sample_sz) / (2 * self.feature_sz)
+        # TODO: remove `self.cls_feat_size`
+        sample_center_crop = self.bbox_center + (
+            (self.cls_feat_size + self.filter_size) % 2
+        ) * (self.target_scale * self.img_sample_sz) / (2 * self.cls_feat_size)
 
         # `img_patch` is of (1, c, h, w) shape
-        # `patch_coord` is of (1, 4) shape.
+        # `patch_coord` is of (1, 4) shape in [x1,y1,x2,y2] format.
         img_patch, patch_coord = self.get_cropped_img(
             img,
-            centered_sample_pos,
+            sample_center_crop,
             self.target_scale * self.img_sample_sz,
             self.img_sample_sz,
             mode=self.test_cfg.get('border_mode', 'replicate'),
@@ -266,37 +269,47 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Extract classification features
         with torch.no_grad():
-            test_x = self.classifier.cls_feature_extractor(backbone_feat[-1])
-            scores_raw = self.classifier.classify(test_x)
+            test_feat = self.classifier.cls_feature_extractor(
+                backbone_feat[-1])
+            scores_raw = self.classifier.classify(test_feat)
             scores = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
         # Location of sample
         patch_coord = patch_coord.float()
-        sample_pos = 0.5 * (patch_coord[:, :2] + patch_coord[:, 2:] - 1)
+        sample_center = 0.5 * (patch_coord[:, :2] + patch_coord[:, 2:] - 1)
         sample_scales = ((patch_coord[:, 2:] - patch_coord[:, :2]) /
                          self.img_sample_sz).prod(dim=1).sqrt()
 
         # Localize the target
-        translation_vec, flag = self.classifier.localize_target(
-            scores, sample_pos, sample_scales, self.img_sample_sz,
-            self.bbox_hw, self.bbox_center_yx)
-        new_pos = sample_pos[0, :] + translation_vec
+        displacement_center, flag = self.classifier.localize_target(
+            scores, sample_center, sample_scales, self.img_sample_sz,
+            self.bbox_size, self.bbox_center)
+        new_bbox_center = sample_center[0, :] + displacement_center
 
         # Refine position, size and get new target scale
         if flag != 'not_found':
-            self.update_state(new_pos)
-            cls_bboxes = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
-                                            sample_pos[0], sample_scales[0])
-            new_pos, new_target_sz = self.bbox_regressor.refine_target_bbox(
-                cls_bboxes, backbone_feat, sample_pos, sample_scales,
-                self.img_sample_sz)
-            if new_pos is not None:
-                new_scale = torch.sqrt(new_target_sz.prod() /
-                                       self.base_target_sz.prod())
-                self.bbox_center_yx = new_pos.clone()
-                self.bbox_hw = new_target_sz
-                self.target_scale = new_scale
+            inside_ratio = self.test_cfg.get('target_min_inside_ratio', 0.2)
+            inside_offset = (inside_ratio - 0.5) * self.bbox_size
+            # Clip the coordinates of the center of the target
+            self.bbox_center = torch.max(
+                torch.min(new_bbox_center, self.img_size - inside_offset),
+                inside_offset)
+
+            # TODO: unify the bbox format of classifier and the bbox regressor
+            # and not re-generate bbox
+            cls_bboxes = self.generate_bbox(self.bbox_center, self.bbox_size,
+                                            sample_center[0], sample_scales[0])
+            (new_bbox_center,
+             new_bbox_size) = self.bbox_regressor.refine_target_bbox(
+                 cls_bboxes, backbone_feat, sample_center, sample_scales,
+                 self.img_sample_sz)
+            if new_bbox_center is not None:
+                # Crop the original image based on the `self.target_scale`
+                self.target_scale = torch.sqrt(new_bbox_size.prod() /
+                                               self.base_target_sz.prod())
+                self.bbox_center = new_bbox_center
+                self.bbox_size = new_bbox_size
 
         # Update the classifier
         update_flag = flag not in ['not_found', 'uncertain']
@@ -304,39 +317,20 @@ class Prdimp(BaseSingleObjectTracker):
         # target
         if update_flag:
             # Create the target_bbox using the refined predicted boxes
-            target_bbox = self.generate_bbox(self.bbox_center_yx, self.bbox_hw,
-                                             sample_pos[0], sample_scales[0])
+            target_bbox = self.generate_bbox(self.bbox_center, self.bbox_size,
+                                             sample_center[0],
+                                             sample_scales[0])
             hard_neg_flag = (flag == 'hard_negative')
-            # Update the classifier model using it's optimizer module
-            self.classifier.update_classifier(test_x, target_bbox,
+            # Update the filter of classifier using it's optimizer module
+            self.classifier.update_classifier(test_feat, target_bbox,
                                               self.frame_num, hard_neg_flag)
 
         max_score = torch.max(scores[0]).item()
         # Compute output bounding box
         new_state = torch.cat(
-            (self.bbox_center_yx[[1, 0]] - (self.bbox_hw[[1, 0]] - 1) / 2,
-             self.bbox_hw[[1, 0]]))
+            (self.bbox_center - (self.bbox_size - 1) / 2, self.bbox_size))
 
         return max_score, new_state
-
-    def update_state(self, new_pos, new_scale=None):
-        """_summary_
-
-        Args:
-            new_pos (_type_): _description_
-            new_scale (_type_, optional): _description_. Defaults to None.
-        """
-        # Update scale
-        if new_scale is not None:
-            self.target_scale = new_scale.clamp(self.min_scale_factor,
-                                                self.max_scale_factor)
-            self.bbox_hw = self.base_target_sz * self.target_scale
-
-        # Update pos
-        inside_ratio = self.test_cfg.get('target_inside_ratio', 0.2)
-        inside_offset = (inside_ratio - 0.5) * self.bbox_hw
-        self.bbox_center_yx = torch.max(
-            torch.min(new_pos, self.image_hw - inside_offset), inside_offset)
 
     def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
         """Test without augmentation.
@@ -392,9 +386,9 @@ class Prdimp(BaseSingleObjectTracker):
 
         Args:
             img: Image
-            crop_center: center position of crop
-            crop_size: size to crop
-            output_size: size to resize to
+            crop_center (Tensor): center position of crop in [x, y] format.
+            crop_size (Tensor): size to crop in [w, h] format.
+            output_size: size to resize to in [w, h] format.
             mode: how to treat image borders: 'replicate' (default), 'inside'
                 or 'inside_major'
             max_scale_change: maximgum allowed scale change when using 'inside'
@@ -413,7 +407,7 @@ class Prdimp(BaseSingleObjectTracker):
         # Get new sample size if forced inside the image
         if mode == 'inside' or mode == 'inside_major':
             pad_mode = 'replicate'
-            img_sz = torch.Tensor([img.shape[2], img.shape[3]])
+            img_sz = torch.Tensor([img.shape[3], img.shape[2]])
             shrink_factor = (crop_size.float() / img_sz)
             if mode == 'inside':
                 shrink_factor = shrink_factor.max()
@@ -427,16 +421,18 @@ class Prdimp(BaseSingleObjectTracker):
         if output_size is not None:
             resize_factor = torch.min(crop_size.float() /
                                       output_size.float()).item()
-            df = int(max(int(resize_factor - 0.1), 1))
+            resize_factor = int(max(int(resize_factor - 0.1), 1))
         else:
-            df = int(1)
-        sz = crop_size.float() / df  # new image size
+            resize_factor = int(1)
+        sz = crop_size.float() / resize_factor  # new image size
 
         # Do downsampling
-        if df > 1:
-            os = crop_center_copy % df  # offset
-            crop_center_copy = (crop_center_copy - os) // df  # new position
-            img2 = img[..., os[0].item()::df, os[1].item()::df]  # downsample
+        if resize_factor > 1:
+            offset = crop_center_copy % resize_factor  # offset
+            crop_center_copy = (crop_center_copy -
+                                offset) // resize_factor  # new position
+            img2 = img[..., offset[1].item()::resize_factor,
+                       offset[0].item()::resize_factor]  # downsample
         else:
             img2 = img
 
@@ -451,7 +447,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Shift the crop to inside
         if mode == 'inside' or mode == 'inside_major':
-            img2_sz = torch.LongTensor([img2.shape[2], img2.shape[3]])
+            img2_sz = torch.LongTensor([img2.shape[3], img2.shape[2]])
             shift = (-tl).clamp(0) - (br - img2_sz).clamp(0)
             tl += shift
             br += shift
@@ -464,16 +460,16 @@ class Prdimp(BaseSingleObjectTracker):
         # Get image patch
         if not is_mask:
             img_patch = F.pad(img2,
-                              (-tl[1].item(), br[1].item() - img2.shape[3],
-                               -tl[0].item(), br[0].item() - img2.shape[2]),
+                              (-tl[0].item(), br[0].item() - img2.shape[3],
+                               -tl[1].item(), br[1].item() - img2.shape[2]),
                               pad_mode)
         else:
             img_patch = F.pad(img2,
-                              (-tl[1].item(), br[1].item() - img2.shape[3],
-                               -tl[0].item(), br[0].item() - img2.shape[2]))
+                              (-tl[0].item(), br[0].item() - img2.shape[3],
+                               -tl[1].item(), br[1].item() - img2.shape[2]))
 
         # Get image coordinates
-        patch_coord = df * torch.cat((tl, br)).view(1, 4)
+        patch_coord = resize_factor * torch.cat((tl, br)).view(1, 4)
 
         if output_size is None or (img_patch.shape[-2] == output_size[0]
                                    and img_patch.shape[-1] == output_size[1]):
@@ -482,10 +478,12 @@ class Prdimp(BaseSingleObjectTracker):
         # Resample
         if not is_mask:
             img_patch = F.interpolate(
-                img_patch, output_size.long().tolist(), mode='bilinear')
+                img_patch,
+                output_size.long().flip(0).tolist(),
+                mode='bilinear')
         else:
             img_patch = F.interpolate(
-                img_patch, output_size.long().tolist(), mode='nearest')
+                img_patch, output_size.long().flip(0).tolist(), mode='nearest')
 
         return img_patch, patch_coord
 

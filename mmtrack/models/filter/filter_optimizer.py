@@ -116,9 +116,9 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         num_iters = self.num_iters if num_iters is None else num_iters
         num_img_per_seq = feat.shape[0]
         batch_size = feat.shape[1] if feat.dim() == 5 else 1
-        filter_sz = (filter.shape[-2], filter.shape[-1])
-        output_sz = (feat.shape[-2] + (filter.shape[-2] + 1) % 2,
-                     feat.shape[-1] + (filter.shape[-1] + 1) % 2)
+        filter_size_hw = (filter.shape[-2], filter.shape[-1])
+        output_size_hw = (feat.shape[-2] + (filter.shape[-2] + 1) % 2,
+                          feat.shape[-1] + (filter.shape[-1] + 1) % 2)
 
         # Get learnable scalars
         step_length_factor = torch.exp(self.log_step_length)
@@ -126,10 +126,10 @@ class PrDiMPSteepestDescentNewton(nn.Module):
             min=self.min_filter_regular**2)
 
         # Compute label density
-        offset = (torch.Tensor(filter_sz).to(bboxes.device) % 2) / 2.0
+        offset = (torch.Tensor(filter_size_hw).to(bboxes.device) % 2) / 2.0
         center = ((bboxes[..., :2] + bboxes[..., 2:] / 2) / self.feat_stride)
-        center = center.flip((-1, )) - offset
-        label_density = self.get_label_density(center, output_sz)
+        center_yx = center.flip((-1, )) - offset
+        label_density = self.get_label_density(center_yx, output_size_hw)
 
         # Get total sample filter
         if sample_weights is None:
@@ -160,7 +160,7 @@ class PrDiMPSteepestDescentNewton(nn.Module):
             # Compute gradient and step_length
             res = sample_weights * (scores - label_density)
             filter_grad = filter_layer.apply_feat_transpose(
-                feat, res, filter_sz,
+                feat, res, filter_size_hw,
                 training=self.training) + filter_regular * filter
 
             step_length = self.get_step_length(feat, sample_weights, scores,

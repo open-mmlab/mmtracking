@@ -105,7 +105,7 @@ def bbox_rect_to_rel(bboxes, size_norm=None):
         , where [cx, cy] is the center coordinate.
 
     Args:
-        bboxes (Tensor): of shape (N, 4)
+        bboxes (Tensor): of shape (N, 4) in [x, y, w, h] format.
         size_norm (Tensor, optional): It contains values of [sw, sh] and it's
             of shape (N, 2).
     """
@@ -121,9 +121,13 @@ def bbox_rect_to_rel(bboxes, size_norm=None):
 
 
 def bbox_rel_to_rect(bboxes, size_norm=None):
-    """Inverts the effect of rect_to_rel.
+    """Inverts the effect of `bbox_rect_to_rel`.
 
-    See above.
+    Args:
+        bboxes (Tensor): of shape (N, 4) in [cx/sw, cy/sh, log(w), log(h)]
+            format.
+        size_norm (Tensor, optional): It contains values of [sw, sh] and it's
+            of shape (N, 2).
     """
 
     sz = torch.exp(bboxes[..., 2:])

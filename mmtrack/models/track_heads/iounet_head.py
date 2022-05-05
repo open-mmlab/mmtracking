@@ -226,7 +226,7 @@ class IouNetHead(nn.Module):
 
         Args:
             iou_backbone_feats (tuple(Tensor)): _description_
-            bboxes (Tensor): _description_
+            bboxes (Tensor): of shape (4, ) in [x,y,w,h] format.
         """
         # Get modulation vector
         with torch.no_grad():
@@ -239,11 +239,12 @@ class IouNetHead(nn.Module):
         Args:
             iou_features (tuple(Tensor)): The features used to predict IoU.
             init_bboxes (Tensor): The initialized bboxes with shape (N,4) in
-                [x,y,w,h] format.
+                [x, y, w, h] format.
 
         Returns:
-            Tensor: _description_
-            Tensor:
+            Tensor: The optimized bboxes with shape (N,4)  in [x, y, w, h]
+                format.
+            Tensor: The predict IoU of the optimized bboxes with shape (N, ).
         """
         output_bboxes = init_bboxes.view(1, -1, 4).to(iou_features[0].device)
         step_length = self.bbox_cfg['box_refine_step_length']
@@ -278,15 +279,15 @@ class IouNetHead(nn.Module):
 
         return output_bboxes.view(-1, 4), iou_outputs.detach().view(-1)
 
-    def refine_target_bbox(self, init_bbox, backbone_feats, sample_pos,
+    def refine_target_bbox(self, init_bbox, backbone_feats, sample_center,
                            sample_scale, sample_size):
         """Run the ATOM IoUNet to refine the target bounding box.
 
         Args:
-            init_bbox (Tensor): of shape (4, )
+            init_bbox (Tensor): of shape (4, ) in [x, y, w, h] formmat.
             backbone_feats (tuple(Tensor)): of shape (1, c, h, w)
-            sample_pos (Tensor): The position of the top-left of the cropped
-                sample on the original image. It's of shape (1,2) in [y, x]
+            sample_center (Tensor): The center of the cropped
+                sample on the original image. It's of shape (1,2) in [x, y]
                 format.
             sample_scale (Tensor): The scale of the cropped sample. It's of
                 shape (1,).
@@ -294,7 +295,8 @@ class IouNetHead(nn.Module):
                 shape (2,) in [h, w] format.
 
         Returns:
-            _type_: _description_
+            Tensor: new center of target bbox in [x, y] format.
+            Tensor: new scale of target bbox in [w, h] format.
         """
         with torch.no_grad():
             iou_features = self.get_iou_feat(backbone_feats)
@@ -310,11 +312,11 @@ class IouNetHead(nn.Module):
             mini_edge_size = init_bbox[2:].min() / 3
             rand_bboxes_shift = (torch.rand(
                 self.bbox_cfg['num_init_random_boxes'], 4) - 0.5) * rand_factor
-            new_sz = (init_bbox[2:] +
-                      rand_bboxes_shift[:, 2:]).clamp(mini_edge_size)
+            new_size = (init_bbox[2:] +
+                        rand_bboxes_shift[:, 2:]).clamp(mini_edge_size)
             new_center = (init_bbox[:2] +
                           init_bbox[2:] / 2) + rand_bboxes_shift[:, :2]
-            init_bboxes = torch.cat([new_center - new_sz / 2, new_sz], 1)
+            init_bboxes = torch.cat([new_center - new_size / 2, new_size], 1)
             init_bboxes = torch.cat([init_bbox.view(1, 4), init_bboxes])
 
         # Optimize the boxes
@@ -342,10 +344,11 @@ class IouNetHead(nn.Module):
         # in [x,y,w,h] format
         predicted_box = out_bboxes[inds, :].mean(0)
 
-        # Get new position and size
-        new_pos = predicted_box[:2] + predicted_box[2:] / 2
-        new_pos = (new_pos.flip(
-            (0, )) - (sample_size - 1) / 2) * sample_scale[0] + sample_pos[0]
-        new_target_sz = predicted_box[2:].flip((0, )) * sample_scale[0]
+        # Convert the bbox of the cropped sample to that of original image.
+        new_bbox_center = predicted_box[:2] + predicted_box[2:] / 2
+        new_bbox_center = (
+            new_bbox_center -
+            (sample_size - 1) / 2) * sample_scale[0] + sample_center[0]
+        new_target_size = predicted_box[2:] * sample_scale[0]
 
-        return new_pos, new_target_sz
+        return new_bbox_center, new_target_size

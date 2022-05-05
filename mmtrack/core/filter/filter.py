@@ -31,7 +31,7 @@ def apply_filter(feat, filter):
     return scores
 
 
-def apply_feat_transpose(feat, activation, filter_size, training=True):
+def apply_feat_transpose(feat, activation, filter_size_hw, training=True):
     """The transposed operation of `apply_filter` w.r.t the filter. It can be
     used to compute the filter gradient. There are two implements: the one
     forwards slowly and backwards fast, which used in training, and the other
@@ -46,6 +46,7 @@ def apply_feat_transpose(feat, activation, filter_size, training=True):
             label). There are two possible shapes in the different modes:
             - training mode: of shape (num_img_per_seq, bs, size_h, size_w)
             - test mode: of shape (num_img_per_seq, 1, size_h, size_w)
+        filter_size_hw (Tensor): of shape (2,) shape in [h, w] format.
         training (bool, optional): Whether training mode or not. The faster
             implementation is chose according to this.
 
@@ -56,9 +57,9 @@ def apply_feat_transpose(feat, activation, filter_size, training=True):
             - test mode: of shape (1, c, out_h, out_w).
     """
 
-    if isinstance(filter_size, int):
-        filter_size = (filter_size, filter_size)
-    transpose_pad = [(sz - 1) // 2 for sz in filter_size]
+    if isinstance(filter_size_hw, int):
+        filter_size_hw = (filter_size_hw, filter_size_hw)
+    transpose_pad = [(sz - 1) // 2 for sz in filter_size_hw]
 
     if training:
         # slow forward and fast backward
