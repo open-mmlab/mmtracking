@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 img_scale = (800, 1440)
-samples_per_gpu = 4
+samples_per_gpu = 1
 
 model = dict(
     type='OCSORT',

@@ -82,11 +82,14 @@ class OCSORT_Tracker(BaseTracker):
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
         self.tracks[id].obs = []
-        self.tracks[id].obs.append(obj)
+        bbox_id = self.memo_items.index('bboxes')
+        self.tracks[id].obs.append(obj[bbox_id])
         # a placefolder to save mean/covariance before losing tracking it
         # parameters to save: mean, covariance, measurement
         self.tracks[id].tracked = True
         self.tracks[id].saved_attr = Dict()
+        self.tracks[id].velocity = torch.tensor(
+            (-1, -1)).to(obj[bbox_id].device)  # placeholder
 
     def update_track(self, id, obj):
         """Update a track."""
@@ -100,7 +103,38 @@ class OCSORT_Tracker(BaseTracker):
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
         self.tracks[id].tracked = True
-        self.tracks[id].obs.append(obj)
+        bbox_id = self.memo_items.index('bboxes')
+        self.tracks[id].obs.append(obj[bbox_id])
+
+        bbox1 = self.k_step_observation(self.tracks[id])
+        bbox2 = obj[bbox_id]
+        self.tracks[id].velocity = self.vel_direction(bbox1, bbox2).to(
+            obj[bbox_id].device)
+
+    def vel_direction(self, bbox1, bbox2):
+        """Estimate the direction vector between two boxes."""
+        if bbox1.sum() < 0 or bbox2.sum() < 0:
+            return torch.tensor((-1, -1))
+        cx1, cy1 = (bbox1[0] + bbox1[2]) / 2.0, (bbox1[1] + bbox1[3]) / 2.0
+        cx2, cy2 = (bbox2[0] + bbox2[2]) / 2.0, (bbox2[1] + bbox2[3]) / 2.0
+        speed = torch.tensor([cy2 - cy1, cx2 - cx1])
+        norm = torch.sqrt((speed[0])**2 + (speed[1])**2) + 1e-6
+        return speed / norm
+
+    def vel_direction_batch(self, bboxes1, bboxes2):
+        """Estimate the direction vector given two batches of boxes."""
+        cx1, cy1 = (bboxes1[:, 0] + bboxes1[:, 2]) / 2.0, (bboxes1[:, 1] +
+                                                           bboxes1[:, 3]) / 2.0
+        cx2, cy2 = (bboxes2[:, 0] + bboxes2[:, 2]) / 2.0, (bboxes2[:, 1] +
+                                                           bboxes2[:, 3]) / 2.0
+        speed_diff_y = cy2[None, :] - cy1[:, None]
+        speed_diff_x = cx2[None, :] - cx1[:, None]
+        speed = torch.cat((speed_diff_y[..., None], speed_diff_x[..., None]),
+                          dim=-1)
+        norm = torch.sqrt((speed[:, :, 0])**2 + (speed[:, :, 1])**2) + 1e-6
+        speed[:, :, 0] /= norm
+        speed[:, :, 1] /= norm
+        return speed
 
     def pop_invalid_tracks(self, frame_id):
         """Pop out invalid tracks."""
@@ -115,11 +149,25 @@ class OCSORT_Tracker(BaseTracker):
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
 
-    def assign_ids(self,
-                   ids,
-                   det_bboxes,
-                   weight_iou_with_det_scores=False,
-                   match_iou_thr=0.5):
+    def k_step_observation(self, track):
+        """return the observation k step away before."""
+        obs_seqs = track.obs
+        num_obs = len(obs_seqs)
+        if num_obs == 0:
+            return torch.tensor((-1, -1, -1, -1)).to(track.obs[0].device)
+        elif num_obs > self.vel_delta_t:
+            if obs_seqs[num_obs - 1 - self.vel_delta_t] is not None:
+                return obs_seqs[num_obs - 1 - self.vel_delta_t]
+            else:
+                return self.last_obs(track)
+        else:
+            return self.last_obs(track)
+
+    def ocm_assign_ids(self,
+                       ids,
+                       det_bboxes,
+                       weight_iou_with_det_scores=False,
+                       match_iou_thr=0.5):
         """Assign ids.
 
         Args:
@@ -133,6 +181,8 @@ class OCSORT_Tracker(BaseTracker):
 
         Returns:
             tuple(int): The assigning ids.
+
+        OC-SORT uses velocity consistency besides IoU for association
         """
         # get track_bboxes
         track_bboxes = np.zeros((0, 4))
@@ -148,6 +198,31 @@ class OCSORT_Tracker(BaseTracker):
             ious *= det_bboxes[:, 4][None]
         dists = (1 - ious).cpu().numpy()
 
+        if len(ids) > 0 and len(det_bboxes) > 0:
+            track_velocities = torch.stack(
+                [self.tracks[id].velocity for id in ids]).to(det_bboxes.device)
+            k_step_observations = torch.stack([
+                self.k_step_observation(self.tracks[id]) for id in ids
+            ]).to(det_bboxes.device)
+            valid1 = track_velocities.sum(dim=1) != -2
+            valid2 = k_step_observations.sum(dim=1) != -4
+            valid = valid1 & valid2
+
+            vel_to_match = self.vel_direction_batch(k_step_observations[:, :4],
+                                                    det_bboxes[:, :4])
+            track_velocities = track_velocities[:, None, :].repeat(
+                1, det_bboxes.shape[0], 1)
+
+            angle_cos = (vel_to_match * track_velocities).sum(dim=-1)
+            angle_cos = torch.clamp(angle_cos, min=-1, max=1)
+            angle = torch.acos(angle_cos)  # [0, pi]
+            norm_angle = (angle - np.pi / 2.) / np.pi  # [-0.5, 0.5]
+            valid_matrix = valid[:, None].int().repeat(1, det_bboxes.shape[0])
+            # set non-valid entries 0
+            valid_norm_angle = norm_angle * valid_matrix
+
+            dists += valid_norm_angle.cpu().numpy() * self.vel_consist_weight
+
         # bipartite match
         if dists.size > 0:
             cost, row, col = lap.lapjv(
@@ -156,6 +231,64 @@ class OCSORT_Tracker(BaseTracker):
             row = np.zeros(len(ids)).astype(np.int32) - 1
             col = np.zeros(len(det_bboxes)).astype(np.int32) - 1
         return row, col
+
+    def last_obs(self, track):
+        """extract the last associated observation."""
+        for bbox in track.obs[::-1]:
+            if bbox is not None:
+                return bbox
+
+    def ocr_assign_ids(self,
+                       track_obs,
+                       det_bboxes,
+                       weight_iou_with_det_scores=False,
+                       match_iou_thr=0.5):
+        """association for Observation-Centric Recovery.
+
+        As try to recover tracks from being lost whose estimated velocity is
+        out- to-date, we use IoU-only matching strategy.
+        """
+        # compute distance
+        ious = bbox_overlaps(track_obs[:, :4], det_bboxes[:, :4])
+        if weight_iou_with_det_scores:
+            ious *= det_bboxes[:, 4][None]
+
+        dists = (1 - ious).cpu().numpy()
+
+        # bipartite match
+        if dists.size > 0:
+            cost, row, col = lap.lapjv(
+                dists, extend_cost=True, cost_limit=1 - match_iou_thr)
+        else:
+            row = np.zeros(len(track_obs)).astype(np.int32) - 1
+            col = np.zeros(len(det_bboxes)).astype(np.int32) - 1
+        return row, col
+
+    def online_smooth(self, track, obj):
+        """Once a track is recovered from being lost, online smooth its
+        parameters to fix the error accumulated during being lost.
+
+        NOTE: you can use different virtual trajectory generation
+        strategies, we adopt the naive linear interpolation as default
+        """
+        last_match_bbox = self.last_obs(track)[:4]
+        new_match_bbox = obj[:4]
+        unmatch_len = 0
+        for bbox in track.obs[::-1]:
+            if bbox is None:
+                unmatch_len += 1
+            else:
+                break
+        bbox_shift_per_step = (new_match_bbox - last_match_bbox) / (
+            unmatch_len + 1)
+        track.mean = track.saved_attr.mean
+        track.covariance = track.saved_attr.covariance
+        for i in range(unmatch_len):
+            virtual_bbox = last_match_bbox + (i + 1) * bbox_shift_per_step
+            virtual_bbox = bbox_xyxy_to_cxcyah(virtual_bbox[None, :])
+            virtual_bbox = virtual_bbox.squeeze(0).cpu().numpy()
+            track.mean, track.covariance = self.kf.update(
+                track.mean, track.covariance, virtual_bbox)
 
     @force_fp32(apply_to=('img', 'bboxes'))
     def track(self,
@@ -184,6 +317,11 @@ class OCSORT_Tracker(BaseTracker):
                 False.
         Returns:
             tuple: Tracking results.
+
+        NOTE: this implementation is slightly different from the original
+        OC-SORT implementation (https://github.com/noahcao/OC_SORT)that we
+        do association between detections and tentative/non-tentative tracks
+        independently while the original implementation combines them together.
         """
         if not hasattr(self, 'kf'):
             self.kf = model.motion
@@ -196,7 +334,6 @@ class OCSORT_Tracker(BaseTracker):
             ids = torch.arange(self.num_tracks,
                                self.num_tracks + num_new_tracks).to(labels)
             self.num_tracks += num_new_tracks
-
         else:
             # 0. init
             ids = torch.full((bboxes.size(0), ),
@@ -205,110 +342,130 @@ class OCSORT_Tracker(BaseTracker):
                              device=labels.device)
 
             # get the detection bboxes for the first association
-            first_det_inds = bboxes[:, -1] > self.obj_score_thrs['high']
-            first_det_bboxes = bboxes[first_det_inds]
-            first_det_labels = labels[first_det_inds]
-            first_det_ids = ids[first_det_inds]
+            det_inds = bboxes[:, -1] > self.obj_score_thr
+            det_bboxes = bboxes[det_inds]
+            det_labels = labels[det_inds]
+            det_ids = ids[det_inds]
 
-            # get the detection bboxes for the second association
-            second_det_inds = (~first_det_inds) & (
-                bboxes[:, -1] > self.obj_score_thrs['low'])
-            second_det_bboxes = bboxes[second_det_inds]
-            second_det_labels = labels[second_det_inds]
-            second_det_ids = ids[second_det_inds]
-
-            # use Kalman Filter to predict current location
+            # 1. predict by Kalman Filter
             for id in self.confirmed_ids:
                 # track is lost in previous frame
                 if self.tracks[id].frame_ids[-1] != frame_id - 1:
                     self.tracks[id].mean[7] = 0
+                if self.tracks[id].tracked:
+                    self.tracks[id].saved_attr.mean = self.tracks[id].mean
+                    self.tracks[id].saved_attr.covariance = self.tracks[
+                        id].covariance
+                    # self.tracks[id].saved_attr.bbox = self.tracks[id].obs[-1]
                 (self.tracks[id].mean,
                  self.tracks[id].covariance) = self.kf.predict(
                      self.tracks[id].mean, self.tracks[id].covariance)
 
-            # match detections and tracks' predicted locations
-            # TODO: add support for velocity consistency
-            first_match_track_inds, first_match_det_inds = self.assign_ids(
-                self.confirmed_ids, first_det_bboxes,
+            # 2. match detections and tracks' predicted locations
+            match_track_inds, raw_match_det_inds = self.ocm_assign_ids(
+                self.confirmed_ids, det_bboxes,
                 self.weight_iou_with_det_scores, self.match_iou_thr)
             # '-1' mean a detection box is not matched with tracklets in
             # previous frame
-            valid = first_match_det_inds > -1
-            first_det_ids[valid] = torch.tensor(
-                self.confirmed_ids)[first_match_det_inds[valid]].to(labels)
+            valid = raw_match_det_inds > -1
+            det_ids[valid] = torch.tensor(
+                self.confirmed_ids)[raw_match_det_inds[valid]].to(labels)
 
-            first_match_det_bboxes = first_det_bboxes[valid]
-            first_match_det_labels = first_det_labels[valid]
-            first_match_det_ids = first_det_ids[valid]
-            assert (first_match_det_ids > -1).all()
+            match_det_bboxes = det_bboxes[valid]
+            match_det_labels = det_labels[valid]
+            match_det_ids = det_ids[valid]
+            assert (match_det_ids > -1).all()
 
             # unmatched tracks and detections
-            first_unmatch_det_bboxes = first_det_bboxes[~valid]
-            first_unmatch_det_labels = first_det_labels[~valid]
-            first_unmatch_det_ids = first_det_ids[~valid]
-            assert (first_unmatch_det_ids == -1).all()
-
-            # Observation-Centeric Recovery for remaining tracks and dets
-            unmatched_ids = self.confirmed_ids - first_match_track_inds
-            last_observations = [
-                self.last_obs(self.tracks[id]) for id in unmatched_ids
-            ]
-            ocr_matched_track_inds, ocr_match_det_inds = self.ocr_assign_ids(
-                last_observations, first_unmatch_det_bboxes,
-                self.weight_iou_with_det_scores, self.match_iou_thr)
-
-            for i, id in enumerate(self.confirmed_ids):
-                case_1 = first_match_track_inds[i] == -1
-                case_2 = ocr_matched_track_inds[id] = -1
-                if case_1 and case_2:
-                    # this track is not associated to any observation
-                    self.tracks[id].tracked = False
-                    self.tracks[id].obs.append(None)
+            unmatch_det_bboxes = det_bboxes[~valid]
+            unmatch_det_labels = det_labels[~valid]
+            unmatch_det_ids = det_ids[~valid]
+            assert (unmatch_det_ids == -1).all()
 
             # 3. use unmatched detection bboxes from the first match to match
             # the unconfirmed tracks
-            # (tentative_match_track_inds,
-            #  tentative_match_det_inds) = self.assign_ids(
-            #      self.unconfirmed_ids, first_unmatch_det_bboxes,
-            #      self.weight_iou_with_det_scores,
-            #      self.match_iou_thr['tentative'])
-            # valid = tentative_match_det_inds > -1
-            # first_unmatch_det_ids[valid] = torch.tensor(\
-            #       self.unconfirmed_ids)[
-            #     tentative_match_det_inds[valid]].to(labels)
+            (tentative_match_track_inds,
+             tentative_match_det_inds) = self.ocm_assign_ids(
+                 self.unconfirmed_ids, unmatch_det_bboxes,
+                 self.weight_iou_with_det_scores, self.match_iou_thr)
+            valid = tentative_match_det_inds > -1
+            unmatch_det_ids[valid] = torch.tensor(self.unconfirmed_ids)[
+                tentative_match_det_inds[valid]].to(labels)
 
-            # # 4. second match for unmatched tracks from the first match
-            # first_unmatch_track_ids = []
-            # for i, id in enumerate(self.confirmed_ids):
-            #     # tracklet is not matched in the first match
-            #     case_1 = first_match_track_inds[i] == -1
-            #     # tracklet is not lost in the previous frame
-            #     case_2 = self.tracks[id].frame_ids[-1] == frame_id - 1
-            #     if case_1 and case_2:
-            #         first_unmatch_track_ids.append(id)
+            match_det_bboxes = torch.cat(
+                (match_det_bboxes, unmatch_det_bboxes[valid]), dim=0)
+            match_det_labels = torch.cat(
+                (match_det_labels, unmatch_det_labels[valid]), dim=0)
+            match_det_ids = torch.cat((match_det_ids, unmatch_det_ids[valid]),
+                                      dim=0)
+            assert (match_det_ids > -1).all()
 
-            # second_match_track_inds, second_match_det_inds = self.assign_ids(
-            #     first_unmatch_track_ids, second_det_bboxes, False,
-            #     self.match_iou_thr['low'])
-            # valid = second_match_det_inds > -1
-            # second_det_ids[valid] = torch.tensor(first_unmatch_track_ids)[
-            #     second_match_det_inds[valid]].to(ids)
+            unmatch_det_bboxes = unmatch_det_bboxes[~valid]
+            unmatch_det_labels = unmatch_det_labels[~valid]
+            unmatch_det_ids = unmatch_det_ids[~valid]
+            assert (unmatch_det_ids == -1).all()
 
-            # 5. gather all matched detection bboxes from step 2-4
-            # we only keep matched detection bboxes in second match, which
-            # means the id != -1
-            valid = second_det_ids > -1
-            bboxes = torch.cat(
-                (first_match_det_bboxes, first_unmatch_det_bboxes), dim=0)
-            bboxes = torch.cat((bboxes, second_det_bboxes[valid]), dim=0)
+            all_track_ids = [id for id, _ in self.tracks.items()]
+            unmatched_track_inds = torch.tensor(
+                [ind for ind in all_track_ids if ind not in match_det_ids])
 
-            labels = torch.cat(
-                (first_match_det_labels, first_unmatch_det_labels), dim=0)
-            labels = torch.cat((labels, second_det_labels[valid]), dim=0)
+            if len(unmatched_track_inds) > 0:
+                # 4. still some tracks not associated yet, perform OCR
+                last_observations = []
+                for id in unmatched_track_inds:
+                    last_box = self.last_obs(self.tracks[id.item()])
+                    last_observations.append(last_box)
+                last_observations = torch.stack(last_observations)
 
-            ids = torch.cat((first_match_det_ids, first_unmatch_det_ids),
-                            dim=0)
-            ids = torch.cat((ids, second_det_ids[valid]), dim=0)
+                remain_det_ids = torch.full((unmatch_det_bboxes.size(0), ),
+                                            -1,
+                                            dtype=labels.dtype,
+                                            device=labels.device)
+
+                _, ocr_match_det_inds = self.ocr_assign_ids(
+                    last_observations, unmatch_det_bboxes,
+                    self.weight_iou_with_det_scores, self.match_iou_thr)
+
+                valid = ocr_match_det_inds > -1
+                remain_det_ids[valid] = unmatched_track_inds.clone()[
+                    ocr_match_det_inds[valid]].to(labels)
+
+                ocr_match_det_bboxes = unmatch_det_bboxes[valid]
+                ocr_match_det_labels = unmatch_det_labels[valid]
+                ocr_match_det_ids = remain_det_ids[valid]
+                assert (ocr_match_det_ids > -1).all()
+
+                ocr_unmatch_det_bboxes = unmatch_det_bboxes[~valid]
+                ocr_unmatch_det_labels = unmatch_det_labels[~valid]
+                ocr_unmatch_det_ids = remain_det_ids[~valid]
+                assert (ocr_unmatch_det_ids == -1).all()
+
+                unmatch_det_bboxes = ocr_unmatch_det_bboxes
+                unmatch_det_labels = ocr_unmatch_det_labels
+                unmatch_det_ids = ocr_unmatch_det_ids
+                match_det_bboxes = torch.cat(
+                    (match_det_bboxes, ocr_match_det_bboxes), dim=0)
+                match_det_labels = torch.cat(
+                    (match_det_labels, ocr_match_det_labels), dim=0)
+                match_det_ids = torch.cat((match_det_ids, ocr_match_det_ids),
+                                          dim=0)
+
+            # 5. summarize the track results
+            for i in range(len(match_det_ids)):
+                det_bbox = match_det_bboxes[i]
+                track_id = match_det_ids[i].item()
+                if not self.tracks[track_id].tracked:
+                    # the track is lost before this step
+                    self.online_smooth(self.tracks[track_id], det_bbox)
+
+            for track_id in all_track_ids:
+                if track_id not in match_det_ids:
+                    self.tracks[track_id].tracked = False
+                    self.tracks[track_id].obs.append(None)
+
+            bboxes = torch.cat((match_det_bboxes, unmatch_det_bboxes), dim=0)
+            labels = torch.cat((match_det_labels, unmatch_det_labels), dim=0)
+            ids = torch.cat((match_det_ids, unmatch_det_ids), dim=0)
 
             # 6. assign new ids
             new_track_inds = ids == -1
