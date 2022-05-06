@@ -72,7 +72,7 @@ Please refer to [changelog.md](docs/en/changelog.md) for details and release his
 
 ## Benchmark and model zoo
 
-Results and models are available in the [model zoo](docs/en/model_zoo.md). The supported and on-the-way methods and datasets are listed below.
+Results and models are available in the [model zoo](docs/en/model_zoo.md). The supported (:white_check_mark:) and on-the-way (:o:) methods and datasets are listed below.
 
 <style>
 td, th {
