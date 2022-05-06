@@ -82,41 +82,41 @@ td, th {
 
 ### Video Object Detection
 
-| <div style="width:290px">Method</div>                                                               | <div style="width:290px">Dataset</div>                                                   |
-| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| <input type="checkbox"  checked />  [DFF](configs/vid/dff) (CVPR 2017)                              | <input type="checkbox"  checked /> [ILSVRC](http://image-net.org/challenges/LSVRC/2017/) |
-| <input type="checkbox"  checked /> [FGFA](configs/vid/fgfa) (ICCV 2017)                             |                                                                                          |
-| <input type="checkbox"  checked /> [SELSA](configs/vid/selsa) (ICCV 2019)                           |                                                                                          |
-| <input type="checkbox"  checked /> [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021) |                                                                                          |
+| Method                                                                              | Dataset                                                                  |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| :white_check_mark:  [DFF](configs/vid/dff) (CVPR 2017)                              | :white_check_mark: [ILSVRC](http://image-net.org/challenges/LSVRC/2017/) |
+| :white_check_mark: [FGFA](configs/vid/fgfa) (ICCV 2017)                             |                                                                          |
+| :white_check_mark: [SELSA](configs/vid/selsa) (ICCV 2019)                           |                                                                          |
+| :white_check_mark: [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021) |                                                                          |
 
 ### Single Object Tracking
 
-| <div style="width:290px">Method</div>                                                  | <div style="width:290px">Dataset</div>                                                  |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| <input type="checkbox"  checked /> [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019) | <input type="checkbox"  checked />    [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)  |
-| <input type="checkbox"  checked /> [STARK](configs/sot/stark) (ICCV 2021)              | <input type="checkbox"  checked />    [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/) |
-|                                                                                        | <input type="checkbox"  checked />  [TrackingNet](https://tracking-net.org/)            |
-|                                                                                        | <input type="checkbox"  checked />  [OTB100](http://www.visual-tracking.net/)           |
-|                                                                                        | <input type="checkbox"  checked />  [GOT10k](http://got-10k.aitestunion.com/)           |
-|                                                                                        | <input type="checkbox"  checked />  [VOT2018](https://www.votchallenge.net/vot2018/)    |
+| Method                                                                 | Dataset                                                                 |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| :white_check_mark: [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019) | :white_check_mark:    [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)  |
+| :white_check_mark: [STARK](configs/sot/stark) (ICCV 2021)              | :white_check_mark:    [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/) |
+|                                                                        | :white_check_mark:  [TrackingNet](https://tracking-net.org/)            |
+|                                                                        | :white_check_mark:  [OTB100](http://www.visual-tracking.net/)           |
+|                                                                        | :white_check_mark:  [GOT10k](http://got-10k.aitestunion.com/)           |
+|                                                                        | :white_check_mark:  [VOT2018](https://www.votchallenge.net/vot2018/)    |
 
 ### Multi-Object Tracking
 
-| <div style="width:290px">Method</div>                                                          | <div style="width:290px">Dataset</div>                                          |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| <input type="checkbox"  checked />  [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)     | <input type="checkbox" checked />  [MOT Challenge](https://motchallenge.net/)   |
-| <input type="checkbox"  checked />  [Tracktor](configs/mot/tracktor) (ICCV 2019)               | <input type="checkbox"  checked />    [CrowdHuman](https://www.crowdhuman.org/) |
-| <input type="checkbox"  checked />  [QDTrack](configs/mot/qdtrack) (CVPR 2021)                 | <input type="checkbox"  checked />   [LVIS](https://www.lvisdataset.org/)       |
-| <input type="checkbox"  checked />  [ByteTrack](configs/mot/bytetrack) (arXiv 2021)            | <input type="checkbox"  checked />   [TAO](https://taodataset.org/)             |
-| <input type="checkbox" /> [OC-SORT](https://github.com/noahcao/OC_SORT)  (arXiv 2022)          | <input type="checkbox" /> [DanceTrack](https://dancetrack.github.io)            |
-| <input type="checkbox" /> [CenterTrack](https://github.com/xingyizhou/CenterTrack) (ECCV 2020) | <input type="checkbox" />  [BDD100k](https://www.bdd100k.com)                   |
+| Method                                                                     | Dataset                                                         |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| :white_check_mark:  [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017) | :white_check_mark:  [MOT Challenge](https://motchallenge.net/)  |
+| :white_check_mark:  [Tracktor](configs/mot/tracktor) (ICCV 2019)           | :white_check_mark:    [CrowdHuman](https://www.crowdhuman.org/) |
+| :white_check_mark:  [QDTrack](configs/mot/qdtrack) (CVPR 2021)             | :white_check_mark:   [LVIS](https://www.lvisdataset.org/)       |
+| :white_check_mark:  [ByteTrack](configs/mot/bytetrack) (arXiv 2021)        | :white_check_mark:   [TAO](https://taodataset.org/)             |
+| :o: [OC-SORT](https://github.com/noahcao/OC_SORT)  (arXiv 2022)            | :o: [DanceTrack](https://dancetrack.github.io)                  |
+| :o: [CenterTrack](https://github.com/xingyizhou/CenterTrack) (ECCV 2020)   | :o:  [BDD100k](https://www.bdd100k.com)                         |
 
 ### Video Instance Segmentation
 
-| <div style="width:290px">Method</div>                                                               | <div style="width:290px">Dataset</div>                                                  |
-| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| <input type="checkbox"  checked /> [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)        | <input type="checkbox"  checked />  [YouTube-VIS](https://youtube-vos.org/dataset/vis/) |
-| <input type="checkbox" > [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | <input type="checkbox" > [OVIS](http://songbai.site/ovis)                               |
+| Method                                                                         | Dataset                                                                 |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| :white_check_mark: [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)   | :white_check_mark:  [YouTube-VIS](https://youtube-vos.org/dataset/vis/) |
+| :o: [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | :o: [OVIS](http://songbai.site/ovis)                                    |
 
 ## Installation
 
