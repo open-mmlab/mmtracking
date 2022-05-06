@@ -32,7 +32,8 @@ Documentation: https://mmtracking.readthedocs.io/
 
 ## Introduction
 
-MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
+MMTracking is an open source video perception toolbox based on PyTorch.
+It is a part of the OpenMMLab project.
 
 The master branch works with **PyTorch1.5+**.
 
@@ -71,30 +72,51 @@ Please refer to [changelog.md](docs/en/changelog.md) for details and release his
 
 ## Benchmark and model zoo
 
-Results and models are available in the [model zoo](docs/en/model_zoo.md).
+Results and models are available in the [model zoo](docs/en/model_zoo.md). The supported and on-the-way methods and datasets are listed below.
 
-Supported methods of video object detection:
+<style>
+td, th {
+   border: none!important;
+}
+</style>
 
-- [x] [DFF](configs/vid/dff) (CVPR 2017)
-- [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
-- [x] [SELSA](configs/vid/selsa) (ICCV 2019)
-- [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
+### Video Object Detection
 
-Supported methods of multi object tracking:
+| <div style="width:290px">Method</div>                                                               | <div style="width:290px">Dataset</div>                                                   |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| <input type="checkbox"  checked />  [DFF](configs/vid/dff) (CVPR 2017)                              | <input type="checkbox"  checked /> [ILSVRC](http://image-net.org/challenges/LSVRC/2017/) |
+| <input type="checkbox"  checked /> [FGFA](configs/vid/fgfa) (ICCV 2017)                             |                                                                                          |
+| <input type="checkbox"  checked /> [SELSA](configs/vid/selsa) (ICCV 2019)                           |                                                                                          |
+| <input type="checkbox"  checked /> [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021) |                                                                                          |
 
-- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
-- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+### Single Object Tracking
 
-Supported methods of single object tracking:
+| <div style="width:290px">Method</div>                                                  | <div style="width:290px">Dataset</div>                                                  |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| <input type="checkbox"  checked /> [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019) | <input type="checkbox"  checked />    [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)  |
+| <input type="checkbox"  checked /> [STARK](configs/sot/stark) (ICCV 2021)              | <input type="checkbox"  checked />    [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/) |
+|                                                                                        | <input type="checkbox"  checked />  [TrackingNet](https://tracking-net.org/)            |
+|                                                                                        | <input type="checkbox"  checked />  [OTB100](http://www.visual-tracking.net/)           |
+|                                                                                        | <input type="checkbox"  checked />  [GOT10k](http://got-10k.aitestunion.com/)           |
+|                                                                                        | <input type="checkbox"  checked />  [VOT2018](https://www.votchallenge.net/vot2018/)    |
 
-- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK](configs/sot/stark) (ICCV 2021)
+### Multi-Object Tracking
 
-Supported methods of video instance segmentation:
+| <div style="width:290px">Method</div>                                                          | <div style="width:290px">Dataset</div>                                          |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| <input type="checkbox"  checked />  [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)     | <input type="checkbox" checked />  [MOT Challenge](https://motchallenge.net/)   |
+| <input type="checkbox"  checked />  [Tracktor](configs/mot/tracktor) (ICCV 2019)               | <input type="checkbox"  checked />    [CrowdHuman](https://www.crowdhuman.org/) |
+| <input type="checkbox"  checked />  [QDTrack](configs/mot/qdtrack) (CVPR 2021)                 | <input type="checkbox"  checked />   [LVIS](https://www.lvisdataset.org/)       |
+| <input type="checkbox"  checked />  [ByteTrack](configs/mot/bytetrack) (arXiv 2021)            | <input type="checkbox"  checked />   [TAO](https://taodataset.org/)             |
+| <input type="checkbox" /> [OC-SORT](https://github.com/noahcao/OC_SORT)  (arXiv 2022)          | <input type="checkbox" /> [DanceTrack](https://dancetrack.github.io)            |
+| <input type="checkbox" /> [CenterTrack](https://github.com/xingyizhou/CenterTrack) (ECCV 2020) | <input type="checkbox" />  [BDD100k](https://www.bdd100k.com)                   |
 
-- [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
+### Video Instance Segmentation
+
+| <div style="width:290px">Method</div>                                                               | <div style="width:290px">Dataset</div>                                                  |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| <input type="checkbox"  checked /> [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)        | <input type="checkbox"  checked />  [YouTube-VIS](https://youtube-vos.org/dataset/vis/) |
+| <input type="checkbox" > [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | <input type="checkbox" > [OVIS](http://songbai.site/ovis)                               |
 
 ## Installation
 
@@ -108,7 +130,7 @@ There are also usage [tutorials](docs/en/tutorials/), such as [learning about co
 
 ## Contributing
 
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the guidelines and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
+We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline.
 
 ## Acknowledgement
 
