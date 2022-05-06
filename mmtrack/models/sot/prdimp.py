@@ -1,13 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import math
+
 import numpy as np
 import torch
 import torch.nn.functional as F
 from addict import Dict
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head
-from torchvision.transforms.functional import normalize
+from torchvision.transforms.functional import gaussian_blur, normalize
 
-from mmtrack.core.utils import augmentation
+from mmtrack.core.utils import numpy_to_tensor, rotate_image, tensor_to_numpy
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
 
@@ -54,15 +56,31 @@ class Prdimp(BaseSingleObjectTracker):
         # initilatize some important global parameters in tracking
         self.init_params(img.shape[-2:], init_bbox)
 
-        # generate bboxes on the resized input image
-        # `init_bboxes` is in [cx,cy,w,h] format
-        # TODO: simplify this code
-        init_bboxes = self.generate_bbox(init_bbox, init_bbox[:2].round(),
-                                         self.target_scale)
+        # Compute expanded size and output size about augmentation
+        aug_expansion_factor = self.test_cfg['init_aug_cfg'].get(
+            'aug_expansion_factor', None)
+        aug_expansion_sz = self.sample_size.clone()
+        aug_output_sz = None
+        if aug_expansion_factor is not None and aug_expansion_factor != 1:
+            aug_expansion_sz = (self.sample_size * aug_expansion_factor).long()
+            # keep the same parity with `self.sample_size`
+            # TODO: verifiy the necessity of these code
+            aug_expansion_sz += (aug_expansion_sz -
+                                 self.sample_size.long()) % 2
+            aug_expansion_sz = aug_expansion_sz.float()
+            aug_output_sz = self.sample_size.long().cpu().tolist()
+
+        # Crop image patches and bboxes
+        img_patch, _ = self.get_cropped_img(
+            img, init_bbox[:2].round(), self.target_scale * aug_expansion_sz,
+            aug_expansion_sz)
+        init_bbox = self.generate_bbox(init_bbox, init_bbox[:2].round(),
+                                       self.target_scale)
 
         # Crop patches from the image and perform augmentation on the image
         # patches
-        aug_img_patches = self.gen_aug_patches(img, init_bbox)
+        aug_img_patches, aug_cls_bboxes = self.gen_aug_imgs_bboxes(
+            img_patch, init_bbox, aug_output_sz)
 
         # Extract initial backbone features
         aug_img_patches = normalize(
@@ -77,22 +95,21 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Initialize the classifier with bboxes and features of `layer3`
         # get the augmented bboxes on the augmented image patches
-        init_aug_cls_bboxes = self.get_aug_cls_bboxes(init_bboxes)
         cls_feat_size = self.classifier.init_classifier(
-            init_backbone_feats[-1], init_aug_cls_bboxes,
+            init_backbone_feats[-1], aug_cls_bboxes,
             self.test_cfg['init_aug_cfg']['augmentation']['dropout'])
 
         # Get feature size and kernel sizes used for calculating the
         # center of samples
         # TODO: remove these two variables
-        self.cls_feat_size = torch.Tensor(cls_feat_size).to(init_bboxes.device)
+        self.cls_feat_size = torch.Tensor(cls_feat_size).to(init_bbox.device)
         self.filter_size = torch.Tensor(self.classifier.filter_size).to(
-            init_bboxes.device)
+            init_bbox.device)
 
         # Initialize IoUNet
         # only use the features of the non-augmented image
         init_iou_features = [x[:1] for x in init_backbone_feats]
-        self.bbox_regressor.init_iou_net(init_iou_features, init_bboxes)
+        self.bbox_regressor.init_iou_net(init_iou_features, init_bbox)
 
     def init_params(self, img_hw, init_bbox):
         """Initilatize some important global parameters in tracking.
@@ -123,31 +140,38 @@ class Prdimp(BaseSingleObjectTracker):
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
         self.max_scale_factor = torch.min(self.img_size / self.base_target_sz)
 
-    def gen_aug_patches(self, img, init_bbox):
-        """Perform data augmentation to generate initial training samples and
-        crop the patches from the augmented images.
+    def img_shift_resize(self, img, output_size=None, shift=None):
+        img_size = [img.shape[-1], img.shape[-2]]
+        # img_size = img.shape[-2:]
+        if output_size is None:
+            pad_h = 0
+            pad_w = 0
+        else:
+            pad_w = (output_size[0] - img_size[0]) / 2
+            pad_h = (output_size[1] - img_size[1]) / 2
+
+        if shift is None:
+            shift = [0, 0]
+
+        pad_left = math.floor(pad_w) + shift[0]
+        pad_right = math.ceil(pad_w) - shift[0]
+        pad_top = math.floor(pad_h) + shift[1]
+        pad_bottom = math.ceil(pad_h) - shift[1]
+
+        return F.pad(img, (pad_left, pad_right, pad_top, pad_bottom),
+                     'replicate')
+
+    def gen_aug_imgs_bboxes(self, img, init_bbox, output_size):
+        """Perform data augmentation.
 
         Args:
-            img (Tensor): Input image of shape (1, C, H, W).
+            img (Tensor): Cropped image of shape (1, C, H, W).
             init_bbox (Tensor): of (4, ) shape in [cx, cy, w, h] format.
+            output_size (Tensor): of (2, ) shape in [w, h] format.
 
         Returns:
             Tensor: The cropped augmented image patches.
         """
-        # Compute augmentation size
-        aug_expansion_factor = self.test_cfg['init_aug_cfg'].get(
-            'aug_expansion_factor', None)
-        aug_expansion_sz = self.sample_size.clone()
-        aug_output_sz = None
-        if aug_expansion_factor is not None and aug_expansion_factor != 1:
-            aug_expansion_sz = (self.sample_size * aug_expansion_factor).long()
-            # keep the same parity with `self.sample_size`
-            # TODO: verifiy the necessity of these code
-            aug_expansion_sz += (aug_expansion_sz -
-                                 self.sample_size.long()) % 2
-            aug_expansion_sz = aug_expansion_sz.float()
-            aug_output_sz = self.sample_size.long().cpu().tolist()
-
         random_shift_factor = self.test_cfg['init_aug_cfg'].get(
             'random_shift_factor', 0)
 
@@ -155,58 +179,64 @@ class Prdimp(BaseSingleObjectTracker):
             return ((torch.rand(2) - 0.5) * self.sample_size.cpu() *
                     random_shift_factor).long().tolist()
 
-        # Always put identity transformation first, since it is the
-        # unaugmented sample that is always used
-        self.transforms = [augmentation.Identity(aug_output_sz)]
-
         augs = self.test_cfg['init_aug_cfg']['augmentation']
+        aug_imgs = [self.img_shift_resize(img, output_size)]
+        aug_bboxes = [init_bbox]
 
-        # Add all augmentations
-        if 'shift' in augs:
-            self.transforms.extend([
-                augmentation.Translation(shift, aug_output_sz)
-                for shift in augs['shift']
-            ])
+        # All augmentations
         if 'relativeshift' in augs:
             for shift in augs['relativeshift']:
                 absulute_shift = (torch.Tensor(shift) *
                                   self.sample_size.cpu() / 2).long().tolist()
-                self.transforms.append(
-                    augmentation.Translation(absulute_shift, aug_output_sz))
+                aug_imgs.append(
+                    self.img_shift_resize(img, output_size, absulute_shift))
+                bbox_shift = torch.tensor(
+                    absulute_shift + [0, 0], device=init_bbox.device)
+                aug_bboxes.append(init_bbox + bbox_shift)
 
         if 'fliplr' in augs and augs['fliplr']:
-            self.transforms.append(
-                augmentation.FlipHorizontal(aug_output_sz, get_rand_shift()))
+            shift = get_rand_shift()
+            aug_imgs.append(
+                self.img_shift_resize(img.flip(3), output_size, shift))
+            bbox_shift = torch.tensor(shift + [0, 0], device=init_bbox.device)
+            aug_bboxes.append(init_bbox)
+
         if 'blur' in augs:
-            self.transforms.extend([
-                augmentation.Blur(sigma, aug_output_sz, get_rand_shift())
-                for sigma in augs['blur']
-            ])
-        if 'scale' in augs:
-            self.transforms.extend([
-                augmentation.Scale(scale_factor, aug_output_sz,
-                                   get_rand_shift())
-                for scale_factor in augs['scale']
-            ])
+            for sigma in augs['blur']:
+                kernel_size = [2 * s + 1 for s in sigma]
+                img_blur = gaussian_blur(
+                    img, kernel_size=kernel_size, sigma=sigma)
+                shift = get_rand_shift()
+                aug_imgs.append(
+                    self.img_shift_resize(img_blur, output_size, shift))
+                bbox_shift = torch.tensor(
+                    shift + [0, 0], device=init_bbox.device)
+                aug_bboxes.append(init_bbox + bbox_shift)
+
         if 'rotate' in augs:
-            self.transforms.extend([
-                augmentation.Rotate(angle, aug_output_sz, get_rand_shift())
-                for angle in augs['rotate']
-            ])
-
-        # Crop image patches
-        img_patch, _ = self.get_cropped_img(
-            img, init_bbox[:2].round(), self.target_scale * aug_expansion_sz,
-            aug_expansion_sz)
-
-        # Perform augmentation on the image patches
-        aug_img_patches = torch.cat(
-            [T(img_patch, is_mask=False) for T in self.transforms])
+            for angle in augs['rotate']:
+                img_numpy = tensor_to_numpy(img)
+                assert img_numpy.ndim == 3
+                rotated_img = rotate_image(
+                    img_numpy,
+                    angle,
+                    border_mode='replicate',
+                )
+                img_tensor = numpy_to_tensor(rotated_img, device=img.device)
+                shift = get_rand_shift()
+                aug_imgs.append(
+                    self.img_shift_resize(img_tensor, output_size, shift))
+                bbox_shift = torch.tensor(
+                    shift + [0, 0], device=init_bbox.device)
+                aug_bboxes.append(init_bbox + bbox_shift)
 
         if 'dropout' in augs:
-            self.transforms.extend(self.transforms[:1] * len(augs['dropout']))
+            for _ in range(len(augs['dropout'])):
+                aug_bboxes.append(init_bbox)
 
-        return aug_img_patches
+        aug_imgs = torch.cat(aug_imgs, dim=0)
+        aug_bboxes = torch.stack(aug_bboxes)
+        return aug_imgs, aug_bboxes
 
     def generate_bbox(self, bbox, sample_center, sample_scale):
         """All inputs are based in original image coordinates and the outputs
@@ -229,17 +259,6 @@ class Prdimp(BaseSingleObjectTracker):
             self.sample_size / 2)
         bbox_size = bbox[2:4] / sample_scale
         return torch.cat([bbox_center, bbox_size])
-
-    def get_aug_cls_bboxes(self, init_bboxes):
-        """Get the target bounding boxes for the initial augmented samples."""
-        init_target_bboxes = []
-        for T in self.transforms:
-            shift = torch.Tensor([T.shift[1], T.shift[0], 0,
-                                  0]).to(init_bboxes.device)
-            init_target_bboxes.append(init_bboxes + shift)
-        init_target_bboxes = torch.stack(init_target_bboxes)
-
-        return init_target_bboxes
 
     def track(self, img, bbox):
         """Track the box `bbox` of previous frame to current frame `img`.
