@@ -2,9 +2,11 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmdet.models import HEADS
 
-from mmtrack.core.bbox import bbox_rect_to_rel, bbox_rel_to_rect
+from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
+                               bbox_rel_to_rect)
 from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
 
 
@@ -178,17 +180,14 @@ class IouNetHead(nn.Module):
         args:
             feats (tuple(Tensor)): Backbone features from template branch.
                 It's of shape (batch, feature_dim, H, W).
-            bboxes: Target boxes (x,y,w,h) in image coords in the template
-                branch. It's of shape (batch, 4).
+            bboxes: Target boxes (x1, y1, x2, y2) in image coords in the
+                template branch. It's of shape (batch, 4).
         """
 
         # Add batch_index to rois
         batch_size = bboxes.shape[0]
         batch_index = torch.arange(
             batch_size, dtype=torch.float32).reshape(-1, 1).to(bboxes.device)
-        # convert the input `bboxes` to [x1, y1, x2, y2] format
-        bboxes = bboxes.clone()
-        bboxes[:, 2:4] = bboxes[:, 0:2] + bboxes[:, 2:4]
         roi = torch.cat((batch_index, bboxes), dim=1)
 
         # Perform conv and prpool on the feature maps from the backbone
@@ -226,12 +225,13 @@ class IouNetHead(nn.Module):
 
         Args:
             iou_backbone_feats (tuple(Tensor)): _description_
-            bboxes (Tensor): of shape (4, ) in [x,y,w,h] format.
+            bboxes (Tensor): of shape (4, ) in [cx, cy, w, h] format.
         """
+        bboxes = bbox_cxcywh_to_xyxy(bboxes.view(-1, 4))
         # Get modulation vector
         with torch.no_grad():
             self.iou_modulation = self.get_modulation(iou_backbone_feats,
-                                                      bboxes.view(-1, 4))
+                                                      bboxes)
 
     def optimize_bboxes(self, iou_features, init_bboxes):
         """Optimize the bboxes.
@@ -239,20 +239,22 @@ class IouNetHead(nn.Module):
         Args:
             iou_features (tuple(Tensor)): The features used to predict IoU.
             init_bboxes (Tensor): The initialized bboxes with shape (N,4) in
-                [x, y, w, h] format.
+                [cx, cy, w, h] format.
 
         Returns:
             Tensor: The optimized bboxes with shape (N,4)  in [x, y, w, h]
                 format.
             Tensor: The predict IoU of the optimized bboxes with shape (N, ).
         """
-        output_bboxes = init_bboxes.view(1, -1, 4).to(iou_features[0].device)
         step_length = self.bbox_cfg['box_refine_step_length']
         if isinstance(step_length, (tuple, list)):
             step_length = torch.Tensor([
                 step_length[0], step_length[0], step_length[1], step_length[1]
             ]).to(iou_features[0].device).view(1, 1, 4)
 
+        # TODO: simplify this series of transform
+        output_bboxes = bbox_cxcywh_to_x1y1wh(init_bboxes)
+        output_bboxes = output_bboxes.view(1, -1, 4)
         bboxes_sz_norm = output_bboxes[:, :1, 2:].clone()
         output_bboxes_rel = bbox_rect_to_rel(output_bboxes, bboxes_sz_norm)
 
@@ -284,7 +286,7 @@ class IouNetHead(nn.Module):
         """Run the ATOM IoUNet to refine the target bounding box.
 
         Args:
-            init_bbox (Tensor): of shape (4, ) in [x, y, w, h] formmat.
+            init_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] formmat.
             backbone_feats (tuple(Tensor)): of shape (1, c, h, w)
             sample_center (Tensor): The center of the cropped
                 sample on the original image. It's of shape (1,2) in [x, y]
@@ -295,8 +297,7 @@ class IouNetHead(nn.Module):
                 shape (2,) in [h, w] format.
 
         Returns:
-            Tensor: new center of target bbox in [x, y] format.
-            Tensor: new scale of target bbox in [w, h] format.
+            Tensor: new target bbox in [cx, cy, w, h] format.
         """
         with torch.no_grad():
             iou_features = self.get_iou_feat(backbone_feats)
@@ -304,7 +305,7 @@ class IouNetHead(nn.Module):
         # Generate some random initial boxes based on the `init_bbox`
         init_bboxes = init_bbox.view(1, 4).clone()
         if self.bbox_cfg['num_init_random_boxes'] > 0:
-            square_box_sz = init_bbox[2:].prod().sqrt()
+            square_box_sz = init_bbox[2:].prod().sqrt().item()
             rand_factor = square_box_sz * torch.cat([
                 self.bbox_cfg['box_jitter_pos'] * torch.ones(2),
                 self.bbox_cfg['box_jitter_sz'] * torch.ones(2)
@@ -312,18 +313,15 @@ class IouNetHead(nn.Module):
             mini_edge_size = init_bbox[2:].min() / 3
             rand_bboxes_shift = (torch.rand(
                 self.bbox_cfg['num_init_random_boxes'], 4) - 0.5) * rand_factor
+            rand_bboxes_shift = rand_bboxes_shift.to(init_bbox.device)
             new_size = (init_bbox[2:] +
                         rand_bboxes_shift[:, 2:]).clamp(mini_edge_size)
-            new_center = (init_bbox[:2] +
-                          init_bbox[2:] / 2) + rand_bboxes_shift[:, :2]
-            init_bboxes = torch.cat([new_center - new_size / 2, new_size], 1)
+            new_center = init_bbox[:2] + rand_bboxes_shift[:, :2]
+            init_bboxes = torch.cat([new_center, new_size], 1)
             init_bboxes = torch.cat([init_bbox.view(1, 4), init_bboxes])
 
         # Optimize the boxes
-        out_bboxes, out_iou = self.optimize_bboxes(
-            iou_features, init_bboxes.to(iou_features[-1].device))
-        out_bboxes = out_bboxes.cpu()
-        out_iou = out_iou.cpu()
+        out_bboxes, out_iou = self.optimize_bboxes(iou_features, init_bboxes)
 
         # Remove weird boxes according to the ratio of aspect
         out_bboxes[:, 2:].clamp_(1)
@@ -335,7 +333,7 @@ class IouNetHead(nn.Module):
 
         # If no box found
         if out_bboxes.shape[0] == 0:
-            return None, None
+            return None
 
         # Predict box
         k = self.bbox_cfg.get('iounet_topk', 5)
@@ -351,4 +349,4 @@ class IouNetHead(nn.Module):
             (sample_size - 1) / 2) * sample_scale[0] + sample_center[0]
         new_target_size = predicted_box[2:] * sample_scale[0]
 
-        return new_bbox_center, new_target_size
+        return torch.cat([new_bbox_center, new_target_size], dim=-1)

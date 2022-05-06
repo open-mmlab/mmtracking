@@ -4,6 +4,7 @@ import math
 import torch
 import torch.nn.functional as F
 from addict import Dict
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmdet.models import HEADS
 from mmdet.models.builder import build_head
 from torch import nn
@@ -102,7 +103,7 @@ class PrdimpClsHead(nn.Module):
 
         Args:
             backbone_feats (Tensor): The features from backbone.
-            target_bboxes (Tensor): in [x, y, w, h] format.
+            target_bboxes (Tensor): in [cx, cy, w, h] format.
             dropout_probs (List, optional): Defaults to None.
 
         Returns:
@@ -121,8 +122,10 @@ class PrdimpClsHead(nn.Module):
 
         # Get target filter by running the discriminative model prediction
         # module
+        target_bboxes_xyxy = bbox_cxcywh_to_xyxy(target_bboxes)
         with torch.no_grad():
-            init_filter = self.filter_initializer(cls_feats, target_bboxes)
+            init_filter = self.filter_initializer(cls_feats,
+                                                  target_bboxes_xyxy)
             self.target_filter = self.filter_optimizer(
                 init_filter,
                 feat=cls_feats,
@@ -137,7 +140,7 @@ class PrdimpClsHead(nn.Module):
     def init_memory(self, aug_feats, target_bboxes):
         """Initialize the some properties about training samples in memory:
 
-            - `bboxes` (N, 4): the gt_bboxes of all samples in [x, y, w, h]
+            - `bboxes` (N, 4): the gt_bboxes of all samples in [cx, cy, w, h]
                 format.
             - `training_samples` (N, C, H, W): the features of training samples
             - `sample_weights` (N,): the weights of all samples
@@ -148,7 +151,7 @@ class PrdimpClsHead(nn.Module):
 
         Args:
             aug_feats (Tensor): The augmented features.
-            target_bboxes (Tensor): of shape (N, 4) in [x, y, w, h] format.
+            target_bboxes (Tensor): of shape (N, 4) in [cx, cy, w, h] format.
         """
         self.memo = Dict()
 
@@ -171,7 +174,7 @@ class PrdimpClsHead(nn.Module):
         self.memo.training_samples[:self.num_init_samples] = aug_feats
 
     def localize_target(self, scores, sample_center, sample_scale, sample_size,
-                        prev_bbox_size, prev_bbox_center):
+                        prev_bbox):
         """Run the target localization based on the score map.
 
         Args:
@@ -183,8 +186,7 @@ class PrdimpClsHead(nn.Module):
                 shape (1,).
             sample_size (Tensor): The scale of the cropped sample. It's of
                 shape (2,) in [h, w] format.
-            prev_bbox_size (Tensor): It's of shape (2,) in [w, h] format.
-            prev_bbox_center (Tensor): It's of shape (2,) in [x, y] format.
+            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
 
         Return:
             Tensor: The displacement of the target to the center of original
@@ -193,15 +195,16 @@ class PrdimpClsHead(nn.Module):
         """
         scores = scores.squeeze()
         score_size = torch.tensor([scores.shape[-1], scores.shape[-2]])
-        output_sz = (score_size - (self.filter_size + 1) % 2).flip(0)
-        score_center = (score_size - 1) / 2
+        output_size = (score_size - (self.filter_size + 1) % 2).flip(0).to(
+            sample_size.device)
+        score_center = ((score_size - 1) / 2).to(scores.device)
 
         max_score, max_pos = max2d(scores)
-        max_pos = max_pos.flip(0).float().cpu()
+        max_pos = max_pos.flip(0).float()
         # the displacement of target to the center of score map
         target_disp_score_map = max_pos - score_center
         # the ratio of the size of original image to to that of score map
-        ratio_size = (sample_size / output_sz) * sample_scale
+        ratio_size = (sample_size / output_size) * sample_scale
         # the displcement of the target to the center of original image
         target_disp = target_disp_score_map * ratio_size
 
@@ -213,7 +216,7 @@ class PrdimpClsHead(nn.Module):
         # Analysis whether there is a distractor
         # Calculate the size of neighborhood near the current target
         target_neigh_sz = self.locate_cfg['target_neighborhood_scale'] * (
-            prev_bbox_size / ratio_size)
+            prev_bbox[2:4] / ratio_size)
 
         top_left = (max_pos - target_neigh_sz / 2).round().long()
         top_left = torch.clamp_min(top_left, 0).tolist()
@@ -225,13 +228,13 @@ class PrdimpClsHead(nn.Module):
 
         # Find new maximum except the neighborhood of the target
         second_max_score, second_max_pos = max2d(scores_masked)
-        second_max_pos = second_max_pos.flip(0).float().cpu().view(-1)
+        second_max_pos = second_max_pos.flip(0).float().view(-1)
         distractor_disp_score_map = second_max_pos - score_center
         distractor_disp = distractor_disp_score_map * ratio_size
         # The displacement of previout target bbox to the center of the score
         # map
         # TODO: check it
-        prev_target_disp_score_map = (prev_bbox_center -
+        prev_target_disp_score_map = (prev_bbox[:2] -
                                       sample_center[0, :]) / ratio_size
 
         # 2. There is a distractor

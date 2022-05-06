@@ -41,7 +41,7 @@ class FilterClassifierInitializer(nn.Module):
         args:
             feat:  Input feature maps. Dims
                 (images_in_sequence, [sequences], feat_dim, H, W).
-            bboxes:  Target bounding boxes in [x, y, w, h] format.
+            bboxes:  Target bounding boxes in [x1, y1, x2, y2] format.
                 Dims (images_in_sequence, [sequences], 4).
         returns:
             weights:  The output weights. Dims (sequences, feat_dim, wH, wW).
@@ -52,9 +52,6 @@ class FilterClassifierInitializer(nn.Module):
         feat = self.filter_conv(
             feat.reshape(-1, feat.shape[-3], feat.shape[-2], feat.shape[-1]))
 
-        # Convert the input `bboxes` to [x1, y1, x2, y2] format
-        bboxes = bboxes.clone()
-        bboxes[:, 2:4] = bboxes[:, 0:2] + bboxes[:, 2:4]
         # Add batch_index to rois
         batch_size = bboxes.shape[0]
         batch_index = torch.arange(

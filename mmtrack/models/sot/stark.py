@@ -269,7 +269,7 @@ class Stark(BaseSingleObjectTracker):
         Args:
             img (Tensor): of shape (1, C, H, W).
             bbox (list | Tensor): The bbox in previous frame. The shape of the
-                bbox is (4, ) in [x, y, w, h] format.
+                bbox is (4, ) in [cx, cy, w, h] format.
 
         Returns:
         """
