@@ -98,17 +98,9 @@ class Prdimp(BaseSingleObjectTracker):
         """Initilatize some important global parameters in tracking.
 
         Args:
-            img_hw (ndarray): the height and width of image
-            init_bbox (ndarray | list): in [x,y,w,h] format
+            img_hw (ndarray): the height and width of the image.
+            init_bbox (ndarray | list): in [x,y,w,h] format.
         """
-        # Set center and size for bbox
-        # bbox_center is in [x, y] format
-        # TODO: pulse 1  or not pulse 1
-        # self.bbox_center = torch.Tensor([
-        #     init_bbox[0] + (init_bbox[2] - 1) / 2,
-        #     init_bbox[1] + (init_bbox[3] - 1) / 2,
-        # ])
-
         # Set size for image. img_size is in [w, h] format.
         self.img_size = torch.Tensor([img_hw[1],
                                       img_hw[0]]).to(init_bbox.device)
@@ -131,11 +123,16 @@ class Prdimp(BaseSingleObjectTracker):
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
         self.max_scale_factor = torch.min(self.img_size / self.base_target_sz)
 
-    def gen_aug_patches(self, im, init_bbox):
+    def gen_aug_patches(self, img, init_bbox):
         """Perform data augmentation to generate initial training samples and
         crop the patches from the augmented images.
 
-        im ():
+        Args:
+            img (Tensor): Input image of shape (1, C, H, W).
+            init_bbox (Tensor): of (4, ) shape in [cx, cy, w, h] format.
+
+        Returns:
+            Tensor: The cropped augmented image patches.
         """
         # Compute augmentation size
         aug_expansion_factor = self.test_cfg['init_aug_cfg'].get(
@@ -199,7 +196,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Crop image patches
         img_patch, _ = self.get_cropped_img(
-            im, init_bbox[:2].round(), self.target_scale * aug_expansion_sz,
+            img, init_bbox[:2].round(), self.target_scale * aug_expansion_sz,
             aug_expansion_sz)
 
         # Perform augmentation on the image patches
@@ -229,9 +226,8 @@ class Prdimp(BaseSingleObjectTracker):
             Tensor: in [cx, cy, w, h] format
         """
         bbox_center = (bbox[:2] - sample_center) / sample_scale + (
-            self.sample_size - 1) / 2
+            self.sample_size / 2)
         bbox_size = bbox[2:4] / sample_scale
-        # target_tl = bbox_center - (bbox_size - 1) / 2
         return torch.cat([bbox_center, bbox_size])
 
     def get_aug_cls_bboxes(self, init_bboxes):
@@ -294,8 +290,6 @@ class Prdimp(BaseSingleObjectTracker):
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
         # Location of sample
-        # patch_coord = patch_coord.float()
-        # sample_center = 0.5 * (patch_coord[:, :2] + patch_coord[:, 2:] - 1)
         sample_center = patch_coord[:, :2]
         sample_scales = (patch_coord[:, 2:] /
                          self.sample_size).prod(dim=1).sqrt()
@@ -400,8 +394,11 @@ class Prdimp(BaseSingleObjectTracker):
                 `torch.nn.functional.pad`)
             3. Reize the image to the `output_size`
 
+        When mode is 'inside' or 'inside_major', the cropped patch may not be
+        centered at the `crop_center`
+
         Args:
-            img: Image
+            img (Tensor): Input image.
             crop_center (Tensor): center position of crop in [x, y] format.
             crop_size (Tensor): size to crop in [w, h] format.
             output_size (Tensor): size to resize to in [w, h] format.
@@ -413,13 +410,12 @@ class Prdimp(BaseSingleObjectTracker):
         Returns:
             img_patch (Tensor): of shape (1, c, h, w)
             patch_coord (Tensor): the coordinate of image patch among the
-                original image. It's of shape (1, 4) in [cx,cy,w,h] format.
+                original image. It's of shape (1, 4) in [cx, cy, w, h] format.
         """
+        # TODO: Simplify this preprocess
         # copy and convert
         crop_center_copy = crop_center.long().clone()
-
         pad_mode = mode
-
         # Get new sample size if forced inside the image
         if mode == 'inside' or mode == 'inside_major':
             pad_mode = 'replicate'
@@ -441,9 +437,8 @@ class Prdimp(BaseSingleObjectTracker):
             resize_factor = int(max(int(resize_factor - 0.1), 1))
         else:
             resize_factor = torch.Tensor(1)
-        sz = crop_size.float() / resize_factor  # new image size
 
-        # Do downsampling
+        # Do downsampling to get `img2`
         if resize_factor > 1:
             offset = crop_center_copy % resize_factor  # offset
             crop_center_copy = (crop_center_copy -
@@ -453,14 +448,12 @@ class Prdimp(BaseSingleObjectTracker):
         else:
             img2 = img
 
-        # compute size to crop, size>=2
-        szl = torch.clamp_min(sz.round(), 2).long()
-
+        # cropped image size
+        cropped_img_size = crop_size.float() / resize_factor
+        cropped_img_size = torch.clamp_min(cropped_img_size.round(), 2).long()
         # Extract top and bottom coordinates
-        # tl = crop_center_copy - torch.div(szl - 1, 2, rounding_mode='floor')
-        # br = crop_center_copy + torch.div(szl, 2, rounding_mode='floor') + 1
-        tl = crop_center_copy - (szl - 1) // 2
-        br = crop_center_copy + szl // 2 + 1
+        tl = crop_center_copy - cropped_img_size // 2
+        br = crop_center_copy + cropped_img_size // 2
 
         # Shift the crop to inside
         if mode == 'inside' or mode == 'inside_major':
@@ -475,7 +468,7 @@ class Prdimp(BaseSingleObjectTracker):
             tl += shift
             br += shift
 
-        # Get image patch
+        # Crop image patch
         if not is_mask:
             img_patch = F.pad(img2,
                               (-tl[0].item(), br[0].item() - img2.shape[3],
@@ -494,7 +487,7 @@ class Prdimp(BaseSingleObjectTracker):
                                    and img_patch.shape[-1] == output_size[1]):
             return img_patch.clone(), patch_coord
 
-        # Resample
+        # Resize
         if not is_mask:
             img_patch = F.interpolate(
                 img_patch,

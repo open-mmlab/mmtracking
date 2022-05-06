@@ -54,6 +54,26 @@ def max2d(a: torch.Tensor):
 
 @HEADS.register_module()
 class PrdimpClsHead(nn.Module):
+    """Prdimp classification head.
+
+    Args:
+        in_dim (int, optional): The dim of input feature. Defaults to 1024.
+        out_dim (int, optional): The dim of output. Defaults to 512.
+        filter_initializer (dict, optional): The configuration of filter
+            initializer. Defaults to None.
+        filter_optimizer (dict, optional): The configuration of filter
+            optimizer. Defaults to None.
+        locate_cfg (dict, optional): The configuration of bbox location.
+            Defaults to None.
+        update_cfg (dict, optional): The configuration of updating tracking
+            state in memory. Defaults to None.
+        optimizer_cfg (dict, optional): The configuration of optimizer.
+            Defaults to None.
+        loss_cls (dict, optional): The configuration of classification
+            loss. Defaults to None.
+        train_cfg (dict, optional): The configuration of training.
+            Defaults to None.
+    """
 
     def __init__(self,
                  in_dim=1024,
@@ -195,9 +215,9 @@ class PrdimpClsHead(nn.Module):
         """
         scores = scores.squeeze()
         score_size = torch.tensor([scores.shape[-1], scores.shape[-2]])
-        output_size = (score_size - (self.filter_size + 1) % 2).flip(0).to(
+        output_size = (score_size - (self.filter_size + 1) % 2).to(
             sample_size.device)
-        score_center = ((score_size - 1) / 2).to(scores.device)
+        score_center = (score_size / 2).to(scores.device)
 
         max_score, max_pos = max2d(scores)
         max_pos = max_pos.flip(0).float()
@@ -220,7 +240,7 @@ class PrdimpClsHead(nn.Module):
 
         top_left = (max_pos - target_neigh_sz / 2).round().long()
         top_left = torch.clamp_min(top_left, 0).tolist()
-        bottom_right = (max_pos + target_neigh_sz / 2 + 1).round().long()
+        bottom_right = (max_pos + target_neigh_sz / 2).round().long()
         bottom_right = torch.clamp_max(bottom_right, score_size.min()).tolist()
         scores_masked = scores.clone()
         scores_masked[top_left[1]:bottom_right[1],
@@ -232,8 +252,9 @@ class PrdimpClsHead(nn.Module):
         distractor_disp_score_map = second_max_pos - score_center
         distractor_disp = distractor_disp_score_map * ratio_size
         # The displacement of previout target bbox to the center of the score
-        # map
-        # TODO: check it
+        # map.
+        # Note that `sample_center`` may not be equal to the center of previous
+        # tracking bbox due to different cropping mode
         prev_target_disp_score_map = (prev_bbox[:2] -
                                       sample_center[0, :]) / ratio_size
 
@@ -242,6 +263,8 @@ class PrdimpClsHead(nn.Module):
             target_disp_diff = torch.sqrt(
                 torch.sum(
                     (target_disp_score_map - prev_target_disp_score_map)**2))
+            # `distractor_disp_diff` is the displacement between current
+            # tracking bbox and previous tracking bbox.
             distractor_disp_diff = torch.sqrt(
                 torch.sum((distractor_disp_score_map -
                            prev_target_disp_score_map)**2))

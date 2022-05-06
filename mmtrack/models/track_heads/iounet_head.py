@@ -53,13 +53,19 @@ class IouNetHead(nn.Module):
     Refer to the ATOM paper for a detailed illustration of the architecture.
     `ATOM: <https://arxiv.org/abs/1811.07628>`_.
 
-    args:
-        input_dim:  Feature dimensionality of the two input backbone layers.
-        pred_input_dim:  Input dimensionality of  the the prediction network.
-        pred_inter_dim:  Intermediate dimensionality in the prediction network.
-        bbox_cfg (dict, optional): _description_. Defaults to None.
-        train_cfg (dict, optional): _description_. Defaults to None.
-        loss_bbox (dict, optional): _description_. Defaults to None.
+    Args:
+        input_dim (tuple(int)): Feature dimensionality of the two input
+            backbone layers.
+        pred_input_dim (tuple(int)): Input dimensionality of the the
+            prediction network.
+        pred_inter_dim (tuple(int)): Intermediate dimensionality in the
+            prediction network.
+        bbox_cfg (dict, optional): The configuration of bbox refinement.
+            Defaults to None.
+        train_cfg (dict, optional): The configuration of training.
+            Defaults to None.
+        loss_bbox (dict, optional): The configuration of loss.
+            Defaults to None.
     """
 
     def __init__(self,
@@ -343,10 +349,10 @@ class IouNetHead(nn.Module):
         predicted_box = out_bboxes[inds, :].mean(0)
 
         # Convert the bbox of the cropped sample to that of original image.
+        # TODO: this postprocess about mapping back can be moved to other place
         new_bbox_center = predicted_box[:2] + predicted_box[2:] / 2
-        new_bbox_center = (
-            new_bbox_center -
-            (sample_size - 1) / 2) * sample_scale[0] + sample_center[0]
+        new_bbox_center = (new_bbox_center - sample_size /
+                           2) * sample_scale[0] + sample_center[0]
         new_target_size = predicted_box[2:] * sample_scale[0]
 
         return torch.cat([new_bbox_center, new_target_size], dim=-1)
