@@ -71,45 +71,68 @@ Please refer to [changelog.md](docs/en/changelog.md) for details and release his
 
 ## Benchmark and model zoo
 
-Results and models are available in the [model zoo](docs/en/model_zoo.md). The supported (:white_check_mark:) and on-the-way (:o:) methods and datasets are listed below.
+Results and models are available in the [model zoo](docs/en/model_zoo.md).
 
 ### Video Object Detection
 
-| Method                                                                              | Dataset                                                                  |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| :white_check_mark:  [DFF](configs/vid/dff) (CVPR 2017)                              | :white_check_mark: [ILSVRC](http://image-net.org/challenges/LSVRC/2017/) |
-| :white_check_mark: [FGFA](configs/vid/fgfa) (ICCV 2017)                             |                                                                          |
-| :white_check_mark: [SELSA](configs/vid/selsa) (ICCV 2019)                           |                                                                          |
-| :white_check_mark: [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021) |                                                                          |
+Supported Methods
+
+- [x] [DFF](configs/vid/dff) (CVPR 2017)
+- [ ] [FGFA](configs/vid/fgfa) (ICCV 2017)
+- [ ] [SELSA](configs/vid/selsa) (ICCV 2019)
+- [ ] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
+
+Supported Datasets
+
+- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
 
 ### Single Object Tracking
 
-| Method                                                                 | Dataset                                                                 |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| :white_check_mark: [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019) | :white_check_mark:    [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)  |
-| :white_check_mark: [STARK](configs/sot/stark) (ICCV 2021)              | :white_check_mark:    [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/) |
-|                                                                        | :white_check_mark:  [TrackingNet](https://tracking-net.org/)            |
-|                                                                        | :white_check_mark:  [OTB100](http://www.visual-tracking.net/)           |
-|                                                                        | :white_check_mark:  [GOT10k](http://got-10k.aitestunion.com/)           |
-|                                                                        | :white_check_mark:  [VOT2018](https://www.votchallenge.net/vot2018/)    |
+Supported Methods
+
+- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
+
+Supported Datasets
+
+- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+- [x] [TrackingNet](https://tracking-net.org/)
+- [x] [OTB100](http://www.visual-tracking.net/)
+- [x] [GOT10k](http://got-10k.aitestunion.com/)
+- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
 
 ### Multi-Object Tracking
 
-| Method                                                                     | Dataset                                                         |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| :white_check_mark:  [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017) | :white_check_mark:  [MOT Challenge](https://motchallenge.net/)  |
-| :white_check_mark:  [Tracktor](configs/mot/tracktor) (ICCV 2019)           | :white_check_mark:    [CrowdHuman](https://www.crowdhuman.org/) |
-| :white_check_mark:  [QDTrack](configs/mot/qdtrack) (CVPR 2021)             | :white_check_mark:   [LVIS](https://www.lvisdataset.org/)       |
-| :white_check_mark:  [ByteTrack](configs/mot/bytetrack) (arXiv 2021)        | :white_check_mark:   [TAO](https://taodataset.org/)             |
-| :o: [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)              | :o: [DanceTrack](https://arxiv.org/abs/2111.14690)              |
-| :o: [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)            | :o:  [BDD100k](https://arxiv.org/abs/1805.04687)                |
+Supported Methods
+
+- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
+- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
+- [ ] [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)
+- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
+- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
+
+Supported Datasets
+
+- [x] [MOT Challenge](https://motchallenge.net/)
+- [x] [CrowdHuman](https://www.crowdhuman.org/)
+- [x] [LVIS](https://www.lvisdataset.org/)
+- [x] [TAO](https://taodataset.org/)
+- [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
+- [ ] [BDD100k](https://arxiv.org/abs/1805.04687)
 
 ### Video Instance Segmentation
 
-| Method                                                                         | Dataset                                                                 |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| :white_check_mark: [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)   | :white_check_mark:  [YouTube-VIS](https://youtube-vos.org/dataset/vis/) |
-| :o: [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | :o: [OVIS](https://arxiv.org/abs/2102.01558)                            |
+Supported Methods
+
+- [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
+- [ ] [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022)
+
+Supported Datasets
+
+- [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
+- [ ] [OVIS](https://arxiv.org/abs/2102.01558)
 
 ## Installation
 

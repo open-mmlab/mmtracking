@@ -70,6 +70,8 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 本工具箱支持的各个模型的结果和设置都可以在[模型库](docs/en/model_zoo.md)页面中查看。
 
+### 视频目标检测
+
 支持的视频目标检测算法:
 
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
@@ -77,21 +79,57 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 - [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
-支持的多目标跟踪算法:
+支持的视频目标检测数据集：
 
-- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
-- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
 
-支持的单目标跟踪算法:
+### 单目标跟踪
+
+支持的算法:
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
 
-支持的视频实例分割算法:
+支持的数据集：
+
+- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+- [x] [TrackingNet](https://tracking-net.org/)
+- [x] [OTB100](http://www.visual-tracking.net/)
+- [x] [GOT10k](http://got-10k.aitestunion.com/)
+- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
+
+### 多目标跟踪
+
+支持的算法:
+
+- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
+- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
+- [ ] [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)
+- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
+- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
+
+支持的数据集：
+
+- [x] [MOT Challenge](https://motchallenge.net/)
+- [x] [CrowdHuman](https://www.crowdhuman.org/)
+- [x] [LVIS](https://www.lvisdataset.org/)
+- [x] [TAO](https://taodataset.org/)
+- [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
+- [ ] [BDD100k](https://arxiv.org/abs/1805.04687)
+
+### 视频实例分割
+
+支持的算法:
 
 - [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
+- [ ] [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022)
+
+支持的数据集：
+
+- [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
+- [ ] [OVIS](https://arxiv.org/abs/2102.01558)
 
 ## 安装
 
