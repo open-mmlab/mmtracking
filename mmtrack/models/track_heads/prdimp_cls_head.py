@@ -241,7 +241,8 @@ class PrdimpClsHead(nn.Module):
         top_left = (max_pos - target_neigh_sz / 2).round().long()
         top_left = torch.clamp_min(top_left, 0).tolist()
         bottom_right = (max_pos + target_neigh_sz / 2).round().long()
-        bottom_right = torch.clamp_max(bottom_right, score_size.min()).tolist()
+        bottom_right = torch.clamp_max(bottom_right,
+                                       score_size.min().item()).tolist()
         scores_masked = scores.clone()
         scores_masked[top_left[1]:bottom_right[1],
                       top_left[0]:bottom_right[0]] = 0

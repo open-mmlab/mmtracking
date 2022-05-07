@@ -60,7 +60,7 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
             for ann in self.coco.imgToAnns[img_id]:
                 if ann['instance_id'] == instance_id:
                     bboxes.append(ann['bbox'])
-        bboxes = np.array(bboxes).reshape(-1, 4)
+        bboxes = np.array(bboxes, dtype=np.float32).reshape(-1, 4)
         return bboxes
 
     def get_img_infos_from_video(self, video_ind):

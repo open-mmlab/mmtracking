@@ -101,7 +101,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
 
     def loadtxt(self,
                 filepath,
-                dtype=float,
+                dtype=np.float32,
                 delimiter=None,
                 skiprows=0,
                 return_array=True):
@@ -127,7 +127,7 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         """
         bbox_path = osp.join(self.img_prefix,
                              self.data_infos[video_ind]['ann_path'])
-        bboxes = self.loadtxt(bbox_path, dtype=float, delimiter=',')
+        bboxes = self.loadtxt(bbox_path, delimiter=',')
         if len(bboxes.shape) == 1:
             bboxes = np.expand_dims(bboxes, axis=0)
 

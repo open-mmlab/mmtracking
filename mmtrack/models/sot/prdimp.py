@@ -460,8 +460,8 @@ class Prdimp(BaseSingleObjectTracker):
         # Do downsampling to get `img2`
         if resize_factor > 1:
             offset = crop_center_copy % resize_factor  # offset
-            crop_center_copy = (crop_center_copy -
-                                offset) // resize_factor  # new position
+            crop_center_copy = torch.floor_divide(
+                crop_center_copy - offset, resize_factor)  # new position
             img2 = img[..., offset[1].item()::resize_factor,
                        offset[0].item()::resize_factor]  # downsample
         else:
@@ -471,8 +471,8 @@ class Prdimp(BaseSingleObjectTracker):
         cropped_img_size = crop_size.float() / resize_factor
         cropped_img_size = torch.clamp_min(cropped_img_size.round(), 2).long()
         # Extract top and bottom coordinates
-        tl = crop_center_copy - cropped_img_size // 2
-        br = crop_center_copy + cropped_img_size // 2
+        tl = crop_center_copy - torch.floor_divide(cropped_img_size, 2)
+        br = crop_center_copy + torch.floor_divide(cropped_img_size, 2)
 
         # Shift the crop to inside
         if mode == 'inside' or mode == 'inside_major':
@@ -482,7 +482,8 @@ class Prdimp(BaseSingleObjectTracker):
             tl += shift
             br += shift
 
-            outside = ((-tl).clamp(0) + (br - img2_sz).clamp(0)) // 2
+            outside = torch.floor_divide(
+                ((-tl).clamp(0) + (br - img2_sz).clamp(0)), 2)
             shift = (-tl - outside) * (outside > 0).long()
             tl += shift
             br += shift
@@ -511,7 +512,8 @@ class Prdimp(BaseSingleObjectTracker):
             img_patch = F.interpolate(
                 img_patch,
                 output_size.long().flip(0).tolist(),
-                mode='bilinear')
+                mode='bilinear',
+                align_corners=True)
         else:
             img_patch = F.interpolate(
                 img_patch, output_size.long().flip(0).tolist(), mode='nearest')

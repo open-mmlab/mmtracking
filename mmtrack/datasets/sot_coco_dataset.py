@@ -61,7 +61,7 @@ class SOTCocoDataset(BaseSOTDataset):
         """
         ann_id = self.data_infos[video_ind]
         anno = self.coco.anns[ann_id]
-        bboxes = np.array(anno['bbox']).reshape(-1, 4)
+        bboxes = np.array(anno['bbox'], dtype=np.float32).reshape(-1, 4)
         return bboxes
 
     def get_img_infos_from_video(self, video_ind):
