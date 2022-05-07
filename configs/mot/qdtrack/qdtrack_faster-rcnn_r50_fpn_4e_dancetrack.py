@@ -1,7 +1,4 @@
-_base_ = [
-    '../../_base_/models/faster_rcnn_r50_fpn.py',
-    '../../_base_/datasets/dancetrack.py', '../../_base_/default_runtime.py'
-]
+_base_ = ['./qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17-private-half.py']
 model = dict(
     type='QDTrack',
     detector=dict(

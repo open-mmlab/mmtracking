@@ -46,20 +46,15 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_gts(gts, is_mot15):
+def parse_gts(gts):
     outputs = defaultdict(list)
     for gt in gts:
         gt = gt.strip().split(',')
         frame_id, ins_id = map(int, gt[:2])
         bbox = list(map(float, gt[2:6]))
-        if is_mot15:
-            conf = 1.
-            class_id = 1
-            visibility = 1.
-        else:
-            conf = float(gt[6])
-            class_id = int(gt[7])
-            visibility = float(gt[8])
+        conf = float(gt[6])
+        class_id = int(gt[7])
+        visibility = float(gt[8])
         if class_id in USELESS:
             continue
         elif class_id in IGNORES:
@@ -123,7 +118,7 @@ def main():
             # parse annotations
             if parse_gt:
                 gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
-                img2gts = parse_gts(gts, False)
+                img2gts = parse_gts(gts)
 
             # image and box level infos
             for frame_id, name in enumerate(img_names):

@@ -24,6 +24,13 @@ class DanceTrackDataset(MOTChallengeDataset):
     Most content is inherited from MOTChallengeDataset.
     """
 
+    def get_benchmark(self):
+        """Get benchmark from upeper/lower-case image prefix."""
+        BENCHMARKS = ['DanceTrack']
+        for benchamrk in BENCHMARKS:
+            if benchamrk in self.img_prefix.upper():
+                return benchamrk
+
     def get_dataset_cfg_for_hota(self, gt_folder, tracker_folder, seqmap):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
 
@@ -49,7 +56,7 @@ class DanceTrackDataset(MOTChallengeDataset):
             CLASSES_TO_EVAL=list(self.CLASSES),
             # TrackEval does not support Dancetrack as an option,
             # we use the wrapper for MOT17 dataset
-            BENCHMARK='DanceTrack',
+            BENCHMARK=self.get_benchmark(),
             # Option Values: 'train', 'val', 'test'
             SPLIT_TO_EVAL='val',
             # Whether tracker input files are zipped
@@ -57,8 +64,7 @@ class DanceTrackDataset(MOTChallengeDataset):
             # Whether to print current config
             PRINT_CONFIG=True,
             # Whether to perform preprocessing
-            # (never done for MOT15)
-            DO_PREPROC=False if 'MOT15' in self.img_prefix else True,
+            DO_PREPROC=False,
             # Tracker files are in
             # TRACKER_FOLDER/tracker_name/TRACKER_SUB_FOLDER
             TRACKER_SUB_FOLDER='',
