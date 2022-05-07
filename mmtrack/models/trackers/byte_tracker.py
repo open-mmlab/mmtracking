@@ -73,11 +73,8 @@ class ByteTracker(BaseTracker):
         bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
-        label_idx = self.memo_items.index('labels')
-        obj_label = obj[label_idx]
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
-        self.tracks[id].label = obj_label
 
     def update_track(self, id, obj):
         """Update a track."""
@@ -88,9 +85,10 @@ class ByteTracker(BaseTracker):
         bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
+        track_label = self.tracks[id]['labels'][-1]
         label_idx = self.memo_items.index('labels')
         obj_label = obj[label_idx]
-        assert obj_label == self.tracks[id].label
+        assert obj_label == track_label
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
@@ -141,8 +139,9 @@ class ByteTracker(BaseTracker):
             ious *= det_bboxes[:, 4][None]
 
         # support multi-class association
-        track_labels = torch.tensor([self.tracks[id].label
-                                     for id in ids]).to(det_bboxes.device)
+        track_labels = torch.tensor([
+            self.tracks[id]['labels'][-1] for id in ids
+        ]).to(det_bboxes.device)
 
         cate_match = det_labels[None, :] == track_labels[:, None]
         # to avoid det and track of different categories are matched
