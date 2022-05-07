@@ -64,7 +64,7 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 ## 更新记录
 
-v0.12.0版本已于2022年04月01日发布，可通过查阅[更新日志](docs/en/changelog.md)了解更多细节以及发布历史。
+v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/en/changelog.md)了解更多细节以及发布历史。
 
 ## 基准测试与模型库
 
@@ -99,11 +99,13 @@ v0.12.0版本已于2022年04月01日发布，可通过查阅[更新日志](docs/
 
 ## 开始使用MMTracking
 
-请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
+请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。我们也提供了[跟踪的colab教程](./demo/MMTracking_Tutorial.ipynb)。
+
+MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
 
 ## 参与贡献
 
-我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节。
+我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节和在这个[讨论](https://github.com/open-mmlab/mmtracking/issues/73)中规划MMTracking的开发计划。
 
 ## 致谢
 
