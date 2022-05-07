@@ -13,7 +13,7 @@ from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
 from mmdet.apis import set_random_seed
 
-from mmtrack.core import setup_multi_processes
+from mmtrack.core import init_model_weights_quiet, setup_multi_processes
 from mmtrack.datasets import build_dataset
 
 
@@ -59,6 +59,10 @@ def parse_args():
         '--tmpdir',
         help='tmp directory used for collecting results from multiple '
         'workers, available when gpu-collect is not specified')
+    parser.add_argument(
+        '--verbose-init-params',
+        action='store_true',
+        help='whether to print the init parameters to the console')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -162,8 +166,13 @@ def main():
             cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
     else:
         model = build_model(cfg.model)
+
     # We need call `init_weights()` to load pretained weights in MOT task.
-    model.init_weights()
+    if not args.verbose_init_params:
+        init_model_weights_quiet(model)
+    else:
+        model.init_weights()
+
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)

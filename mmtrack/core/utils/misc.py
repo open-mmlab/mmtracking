@@ -1,7 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import multiprocessing as mp
 import os
 import platform
+import tempfile
 import warnings
 
 import cv2
@@ -37,3 +39,25 @@ def setup_multi_processes(cfg):
             f'overloaded, please further tune the variable for optimal '
             f'performance in your application as needed.')
         os.environ['MKL_NUM_THREADS'] = str(mkl_num_threads)
+
+
+def init_model_weights_quiet(model):
+    """Creating a temporary file to record the information of initialized
+    parameters. If not, the information of initialized parameters will be
+    printed to the console because of the call of
+    `mmcv.runner.BaseModule.init_weights`.
+
+    Args:
+        model: The model inheriented from `BaseModule` in MMCV.
+    """
+    assert hasattr(model, 'logger') and hasattr(model, 'init_weights')
+    tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    file_handler = logging.FileHandler(tmp_file.name, mode='w')
+    model.logger.addHandler(file_handler)
+    # We need call `init_weights()` to load pretained weights in MOT
+    # task.
+    model.init_weights()
+    file_handler.close()
+    model.logger.removeHandler(file_handler)
+    tmp_file.close()
+    os.remove(tmp_file.name)
