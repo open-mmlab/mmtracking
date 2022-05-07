@@ -32,8 +32,7 @@ Documentation: https://mmtracking.readthedocs.io/
 
 ## Introduction
 
-MMTracking is an open source video perception toolbox based on PyTorch.
-It is a part of the OpenMMLab project.
+MMTracking is an open source video perception toolbox based on PyTorch. It is a part of [OpenMMLab]((https://openmmlab.com)) project.
 
 The master branch works with **PyTorch1.5+**.
 
@@ -74,12 +73,6 @@ Please refer to [changelog.md](docs/en/changelog.md) for details and release his
 
 Results and models are available in the [model zoo](docs/en/model_zoo.md). The supported (:white_check_mark:) and on-the-way (:o:) methods and datasets are listed below.
 
-<style>
-td, th {
-   border: none!important;
-}
-</style>
-
 ### Video Object Detection
 
 | Method                                                                              | Dataset                                                                  |
@@ -108,15 +101,15 @@ td, th {
 | :white_check_mark:  [Tracktor](configs/mot/tracktor) (ICCV 2019)           | :white_check_mark:    [CrowdHuman](https://www.crowdhuman.org/) |
 | :white_check_mark:  [QDTrack](configs/mot/qdtrack) (CVPR 2021)             | :white_check_mark:   [LVIS](https://www.lvisdataset.org/)       |
 | :white_check_mark:  [ByteTrack](configs/mot/bytetrack) (arXiv 2021)        | :white_check_mark:   [TAO](https://taodataset.org/)             |
-| :o: [OC-SORT](https://github.com/noahcao/OC_SORT)  (arXiv 2022)            | :o: [DanceTrack](https://dancetrack.github.io)                  |
-| :o: [CenterTrack](https://github.com/xingyizhou/CenterTrack) (ECCV 2020)   | :o:  [BDD100k](https://www.bdd100k.com)                         |
+| :o: [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)              | :o: [DanceTrack](https://arxiv.org/abs/2111.14690)              |
+| :o: [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)            | :o:  [BDD100k](https://arxiv.org/abs/1805.04687)                |
 
 ### Video Instance Segmentation
 
 | Method                                                                         | Dataset                                                                 |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | :white_check_mark: [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)   | :white_check_mark:  [YouTube-VIS](https://youtube-vos.org/dataset/vis/) |
-| :o: [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | :o: [OVIS](http://songbai.site/ovis)                                    |
+| :o: [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022) | :o: [OVIS](https://arxiv.org/abs/2102.01558)                            |
 
 ## Installation
 
