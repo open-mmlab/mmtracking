@@ -342,7 +342,7 @@ class IouNetHead(nn.Module):
             return None
 
         # Predict box
-        k = self.bbox_cfg.get('iounet_topk', 5)
+        k = self.bbox_cfg['iounet_topk']
         topk = min(k, out_bboxes.shape[0])
         _, inds = torch.topk(out_iou, topk)
         # in [x,y,w,h] format

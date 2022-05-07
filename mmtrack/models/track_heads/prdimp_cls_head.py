@@ -150,7 +150,7 @@ class PrdimpClsHead(nn.Module):
                 init_filter,
                 feat=cls_feats,
                 bboxes=target_bboxes,
-                num_iters=self.optimizer_cfg['net_opt_iter'])
+                num_iters=self.optimizer_cfg['init_update_iters'])
 
         # Initialize memory
         self.init_memory(cls_feats, target_bboxes)
@@ -328,11 +328,7 @@ class PrdimpClsHead(nn.Module):
             (int): the index of updated samples in memory.
         """
 
-        if learning_rate is None:
-            learning_rate = self.locate_cfg.learning_rate
-
-        init_sample_weight = self.locate_cfg.get('init_samples_minimum_weight',
-                                                 None)
+        init_sample_weight = self.update_cfg['init_samples_min_weight']
         if init_sample_weight == 0:
             init_sample_weight = None
 
@@ -394,16 +390,15 @@ class PrdimpClsHead(nn.Module):
                 'hard_neg_lr']
 
         # Update the tracker memory
-        if hard_neg_flag or frame_num % self.locate_cfg.get(
-                'train_sample_interval', 1) == 0:
+        if hard_neg_flag:
             self.update_memory(train_feat, target_bbox, learning_rate)
 
         # Decide the number of iterations to run
         num_iters = 0
         if hard_neg_flag:
-            num_iters = self.optimizer_cfg.get('hard_neg_iters', None)
+            num_iters = self.optimizer_cfg['hard_neg_iters']
         elif (frame_num - 1) % self.update_cfg['train_skipping'] == 0:
-            num_iters = self.optimizer_cfg.get('update_iters', None)
+            num_iters = self.optimizer_cfg['update_iters']
 
         if num_iters > 0:
             # Get inputs for the DiMP filter optimizer module

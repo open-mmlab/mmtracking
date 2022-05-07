@@ -57,8 +57,8 @@ class Prdimp(BaseSingleObjectTracker):
         self.init_params(img.shape[-2:], init_bbox)
 
         # Compute expanded size and output size about augmentation
-        aug_expansion_factor = self.test_cfg['init_aug_cfg'].get(
-            'aug_expansion_factor', None)
+        aug_expansion_factor = self.test_cfg['init_aug_cfg'][
+            'aug_expansion_factor']
         aug_expansion_sz = self.sample_size.clone()
         aug_output_sz = None
         if aug_expansion_factor is not None and aug_expansion_factor != 1:
@@ -172,8 +172,8 @@ class Prdimp(BaseSingleObjectTracker):
         Returns:
             Tensor: The cropped augmented image patches.
         """
-        random_shift_factor = self.test_cfg['init_aug_cfg'].get(
-            'random_shift_factor', 0)
+        random_shift_factor = self.test_cfg['init_aug_cfg'][
+            'random_shift_factor']
 
         def get_rand_shift():
             return ((torch.rand(2) - 0.5) * self.sample_size.cpu() *
@@ -287,8 +287,8 @@ class Prdimp(BaseSingleObjectTracker):
             sample_center_crop,
             self.target_scale * self.sample_size,
             self.sample_size,
-            mode=self.test_cfg.get('border_mode', 'replicate'),
-            max_scale_change=self.test_cfg.get('patch_max_scale_change', None))
+            mode=self.test_cfg['border_mode'],
+            max_scale_change=self.test_cfg['patch_max_scale_change'])
 
         img_patch = normalize(
             img_patch / 255,
@@ -320,7 +320,8 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Refine position, size and get new target scale
         if flag != 'not_found':
-            inside_ratio = self.test_cfg.get('target_min_inside_ratio', 0.2)
+            # TODO: hard code here
+            inside_ratio = 0.2
             inside_offset = (inside_ratio - 0.5) * bbox[2:4]
             # Clip the coordinates of the center of the target
             bbox[:2] = torch.max(
