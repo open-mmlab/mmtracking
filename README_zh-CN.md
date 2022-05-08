@@ -99,7 +99,9 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 ## 开始使用MMTracking
 
-请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。我们也提供了[跟踪的colab教程](./demo/MMTracking_Tutorial.ipynb)。
+请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。
+
+我们也提供了跟踪的colab教程. 您可以在[这里]((./demo/MMTracking_Tutorial.ipynb))预览或者直接在[colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb)上运行。
 
 MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
 
