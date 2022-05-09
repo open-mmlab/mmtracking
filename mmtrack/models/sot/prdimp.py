@@ -199,7 +199,7 @@ class Prdimp(BaseSingleObjectTracker):
             aug_imgs.append(
                 self.img_shift_resize(img.flip(3), output_size, shift))
             bbox_shift = torch.tensor(shift + [0, 0], device=init_bbox.device)
-            aug_bboxes.append(init_bbox)
+            aug_bboxes.append(init_bbox + bbox_shift)
 
         if 'blur' in augs:
             for sigma in augs['blur']:
