@@ -21,7 +21,7 @@ class FilterClassifierInitializer(nn.Module):
         self.filter_conv = nn.Conv2d(
             feature_dim, feature_dim, kernel_size=3, padding=1)
         self.filter_pool = PrRoIPool2D(filter_size, filter_size,
-                                       feature_stride)
+                                       1 / feature_stride)
 
     def init_weights(self):
         # Init weights
