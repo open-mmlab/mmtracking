@@ -20,10 +20,8 @@ class DanceTrackDataset(MOTChallengeDataset):
         Returns:
             tuple(string): The first string denotes the type of dataset.
             The second string denots the split of the dataset to eval.
-        """
-        SPLIT_TO_EVAL = ['train', 'val']
-        for split_to_eval in SPLIT_TO_EVAL:
-            if split_to_eval in self.img_prefix.upper():
-                break
 
-        return 'DanceTrack', split_to_eval
+        As DanceTrack only has train/val and use 'val' for evaluation as
+        default, we can directly output the desired split.
+        """
+        return 'DanceTrack', 'val'
