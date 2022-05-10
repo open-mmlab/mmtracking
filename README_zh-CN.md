@@ -105,7 +105,6 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [ ] [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 - [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
@@ -117,19 +116,16 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 - [x] [LVIS](https://www.lvisdataset.org/)
 - [x] [TAO](https://taodataset.org/)
 - [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
-- [ ] [BDD100k](https://arxiv.org/abs/1805.04687)
 
 ### 视频实例分割
 
 支持的算法:
 
 - [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
-- [ ] [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022)
 
 支持的数据集：
 
 - [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
-- [ ] [OVIS](https://arxiv.org/abs/2102.01558)
 
 ## 安装
 

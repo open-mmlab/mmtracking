@@ -32,7 +32,7 @@ Documentation: https://mmtracking.readthedocs.io/
 
 ## Introduction
 
-MMTracking is an open source video perception toolbox based on PyTorch. It is a part of [OpenMMLab]((https://openmmlab.com)) project.
+MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
 
 The master branch works with **PyTorch1.5+**.
 
@@ -78,9 +78,9 @@ Results and models are available in the [model zoo](docs/en/model_zoo.md).
 Supported Methods
 
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
-- [ ] [FGFA](configs/vid/fgfa) (ICCV 2017)
-- [ ] [SELSA](configs/vid/selsa) (ICCV 2019)
-- [ ] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
+- [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
+- [x] [SELSA](configs/vid/selsa) (ICCV 2019)
+- [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
 Supported Datasets
 
@@ -108,7 +108,6 @@ Supported Methods
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [ ] [CenterTrack](https://arxiv.org/abs/2004.01177) (ECCV 2020)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 - [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
@@ -120,19 +119,16 @@ Supported Datasets
 - [x] [LVIS](https://www.lvisdataset.org/)
 - [x] [TAO](https://taodataset.org/)
 - [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
-- [ ] [BDD100k](https://arxiv.org/abs/1805.04687)
 
 ### Video Instance Segmentation
 
 Supported Methods
 
 - [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
-- [ ] [Mask2Former](https://github.com/facebookresearch/Mask2Former) (CVPR 2022)
 
 Supported Datasets
 
 - [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
-- [ ] [OVIS](https://arxiv.org/abs/2102.01558)
 
 ## Installation
 
