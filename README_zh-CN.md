@@ -72,14 +72,14 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 ### 视频目标检测
 
-支持的视频目标检测算法:
+支持的算法:
 
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 - [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
-支持的视频目标检测数据集：
+支持的数据集：
 
 - [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
 
