@@ -19,13 +19,13 @@ cv2_border_modes = {
 }
 
 
-def numpy_to_tensor(x: np.ndarray, device='cpu'):
+def ndarray2tensor(x, device='cpu'):
     assert isinstance(x, np.ndarray)
     return torch.from_numpy(x.transpose(2, 0,
                                         1)).float().unsqueeze(0).to(device)
 
 
-def tensor_to_numpy(x: torch.Tensor):
+def tensor2ndarray(x):
     assert isinstance(x, torch.Tensor)
     if x.is_cuda:
         x = x.cpu()

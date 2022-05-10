@@ -3,32 +3,35 @@ import math
 
 import torch
 import torch.nn as nn
+from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
 
 from mmtrack.core.filter import filter as filter_layer
 
 
 @HEADS.register_module()
-class PrDiMPSteepestDescentNewton(nn.Module):
-    """Optimizer module for PrDiMP.
+class PrDiMPSteepestDescentNewton(BaseModule):
+    """Optimizer module of PrDiMP.
 
     It unrolls the steepest descent with Newton iterations to optimize the
         target filter. It's used on PrDiMP.
 
     Args:
-        num_iters:  Number of default optimization iterations.
-        feat_stride:  The stride of the input feature.
-        init_step_length:  Initial scaling of the step length
-            (which is then learned).
-        init_filter_regular:  Initial filter regularization weight
-            (which is then learned).
-        gauss_sigma:  The standard deviation to use for the label density
-            function.
-        min_filter_regular:  Enforce a minimum value on the regularization
-            (helps stability sometimes).
-        alpha_eps:  Term in the denominator of the steepest descent that
-            stabalizes learning.
-        label_thres:  Threshold probabilities smaller than this.
+        num_iters (int, optional):  Number of default optimization iterations.
+            Defaults to 1.
+        feat_stride (int, optional):  The stride of the input feature.
+            Defaults to 16.
+        init_step_length (float, optional):  Initial scaling of the step length
+            (which is then learned). Defaults to 1.0.
+        init_filter_regular (float, optional):  Initial filter regularization
+            weight (which is then learned). Defaults to 1e-2.
+        gauss_sigma (float, optional):  The standard deviation to use for the
+            label density function. Defaults to 1.0.
+        min_filter_regular (float, optional):  Enforce a minimum value on the
+            regularization (helps stability sometimes). Defaults to 1e-3.
+        alpha_eps (float, optional):  Term in the denominator of the steepest
+            descent that stabalizes learning. Defaults to 0.
+        label_thres (float, optional):  Threshold probabilities. Defaults to 0.
     """
 
     def __init__(self,
@@ -52,16 +55,30 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         self.alpha_eps = alpha_eps
         self.label_thres = label_thres
 
-    def get_label_density(self, center, output_sz):
-        center = center.reshape(center.shape[0], -1, center.shape[-1])
+    def gen_label_density(self, center_yx, output_size_hw):
+        """Generate label density.
+
+        Args:
+            center_yx (Tensor): The center of score map.
+            output_size_hw (Tensor): The size of score map in [h, w] format.
+
+        Returns:
+            Tensor: Label density with two possible shape:
+                - train mode: (num_img_per_seq, bs, h, w).
+                - test mode: (num_img_per_seq, 1, h, w).
+        """
+        center_yx = center_yx.reshape(center_yx.shape[0], -1,
+                                      center_yx.shape[-1])
         k0 = torch.arange(
-            output_sz[0], dtype=torch.float32).reshape(1, 1, -1,
-                                                       1).to(center.device)
+            output_size_hw[0],
+            dtype=torch.float32).reshape(1, 1, -1, 1).to(center_yx.device)
         k1 = torch.arange(
-            output_sz[1], dtype=torch.float32).reshape(1, 1, 1,
-                                                       -1).to(center.device)
-        dist0 = (k0 - center[:, :, 0].reshape(*center.shape[:2], 1, 1))**2
-        dist1 = (k1 - center[:, :, 1].reshape(*center.shape[:2], 1, 1))**2
+            output_size_hw[1],
+            dtype=torch.float32).reshape(1, 1, 1, -1).to(center_yx.device)
+        dist0 = (k0 -
+                 center_yx[:, :, 0].reshape(*center_yx.shape[:2], 1, 1))**2
+        dist1 = (k1 -
+                 center_yx[:, :, 1].reshape(*center_yx.shape[:2], 1, 1))**2
         if self.gauss_sigma == 0:
             dist0_view = dist0.reshape(-1, dist0.shape[-2])
             dist1_view = dist1.reshape(-1, dist1.shape[-1])
@@ -92,18 +109,19 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         Note that [] denotes an optional dimension. Generally speaking, inputs
         in test mode don't have the dim of [].
 
-        args:
-            filter:  Initial filter with shape
+        Args:
+            filter (Tensor):  Initial filter with shape
                 (num_img_per_seq, c, fitler_h, filter_w).
-            feat:  Input feature maps with shape
+            feat (Tensor):  Input feature maps with shape
                 (num_img_per_seq, [bs], feat_dim, H, W).
-            bboxes:  Target bounding boxes with shape
+            bboxes (Tensor):  Target bounding boxes with shape
                 (num_img_per_seq, [bs], 4). in (cx, cy, x, y) format.
-            sample_weights:  Optional weight for each sample.
-                Dims: (num_img_per_seq, [bs]).
-            num_iters:  Number of iterations to run.
+            num_iters (int, optional):  Number of iterations to run.
+                Defaults to None.
+            sample_weights (Tensor, optional):  Optional weight for each
+                sample with shape (num_img_per_seq, [bs]). Defaults to None.
 
-        returns:
+        Returns:
             filter (Tensor):  The final oprimized filter.
             filter_iters (Tensor, optional):  The filter computed in each
                 iteration (including initial input and final output), returned
@@ -127,12 +145,11 @@ class PrDiMPSteepestDescentNewton(nn.Module):
 
         # Compute label density
         offset = (torch.Tensor(filter_size_hw).to(bboxes.device) % 2) / 2.0
-        # center = ((bboxes[..., :2] + bboxes[..., 2:] / 2) / self.feat_stride)
         center = bboxes[:, :2] / self.feat_stride
         center_yx = center.flip((-1, )) - offset
-        label_density = self.get_label_density(center_yx, output_size_hw)
+        label_density = self.gen_label_density(center_yx, output_size_hw)
 
-        # Get total sample filter
+        # Get total sample weights
         if sample_weights is None:
             sample_weights = torch.Tensor([1.0 / num_img_per_seq
                                            ]).to(feat.device)
@@ -143,7 +160,7 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         filter_iters = []
         losses = []
 
-        for i in range(num_iters):
+        for _ in range(num_iters):
             # Get scores by applying the filter on the features
             scores = filter_layer.apply_filter(feat, filter)
             scores = torch.softmax(
@@ -187,15 +204,19 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         """Compute the step length of updating the filter.
 
         Args:
-            feat (Tensor): Input feature map with shape.
-            sample_weights (Tensor): The weights of all samples with shape ()
-            scores (Tensor): The score map with shaoe ().
-            filter_grad (Tensor): The gradient of the filter with shape ().
+            feat (Tensor): Input feature map with shape
+                (num_img_per_seq, [bs], feat_dim, H, W).
+            sample_weights (Tensor): The weights of all the samples.
+            scores (Tensor): The score map with two possible shape:
+                - train mode: (num_img_per_seq, bs, h, w).
+                - test mode: (num_img_per_seq, 1, h, w).
+            filter_grad (Tensor): The gradient of the filter with shape
+                (num_img_per_seq, c, fitler_h, filter_w).
             filter_regular (Tensor): The regulazation item of the filter, with
-                shape ().
+                shape (1,).
 
         Returns:
-            alpha (Tensor): The updating factor with shape ().
+            alpha (Tensor): The updating factor with shape (1, ).
         """
         num_img_per_seq = feat.shape[0]
         batch_size = feat.shape[1] if feat.dim() == 5 else 1
@@ -222,14 +243,19 @@ class PrDiMPSteepestDescentNewton(nn.Module):
         """Compute loss in the box optimization.
 
         Args:
-            scores (Tensor): _description_
-            sample_weights (Tensor): _description_
-            label_density (Tensor): _description_
-            filter (Tensor): _description_
-            filter_regular (Tensor): _description_
+            scores (Tensor): The score map with shape
+                (num_img_per_seq, bs, h, w).
+            sample_weights (Tensor): The weights of all the samples with shape
+                (num_img_per_seq, bs, 1, 1)
+            label_density (Tensor):The label density with shape
+                (num_img_per_seq, bs, h, w).
+            filter (Tensor): The filter with shape
+                (num_img_per_seq, c, fitler_h, filter_w).
+            filter_regular (Tensor):The regulazation item of the filter, with
+                shape (1,).
 
         Returns:
-            (Tensor):
+            Tensor: with shape (1,)
         """
 
         num_samples = sample_weights.shape[0]

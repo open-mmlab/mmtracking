@@ -9,7 +9,7 @@ from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmdet.models.builder import build_backbone, build_head
 from torchvision.transforms.functional import gaussian_blur, normalize
 
-from mmtrack.core.utils import numpy_to_tensor, rotate_image, tensor_to_numpy
+from mmtrack.core.utils import ndarray2tensor, rotate_image, tensor2ndarray
 from ..builder import MODELS
 from .base import BaseSingleObjectTracker
 
@@ -22,9 +22,12 @@ class Prdimp(BaseSingleObjectTracker):
     <https://arxiv.org/abs/2003.12565>`_.
 
     args:
-        backbone (dict): the configuration of backbone network.
+        backbone (dict, optional): the configuration of backbone network.
+            Defaults to None.
         cls_head (dict, optional):  target classification module.
+            Defaults to None.
         bbox_head (dict, optional):  bounding box regression module.
+            Defaults to None.
         init_cfg (dict, optional): the configuration of initialization.
             Defaults to None.
         test_cfg (dict, optional): the configuration of test.
@@ -48,7 +51,7 @@ class Prdimp(BaseSingleObjectTracker):
         """Initialize tracker.
 
         Args:
-            img (Tensor): input image of shape (1, C, H, W).
+            img (Tensor): Input image of shape (1, C, H, W).
             init_bbox (Tensor): of (4, ) shape in [cx, cy, w, h] format.
         """
         self.frame_num = 1
@@ -116,7 +119,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         Args:
             img_hw (ndarray): the height and width of the image.
-            init_bbox (ndarray | list): in [x,y,w,h] format.
+            init_bbox (ndarray | list): in [cx, cy, w, h] format.
         """
         # Set size for image. img_size is in [w, h] format.
         self.img_size = torch.Tensor([img_hw[1],
@@ -140,7 +143,17 @@ class Prdimp(BaseSingleObjectTracker):
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
         self.max_scale_factor = torch.min(self.img_size / self.base_target_sz)
 
-    def img_shift_resize(self, img, output_size=None, shift=None):
+    def img_shift_crop(self, img, output_size=None, shift=None):
+        """Shift and crop the image.
+
+        Args:
+            img (Tensor): The image of shape (C, H, W).
+            output_size (list): in [w, h] format.
+            shift (list): in [x, y] fotmat.
+
+        Returns:
+            Tensor: Output image.
+        """
         img_size = [img.shape[-1], img.shape[-2]]
         # img_size = img.shape[-2:]
         if output_size is None:
@@ -180,7 +193,7 @@ class Prdimp(BaseSingleObjectTracker):
                     random_shift_factor).long().tolist()
 
         augs = self.test_cfg['init_aug_cfg']['augmentation']
-        aug_imgs = [self.img_shift_resize(img, output_size)]
+        aug_imgs = [self.img_shift_crop(img, output_size)]
         aug_bboxes = [init_bbox]
 
         # All augmentations
@@ -189,7 +202,7 @@ class Prdimp(BaseSingleObjectTracker):
                 absulute_shift = (torch.Tensor(shift) *
                                   self.sample_size.cpu() / 2).long().tolist()
                 aug_imgs.append(
-                    self.img_shift_resize(img, output_size, absulute_shift))
+                    self.img_shift_crop(img, output_size, absulute_shift))
                 bbox_shift = torch.tensor(
                     absulute_shift + [0, 0], device=init_bbox.device)
                 aug_bboxes.append(init_bbox + bbox_shift)
@@ -197,7 +210,7 @@ class Prdimp(BaseSingleObjectTracker):
         if 'fliplr' in augs and augs['fliplr']:
             shift = get_rand_shift()
             aug_imgs.append(
-                self.img_shift_resize(img.flip(3), output_size, shift))
+                self.img_shift_crop(img.flip(3), output_size, shift))
             bbox_shift = torch.tensor(shift + [0, 0], device=init_bbox.device)
             aug_bboxes.append(init_bbox + bbox_shift)
 
@@ -208,24 +221,24 @@ class Prdimp(BaseSingleObjectTracker):
                     img, kernel_size=kernel_size, sigma=sigma)
                 shift = get_rand_shift()
                 aug_imgs.append(
-                    self.img_shift_resize(img_blur, output_size, shift))
+                    self.img_shift_crop(img_blur, output_size, shift))
                 bbox_shift = torch.tensor(
                     shift + [0, 0], device=init_bbox.device)
                 aug_bboxes.append(init_bbox + bbox_shift)
 
         if 'rotate' in augs:
             for angle in augs['rotate']:
-                img_numpy = tensor_to_numpy(img)
+                img_numpy = tensor2ndarray(img)
                 assert img_numpy.ndim == 3
                 rotated_img = rotate_image(
                     img_numpy,
                     angle,
                     border_mode='replicate',
                 )
-                img_tensor = numpy_to_tensor(rotated_img, device=img.device)
+                img_tensor = ndarray2tensor(rotated_img, device=img.device)
                 shift = get_rand_shift()
                 aug_imgs.append(
-                    self.img_shift_resize(img_tensor, output_size, shift))
+                    self.img_shift_crop(img_tensor, output_size, shift))
                 bbox_shift = torch.tensor(
                     shift + [0, 0], device=init_bbox.device)
                 aug_bboxes.append(init_bbox + bbox_shift)
@@ -243,11 +256,6 @@ class Prdimp(BaseSingleObjectTracker):
         are based on the resized cropped image sample.
 
         Args:
-            Generates a box in the cropped image sample reference frame, in the
-                format used by the IoUNet.
-            # bbox_center: the bbox center in [x,y] format.
-            # bbox_size: the width and height of the image, with shape (2, ) in
-            #     [w, h] format.
             bbox (Tensor): of shape (4,) in [cx, cy, w, h] format
             sample_center (Tensor): of shape (2,)
             sample_scale (int):
@@ -301,9 +309,6 @@ class Prdimp(BaseSingleObjectTracker):
         with torch.no_grad():
             test_feat = self.classifier.cls_feature_extractor(
                 backbone_feat[-1])
-            # test_feat = torch.load('./scripts/test_x.pth').cuda()
-            # self.classifier.target_filter = torch.load(
-            #     './scripts/filter.pth').cuda()
             scores_raw = self.classifier.classify(test_feat)
             scores = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)

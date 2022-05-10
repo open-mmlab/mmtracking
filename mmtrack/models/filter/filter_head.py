@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
+from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
 from torch import nn
 
@@ -7,16 +8,17 @@ from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
 
 
 @HEADS.register_module()
-class FilterClassifierInitializer(nn.Module):
+class FilterClassifierInitializer(BaseModule):
     """Initializes a target classification filter.
 
     Args:
-        filter_size (int, optional):  Size of the filter.
+        filter_size (int, optional):  Size of the filter. Defaults to 4.
         feature_dim (int, optional):  Input feature dimentionality.
-        feature_stride (int, optional):  Input feature stride.
+             Defaults to 512.
+        feature_stride (int, optional):  Input feature stride. Defaults to 16.
     """
 
-    def __init__(self, filter_size=1, feature_dim=512, feature_stride=16):
+    def __init__(self, filter_size=4, feature_dim=512, feature_stride=16):
         super().__init__()
         self.filter_conv = nn.Conv2d(
             feature_dim, feature_dim, kernel_size=3, padding=1)
@@ -24,7 +26,7 @@ class FilterClassifierInitializer(nn.Module):
                                        1 / feature_stride)
 
     def init_weights(self):
-        # Init weights
+        """Initialize the parameters of this module."""
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 m.weight.data.zero_()
@@ -46,7 +48,8 @@ class FilterClassifierInitializer(nn.Module):
                 format.
 
         Returns:
-            weights:  The output weights. Dims (sequences, feat_dim, wH, wW).
+            filter_weights (Tensor):  The output filter with shape
+                (images_in_sequence, c, filter_h, filter_w).
         """
 
         num_images = feat.shape[0]

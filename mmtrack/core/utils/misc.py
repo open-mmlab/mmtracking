@@ -7,6 +7,7 @@ import tempfile
 import warnings
 
 import cv2
+import torch
 
 
 def setup_multi_processes(cfg):
@@ -61,3 +62,25 @@ def init_model_weights_quiet(model):
     model.logger.removeHandler(file_handler)
     tmp_file.close()
     os.remove(tmp_file.name)
+
+
+def max2d(input):
+    """Computes the value and position of maximum in the last two dimensions.
+
+    Args:
+        input (Tensor): of shape (..., H, W)
+
+    Returns:
+        max_val (Tensor): The maximum value.
+        argmax (Tensor): The position of maximum in [row, col] format.
+    """
+
+    max_val_row, argmax_row = torch.max(input, dim=-2)
+    max_val, argmax_col = torch.max(max_val_row, dim=-1)
+    argmax_row = argmax_row.view(argmax_col.numel(),
+                                 -1)[torch.arange(argmax_col.numel()),
+                                     argmax_col.view(-1)]
+    argmax_row = argmax_row.reshape(argmax_col.shape)
+    argmax = torch.cat((argmax_row.unsqueeze(-1), argmax_col.unsqueeze(-1)),
+                       -1)
+    return max_val, argmax

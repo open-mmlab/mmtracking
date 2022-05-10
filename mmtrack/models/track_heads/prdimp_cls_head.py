@@ -4,25 +4,34 @@ import math
 import torch
 import torch.nn.functional as F
 from addict import Dict
+from mmcv.runner.base_module import BaseModule
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmdet.models import HEADS
 from mmdet.models.builder import build_head
 from torch import nn
 
 from mmtrack.core.filter import filter as filter_layer
+from mmtrack.core.utils import max2d
 
 
-class InstanceL2Norm(nn.Module):
-    """Instance L2 normalization."""
+class InstanceL2Norm(BaseModule):
+    """Instance L2 normalization.
 
-    def __init__(self, size_average=True, eps=1e-5, scale=1.0):
+    Args:
+        size_avg (bool, optional): Whether average the size. Defaults to True.
+        eps (float, optional):  a value added to the denominator for numerical
+            stability. Defaults to 1e-5
+        scale (float, optional): The scale factor. Defaults to 1.0.
+    """
+
+    def __init__(self, size_avg=True, eps=1e-5, scale=1.0):
         super().__init__()
-        self.size_average = size_average
+        self.size_avg = size_avg
         self.eps = eps
         self.scale = scale
 
     def forward(self, input):
-        if self.size_average:
+        if self.size_avg:
             return input * (
                 self.scale *
                 ((input.shape[1] * input.shape[2] * input.shape[3]) /
@@ -38,22 +47,8 @@ class InstanceL2Norm(nn.Module):
                     keepdim=True) + self.eps).sqrt())
 
 
-def max2d(a: torch.Tensor):
-    """Computes maximum and argmax in the last two dimensions."""
-
-    max_val_row, argmax_row = torch.max(a, dim=-2)
-    max_val, argmax_col = torch.max(max_val_row, dim=-1)
-    argmax_row = argmax_row.view(argmax_col.numel(),
-                                 -1)[torch.arange(argmax_col.numel()),
-                                     argmax_col.view(-1)]
-    argmax_row = argmax_row.reshape(argmax_col.shape)
-    argmax = torch.cat((argmax_row.unsqueeze(-1), argmax_col.unsqueeze(-1)),
-                       -1)
-    return max_val, argmax
-
-
 @HEADS.register_module()
-class PrdimpClsHead(nn.Module):
+class PrdimpClsHead(BaseModule):
     """Prdimp classification head.
 
     Args:
@@ -104,6 +99,7 @@ class PrdimpClsHead(nn.Module):
         self.filter_size = torch.tensor(filter_size, dtype=torch.float32)
 
     def init_weights(self):
+        """Initialize the parameters of this module."""
         for m in self.cls_feature_extractor.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels

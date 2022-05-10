@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
+from mmcv.runner.base_module import BaseModule
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmdet.models import HEADS
 
@@ -47,21 +48,21 @@ class LinearBlock(nn.Module):
 
 
 @HEADS.register_module()
-class IouNetHead(nn.Module):
+class IouNetHead(BaseModule):
     """Module for IoU prediction.
 
     Refer to the ATOM paper for a detailed illustration of the architecture.
     `ATOM: <https://arxiv.org/abs/1811.07628>`_.
 
     Args:
-        input_dim (tuple(int)): Feature dimensionality of the two input
-            backbone layers.
-        pred_input_dim (tuple(int)): Input dimensionality of the the
-            prediction network.
-        pred_inter_dim (tuple(int)): Intermediate dimensionality in the
-            prediction network.
+        input_dim (tuple(int), optional): Feature dimensionality from the two
+            input backbone layers. Defaults to (128, 256).
+        pred_input_dim (tuple(int), optional): Input dimensionality of the
+            prediction network. Defaults to (256, 256).
+        pred_inter_dim (tuple(int), optional): Intermediate dimensionality in
+            the prediction network. Defaults to (256, 256).
         bbox_cfg (dict, optional): The configuration of bbox refinement.
-            Defaults to None.
+            Defaults to None. Defaults to None.
         train_cfg (dict, optional): The configuration of training.
             Defaults to None.
         loss_bbox (dict, optional): The configuration of loss.
@@ -92,6 +93,8 @@ class IouNetHead(nn.Module):
                 inplace=True)
 
         # `*_temp` denotes template branch, `*_search` denotes search branch
+        # The `number` in the names of variables are block indexes in the
+        # backbone or indexes of head layer.
         self.conv3_temp = conv_module(input_dim[0], 128)
         self.roi3_temp = PrRoIPool2D(3, 3, 1 / 8)
         self.fc3_temp = conv_module(128, 256, padding=0)
@@ -119,7 +122,7 @@ class IouNetHead(nn.Module):
             pred_inter_dim[0] + pred_inter_dim[1], 1, bias=True)
 
     def init_weights(self):
-        # Init weights
+        """Initialize the parameters of this module."""
         for m in self.modules():
             if isinstance(m, nn.Conv2d) or isinstance(
                     m, nn.ConvTranspose2d) or isinstance(m, nn.Linear):
@@ -133,15 +136,21 @@ class IouNetHead(nn.Module):
     def predict_iou(self, modulations, feats, proposals):
         """Predicts IoU for the give proposals.
 
-        args:
+        Args:
             modulations (tuple(Tensor)): contains the features from two layers.
                 The inner tensors are of shape (bs, c, 1, 1)
             feats (tuple(Tensor)):  IoU features for test images.
                 The inner tensors are of shape (bs, c, h, w).
             proposals:  Proposal boxes for which the IoU will be predicted
                 (bs, num_proposals, 4).
-        """
 
+        Returns:
+            Tensor: IoU between the proposals with the groundtruth boxes. It's
+                of shape (bs, num_proposals).
+        """
+        # `*_temp` denotes template branch, `*_search` denotes search branch
+        # The `number` in the names of variables are block indexes in the
+        # backbone or indexes of head layer.
         fc34_3_temp, fc34_4_temp = modulations
         conv3_search, conv4_search = feats
         batch_size = conv3_search.shape[0]
@@ -181,13 +190,17 @@ class IouNetHead(nn.Module):
         return iou_pred
 
     def get_modulation(self, feats, bboxes):
-        """Get modulation vectors for the targets.
+        """Get modulation vectors for the targets in the search branch.
 
-        args:
+        Args:
             feats (tuple(Tensor)): Backbone features from template branch.
-                It's of shape (batch, feature_dim, H, W).
+                It's of shape (bs, c, h, w).
             bboxes: Target boxes (x1, y1, x2, y2) in image coords in the
-                template branch. It's of shape (batch, 4).
+                template branch. It's of shape (bs, 4).
+
+        Returns:
+            fc34_3_temp (Tensor): of shape (bs, c, 1, 1).
+            fc34_4_temp (Tensor): of shape (bs, c, 1, 1).
         """
 
         # Add batch_index to rois
@@ -197,6 +210,9 @@ class IouNetHead(nn.Module):
         roi = torch.cat((batch_index, bboxes), dim=1)
 
         # Perform conv and prpool on the feature maps from the backbone
+        # `*_temp` denotes template branch, `*_search` denotes search branch
+        # The `number` in the names of variables are block indexes in the
+        # backbone or indexes of head layer.
         feat3_temp, feat4_temp = feats
         conv3_temp = self.conv3_temp(feat3_temp)
         roi3_temp = self.roi3_temp(conv3_temp, roi)
@@ -215,15 +231,27 @@ class IouNetHead(nn.Module):
 
     def get_iou_feat(self, feats):
         """Get IoU prediction features from a 4 or 5 dimensional backbone
-        input."""
+        input.
+
+        Args:
+            feats (tuple(Tensor)): Containing the features from backbone with
+                shape (bs, c, h, w)
+
+        Returns:
+            conv3_search (Tensor): Features from the `conv3_search` branch.
+            conv4_search (Tensor): Features from the `conv4_search` branch.
+        """
+        # `*_temp` denotes template branch, `*_search` denotes search branch
+        # The `number` in the names of variables are block indexes in the
+        # backbone or indexes of head layer.
         feats = [
             f.reshape(-1, *f.shape[-3:]) if f.dim() == 5 else f for f in feats
         ]
         feat3_search, feat4_search = feats
-        c3_search = self.conv3_search(feat3_search)
-        c4_search = self.conv4_search(feat4_search)
+        conv3_search = self.conv3_search(feat3_search)
+        conv4_search = self.conv4_search(feat4_search)
 
-        return c3_search, c4_search
+        return conv3_search, conv4_search
 
     def init_iou_net(self, iou_backbone_feats, bboxes):
         """Initialize the IoUNet with feature are from the 'layer2' and
@@ -289,7 +317,7 @@ class IouNetHead(nn.Module):
 
     def refine_target_bbox(self, init_bbox, backbone_feats, sample_center,
                            sample_scale, sample_size):
-        """Run the ATOM IoUNet to refine the target bounding box.
+        """Refine the target bounding box.
 
         Args:
             init_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] formmat.
