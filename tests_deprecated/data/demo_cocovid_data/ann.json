@@ -1,0 +1,286 @@
+{
+    "categories": [
+        {
+            "id": 1,
+            "name": "car"
+        },
+        {
+            "id": 2,
+            "name": "person"
+        }
+    ],
+    "videos": [
+        {
+            "id": 1,
+            "name": "dummy_video"
+        }
+    ],
+    "images": [
+        {
+            "file_name": "image_1.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 1,
+            "video_id": 1,
+            "frame_id": 0
+        },
+        {
+            "file_name": "image_2.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 2,
+            "video_id": 1,
+            "frame_id": 1
+        },
+        {
+            "file_name": "image_3.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 3,
+            "video_id": 1,
+            "frame_id": 2
+        },
+        {
+            "file_name": "image_4.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 4,
+            "video_id": 1,
+            "frame_id": 3
+        },
+        {
+            "file_name": "image_5.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 5,
+            "video_id": 1,
+            "frame_id": 4
+        },
+        {
+            "file_name": "image_6.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 6,
+            "video_id": 1,
+            "frame_id": 5
+        },
+        {
+            "file_name": "image_7.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 7,
+            "video_id": 1,
+            "frame_id": 6
+        },
+        {
+            "file_name": "image_8.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 8,
+            "video_id": 1,
+            "frame_id": 7
+        }
+    ],
+    "annotations": [
+        {
+            "id": 1,
+            "image_id": 2,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 1,
+            "bbox": [
+                44.96680450439453,
+                46.50063705444336,
+                51.31086730957031,
+                4.578987121582031
+            ],
+            "area": 234.9518006077269,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 2,
+            "image_id": 3,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 1,
+            "bbox": [
+                120.4886245727539,
+                227.72906494140625,
+                45.48944854736328,
+                25.938629150390625
+            ],
+            "area": 1179.9339361258317,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 3,
+            "image_id": 4,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 1,
+            "bbox": [
+                2.3915271759033203,
+                129.34030151367188,
+                79.5280590057373,
+                111.25004577636719
+            ],
+            "area": 8847.500204893906,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 4,
+            "image_id": 5,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 1,
+            "bbox": [
+                197.55728149414062,
+                32.26101303100586,
+                21.632125854492188,
+                208.88010025024414
+            ],
+            "area": 4518.520617112226,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 5,
+            "image_id": 5,
+            "video_id": 1,
+            "category_id": 2,
+            "instance_id": 2,
+            "bbox": [
+                182.20187377929688,
+                227.82843017578125,
+                8.478378295898438,
+                14.818862915039062
+            ],
+            "area": 125.63992570876144,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 6,
+            "image_id": 6,
+            "video_id": 1,
+            "category_id": 2,
+            "instance_id": 2,
+            "bbox": [
+                5.008738994598389,
+                64.79338836669922,
+                228.1608624458313,
+                113.8602066040039
+            ],
+            "area": 25978.442937030068,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 7,
+            "image_id": 7,
+            "video_id": 1,
+            "category_id": 2,
+            "instance_id": 2,
+            "bbox": [
+                91.12625122070312,
+                89.11300659179688,
+                14.969261169433594,
+                91.34773254394531
+            ],
+            "area": 1367.408065685886,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": false,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 8,
+            "image_id": 1,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 3,
+            "bbox": [
+                76.43632507324219,
+                39.33003234863281,
+                148.8035125732422,
+                29.683120727539062
+            ],
+            "area": 4416.952628393425,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": true,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 9,
+            "image_id": 1,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 4,
+            "bbox": [
+                120.81246948242188,
+                85.94278717041016,
+                8.577041625976562,
+                159.13533782958984
+            ],
+            "area": 1364.9104167282348,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": true,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        },
+        {
+            "id": 10,
+            "image_id": 1,
+            "video_id": 1,
+            "category_id": 1,
+            "instance_id": 5,
+            "bbox": [
+                66.48412322998047,
+                140.93060302734375,
+                44.840370178222656,
+                70.38531494140625
+            ],
+            "area": 3156.1035770834424,
+            "occluded": false,
+            "truncated": false,
+            "iscrowd": true,
+            "ignore": false,
+            "is_vid_train_frame": true,
+            "visibility": 1.0
+        }
+    ]
+}
