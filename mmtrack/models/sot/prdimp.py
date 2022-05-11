@@ -303,11 +303,12 @@ class Prdimp(BaseSingleObjectTracker):
             mean=(0.485, 0.456, 0.406),
             std=(0.229, 0.224, 0.225))
         with torch.no_grad():
-            backbone_feat = self.backbone(img_patch)
+            backbone_feats = self.backbone(img_patch)
 
         # Extract classification features
         with torch.no_grad():
-            scores_raw, test_feat = self.classifier.classify(backbone_feat[-1])
+            scores_raw, test_feat = self.classifier.classify(
+                backbone_feats[-1])
             scores = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
@@ -336,7 +337,7 @@ class Prdimp(BaseSingleObjectTracker):
             cls_bboxes = self.generate_bbox(bbox, sample_center[0],
                                             sample_scales[0])
             new_bbox = self.bbox_regressor.refine_target_bbox(
-                cls_bboxes, backbone_feat, sample_center, sample_scales,
+                cls_bboxes, backbone_feats, sample_center, sample_scales,
                 self.sample_size)
             if new_bbox is not None:
                 # Crop the original image based on the `self.target_scale`

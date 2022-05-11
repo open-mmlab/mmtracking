@@ -238,7 +238,7 @@ class PrDiMPSteepestDescentNewton(BaseModule):
 
         return alpha
 
-    def _compute_loss(scores, sample_weights, label_density, filter,
+    def _compute_loss(self, scores, sample_weights, label_density, filter,
                       filter_regular):
         """Compute loss in the box optimization.
 

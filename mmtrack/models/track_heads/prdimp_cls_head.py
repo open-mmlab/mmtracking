@@ -180,12 +180,12 @@ class PrdimpClsHead(BaseModule):
         """Run the target localization based on the score map.
 
         Args:
-            scores (Tensor): It's of shape (1, h, w).
+            scores (Tensor): It's of shape (1, h, w) or (h, w).
             sample_center (Tensor): The center of the cropped
-                sample on the original image. It's of shape (1,2) in [x, y]
-                format.
-            sample_scale (Tensor): The scale of the cropped sample. It's of
-                shape (1,).
+                sample on the original image. It's of shape (1,2) or (2,) in
+                [x, y] format.
+            sample_scale (int | Tensor): The scale of the cropped sample.
+                It's of shape (1,) when it's a tensor.
             sample_size (Tensor): The scale of the cropped sample. It's of
                 shape (2,) in [h, w] format.
             prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
@@ -195,7 +195,13 @@ class PrdimpClsHead(BaseModule):
                 image
             bool: The tracking state
         """
+        sample_center = sample_center.squeeze()
         scores = scores.squeeze()
+        prev_bbox = prev_bbox.squeeze()
+        sample_size = sample_size.squeeze()
+        assert scores.dim() == 2
+        assert sample_center.dim() == sample_size.dim() == prev_bbox.dim() == 1
+
         score_size = torch.tensor([scores.shape[-1], scores.shape[-2]])
         output_size = (score_size - (self.filter_size + 1) % 2).to(
             sample_size.device)
@@ -239,7 +245,7 @@ class PrdimpClsHead(BaseModule):
         # Note that `sample_center`` may not be equal to the center of previous
         # tracking bbox due to different cropping mode
         prev_target_disp_score_map = (prev_bbox[:2] -
-                                      sample_center[0, :]) / ratio_size
+                                      sample_center) / ratio_size
 
         # 2. There is a distractor
         if second_max_score > self.locate_cfg['distractor_thres'] * max_score:
@@ -277,7 +283,16 @@ class PrdimpClsHead(BaseModule):
         return target_disp, 'normal'
 
     def classify(self, backbone_feats):
-        """Run classifier on the backbone features."""
+        """Run classifier on the backbone features.
+
+        Args:
+            backbone_feats (Tensor): the features from the last layer of
+                backbone
+
+        Returns:
+            scores (Tensor): of shape (bs, 1, h, w)
+            feats (Tensor): features for classification.
+        """
         with torch.no_grad():
             feats = self.get_cls_feats(backbone_feats)
         scores = filter_layer.apply_filter(feats, self.target_filter)

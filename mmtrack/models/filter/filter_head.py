@@ -54,8 +54,7 @@ class FilterClassifierInitializer(BaseModule):
 
         num_images = feat.shape[0]
 
-        feat = self.filter_conv(
-            feat.reshape(-1, feat.shape[-3], feat.shape[-2], feat.shape[-1]))
+        feat = self.filter_conv(feat.reshape(-1, *feat.shape[-3:]))
 
         # Add batch_index to rois
         batch_size = bboxes.shape[0]

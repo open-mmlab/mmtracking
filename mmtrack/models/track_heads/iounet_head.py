@@ -55,9 +55,9 @@ class IouNetHead(BaseModule):
     `ATOM: <https://arxiv.org/abs/1811.07628>`_.
 
     Args:
-        input_dim (tuple(int), optional): Feature dimensionality from the two
+        in_dim (tuple(int), optional): Feature dimensionality from the two
             input backbone layers. Defaults to (128, 256).
-        pred_input_dim (tuple(int), optional): Input dimensionality of the
+        pred_in_dim (tuple(int), optional): Input dimensionality of the
             prediction network. Defaults to (256, 256).
         pred_inter_dim (tuple(int), optional): Intermediate dimensionality in
             the prediction network. Defaults to (256, 256).
@@ -70,8 +70,8 @@ class IouNetHead(BaseModule):
     """
 
     def __init__(self,
-                 input_dim=(128, 256),
-                 pred_input_dim=(256, 256),
+                 in_dim=(128, 256),
+                 pred_in_dim=(256, 256),
                  pred_inter_dim=(256, 256),
                  bbox_cfg=None,
                  train_cfg=None,
@@ -95,28 +95,26 @@ class IouNetHead(BaseModule):
         # `*_temp` denotes template branch, `*_search` denotes search branch
         # The `number` in the names of variables are block indexes in the
         # backbone or indexes of head layer.
-        self.conv3_temp = conv_module(input_dim[0], 128)
+        self.conv3_temp = conv_module(in_dim[0], 128)
         self.roi3_temp = PrRoIPool2D(3, 3, 1 / 8)
         self.fc3_temp = conv_module(128, 256, padding=0)
         self.fc34_3_temp = conv_module(
-            256 + 256, pred_input_dim[0], kernel_size=1, padding=0)
+            256 + 256, pred_in_dim[0], kernel_size=1, padding=0)
 
-        self.conv4_temp = conv_module(input_dim[1], 256)
+        self.conv4_temp = conv_module(in_dim[1], 256)
         self.roi4_temp = PrRoIPool2D(1, 1, 1 / 16)
         self.fc34_4_temp = conv_module(
-            256 + 256, pred_input_dim[1], kernel_size=1, padding=0)
+            256 + 256, pred_in_dim[1], kernel_size=1, padding=0)
 
         self.conv3_search = nn.Sequential(
-            conv_module(input_dim[0], 256),
-            conv_module(256, pred_input_dim[0]))
+            conv_module(in_dim[0], 256), conv_module(256, pred_in_dim[0]))
         self.roi3_search = PrRoIPool2D(5, 5, 1 / 8)
-        self.fc3_search = LinearBlock(pred_input_dim[0], pred_inter_dim[0], 5)
+        self.fc3_search = LinearBlock(pred_in_dim[0], pred_inter_dim[0], 5)
 
         self.conv4_search = nn.Sequential(
-            conv_module(input_dim[1], 256),
-            conv_module(256, pred_input_dim[1]))
+            conv_module(in_dim[1], 256), conv_module(256, pred_in_dim[1]))
         self.roi4_search = PrRoIPool2D(3, 3, 1 / 16)
-        self.fc4_search = LinearBlock(pred_input_dim[1], pred_inter_dim[1], 3)
+        self.fc4_search = LinearBlock(pred_in_dim[1], pred_inter_dim[1], 3)
 
         self.iou_predictor = nn.Linear(
             pred_inter_dim[0] + pred_inter_dim[1], 1, bias=True)
@@ -259,7 +257,7 @@ class IouNetHead(BaseModule):
 
         Args:
             iou_backbone_feats (tuple(Tensor)): _description_
-            bboxes (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            bboxes (Tensor): of shape (4, ) or (1, 4) in [cx, cy, w, h] format.
         """
         bboxes = bbox_cxcywh_to_xyxy(bboxes.view(-1, 4))
         # Get modulation vector
@@ -320,39 +318,46 @@ class IouNetHead(BaseModule):
         """Refine the target bounding box.
 
         Args:
-            init_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] formmat.
+            init_bbox (Tensor): of shape (4, ) or (1, 4) in [cx, cy, w, h]
+                formmat.
             backbone_feats (tuple(Tensor)): of shape (1, c, h, w)
             sample_center (Tensor): The center of the cropped
                 sample on the original image. It's of shape (1,2) in [x, y]
                 format.
-            sample_scale (Tensor): The scale of the cropped sample. It's of
-                shape (1,).
+            sample_scale (int | Tensor): The scale of the cropped sample.
+                It's of shape (1,) when it's a tensor.
             sample_size (Tensor): The scale of the cropped sample. It's of
                 shape (2,) in [h, w] format.
 
         Returns:
             Tensor: new target bbox in [cx, cy, w, h] format.
         """
+        init_bbox = init_bbox.squeeze()
+        sample_center = sample_center.squeeze()
+        sample_size = sample_size.squeeze()
+        assert sample_center.dim() == sample_size.dim() == 1
+
         with torch.no_grad():
             iou_features = self.get_iou_feat(backbone_feats)
 
         # Generate some random initial boxes based on the `init_bbox`
-        init_bboxes = init_bbox.view(1, 4).clone()
+        init_bbox = init_bbox.view(1, 4)
+        init_bboxes = init_bbox.clone()
         if self.bbox_cfg['num_init_random_boxes'] > 0:
-            square_box_sz = init_bbox[2:].prod().sqrt().item()
+            square_box_sz = init_bbox[0, 2:].prod().sqrt().item()
             rand_factor = square_box_sz * torch.cat([
                 self.bbox_cfg['box_jitter_pos'] * torch.ones(2),
                 self.bbox_cfg['box_jitter_sz'] * torch.ones(2)
             ])
-            mini_edge_size = init_bbox[2:].min() / 3
-            rand_bboxes_shift = (torch.rand(
+            min_edge_size = init_bbox[0, 2:].min() / 3
+            rand_bboxes_jitter = (torch.rand(
                 self.bbox_cfg['num_init_random_boxes'], 4) - 0.5) * rand_factor
-            rand_bboxes_shift = rand_bboxes_shift.to(init_bbox.device)
-            new_size = (init_bbox[2:] +
-                        rand_bboxes_shift[:, 2:]).clamp(mini_edge_size)
-            new_center = init_bbox[:2] + rand_bboxes_shift[:, :2]
+            rand_bboxes_jitter = rand_bboxes_jitter.to(init_bbox.device)
+            new_size = (init_bbox[:, 2:] +
+                        rand_bboxes_jitter[:, 2:]).clamp(min_edge_size)
+            new_center = init_bbox[:, :2] + rand_bboxes_jitter[:, :2]
             init_bboxes = torch.cat([new_center, new_size], 1)
-            init_bboxes = torch.cat([init_bbox.view(1, 4), init_bboxes])
+            init_bboxes = torch.cat([init_bbox, init_bboxes])
 
         # Optimize the boxes
         out_bboxes, out_iou = self.optimize_bboxes(iou_features, init_bboxes)
@@ -379,8 +384,8 @@ class IouNetHead(BaseModule):
         # Convert the bbox of the cropped sample to that of original image.
         # TODO: this postprocess about mapping back can be moved to other place
         new_bbox_center = predicted_box[:2] + predicted_box[2:] / 2
-        new_bbox_center = (new_bbox_center - sample_size /
-                           2) * sample_scale[0] + sample_center[0]
-        new_target_size = predicted_box[2:] * sample_scale[0]
+        new_bbox_center = (new_bbox_center -
+                           sample_size / 2) * sample_scale + sample_center
+        new_target_size = predicted_box[2:] * sample_scale
 
         return torch.cat([new_bbox_center, new_target_size], dim=-1)
