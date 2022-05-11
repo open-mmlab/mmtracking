@@ -14,39 +14,6 @@ from mmtrack.core.filter import filter as filter_layer
 from mmtrack.core.utils import max2d
 
 
-class InstanceL2Norm(BaseModule):
-    """Instance L2 normalization.
-
-    Args:
-        size_avg (bool, optional): Whether average the size. Defaults to True.
-        eps (float, optional):  a value added to the denominator for numerical
-            stability. Defaults to 1e-5
-        scale (float, optional): The scale factor. Defaults to 1.0.
-    """
-
-    def __init__(self, size_avg=True, eps=1e-5, scale=1.0):
-        super().__init__()
-        self.size_avg = size_avg
-        self.eps = eps
-        self.scale = scale
-
-    def forward(self, input):
-        if self.size_avg:
-            return input * (
-                self.scale *
-                ((input.shape[1] * input.shape[2] * input.shape[3]) /
-                 (torch.sum(
-                     (input * input).view(input.shape[0], 1, 1, -1),
-                     dim=3,
-                     keepdim=True) + self.eps)).sqrt())
-        else:
-            return input * (
-                self.scale / (torch.sum(
-                    (input * input).view(input.shape[0], 1, 1, -1),
-                    dim=3,
-                    keepdim=True) + self.eps).sqrt())
-
-
 @HEADS.register_module()
 class PrdimpClsHead(BaseModule):
     """Prdimp classification head.
@@ -85,10 +52,10 @@ class PrdimpClsHead(BaseModule):
         filter_size = filter_initializer.filter_size
         self.filter_initializer = build_head(filter_initializer)
         self.filter_optimizer = build_head(filter_optimizer)
-        norm_scale = math.sqrt(1.0 / (out_dim * filter_size * filter_size))
-        self.cls_feature_extractor = nn.Sequential(
-            nn.Conv2d(in_dim, out_dim, kernel_size=3, padding=1, bias=False),
-            InstanceL2Norm(scale=norm_scale))
+        self.feat_norm_scale = math.sqrt(1.0 /
+                                         (out_dim * filter_size * filter_size))
+        self.channel_mapping = nn.Sequential(
+            nn.Conv2d(in_dim, out_dim, kernel_size=3, padding=1, bias=False))
 
         self.locate_cfg = locate_cfg
         self.update_cfg = update_cfg
@@ -100,7 +67,7 @@ class PrdimpClsHead(BaseModule):
 
     def init_weights(self):
         """Initialize the parameters of this module."""
-        for m in self.cls_feature_extractor.modules():
+        for m in self.channel_mapping:
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
@@ -111,6 +78,24 @@ class PrdimpClsHead(BaseModule):
                 m.bias.data.zero_()
         self.filter_initializer.init_weights()
 
+    def get_cls_feats(self, backbone_feats):
+        """Get features for classification.
+
+        Args:
+            backbone_feats (Tensor): The features from backbone.
+
+        Returns:
+            Tensor: The features for classification.
+        """
+        cls_feats = self.channel_mapping(backbone_feats)
+        scale_factor = (torch.tensor(cls_feats.shape[1:]).prod() / (torch.sum(
+            (cls_feats**2).view(cls_feats.shape[0], 1, 1, -1),
+            dim=3,
+            keepdim=True) + 1e-5)).sqrt()
+        cls_feats *= self.feat_norm_scale * scale_factor
+
+        return cls_feats
+
     def init_classifier(self,
                         backbone_feats,
                         target_bboxes,
@@ -120,13 +105,14 @@ class PrdimpClsHead(BaseModule):
         Args:
             backbone_feats (Tensor): The features from backbone.
             target_bboxes (Tensor): in [cx, cy, w, h] format.
-            dropout_probs (List, optional): Defaults to None.
+            dropout_probs (list, optional): Defaults to None.
 
         Returns:
             _type_: _description_
         """
         with torch.no_grad():
-            cls_feats = self.cls_feature_extractor(backbone_feats)
+            cls_feats = self.get_cls_feats(backbone_feats)
+
         # add features through the augmentation of `dropout`
         if dropout_probs is not None:
             aug_feats = []
@@ -290,10 +276,12 @@ class PrdimpClsHead(BaseModule):
         # 4. Normal target
         return target_disp, 'normal'
 
-    def classify(self, feat):
-        """Run classifier on the features."""
-        scores = filter_layer.apply_filter(feat, self.target_filter)
-        return scores
+    def classify(self, backbone_feats):
+        """Run classifier on the backbone features."""
+        with torch.no_grad():
+            feats = self.get_cls_feats(backbone_feats)
+        scores = filter_layer.apply_filter(feats, self.target_filter)
+        return scores, feats
 
     def update_memory(self, sample_x, target_bbox, learning_rate=None):
         """Update the tracking state in memory.

@@ -138,15 +138,19 @@ def test_stark_forward():
     loss.backward()
 
 
-@pytest.mark.parametrize('cfg_file', [
-    'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
-    'sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py',
-    'sot/stark/stark_st2_r50_50e_got10k.py'
-])
+@pytest.mark.parametrize(
+    'cfg_file',
+    [
+        'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
+        'sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py',
+        'sot/stark/stark_st2_r50_50e_got10k.py',
+        # 'sot/prdimp/prdimp_r50_50e_got10k.py'
+    ])
 def test_sot_test_forward(cfg_file):
     config = _get_config_module(cfg_file)
     model = copy.deepcopy(config.model)
     sot = build_model(model)
+    # sot = sot.cuda('cuda:0')
     sot.eval()
 
     input_shape = (1, 3, 127, 127)
@@ -165,6 +169,8 @@ def test_sot_test_forward(cfg_file):
         results = defaultdict(list)
         for one_img, one_meta, one_gt_bboxes in zip(img_list, img_metas,
                                                     gt_bboxes):
+            # one_img = one_img.cuda('cuda:0')
+            # one_gt_bboxes = one_gt_bboxes.cuda('cuda:0')
             result = sot.forward([one_img], [[one_meta]],
                                  gt_bboxes=[one_gt_bboxes],
                                  return_loss=False)

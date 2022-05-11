@@ -307,9 +307,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Extract classification features
         with torch.no_grad():
-            test_feat = self.classifier.cls_feature_extractor(
-                backbone_feat[-1])
-            scores_raw = self.classifier.classify(test_feat)
+            scores_raw, test_feat = self.classifier.classify(backbone_feat[-1])
             scores = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
