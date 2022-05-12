@@ -73,28 +73,63 @@ Please refer to [changelog.md](docs/en/changelog.md) for details and release his
 
 Results and models are available in the [model zoo](docs/en/model_zoo.md).
 
-Supported methods of video object detection:
+### Video Object Detection
+
+Supported Methods
 
 - [x] [DFF](configs/vid/dff) (CVPR 2017)
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 - [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
 
-Supported methods of multi object tracking:
+Supported Datasets
+
+- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
+
+### Single Object Tracking
+
+Supported Methods
+
+- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
+
+Supported Datasets
+
+- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+- [x] [TrackingNet](https://tracking-net.org/)
+- [x] [OTB100](http://www.visual-tracking.net/)
+- [x] [GOT10k](http://got-10k.aitestunion.com/)
+- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
+
+### Multi-Object Tracking
+
+Supported Methods
 
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
 
-Supported methods of single object tracking:
+Supported Datasets
 
-- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [x] [MOT Challenge](https://motchallenge.net/)
+- [x] [CrowdHuman](https://www.crowdhuman.org/)
+- [x] [LVIS](https://www.lvisdataset.org/)
+- [x] [TAO](https://taodataset.org/)
+- [x] [DanceTrack](https://arxiv.org/abs/2111.14690)
 
-Supported methods of video instance segmentation:
+### Video Instance Segmentation
+
+Supported Methods
 
 - [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
+
+Supported Datasets
+
+- [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
 ## Installation
 
@@ -110,7 +145,7 @@ There are also usage [tutorials](docs/en/tutorials/), such as [learning about co
 
 ## Contributing
 
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the guidelines and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
+We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
 
 ## Acknowledgement
 
