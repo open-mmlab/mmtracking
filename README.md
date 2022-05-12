@@ -92,6 +92,7 @@ Supported Methods
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020)
 
 Supported Datasets
 
@@ -118,7 +119,7 @@ Supported Datasets
 - [x] [CrowdHuman](https://www.crowdhuman.org/)
 - [x] [LVIS](https://www.lvisdataset.org/)
 - [x] [TAO](https://taodataset.org/)
-- [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
+- [x] [DanceTrack](https://arxiv.org/abs/2111.14690)
 
 ### Video Instance Segmentation
 
