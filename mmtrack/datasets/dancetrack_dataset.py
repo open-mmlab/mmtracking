@@ -20,8 +20,7 @@ class DanceTrackDataset(MOTChallengeDataset):
         Returns:
             tuple(string): The first string denotes the type of dataset.
             The second string denots the split of the dataset to eval.
-
-        As DanceTrack only has train/val and use 'val' for evaluation as
-        default, we can directly output the desired split.
         """
+        # As DanceTrack only has train/val and use 'val' for evaluation as
+        # default, we can directly output the desired split.
         return 'DanceTrack', 'val'
