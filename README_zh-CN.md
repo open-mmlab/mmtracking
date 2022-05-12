@@ -89,7 +89,7 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
-- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020)
+- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
 
 支持的数据集：
 
@@ -108,7 +108,7 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
-- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
+- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
 
 支持的数据集：
 
