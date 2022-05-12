@@ -2,7 +2,7 @@
 import copy
 import os.path as osp
 import random
-from typing import List, Union
+from typing import Any, List, Tuple, Union
 
 from mmengine.dataset import BaseDataset, force_full_init
 from mmengine.logging import MMLogger
@@ -66,11 +66,12 @@ class BaseVideoDataset(BaseDataset):
 
         self._fully_initialized = True
 
-    def load_data_list(self) -> List[dict]:
+    def load_data_list(self) -> Tuple[List[dict], List]:
         """Load annotations from an annotation file named as ``self.ann_file``
 
         Returns:
-            list[dict]: A list of annotation.
+            tuple(list[dict], list): A list of annotation and a list of
+            valid data indices.
         """
         coco = CocoVID(self.ann_file)
         # The order of returned `cat_ids` will not
@@ -243,7 +244,7 @@ class BaseVideoDataset(BaseDataset):
         """
         return len(self.valid_data_indices)
 
-    def prepare_data(self, idx) -> dict:
+    def prepare_data(self, idx) -> Any:
         """Get data processed by ``self.pipeline``.
 
         Args:
