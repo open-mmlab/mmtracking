@@ -89,6 +89,7 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020)
 
 支持的数据集：
 
@@ -115,7 +116,7 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 - [x] [CrowdHuman](https://www.crowdhuman.org/)
 - [x] [LVIS](https://www.lvisdataset.org/)
 - [x] [TAO](https://taodataset.org/)
-- [ ] [DanceTrack](https://arxiv.org/abs/2111.14690)
+- [x] [DanceTrack](https://arxiv.org/abs/2111.14690)
 
 ### 视频实例分割
 
