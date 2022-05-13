@@ -7,8 +7,8 @@ from mmtrack.datasets.parsers import CocoVID
 
 PREFIX = osp.join(osp.dirname(__file__), '../data')
 # This is a demo annotation file for MOTChallengeDataset
-# 1 videos, 2 categories ('pedestrian')
-# 3 images, 3 instances, 1 video
+# 1 video, 2 categories ('pedestrian')
+# 3 images, 3 instances
 # 0 ignore, 1 crowd
 DEMO_ANN_FILE = f'{PREFIX}/demo_mot_data/ann.json'
 
