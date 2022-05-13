@@ -8,12 +8,12 @@ from mmdet.core import bbox_overlaps
 
 from mmtrack.core.bbox import bbox_cxcyah_to_xyxy, bbox_xyxy_to_cxcyah
 from mmtrack.models import TRACKERS
-from .base_tracker import BaseTracker
+from .sort_tracker import SortTracker
 
 
 @TRACKERS.register_module()
-class OCSORT_Tracker(BaseTracker):
-    """Tracker for ByteTrack.
+class OCSORTTracker(SortTracker):
+    """Tracker for OC-SORT.
 
     Args:
         obj_score_thrs (float): Detection score threshold for matching objects.
@@ -32,8 +32,6 @@ class OCSORT_Tracker(BaseTracker):
             velocity direction of tracklets.
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Defaults to None.
-
-    refer to mmtrack/models/mot/motion/kalman_filter.py for details.
     """
 
     def __init__(self,
@@ -56,12 +54,6 @@ class OCSORT_Tracker(BaseTracker):
         self.vel_delta_t = vel_delta_t
 
         self.num_tentatives = num_tentatives
-
-    @property
-    def confirmed_ids(self):
-        """Confirmed ids in the tracker."""
-        ids = [id for id, track in self.tracks.items() if not track.tentative]
-        return ids
 
     @property
     def unconfirmed_ids(self):
@@ -135,19 +127,6 @@ class OCSORT_Tracker(BaseTracker):
         speed[:, :, 0] /= norm
         speed[:, :, 1] /= norm
         return speed
-
-    def pop_invalid_tracks(self, frame_id):
-        """Pop out invalid tracks."""
-        invalid_ids = []
-        for k, v in self.tracks.items():
-            # case1: disappeared frames >= self.num_frames_retrain
-            case1 = frame_id - v['frame_ids'][-1] >= self.num_frames_retain
-            # case2: tentative tracks but not matched in this frame
-            case2 = v.tentative and v['frame_ids'][-1] != frame_id
-            if case1 or case2:
-                invalid_ids.append(k)
-        for invalid_id in invalid_ids:
-            self.tracks.pop(invalid_id)
 
     def k_step_observation(self, track):
         """return the observation k step away before."""

@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 img_scale = (800, 1440)
-samples_per_gpu = 1
+samples_per_gpu = 4
 
 model = dict(
     type='OCSORT',
@@ -20,7 +20,7 @@ model = dict(
         )),
     motion=dict(type='KalmanFilter'),
     tracker=dict(
-        type='OCSORT_Tracker',
+        type='OCSORTTracker',
         obj_score_thr=0.3,
         init_track_thr=0.7,
         weight_iou_with_det_scores=True,
@@ -93,13 +93,12 @@ data = dict(
             type='CocoDataset',
             ann_file=[
                 'data/MOT17/annotations/half-train_cocoformat.json',
-                # 'data/crowdhuman/annotations/crowdhuman_train.json',
-                # 'data/crowdhuman/annotations/crowdhuman_val.json'
+                'data/crowdhuman/annotations/crowdhuman_train.json',
+                'data/crowdhuman/annotations/crowdhuman_val.json'
             ],
             img_prefix=[
-                'data/MOT17/train',
-                # 'data/crowdhuman/train',
-                # 'data/crowdhuman/val'
+                'data/MOT17/train', 'data/crowdhuman/train',
+                'data/crowdhuman/val'
             ],
             classes=('pedestrian', ),
             pipeline=[
