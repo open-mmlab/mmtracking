@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from mmtrack.datasets import BaseVideoDataset
 
-PREFIX = osp.join(osp.dirname(__file__), '../../data')
+PREFIX = osp.join(osp.dirname(__file__), '../data')
 # This is a demo annotation file for CocoVideoDataset
 # 1 videos, 2 categories ('car', 'person')
 # 8 images, 2 instances -> [4, 3] objects

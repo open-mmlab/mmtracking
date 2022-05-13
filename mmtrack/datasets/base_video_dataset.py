@@ -2,7 +2,7 @@
 import copy
 import os.path as osp
 import random
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Tuple
 
 from mmengine.dataset import BaseDataset, force_full_init
 from mmengine.logging import MMLogger
@@ -103,14 +103,14 @@ class BaseVideoDataset(BaseDataset):
         valid_data_indices = list(range(len(data_list)))
         return data_list, valid_data_indices
 
-    def parse_data_info(self, raw_data_info: dict) -> Union[dict, List[dict]]:
+    def parse_data_info(self, raw_data_info: dict) -> dict:
         """Parse raw annotation to target format.
 
         Args:
             raw_data_info (dict): Raw data information load from ``ann_file``
 
         Returns:
-            Union[dict, List[dict]]: Parsed annotation.
+            dict: Parsed annotation.
         """
         img_info = raw_data_info['raw_img_info']
         ann_info = raw_data_info['raw_ann_info']
@@ -244,7 +244,7 @@ class BaseVideoDataset(BaseDataset):
         """
         return len(self.valid_data_indices)
 
-    def prepare_data(self, idx) -> Any:
+    def prepare_data(self, idx: int) -> Any:
         """Get data processed by ``self.pipeline``.
 
         Args:

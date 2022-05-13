@@ -5,7 +5,7 @@ from unittest import TestCase
 from mmtrack.datasets import MOTChallengeDataset
 from mmtrack.datasets.parsers import CocoVID
 
-PREFIX = osp.join(osp.dirname(__file__), '../../data')
+PREFIX = osp.join(osp.dirname(__file__), '../data')
 # This is a demo annotation file for MOTChallengeDataset
 # 1 videos, 2 categories ('pedestrian')
 # 3 images, 3 instances, 1 video

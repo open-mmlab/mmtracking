@@ -1,112 +1,75 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import random
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from io import StringIO
+from typing import Any, Optional, Sequence, Union
 
-import mmcv
 import numpy as np
 from addict import Dict
-from mmcv.utils import print_log
-from mmdet.datasets.pipelines import Compose
-from torch.utils.data import Dataset
+from mmengine.dataset import BaseDataset, force_full_init
+from mmengine.fileio.file_client import FileClient
 
-from mmtrack.core.evaluation import eval_sot_ope
-from mmtrack.datasets import DATASETS
+from mmtrack.registry import DATASETS
 
 
 @DATASETS.register_module()
-class BaseSOTDataset(Dataset, metaclass=ABCMeta):
-    """Dataset of single object tracking. The dataset can both support training
-    and testing mode.
+class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
+    """Base dataset for SOT task. The dataset can both support training and
+    testing mode.
 
     Args:
-        img_prefix (str): Prefix in the paths of image files.
-        pipeline (list[dict]): Processing pipeline.
-        split (str): Dataset split.
-        ann_file (str, optional): The file contains data information. It will
-            be loaded and parsed in the `self.load_data_infos` function.
-        test_mode (bool, optional): Default to False.
         bbox_min_size (int, optional): Only bounding boxes whose sizes are
-            larger than `bbox_min_size` can be regarded as valid. Default to 0.
+            larger than ``bbox_min_size`` can be regarded as valid.
+            Default to 0.
         only_eval_visible (bool, optional): Whether to only evaluate frames
             where object are visible. Default to False.
-        file_client_args (dict, optional): Arguments to instantiate a
-                FileClient. Default: dict(backend='disk').
     """
 
-    # Compatible with MOT and VID Dataset class. The 'CLASSES' attribute will
-    # be called in tools/train.py.
-    CLASSES = None
+    META = dict(CLASSES=None)
 
     def __init__(self,
-                 img_prefix,
-                 pipeline,
-                 split,
-                 ann_file=None,
-                 test_mode=False,
-                 bbox_min_size=0,
-                 only_eval_visible=False,
-                 file_client_args=dict(backend='disk'),
+                 bbox_min_size: int = 0,
+                 only_eval_visible: bool = False,
+                 *args,
                  **kwargs):
-        self.img_prefix = img_prefix
-        self.split = split
-        self.pipeline = Compose(pipeline)
-        self.ann_file = ann_file
-        self.test_mode = test_mode
         self.bbox_min_size = bbox_min_size
         self.only_eval_visible = only_eval_visible
-        self.file_client_args = file_client_args
-        self.file_client = mmcv.FileClient(**file_client_args)
-        # 'self.load_as_video' must be set to True in order to using
+        # ``self.load_as_video`` must be set to True in order to using
         # distributed video sampler to load dataset when testing.
         self.load_as_video = True
-        ''' The self.data_info is a list, which the length is the
-            number of videos. The default content is in the following format:
-            [
-                {
-                    'video_path': the video path
-                    'ann_path': the annotation path
-                    'start_frame_id': the starting frame ID number contained in
-                                    the image name
-                    'end_frame_id': the ending frame ID number contained in the
-                                    image name
-                    'framename_template': the template of image name
-                },
-                ...
-            ]
-        '''
-        self.data_infos = self.load_data_infos(split=self.split)
-        self.num_frames_per_video = [
-            self.get_len_per_video(video_ind)
-            for video_ind in range(len(self.data_infos))
-        ]
+        super().__init__(*args, **kwargs)
+
         # used to record the video information at the beginning of the video
         # test. Thus, we can avoid reloading the files of video information
         # repeatedly in all frames of one video.
         self.test_memo = Dict()
 
-    def __getitem__(self, ind):
-        if self.test_mode:
-            assert isinstance(ind, tuple)
-            # the first element in the tuple is the video index and the second
-            # element in the tuple is the frame index
-            return self.prepare_test_data(ind[0], ind[1])
-        else:
-            return self.prepare_train_data(ind)
+    def _loadtxt(self,
+                 filepath: str,
+                 dtype=np.float32,
+                 delimiter: Optional[str] = None,
+                 skiprows: int = 0,
+                 return_ndarray: bool = True) -> Union[np.ndarray, str]:
+        """Load TEXT file.
 
-    @abstractmethod
-    def load_data_infos(self, split='train'):
-        pass
+        Args:
+            filepath (str): The path of file.
+            dtype (data-type, optional): Data-type of the resulting array.
+                Defaults to np.float32.
+            delimiter (str, optional): The string used to separate values.
+                Defaults to None.
+            skiprows (int, optional): Skip the first ``skiprows`` lines,
+                including comments. Defaults to 0.
+            return_ndarray (bool, optional): Whether to return the ``ndarray``
+                type. Defaults to True.
 
-    def loadtxt(self,
-                filepath,
-                dtype=float,
-                delimiter=None,
-                skiprows=0,
-                return_array=True):
-        file_string = self.file_client.get_text(filepath)
-        if return_array:
+        Returns:
+            Union[np.ndarray, str]: Contents of the file.
+        """
+        file_client = FileClient.infer_client(uri=filepath)
+        file_string = file_client.get_text(filepath)
+        if return_ndarray:
             return np.loadtxt(
                 StringIO(file_string),
                 dtype=dtype,
@@ -115,24 +78,25 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
         else:
             return file_string.strip()
 
-    def get_bboxes_from_video(self, video_ind):
+    def get_bboxes_from_video(self, video_idx: int) -> np.ndarray:
         """Get bboxes annotation about the instance in a video.
 
         Args:
-            video_ind (int): video index
+            video_idx (int): video index
 
         Returns:
-            ndarray: in [N, 4] shape. The N is the number of bbox and the bbox
-                is in (x, y, w, h) format.
+            np.ndarray: In [N, 4] shape. The N is the number of bbox and
+                the bbox is in (x, y, w, h) format.
         """
-        bbox_path = osp.join(self.img_prefix,
-                             self.data_infos[video_ind]['ann_path'])
-        bboxes = self.loadtxt(bbox_path, dtype=float, delimiter=',')
+        meta_video_info = self.get_data_info(video_idx)
+        bbox_path = osp.join(self.data_prefix['img'],
+                             meta_video_info['ann_path'])
+        bboxes = self._loadtxt(bbox_path, dtype=float, delimiter=',')
         if len(bboxes.shape) == 1:
             bboxes = np.expand_dims(bboxes, axis=0)
 
-        end_frame_id = self.data_infos[video_ind]['end_frame_id']
-        start_frame_id = self.data_infos[video_ind]['start_frame_id']
+        end_frame_id = meta_video_info['end_frame_id']
+        start_frame_id = meta_video_info['start_frame_id']
 
         if not self.test_mode:
             assert len(bboxes) == (
@@ -140,193 +104,176 @@ class BaseSOTDataset(Dataset, metaclass=ABCMeta):
             ), f'{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1'  # noqa
         return bboxes
 
-    def get_len_per_video(self, video_ind):
-        """Get the number of frames in a video."""
-        return self.data_infos[video_ind]['end_frame_id'] - self.data_infos[
-            video_ind]['start_frame_id'] + 1
-
-    def get_visibility_from_video(self, video_ind):
-        """Get the visible information of instance in a video."""
-        visible = np.array([True] * self.get_len_per_video(video_ind))
-        return dict(visible=visible)
-
-    def get_masks_from_video(self, video_ind):
-        pass
-
-    def get_ann_infos_from_video(self, video_ind):
-        """Get annotation information in a video.
+    def get_len_per_video(self, video_idx: int) -> int:
+        """Get the number of frames in a video.
 
         Args:
-            video_ind (int): video index
+            video_idx (int): The index of video.
 
         Returns:
-            dict: {'bboxes': ndarray in (N, 4) shape, 'bboxes_isvalid':
-                ndarray, 'visible':ndarray}. The annotation information in some
-                datasets may contain 'visible_ratio'. The bbox is in
-                (x1, y1, x2, y2) format.
+            int: The length of the video.
         """
-        bboxes = self.get_bboxes_from_video(video_ind)
+        return self.get_data_info(
+            video_idx)['end_frame_id'] - self.get_data_info(
+                video_idx)['start_frame_id'] + 1
+
+    def get_visibility_from_video(self, video_idx: int) -> dict:
+        """Get the visible information of instance in a video.
+
+        Args:
+            video_idx (int): The index of video.
+
+        Returns:
+            dict: The visibilities of each object in the video.
+        """
+        visible = np.array([True] * self.get_len_per_video(video_idx))
+        return dict(visible=visible)
+
+    def get_masks_from_video(self, video_idx: int) -> Any:
+        """Get the mask information of instance in a video.
+
+        Args:
+            video_idx (int): The index of video.
+
+        Returns:
+            Any: Not implemented yet.
+        """
+        pass
+
+    def get_infos_from_video(self, video_idx: int) -> dict:
+        """Get the information of all images in a video.
+
+        Args:
+            video_idx (int): The index of video.
+
+        Returns:
+            dict: {
+                    'img_paths': list[str],
+                    'frame_ids': np.ndarray,
+                    'video_id': int,
+                    'bboxes': np.ndarray in (N, 4) shape,
+                    'bboxes_isvalid': np.ndarray,
+                    'visible': np.ndarray
+                  }
+                  The annotation information in some datasets may contain
+                    'visible_ratio'. The bbox is in (x1, y1, x2, y2) format.
+        """
+        # Information about images
+        img_paths = []
+        meta_video_info = self.get_data_info(video_idx)
+        start_frame_id = meta_video_info['start_frame_id']
+        end_frame_id = meta_video_info['end_frame_id']
+        framename_template = meta_video_info['framename_template']
+        for frame_id in range(start_frame_id, end_frame_id + 1):
+            img_paths.append(
+                osp.join(meta_video_info['video_path'],
+                         framename_template % frame_id))
+        frame_ids = np.arange(self.get_len_per_video(video_idx))
+
+        # Information about annotation of instances
+        bboxes = self.get_bboxes_from_video(video_idx)
         # The visible information in some datasets may contain
         # 'visible_ratio'.
-        visible_info = self.get_visibility_from_video(video_ind)
+        visible_info = self.get_visibility_from_video(video_idx)
         bboxes_isvalid = (bboxes[:, 2] > self.bbox_min_size) & (
             bboxes[:, 3] > self.bbox_min_size)
         visible_info['visible'] = visible_info['visible'] & bboxes_isvalid
         bboxes[:, 2:] += bboxes[:, :2]
-        ann_infos = dict(
-            bboxes=bboxes, bboxes_isvalid=bboxes_isvalid, **visible_info)
-        return ann_infos
 
-    def get_img_infos_from_video(self, video_ind):
-        """Get image information in a video.
+        video_infos = dict(
+            video_id=video_idx,
+            frame_ids=frame_ids,
+            img_paths=img_paths,
+            bboxes=bboxes,
+            bboxes_isvalid=bboxes_isvalid,
+            **visible_info)
+        return video_infos
 
-        Args:
-            video_ind (int): video index
-
-        Returns:
-            dict: {'filename': list[str], 'frame_ids':ndarray, 'video_id':int}
-        """
-        img_names = []
-        start_frame_id = self.data_infos[video_ind]['start_frame_id']
-        end_frame_id = self.data_infos[video_ind]['end_frame_id']
-        framename_template = self.data_infos[video_ind]['framename_template']
-        for frame_id in range(start_frame_id, end_frame_id + 1):
-            img_names.append(
-                osp.join(self.data_infos[video_ind]['video_path'],
-                         framename_template % frame_id))
-        frame_ids = np.arange(self.get_len_per_video(video_ind))
-        img_infos = dict(
-            filename=img_names, frame_ids=frame_ids, video_id=video_ind)
-        return img_infos
-
-    def prepare_test_data(self, video_ind, frame_ind):
+    def prepare_test_data(self, video_idx: int, frame_idx: int) -> dict:
         """Get testing data of one frame. We parse one video, get one frame
         from it and pass the frame information to the pipeline.
 
         Args:
-            video_ind (int): video index
-            frame_ind (int): frame index
+            video_idx (int): The index of video.
+            frame_idx (int): The index of frame.
 
         Returns:
-            dict: testing data of one frame.
+            dict: Testing data of one frame.
         """
-        if self.test_memo.get('video_ind', None) != video_ind:
-            self.test_memo.video_ind = video_ind
-            self.test_memo.ann_infos = self.get_ann_infos_from_video(video_ind)
-            self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
-        assert 'video_ind' in self.test_memo and 'ann_infos' in \
-            self.test_memo and 'img_infos' in self.test_memo
+        # Avoid reloading the files of video information
+        # repeatedly in all frames of one video.
+        if self.test_memo.get('video_idx', None) != video_idx:
+            self.test_memo.video_idx = video_idx
+            self.test_memo.video_infos = self.get_infos_from_video(video_idx)
+        assert 'video_idx' in self.test_memo and 'video_infos'\
+            in self.test_memo
 
-        img_info = dict(
-            filename=self.test_memo.img_infos['filename'][frame_ind],
-            frame_id=frame_ind)
-        ann_info = dict(
-            bboxes=self.test_memo.ann_infos['bboxes'][frame_ind],
-            visible=self.test_memo.ann_infos['visible'][frame_ind])
+        results = {}
+        results['img_path'] = self.test_memo.video_infos['img_paths'][
+            frame_idx]
+        results['frame_id'] = frame_idx
 
-        results = dict(img_info=img_info, ann_info=ann_info)
-        self.pre_pipeline(results)
+        results['instances'] = []
+        instance = {}
+        instance['bbox'] = self.test_memo.video_infos['bboxes'][frame_idx]
+        instance['visible'] = self.test_memo.video_infos['visible'][frame_idx]
+        instance['bbox_label'] = np.array([0], dtype=np.int32)
+        results['instances'].append(instance)
+
         results = self.pipeline(results)
         return results
 
-    def prepare_train_data(self, video_ind):
+    def prepare_train_data(self, video_idx: int) -> dict:
         """Get training data sampled from some videos. We firstly sample two
-        videos from the dataset and then parse the data information. The first
-        operation in the training pipeline is frames sampling.
+        videos from the dataset and then parse the data information in the
+        subsequent pipeline. The first operation in the training pipeline must
+        be frames sampling.
 
         Args:
-            video_ind (int): video index
+            video_idx (int): The index of video.
 
         Returns:
-            dict: training data pairs, triplets or groups.
+            dict: Training data pairs, triplets or groups.
         """
-        while True:
-            video_inds = random.choices(list(range(len(self))), k=2)
-            pair_video_infos = []
-            for video_index in video_inds:
-                ann_infos = self.get_ann_infos_from_video(video_index)
-                img_infos = self.get_img_infos_from_video(video_index)
-                video_infos = dict(**ann_infos, **img_infos)
-                self.pre_pipeline(video_infos)
-                pair_video_infos.append(video_infos)
+        video_idxes = random.choices(list(range(len(self))), k=2)
+        pair_video_infos = []
+        for video_idx in video_idxes:
+            video_infos = self.get_infos_from_video(video_idx)
+            pair_video_infos.append(video_infos)
 
-            results = self.pipeline(pair_video_infos)
-            if results is not None:
-                return results
+        results = self.pipeline(pair_video_infos)
+        return results
 
-    def pre_pipeline(self, results):
-        """Prepare results dict for pipeline.
-
-        The following keys in dict will be called in the subsequent pipeline.
-        """
-        results['img_prefix'] = self.img_prefix
-        results['bbox_fields'] = []
-        results['mask_fields'] = []
-        results['seg_fields'] = []
-
-    def __len__(self):
-        if self.test_mode:
-            return sum(self.num_frames_per_video)
-        else:
-            return len(self.data_infos)
-
-    def evaluate(self, results, metric=['track'], logger=None):
-        """Default evaluation standard is OPE.
+    def prepare_data(self, idx: Union[Sequence[int], int]) -> Any:
+        """Get data processed by ``self.pipeline``.
 
         Args:
-            results (dict(list[ndarray])): tracking results. The ndarray is in
-                (x1, y1, x2, y2, score) format.
-            metric (list, optional): defaults to ['track'].
-            logger (logging.Logger | str | None, optional): defaults to None.
+            idx (int): The index of ``data_info``.
+
+        Returns:
+            Any: Depends on ``self.pipeline``.
         """
-
-        if isinstance(metric, list):
-            metrics = metric
-        elif isinstance(metric, str):
-            metrics = [metric]
+        if self.test_mode:
+            assert isinstance(idx, Sequence) and len(idx) == 2
+            # the first element in the ``Sequence`` is the video index and the
+            # second element in the ``Sequence`` is the frame index
+            return self.prepare_test_data(idx[0], idx[1])
         else:
-            raise TypeError('metric must be a list or a str.')
-        allowed_metrics = ['track']
-        for metric in metrics:
-            if metric not in allowed_metrics:
-                raise KeyError(f'metric {metric} is not supported.')
+            assert isinstance(idx, int)
+            return self.prepare_train_data(idx)
 
-        # get all test annotations
-        gt_bboxes = []
-        visible_infos = []
-        for video_ind in range(len(self.data_infos)):
-            video_anns = self.get_ann_infos_from_video(video_ind)
-            gt_bboxes.append(video_anns['bboxes'])
-            visible_infos.append(video_anns['visible'])
+    @force_full_init
+    def __len__(self) -> int:
+        """Get the length of filtered dataset and automatically call
+        ``full_init`` if the  dataset has not been fully init.
 
-        # tracking_bboxes converting code
-        eval_results = dict()
-        if 'track' in metrics:
-            assert len(self) == len(
-                results['track_bboxes']
-            ), f"{len(self)} == {len(results['track_bboxes'])}"
-            print_log('Evaluate OPE Benchmark...', logger=logger)
-            track_bboxes = []
-            start_ind = end_ind = 0
-            for num in self.num_frames_per_video:
-                end_ind += num
-                track_bboxes.append(
-                    list(
-                        map(lambda x: x[:-1],
-                            results['track_bboxes'][start_ind:end_ind])))
-                start_ind += num
-
-            if not self.only_eval_visible:
-                visible_infos = None
-            # evaluation
-            track_eval_results = eval_sot_ope(
-                results=track_bboxes,
-                annotations=gt_bboxes,
-                visible_infos=visible_infos)
-            eval_results.update(track_eval_results)
-
-            for k, v in eval_results.items():
-                if isinstance(v, float):
-                    eval_results[k] = float(f'{(v):.3f}')
-            print_log(eval_results, logger=logger)
-        return eval_results
+        Returns:
+            int: The length of filtered dataset.
+        """
+        num_videos = len(self.data_address) if self.serialize_data else len(
+            self.data_list)
+        if self.test_mode:
+            return sum(
+                self.get_len_per_video(idx) for idx in range(num_videos))
+        else:
+            return num_videos
