@@ -17,20 +17,6 @@ class TestMOTChallengeDataset(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        '''
-        ann_file = ''
-        metainfo = None
-        data_root = None
-        data_prefix = dict(img=None, ann=None)
-        filter_cfg = None
-        indices = None
-        serialize_data = True
-        pipeline = []
-        test_mode = False
-        lazy_init = False
-        max_refetch = 1000
-        '''
-
         cls.metainfo = dict(CLASSES=('pedestrian'))
         cls.ref_img_sampler = dict(
             num_ref_imgs=1,

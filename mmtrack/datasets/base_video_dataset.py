@@ -148,6 +148,8 @@ class BaseVideoDataset(BaseDataset):
                 instance['bbox_label'] = self.cat2label[ann['category_id']]
                 if ann.get('segmentation', None):
                     instance['mask'] = ann['segmentation']
+                if ann.get('instance_id', None):
+                    instance['instance_id'] = ann['instance_id']
             if len(instance) > 0:
                 instances.append(instance)
         data_info['instances'] = instances
@@ -257,14 +259,13 @@ class BaseVideoDataset(BaseDataset):
         if self.ref_img_sampler is not None:
             data_infos = self.ref_img_sampling(idx, data_info,
                                                **self.ref_img_sampler)
-            for _data in data_infos[1:]:
+            for _data in data_infos:
                 assert data_infos[0]['video_id'] == _data['video_id']
+                _data['is_video_data'] = self.load_as_video
             final_data_info = data_infos[0].copy()
-            final_data_info['is_video_data'] = self.load_as_video
             # Collate data_list scatters (list of dict to dict of list)
-            for key in ['img_path', 'instances', 'frame_id']:
-                if key in final_data_info:
-                    final_data_info[key] = [_data[key] for _data in data_infos]
+            for key in final_data_info.keys():
+                final_data_info[key] = [_data[key] for _data in data_infos]
         else:
             final_data_info = data_info.copy()
             final_data_info['is_video_data'] = self.load_as_video
@@ -322,7 +323,7 @@ class BaseVideoDataset(BaseDataset):
 
         if 'test' in method and \
                 (frame_range[1] - frame_range[0]) != num_ref_imgs:
-            logger = MMLogger.get_instance('mmtrack')
+            logger = MMLogger.get_current_instance()
             logger.info(
                 'Warning:'
                 "frame_range[1] - frame_range[0] isn't equal to num_ref_imgs."
@@ -390,8 +391,14 @@ class BaseVideoDataset(BaseDataset):
                 offset = ref_frame_id - frame_id
                 ref_data_info = self._get_ori_data_info(
                     self.valid_data_indices[idx] + offset)
+
+                # We need data_info and ref_data_info to have the same keys.
+                for key in data_info.keys():
+                    if key not in ref_data_info:
+                        ref_data_info[key] = data_info[key]
+
                 ref_data_infos.append(ref_data_info)
+
             ref_data_infos = sorted(
                 ref_data_infos, key=lambda i: i['frame_id'])
-
         return [data_info, *ref_data_infos]
