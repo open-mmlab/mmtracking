@@ -1,13 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os
-import os.path as osp
-import shutil
 import time
+from typing import List, Union
 
 import numpy as np
-from mmcv.utils import print_log
-from mmdet.datasets import DATASETS
 
+from mmtrack.registry import DATASETS
 from .base_sot_dataset import BaseSOTDataset
 
 
@@ -18,23 +16,29 @@ class TrackingNetDataset(BaseSOTDataset):
     The dataset can both support training and testing mode.
     """
 
-    def __init__(self, chunks_list=['all'], *args, **kwargs):
+    def __init__(self,
+                 chunks_list: List[Union[int, str]] = ['all'],
+                 *args,
+                 **kwargs):
         """Initialization of SOT dataset class.
 
         Args:
-            chunks_list (list, optional): the training chunks. The optional
-                values in this list are: 0, 1, 2, ..., 10, 11 and 'all'. Some
-                methods may only use part of the dataset. Default to all
-                chunks, namely ['all'].
+            chunks_list (list[Union[int, str]], optional): The training chunks.
+                The optional values in this list are: 0, 1, 2, ..., 10, 11 and
+                'all'. Some methods may only use part of the dataset. Default
+                to all chunks, namely ['all'].
         """
         if isinstance(chunks_list, (str, int)):
             chunks_list = [chunks_list]
         assert set(chunks_list).issubset(set(range(12)) | {'all'})
-        self.chunks_list = chunks_list
+        if 'all' in chunks_list:
+            self.chunks_list = [f'TRAIN_{i}' for i in range(12)]
+        else:
+            self.chunks_list = [f'TRAIN_{chunk}' for chunk in chunks_list]
         super(TrackingNetDataset, self).__init__(*args, **kwargs)
 
-    def load_data_infos(self, split='train'):
-        """Load dataset information.
+    def load_data_list(self) -> List[dict]:
+        """Load annotations from an annotation file named as ``self.ann_file``.
 
         Args:
             split (str, optional): the split of dataset. Defaults to 'train'.
@@ -54,27 +58,16 @@ class TrackingNetDataset(BaseSOTDataset):
         """
         print('Loading TrackingNet dataset...')
         start_time = time.time()
-        if split == 'test':
-            chunks = ['TEST']
-        elif split == 'train':
-            if 'all' in self.chunks_list:
-                chunks = [f'TRAIN_{i}' for i in range(12)]
-            else:
-                chunks = [f'TRAIN_{chunk}' for chunk in self.chunks_list]
-        else:
-            raise NotImplementedError
-
-        assert len(chunks) > 0
-        chunks = set(chunks)
+        chunks = set(self.chunks_list)
         data_infos = []
-        data_infos_str = self.loadtxt(
-            self.ann_file, return_array=False).split('\n')
+        data_infos_str = self._loadtxt(
+            self.ann_file, return_ndarray=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.
             line = line.strip().replace('/', os.sep).split(',')
             chunk = line[0].split(os.sep)[0]
-            if chunk in chunks:
+            if chunk == 'TEST' or chunk in chunks:
                 data_info = dict(
                     video_path=line[0],
                     ann_path=line[1],
@@ -85,82 +78,37 @@ class TrackingNetDataset(BaseSOTDataset):
         print(f'TrackingNet dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
-    def prepare_test_data(self, video_ind, frame_ind):
+    def prepare_test_data(self, video_idx: int, frame_idx: int) -> dict:
         """Get testing data of one frame. We parse one video, get one frame
         from it and pass the frame information to the pipeline.
 
         Args:
-            video_ind (int): video index
-            frame_ind (int): frame index
+            video_idx (int): The index of video.
+            frame_idx (int): The index of frame.
 
         Returns:
-            dict: testing data of one frame.
+            dict: Testing data of one frame.
         """
-        if self.test_memo.get('video_ind', None) != video_ind:
-            self.test_memo.video_ind = video_ind
-            self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
-        assert 'video_ind' in self.test_memo and 'img_infos' in self.test_memo
+        if self.test_memo.get('video_idx', None) != video_idx:
+            self.test_memo.video_idx = video_idx
+            self.test_memo.img_infos = self.get_img_infos_from_video(video_idx)
+        assert 'video_idx' in self.test_memo and 'img_infos' in self.test_memo
 
-        img_info = dict(
-            filename=self.test_memo.img_infos['filename'][frame_ind],
-            frame_id=frame_ind)
-        if frame_ind == 0:
-            ann_infos = self.get_ann_infos_from_video(video_ind)
-            ann_info = dict(
-                bboxes=ann_infos['bboxes'][frame_ind], visible=True)
+        results = {}
+        results['img_path'] = self.test_memo.img_infos['img_paths'][frame_idx]
+        results['frame_id'] = frame_idx
+
+        if frame_idx == 0:
+            ann_infos = self.get_ann_infos_from_video(video_idx)
+            bbox = ann_infos['bboxes'][frame_idx]
         else:
-            ann_info = dict(
-                bboxes=np.array([0] * 4, dtype=np.float32), visible=True)
+            bbox = np.array([0] * 4, dtype=np.float32)
 
-        results = dict(img_info=img_info, ann_info=ann_info)
-        self.pre_pipeline(results)
+        results['instances'] = []
+        instance = {}
+        instance['bbox'] = bbox
+        instance['visible'] = True
+        instance['bbox_label'] = np.array([0], dtype=np.int32)
+        results['instances'].append(instance)
         results = self.pipeline(results)
         return results
-
-    def format_results(self, results, resfile_path=None, logger=None):
-        """Format the results to txts (standard format for TrackingNet
-        Challenge).
-
-        Args:
-            results (dict(list[ndarray])): Testing results of the dataset.
-            resfile_path (str): Path to save the formatted results.
-                Defaults to None.
-            logger (logging.Logger | str | None, optional): defaults to None.
-        """
-        # prepare saved dir
-        assert resfile_path is not None, 'Please give key-value pair \
-            like resfile_path=xxx in argparse'
-
-        if not osp.isdir(resfile_path):
-            os.makedirs(resfile_path, exist_ok=True)
-
-        print_log(
-            f"-------- There are total {len(results['track_bboxes'])} images "
-            '--------',
-            logger=logger)
-
-        # transform tracking results format
-        # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
-        start_ind = end_ind = 0
-        for num, video_info in zip(self.num_frames_per_video, self.data_infos):
-            end_ind += num
-            video_name = video_info['video_path'].split(os.sep)[-1]
-            video_txt = osp.join(resfile_path, '{}.txt'.format(video_name))
-            with open(video_txt, 'w') as f:
-                for bbox in results['track_bboxes'][start_ind:end_ind]:
-                    bbox = [
-                        str(f'{bbox[0]:.4f}'),
-                        str(f'{bbox[1]:.4f}'),
-                        str(f'{(bbox[2] - bbox[0]):.4f}'),
-                        str(f'{(bbox[3] - bbox[1]):.4f}')
-                    ]
-                    line = ','.join(bbox) + '\n'
-                    f.writelines(line)
-            start_ind += num
-
-        shutil.make_archive(resfile_path, 'zip', resfile_path)
-        shutil.rmtree(resfile_path)
-
-        print_log(
-            f'-------- The results are stored in {resfile_path}.zip --------',
-            logger=logger)

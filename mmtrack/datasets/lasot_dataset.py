@@ -20,7 +20,7 @@ class LaSOTDataset(BaseSOTDataset):
         super(LaSOTDataset, self).__init__(*args, **kwargs)
 
     def load_data_list(self) -> List[dict]:
-        """Load dataset information.
+        """Load annotations from an annotation file named as ``self.ann_file``.
 
         Returns:
             list[dict]: The length of the list is the number of videos. The
@@ -37,7 +37,7 @@ class LaSOTDataset(BaseSOTDataset):
         """
         print('Loading LaSOT dataset...')
         start_time = time.time()
-        data_list = []
+        data_infos = []
         data_infos_str = self._loadtxt(
             self.ann_file, return_ndarray=False).split('\n')
         # the first line of annotation file is a dataset comment.
@@ -50,9 +50,9 @@ class LaSOTDataset(BaseSOTDataset):
                 start_frame_id=int(line[2]),
                 end_frame_id=int(line[3]),
                 framename_template='%08d.jpg')
-            data_list.append(data_info)
+            data_infos.append(data_info)
         print(f'LaSOT dataset loaded! ({time.time()-start_time:.2f} s)')
-        return data_list
+        return data_infos
 
     def get_visibility_from_video(self, video_idx: int) -> dict:
         """Get the visible information of instance in a video.

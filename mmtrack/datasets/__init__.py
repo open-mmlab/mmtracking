@@ -1,12 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .base_sot_dataset import BaseSOTDataset
 from .base_video_dataset import BaseVideoDataset
+from .got10k_dataset import GOT10kDataset
 from .lasot_dataset import LaSOTDataset
 from .mot_challenge_dataset import MOTChallengeDataset
 from .reid_dataset import ReIDDataset
+from .sot_coco_dataset import SOTCocoDataset
+from .sot_imagenet_vid_dataset import SOTImageNetVIDDataset
+from .trackingnet_dataset import TrackingNetDataset
 from .youtube_vis_dataset import YouTubeVISDataset
 
 __all__ = [
     'BaseVideoDataset', 'MOTChallengeDataset', 'BaseSOTDataset',
-    'LaSOTDataset', 'ReIDDataset', 'YouTubeVISDataset'
+    'LaSOTDataset', 'ReIDDataset', 'GOT10kDataset', 'SOTCocoDataset',
+    'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset'
 ]

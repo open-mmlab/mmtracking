@@ -1,11 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import time
+from typing import List
 
-import mmcv
 import numpy as np
-from mmdet.datasets import DATASETS
+from mmengine.dataset import force_full_init
+from mmengine.fileio.file_client import FileClient
 from pycocotools.coco import COCO
 
+from mmtrack.registry import DATASETS
 from .base_sot_dataset import BaseSOTDataset
 
 
@@ -16,71 +17,74 @@ class SOTCocoDataset(BaseSOTDataset):
     The dataset only support training mode.
     """
 
-    def __init__(self, ann_file, *args, **kwargs):
-        """Initialization of SOT dataset class.
-
-        Args:
-            ann_file (str): The official coco annotation file. It will be
-                loaded and parsed in the `self.load_data_infos` function.
-        """
-        file_client_args = kwargs.get('file_client_args', dict(backend='disk'))
-        self.file_client = mmcv.FileClient(**file_client_args)
-        with self.file_client.get_local_path(ann_file) as local_path:
-            self.coco = COCO(local_path)
+    def __init__(self, *args, **kwargs):
+        """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
-    def load_data_infos(self, split='train'):
-        """Load dataset information. Each instance is viewed as a video.
-
-        Args:
-            split (str, optional): The split of dataset. Defaults to 'train'.
+    def load_data_list(self) -> List[dict]:
+        """Load annotations from an annotation file named as ``self.ann_file``.
+        Each instance is viewed as a video.
 
         Returns:
-            list[int]: The length of the list is the number of valid object
-                annotations. The elemment in the list is annotation ID in coco
+            list[dict]: The length of the list is the number of valid object
+                annotations. The inner dict contains annotation ID in coco
                 API.
         """
-        print('Loading Coco dataset...')
-        start_time = time.time()
+        file_client = FileClient.infer_client(uri=self.ann_file)
+        with file_client.get_local_path(self.ann_file) as local_file:
+            self.coco = COCO(local_file)
         ann_list = list(self.coco.anns.keys())
-        videos_list = [
-            ann for ann in ann_list
+        data_infos = [
+            dict(ann_id=ann) for ann in ann_list
             if self.coco.anns[ann].get('iscrowd', 0) == 0
         ]
-        print(f'Coco dataset loaded! ({time.time()-start_time:.2f} s)')
-        return videos_list
+        return data_infos
 
-    def get_bboxes_from_video(self, video_ind):
-        """Get bbox annotation about the instance in an image.
+    def get_bboxes_from_video(self, video_idx: int) -> np.ndarray:
+        """Get bbox annotation about one instance in an image.
 
         Args:
-            video_ind (int): video index. Each video_ind denotes an instance.
+            video_idx (int): The index of video.
 
         Returns:
-            ndarray: in [1, 4] shape. The bbox is in (x, y, w, h) format.
+            ndarray: In [1, 4] shape. The bbox is in (x, y, w, h) format.
         """
-        ann_id = self.data_infos[video_ind]
+        ann_id = self.get_data_info(video_idx)['ann_id']
         anno = self.coco.anns[ann_id]
-        bboxes = np.array(anno['bbox']).reshape(-1, 4)
+        bboxes = np.array(anno['bbox'], dtype=np.float32).reshape(-1, 4)
         return bboxes
 
-    def get_img_infos_from_video(self, video_ind):
-        """Get all frame paths in a video.
+    def get_img_infos_from_video(self, video_idx: int) -> dict:
+        """Get the image information about one instance in a image.
 
         Args:
-            video_ind (int): video index. Each video_ind denotes an instance.
+            video_idx (int): The index of video.
 
         Returns:
-            list[str]: all image paths
+            dict: {
+                    'video_id': int,
+                    'frame_ids': np.ndarray,
+                    'img_paths': list[str]
+                  }
         """
-        ann_id = self.data_infos[video_ind]
+        ann_id = self.get_data_info(video_idx)['ann_id']
         imgs = self.coco.loadImgs([self.coco.anns[ann_id]['image_id']])
         img_names = [img['file_name'] for img in imgs]
-        frame_ids = np.arange(self.get_len_per_video(video_ind))
+        frame_ids = np.arange(self.get_len_per_video(video_idx))
         img_infos = dict(
-            filename=img_names, frame_ids=frame_ids, video_id=video_ind)
+            video_id=video_idx, frame_ids=frame_ids, img_paths=img_names)
         return img_infos
 
-    def get_len_per_video(self, video_ind):
-        """Get the number of frames in a video."""
+    @force_full_init
+    def get_len_per_video(self, video_idx: int) -> int:
+        """Get the number of frames in a video. Here, it returns 1 since Coco
+        is a image dataset.
+
+        Args:
+            video_idx (int): The index of video. Each video_idx denotes an
+                instance.
+
+        Returns:
+            int: The length of video.
+        """
         return 1

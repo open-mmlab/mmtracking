@@ -140,25 +140,19 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         """
         pass
 
-    def get_infos_from_video(self, video_idx: int) -> dict:
-        """Get the information of all images in a video.
+    def get_img_infos_from_video(self, video_idx: int) -> dict:
+        """Get the information of images in a video.
 
         Args:
             video_idx (int): The index of video.
 
         Returns:
             dict: {
-                    'img_paths': list[str],
-                    'frame_ids': np.ndarray,
                     'video_id': int,
-                    'bboxes': np.ndarray in (N, 4) shape,
-                    'bboxes_isvalid': np.ndarray,
-                    'visible': np.ndarray
+                    'frame_ids': np.ndarray,
+                    'img_paths': list[str]
                   }
-                  The annotation information in some datasets may contain
-                    'visible_ratio'. The bbox is in (x1, y1, x2, y2) format.
         """
-        # Information about images
         img_paths = []
         meta_video_info = self.get_data_info(video_idx)
         start_frame_id = meta_video_info['start_frame_id']
@@ -170,7 +164,25 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
                          framename_template % frame_id))
         frame_ids = np.arange(self.get_len_per_video(video_idx))
 
-        # Information about annotation of instances
+        img_infos = dict(
+            video_id=video_idx, frame_ids=frame_ids, img_paths=img_paths)
+        return img_infos
+
+    def get_ann_infos_from_video(self, video_idx: int) -> dict:
+        """Get the information of annotations in a video.
+
+        Args:
+            video_idx (int): The index of video.
+
+        Returns:
+            dict: {
+                    'bboxes': np.ndarray in (N, 4) shape,
+                    'bboxes_isvalid': np.ndarray,
+                    'visible': np.ndarray
+                  }.
+                  The annotation information in some datasets may contain
+                    'visible_ratio'. The bbox is in (x1, y1, x2, y2) format.
+        """
         bboxes = self.get_bboxes_from_video(video_idx)
         # The visible information in some datasets may contain
         # 'visible_ratio'.
@@ -180,14 +192,9 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         visible_info['visible'] = visible_info['visible'] & bboxes_isvalid
         bboxes[:, 2:] += bboxes[:, :2]
 
-        video_infos = dict(
-            video_id=video_idx,
-            frame_ids=frame_ids,
-            img_paths=img_paths,
-            bboxes=bboxes,
-            bboxes_isvalid=bboxes_isvalid,
-            **visible_info)
-        return video_infos
+        ann_infos = dict(
+            bboxes=bboxes, bboxes_isvalid=bboxes_isvalid, **visible_info)
+        return ann_infos
 
     def prepare_test_data(self, video_idx: int, frame_idx: int) -> dict:
         """Get testing data of one frame. We parse one video, get one frame
@@ -204,7 +211,9 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         # repeatedly in all frames of one video.
         if self.test_memo.get('video_idx', None) != video_idx:
             self.test_memo.video_idx = video_idx
-            self.test_memo.video_infos = self.get_infos_from_video(video_idx)
+            ann_infos = self.get_ann_infos_from_video(video_idx)
+            img_infos = self.get_img_infos_from_video(video_idx)
+            self.test_memo.video_infos = dict(**img_infos, **ann_infos)
         assert 'video_idx' in self.test_memo and 'video_infos'\
             in self.test_memo
 
@@ -238,7 +247,9 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         video_idxes = random.choices(list(range(len(self))), k=2)
         pair_video_infos = []
         for video_idx in video_idxes:
-            video_infos = self.get_infos_from_video(video_idx)
+            ann_infos = self.get_ann_infos_from_video(video_idx)
+            img_infos = self.get_img_infos_from_video(video_idx)
+            video_infos = dict(**img_infos, **ann_infos)
             pair_video_infos.append(video_infos)
 
         results = self.pipeline(pair_video_infos)

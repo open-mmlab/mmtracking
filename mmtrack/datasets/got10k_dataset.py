@@ -1,13 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os
 import os.path as osp
-import shutil
 import time
+from typing import List
 
 import numpy as np
-from mmcv.utils import print_log
-from mmdet.datasets import DATASETS
 
+from mmtrack.registry import DATASETS
 from .base_sot_dataset import BaseSOTDataset
 
 
@@ -19,13 +18,11 @@ class GOT10kDataset(BaseSOTDataset):
     """
 
     def __init__(self, *args, **kwargs):
+        """Initialization of SOT dataset class."""
         super(GOT10kDataset, self).__init__(*args, **kwargs)
 
-    def load_data_infos(self, split='train'):
-        """Load dataset information.
-
-        Args:
-            split (str, optional): the split of dataset. Defaults to 'train'.
+    def load_data_list(self) -> List[dict]:
+        """Load annotations from an annotation file named as ``self.ann_file``.
 
         Returns:
             list[dict]: the length of the list is the number of videos. The
@@ -42,10 +39,9 @@ class GOT10kDataset(BaseSOTDataset):
         """
         print('Loading GOT10k dataset...')
         start_time = time.time()
-        assert split in ['train', 'val', 'test', 'val_vot', 'train_vot']
         data_infos = []
-        data_infos_str = self.loadtxt(
-            self.ann_file, return_array=False).split('\n')
+        data_infos_str = self._loadtxt(
+            self.ann_file, return_ndarray=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.
@@ -60,115 +56,66 @@ class GOT10kDataset(BaseSOTDataset):
         print(f'GOT10k dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
-    def get_visibility_from_video(self, video_ind):
-        """Get the visible information of instance in a video."""
+    def get_visibility_from_video(self, video_idx: int) -> dict:
+        """Get the visible information of instance in a video.
+
+        Args:
+            video_idx (int): The index of video.
+
+        Returns:
+            dict: The visibilities of each object in the video.
+        """
         if not self.test_mode:
-            absense_info_path = osp.join(
-                self.img_prefix, self.data_infos[video_ind]['video_path'],
-                'absence.label')
-            cover_info_path = osp.join(
-                self.img_prefix, self.data_infos[video_ind]['video_path'],
-                'cover.label')
-            absense_info = self.loadtxt(absense_info_path, dtype=bool)
+            video_path = self.get_data_info(video_idx)['video_path']
+            absense_info_path = osp.join(self.data_prefix['img'], video_path,
+                                         'absence.label')
+            cover_info_path = osp.join(self.data_prefix['img'], video_path,
+                                       'cover.label')
+            absense_info = self._loadtxt(absense_info_path, dtype=bool)
             # The values of key 'cover' are
             # int numbers in range [0,8], which correspond to
             # ranges of object visible ratios: 0%, (0%, 15%],
             # (15%~30%], (30%, 45%], (45%, 60%],(60%, 75%],
             # (75%, 90%], (90%, 100%) and 100% respectively
-            cover_info = self.loadtxt(cover_info_path, dtype=int)
+            cover_info = self._loadtxt(cover_info_path, dtype=int)
             visible = ~absense_info & (cover_info > 0)
             visible_ratio = cover_info / 8.
             return dict(visible=visible, visible_ratio=visible_ratio)
         else:
             return super(GOT10kDataset,
-                         self).get_visibility_from_video(video_ind)
+                         self).get_visibility_from_video(video_idx)
 
-    def prepare_test_data(self, video_ind, frame_ind):
+    def prepare_test_data(self, video_idx: int, frame_idx: int) -> dict:
         """Get testing data of one frame. We parse one video, get one frame
         from it and pass the frame information to the pipeline.
 
         Args:
-            video_ind (int): video index
-            frame_ind (int): frame index
+            video_idx (int): The index of video.
+            frame_idx (int): The index of frame.
 
         Returns:
-            dict: testing data of one frame.
+            dict: Testing data of one frame.
         """
-        if self.test_memo.get('video_ind', None) != video_ind:
-            self.test_memo.video_ind = video_ind
-            self.test_memo.img_infos = self.get_img_infos_from_video(video_ind)
-        assert 'video_ind' in self.test_memo and 'img_infos' in self.test_memo
+        if self.test_memo.get('video_idx', None) != video_idx:
+            self.test_memo.video_idx = video_idx
+            self.test_memo.img_infos = self.get_img_infos_from_video(video_idx)
+        assert 'video_idx' in self.test_memo and 'img_infos' in self.test_memo
 
-        img_info = dict(
-            filename=self.test_memo.img_infos['filename'][frame_ind],
-            frame_id=frame_ind)
-        if frame_ind == 0:
-            ann_infos = self.get_ann_infos_from_video(video_ind)
-            ann_info = dict(
-                bboxes=ann_infos['bboxes'][frame_ind], visible=True)
+        results = {}
+        results['img_path'] = self.test_memo.img_infos['img_paths'][frame_idx]
+        results['frame_id'] = frame_idx
+
+        if frame_idx == 0:
+            ann_infos = self.get_ann_infos_from_video(video_idx)
+            bbox = ann_infos['bboxes'][frame_idx]
         else:
-            ann_info = dict(
-                bboxes=np.array([0] * 4, dtype=np.float32), visible=True)
+            bbox = np.array([0] * 4, dtype=np.float32)
 
-        results = dict(img_info=img_info, ann_info=ann_info)
-        self.pre_pipeline(results)
+        results['instances'] = []
+        instance = {}
+        instance['bbox'] = bbox
+        instance['visible'] = True
+        instance['bbox_label'] = np.array([0], dtype=np.int32)
+        results['instances'].append(instance)
         results = self.pipeline(results)
         return results
-
-    def format_results(self, results, resfile_path=None, logger=None):
-        """Format the results to txts (standard format for GOT10k Challenge).
-
-        Args:
-            results (dict(list[ndarray])): Testing results of the dataset.
-            resfile_path (str): Path to save the formatted results.
-                Defaults to None.
-            logger (logging.Logger | str | None, optional): defaults to None.
-        """
-        # prepare saved dir
-        assert resfile_path is not None, 'Please give key-value pair \
-            like resfile_path=xxx in argparse'
-
-        if not osp.isdir(resfile_path):
-            os.makedirs(resfile_path, exist_ok=True)
-
-        # transform tracking results format
-        # from [bbox_1, bbox_2, ...] to {'video_1':[bbox_1, bbox_2, ...], ...}
-        track_bboxes = results['track_bboxes']
-        print_log(
-            f'-------- There are total {len(track_bboxes)} images --------',
-            logger=logger)
-
-        start_ind = end_ind = 0
-        for num, video_info in zip(self.num_frames_per_video, self.data_infos):
-            end_ind += num
-            video_name = video_info['video_path'].split(os.sep)[-1]
-            video_resfiles_path = osp.join(resfile_path, video_name)
-            if not osp.isdir(video_resfiles_path):
-                os.makedirs(video_resfiles_path, exist_ok=True)
-            video_bbox_txt = osp.join(video_resfiles_path,
-                                      '{}_001.txt'.format(video_name))
-            video_time_txt = osp.join(video_resfiles_path,
-                                      '{}_time.txt'.format(video_name))
-            with open(video_bbox_txt,
-                      'w') as f_bbox, open(video_time_txt, 'w') as f_time:
-
-                for bbox in results['track_bboxes'][start_ind:end_ind]:
-                    bbox = [
-                        str(f'{bbox[0]:.4f}'),
-                        str(f'{bbox[1]:.4f}'),
-                        str(f'{(bbox[2] - bbox[0]):.4f}'),
-                        str(f'{(bbox[3] - bbox[1]):.4f}')
-                    ]
-                    line = ','.join(bbox) + '\n'
-                    f_bbox.writelines(line)
-                    # We don't record testing time, so we set a default
-                    # time in order to test on the server.
-                    f_time.writelines('0.0001\n')
-            start_ind += num
-
-        shutil.make_archive(resfile_path, 'zip', resfile_path)
-        shutil.rmtree(resfile_path)
-
-        print_log(
-            f'-------- The results are stored in {resfile_path}.zip --------',
-            logger=logger)
