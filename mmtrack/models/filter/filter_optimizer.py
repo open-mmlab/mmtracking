@@ -67,6 +67,7 @@ class PrDiMPSteepestDescentNewton(BaseModule):
                 - train mode: (num_img_per_seq, bs, h, w).
                 - test mode: (num_img_per_seq, 1, h, w).
         """
+        # convert to (num_img_per_seq, bs, 4) shape
         center_yx = center_yx.reshape(center_yx.shape[0], -1,
                                       center_yx.shape[-1])
         k0 = torch.arange(
@@ -111,9 +112,10 @@ class PrDiMPSteepestDescentNewton(BaseModule):
 
         Args:
             filter (Tensor):  Initial filter with shape
-                (num_img_per_seq, c, fitler_h, filter_w).
+                training mode: (bs, c, fitler_h, filter_w)
+                test mode: (1, c, fitler_h, filter_w)
             feat (Tensor):  Input feature maps with shape
-                (num_img_per_seq, [bs], feat_dim, H, W).
+                (num_img_per_seq, [bs], c, H, W).
             bboxes (Tensor):  Target bounding boxes with shape
                 (num_img_per_seq, [bs], 4). in (cx, cy, x, y) format.
             num_iters (int, optional):  Number of iterations to run.
@@ -144,8 +146,13 @@ class PrDiMPSteepestDescentNewton(BaseModule):
             min=self.min_filter_regular**2)
 
         # Compute label density
+        if self.training:
+            assert bboxes.dim() == 3
+        else:
+            assert bboxes.dim() == 2
+            bboxes = bboxes.reshape([bboxes.shape[0], -1, bboxes.shape[-1]])
         offset = (torch.Tensor(filter_size_hw).to(bboxes.device) % 2) / 2.0
-        center = bboxes[:, :2] / self.feat_stride
+        center = bboxes[..., :2] / self.feat_stride
         center_yx = center.flip((-1, )) - offset
         label_density = self.gen_label_density(center_yx, output_size_hw)
 

@@ -14,7 +14,7 @@ def apply_filter(feat, filter):
             - test mode: of shape (num_img_per_seq, c, h, w).
         filter (Tensor): The filter to be applied on the `feat`. There are two
             possible shapes in the different modes:
-            - training mode: of shape (num_img_per_seq, c, filter_h, filter_w)
+            - training mode: of shape (bs, c, filter_h, filter_w)
             - test mode: of shape (1, c, filter_h, filter_w)
     output:
         scores (Tenosr): Output of filtering.
@@ -24,7 +24,7 @@ def apply_filter(feat, filter):
     padding = (filter.shape[-2] // 2, filter.shape[-1] // 2)
     num_groups = feat.shape[1] if feat.dim() == 5 else 1
     scores = F.conv2d(
-        feat.reshape(feat.shape[0], -1, feat.shape[-2], feat.shape[-1]),
+        feat.reshape(feat.shape[0], -1, *feat.shape[-2:]),
         filter,
         padding=padding,
         groups=num_groups)
@@ -53,16 +53,17 @@ def apply_feat_transpose(feat, activation, filter_size_hw, training=True):
     Returns:
         (Tensor). There are two possible shape in the
             different mode:
-            - training mode: of shape (bs, c, out_h, out_w).
-            - test mode: of shape (1, c, out_h, out_w).
+            - training mode: of shape (bs, c, filter_h, fiter_w).
+            - test mode: of shape (1, c, filter_h, fiter_w).
     """
 
     if isinstance(filter_size_hw, int):
         filter_size_hw = (filter_size_hw, filter_size_hw)
-    transpose_pad = [(sz - 1) // 2 for sz in filter_size_hw]
 
     if training:
         # slow forward and fast backward
+        # TODO: check the pad difference in training and test mode
+        transpose_pad = [sz // 2 for sz in filter_size_hw]
         num_img_per_seq = feat.shape[0]
         batch_size = feat.shape[1] if feat.dim() == 5 else 1
 
@@ -79,6 +80,7 @@ def apply_feat_transpose(feat, activation, filter_size_hw, training=True):
                                     1, 0, 2, 3)
     else:
         # fast forwward and slow backward
+        transpose_pad = [(sz - 1) // 2 for sz in filter_size_hw]
         batch_size = feat.shape[0]
         filter_grad = F.conv2d(
             activation.reshape(1, -1, *activation.shape[-2:]),
