@@ -1,11 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional
+
 import cv2
 import numpy as np
-from mmcv.transforms import BaseTransform
+from mmcv.transforms import BaseTransform, to_tensor
+from mmengine.data import InstanceData
 
+from mmtrack.core import TrackDataSample
 from mmtrack.registry import TRANSFORMS
 
 
+# TODO: We may consider to merge ``ConcatSameTypeFrames`` into
+# ``PackTrackDataSample``.
 @TRANSFORMS.register_module()
 class ConcatSameTypeFrames(BaseTransform):
     """Concat the frames of the same type. We divide all the frames into two
@@ -24,7 +30,8 @@ class ConcatSameTypeFrames(BaseTransform):
 
     - img (optional)
     - gt_bboxes (optional)
-    - gt_labels (optional)
+    - gt_bboxes_labels (optional)
+    - gt_ignore_flags (optional)
     - gt_instance_ids (optional)
     - gt_masks (optional)
     - proposals (optional)
@@ -36,7 +43,8 @@ class ConcatSameTypeFrames(BaseTransform):
 
     - img (optional)
     - gt_bboxes (optional)
-    - gt_labels (optional)
+    - gt_bboxes_labels (optional)
+    - gt_ignore_flags (optional)
     - gt_instance_ids (optional)
     - gt_masks (optional)
     - proposals (optional)
@@ -48,7 +56,8 @@ class ConcatSameTypeFrames(BaseTransform):
 
     - f'{self.ref_prefix}_img' (optional)
     - f'{self.ref_prefix}_gt_bboxes' (optional)
-    - f'{self.ref_prefix}_gt_labels' (optional)
+    - f'{self.ref_prefix}_gt_bboxes_labels' (optional)
+    - f'{self.ref_prefix}_gt_ignore_flags' (optional)
     - f'{self.ref_prefix}_gt_instance_ids' (optional)
     - f'{self.ref_prefix}_gt_masks' (optional)
     - f'{self.ref_prefix}_proposals' (optional)
@@ -60,13 +69,34 @@ class ConcatSameTypeFrames(BaseTransform):
         num_key_frames (int): the number of key frames.
         ref_prefix (str): The prefix of key added to the 'reference' frames.
             Defaults to 'ref'.
+        meta_keys (Sequence[str]): Meta keys to be collected in
+            ``data_sample.metainfo``. Defaults to None.
+        default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
+            'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
+            'scale_factor', 'flip', 'flip_direction', 'img_norm_cfg',
+            'frame_id', 'is_video_data').
     """
 
-    def __init__(self, num_key_frames, ref_prefix='ref'):
+    def __init__(self,
+                 num_key_frames: int,
+                 ref_prefix: str = 'ref',
+                 meta_keys: Optional[dict] = None,
+                 default_meta_keys: dict = ('img_id', 'img_path', 'ori_shape',
+                                            'img_shape', 'scale_factor',
+                                            'flip', 'flip_direction',
+                                            'frame_id', 'is_video_data')):
         self.num_key_frames = num_key_frames
         self.ref_prefix = ref_prefix
+        self.meta_keys = default_meta_keys
+        if meta_keys is not None:
+            if isinstance(meta_keys, str):
+                meta_keys = (meta_keys, )
+            else:
+                assert isinstance(meta_keys, tuple), \
+                    'meta_keys must be str or tuple'
+            self.meta_keys += meta_keys
 
-    def concat_one_mode_results(self, results):
+    def concat_one_mode_results(self, results: dict) -> dict:
         """Concatenate the results of the same mode."""
         out = dict()
         for i, result in enumerate(results):
@@ -79,19 +109,15 @@ class ConcatSameTypeFrames(BaseTransform):
                 else:
                     out['img'] = np.concatenate(
                         (out['img'], np.expand_dims(img, -1)), axis=-1)
-            # TODO: remove the hard code
-            for key in [
-                    'file_name', 'img_id', 'frame_id', 'img_path', 'flip',
-                    'flip_direction', 'gt_masks'
-            ]:
+            for key in (self.meta_keys + ('gt_masks', )):
                 if key in result:
                     if i == 0:
                         result[key] = [result[key]]
                     else:
                         out[key].append(result[key])
             for key in [
-                    'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
-                    'gt_instance_ids'
+                    'proposals', 'gt_bboxes', 'gt_ignore_flags',
+                    'gt_bboxes_labels', 'gt_instances_id'
             ]:
                 if key not in result:
                     continue
@@ -131,7 +157,7 @@ class ConcatSameTypeFrames(BaseTransform):
                 out = result
         return out
 
-    def transform(self, results):
+    def transform(self, results: dict) -> dict:
         """Transform function.
 
         Args:
@@ -172,6 +198,14 @@ class ConcatSameTypeFrames(BaseTransform):
             results[f'{self.ref_prefix}_{k}'] = v
         return results
 
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'num_key_frames={self.num_key_frames}, '
+        repr_str += f'ref_prefix={self.ref_prefix}, '
+        repr_str += f'meta_keys={self.meta_keys}, '
+        repr_str += f'default_meta_keys={self.default_meta_keys})'
+        return repr_str
+
 
 @TRANSFORMS.register_module()
 class ConcatVideoReferences(ConcatSameTypeFrames):
@@ -184,6 +218,187 @@ class ConcatVideoReferences(ConcatSameTypeFrames):
 
     def __init__(self, **kwargs):
         super(ConcatVideoReferences, self).__init__(num_key_frames=1, **kwargs)
+
+
+@TRANSFORMS.register_module()
+class PackTrackInputs(BaseTransform):
+    """Pack the inputs data for the video object detection / multi object
+    tracking / single object tracking / video instance segmentation.
+
+    Args:
+        ref_prefix (str): The prefix of key added to the 'reference' frames.
+            Defaults to 'ref'.
+        meta_keys (Sequence[str]): Meta keys to be collected in
+            ``data_sample.metainfo``. Defaults to None.
+        default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
+            'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
+            'scale_factor', 'flip', 'flip_direction', 'img_norm_cfg',
+            'frame_id', 'is_video_data').
+    """
+    mapping_table = {
+        'gt_bboxes': 'bboxes',
+        'gt_bboxes_labels': 'labels',
+        'gt_masks': 'masks',
+        'gt_instances_id': 'instances_id'
+    }
+
+    def __init__(self,
+                 ref_prefix: str = 'ref',
+                 meta_keys: Optional[dict] = None,
+                 default_meta_keys: dict = ('img_id', 'img_path', 'ori_shape',
+                                            'img_shape', 'scale_factor',
+                                            'flip', 'flip_direction',
+                                            'frame_id', 'is_video_data')):
+        self.ref_prefix = ref_prefix
+        self.meta_keys = default_meta_keys
+        if meta_keys is not None:
+            if isinstance(meta_keys, str):
+                meta_keys = (meta_keys, )
+            else:
+                assert isinstance(meta_keys, tuple), \
+                    'meta_keys must be str or tuple'
+            self.meta_keys += meta_keys
+
+    def transform(self, results: dict) -> dict:
+        """Method to pack the input data.
+
+        Args:
+            results (dict): Result dict from the data pipeline.
+
+        Returns:
+            dict:
+
+            - 'inputs' (obj:`torch.Tensor`): The forward data of models.
+            - 'data_sample' (obj:`TrackDataSample`): The annotation info of the
+                sample.
+        """
+        packed_results = dict()
+        packed_results['inputs'] = dict()
+
+        # 1. Pack image of key frames
+        if 'img' in results:
+            img = results['img']
+            if len(img.shape) <= 3:
+                if len(img.shape) < 3:
+                    img = np.expand_dims(img, -1)
+                # (H, W, C) -> (C, H, W)
+                img = np.ascontiguousarray(img.transpose(2, 0, 1))
+            else:
+                # (H, W, C, N) -> (N, C, H, W)
+                img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
+            packed_results['inputs']['img'] = to_tensor(img)
+
+        # 2. Pack image of reference frames.
+        if f'{self.ref_prefix}_img' in results:
+            ref_img = results[f'{self.ref_prefix}_img']
+            ref_img = np.ascontiguousarray(ref_img.transpose(3, 2, 0, 1))
+            packed_results['inputs'][f'{self.ref_prefix}_img'] = to_tensor(
+                ref_img)
+
+        data_sample = TrackDataSample()
+
+        # 3. Pack data of key frames
+        if 'gt_ignore_flags' in results:
+            vaild_idx = results['gt_ignore_flags'] == 0
+            ignore_idx = results['gt_ignore_flags'] == 1
+
+        instance_data = InstanceData()
+        ignore_instance_data = InstanceData()
+        for key in self.mapping_table.keys():
+            if key not in results:
+                continue
+            if key == 'gt_masks':
+                if 'gt_ignore_flags' in results:
+                    instance_data[
+                        self.mapping_table[key]] = results[key][vaild_idx]
+                    ignore_instance_data[
+                        self.mapping_table[key]] = results[key][ignore_idx]
+                else:
+                    instance_data[self.mapping_table[key]] = results[key]
+            else:
+                if 'gt_ignore_flags' in results:
+                    instance_data[self.mapping_table[key]] = to_tensor(
+                        results[key][vaild_idx])
+                    ignore_instance_data[self.mapping_table[key]] = to_tensor(
+                        results[key][ignore_idx])
+                else:
+                    instance_data[self.mapping_table[key]] = to_tensor(
+                        results[key])
+        data_sample.gt_instances = instance_data
+        data_sample.ignored_instances = ignore_instance_data
+
+        if 'proposals' in results:
+            data_sample.proposals = InstanceData('bboxes',
+                                                 results['proposals'])
+
+        # 4. Pack data of reference frames
+        if f'{self.ref_prefix}_gt_ignore_flags' in results:
+            vaild_idx = results[f'{self.ref_prefix}_gt_ignore_flags'][:,
+                                                                      1] == 0
+            ignore_idx = results[f'{self.ref_prefix}_gt_ignore_flags'][:,
+                                                                       1] == 1
+
+        ref_instance_data = InstanceData()
+        ref_ignore_instance_data = InstanceData()
+        for key in self.mapping_table.keys():
+            ref_key = f'{self.ref_prefix}_{key}'
+            if ref_key not in results:
+                continue
+            if ref_key == f'{self.ref_prefix}_gt_masks':
+                if f'{self.ref_prefix}_gt_ignore_flags' in results:
+                    ref_instance_data[
+                        self.mapping_table[key]] = results[ref_key][vaild_idx]
+                    ref_ignore_instance_data[
+                        self.mapping_table[key]] = results[ref_key][ignore_idx]
+                else:
+                    ref_instance_data[
+                        self.mapping_table[key]] = results[ref_key]
+            else:
+                if f'{self.ref_prefix}_gt_ignore_flags' in results:
+                    ref_instance_data[self.mapping_table[key]] = to_tensor(
+                        results[ref_key][vaild_idx])
+                    ref_ignore_instance_data[
+                        self.mapping_table[key]] = to_tensor(
+                            results[ref_key][ignore_idx])
+                else:
+                    ref_instance_data[self.mapping_table[key]] = to_tensor(
+                        results[ref_key])
+        setattr(data_sample, f'{self.ref_prefix}_gt_instances',
+                ref_instance_data)
+        setattr(data_sample, f'{self.ref_prefix}_ignore_instance_data',
+                ref_ignore_instance_data)
+
+        if f'{self.ref_prefix}_proposals' in results:
+            setattr(
+                data_sample, f'{self.ref_prefix}_proposals',
+                InstanceData('bboxes',
+                             results[f'{self.ref_prefix}_proposals']))
+
+        # 5. set metainfo
+        img_meta = {}
+        for key in self.meta_keys:
+            # TODO: Wait until mmcv is modified and deleted.
+            if (key == 'ori_shape' and 'ori_height' in results
+                    and 'ori_width' in results):
+                img_shape = (results['ori_height'], results['ori_width'])
+                img_meta[key] = img_shape
+            else:
+                if key not in results:
+                    continue
+                img_meta[key] = results[key]
+                img_meta[f'{self.ref_prefix}_{key}'] = results[
+                    f'{self.ref_prefix}_{key}']
+        data_sample.set_metainfo(img_meta)
+
+        packed_results['data_sample'] = data_sample
+        return packed_results
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'(ref_prefix={self.ref_prefix}, '
+        repr_str += f'meta_keys={self.meta_keys}, '
+        repr_str += f'default_meta_keys={self.default_meta_keys})'
+        return repr_str
 
 
 @TRANSFORMS.register_module()

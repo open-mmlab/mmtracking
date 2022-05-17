@@ -35,10 +35,10 @@ class TestBasevideoDataset(TestCase):
             assert len(data_info['instances']) > 0
 
     def test_len(self):
-        assert len(self.dataset) == 4
+        assert len(self.dataset) == 5
 
     def test_getitem(self):
-        for i in range(len(self.dataset)):
+        for i in range(1, len(self.dataset) - 1):
             results = self.dataset[i]
             assert isinstance(results, dict)
             assert len(results['frame_id']) == 3

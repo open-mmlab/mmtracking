@@ -141,15 +141,15 @@ class BaseVideoDataset(BaseDataset):
             bbox = [x1, y1, x1 + w, y1 + h]
 
             if ann.get('iscrowd', False):
-                # TODO: follow the logic of mmdet
-                continue
+                instance['ignore_flag'] = 1
             else:
-                instance['bbox'] = bbox
-                instance['bbox_label'] = self.cat2label[ann['category_id']]
-                if ann.get('segmentation', None):
-                    instance['mask'] = ann['segmentation']
-                if ann.get('instance_id', None):
-                    instance['instance_id'] = ann['instance_id']
+                instance['ignore_flag'] = 0
+            instance['bbox'] = bbox
+            instance['bbox_label'] = self.cat2label[ann['category_id']]
+            if ann.get('segmentation', None):
+                instance['mask'] = ann['segmentation']
+            if ann.get('instance_id', None):
+                instance['instance_id'] = ann['instance_id']
             if len(instance) > 0:
                 instances.append(instance)
         data_info['instances'] = instances

@@ -1,14 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from mmcv.transforms import LoadAnnotations
+from mmdet.datasets.pipelines import LoadAnnotations as MMDet_LoadAnnotations
 
 from mmtrack.core import results2outs
 from mmtrack.registry import TRANSFORMS
 
 
-# TODO: inherit from mmdet to load mask ann.
 @TRANSFORMS.register_module()
-class LoadTrackAnnotations(LoadAnnotations):
+class LoadTrackAnnotations(MMDet_LoadAnnotations):
     """Load and process the ``instances`` and ``seg_map`` annotation provided
     by dataset.
 
@@ -31,11 +30,18 @@ class LoadTrackAnnotations(LoadAnnotations):
                 # Id of instances.
                 'instance_id': 100,
 
-                # Used in key point detection.
-                # Can only load the format of [x1, y1, v1,…, xn, yn, vn]. v[i]
-                # means the visibility of this keypoint. n must be equal to the
-                # number of keypoint categories.
-                'keypoints': [x1, y1, v1, ..., xn, yn, vn]
+                # Used in instance/panoptic segmentation. The segmentation mask
+                # of the instance or the information of segments.
+                # 1. If list[list[float]], it represents a list of polygons,
+                # one for each connected component of the object. Each
+                # list[float] is one simple polygon in the format of
+                # [x1, y1, ..., xn, yn] (n≥3). The Xs and Ys are absolute
+                # coordinates in unit of pixels.
+                # 2. If dict, it represents the per-pixel segmentation mask in
+                # COCO’s compressed RLE format. The dict should have keys
+                # “size” and “counts”.  Can be loaded by pycocotools
+                'mask': list[list[float]] or dict,
+
                 }
             ]
             # Filename of semantic or panoptic segmentation ground truth file.
@@ -48,26 +54,28 @@ class LoadTrackAnnotations(LoadAnnotations):
 
         {
             # In (x1, y1, x2, y2) order, float type. N is the number of bboxes
-            # in np.float32
+            # in an image
             'gt_bboxes': np.ndarray(N, 4)
-             # In np.int32 type.
+             # In int type.
             'gt_bboxes_labels': np.ndarray(N, )
-            # In np.int32 type.
-            'gt_instances_id': np.ndarray(N, )
+             # In built-in class
+            'gt_masks': PolygonMasks (H, W) or BitmapMasks (H, W)
              # In uint8 type.
             'gt_seg_map': np.ndarray (H, W)
-             # with (x, y, v) order, in np.float32 type.
-            'gt_keypoints': np.ndarray(N, NK, 3)
+             # in (x, y, v) order, float type.
         }
 
     Required Keys:
 
+    - height
+    - width
     - instances
 
       - bbox (optional)
       - bbox_label
       - instance_id (optional)
-      - keypoints (optional)
+      - mask (optional)
+      - ignore_flag
 
     - seg_map_path (optional)
 
@@ -76,8 +84,9 @@ class LoadTrackAnnotations(LoadAnnotations):
     - gt_bboxes (np.float32)
     - gt_bboxes_labels (np.int32)
     - gt_instances_id (np.int32)
+    - gt_masks (BitmapMasks | PolygonMasks)
     - gt_seg_map (np.uint8)
-    - gt_keypoints (np.float32)
+    - gt_ignore_flags (np.bool)
 
     Args:
         with_instance_id (bool): Whether to parse and load the instance id
@@ -88,9 +97,11 @@ class LoadTrackAnnotations(LoadAnnotations):
         super().__init__(**kwargs)
         self.with_instance_id = with_instance_id
 
-    # TODO: remove the func after mmcv fix the bug when gt_bboxes==[]
     def _load_bboxes(self, results: dict) -> None:
         """Private function to load bounding box annotations.
+
+        The only difference is that we record the type of `gt_ignore_flags`
+        as np.int32.
 
         Args:
             results (dict): Result dict from :obj:``mmcv.BaseDataset``.
@@ -98,10 +109,21 @@ class LoadTrackAnnotations(LoadAnnotations):
             dict: The dict contains loaded bounding box annotations.
         """
         gt_bboxes = []
+        gt_ignore_flags = []
         for instance in results['instances']:
             gt_bboxes.append(instance['bbox'])
+            gt_ignore_flags.append(instance['ignore_flag'])
         results['gt_bboxes'] = np.array(
             gt_bboxes, dtype=np.float32).reshape(-1, 4)
+        # The only difference is that we record the type of `gt_ignore_flags`
+        # as np.int32.
+        results['gt_ignore_flags'] = np.array(gt_ignore_flags, dtype=np.int32)
+
+        if self.denorm_bbox:
+            bbox_num = results['gt_bboxes'].shape[0]
+            if bbox_num != 0:
+                results['gt_bboxes'][:, 0::2] *= results['width']
+                results['gt_bboxes'][:, 1::2] *= results['height']
 
     def _load_instances_id(self, results: dict) -> None:
         """Private function to load instances id annotations.
@@ -137,8 +159,9 @@ class LoadTrackAnnotations(LoadAnnotations):
         repr_str += f'(with_bbox={self.with_bbox}, '
         repr_str += f'with_label={self.with_label}, '
         repr_str += f'with_instance_id={self.with_instance_id}, '
+        repr_str += f'with_mask={self.with_mask}, '
         repr_str += f'with_seg={self.with_seg}, '
-        repr_str += f'with_keypoints={self.with_keypoints}, '
+        repr_str += f'poly2mask={self.poly2mask}, '
         repr_str += f"imdecode_backend='{self.imdecode_backend}', "
         repr_str += f'file_client_args={self.file_client_args})'
         return repr_str

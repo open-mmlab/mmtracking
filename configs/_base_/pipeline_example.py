@@ -9,5 +9,5 @@ pipeline = [
             dict(type='RandomFlip', prob=0.5),
         ]),
     dict(type='mmtrack.ConcatVideoReferences', ref_prefix='ref'),
-    # dict(type='PackTrackInputs')
+    dict(type='mmtrack.PackTrackInputs', ref_prefix='ref')
 ]

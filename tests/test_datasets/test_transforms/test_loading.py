@@ -47,10 +47,9 @@ class TestLoadTrackAnnotations:
             with_label=False,
             with_instance_id=True,
             with_seg=False,
-            with_keypoints=False,
-        )
-        assert repr(transform) == (
-            'LoadTrackAnnotations(with_bbox=True, '
-            'with_label=False, with_instance_id=True, with_seg=False, '
-            "with_keypoints=False, imdecode_backend='cv2', "
-            "file_client_args={'backend': 'disk'})")
+            with_mask=False)
+        assert repr(transform) == ('LoadTrackAnnotations(with_bbox=True, '
+                                   'with_label=False, with_instance_id=True, '
+                                   'with_mask=False, with_seg=False, '
+                                   "poly2mask=True, imdecode_backend='cv2', "
+                                   "file_client_args={'backend': 'disk'})")
