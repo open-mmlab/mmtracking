@@ -1,0 +1,131 @@
+{
+    "images": [
+        {
+            "file_name": "image_1.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 0,
+            "is_vid_train_frame": true
+        },
+        {
+            "file_name": "image_2.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 1,
+            "is_vid_train_frame": true
+        },
+        {
+            "file_name": "image_3.jpg",
+            "height": 256,
+            "width": 512,
+            "id": 2,
+            "is_vid_train_frame": true
+        }
+    ],
+    "annotations": [
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 1,
+            "image_id": 0,
+            "iscrowd": 0,
+            "ignore": 0
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 2,
+            "id": 2,
+            "image_id": 0,
+            "iscrowd": 1,
+            "ignore": 0
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 3,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 4,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 1
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                0,
+                10
+            ],
+            "area": 0.0,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 5,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                10,
+                10
+            ],
+            "area": 100.0,
+            "score": 1.0,
+            "category_id": 3,
+            "id": 6,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0
+        }
+    ],
+    "categories": [
+        {
+            "id": 1,
+            "name": "bus",
+            "supercategory": "none"
+        },
+        {
+            "id": 2,
+            "name": "car",
+            "supercategory": "none"
+        }
+    ],
+    "licenses": [],
+    "info": null
+}

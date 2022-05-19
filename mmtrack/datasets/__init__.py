@@ -2,6 +2,7 @@
 from .base_sot_dataset import BaseSOTDataset
 from .base_video_dataset import BaseVideoDataset
 from .got10k_dataset import GOT10kDataset
+from .imagenet_vid_dataset import ImagenetVIDDataset
 from .lasot_dataset import LaSOTDataset
 from .mot_challenge_dataset import MOTChallengeDataset
 from .reid_dataset import ReIDDataset
@@ -13,5 +14,6 @@ from .youtube_vis_dataset import YouTubeVISDataset
 __all__ = [
     'BaseVideoDataset', 'MOTChallengeDataset', 'BaseSOTDataset',
     'LaSOTDataset', 'ReIDDataset', 'GOT10kDataset', 'SOTCocoDataset',
-    'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset'
+    'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset',
+    'ImagenetVIDDataset'
 ]

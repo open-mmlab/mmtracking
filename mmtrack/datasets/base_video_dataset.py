@@ -192,8 +192,9 @@ class BaseVideoDataset(BaseDataset):
                 if min(width, height) >= self.filter_cfg.get('min_size', 32):
                     valid_data_indices.append(i)
 
+        set_valid_data_indices = set(self.valid_data_indices)
         valid_data_indices = [
-            id for id in valid_data_indices if id in self.valid_data_indices
+            id for id in valid_data_indices if id in set_valid_data_indices
         ]
         return valid_data_indices
 
@@ -260,7 +261,8 @@ class BaseVideoDataset(BaseDataset):
             data_infos = self.ref_img_sampling(idx, data_info,
                                                **self.ref_img_sampler)
             for _data in data_infos:
-                assert data_infos[0]['video_id'] == _data['video_id']
+                if 'video_id' in data_infos[0]:
+                    assert data_infos[0]['video_id'] == _data['video_id']
                 _data['is_video_data'] = self.load_as_video
             final_data_info = data_infos[0].copy()
             # Collate data_list scatters (list of dict to dict of list)
