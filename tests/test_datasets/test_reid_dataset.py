@@ -18,13 +18,13 @@ class TestReIDDataset(TestCase):
         cls.dataset = ReIDDataset(
             pipeline=[],
             ann_file=REID_ANN_FILE,
-        )
+            data_prefix=dict(img_path=None))
         cls.dataset_triplet = ReIDDataset(
             pipeline=[],
             triplet_sampler=dict(
                 num_ids=cls.num_ids, ins_per_id=cls.ins_per_id),
             ann_file=REID_ANN_FILE,
-        )
+            data_prefix=dict(img_path=None))
 
     def test_get_data_info(self):
         # id 0 has 21 objects
@@ -51,16 +51,16 @@ class TestReIDDataset(TestCase):
         for i in range(len(self.dataset)):
             results = self.dataset[i]
             assert isinstance(results, dict)  # no triplet -> dict
-            assert 'img_info' in results
+            assert 'img_path' in results
             assert 'gt_label' in results
         for i in range(len(self.dataset_triplet)):
+            num = self.num_ids * self.ins_per_id
             results = self.dataset_triplet[i]
-            assert isinstance(results, list)  # triplet -> list
-            assert len(results) == self.num_ids * self.ins_per_id
-            assert 'img_info' in results[0]
-            assert 'gt_label' in results[0]
-            assert results[0].keys() == results[1].keys()
-            for idx in range(len(results) - 1):
+            assert isinstance(results, dict)  # triplet -> dict
+            assert len(results['img_path']) == num
+            assert 'img_path' in results
+            assert 'gt_label' in results
+            for idx in range(num - 1):
                 if (idx + 1) % self.ins_per_id != 0:
-                    assert results[idx]['gt_label'] == \
-                           results[idx + 1]['gt_label']
+                    assert results['gt_label'][idx] == \
+                           results['gt_label'][idx + 1]

@@ -1,8 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from unittest import TestCase
+
 import numpy as np
 import torch
+from mmengine.data import LabelData
 
-from mmtrack.datasets.transforms import ConcatSameTypeFrames, PackTrackInputs
+from mmtrack.core import ReIDDataSample
+from mmtrack.datasets.transforms import (ConcatSameTypeFrames, PackReIDInputs,
+                                         PackTrackInputs)
 
 
 class TestConcatSameTypeFrames:
@@ -96,3 +101,42 @@ class TestPackTrackInputs:
 
         assert track_data_sample.gt_instances.bboxes.shape == (2, 4)
         assert track_data_sample.ref_gt_instances.bboxes.shape == (2, 5)
+
+
+class TestPackReIDInputs(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.results = dict(
+            img=np.random.randn(256, 128, 3),
+            gt_label=0,
+            img_path='',
+            ori_height=128,
+            ori_width=128,
+            img_shape=(256, 128),
+            scale=(128, 256),
+            scale_factor=(1., 2.),
+            flip=False,
+            flip_direction=None)
+        cls.pack_reid_inputs = PackReIDInputs()
+
+    def test_transform(self):
+        results = self.pack_reid_inputs(self.results)
+        self.assertIn('inputs', results)
+        self.assertIsInstance(results['inputs']['img'], torch.Tensor)
+        self.assertIn('data_sample', results)
+        data_sample = results['data_sample']
+        self.assertIsInstance(data_sample, ReIDDataSample)
+        self.assertIsInstance(data_sample.gt_label, LabelData)
+        self.assertEqual(data_sample.img_path, '')
+        self.assertEqual(data_sample.ori_shape, (128, 128))
+        self.assertEqual(data_sample.img_shape, (256, 128))
+        self.assertEqual(data_sample.scale, (128, 256))
+        self.assertEqual(data_sample.scale_factor, (1., 2.))
+        self.assertEqual(data_sample.flip, False)
+        self.assertIsNone(data_sample.flip_direction)
+
+    def test_repr(self):
+        self.assertEqual(
+            repr(self.pack_reid_inputs),
+            f'PackReIDInputs(meta_keys={self.pack_reid_inputs.meta_keys})')
