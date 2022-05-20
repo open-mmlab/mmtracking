@@ -17,12 +17,14 @@ class BaseVideoDataset(BaseDataset):
 
     Args:
         load_as_video (bool): Load data as videos or images Defaults to True.
+        key_img_sampler (dict): Configuration of sampling key images.
         ref_img_sampler (dict): Configuration of sampling reference images.
     """
     META = dict(CLASSES=None)
 
     def __init__(self,
                  load_as_video: bool = True,
+                 key_img_sampler: dict = dict(interval=1),
                  ref_img_sampler: dict = dict(
                      num_ref_imgs=2,
                      frame_range=9,
@@ -31,6 +33,7 @@ class BaseVideoDataset(BaseDataset):
                  *args,
                  **kwargs):
         self.load_as_video = load_as_video
+        self.key_img_sampler = key_img_sampler
         self.ref_img_sampler = ref_img_sampler
         super().__init__(*args, **kwargs)
 
@@ -81,6 +84,8 @@ class BaseVideoDataset(BaseDataset):
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
 
         data_list = []
+        valid_data_indices = []
+        data_id = 0
         vid_ids = coco.get_vid_ids()
         for vid_id in vid_ids:
             img_ids = coco.get_img_ids_from_vid(vid_id)
@@ -95,12 +100,16 @@ class BaseVideoDataset(BaseDataset):
                     img_ids=[img_id], cat_ids=self.cat_ids)
                 raw_ann_info = coco.load_anns(ann_ids)
 
+                if (self.key_img_sampler is not None) and (
+                        raw_img_info['frame_id'] %
+                        self.key_img_sampler.get('interval', 1) == 0):
+                    valid_data_indices.append(data_id)
                 # get data_info
                 parsed_data_info = self.parse_data_info(
                     dict(raw_img_info=raw_img_info, raw_ann_info=raw_ann_info))
                 data_list.append(parsed_data_info)
+                data_id += 1
 
-        valid_data_indices = list(range(len(data_list)))
         return data_list, valid_data_indices
 
     def parse_data_info(self, raw_data_info: dict) -> dict:
@@ -275,13 +284,13 @@ class BaseVideoDataset(BaseDataset):
         return self.pipeline(final_data_info)
 
     def ref_img_sampling(self,
-                         idx,
-                         data_info,
-                         frame_range,
-                         stride=1,
-                         num_ref_imgs=1,
-                         filter_key_img=True,
-                         method='uniform') -> List[dict]:
+                         idx: int,
+                         data_info: dict,
+                         frame_range: list,
+                         stride: int = 1,
+                         num_ref_imgs: int = 1,
+                         filter_key_img: bool = True,
+                         method: str = 'uniform') -> List[dict]:
         """Sampling reference frames in the same video for key frame.
 
         Args:
