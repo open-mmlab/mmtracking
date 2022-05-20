@@ -64,9 +64,9 @@ class LaSOTDataset(BaseSOTDataset):
             dict: The visibilities of each object in the video.
         """
         video_path = osp.dirname(self.get_data_info(video_idx)['video_path'])
-        full_occlusion_file = osp.join(self.data_prefix['img'], video_path,
-                                       'full_occlusion.txt')
-        out_of_view_file = osp.join(self.data_prefix['img'], video_path,
+        full_occlusion_file = osp.join(self.data_prefix['img_path'],
+                                       video_path, 'full_occlusion.txt')
+        out_of_view_file = osp.join(self.data_prefix['img_path'], video_path,
                                     'out_of_view.txt')
         full_occlusion = self._loadtxt(
             full_occlusion_file, dtype=bool, delimiter=',')

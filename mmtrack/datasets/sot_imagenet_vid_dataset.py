@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os.path as osp
 from typing import List
 
 import numpy as np
@@ -79,7 +80,9 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
         # In ImageNetVID dataset, frame_ids may not be continuous.
         for img_id in img_ids:
             frame_ids.append(self.coco.imgs[img_id]['frame_id'])
-            img_names.append(self.coco.imgs[img_id]['file_name'])
+            img_names.append(
+                osp.join(self.data_prefix['img_path'],
+                         self.coco.imgs[img_id]['file_name']))
         img_infos = dict(
             video_id=video_idx, frame_ids=frame_ids, img_paths=img_names)
         return img_infos

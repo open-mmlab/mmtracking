@@ -470,7 +470,7 @@ class PackTrackInputs(BaseTransform):
         data_sample.ignored_instances = ignore_instance_data
         setattr(data_sample, f'{self.ref_prefix}_gt_instances',
                 ref_instance_data)
-        setattr(data_sample, f'{self.ref_prefix}_ignore_instance_data',
+        setattr(data_sample, f'{self.ref_prefix}_ignored_instances',
                 ref_ignore_instance_data)
 
         # 3. Pack metainfo

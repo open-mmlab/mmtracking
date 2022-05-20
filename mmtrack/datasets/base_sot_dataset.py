@@ -89,7 +89,7 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
                 the bbox is in (x, y, w, h) format.
         """
         meta_video_info = self.get_data_info(video_idx)
-        bbox_path = osp.join(self.data_prefix['img'],
+        bbox_path = osp.join(self.data_prefix['img_path'],
                              meta_video_info['ann_path'])
         bboxes = self._loadtxt(bbox_path, dtype=float, delimiter=',')
         if len(bboxes.shape) == 1:
@@ -160,7 +160,8 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         framename_template = meta_video_info['framename_template']
         for frame_id in range(start_frame_id, end_frame_id + 1):
             img_paths.append(
-                osp.join(meta_video_info['video_path'],
+                osp.join(self.data_prefix['img_path'],
+                         meta_video_info['video_path'],
                          framename_template % frame_id))
         frame_ids = np.arange(self.get_len_per_video(video_idx))
 
@@ -227,6 +228,7 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         instance['bbox'] = self.test_memo.video_infos['bboxes'][frame_idx]
         instance['visible'] = self.test_memo.video_infos['visible'][frame_idx]
         instance['bbox_label'] = np.array([0], dtype=np.int32)
+        instance['ignore_flag'] = False
         results['instances'].append(instance)
 
         results = self.pipeline(results)

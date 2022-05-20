@@ -16,7 +16,7 @@ class TestLaSOTDataset(TestCase):
         cls.dataset = LaSOTDataset(
             data_root=SOT_DATA_PREFIX,
             ann_file='trackingnet/annotations/trackingnet_train_infos.txt',
-            data_prefix=dict(img='trackingnet'),
+            data_prefix=dict(img_path='trackingnet'),
             test_mode=False)
 
     def test_get_bboxes_from_video(self):
@@ -78,7 +78,7 @@ class TestGOT10kDataset(TestLaSOTDataset):
         cls.dataset = GOT10kDataset(
             data_root=SOT_DATA_PREFIX,
             ann_file='trackingnet/annotations/trackingnet_train_infos.txt',
-            data_prefix=dict(img='trackingnet'),
+            data_prefix=dict(img_path='trackingnet'),
             test_mode=False)
 
 
@@ -89,7 +89,7 @@ class TestTrackingNetDataset(TestLaSOTDataset):
         cls.dataset = TrackingNetDataset(
             data_root=SOT_DATA_PREFIX,
             ann_file='trackingnet/annotations/trackingnet_train_infos.txt',
-            data_prefix=dict(img='trackingnet'),
+            data_prefix=dict(img_path='trackingnet'),
             test_mode=False)
 
 
@@ -99,7 +99,7 @@ class TestSOTCocoDataset(TestLaSOTDataset):
     def setUpClass(cls):
         cls.dataset = SOTCocoDataset(
             ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
-            data_prefix=dict(img=osp.join(PREFIX, 'demo_cocovid_data')),
+            data_prefix=dict(img_path=PREFIX),
             test_mode=False)
 
     def test_get_len_per_video(self):
@@ -116,7 +116,7 @@ class TestSOTImageNetVIDDataset(TestLaSOTDataset):
     def setUpClass(cls):
         cls.dataset = SOTImageNetVIDDataset(
             ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
-            data_prefix=dict(img=osp.join(PREFIX, 'demo_cocovid_data')),
+            data_prefix=dict(img_path=PREFIX),
             test_mode=False)
 
     def test_get_len_per_video(self):

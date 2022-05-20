@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os.path as osp
 from typing import List
 
 import numpy as np
@@ -69,7 +70,10 @@ class SOTCocoDataset(BaseSOTDataset):
         """
         ann_id = self.get_data_info(video_idx)['ann_id']
         imgs = self.coco.loadImgs([self.coco.anns[ann_id]['image_id']])
-        img_names = [img['file_name'] for img in imgs]
+        img_names = [
+            osp.join(self.data_prefix['img_path'], img['file_name'])
+            for img in imgs
+        ]
         frame_ids = np.arange(self.get_len_per_video(video_idx))
         img_infos = dict(
             video_id=video_idx, frame_ids=frame_ids, img_paths=img_names)

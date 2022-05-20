@@ -67,10 +67,10 @@ class GOT10kDataset(BaseSOTDataset):
         """
         if not self.test_mode:
             video_path = self.get_data_info(video_idx)['video_path']
-            absense_info_path = osp.join(self.data_prefix['img'], video_path,
-                                         'absence.label')
-            cover_info_path = osp.join(self.data_prefix['img'], video_path,
-                                       'cover.label')
+            absense_info_path = osp.join(self.data_prefix['img_path'],
+                                         video_path, 'absence.label')
+            cover_info_path = osp.join(self.data_prefix['img_path'],
+                                       video_path, 'cover.label')
             absense_info = self._loadtxt(absense_info_path, dtype=bool)
             # The values of key 'cover' are
             # int numbers in range [0,8], which correspond to
@@ -116,6 +116,7 @@ class GOT10kDataset(BaseSOTDataset):
         instance['bbox'] = bbox
         instance['visible'] = True
         instance['bbox_label'] = np.array([0], dtype=np.int32)
+        instance['ignore_flag'] = False
         results['instances'].append(instance)
         results = self.pipeline(results)
         return results

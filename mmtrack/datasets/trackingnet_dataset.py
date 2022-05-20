@@ -109,6 +109,7 @@ class TrackingNetDataset(BaseSOTDataset):
         instance['bbox'] = bbox
         instance['visible'] = True
         instance['bbox_label'] = np.array([0], dtype=np.int32)
+        instance['ignore_flag'] = False
         results['instances'].append(instance)
         results = self.pipeline(results)
         return results
