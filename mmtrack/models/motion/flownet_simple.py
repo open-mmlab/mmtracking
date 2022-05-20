@@ -1,13 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import List, Union
+
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmcv.runner import BaseModule
 
-from ..builder import MOTION
+from mmtrack.registry import MODELS
 
 
-@MOTION.register_module()
+@MODELS.register_module()
 class FlowNetSimple(BaseModule):
     """The simple version of FlowNet.
 
@@ -40,12 +42,12 @@ class FlowNetSimple(BaseModule):
     }
 
     def __init__(self,
-                 img_scale_factor,
-                 out_indices=[2, 3, 4, 5, 6],
-                 flow_scale_factor=5.0,
-                 flow_img_norm_std=[255.0, 255.0, 255.0],
-                 flow_img_norm_mean=[0.411, 0.432, 0.450],
-                 init_cfg=None):
+                 img_scale_factor: float,
+                 out_indices: List[int] = [2, 3, 4, 5, 6],
+                 flow_scale_factor: float = 5.0,
+                 flow_img_norm_std: List[float] = [255.0, 255.0, 255.0],
+                 flow_img_norm_mean: List[float] = [0.411, 0.432, 0.450],
+                 init_cfg: Union[List[dict], dict] = None) -> None:
         super(FlowNetSimple, self).__init__(init_cfg)
         self.img_scale_factor = img_scale_factor
         self.out_indices = out_indices
@@ -146,44 +148,49 @@ class FlowNetSimple(BaseModule):
             conv_cfg=dict(type='Conv'),
             act_cfg=None)
 
-    def prepare_imgs(self, imgs, img_metas):
+    def prepare_imgs(self, imgs: torch.Tensor, metainfo: dict,
+                     preprocess_cfg: dict) -> torch.Tensor:
         """Preprocess images pairs for computing flow.
 
         Args:
             imgs (Tensor): of shape (N, 6, H, W) encoding input images pairs.
                 Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): list of image information dict where each
+            metainfo (dict): image information dict where each
                 dict has: 'img_shape', 'scale_factor', 'flip', and may also
                 contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+                `mmtrack/datasets/transforms/formatting.py:PackTrackInputs`.
+            preprocess_cfg (dict): Model preprocessing config
+                for processing the input data. it usually includes
+                ``to_rgb``, ``pad_size_divisor``, ``pad_value``,
+                ``mean`` and ``std``.
 
         Returns:
             Tensor: of shape (N, 6, H, W) encoding the input images pairs for
             FlowNetSimple.
         """
         if not hasattr(self, 'img_norm_mean'):
-            mean = img_metas[0]['img_norm_cfg']['mean']
-            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
+            mean = preprocess_cfg['mean']
+            mean = torch.tensor(mean).to(imgs)
             self.img_norm_mean = mean.repeat(2)[None, :, None, None]
 
             mean = self.flow_img_norm_mean
-            mean = torch.tensor(mean, dtype=imgs.dtype, device=imgs.device)
+            mean = torch.tensor(mean).to(imgs)
             self.flow_img_norm_mean = mean.repeat(2)[None, :, None, None]
 
         if not hasattr(self, 'img_norm_std'):
-            std = img_metas[0]['img_norm_cfg']['std']
-            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
+            std = preprocess_cfg['std']
+            std = torch.tensor(std).to(imgs)
             self.img_norm_std = std.repeat(2)[None, :, None, None]
 
             std = self.flow_img_norm_std
-            std = torch.tensor(std, dtype=imgs.dtype, device=imgs.device)
+            std = torch.tensor(std).to(imgs)
             self.flow_img_norm_std = std.repeat(2)[None, :, None, None]
 
         flow_img = imgs * self.img_norm_std + self.img_norm_mean
         flow_img = flow_img / self.flow_img_norm_std - self.flow_img_norm_mean
-        flow_img[:, :, img_metas[0]['img_shape'][0]:, :] = 0.0
-        flow_img[:, :, :, img_metas[0]['img_shape'][1]:] = 0.0
+        flow_img[:, :, metainfo['img_shape'][0]:, :] = 0.0
+        flow_img[:, :, :, metainfo['img_shape'][1]:] = 0.0
         flow_img = torch.nn.functional.interpolate(
             flow_img,
             scale_factor=self.img_scale_factor,
@@ -191,22 +198,27 @@ class FlowNetSimple(BaseModule):
             align_corners=False)
         return flow_img
 
-    def forward(self, imgs, img_metas):
+    def forward(self, imgs: torch.Tensor, metainfo: dict,
+                preprocess_cfg: dict) -> torch.Tensor:
         """Compute the flow of images pairs.
 
         Args:
             imgs (Tensor): of shape (N, 6, H, W) encoding input images pairs.
                 Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): list of image information dict where each
+            metainfo (dict): image information dict where each
                 dict has: 'img_shape', 'scale_factor', 'flip', and may also
                 contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+                `mmtrack/datasets/transforms/formatting.py:PackTrackInputs`.
+            preprocess_cfg (dict): Model preprocessing config
+                for processing the input data. it usually includes
+                ``to_rgb``, ``pad_size_divisor``, ``pad_value``,
+                ``mean`` and ``std``.
 
         Returns:
             Tensor: of shape (N, 2, H, W) encoding flow of images pairs.
         """
-        x = self.prepare_imgs(imgs, img_metas)
+        x = self.prepare_imgs(imgs, metainfo, preprocess_cfg)
         conv_outs = []
         for i, conv_name in enumerate(self.conv_layers, 1):
             conv_layer = getattr(self, conv_name)

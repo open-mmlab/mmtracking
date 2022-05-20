@@ -1,6 +1,15 @@
+# model settings
+preprocess_cfg = dict(
+    mean=[123.675, 116.28, 103.53],
+    std=[58.395, 57.12, 57.375],
+    to_rgb=True,
+    pad_size_divisor=32)
+norm_cfg = dict(type='BN', requires_grad=False)
 model = dict(
+    preprocess_cfg=preprocess_cfg,
     detector=dict(
-        type='FasterRCNN',
+        # TODO: change to mmdet.FasterRCNN when mmdet fix the bug
+        type='mmdet.TwoStageDetector',
         backbone=dict(
             type='ResNet',
             depth=50,
@@ -9,7 +18,7 @@ model = dict(
             strides=(1, 2, 2, 1),
             dilations=(1, 1, 1, 2),
             frozen_stages=1,
-            norm_cfg=dict(type='BN', requires_grad=True),
+            norm_cfg=norm_cfg,
             norm_eval=True,
             style='pytorch',
             init_cfg=dict(

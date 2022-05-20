@@ -1,4 +1,4 @@
-_base_ = ['./dff_faster_rcnn_r50_dc5_1x_imagenetvid.py']
+_base_ = ['./dff_faster_rcnn_r50_dc5_7e_imagenetvid.py']
 model = dict(
     detector=dict(
         backbone=dict(

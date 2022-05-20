@@ -2,7 +2,7 @@
 import torch
 
 
-def flow_warp_feats(x, flow):
+def flow_warp_feats(x: torch.Tensor, flow: torch.Tensor) -> torch.Tensor:
     """Use flow to warp feature map.
 
     Args:
@@ -12,13 +12,15 @@ def flow_warp_feats(x, flow):
     Returns:
         Tensor: The warpped feature map with shape (N, C, H_x, W_x).
     """
-    assert len(x.shape) == 4
-    assert len(flow.shape) == 4 and flow.shape[1] == 2
+    assert x.dim() == 4
+    assert flow.dim() == 4 and flow.size(1) == 2
     # 1. resize the resolution of flow to be the same as x.
-    scale_factor = float(x.shape[-1]) / flow.shape[-1]
+    scale_factor_w = float(x.shape[-1]) / flow.shape[-1]
+    scale_factor_h = float(x.shape[-2]) / flow.shape[-2]
     flow = torch.nn.functional.interpolate(
-        flow, scale_factor=scale_factor, mode='bilinear', align_corners=False)
-    flow = flow * scale_factor
+        flow, size=x.shape[-2:], mode='bilinear', align_corners=False)
+    flow[:, 0] = flow[:, 0] * scale_factor_w
+    flow[:, 1] = flow[:, 1] * scale_factor_h
 
     # 2. compute the flow_field (grid in the code) used to warp features.
     H, W = x.shape[-2:]
@@ -31,8 +33,8 @@ def flow_warp_feats(x, flow):
     grid = torch.cat((w_grid, h_grid), dim=1)
     # [N, 2, H, W]
     grid = grid + flow
-    grid[:, 0] = grid[:, 0] / W * 2 - 1
-    grid[:, 1] = grid[:, 1] / H * 2 - 1
+    grid[:, 0] = grid[:, 0] / (W - 1) * 2 - 1
+    grid[:, 1] = grid[:, 1] / (H - 1) * 2 - 1
     # [N, H, W, 2]
     grid = grid.permute(0, 2, 3, 1)
 
