@@ -117,7 +117,7 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
             gt_bboxes, dtype=np.float32).reshape(-1, 4)
         # The only difference is that we record the type of `gt_ignore_flags`
         # as np.int32.
-        results['gt_ignore_flags'] = np.array(gt_ignore_flags, dtype=np.int32)
+        results['gt_ignore_flags'] = np.array(gt_ignore_flags, dtype=np.bool)
 
         if self.denorm_bbox:
             bbox_num = results['gt_bboxes'].shape[0]

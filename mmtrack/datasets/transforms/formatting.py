@@ -1,9 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence, Tuple, Union
 
 import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform, to_tensor
+from mmdet.core.mask import BitmapMasks
 from mmengine.data import InstanceData
 
 from mmtrack.core import ReIDDataSample, TrackDataSample
@@ -81,10 +82,10 @@ class ConcatSameTypeFrames(BaseTransform):
                  num_key_frames: int,
                  ref_prefix: str = 'ref',
                  meta_keys: Optional[dict] = None,
-                 default_meta_keys: dict = ('img_id', 'img_path', 'ori_shape',
-                                            'img_shape', 'scale_factor',
-                                            'flip', 'flip_direction',
-                                            'frame_id', 'is_video_data')):
+                 default_meta_keys: tuple = ('img_id', 'img_path', 'ori_shape',
+                                             'img_shape', 'scale_factor',
+                                             'flip', 'flip_direction',
+                                             'frame_id', 'is_video_data')):
         self.num_key_frames = num_key_frames
         self.ref_prefix = ref_prefix
         self.meta_keys = default_meta_keys
@@ -225,15 +226,23 @@ class PackTrackInputs(BaseTransform):
     """Pack the inputs data for the video object detection / multi object
     tracking / single object tracking / video instance segmentation.
 
+    For each value (``List`` type) in the input dict, we concat the first
+    `num_key_frames` elements to the first dict with a new key, and the rest
+    of elements are concated to the second dict with a new key.
+    All the information of images are packed to ``inputs``.
+    All the information except images are packed to ``data_samples``.
+
     Args:
         ref_prefix (str): The prefix of key added to the 'reference' frames.
             Defaults to 'ref'.
+        num_key_frames (int): The number of key frames.
+        num_template_frames (optional, int): The number of template frames. It
+            is only used in SOT.
         meta_keys (Sequence[str]): Meta keys to be collected in
             ``data_sample.metainfo``. Defaults to None.
-        default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
-            'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
-            'scale_factor', 'flip', 'flip_direction', 'img_norm_cfg',
-            'frame_id', 'is_video_data').
+        default_meta_keys (tuple): Default meta keys. Defaults to ('img_id',
+            'img_path', 'ori_shape', 'img_shape', 'scale_factor',
+            'flip', 'flip_direction', 'frame_id', 'is_video_data').
     """
     mapping_table = {
         'gt_bboxes': 'bboxes',
@@ -244,12 +253,19 @@ class PackTrackInputs(BaseTransform):
 
     def __init__(self,
                  ref_prefix: str = 'ref',
+                 num_key_frames: int = 1,
+                 num_template_frames: Optional[int] = None,
                  meta_keys: Optional[dict] = None,
-                 default_meta_keys: dict = ('img_id', 'img_path', 'ori_shape',
-                                            'img_shape', 'scale_factor',
-                                            'flip', 'flip_direction',
-                                            'frame_id', 'is_video_data')):
+                 default_meta_keys: tuple = ('img_id', 'img_path', 'ori_shape',
+                                             'img_shape', 'scale_factor',
+                                             'flip', 'flip_direction',
+                                             'frame_id', 'is_video_data')):
         self.ref_prefix = ref_prefix
+        # If ``num_template_frames`` is not None, this class is used in SOT.
+        # In this case, we assign the value of ``num_template_frames`` to
+        # ``self.num_key_frames`` for the consistency in the processing.
+        self.num_key_frames = num_key_frames if num_template_frames is None \
+            else num_template_frames
         self.meta_keys = default_meta_keys
         if meta_keys is not None:
             if isinstance(meta_keys, str):
@@ -258,6 +274,74 @@ class PackTrackInputs(BaseTransform):
                 assert isinstance(meta_keys, tuple), \
                     'meta_keys must be str or tuple'
             self.meta_keys += meta_keys
+
+    def _cat_same_type_data(
+            self,
+            data: Union[List, int],
+            return_ndarray: bool = True,
+            axis: int = 0,
+            stack: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+        """Concatenate data with the same type.
+
+        Args:
+            data (Union[List, int]): Input data.
+            return_ndarray (bool, optional): Whether to return ``np.ndarray``.
+                Defaults to True.
+            axis (int, optional): The axis that concatenating along. Defaults
+                to 0.
+            stack (bool, optional): Whether to stack all the data. If not,
+                using the concatenating operation. Defaults to False.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: The first element is the
+                concatenated data of key frames, and the second element is the
+                concatenated data of reference frames.
+        """
+        if not isinstance(data, list):
+            data = [data]
+        key_data = data[:self.num_key_frames]
+        ref_data = data[self.num_key_frames:] if len(
+            data) > self.num_key_frames else None
+
+        if return_ndarray:
+            if stack:
+                key_data = np.stack(key_data, axis=axis)
+                if ref_data is not None:
+                    ref_data = np.stack(ref_data, axis=axis)
+            else:
+                key_data = np.concatenate(key_data, axis=axis)
+                if ref_data is not None:
+                    ref_data = np.concatenate(ref_data, axis=axis)
+
+        return key_data, ref_data
+
+    def _get_img_idx_map(self, anns: List) -> Tuple[np.ndarray, np.ndarray]:
+        """Get the index of images for the annotations. The multiple instances
+        in one image need to be denoted the image index when concatenating
+        multiple images.
+
+        Args:
+            anns (List): Input annotations.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: The first element is the
+                concatenated indexes of key frames, and the second element is
+                the concatenated indexes of reference frames.
+        """
+        if not isinstance(anns, list):
+            anns = [anns]
+        key_img_idx_map = []
+        for img_idx, ann in enumerate(anns[:self.num_key_frames]):
+            key_img_idx_map.extend([img_idx] * len(ann))
+        key_img_idx_map = np.array(key_img_idx_map, dtype=np.int32)
+        if len(anns) > self.num_key_frames:
+            ref_img_idx_map = []
+            for img_idx, ann in enumerate(anns[self.num_key_frames:]):
+                ref_img_idx_map.extend([img_idx] * len(ann))
+            ref_img_idx_map = np.array(ref_img_idx_map, dtype=np.int32)
+        else:
+            ref_img_idx_map = None
+        return key_img_idx_map, ref_img_idx_map
 
     def transform(self, results: dict) -> dict:
         """Method to pack the input data.
@@ -268,127 +352,191 @@ class PackTrackInputs(BaseTransform):
         Returns:
             dict:
 
-            - 'inputs' (obj:`torch.Tensor`): The forward data of models.
+            - 'inputs' (dict[Tensor]): The forward data of models.
             - 'data_sample' (obj:`TrackDataSample`): The annotation info of the
                 sample.
         """
         packed_results = dict()
         packed_results['inputs'] = dict()
 
-        # 1. Pack image of key frames
+        # 1. Pack images
         if 'img' in results:
-            img = results['img']
-            if len(img.shape) <= 3:
-                if len(img.shape) < 3:
-                    img = np.expand_dims(img, -1)
-                # (H, W, C) -> (C, H, W)
-                img = np.ascontiguousarray(img.transpose(2, 0, 1))
-            else:
-                # (H, W, C, N) -> (N, C, H, W)
-                img = np.ascontiguousarray(img.transpose(3, 2, 0, 1))
-            packed_results['inputs']['img'] = to_tensor(img)
+            imgs = results['img']
+            key_imgs, ref_imgs = self._cat_same_type_data(imgs, stack=True)
+            key_imgs = key_imgs.transpose(0, 3, 1, 2)
+            packed_results['inputs']['img'] = to_tensor(key_imgs)
 
-        # 2. Pack image of reference frames.
-        if f'{self.ref_prefix}_img' in results:
-            ref_img = results[f'{self.ref_prefix}_img']
-            ref_img = np.ascontiguousarray(ref_img.transpose(3, 2, 0, 1))
-            packed_results['inputs'][f'{self.ref_prefix}_img'] = to_tensor(
-                ref_img)
+            if ref_imgs is not None:
+                ref_imgs = ref_imgs.transpose(0, 3, 1, 2)
+                packed_results['inputs'][f'{self.ref_prefix}_img'] = to_tensor(
+                    ref_imgs)
 
         data_sample = TrackDataSample()
 
-        # 3. Pack data of key frames
+        # 2. Pack InstanceData
         if 'gt_ignore_flags' in results:
-            vaild_idx = results['gt_ignore_flags'] == 0
-            ignore_idx = results['gt_ignore_flags'] == 1
+            gt_ignore_flags = results['gt_ignore_flags']
+            (key_gt_ignore_flags,
+             ref_gt_ignore_flags) = self._cat_same_type_data(gt_ignore_flags)
+            key_valid_idx = key_gt_ignore_flags == 0
+            if ref_gt_ignore_flags is not None:
+                ref_valid_idx = ref_gt_ignore_flags == 0
 
         instance_data = InstanceData()
         ignore_instance_data = InstanceData()
+        ref_instance_data = InstanceData()
+        ref_ignore_instance_data = InstanceData()
+
+        # Flag that whether have recorded the image index
+        img_idx_map_flag = False
         for key in self.mapping_table.keys():
             if key not in results:
                 continue
             if key == 'gt_masks':
+                gt_masks = results[key]
+                if not isinstance(gt_masks, list):
+                    gt_masks = [gt_masks]
+                gt_masks_ndarray = [mask.to_ndarray() for mask in gt_masks]
+                key_gt_masks, ref_gt_masks = self._cat_same_type_data(
+                    gt_masks_ndarray)
+
+                mapped_key = self.mapping_table[key]
                 if 'gt_ignore_flags' in results:
-                    instance_data[
-                        self.mapping_table[key]] = results[key][vaild_idx]
-                    ignore_instance_data[
-                        self.mapping_table[key]] = results[key][ignore_idx]
+                    instance_data[mapped_key] = BitmapMasks(
+                        key_gt_masks[key_valid_idx], *key_gt_masks.shape[-2:])
+                    ignore_instance_data[mapped_key] = BitmapMasks(
+                        key_gt_masks[~key_valid_idx], *key_gt_masks.shape[-2:])
+
+                    if ref_gt_masks is not None:
+                        ref_instance_data[mapped_key] = BitmapMasks(
+                            ref_gt_masks[ref_valid_idx],
+                            *key_gt_masks.shape[-2:])
+                        ref_ignore_instance_data[mapped_key] = BitmapMasks(
+                            ref_gt_masks[~ref_valid_idx],
+                            *key_gt_masks.shape[-2:])
                 else:
-                    instance_data[self.mapping_table[key]] = results[key]
+                    instance_data[mapped_key] = BitmapMasks(
+                        key_gt_masks, *key_gt_masks.shape[-2:])
+                    if ref_gt_masks is not None:
+                        ref_instance_data[mapped_key] = BitmapMasks(
+                            ref_gt_masks, *ref_gt_masks.shape[-2:])
+
             else:
+                anns = results[key]
+                key_anns, ref_anns = self._cat_same_type_data(anns)
+
+                if not img_idx_map_flag:
+                    # The multiple instances in one image need to be
+                    # denoted the image index when concatenating multiple
+                    # images.
+                    key_img_idx_map, ref_img_idx_map = self._get_img_idx_map(
+                        anns)
+                    img_idx_map_flag = True
+
+                mapped_key = self.mapping_table[key]
                 if 'gt_ignore_flags' in results:
-                    instance_data[self.mapping_table[key]] = to_tensor(
-                        results[key][vaild_idx])
-                    ignore_instance_data[self.mapping_table[key]] = to_tensor(
-                        results[key][ignore_idx])
+                    instance_data[mapped_key] = to_tensor(
+                        key_anns[key_valid_idx])
+                    ignore_instance_data[mapped_key] = to_tensor(
+                        key_anns[~key_valid_idx])
+                    instance_data['map_instances_to_img_idx'] = to_tensor(
+                        key_img_idx_map[key_valid_idx])
+                    ignore_instance_data[
+                        'map_instances_to_img_idx'] = to_tensor(
+                            key_img_idx_map[~key_valid_idx])
+
+                    if ref_anns is not None:
+                        ref_instance_data[mapped_key] = to_tensor(
+                            ref_anns[ref_valid_idx])
+                        ref_ignore_instance_data[mapped_key] = to_tensor(
+                            ref_anns[~ref_valid_idx])
+                        ref_instance_data[
+                            'map_instances_to_img_idx'] = to_tensor(
+                                ref_img_idx_map[ref_valid_idx])
+                        ref_ignore_instance_data[
+                            'map_instances_to_img_idx'] = to_tensor(
+                                ref_img_idx_map[~ref_valid_idx])
                 else:
-                    instance_data[self.mapping_table[key]] = to_tensor(
-                        results[key])
+                    instance_data[mapped_key] = to_tensor(key_anns)
+                    instance_data['map_instances_to_img_idx'] = to_tensor(
+                        key_img_idx_map)
+                    if ref_anns is not None:
+                        ref_instance_data[mapped_key] = to_tensor(ref_anns)
+                        ref_instance_data[
+                            'map_instances_to_img_idx'] = to_tensor(
+                                ref_img_idx_map)
+
         data_sample.gt_instances = instance_data
         data_sample.ignored_instances = ignore_instance_data
-
-        if 'proposals' in results:
-            data_sample.proposals = InstanceData('bboxes',
-                                                 results['proposals'])
-
-        # 4. Pack data of reference frames
-        if f'{self.ref_prefix}_gt_ignore_flags' in results:
-            vaild_idx = results[f'{self.ref_prefix}_gt_ignore_flags'][:,
-                                                                      1] == 0
-            ignore_idx = results[f'{self.ref_prefix}_gt_ignore_flags'][:,
-                                                                       1] == 1
-
-        ref_instance_data = InstanceData()
-        ref_ignore_instance_data = InstanceData()
-        for key in self.mapping_table.keys():
-            ref_key = f'{self.ref_prefix}_{key}'
-            if ref_key not in results:
-                continue
-            if ref_key == f'{self.ref_prefix}_gt_masks':
-                if f'{self.ref_prefix}_gt_ignore_flags' in results:
-                    ref_instance_data[
-                        self.mapping_table[key]] = results[ref_key][vaild_idx]
-                    ref_ignore_instance_data[
-                        self.mapping_table[key]] = results[ref_key][ignore_idx]
-                else:
-                    ref_instance_data[
-                        self.mapping_table[key]] = results[ref_key]
-            else:
-                if f'{self.ref_prefix}_gt_ignore_flags' in results:
-                    ref_instance_data[self.mapping_table[key]] = to_tensor(
-                        results[ref_key][vaild_idx])
-                    ref_ignore_instance_data[
-                        self.mapping_table[key]] = to_tensor(
-                            results[ref_key][ignore_idx])
-                else:
-                    ref_instance_data[self.mapping_table[key]] = to_tensor(
-                        results[ref_key])
         setattr(data_sample, f'{self.ref_prefix}_gt_instances',
                 ref_instance_data)
         setattr(data_sample, f'{self.ref_prefix}_ignore_instance_data',
                 ref_ignore_instance_data)
 
-        if f'{self.ref_prefix}_proposals' in results:
-            setattr(
-                data_sample, f'{self.ref_prefix}_proposals',
-                InstanceData('bboxes',
-                             results[f'{self.ref_prefix}_proposals']))
-
-        # 5. set metainfo
-        img_meta = {}
+        # 3. Pack metainfo
+        new_img_metas = {}
         for key in self.meta_keys:
             # TODO: Wait until mmcv is modified and deleted.
             if (key == 'ori_shape' and 'ori_height' in results
                     and 'ori_width' in results):
-                img_shape = (results['ori_height'], results['ori_width'])
-                img_meta[key] = img_shape
+                ori_height = results['ori_height']
+                ori_width = results['ori_width']
+                key_ori_height, ref_ori_height = self._cat_same_type_data(
+                    ori_height, return_ndarray=False)
+                key_ori_width, ref_ori_width = self._cat_same_type_data(
+                    ori_width, return_ndarray=False)
+                assert len(key_ori_height) == len(key_ori_width)
+                # To compatible the interface of ``MMDet``, we don't use
+                # the fotmat of list when the length of meta information is
+                # equal to 1.
+                if len(key_ori_height) > 1:
+                    new_img_metas[key] = [
+                        (h, w) for h, w in zip(key_ori_height, key_ori_width)
+                    ]
+                else:
+                    new_img_metas[key] = (key_ori_height[0], key_ori_width[0])
+                if ref_ori_height is not None and ref_ori_width is not None:
+                    assert len(ref_ori_height) == len(ref_ori_width)
+                    if len(ref_ori_height) > 1:
+                        new_img_metas[f'{self.ref_prefix}_{key}'] = [
+                            (h, w)
+                            for h, w in zip(ref_ori_height, ref_ori_width)
+                        ]
+                    else:
+                        new_img_metas[f'{self.ref_prefix}_{key}'] = (
+                            ref_ori_height[0], ref_ori_width[0])
             else:
                 if key not in results:
                     continue
-                img_meta[key] = results[key]
-                img_meta[f'{self.ref_prefix}_{key}'] = results[
-                    f'{self.ref_prefix}_{key}']
-        data_sample.set_metainfo(img_meta)
+                img_metas = results[key]
+                key_img_metas, ref_img_metas = self._cat_same_type_data(
+                    img_metas, return_ndarray=False)
+                # To compatible the interface of ``MMDet``, we don't use
+                # the fotmat of list when the length of meta information is
+                # equal to 1.
+                if len(key_img_metas) > 1:
+                    new_img_metas[key] = key_img_metas
+                else:
+                    new_img_metas[key] = key_img_metas[0]
+                if ref_img_metas is not None:
+                    if len(ref_img_metas) > 1:
+                        new_img_metas[
+                            f'{self.ref_prefix}_{key}'] = ref_img_metas
+                    else:
+                        new_img_metas[
+                            f'{self.ref_prefix}_{key}'] = ref_img_metas[0]
+
+        data_sample.set_metainfo(new_img_metas)
+
+        # 4. Pack some additional properties.
+        if 'padding_mask' in results:
+            # This property is used in ``STARK`` method in SOT.
+            padding_mask = results['padding_mask']
+            key_padding_mask, ref_padding_mask = self._cat_same_type_data(
+                padding_mask, stack=True)
+            data_sample.padding_mask = to_tensor(key_padding_mask)
+            if ref_padding_mask is not None:
+                data_sample.ref_padding_mask = to_tensor(ref_padding_mask)
 
         packed_results['data_sample'] = data_sample
         return packed_results
