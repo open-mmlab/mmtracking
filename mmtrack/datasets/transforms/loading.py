@@ -67,8 +67,8 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
 
     Required Keys:
 
-    - height
-    - width
+    - height (optional)
+    - width (optional)
     - instances
 
       - bbox (optional)
@@ -122,6 +122,7 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
         if self.denorm_bbox:
             bbox_num = results['gt_bboxes'].shape[0]
             if bbox_num != 0:
+                assert 'width' in results and 'height' in results
                 results['gt_bboxes'][:, 0::2] *= results['width']
                 results['gt_bboxes'][:, 1::2] *= results['height']
 

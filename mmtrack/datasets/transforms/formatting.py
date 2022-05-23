@@ -168,9 +168,9 @@ class ConcatSameTypeFrames(BaseTransform):
                 'gt_instance_ids', 'padding_mask'.
 
         Returns:
-            list[dict]: The first dict of outputs concats the dicts of 'key'
-                information. The second dict of outputs concats the dicts of
-                'reference' information.
+            dict: The elements without prefix ``self.ref_prefix`` concats the
+                information of key frame. The elements with prefix
+                ``self.ref_prefix`` concats the information of reference frame.
         """
         assert (isinstance(results, dict)), 'results must be dict'
         # 1. Convert dict of list to list of dict

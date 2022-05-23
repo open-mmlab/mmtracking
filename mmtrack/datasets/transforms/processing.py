@@ -1,9 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import random
+from collections import defaultdict
+from typing import List, Optional
 
 import numpy as np
+from mmcv.transforms import BaseTransform
 from mmcv.utils import print_log
 from mmdet.datasets.builder import PIPELINES
+
+from mmtrack.registry import TRANSFORMS
 
 
 @PIPELINES.register_module()
@@ -261,23 +266,51 @@ class TridentSampling(object):
         return results
 
 
-@PIPELINES.register_module()
-class PairSampling(object):
+@TRANSFORMS.register_module()
+class PairSampling(BaseTransform):
     """Pair-style sampling. It's used in `SiameseRPN++
 
     <https://arxiv.org/abs/1812.11703.>`_.
 
+    The input in this transform is a list of dict. In each dict:
+
+    Required Keys:
+
+    - instances
+
+      - bboxes
+      - frame_ids
+      - video_id
+      - instance_id (optional)
+      - mask (optional)
+      - img_paths
+
+    - seg_map_path (optional)
+
+    Added Keys:
+
+    - instances
+
+      - bbox (np.float32)
+      - bbox_label (np.int32)
+      - frame_id (np.int32)
+      - ignore_flag (np.bool)
+      - img_path (str)
+
     Args:
-        frame_range (List(int) | int): the sampling range of search
+        frame_range (List(int) | int): The sampling range of search
             frames in the same video for template frame. Defaults to 5.
-        pos_prob (float, optional):  the probility of sampling positive
+        pos_prob (float, optional):  The probility of sampling positive
             sample pairs. Defaults to 0.8.
-        filter_template_img (bool, optional): if False, the template image will
+        filter_template_img (bool, optional): If False, the template image will
             be in the sampling search candidates, otherwise, it is exclude.
             Defaults to False.
     """
 
-    def __init__(self, frame_range=5, pos_prob=0.8, filter_template_img=False):
+    def __init__(self,
+                 frame_range: int = 5,
+                 pos_prob: float = 0.8,
+                 filter_template_img: bool = False):
         assert pos_prob >= 0.0 and pos_prob <= 1.0
         if isinstance(frame_range, int):
             assert frame_range >= 0, 'frame_range can not be a negative value.'
@@ -293,52 +326,52 @@ class PairSampling(object):
         self.pos_prob = pos_prob
         self.filter_template_img = filter_template_img
 
-    def prepare_data(self, video_info, sampled_inds, is_positive_pairs=False):
+    def prepare_data(self,
+                     video_info: dict,
+                     sampled_inds: List[int],
+                     is_positive_pairs: bool = False,
+                     results: Optional[dict] = None) -> List[dict]:
         """Prepare sampled training data according to the sampled index.
 
         Args:
             video_info (dict): the video information. It contains the keys:
-                ['bboxes','bboxes_isvalid','filename','frame_ids',
+                ['bboxes','bboxes_isvalid','img_paths','frame_ids',
                 'video_id','visible'].
             sampled_inds (list[int]): the sampled frame indexes.
             is_positive_pairs (bool, optional): whether it's the positive
                 pairs. Defaults to False.
+            results (dict[list], optional): The prepared results which need to
+                be updated.
 
         Returns:
             List[dict]: contains the information of sampled data.
         """
-        extra_infos = {}
-        for key, info in video_info.items():
-            if key in [
-                    'bbox_fields', 'mask_fields', 'seg_fields', 'img_prefix'
-            ]:
-                extra_infos[key] = info
-
-        bboxes = video_info['bboxes']
-        results = []
+        if results is None:
+            results = defaultdict(list)
+        assert isinstance(results, dict)
         for frame_ind in sampled_inds:
-            ann_info = dict(bboxes=np.expand_dims(bboxes[frame_ind], axis=0))
-            img_info = dict(
-                filename=video_info['filename'][frame_ind],
-                frame_id=video_info['frame_ids'][frame_ind],
-                video_id=video_info['video_id'])
-            result = dict(
-                img_info=img_info,
-                ann_info=ann_info,
-                is_positive_pairs=is_positive_pairs,
-                **extra_infos)
-            results.append(result)
+            results['img_path'].append(video_info['img_paths'][frame_ind])
+            results['frame_id'].append(video_info['frame_ids'][frame_ind])
+            results['video_id'].append(video_info['video_id'])
+            instance = [
+                dict(
+                    bbox=video_info['bboxes'][frame_ind],
+                    bbox_label=np.array(is_positive_pairs, dtype=np.int32),
+                    ignore_flag=False)
+            ]
+            results['instances'].append(instance)
         return results
 
-    def __call__(self, pair_video_infos):
+    def transform(self, pair_video_infos: List[dict]) -> dict:
         """
         Args:
-            pair_video_infos (list[dict]): contains two video infos. Each video
-                info contains the keys: ['bboxes','bboxes_isvalid','filename',
-                'frame_ids','video_id','visible'].
+            pair_video_infos (list[dict]): Containing the information of two
+                videos. Each video information contains the keys:
+                ['bboxes','bboxes_isvalid', 'img_paths', 'frame_ids',
+                'video_id','visible'].
 
         Returns:
-            List[dict]: contains the information of sampled data.
+            dict: contains the information of sampled data.
         """
         video_info, video_info_another = pair_video_infos
         if len(video_info['frame_ids']) > 1 and len(
@@ -363,10 +396,11 @@ class PairSampling(object):
                     len(video_info_another['frame_ids']))
                 results = self.prepare_data(
                     video_info, [template_frame_ind], is_positive_pairs=False)
-                results.extend(
-                    self.prepare_data(
-                        video_info_another, [search_frame_ind],
-                        is_positive_pairs=False))
+                results = self.prepare_data(
+                    video_info_another, [search_frame_ind],
+                    is_positive_pairs=False,
+                    results=results)
+
         else:
             if self.pos_prob > np.random.random():
                 results = self.prepare_data(
@@ -374,10 +408,19 @@ class PairSampling(object):
             else:
                 results = self.prepare_data(
                     video_info, [0], is_positive_pairs=False)
-                results.extend(
-                    self.prepare_data(
-                        video_info_another, [0], is_positive_pairs=False))
+                results = self.prepare_data(
+                    video_info_another, [0],
+                    is_positive_pairs=False,
+                    results=results)
+
         return results
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'frame_range={self.frame_range}, '
+        repr_str += f'pos_prob={self.pos_prob}, '
+        repr_str += f'filter_template_img={self.filter_template_img})'
+        return repr_str
 
 
 @PIPELINES.register_module()
