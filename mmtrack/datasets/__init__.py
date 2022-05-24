@@ -6,6 +6,7 @@ from .imagenet_vid_dataset import ImagenetVIDDataset
 from .lasot_dataset import LaSOTDataset
 from .mot_challenge_dataset import MOTChallengeDataset
 from .reid_dataset import ReIDDataset
+from .samplers import *  # noqa: F401,F403
 from .sot_coco_dataset import SOTCocoDataset
 from .sot_imagenet_vid_dataset import SOTImageNetVIDDataset
 from .trackingnet_dataset import TrackingNetDataset

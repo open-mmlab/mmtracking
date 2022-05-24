@@ -1,7 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .quota_sampler import DistributedQuotaSampler
-from .video_sampler import DistributedVideoSampler, SOTVideoSampler
+from .video_sampler import VideoSampler
 
-__all__ = [
-    'DistributedVideoSampler', 'SOTVideoSampler', 'DistributedQuotaSampler'
-]
+__all__ = ['VideoSampler']
