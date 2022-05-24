@@ -1,10 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from mmcv.parallel import is_module_wrapper
-from mmcv.runner.hooks import HOOKS
 from mmdet.core import YOLOXModeSwitchHook as _YOLOXModeSwitchHook
+from mmengine.model import is_model_wrapper
+
+from mmtrack.registry import HOOKS
 
 
-@HOOKS.register_module(force=True)
+@HOOKS.register_module()
 class YOLOXModeSwitchHook(_YOLOXModeSwitchHook):
     """Switch the mode of YOLOX during training.
 
@@ -21,9 +22,10 @@ class YOLOXModeSwitchHook(_YOLOXModeSwitchHook):
     def before_train_epoch(self, runner):
         """Close mosaic and mixup augmentation and switches to use L1 loss."""
         epoch = runner.epoch
-        train_loader = runner.data_loader
+        train_loader = runner.train_dataloader
         model = runner.model
-        if is_module_wrapper(model):
+        # TODO: refactor after mmengine using model wrapper
+        if is_model_wrapper(model):
             model = model.module
         if (epoch + 1) == runner.max_epochs - self.num_last_epochs:
             runner.logger.info('No mosaic and mixup aug now!')
