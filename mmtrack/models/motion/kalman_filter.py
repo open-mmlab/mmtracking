@@ -1,11 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Tuple
+
 import numpy as np
 import scipy.linalg
+import torch
 
-from ..builder import MOTION
+from mmtrack.registry import MODELS
 
 
-@MOTION.register_module()
+@MODELS.register_module()
 class KalmanFilter(object):
     """A simple Kalman filter for tracking bounding boxes in image space.
 
@@ -23,7 +26,7 @@ class KalmanFilter(object):
         9: 16.919
     }
 
-    def __init__(self, center_only=False):
+    def __init__(self, center_only: bool = False):
         self.center_only = center_only
         if self.center_only:
             self.gating_threshold = self.chi2inv95[2]
@@ -44,7 +47,7 @@ class KalmanFilter(object):
         self._std_weight_position = 1. / 20
         self._std_weight_velocity = 1. / 160
 
-    def initiate(self, measurement):
+    def initiate(self, measurement: np.array) -> Tuple[np.array, np.array]:
         """Create track from unassociated measurement.
 
         Args:
@@ -71,7 +74,8 @@ class KalmanFilter(object):
         covariance = np.diag(np.square(std))
         return mean, covariance
 
-    def predict(self, mean, covariance):
+    def predict(self, mean: np.array,
+                covariance: np.array) -> Tuple[np.array, np.array]:
         """Run Kalman filter prediction step.
 
         Args:
@@ -104,7 +108,8 @@ class KalmanFilter(object):
 
         return mean, covariance
 
-    def project(self, mean, covariance):
+    def project(self, mean: np.array,
+                covariance: np.array) -> Tuple[np.array, np.array]:
         """Project state distribution to measurement space.
 
         Args:
@@ -128,7 +133,8 @@ class KalmanFilter(object):
             (self._update_mat, covariance, self._update_mat.T))
         return mean, covariance + innovation_cov
 
-    def update(self, mean, covariance, measurement):
+    def update(self, mean: np.array, covariance: np.array,
+               measurement: np.array) -> Tuple[np.array, np.array]:
         """Run Kalman filter correction step.
 
         Args:
@@ -160,10 +166,10 @@ class KalmanFilter(object):
         return new_mean, new_covariance
 
     def gating_distance(self,
-                        mean,
-                        covariance,
-                        measurements,
-                        only_position=False):
+                        mean: np.array,
+                        covariance: np.array,
+                        measurements: np.array,
+                        only_position: bool = False) -> np.array:
         """Compute gating distance between state distribution and measurements.
 
         A suitable distance threshold can be obtained from `chi2inv95`. If
@@ -204,7 +210,8 @@ class KalmanFilter(object):
         squared_maha = np.sum(z * z, axis=0)
         return squared_maha
 
-    def track(self, tracks, bboxes):
+    def track(self, tracks: dict,
+              bboxes: torch.Tensor) -> Tuple[dict, np.array]:
         """Track forward.
 
         Args:
@@ -212,7 +219,7 @@ class KalmanFilter(object):
             bboxes (Tensor): Detected bounding boxes.
 
         Returns:
-            (dict[int:dict], Tensor): Updated tracks and bboxes.
+            (dict[int:dict], ndarray): Updated tracks and bboxes.
         """
         costs = []
         for id, track in tracks.items():

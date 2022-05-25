@@ -66,7 +66,7 @@ def bbox_xyxy_to_x1y1wh(bbox):
     return torch.cat(bbox_new, dim=-1)
 
 
-def bbox_xyxy_to_cxcyah(bboxes):
+def bbox_xyxy_to_cxcyah(bboxes: torch.Tensor) -> torch.Tensor:
     """Convert bbox coordinates from (x1, y1, x2, y2) to (cx, cy, ratio, h).
 
     Args:
@@ -83,7 +83,7 @@ def bbox_xyxy_to_cxcyah(bboxes):
     return xyah
 
 
-def bbox_cxcyah_to_xyxy(bboxes):
+def bbox_cxcyah_to_xyxy(bboxes: torch.Tensor) -> torch.Tensor:
     """Convert bbox coordinates from (cx, cy, ratio, h) to (x1, y1, x2, y2).
 
     Args:

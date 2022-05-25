@@ -193,7 +193,7 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
                 input images. Each TrackDataSample usually contains
                 ``pred_det_instances`` or ``pred_track_instances``.
         """
-        batch_inputs, batch_data_samples = self.preprocss_data(data)
+        batch_inputs, batch_data_samples = self.preprocess_data(data)
 
         if return_loss:
             losses = self._forward_train(batch_inputs, batch_data_samples,
@@ -212,7 +212,7 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
             return self._forward_test(batch_inputs, batch_data_samples,
                                       **kwargs)
 
-    def preprocss_data(self, data: List[dict]) -> Tuple:
+    def preprocess_data(self, data: List[dict]) -> Tuple:
         """ Process input data during training and simple testing phases.
         Args:
             data (list[dict]): The data to be processed, which
