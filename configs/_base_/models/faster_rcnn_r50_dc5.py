@@ -3,15 +3,14 @@ preprocess_cfg = dict(
     mean=[123.675, 116.28, 103.53],
     std=[58.395, 57.12, 57.375],
     to_rgb=True,
-    pad_size_divisor=32)
-norm_cfg = dict(type='BN', requires_grad=False)
+    pad_size_divisor=16)
+norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
     preprocess_cfg=preprocess_cfg,
     detector=dict(
-        # TODO: change to mmdet.FasterRCNN when mmdet fix the bug
-        type='mmdet.TwoStageDetector',
+        type='mmdet.FasterRCNN',
         backbone=dict(
-            type='ResNet',
+            type='mmdet.ResNet',
             depth=50,
             num_stages=4,
             out_indices=(3, ),
@@ -24,63 +23,66 @@ model = dict(
             init_cfg=dict(
                 type='Pretrained', checkpoint='torchvision://resnet50')),
         neck=dict(
-            type='ChannelMapper',
+            type='mmdet.ChannelMapper',
             in_channels=[2048],
             out_channels=512,
             kernel_size=3),
         rpn_head=dict(
-            type='RPNHead',
+            type='mmdet.RPNHead',
             in_channels=512,
             feat_channels=512,
             anchor_generator=dict(
-                type='AnchorGenerator',
+                type='mmdet.AnchorGenerator',
                 scales=[4, 8, 16, 32],
                 ratios=[0.5, 1.0, 2.0],
                 strides=[16]),
             bbox_coder=dict(
-                type='DeltaXYWHBBoxCoder',
+                type='mmdet.DeltaXYWHBBoxCoder',
                 target_means=[.0, .0, .0, .0],
                 target_stds=[1.0, 1.0, 1.0, 1.0]),
             loss_cls=dict(
-                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+                type='mmdet.CrossEntropyLoss',
+                use_sigmoid=True,
+                loss_weight=1.0),
             loss_bbox=dict(
-                type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                type='mmdet.SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
         roi_head=dict(
-            type='StandardRoIHead',
+            type='mmdet.StandardRoIHead',
             bbox_roi_extractor=dict(
-                type='SingleRoIExtractor',
+                type='mmdet.SingleRoIExtractor',
                 roi_layer=dict(
                     type='RoIAlign', output_size=7, sampling_ratio=2),
                 out_channels=512,
                 featmap_strides=[16]),
             bbox_head=dict(
-                type='Shared2FCBBoxHead',
+                type='mmdet.Shared2FCBBoxHead',
                 in_channels=512,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=30,
                 bbox_coder=dict(
-                    type='DeltaXYWHBBoxCoder',
+                    type='mmdet.DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.2, 0.2, 0.2, 0.2]),
                 reg_class_agnostic=False,
                 loss_cls=dict(
-                    type='CrossEntropyLoss',
+                    type='mmdet.CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                               loss_weight=1.0))),
+                loss_bbox=dict(
+                    type='mmdet.SmoothL1Loss', beta=1.0, loss_weight=1.0))),
         # detector training and testing settings
         train_cfg=dict(
             rpn=dict(
                 assigner=dict(
-                    type='MaxIoUAssigner',
+                    type='mmdet.MaxIoUAssigner',
+                    iou_calculator=dict(type='mmdet.BboxOverlaps2D'),
                     pos_iou_thr=0.7,
                     neg_iou_thr=0.3,
                     min_pos_iou=0.3,
                     ignore_iof_thr=-1),
                 sampler=dict(
-                    type='RandomSampler',
+                    type='mmdet.RandomSampler',
                     num=256,
                     pos_fraction=0.5,
                     neg_pos_ub=-1,
@@ -95,13 +97,14 @@ model = dict(
                 min_bbox_size=0),
             rcnn=dict(
                 assigner=dict(
-                    type='MaxIoUAssigner',
+                    type='mmdet.MaxIoUAssigner',
+                    iou_calculator=dict(type='mmdet.BboxOverlaps2D'),
                     pos_iou_thr=0.5,
                     neg_iou_thr=0.5,
                     min_pos_iou=0.5,
                     ignore_iof_thr=-1),
                 sampler=dict(
-                    type='RandomSampler',
+                    type='mmdet.RandomSampler',
                     num=256,
                     pos_fraction=0.25,
                     neg_pos_ub=-1,

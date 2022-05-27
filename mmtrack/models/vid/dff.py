@@ -86,39 +86,46 @@ class DFF(BaseVideoDetector):
         losses = dict()
 
         # TODO: wait for mmdet
-        losses['loss_cls'] = torch.Tensor([0.0])
-        # # Two stage detector
-        # if hasattr(self.detector, 'roi_head'):
-        #     # RPN forward and loss
-        #     if self.detector.with_rpn:
-        #         proposal_cfg = self.detector.train_cfg.get(
-        #             'rpn_proposal', self.detector.test_cfg.rpn)
-        #         # TODO:
-        #         cp_data_samples = copy.deepcopy(batch_data_samples)
-        #         for data_sample in cp_data_samples:
-        #             del data_sample.gt_instances.labels
+        # Two stage detector
+        if hasattr(self.detector, 'roi_head'):
+            # RPN forward and loss
+            if self.detector.with_rpn:
+                proposal_cfg = self.detector.train_cfg.get(
+                    'rpn_proposal', self.detector.test_cfg.rpn)
+                rpn_data_samples = copy.deepcopy(batch_data_samples)
+                # set cat_id of gt_labels to 0 in RPN
+                for data_sample in rpn_data_samples:
+                    data_sample.gt_instances.labels = \
+                        torch.zeros_like(data_sample.gt_instances.labels)
 
-        #         rpn_losses, results_list = \
-        #             self.detector.rpn_head.forward_train(
-        #             x, cp_data_samples, proposal_cfg=proposal_cfg, **kwargs)
-        #         losses.update(rpn_losses)
-        #         # TODO: remove this after refactor two stage input
-        #         proposal_list = results2proposal(results_list)
-        #     else:
-        #         proposal_list = [
-        #             data_sample.proposals for data_sample in data_samples
-        #         ]
+                rpn_losses, rpn_results_list = \
+                    self.detector.rpn_head.forward_train(
+                        x, rpn_data_samples, proposal_cfg=proposal_cfg,
+                        **kwargs)
+                # avoid get same name with roi_head loss
+                keys = rpn_losses.keys()
+                for key in keys:
+                    if 'loss' in key and 'rpn' not in key:
+                        rpn_losses[f'rpn_{key}'] = rpn_losses.pop(key)
+                losses.update(rpn_losses)
+            else:
+                # TODO: Need check with Fast R-CNN
+                rpn_results_list = []
+                for i in range(len(batch_data_samples)):
+                    results = InstanceData()
+                    results.bboxes = batch_data_samples[i].proposals
+                    rpn_results_list.append(results)
 
-        #     roi_losses = self.detector.roi_head.forward_train(
-        #         x, proposal_list, batch_data_samples, **kwargs)
-        #     losses.update(roi_losses)
-        # # Single stage detector
-        # elif hasattr(self.detector, 'bbox_head'):
-        #     bbox_losses = self.detector.bbox_head.forward_train(
-        #         x, batch_data_samples, **kwargs)
-        #     losses.update(bbox_losses)
-        # else:
-        #     raise TypeError('detector must has roi_head or bbox_head.')
+            roi_losses = self.detector.roi_head.forward_train(
+                x, rpn_results_list, batch_data_samples, **kwargs)
+            losses.update(roi_losses)
+        # Single stage detector
+        elif hasattr(self.detector, 'bbox_head'):
+            bbox_losses = self.detector.bbox_head.forward_train(
+                x, batch_data_samples, **kwargs)
+            losses.update(bbox_losses)
+        else:
+            raise TypeError('detector must has roi_head or bbox_head.')
 
         return losses
 
@@ -199,42 +206,35 @@ class DFF(BaseVideoDetector):
         track_data_sample = copy.deepcopy(batch_data_samples[0])
 
         # TODO: wait for mmdet
-        x = len(x)
-        # # Two stage detector
-        # if hasattr(self.detector, 'roi_head'):
-        #     if not hasattr(batch_data_samples[0], 'proposals'):
-        #         results_list = self.detector.rpn_head.simple_test(
-        #             x, [metainfo])
-        #         proposal_list = results2proposal(results_list)
-        #     else:
-        #         proposal_list = [
-        #             data_sample.proposals for data_sample in data_samples
-        #         ]
+        # Two stage detector
+        if hasattr(self.detector, 'roi_head'):
+            if not hasattr(batch_data_samples[0], 'proposals'):
+                rpn_results_list = self.detector.rpn_head.simple_test(
+                    x, [metainfo], rescale=False)
+            else:
+                # TODO: Need check with Fast R-CNN
+                rpn_results_list = []
+                for i in range(len(batch_data_samples)):
+                    results = InstanceData()
+                    results.bboxes = batch_data_samples[i].proposals
+                    rpn_results_list.append(results)
 
-        #     det_data_sample = self.detector.roi_head.simple_test(
-        #         x, proposal_list, [metainfo], rescale=rescale)
+            results_list = self.detector.roi_head.simple_test(
+                x, rpn_results_list, [metainfo], rescale=rescale)
+            # connvert to DetDataSample
+            det_data_sample_list = self.detector.postprocess_result(
+                results_list)
+            assert len(results_list) == 1
 
-        #     track_data_sample.pred_det_instances = \
-        #         det_data_sample.pred_instances
-        # # Single stage detector
-        # elif hasattr(self.detector, 'bbox_head'):
-        #     results_list = self.bbox_head.simple_test(
-        #         x, [metainfo], rescale=rescale)
+            track_data_sample.pred_det_instances = \
+                det_data_sample_list[0].pred_instances
+        # Single stage detector
+        elif hasattr(self.detector, 'bbox_head'):
+            results_list = self.detector.bbox_head.simple_test(
+                x, [metainfo], rescale=rescale)
 
-        #     track_data_sample.pred_det_instances = results_list[0]
-        # else:
-        #     raise TypeError('detector must has roi_head or bbox_head.')
+            track_data_sample.pred_det_instances = results_list[0]
+        else:
+            raise TypeError('detector must has roi_head or bbox_head.')
 
         return [track_data_sample]
-
-
-# TODO: remove this after refactor `roi_head` input
-def results2proposal(results_list):
-    if isinstance(results_list[0], InstanceData):
-        proposal_list = []
-        for results in results_list:
-            proposal_list.append(
-                torch.cat([results.bboxes, results.scores[:, None]], dim=-1))
-        return proposal_list
-    else:
-        return results_list

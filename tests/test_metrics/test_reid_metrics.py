@@ -4,11 +4,15 @@ from unittest import TestCase
 import torch
 
 from mmtrack.core import ReIDDataSample
-from mmtrack.metrics import ReIDMetrics  # noqa
 from mmtrack.registry import METRICS
+from mmtrack.utils import register_all_modules
 
 
 class TestReIDMetrics(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        register_all_modules(init_default_scope=True)
 
     def test_evaluate(self):
         """Test using the metric in the same way as Evaluator."""

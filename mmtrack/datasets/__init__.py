@@ -10,6 +10,7 @@ from .samplers import *  # noqa: F401,F403
 from .sot_coco_dataset import SOTCocoDataset
 from .sot_imagenet_vid_dataset import SOTImageNetVIDDataset
 from .trackingnet_dataset import TrackingNetDataset
+from .transforms import *  # noqa: F401,F403
 from .youtube_vis_dataset import YouTubeVISDataset
 
 __all__ = [

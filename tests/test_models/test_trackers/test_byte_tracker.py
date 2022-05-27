@@ -5,9 +5,8 @@ from unittest.mock import MagicMock
 import torch
 from mmdet.core.bbox.demodata import random_boxes
 
-# for register all models in mmtrack
-from mmtrack.models import *  # noqa
 from mmtrack.registry import MODELS
+from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs
 
 
@@ -15,6 +14,7 @@ class TestByteTracker(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        register_all_modules(init_default_scope=True)
         cfg = dict(
             type='ByteTracker',
             obj_score_thrs=dict(high=0.6, low=0.1),

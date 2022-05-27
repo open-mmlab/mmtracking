@@ -160,6 +160,10 @@ class BaseVideoDataset(BaseDataset):
                 instance['mask'] = ann['segmentation']
             if ann.get('instance_id', None):
                 instance['instance_id'] = ann['instance_id']
+            else:
+                # image dataset usually has no `instance_id`.
+                # Therefore, we set it to `i`.
+                instance['instance_id'] = i
             if len(instance) > 0:
                 instances.append(instance)
         data_info['instances'] = instances

@@ -103,8 +103,8 @@ def _demo_mm_inputs(batch_size=1,
 
         img_meta = {
             'img_id': idx,
-            'img_shape': image_shape,
-            'ori_shape': image_shape,
+            'img_shape': image_shape[2:],
+            'ori_shape': image_shape[2:],
             'filename': '<demo>.png',
             'scale_factor': np.array([1.1, 1.2]),
             'flip': False,

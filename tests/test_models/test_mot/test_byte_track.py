@@ -3,22 +3,23 @@ import unittest
 from unittest import TestCase
 
 import torch
-# for register all models in mmdet
-from mmdet.models import *  # noqa
 from parameterized import parameterized
 
-# for register all models in mmtrack
-from mmtrack.models import *  # noqa
 from mmtrack.registry import MODELS
+from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
-class TestVideoDetector(TestCase):
+class TestByteTrack(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py',
+        'mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
     ])
-    def test_init(self, cfg_file):
+    def test_bytetrack_init(self, cfg_file):
         model = _get_model_cfg(cfg_file)
 
         model = MODELS.build(model)
@@ -27,9 +28,10 @@ class TestVideoDetector(TestCase):
         assert model.device.type == 'cpu'
 
     @parameterized.expand([
-        ('vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
+         ('cpu', 'cuda')),
     ])
-    def test_vid_dff_style_forward_train(self, cfg_file, devices):
+    def test_bytetrack_forward_train(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -45,18 +47,18 @@ class TestVideoDetector(TestCase):
             assert model.device.type == device
 
             packed_inputs = _demo_mm_inputs(
-                batch_size=1, frame_id=0, num_ref_imgs=1)
+                batch_size=1, frame_id=0, num_ref_imgs=0)
 
             # Test forward train
             losses = model.forward(packed_inputs, return_loss=True)
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
+         ('cpu', 'cuda')),
     ])
-    def test_single_stage_forward_test(self, cfg_file, devices):
+    def test_bytetrack_simple_test(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
-        _model.test_cfg.key_frame_interval = 2
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
 

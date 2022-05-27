@@ -72,7 +72,11 @@ class ImagenetVIDDataset(BaseVideoDataset):
                 raw_ann_info = coco.load_anns(ann_ids)
 
                 # load frames for training
-                if raw_img_info['is_vid_train_frame']:
+                if self.test_mode:
+                    assert not raw_img_info['is_vid_train_frame'], \
+                        'is_vid_train_frame must be False in testing'
+                    valid_data_indices.append(data_id)
+                elif raw_img_info['is_vid_train_frame']:
                     valid_data_indices.append(data_id)
 
                 # get data_info
