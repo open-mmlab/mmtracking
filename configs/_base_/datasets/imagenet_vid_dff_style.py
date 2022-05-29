@@ -17,7 +17,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='Resize', scale=(1333, 800), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
     dict(type='PackTrackInputs')
 ]
 

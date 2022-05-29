@@ -33,8 +33,8 @@ def flow_warp_feats(x: torch.Tensor, flow: torch.Tensor) -> torch.Tensor:
     grid = torch.cat((w_grid, h_grid), dim=1)
     # [N, 2, H, W]
     grid = grid + flow
-    grid[:, 0] = grid[:, 0] / (W - 1) * 2 - 1
-    grid[:, 1] = grid[:, 1] / (H - 1) * 2 - 1
+    grid[:, 0] = grid[:, 0] / W * 2 - 1
+    grid[:, 1] = grid[:, 1] / H * 2 - 1
     # [N, H, W, 2]
     grid = grid.permute(0, 2, 3, 1)
 

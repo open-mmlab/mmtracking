@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
+import warnings
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 from typing import List, Optional, Tuple, Union
@@ -37,6 +38,8 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
 
     def set_preprocess_cfg(self) -> None:
         """Set the preprocessing config for processing the input data."""
+        self.pad_size_divisor = 0
+        self.pad_value = 0
         if self.preprocess_cfg is not None:
             assert isinstance(self.preprocess_cfg, dict)
             preprocess_cfg = self.preprocess_cfg
@@ -52,10 +55,8 @@ class BaseVideoDetector(BaseModule, metaclass=ABCMeta):
                 torch.tensor(preprocess_cfg['std']).view(1, -1, 1, 1), False)
         else:
             # Only used to provide device information
+            warnings.warn('We treat `model.preprocess_cfg` is None.')
             self.register_buffer('pixel_mean', torch.tensor(1), False)
-
-        self.pad_size_divisor = 0
-        self.pad_value = 0
 
     @property
     def device(self) -> torch.device:
