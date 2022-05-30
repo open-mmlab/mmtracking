@@ -22,7 +22,8 @@ def flow_warp_feats(x, flow):
 
     # 2. compute the flow_field (grid in the code) used to warp features.
     H, W = x.shape[-2:]
-    h_grid, w_grid = torch.meshgrid(torch.arange(H), torch.arange(W))
+    h_grid, w_grid = torch.meshgrid(
+        torch.arange(H), torch.arange(W), indexing='ij')
     # [1, 1, H, W]
     h_grid = h_grid.to(flow)[None, None, ...]
     # [1, 1, H, W]
