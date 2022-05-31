@@ -275,6 +275,17 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
             assert isinstance(idx, int)
             return self.prepare_train_data(idx)
 
+    @property
+    def num_videos(self) -> int:
+        """Get the number of videos in the dataset.
+
+        Returns:
+            int: The number of videos.
+        """
+        num_videos = len(self.data_address) if self.serialize_data else len(
+            self.data_list)
+        return num_videos
+
     @force_full_init
     def __len__(self) -> int:
         """Get the length of filtered dataset and automatically call
@@ -283,10 +294,8 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         Returns:
             int: The length of filtered dataset.
         """
-        num_videos = len(self.data_address) if self.serialize_data else len(
-            self.data_list)
         if self.test_mode:
             return sum(
-                self.get_len_per_video(idx) for idx in range(num_videos))
+                self.get_len_per_video(idx) for idx in range(self.num_videos))
         else:
-            return num_videos
+            return self.num_videos

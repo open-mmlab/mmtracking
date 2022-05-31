@@ -58,10 +58,12 @@ def _rand_bboxes(rng, num_boxes, w, h):
 
 def _demo_mm_inputs(batch_size=1,
                     frame_id=0,
+                    num_key_imgs=1,
                     num_ref_imgs=1,
                     image_shapes=[(1, 3, 128, 128)],
                     num_items=None,
                     num_classes=10,
+                    ref_prefix='ref',
                     with_semantic=False):
     """Create a superset of inputs needed to run test or train batches.
 
@@ -95,11 +97,15 @@ def _demo_mm_inputs(batch_size=1,
         image = rng.randint(0, 255, size=image_shape, dtype=np.uint8)
 
         mm_inputs = dict(inputs=dict())
-        mm_inputs['inputs']['img'] = torch.from_numpy(image)
+        if num_key_imgs > 0:
+            key_img = [image] * num_key_imgs
+            key_img = np.concatenate(key_img)
+            mm_inputs['inputs']['img'] = torch.from_numpy(key_img)
         if num_ref_imgs > 0:
             ref_img = [image] * num_ref_imgs
             ref_img = np.concatenate(ref_img)
-            mm_inputs['inputs']['ref_img'] = torch.from_numpy(ref_img)
+            mm_inputs['inputs'][f'{ref_prefix}_img'] = torch.from_numpy(
+                ref_img)
 
         img_meta = {
             'img_id': idx,
@@ -135,12 +141,19 @@ def _demo_mm_inputs(batch_size=1,
         # gt_instances.mask = BitmapMasks(masks, h, w)
 
         data_sample.gt_instances = gt_instances
-
         # ignore_instances
         ignore_instances = InstanceData()
         bboxes = _rand_bboxes(rng, num_boxes, w, h)
         ignore_instances.bboxes = bboxes
         data_sample.ignored_instances = ignore_instances
+
+        if num_ref_imgs > 0:
+            ref_gt_instances = copy.deepcopy(gt_instances)
+            setattr(data_sample, f'{ref_prefix}_gt_instances',
+                    ref_gt_instances)
+            ref_ignored_instances = copy.deepcopy(ignore_instances)
+            setattr(data_sample, f'{ref_prefix}_ignored_instances',
+                    ref_ignored_instances)
 
         # TODO: add gt_sem_seg
         # if with_semantic:

@@ -119,15 +119,7 @@ class BaseMultiObjectTracker(BaseModule, metaclass=ABCMeta):
                 as `gt_instance`.
 
         Return:
-            dict: It should contain at least 3 keys: ``loss``,
-            ``log_vars``, ``num_samples``.
-                - ``loss`` is a tensor for back propagation, which can be a
-                    weighted sum of multiple losses.
-                - ``log_vars`` contains all the variables to be sent to the
-                    logger.
-                - ``num_samples`` indicates the batch size (when the model
-                    is DDP, it means the batch size on each GPU), which is
-                    used for averaging the logs.
+            dict: A dictionary of loss components.
         """
         pass
 

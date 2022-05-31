@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .base_sot_dataset import BaseSOTDataset
 from .base_video_dataset import BaseVideoDataset
+from .dataset_wrappers import RandomSampleConcatDataset
 from .got10k_dataset import GOT10kDataset
 from .imagenet_vid_dataset import ImagenetVIDDataset
 from .lasot_dataset import LaSOTDataset
@@ -17,5 +18,5 @@ __all__ = [
     'BaseVideoDataset', 'MOTChallengeDataset', 'BaseSOTDataset',
     'LaSOTDataset', 'ReIDDataset', 'GOT10kDataset', 'SOTCocoDataset',
     'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset',
-    'ImagenetVIDDataset'
+    'ImagenetVIDDataset', 'RandomSampleConcatDataset'
 ]

@@ -1,18 +1,21 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import copy
 import warnings
+from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 from addict import Dict
 from mmdet.core.bbox import bbox_cxcywh_to_xyxy
-from mmdet.models.builder import build_backbone, build_head, build_neck
+from mmengine.data import InstanceData
+from torch import Tensor
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
+from mmtrack.core import TrackDataSample
 from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_xyxy_to_x1y1wh,
                                calculate_region_overlap, quad2bbox)
 from mmtrack.core.evaluation import bbox2region
-from ..builder import MODELS
+from mmtrack.registry import MODELS
 from .base import BaseSingleObjectTracker
 
 
@@ -25,14 +28,15 @@ class SiamRPN(BaseSingleObjectTracker):
     """
 
     def __init__(self,
-                 backbone,
-                 neck=None,
-                 head=None,
-                 pretrains=None,
-                 init_cfg=None,
-                 frozen_modules=None,
-                 train_cfg=None,
-                 test_cfg=None):
+                 backbone: dict,
+                 neck: Optional[dict] = None,
+                 head: Optional[dict] = None,
+                 pretrains: Optional[dict] = None,
+                 init_cfg: Optional[dict] = None,
+                 train_cfg: Optional[dict] = None,
+                 test_cfg: Optional[dict] = None,
+                 frozen_modules: Optional[Union[List[str], Tuple[str],
+                                                str]] = None):
         super(SiamRPN, self).__init__(init_cfg)
         if isinstance(pretrains, dict):
             warnings.warn('DeprecationWarning: pretrains is deprecated, '
@@ -43,12 +47,12 @@ class SiamRPN(BaseSingleObjectTracker):
                     type='Pretrained', checkpoint=backbone_pretrain)
             else:
                 backbone.init_cfg = None
-        self.backbone = build_backbone(backbone)
+        self.backbone = MODELS.build(backbone)
         if neck is not None:
-            self.neck = build_neck(neck)
+            self.neck = MODELS.build(neck)
         head = head.copy()
         head.update(train_cfg=train_cfg.rpn, test_cfg=test_cfg.rpn)
-        self.head = build_head(head)
+        self.head = MODELS.build(head)
 
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
@@ -74,7 +78,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 if isinstance(m, _ConvNd) or isinstance(m, _BatchNorm):
                     m.reset_parameters()
 
-    def forward_template(self, z_img):
+    def forward_template(self, z_img: Tensor) -> Tuple[Tensor]:
         """Extract the features of exemplar images.
 
         Args:
@@ -82,7 +86,8 @@ class SiamRPN(BaseSingleObjectTracker):
                 images. Typically H and W equal to 127.
 
         Returns:
-            tuple(Tensor): Multi level feature map of exemplar images.
+            Tuple[Tensor, ...]: Multi level feature map of exemplar
+                images.
         """
         z_feat = self.backbone(z_img)
         if self.with_neck:
@@ -95,7 +100,7 @@ class SiamRPN(BaseSingleObjectTracker):
             z_feat_center.append(z_feat[i][:, :, left:right, left:right])
         return tuple(z_feat_center)
 
-    def forward_search(self, x_img):
+    def forward_search(self, x_img: Tensor) -> Tuple[Tensor, ...]:
         """Extract the features of search images.
 
         Args:
@@ -103,15 +108,16 @@ class SiamRPN(BaseSingleObjectTracker):
                 images. Typically H and W equal to 255.
 
         Returns:
-            tuple(Tensor): Multi level feature map of search images.
+            Tuple[Tensor, ...]: Multi level feature map of search images.
         """
         x_feat = self.backbone(x_img)
         if self.with_neck:
             x_feat = self.neck(x_feat)
         return x_feat
 
-    def get_cropped_img(self, img, center_xy, target_size, crop_size,
-                        avg_channel):
+    def get_cropped_img(self, img: Tensor, center_xy: Tensor,
+                        target_size: Tensor, crop_size: Tensor,
+                        avg_channel: Tensor) -> Tensor:
         """Crop image.
 
         Only used during testing.
@@ -124,15 +130,16 @@ class SiamRPN(BaseSingleObjectTracker):
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            center_xy (Tensor): of shape (2, ) denoting the center point for
-                cropping image.
+            center_xy (Tensor): of shape (2, ) denoting the center point
+                for cropping image.
             target_size (int): The output size of cropped image.
             crop_size (Tensor): The size for cropping image.
-            avg_channel (Tensor): of shape (3, ) denoting the padding values.
+            avg_channel (Tensor): of shape (3, ) denoting the padding
+                values.
 
         Returns:
-            Tensor: of shape (1, C, target_size, target_size) encoding the
-            resized cropped image.
+            Tensor: of shape (1, C, target_size, target_size) encoding
+                the resized cropped image.
         """
         N, C, H, W = img.shape
         context_xmin = int(center_xy[0] - crop_size / 2)
@@ -176,29 +183,42 @@ class SiamRPN(BaseSingleObjectTracker):
             align_corners=False)
         return crop_img
 
-    def _bbox_clip(self, bbox, img_h, img_w):
-        """Clip the bbox with [cx, cy, w, h] format."""
+    def _bbox_clip(self, bbox: Tensor, img_h: int, img_w: int) -> Tensor:
+        """Clip the bbox with [cx, cy, w, h] format.
+
+        Args:
+            img (Tensor): of shape (1, C, H, W) encoding original input
+                image.
+            bbox (Tensor): The given instance bbox of first frame that
+                need be tracked in the following frames. The shape of the box
+                is of (4, ) shape in [cx, cy, w, h] format.
+
+        Returns:
+            Tensor: The clipped boxes.
+        """
         bbox[0] = bbox[0].clamp(0., img_w)
         bbox[1] = bbox[1].clamp(0., img_h)
         bbox[2] = bbox[2].clamp(10., img_w)
         bbox[3] = bbox[3].clamp(10., img_h)
         return bbox
 
-    def init(self, img, bbox):
+    def init(self, img: Tensor,
+             bbox: Tensor) -> Tuple[Tuple[Tensor, ...], Tensor]:
         """Initialize the single object tracker in the first frame.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            bbox (Tensor): The given instance bbox of first frame that need be
-                tracked in the following frames. The shape of the box is (4, )
-                with [cx, cy, w, h] format.
+            bbox (Tensor): The given instance bbox of first frame that
+                need be tracked in the following frames. The shape of the box
+                is of (4, ) shape in [cx, cy, w, h] format.
 
         Returns:
-            tuple(z_feat, avg_channel): z_feat is a tuple[Tensor] that
-            contains the multi level feature maps of exemplar image,
-            avg_channel is Tensor with shape (3, ), and denotes the padding
-            values.
+            Tuple[Tuple[Tensor, ...], Tensor):
+                - z_feat: Containing the multi level feature maps of exemplar
+                image
+                - avg_channel: Tensor with shape (3, ), and denotes the padding
+                values.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
@@ -210,23 +230,25 @@ class SiamRPN(BaseSingleObjectTracker):
         z_feat = self.forward_template(z_crop)
         return z_feat, avg_channel
 
-    def track(self, img, bbox, z_feat, avg_channel):
+    def track(self, img: Tensor, bbox: Tensor, z_feat: Tuple[Tensor, ...],
+              avg_channel: Tensor) -> Tuple[Tensor, Tensor]:
         """Track the box `bbox` of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            bbox (Tensor): The bbox in previous frame. The shape of the box is
-                (4, ) in [cx, cy, w, h] format.
-            z_feat (tuple[Tensor]): The multi level feature maps of exemplar
-                image in the first frame.
-            avg_channel (Tensor): of shape (3, ) denoting the padding values.
+            bbox (Tensor): The bbox in previous frame. The shape of the
+                box is (4, ) in [cx, cy, w, h] format.
+            z_feat (tuple[Tensor, ...]): The multi level feature maps of
+                exemplar image in the first frame.
+            avg_channel (Tensor): of shape (3, ) denoting the padding
+                values.
 
         Returns:
-            tuple(best_score, best_bbox): best_score is a Tensor denoting the
-            score of best_bbox, best_bbox is a Tensor of shape (4, ) in
-            [cx, cy, w, h] format, and denotes the best tracked bbox in
-            current frame.
+            Tuple[Tensor, Tensor]: It contains
+                - ``best_score``: a Tensor denoting the score of best_bbox.
+                - ``best_bbox``: a Tensor of shape (4, ) in [cx, cy, w, h]
+                format, and denotes the best tracked bbox in current frame.
         """
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
@@ -248,7 +270,12 @@ class SiamRPN(BaseSingleObjectTracker):
         best_bbox = self._bbox_clip(best_bbox, img.shape[2], img.shape[3])
         return best_score, best_bbox
 
-    def simple_test_vot(self, img, frame_id, gt_bboxes, img_metas=None):
+    def simple_test_vot(
+            self,
+            img: Tensor,
+            frame_id: int,
+            gt_bboxes: List[Tensor],
+            img_metas: Optional[List[dict]] = None) -> Tuple[Tensor, Tensor]:
         """Test using VOT test mode.
 
         Args:
@@ -264,9 +291,11 @@ class SiamRPN(BaseSingleObjectTracker):
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
         Returns:
-            bbox_pred (Tensor): in [tl_x, tl_y, br_x, br_y] format.
-            best_score (Tensor): the tracking bbox confidence in range [0,1],
-                and the score of initial frame is -1.
+            Tuple[Tensor, Tensor]: Containing two elements:
+                - ``bbox_pred`` (Tensor): of shape (4, ), in
+                [tl_x, tl_y, br_x, br_y] format.
+                - ``best_score`` (Tensor): the tracking bbox confidence in
+                range [0,1], and the score of initial frame is -1.
         """
         if frame_id == 0:
             self.init_frame_id = 0
@@ -315,7 +344,8 @@ class SiamRPN(BaseSingleObjectTracker):
 
         return bbox_pred, best_score
 
-    def simple_test_ope(self, img, frame_id, gt_bboxes):
+    def simple_test_ope(self, img: Tensor, frame_id: int,
+                        gt_bboxes: List[Tensor]) -> Tuple[Tensor, Tensor]:
         """Test using OPE test mode.
 
         Args:
@@ -326,12 +356,13 @@ class SiamRPN(BaseSingleObjectTracker):
                 shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
 
         Returns:
-            bbox_pred (Tensor): in [tl_x, tl_y, br_x, br_y] format.
-            best_score (Tensor): the tracking bbox confidence in range [0,1],
-                and the score of initial frame is -1.
+            Tuple[Tensor, Tensor]: Containing two elements:
+                - ``bbox_pred``: of shape (4, ),
+                in [tl_x, tl_y, br_x, br_y] format.
+                - ``best_score``: the tracking bbox confidence in range
+                [0,1], and the score of initial frame is -1.
         """
         if frame_id == 0:
-            gt_bboxes = gt_bboxes[0][0]
             self.memo = Dict()
             self.memo.bbox = quad2bbox(gt_bboxes)
             self.memo.z_feat, self.memo.avg_channel = self.init(
@@ -345,93 +376,102 @@ class SiamRPN(BaseSingleObjectTracker):
 
         return bbox_pred, best_score
 
-    def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
+    def simple_test(self,
+                    batch_inputs: dict,
+                    batch_data_samples: List[TrackDataSample],
+                    rescale: bool = False):
         """Test without augmentation.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding input image.
-            img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-            gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
-                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
+            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W)
+                encodingbinput images. Typically these should be mean centered
+                and stdbscaled. The N denotes batch size. The T denotes the
+                number of key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+                In test mode, T = 1 and there is only ``img`` and no
+                ``ref_img``.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instances``.
+            rescale (bool, Optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to False.
 
         Returns:
-            dict[str : ndarray]: The tracking results.
+            list[obj:`TrackDataSample`]: Tracking results of the
+                input images. Each TrackDataSample usually contains
+                ``pred_det_instances`` or ``pred_track_instances``.
         """
-        frame_id = img_metas[0].get('frame_id', -1)
+        img = batch_inputs['img']
+        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        assert img.size(0) == 1, \
+            'Only support 1 batch size per gpu in test mode'
+        img = img[0]
+
+        metainfo = batch_data_samples[0].metainfo
+        frame_id = metainfo.get('frame_id', -1)
         assert frame_id >= 0
-        assert len(img) == 1, 'only support batch_size=1 when testing'
+        gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
 
         test_mode = self.test_cfg.get('test_mode', 'OPE')
         assert test_mode in ['OPE', 'VOT']
         if test_mode == 'VOT':
             bbox_pred, best_score = self.simple_test_vot(
-                img, frame_id, gt_bboxes, img_metas)
+                img, frame_id, gt_bboxes, metainfo)
         else:
             bbox_pred, best_score = self.simple_test_ope(
                 img, frame_id, gt_bboxes)
 
-        results = dict()
-        if best_score == -1.:
-            results['track_bboxes'] = np.concatenate(
-                (bbox_pred.cpu().numpy(), np.array([best_score])))
-        else:
-            results['track_bboxes'] = np.concatenate(
-                (bbox_pred.cpu().numpy(), best_score.cpu().numpy()[None]))
-        return results
+        track_data_sample = copy.deepcopy(batch_data_samples[0])
+        pred_track_instances = InstanceData()
+        pred_track_instances['bboxes'] = bbox_pred[None]
+        pred_track_instances['scores'] = torch.Tensor([best_score]).to(
+            bbox_pred.device) if best_score == -1 else best_score[None]
+        track_data_sample.pred_track_instances = pred_track_instances
 
-    def forward_train(self, img, img_metas, gt_bboxes, search_img,
-                      search_img_metas, search_gt_bboxes, is_positive_pairs,
-                      **kwargs):
+        return [track_data_sample]
+
+    def forward_train(self, batch_inputs: dict,
+                      batch_data_samples: List[TrackDataSample],
+                      **kwargs) -> dict:
         """
         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input exemplar images.
-                Typically H and W equal to 127.
+            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+                input images. Typically these should be mean centered and std
+                scaled. The N denotes batch size. The T denotes the number of
+                key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
 
-            img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
 
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each exemplar
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
-
-            search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
-                images. 1 denotes there is only one search image for each
-                exemplar image. Typically H and W equal to 255.
-
-            search_img_metas (list[list[dict]]): The second list only has one
-                element. The first list contains search image information dict
-                where each dict has: 'img_shape', 'scale_factor', 'flip', and
-                may also contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-
-            search_gt_bboxes (list[Tensor]): Ground truth bboxes for each
-                search image with shape (1, 5) in [0.0, tl_x, tl_y, br_x, br_y]
-                format.
-
-            is_positive_pairs (list[bool]): list of bool denoting whether each
-                exemplar image and corresponding search image is positive pair.
-
-        Returns:
-            dict[str, Tensor]: a dictionary of loss components.
+        Return:
+            dict: A dictionary of loss components.
         """
+        search_gt_instances = [
+            data_sample.search_gt_instances
+            for data_sample in batch_data_samples
+        ]
+        search_img = batch_inputs['search_img']
+        assert search_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         search_img = search_img[:, 0]
 
-        z_feat = self.forward_template(img)
+        template_img = batch_inputs['img']
+        assert template_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        template_img = template_img[:, 0]
+
+        z_feat = self.forward_template(template_img)
         x_feat = self.forward_search(search_img)
         cls_score, bbox_pred = self.head(z_feat, x_feat)
 
         losses = dict()
-        bbox_targets = self.head.get_targets(search_gt_bboxes,
-                                             cls_score.shape[2:],
-                                             is_positive_pairs)
+        bbox_targets = self.head.get_targets(search_gt_instances,
+                                             cls_score.shape[2:])
         head_losses = self.head.loss(cls_score, bbox_pred, *bbox_targets)
         losses.update(head_losses)
 

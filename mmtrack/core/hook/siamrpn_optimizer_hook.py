@@ -57,7 +57,7 @@ class SiameseRPNOptimizerHook(OptimizerHook):
 #         self.backbone_train_layers = backbone_train_layers
 
 #     def before_train_epoch(self, runner):
-#         """If `runner.epoch >= self.backbone_start_train_epoch`, start to train   # noqa: E501
+#         """If `runner.epoch >= self.backbone_start_train_epoch`, start to train  # noqa: E501
 #         the backbone."""
 #         if runner.epoch >= self.backbone_start_train_epoch:
 #             for layer in self.backbone_train_layers:

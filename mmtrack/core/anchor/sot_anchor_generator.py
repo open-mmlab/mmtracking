@@ -1,10 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
 import torch
-from mmdet.core.anchor import ANCHOR_GENERATORS, AnchorGenerator
+from mmdet.core import AnchorGenerator
+from torch import Tensor
+
+from mmtrack.registry import TASK_UTILS
 
 
-@ANCHOR_GENERATORS.register_module()
+@TASK_UTILS.register_module()
 class SiameseRPNAnchorGenerator(AnchorGenerator):
     """Anchor generator for siamese rpn.
 
@@ -12,16 +17,19 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
     for detailed docstring.
     """
 
-    def __init__(self, strides, *args, **kwargs):
+    def __init__(self, strides: List[Union[int, Tuple[int, int]]], *args,
+                 **kwargs):
         assert len(strides) == 1, 'only support one feature map level'
         super(SiameseRPNAnchorGenerator,
               self).__init__(strides, *args, **kwargs)
 
-    def gen_2d_hanning_windows(self, featmap_sizes, device='cuda'):
+    def gen_2d_hanning_windows(self,
+                               featmap_sizes: List[torch.Size],
+                               device='cuda') -> List[Tensor]:
         """Generate 2D hanning window.
 
         Args:
-            featmap_sizes (list[torch.size]): List of torch.size recording the
+            featmap_sizes (list[torch.Size]): List of torch.Size recording the
                 resolution (height, width) of the multi-level feature maps.
             device (str): Device the tensor will be put on. Defaults to 'cuda'.
 
@@ -39,11 +47,12 @@ class SiameseRPNAnchorGenerator(AnchorGenerator):
             multi_level_windows.append(torch.from_numpy(window).to(device))
         return multi_level_windows
 
-    def gen_single_level_base_anchors(self,
-                                      base_size,
-                                      scales,
-                                      ratios,
-                                      center=None):
+    def gen_single_level_base_anchors(
+            self,
+            base_size: Union[int, float],
+            scales: Tensor,
+            ratios: Tensor,
+            center: Optional[Tuple[float]] = None) -> Tensor:
         """Generate base anchors of a single level feature map.
 
         Args:

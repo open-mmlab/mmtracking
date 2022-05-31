@@ -27,28 +27,25 @@ class VideoSampler(Sampler):
         self.world_size = world_size
 
         if isinstance(self.dataset, BaseSOTDataset):
-            # TODO: Support SOT task
-            raise NotImplementedError
             # The input of '__getitem__' function in SOT dataset class must be
             # a tuple when testing. The tuple is in (video_index, frame_index)
             # format.
-            # self.num_videos = len(self.dataset.data_list)
-            # self.num_frames_per_video = self.dataset.num_frames_per_video
-            # if self.num_videos < self.world_size:
-            #     raise ValueError(f'only {self.num_videos} videos loaded,'
-            #                      f'but {self.world_size} gpus were given.')
+            self.num_videos = self.dataset.num_videos
+            if self.num_videos < self.world_size:
+                raise ValueError(f'only {self.num_videos} videos loaded,'
+                                 f'but {self.world_size} gpus were given.')
 
-            # chunks = np.array_split(
-            #     list(range(self.num_videos)), self.world_size)
-            # self.indices = []
-            # for videos in chunks:
-            #     indices_chunk = []
-            #     for video_ind in videos:
-            #         indices_chunk.extend([
-            #             (video_ind, frame_ind) for frame_ind in range(
-            #                 self.num_frames_per_video[video_ind])
-            #         ])
-            #     self.indices.append(indices_chunk)
+            chunks = np.array_split(
+                list(range(self.num_videos)), self.world_size)
+            self.indices = []
+            for videos in chunks:
+                indices_chunk = []
+                for video_ind in videos:
+                    indices_chunk.extend([
+                        (video_ind, frame_ind) for frame_ind in range(
+                            self.dataset.get_len_per_video(video_ind))
+                    ])
+                self.indices.append(indices_chunk)
         else:
             assert isinstance(self.dataset, BaseVideoDataset)
             first_frame_indices = []

@@ -63,6 +63,9 @@ class TestLaSOTDataset(TestCase):
         for idx in range(len(self.dataset)):
             assert self.dataset.get_len_per_video(idx) == 2
 
+    def test_num_videos(self):
+        assert self.dataset.num_videos == 2
+
     def test_len(self):
         self.dataset.test_mode = False
         assert len(self.dataset) == 2
@@ -106,6 +109,9 @@ class TestSOTCocoDataset(TestLaSOTDataset):
         for idx in range(len(self.dataset)):
             assert self.dataset.get_len_per_video(idx) == 1
 
+    def test_num_videos(self):
+        assert self.dataset.num_videos == 7
+
     def test_len(self):
         assert len(self.dataset) == 7
 
@@ -123,6 +129,9 @@ class TestSOTImageNetVIDDataset(TestLaSOTDataset):
         len_videos = [4, 3, 1, 1, 1]
         for idx in range(len(self.dataset)):
             assert self.dataset.get_len_per_video(idx) == len_videos[idx]
+
+    def test_num_videos(self):
+        assert self.dataset.num_videos == 5
 
     def test_len(self):
         assert len(self.dataset) == 5

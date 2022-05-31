@@ -1,3 +1,5 @@
+_base_ = ['../../_base_/default_runtime.py']
+
 cudnn_benchmark = False
 deterministic = True
 seed = 1
@@ -7,6 +9,11 @@ exemplar_size = 127
 search_size = 255
 
 # model settings
+preprocess_cfg = dict(
+    mean=[123.675, 116.28, 103.53],
+    std=[58.395, 57.12, 57.375],
+    to_rgb=False,
+    pad_size_divisor=32)
 model = dict(
     type='SiamRPN',
     backbone=dict(
@@ -23,7 +30,7 @@ model = dict(
             'https://download.openmmlab.com/mmtracking/pretrained_weights/sot_resnet50.model'  # noqa: E501
         )),
     neck=dict(
-        type='ChannelMapper',
+        type='mmdet.ChannelMapper',
         in_channels=[512, 1024, 2048],
         out_channels=256,
         kernel_size=1,
@@ -39,22 +46,23 @@ model = dict(
         in_channels=[256, 256, 256],
         weighted_sum=True,
         bbox_coder=dict(
-            type='DeltaXYWHBBoxCoder',
+            type='mmdet.DeltaXYWHBBoxCoder',
             target_means=[0., 0., 0., 0.],
             target_stds=[1., 1., 1., 1.]),
         loss_cls=dict(
-            type='CrossEntropyLoss', reduction='sum', loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', reduction='sum', loss_weight=1.2)),
+            type='mmdet.CrossEntropyLoss', reduction='sum', loss_weight=1.0),
+        loss_bbox=dict(type='mmdet.L1Loss', reduction='sum', loss_weight=1.2)),
     train_cfg=dict(
         rpn=dict(
             assigner=dict(
-                type='MaxIoUAssigner',
+                type='mmdet.MaxIoUAssigner',
                 pos_iou_thr=0.6,
                 neg_iou_thr=0.3,
                 min_pos_iou=0.6,
-                match_low_quality=False),
+                match_low_quality=False,
+                iou_calculator=dict(type='mmdet.BboxOverlaps2D')),
             sampler=dict(
-                type='RandomSampler',
+                type='mmdet.RandomSampler',
                 num=64,
                 pos_fraction=0.25,
                 add_gt_as_proposals=False),
@@ -68,6 +76,7 @@ model = dict(
         center_size=7,
         rpn=dict(penalty_k=0.05, window_influence=0.42, lr=0.38)))
 
+# data pipeline
 data_root = 'data/'
 train_pipeline = [
     dict(
@@ -75,13 +84,18 @@ train_pipeline = [
         frame_range=100,
         pos_prob=0.8,
         filter_template_img=False),
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=False),
     dict(
-        type='SeqCropLikeSiamFC',
-        context_amount=0.5,
-        exemplar_size=exemplar_size,
-        crop_size=crop_size),
+        type='TransformBroadcaster',
+        share_random_params=False,
+        transforms=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadTrackAnnotations', with_instance_id=False),
+            dict(
+                type='CropLikeSiamFC',
+                context_amount=0.5,
+                exemplar_size=exemplar_size,
+                crop_size=crop_size)
+        ]),
     dict(
         type='SeqShiftScaleAug',
         target_size=[exemplar_size, search_size],
@@ -89,73 +103,102 @@ train_pipeline = [
         scale=[0.05, 0.18]),
     dict(type='SeqColorAug', prob=[1.0, 1.0]),
     dict(type='SeqBlurAug', prob=[0.0, 0.2]),
-    dict(type='VideoCollect', keys=['img', 'gt_bboxes', 'is_positive_pairs']),
-    dict(type='ConcatSameTypeFrames'),
-    dict(type='SeqDefaultFormatBundle', ref_prefix='search')
+    dict(type='PackTrackInputs', ref_prefix='search', num_template_frames=1)
 ]
+
 test_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True),
-    dict(type='LoadAnnotations', with_bbox=True, with_label=False),
-    dict(
-        type='MultiScaleFlipAug',
-        scale_factor=1,
-        flip=False,
-        transforms=[
-            dict(type='VideoCollect', keys=['img', 'gt_bboxes']),
-            dict(type='ImageToTensor', keys=['img'])
-        ])
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadTrackAnnotations', with_instance_id=False),
+    dict(type='PackTrackInputs')
 ]
-# dataset settings
-data = dict(
-    samples_per_gpu=28,
-    workers_per_gpu=4,
+
+# dataloader
+train_dataloader = dict(
+    batch_size=28,
+    num_workers=4,
     persistent_workers=True,
-    samples_per_epoch=600000,
-    train=dict(
+    sampler=dict(type='QuotaSampler', samples_per_epoch=600000),
+    dataset=dict(
         type='RandomSampleConcatDataset',
         dataset_sampling_weights=[0.25, 0.2, 0.55],
-        dataset_cfgs=[
+        datasets=[
             dict(
                 type='SOTImageNetVIDDataset',
-                ann_file=data_root +
-                'ILSVRC/annotations/imagenet_vid_train.json',
-                img_prefix=data_root + 'ILSVRC/Data/VID',
+                data_root=data_root,
+                ann_file='ILSVRC/annotations/imagenet_vid_train.json',
+                data_prefix=dict(img_path='ILSVRC/Data/VID'),
                 pipeline=train_pipeline,
-                split='train',
                 test_mode=False),
             dict(
                 type='SOTCocoDataset',
-                ann_file=data_root +
-                'coco/annotations/instances_train2017.json',
-                img_prefix=data_root + 'coco/train2017',
+                data_root=data_root,
+                ann_file='coco/annotations/instances_train2017.json',
+                data_prefix=dict(img_path='coco/train2017'),
                 pipeline=train_pipeline,
-                split='train',
                 test_mode=False),
             dict(
                 type='SOTCocoDataset',
-                ann_file=data_root +
-                'ILSVRC/annotations/imagenet_det_30plus1cls.json',
-                img_prefix=data_root + 'ILSVRC/Data/DET',
+                data_root=data_root,
+                ann_file='ILSVRC/annotations/imagenet_det_30plus1cls.json',
+                data_prefix=dict(img_path='ILSVRC/Data/DET'),
                 pipeline=train_pipeline,
-                split='train',
                 test_mode=False)
-        ]),
-    val=dict(
-        type='LaSOTDataset',
-        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',
-        img_prefix=data_root + 'lasot/LaSOTBenchmark',
-        pipeline=test_pipeline,
-        split='test',
-        test_mode=True,
-        only_eval_visible=True),
-    test=dict(
-        type='LaSOTDataset',
-        ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',
-        img_prefix=data_root + 'lasot/LaSOTBenchmark',
-        pipeline=test_pipeline,
-        split='test',
-        test_mode=True,
-        only_eval_visible=True))
+        ]))
+# val_dataloader = dict(
+#     batch_size=1,
+#     num_workers=4,
+#     persistent_workers=True,
+#     drop_last=False,
+#     sampler=dict(type='VideoSampler'),
+#     dataset=dict(
+#         type='LaSOTDataset',
+#         ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',
+#         img_prefix=data_root + 'lasot/LaSOTBenchmark',
+#         pipeline=test_pipeline,
+#         test_mode=True,
+#         only_eval_visible=True))
+# test_dataloader = val_dataloader
+
+# TODO: evaluator
+# evaluation = dict(
+#     metric=['track'],
+#     interval=1,
+#     start=10,
+#     rule='greater',
+#     save_best='success')
+
+# evaluator
+# val_evaluator = dict(
+#     type='OPEMetric',
+#     ann_file=data_root + 'annotations/imagenet_vid_val.json',
+#     metric='bbox')
+# test_evaluator = val_evaluator
+
+# training schedule
+train_cfg = dict(by_epoch=True, max_epochs=20)
+# val_cfg = dict(begin=10, interval=1)
+# test_cfg = dict()
+
+# learning rate
+param_scheduler = [
+    dict(
+        type='SiamRPNExpLR',
+        start_factor=0.2,
+        end_factor=1.0,
+        by_epoch=True,
+        begin=0,
+        end=5,
+        endpoint=False),
+    dict(
+        type='SiamRPNExpLR',
+        start_factor=1.0,
+        end_factor=0.1,
+        by_epoch=True,
+        begin=5,
+        end=20,
+        endpoint=True)
+]
+
 # optimizer
 optimizer = dict(
     type='SGD',
@@ -164,39 +207,10 @@ optimizer = dict(
     weight_decay=0.0001,
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
-optimizer_config = dict(
-    type='SiameseRPNOptimizerHook',
-    backbone_start_train_epoch=10,
-    backbone_train_layers=['layer2', 'layer3', 'layer4'],
-    grad_clip=dict(max_norm=10.0, norm_type=2))
-# learning policy
-lr_config = dict(
-    policy='SiameseRPN',
-    lr_configs=[
-        dict(type='step', start_lr_factor=0.2, end_lr_factor=1.0, end_epoch=5),
-        dict(type='log', start_lr_factor=1.0, end_lr_factor=0.1, end_epoch=20),
-    ])
-# checkpoint saving
-checkpoint_config = dict(interval=1)
-evaluation = dict(
-    metric=['track'],
-    interval=1,
-    start=10,
-    rule='greater',
-    save_best='success')
-# yapf:disable
-log_config = dict(
-    interval=50,
-    hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
-    ])
-# yapf:enable
-# runtime settings
-total_epochs = 20
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-work_dir = './work_dirs/xxx'
-load_from = None
-resume_from = None
-workflow = [('train', 1)]
+default_hooks = dict(
+    optimizer=dict(
+        type='SiameseRPNOptimizerHook',
+        _delete_=True,
+        backbone_start_train_epoch=10,
+        backbone_train_layers=['layer2', 'layer3', 'layer4'],
+        grad_clip=dict(max_norm=10.0, norm_type=2)))
