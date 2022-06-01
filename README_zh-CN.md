@@ -17,7 +17,7 @@
     </sup>
   </div>
   <div>&nbsp;</div>
-</div>
+  <div>&nbsp;</div>
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
@@ -26,9 +26,19 @@
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
 
+[📘Documentation](https://mmtracking.readthedocs.io/) |
+[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/modelzoo.html) |
+[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
+[🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
+
+</div>
+
+<div align="center">
+
 [English](/README.md) | 简体中文
 
-文档：https://mmtracking.readthedocs.io/
+</div>
 
 ## 简介
 
@@ -36,7 +46,7 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 主分支代码目前支持**PyTorch 1.5以上**的版本。
 
-<div align="left">
+<div align="center">
   <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
 </div>
 
@@ -58,13 +68,21 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
   **强大**：MMTracking复现了SOTA性能的模型。受益于[MMDetection](https://github.com/open-mmlab/mmdetection)的持续推进，部分实现精度超出官方版本。
 
-## 许可
-
-该项目遵循[Apache 2.0 license](/LICENSE)开源协议。
-
-## 更新记录
+## 更新
 
 v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/en/changelog.md)了解更多细节以及发布历史。
+
+## 安装
+
+请参考[安装指南](docs/en/install.md)进行安装。
+
+## 开始使用MMTracking
+
+请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。
+
+我们提供了跟踪的Colab教程，您可以在[这里](<(./demo/MMTracking_Tutorial.ipynb)>)预览或者直接在[Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb)上运行。
+
+MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
 
 ## 基准测试与模型库
 
@@ -128,18 +146,6 @@ v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/
 
 - [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
-## 安装
-
-请参考[安装指南](docs/en/install.md)进行安装。
-
-## 开始使用MMTracking
-
-请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。
-
-我们提供了跟踪的Colab教程，您可以在[这里](<(./demo/MMTracking_Tutorial.ipynb)>)预览或者直接在[Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb)上运行。
-
-MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
-
 ## 参与贡献
 
 我们非常欢迎用户对于MMTracking做出的任何贡献，可以参考[贡献指南](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md)文件了解更多细节和在这个[讨论](https://github.com/open-mmlab/mmtracking/issues/73)中规划MMTracking的开发计划。
@@ -160,6 +166,10 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
     year={2020}
 }
 ```
+
+## 许可
+
+该项目遵循[Apache 2.0 license](/LICENSE)开源协议。
 
 ## OpenMMLab 的其他项目
 

@@ -17,7 +17,6 @@
     </sup>
   </div>
   <div>&nbsp;</div>
-</div>
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
@@ -26,9 +25,19 @@
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
 
-English | [简体中文](/README_zh-CN.md)
+[📘Documentation](https://mmtracking.readthedocs.io/) |
+[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/modelzoo.html) |
+[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
+[🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
-Documentation: https://mmtracking.readthedocs.io/
+</div>
+
+<div align="center">
+
+English | [简体中文](README_zh-CN.md)
+
+</div>
 
 ## Introduction
 
@@ -36,7 +45,7 @@ MMTracking is an open source video perception toolbox by PyTorch. It is a part o
 
 The master branch works with **PyTorch1.5+**.
 
-<div align="left">
+<div align="center">
   <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
 </div>
 
@@ -58,16 +67,24 @@ The master branch works with **PyTorch1.5+**.
 
   **Strong**: We reproduce state-of-the-art models and some of them even outperform the official implementations.
 
-## License
-
-This project is released under the [Apache 2.0 license](LICENSE).
-
-## Changelog
+## What's New
 
 Release [QDTrack](configs/mot/qdtrack) pretrained models.
 
 v0.13.0 was released in 29/04/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
+
+## Installation
+
+Please refer to [install.md](docs/en/install.md) for install instructions.
+
+## Getting Started
+
+Please see [dataset.md](docs/en/dataset.md) and [quick_run.md](docs/en/quick_run.md) for the basic usage of MMTracking.
+
+A Colab tutorial is provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
+
+There are also usage [tutorials](docs/en/tutorials/), such as [learning about configs](docs/en/tutorials/config.md), [an example about detailed description of vid config](docs/en/tutorials/config_vid.md), [an example about detailed description of mot config](docs/en/tutorials/config_mot.md), [an example about detailed description of sot config](docs/en/tutorials/config_sot.md), [customizing dataset](docs/en/tutorials/customize_dataset.md), [customizing data pipeline](docs/en/tutorials/customize_data_pipeline.md), [customizing vid model](docs/en/tutorials/customize_vid_model.md), [customizing mot model](docs/en/tutorials/customize_mot_model.md), [customizing sot model](docs/en/tutorials/customize_sot_model.md), [customizing runtime settings](docs/en/tutorials/customize_runtime.md) and [useful tools](docs/en/useful_tools_scripts.md).
 
 ## Benchmark and model zoo
 
@@ -131,18 +148,6 @@ Supported Datasets
 
 - [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
 
-## Installation
-
-Please refer to [install.md](docs/en/install.md) for install instructions.
-
-## Getting Started
-
-Please see [dataset.md](docs/en/dataset.md) and [quick_run.md](docs/en/quick_run.md) for the basic usage of MMTracking.
-
-A Colab tutorial is provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
-
-There are also usage [tutorials](docs/en/tutorials/), such as [learning about configs](docs/en/tutorials/config.md), [an example about detailed description of vid config](docs/en/tutorials/config_vid.md), [an example about detailed description of mot config](docs/en/tutorials/config_mot.md), [an example about detailed description of sot config](docs/en/tutorials/config_sot.md), [customizing dataset](docs/en/tutorials/customize_dataset.md), [customizing data pipeline](docs/en/tutorials/customize_data_pipeline.md), [customizing vid model](docs/en/tutorials/customize_vid_model.md), [customizing mot model](docs/en/tutorials/customize_mot_model.md), [customizing sot model](docs/en/tutorials/customize_sot_model.md), [customizing runtime settings](docs/en/tutorials/customize_runtime.md) and [useful tools](docs/en/useful_tools_scripts.md).
-
 ## Contributing
 
 We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
@@ -166,6 +171,10 @@ If you find this project useful in your research, please consider cite:
     year={2020}
 }
 ```
+
+## License
+
+This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Projects in OpenMMLab
 
