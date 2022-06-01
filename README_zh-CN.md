@@ -25,10 +25,10 @@
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
 
-[📘Documentation](https://mmtracking.readthedocs.io/) |
-[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/modelzoo.html) |
-[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
+[📘Documentation](https://mmtracking.readthedocs.io/zh_CN/latest/) |
+[🛠️Installation](https://mmtracking.readthedocs.io/zh_CN/latest/install.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/zh_CN/latest/model_zoo.html) |
+[🆕Update News](https://mmtracking.readthedocs.io/zh_CN/latest/changelog.html) |
 [🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
 </div>

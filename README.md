@@ -27,7 +27,7 @@
 
 [📘Documentation](https://mmtracking.readthedocs.io/) |
 [🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/modelzoo.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/model_zoo.html) |
 [🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
 [🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
