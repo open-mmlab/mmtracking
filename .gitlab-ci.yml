@@ -41,6 +41,7 @@ linting:
     - echo "Start building..."
     - pip install -e .[all]
     # - pip install -e .[all] -i https://pypi.tuna.tsinghua.edu.cn/simple/
+    - pip install git+https://github.com/JonathonLuiten/TrackEval.git
     - echo "Start testing..."
     - python -c "import mmtrack; print(mmtrack.__version__)"
     - pytest tests/
