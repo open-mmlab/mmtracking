@@ -10,6 +10,7 @@ from .reid_dataset import ReIDDataset
 from .samplers import *  # noqa: F401,F403
 from .sot_coco_dataset import SOTCocoDataset
 from .sot_imagenet_vid_dataset import SOTImageNetVIDDataset
+from .tao_dataset import TaoDataset
 from .trackingnet_dataset import TrackingNetDataset
 from .transforms import *  # noqa: F401,F403
 from .youtube_vis_dataset import YouTubeVISDataset
@@ -18,5 +19,5 @@ __all__ = [
     'BaseVideoDataset', 'MOTChallengeDataset', 'BaseSOTDataset',
     'LaSOTDataset', 'ReIDDataset', 'GOT10kDataset', 'SOTCocoDataset',
     'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset',
-    'ImagenetVIDDataset', 'RandomSampleConcatDataset'
+    'ImagenetVIDDataset', 'RandomSampleConcatDataset', 'TaoDataset'
 ]
