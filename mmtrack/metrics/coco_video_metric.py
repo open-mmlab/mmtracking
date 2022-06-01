@@ -53,6 +53,8 @@ class CocoVideoMetric(BaseVideoMetric):
             names to disambiguate homonymous metrics of different evaluators.
             If prefix is not provided in the argument, self.default_prefix
             will be used instead. Defaults to None.
+        format_only (bool): If True, only formatting the results to the
+            official format and not performing evaluation. Defaults to False.
     """
     default_prefix: Optional[str] = 'coco'
 
@@ -67,10 +69,7 @@ class CocoVideoMetric(BaseVideoMetric):
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None,
                  format_only: bool = False) -> None:
-        super().__init__(
-            collect_device=collect_device,
-            prefix=prefix,
-            format_only=format_only)
+        super().__init__(collect_device=collect_device, prefix=prefix)
         # coco evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
@@ -236,6 +235,7 @@ class CocoVideoMetric(BaseVideoMetric):
             outfile_prefix (str): The filename prefix of the json files. If the
                 prefix is "somepath/xxx", the json file will be named
                 "somepath/xxx.gt.json".
+
         Returns:
             str: The filename of the json file.
         """

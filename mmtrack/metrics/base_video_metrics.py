@@ -24,24 +24,10 @@ class BaseVideoMetric(BaseMetric):
     A subclass of class:`BaseVideoMetric` should assign a meaningful value
     to the class attribute `default_prefix`. See the argument `prefix` for
     details.
-
-    Args:
-        format_only (bool): If True, only formatting the results to the
-            official format and not performing evaluation. Defaults to False.
     """
 
-    def __init__(self, format_only: bool = False, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.format_only = format_only
-
-    def format_results(self, results: list) -> None:
-        """Format the results to official format.
-
-        In dataset like MOT CHALLENGE dataset, YouTube-VIS dataset and GOT10k
-        dataset, we need to format the results to the official format in order
-        to submit the results to the test server.
-        """
-        raise NotImplementedError
 
     def evaluate(self, size: int) -> dict:
         """Evaluate the model performance of the whole dataset after processing
@@ -60,13 +46,7 @@ class BaseVideoMetric(BaseMetric):
                 'ensure that the processed results are properly added into '
                 '`self.results` in `process` method.')
 
-        results = collect_tracking_results(self.results, size,
-                                           self.collect_device)
-        if self.format_only:
-            self.format_results(self.results)
-            # reset the results list
-            self.results.clear()
-            return dict()
+        results = collect_tracking_results(self.results, self.collect_device)
 
         if is_main_process():
             _metrics = self.compute_metrics(results)  # type: ignore
@@ -88,7 +68,6 @@ class BaseVideoMetric(BaseMetric):
 
 
 def collect_tracking_results(results: list,
-                             size: int,
                              device: str = 'cpu',
                              tmpdir: Optional[str] = None) -> Optional[list]:
     """Collected results in distributed environments.
@@ -97,8 +76,6 @@ def collect_tracking_results(results: list,
         results (list): Result list containing result parts to be
             collected. Each item of ``result_part`` should be a picklable
             object.
-        size (int): Size of the results, commonly equal to length of
-            the results.
         device (str): Device name. Optional values are 'cpu' and 'gpu'.
         tmpdir (str | None): Temporal directory for collected results to
             store. If set to None, it will create a temporal directory for it.
@@ -115,13 +92,12 @@ def collect_tracking_results(results: list,
         assert tmpdir is None, 'tmpdir should be None when device is "gpu"'
         raise NotImplementedError('GPU collecting has not been supported yet')
     else:
-        return collect_tracking_results_cpu(results, size, tmpdir)
+        return collect_tracking_results_cpu(results, tmpdir)
 
 
-def collect_tracking_results_cpu(
-        result_part: list,
-        size: int,
-        tmpdir: Optional[str] = None) -> Optional[list]:
+def collect_tracking_results_cpu(result_part: list,
+                                 tmpdir: Optional[str] = None
+                                 ) -> Optional[list]:
     """Collect results on cpu mode.
 
     Saves the results on different gpus to 'tmpdir' and collects them by the
@@ -129,8 +105,6 @@ def collect_tracking_results_cpu(
 
     Args:
         result_part (list): The part of prediction results.
-        size (int): Size of the results, commonly equal to length of
-            the results.
         tmpdir (str): Path of directory to save the temporary results from
             different gpus under cpu mode. If is None, use `tempfile.mkdtemp()`
             to make a temporary path. Defaults to None.
@@ -140,7 +114,7 @@ def collect_tracking_results_cpu(
     """
     rank, world_size = get_dist_info()
     if world_size == 1:
-        return result_part[:size]
+        return result_part
 
     # create a tmp dir if it is not specified
     if tmpdir is None:
