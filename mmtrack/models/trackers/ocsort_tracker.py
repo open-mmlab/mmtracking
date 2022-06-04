@@ -73,6 +73,7 @@ class OCSORTTracker(SortTracker):
         bbox = bbox.squeeze(0).cpu().numpy()
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
+        # track.obs maintains the history associated detections to this track
         self.tracks[id].obs = []
         bbox_id = self.memo_items.index('bboxes')
         self.tracks[id].obs.append(obj[bbox_id])
@@ -147,7 +148,11 @@ class OCSORTTracker(SortTracker):
                        det_bboxes,
                        weight_iou_with_det_scores=False,
                        match_iou_thr=0.5):
-        """Assign ids.
+        """Apply Observation-Centric Momentum (OCM) to assign ids.
+
+        OCM adds movement direction consistency into the association cost
+        matrix. This term requires no additional assumption but from the
+        same linear motion assumption as the canonical Kalman Filter in SORT.
 
         Args:
             ids (list[int]): Tracking ids.
@@ -183,6 +188,8 @@ class OCSORTTracker(SortTracker):
             k_step_observations = torch.stack([
                 self.k_step_observation(self.tracks[id]) for id in ids
             ]).to(det_bboxes.device)
+            # valid1: if the track has previous observations to estimate speed
+            # valid2: if the associated observation k steps ago is a detection
             valid1 = track_velocities.sum(dim=1) != -2
             valid2 = k_step_observations.sum(dim=1) != -4
             valid = valid1 & valid2
@@ -226,6 +233,19 @@ class OCSORTTracker(SortTracker):
 
         As try to recover tracks from being lost whose estimated velocity is
         out- to-date, we use IoU-only matching strategy.
+
+        Args:
+            track_obs (Tensor): the list of historical associated
+                detections of tracks
+            det_bboxes (Tensor): of shape (N, 5), unmatched detections
+            weight_iou_with_det_scores (bool, optional): Whether using
+                detection scores to weight IOU which is used for matching.
+                Defaults to False.
+            match_iou_thr (float, optional): Matching threshold.
+                Defaults to 0.5.
+
+        Returns:
+            tuple(int): The assigning ids.
         """
         # compute distance
         ious = bbox_overlaps(track_obs[:, :4], det_bboxes[:, :4])
@@ -280,6 +300,10 @@ class OCSORTTracker(SortTracker):
               rescale=False,
               **kwargs):
         """Tracking forward function.
+        NOTE: this implementation is slightly different from the original
+        OC-SORT implementation (https://github.com/noahcao/OC_SORT)that we
+        do association between detections and tentative/non-tentative tracks
+        independently while the original implementation combines them together.
 
         Args:
             img (Tensor): of shape (N, C, H, W) encoding input images.
@@ -296,11 +320,6 @@ class OCSORTTracker(SortTracker):
                 False.
         Returns:
             tuple: Tracking results.
-
-        NOTE: this implementation is slightly different from the original
-        OC-SORT implementation (https://github.com/noahcao/OC_SORT)that we
-        do association between detections and tentative/non-tentative tracks
-        independently while the original implementation combines them together.
         """
         if not hasattr(self, 'kf'):
             self.kf = model.motion
@@ -335,7 +354,6 @@ class OCSORTTracker(SortTracker):
                     self.tracks[id].saved_attr.mean = self.tracks[id].mean
                     self.tracks[id].saved_attr.covariance = self.tracks[
                         id].covariance
-                    # self.tracks[id].saved_attr.bbox = self.tracks[id].obs[-1]
                 (self.tracks[id].mean,
                  self.tracks[id].covariance) = self.kf.predict(
                      self.tracks[id].mean, self.tracks[id].covariance)
