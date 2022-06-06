@@ -1,27 +1,30 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import tempfile
-import zipfile
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import mmcv
 import numpy as np
-from mmdet.core.mask import encode_mask_results
 from mmengine.logging import MMLogger
 
-from mmtrack.core.evaluation import YTVIS, YTVISeval
 from mmtrack.metrics import BaseVideoMetric
 from mmtrack.registry import METRICS
 
+try:
+    import tao
+    from tao.toolkit.tao import Tao, TaoEval
+except ImportError:
+    tao = None
+
 
 @METRICS.register_module()
-class YouTubeVISMetric(BaseVideoMetric):
-    """mAP evaluation metrics for the VIS task.
+class TAOMetric(BaseVideoMetric):
+    """mAP evaluation metrics for the TAO task.
 
     Args:
         metric (str | list[str]): Metrics to be evaluated.
-            Default value is `youtube_vis_ap`.
+            Defaults to 'tao_track_ap'.
         metric_items (List[str], optional): Metric result names to be
             recorded in the evaluation result. Defaults to None.
         outfile_prefix (str | None): The prefix of json files. It includes
@@ -33,35 +36,36 @@ class YouTubeVISMetric(BaseVideoMetric):
         prefix (str, optional): The prefix that will be added in the metric
             names to disambiguate homonyms metrics of different evaluators.
             If prefix is not provided in the argument, self.default_prefix
-            will be used instead. Default: None
+            will be used instead. Defaults to None.
         format_only (bool): If True, only formatting the results to the
             official format and not performing evaluation. Defaults to False.
     """
 
-    default_prefix: Optional[str] = 'youtube_vis'
+    default_prefix: Optional[str] = 'tao'
 
     def __init__(self,
-                 metric: Union[str, List[str]] = 'youtube_vis_ap',
+                 metric: Union[str, List[str]] = 'tao_track_ap',
                  metric_items: Optional[Sequence[str]] = None,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None,
                  format_only: bool = False) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
-        # vis evaluation metrics
+        # tao evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
         self.format_only = format_only
-        allowed_metrics = ['youtube_vis_ap']
+        allowed_metrics = ['tao_track_ap']
         for metric in self.metrics:
             if metric not in allowed_metrics:
                 raise KeyError(
-                    f"metric should be 'youtube_vis_ap', but got {metric}.")
+                    f"metric should be 'tao_track_ap', but got {metric}.")
 
         self.metric_items = metric_items
         self.outfile_prefix = outfile_prefix
         self.per_video_res = []
-        self.categories = []
-        self._vis_meta_info = defaultdict(list)  # record video and image infos
+        self.img_ids = []
+        self.cat_ids = []
+        self._tao_meta_info = defaultdict(list)
 
     def process(self, data_batch: Sequence[dict],
                 predictions: Sequence[dict]) -> None:
@@ -80,31 +84,32 @@ class YouTubeVISMetric(BaseVideoMetric):
             pred = pred['pred_track_instances']
             frame_id = data['data_sample']['frame_id']
             video_length = data['data_sample']['video_length']
-            video_id = data['data_sample']['video_id']
 
             result['img_id'] = data['data_sample']['img_id']
             result['bboxes'] = pred['bboxes'].cpu().numpy()
             result['scores'] = pred['scores'].cpu().numpy()
             result['labels'] = pred['labels'].cpu().numpy()
             result['instance_id'] = pred['instance_id'].cpu().numpy()
-            # encode mask to RLE
-            assert 'masks' in pred, \
-                'masks must exist in YouTube-VIS metric'
-            result['masks'] = encode_mask_results(
-                pred['masks'].detach().cpu().numpy())
 
             # parse gt
             gt = dict()
             gt['width'] = data['data_sample']['ori_shape'][1]
             gt['height'] = data['data_sample']['ori_shape'][0]
-            gt['img_id'] = data['data_sample']['img_id']
-            gt['frame_id'] = frame_id
-            gt['video_id'] = video_id
-            gt['video_length'] = video_length
+            keys = [
+                'frame_id', 'frame_index', 'neg_category_ids',
+                'not_exhaustive_category_ids', 'img_id', 'video_id',
+                'video_length'
+            ]
+            for key in keys:
+                if key not in data['data_sample']:
+                    raise KeyError(
+                        f'The key {key} is not found in track_data_sample,'
+                        f' please pass it into the meta_keys'
+                        f' of the PackTrackInputs')
+                gt[key] = data['data_sample'][key]
 
             # When the ground truth exists, get annotation from `instances`.
-            # In general, it contains `bbox`, `bbox_label`, `mask` and
-            # `instance_id`.
+            # In general, it contains `bbox`, `bbox_label` and `instance_id`.
             if 'instances' in data['data_sample']:
                 gt['anns'] = data['data_sample']['instances']
             else:
@@ -114,7 +119,6 @@ class YouTubeVISMetric(BaseVideoMetric):
             if frame_id == video_length - 1:
                 preds, gts = zip(*self.per_video_res)
                 # format the results
-                # we must format gts first to update self._vis_meta_info
                 gt_results = self._format_one_video_gts(gts)
                 pred_results = self._format_one_video_preds(preds)
                 self.per_video_res.clear()
@@ -131,6 +135,7 @@ class YouTubeVISMetric(BaseVideoMetric):
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are corresponding results.
         """
+        logger: MMLogger = MMLogger.get_current_instance()
         # split gt and prediction list
         tmp_pred_results, tmp_gt_results = zip(*results)
         gt_results = self.format_gts(tmp_gt_results)
@@ -140,69 +145,56 @@ class YouTubeVISMetric(BaseVideoMetric):
             self.save_pred_results(pred_results)
             return dict()
 
-        ytvis = YTVIS(gt_results)
+        eval_results = dict()
 
-        ytvis_dets = ytvis.loadRes(pred_results)
-        vid_ids = ytvis.getVidIds()
+        if 'tao_track_ap' in self.metrics:
+            if tao is None:
+                raise ImportError(
+                    'Please run'
+                    ' pip install git+https://github.com/TAO-Dataset/tao.git '
+                    'to manually install tao')
 
-        iou_type = metric = 'segm'
-        eval_results = OrderedDict()
-        ytvisEval = YTVISeval(ytvis, ytvis_dets, iou_type)
-        ytvisEval.params.vidIds = vid_ids
-        ytvisEval.evaluate()
-        ytvisEval.accumulate()
-        ytvisEval.summarize()
+            logger.info('Evaluating tracking results...')
+            tao_gt = Tao(gt_results)
+            tao_eval = TaoEval(tao_gt, pred_results)
+            tao_eval.params.img_ids = self.img_ids
+            tao_eval.params.cat_ids = self.cat_ids
+            tao_eval.params.iou_thrs = np.array([0.5, 0.75])
+            tao_eval.run()
 
-        coco_metric_names = {
-            'mAP': 0,
-            'mAP_50': 1,
-            'mAP_75': 2,
-            'mAP_s': 3,
-            'mAP_m': 4,
-            'mAP_l': 5,
-            'AR@1': 6,
-            'AR@10': 7,
-            'AR@100': 8,
-            'AR_s@100': 9,
-            'AR_m@100': 10,
-            'AR_l@100': 11
-        }
-        metric_items = self.metric_items
-        if metric_items is not None:
-            for metric_item in metric_items:
-                if metric_item not in coco_metric_names:
-                    raise KeyError(
-                        f'metric item "{metric_item}" is not supported')
-
-        if metric_items is None:
-            metric_items = [
-                'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
-            ]
-        for metric_item in metric_items:
-            key = f'{metric}_{metric_item}'
-            val = float(
-                f'{ytvisEval.stats[coco_metric_names[metric_item]]:.3f}')
-            eval_results[key] = val
-
-        ap = ytvisEval.stats[:6]
-        eval_results[f'{metric}_mAP_copypaste'] = (
-            f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
-            f'{ap[4]:.3f} {ap[5]:.3f}')
+            tao_eval.print_results()
+            tao_results = tao_eval.get_results()
+            for k, v in tao_results.items():
+                if isinstance(k, str) and k.startswith('AP'):
+                    key = 'track_{}'.format(k)
+                    val = float('{:.3f}'.format(float(v)))
+                    eval_results[key] = val
 
         return eval_results
 
     def format_gts(self, gts: Tuple[List]) -> dict:
         """Gather all ground-truth from self.results."""
-        self.categories = [
-            dict(id=id + 1, name=name)
-            for id, name in enumerate(self.dataset_meta['CLASSES'])
-        ]
+        categories = []
+        for id, name in enumerate(self.dataset_meta['CLASSES']):
+            categories.append(dict(id=id + 1, name=name))
+            self.cat_ids.append(id + 1)
+        for img_info in self._tao_meta_info['images']:
+            self.img_ids.append(img_info['id'])
         gt_results = dict(
-            categories=self.categories,
-            videos=self._vis_meta_info['videos'],
-            annotations=[])
+            info=dict(),
+            images=self._tao_meta_info['images'],
+            categories=categories,
+            videos=self._tao_meta_info['videos'],
+            annotations=[],
+            tracks=self._tao_meta_info['tracks'])
+
+        ann_id = 1
         for gt_result in gts:
-            gt_results['annotations'].extend(gt_result)
+            for ann in gt_result:
+                ann['id'] = ann_id
+                gt_results['annotations'].append(ann)
+                ann_id += 1
+
         return gt_results
 
     def format_preds(self, preds: Tuple[List]) -> List:
@@ -229,45 +221,28 @@ class YouTubeVISMetric(BaseVideoMetric):
             for key in pred.keys():
                 preds[key].append(pred[key])
 
-        img_infos = self._vis_meta_info['images']
-        vid_infos = self._vis_meta_info['videos']
-        inds = [i for i, _ in enumerate(img_infos) if _['frame_id'] == 0]
-        inds.append(len(img_infos))
+        vid_infos = self._tao_meta_info['videos']
         json_results = []
         video_id = vid_infos[-1]['id']
-        # collect data for each instances in a video.
-        collect_data = dict()
-        for frame_id, (masks, scores, labels, ids) in enumerate(
-                zip(preds['masks'], preds['scores'], preds['labels'],
-                    preds['instance_id'])):
 
-            assert len(masks) == len(labels)
-            for j, id in enumerate(ids):
-                if id not in collect_data:
-                    collect_data[id] = dict(
-                        category_ids=[], scores=[], segmentations=dict())
-                collect_data[id]['category_ids'].append(labels[j])
-                collect_data[id]['scores'].append(scores)
-                if isinstance(masks[j]['counts'], bytes):
-                    masks[j]['counts'] = masks[j]['counts'].decode()
-                collect_data[id]['segmentations'][frame_id] = masks[j]
-
-        # transform the collected data into official format
-        for id, id_data in collect_data.items():
-            output = dict()
-            output['video_id'] = video_id
-            output['score'] = np.array(id_data['scores']).mean().item()
-            # majority voting for sequence category
-            output['category_id'] = np.bincount(
-                np.array(id_data['category_ids'])).argmax().item() + 1
-            output['segmentations'] = []
-            for frame_id in range(inds[-1] - inds[-2]):
-                if frame_id in id_data['segmentations']:
-                    output['segmentations'].append(
-                        id_data['segmentations'][frame_id])
-                else:
-                    output['segmentations'].append(None)
-            json_results.append(output)
+        for img_id, bboxes, scores, labels, ins_ids in zip(
+                preds['img_id'], preds['bboxes'], preds['scores'],
+                preds['labels'], preds['instance_id']):
+            for bbox, score, label, ins_id in zip(bboxes, scores, labels,
+                                                  ins_ids):
+                data = dict(
+                    image_id=img_id,
+                    bbox=[
+                        bbox[0],
+                        bbox[1],
+                        bbox[2] - bbox[0],
+                        bbox[3] - bbox[1],
+                    ],
+                    score=score,
+                    category_id=label + 1,
+                    track_id=ins_id,
+                    video_id=video_id)
+                json_results.append(data)
 
         return json_results
 
@@ -284,9 +259,9 @@ class YouTubeVISMetric(BaseVideoMetric):
         """
         video_infos = []
         image_infos = []
-        instance_infos = defaultdict(list)
-        len_videos = dict()  # mapping from instance_id to video_length
-        vis_anns = []
+        track_infos = []
+        annotations = []
+        instance_flag = dict()  # flag the ins_id is used or not
 
         # get video infos
         for gt_dict in gt_dicts:
@@ -297,7 +272,12 @@ class YouTubeVISMetric(BaseVideoMetric):
                 id=img_id,
                 width=gt_dict['width'],
                 height=gt_dict['height'],
+                video_id=video_id,
                 frame_id=frame_id,
+                frame_index=gt_dict['frame_index'],
+                neg_category_ids=gt_dict['neg_category_ids'],
+                not_exhaustive_category_ids=gt_dict[
+                    'not_exhaustive_category_ids'],
                 file_name='')
             image_infos.append(image_info)
             if frame_id == 0:
@@ -305,6 +285,9 @@ class YouTubeVISMetric(BaseVideoMetric):
                     id=video_id,
                     width=gt_dict['width'],
                     height=gt_dict['height'],
+                    neg_category_ids=gt_dict['neg_category_ids'],
+                    not_exhaustive_category_ids=gt_dict[
+                        'not_exhaustive_category_ids'],
                     file_name='')
                 video_infos.append(video_info)
 
@@ -312,8 +295,6 @@ class YouTubeVISMetric(BaseVideoMetric):
                 label = ann['bbox_label']
                 bbox = ann['bbox']
                 instance_id = ann['instance_id']
-                # update video length
-                len_videos[instance_id] = gt_dict['video_length']
                 coco_bbox = [
                     bbox[0],
                     bbox[1],
@@ -322,55 +303,34 @@ class YouTubeVISMetric(BaseVideoMetric):
                 ]
 
                 annotation = dict(
+                    id=-1,  # need update when all results have been collected
                     video_id=video_id,
+                    image_id=img_id,
                     frame_id=frame_id,
                     bbox=coco_bbox,
+                    track_id=instance_id,
                     instance_id=instance_id,
                     iscrowd=ann.get('ignore_flag', 0),
-                    category_id=int(label) + 1,
+                    category_id=label + 1,
                     area=coco_bbox[2] * coco_bbox[3])
-                if ann.get('mask', None):
-                    mask = ann['mask']
-                    # area = mask_util.area(mask)
-                    if isinstance(mask, dict) and isinstance(
-                            mask['counts'], bytes):
-                        mask['counts'] = mask['counts'].decode()
-                    annotation['segmentation'] = mask
+                if not instance_flag.get(instance_id, False):
+                    track_info = dict(
+                        id=instance_id,
+                        category_id=label + 1,
+                        video_id=video_id)
+                    track_infos.append(track_info)
+                    instance_flag[instance_id] = True
+                annotations.append(annotation)
 
-                instance_infos[instance_id].append(annotation)
+        # update tao meta info
+        self._tao_meta_info['images'].extend(image_infos)
+        self._tao_meta_info['videos'].extend(video_infos)
+        self._tao_meta_info['tracks'].extend(track_infos)
 
-        # update vis meta info
-        self._vis_meta_info['images'].extend(image_infos)
-        self._vis_meta_info['videos'].extend(video_infos)
-
-        for instance_id, ann_infos in instance_infos.items():
-            cur_video_len = len_videos[instance_id]
-            segm = [None] * cur_video_len
-            bbox = [None] * cur_video_len
-            area = [None] * cur_video_len
-            # In the official format, no instances are represented by
-            # 'None', however, only images with instances are recorded
-            # in the current annotations, so we need to use 'None' to
-            # initialize these lists.
-            for ann_info in ann_infos:
-                frame_id = ann_info['frame_id']
-                segm[frame_id] = ann_info['segmentation']
-                bbox[frame_id] = ann_info['bbox']
-                area[frame_id] = ann_info['area']
-            instance = dict(
-                category_id=ann_infos[0]['category_id'],
-                segmentations=segm,
-                bboxes=bbox,
-                video_id=ann_infos[0]['video_id'],
-                areas=area,
-                id=instance_id,
-                iscrowd=ann_infos[0]['iscrowd'])
-            vis_anns.append(instance)
-        return vis_anns
+        return annotations
 
     def save_pred_results(self, pred_results: List) -> None:
-        """Save the results to a zip file (standard format for YouTube-VIS
-        Challenge).
+        """Save the results to a zip file.
 
         Args:
             pred_results (list): Testing results of the
@@ -383,10 +343,5 @@ class YouTubeVISMetric(BaseVideoMetric):
         else:
             outfile_prefix = self.outfile_prefix
         mmcv.dump(pred_results, f'{outfile_prefix}.json')
-        # zip the json file in order to submit to the test server.
-        zip_file_name = f'{outfile_prefix}.submission_file.zip'
-        zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)
-        logger.info(f"zip the 'results.json' into '{zip_file_name}', "
-                    'please submmit the zip file to the test server')
-        zf.write(f'{outfile_prefix}.json', 'results.json')
-        zf.close()
+
+        logger.info(f'save the results to {outfile_prefix}.json')
