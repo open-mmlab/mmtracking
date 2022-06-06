@@ -276,14 +276,13 @@ class PairSampling(BaseTransform):
 
     Required Keys:
 
-    - instances
-
-      - bboxes
-      - frame_ids
-      - video_id
-      - instance_id (optional)
-      - mask (optional)
-      - img_paths
+    - img_paths
+    - frame_ids
+    - video_id
+    - video_length
+    - bboxes
+    - instance_id (optional)
+    - mask (optional)
 
     - seg_map_path (optional)
 
@@ -353,6 +352,7 @@ class PairSampling(BaseTransform):
             results['img_path'].append(video_info['img_paths'][frame_ind])
             results['frame_id'].append(video_info['frame_ids'][frame_ind])
             results['video_id'].append(video_info['video_id'])
+            results['video_length'].append(video_info['video_length'])
             instance = [
                 dict(
                     bbox=video_info['bboxes'][frame_ind],
@@ -368,7 +368,7 @@ class PairSampling(BaseTransform):
             pair_video_infos (list[dict]): Containing the information of two
                 videos. Each video information contains the keys:
                 ['bboxes','bboxes_isvalid', 'img_paths', 'frame_ids',
-                'video_id','visible'].
+                'video_id', 'visible', 'video_length'].
 
         Returns:
             dict: contains the information of sampled data.

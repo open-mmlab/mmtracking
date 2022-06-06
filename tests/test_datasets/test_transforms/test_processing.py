@@ -22,7 +22,8 @@ class TestPairSampling:
                 visible=visible,
                 img_paths=filenames,
                 frame_ids=frame_ids,
-                video_id=video_id)
+                video_id=video_id,
+                video_length=60)
             pair_video_infos.append(video_info)
 
         cls.num_frames = num_frames

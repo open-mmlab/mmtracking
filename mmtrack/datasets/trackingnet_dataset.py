@@ -97,16 +97,14 @@ class TrackingNetDataset(BaseSOTDataset):
         results = {}
         results['img_path'] = self.test_memo.img_infos['img_paths'][frame_idx]
         results['frame_id'] = frame_idx
+        results['video_id'] = video_idx
 
+        instance = {}
         if frame_idx == 0:
             ann_infos = self.get_ann_infos_from_video(video_idx)
-            bbox = ann_infos['bboxes'][frame_idx]
-        else:
-            bbox = np.array([0] * 4, dtype=np.float32)
+            instance['bbox'] = ann_infos['bboxes'][frame_idx]
 
         results['instances'] = []
-        instance = {}
-        instance['bbox'] = bbox
         instance['visible'] = True
         instance['bbox_label'] = np.array([0], dtype=np.int32)
         instance['ignore_flag'] = False

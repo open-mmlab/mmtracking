@@ -70,7 +70,8 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
             dict: {
                     'video_id': int,
                     'frame_ids': np.ndarray,
-                    'img_paths': list[str]
+                    'img_paths': list[str],
+                    'video_length': int
                   }
         """
         instance_id = self.get_data_info(video_idx)['ins_id']
@@ -84,7 +85,10 @@ class SOTImageNetVIDDataset(BaseSOTDataset):
                 osp.join(self.data_prefix['img_path'],
                          self.coco.imgs[img_id]['file_name']))
         img_infos = dict(
-            video_id=video_idx, frame_ids=frame_ids, img_paths=img_names)
+            video_id=video_idx,
+            frame_ids=frame_ids,
+            img_paths=img_names,
+            video_length=len(frame_ids))
         return img_infos
 
     def get_ann_infos_from_video(self, video_idx: int) -> dict:

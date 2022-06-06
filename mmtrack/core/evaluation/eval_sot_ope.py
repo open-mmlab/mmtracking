@@ -1,22 +1,25 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Dict, List, Optional
+
 import numpy as np
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 
 
-def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
+def success_overlap(gt_bboxes: np.ndarray, pred_bboxes: np.ndarray,
+                    iou_th: np.ndarray, video_length: int) -> np.ndarray:
     """Evaluation based on iou.
 
     Args:
-        gt_bboxes (ndarray): of shape (video_length, 4) in
+        gt_bboxes (np.ndarray): of shape (video_length, 4) in
             [tl_x, tl_y, br_x, br_y] format.
-        pred_bboxes (ndarray): of shape (video_length, 4) in
+        pred_bboxes (np.ndarray): of shape (video_length, 4) in
             [tl_x, tl_y, br_x, br_y] format.
-        iou_th (ndarray): Different threshold of iou. Typically is set to
+        iou_th (np.ndarray): Different threshold of iou. Typically is set to
             `np.arange(0, 1.05, 0.05)`.
         video_length (int): Video length.
 
     Returns:
-        ndarray: The evaluation results at different threshold of iou.
+        np.ndarray: The evaluation results at different threshold of iou.
     """
     success = np.zeros(len(iou_th))
     iou = np.ones(len(gt_bboxes)) * (-1)
@@ -31,18 +34,21 @@ def success_overlap(gt_bboxes, pred_bboxes, iou_th, video_length):
     return success
 
 
-def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
-                  video_length):
+def success_error(gt_bboxes_center: np.ndarray, pred_bboxes_center: np.ndarray,
+                  pixel_offset_th: np.ndarray,
+                  video_length: int) -> np.ndarray:
     """Evaluation based on pixel offset.
 
     Args:
-        gt_bboxes (ndarray): of shape (video_length, 2) in [cx, cy] format.
-        pred_bboxes (ndarray): of shape (video_length, 2) in [cx, cy] format.
-        pixel_offset_th (ndarray): Different threshold of pixel offset.
+        gt_bboxes (np.ndarray): of shape (video_length, 2) in [cx, cy] format.
+        pred_bboxes (np.ndarray): of shape (video_length, 2) in [cx, cy]
+            format.
+        pixel_offset_th (np.ndarray): Different threshold of pixel offset.
         video_length (int): Video length.
 
     Returns:
-        ndarray: The evaluation results at different threshold of pixel offset.
+        np.ndarray: The evaluation results at different threshold of pixel
+            offset.
     """
     success = np.zeros(len(pixel_offset_th))
     dist = np.ones(len(gt_bboxes_center)) * (-1)
@@ -55,24 +61,27 @@ def success_error(gt_bboxes_center, pred_bboxes_center, pixel_offset_th,
     return success
 
 
-def eval_sot_ope(results, annotations, visible_infos=None):
+def eval_sot_ope(
+        results,
+        annotations: List[List[np.ndarray]],
+        visible_infos: Optional[List[np.ndarray]] = None) -> Dict[str, float]:
     """Evaluation in OPE protocol.
 
     Args:
-        results (list[list[ndarray]]): The first list contains the tracking
+        results (List[List[np.ndarray]]): The first list contains the tracking
             results of each video. The second list contains the tracking
             results of each frame in one video. The ndarray denotes the
             tracking box in [tl_x, tl_y, br_x, br_y] format.
-        annotations (list[ndarray]): The list contains the bbox
+        annotations (List[np.ndarray]): The list contains the bbox
             annotations of each video. The ndarray is gt_bboxes of one video.
             It's in (N, 4) shape. Each bbox is in (x1, y1, x2, y2) format.
-        visible_infos (list[ndarray] | None): If not None, the list
-            contains the visible information of each video. The ndarray is
+        visible_infos (Optional[List[np.ndarray]], optional): If not None, the
+            list contains the visible information of each video. The ndarray is
             visibility (with bool type) of object in one video. It's in (N,)
             shape. Default to None.
 
     Returns:
-        dict[str, float]: OPE style evaluation metric (i.e. success,
+        Dict[str, float]: OPE style evaluation metric (i.e. success,
         norm precision and precision).
     """
     success_results = []

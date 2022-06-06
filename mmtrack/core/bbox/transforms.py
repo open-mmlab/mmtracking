@@ -3,15 +3,15 @@ import torch
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
 
 
-def quad2bbox(quad):
+def quad2bbox_cxcywh(quad: torch.Tensor):
     """Convert quadrilateral to axis aligned box in [cx, cy, w, h] format.
 
     Args:
-        quad (Tensor): of shape (N, 8), (8, ), (N, 4) or (4, ). The
+        quad (torch.Tensor): of shape (N, 8), (8, ), (N, 4) or (4, ). The
             coordinates are in [x1, y1, x2, y2, x3, y3, x4, y4] or
             [tl_x, tl_y, br_x, br_y] format.
     Returns:
-        Tensor: in [cx, cy, w, h] format.
+        torch.Tensor: in [cx, cy, w, h] format.
     """
     if len(quad.shape) == 1:
         quad = quad.unsqueeze(0)
@@ -38,28 +38,28 @@ def quad2bbox(quad):
     return bbox
 
 
-def bbox_cxcywh_to_x1y1wh(bbox):
+def bbox_cxcywh_to_x1y1wh(bbox: torch.Tensor) -> torch.Tensor:
     """Convert bbox coordinates from (cx, cy, w, h) to (x1, y1, w, h).
 
     Args:
-        bbox (Tensor): Shape (n, 4) or (4, ) for bboxes.
+        bbox (torch.Tensor): Shape (n, 4) or (4, ) for bboxes.
 
     Returns:
-        Tensor: Converted bboxes.
+        torch.Tensor: Converted bboxes.
     """
     cx, cy, w, h = bbox.split((1, 1, 1, 1), dim=-1)
     bbox_new = [(cx - 0.5 * w), (cy - 0.5 * h), w, h]
     return torch.cat(bbox_new, dim=-1)
 
 
-def bbox_xyxy_to_x1y1wh(bbox):
+def bbox_xyxy_to_x1y1wh(bbox: torch.Tensor) -> torch.Tensor:
     """Convert bbox coordinates from (x1, y1, x2, y2) to (x1, y1, w, h).
 
     Args:
-        bbox (Tensor): Shape (n, 4) or (4, ) for bboxes.
+        bbox (torch.Tensor): Shape (n, 4) or (4, ) for bboxes.
 
     Returns:
-        Tensor: Converted bboxes.
+        torch.Tensor: Converted bboxes.
     """
     x1, y1, x2, y2 = bbox.split((1, 1, 1, 1), dim=-1)
     bbox_new = [x1, y1, (x2 - x1), (y2 - y1)]

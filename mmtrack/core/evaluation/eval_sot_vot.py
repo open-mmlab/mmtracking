@@ -1,5 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # The codes are modified from https://github.com/votchallenge/toolkit/blob/master/vot/analysis/supervised.py # noqa: E501
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 
 try:
@@ -11,15 +13,16 @@ except ImportError:
     vot = None
 
 
-def bbox2region(bbox):
+def bbox2region(bbox: np.ndarray) -> Union[Rectangle, Polygon]:
     """Convert bbox to Rectangle or Polygon Class object.
 
     Args:
-        bbox (ndarray): the format of rectangle bbox is (x1, y1, w, h);
-            the format of polygon is (x1, y1, x2, y2, ...).
+        bbox (np.ndarray): the format of rectangle bbox is
+            [tl_x, tl_y, br_x, br_y];
+            the format of polygon is [x1, y1, x2, y2, ...].
 
     Returns:
-        Rectangle or Polygon Class object.
+        :obj:`Rectangle` or :obj:`Polygon`.
     """
     if vot is None:
         raise ImportError(
@@ -30,7 +33,8 @@ def bbox2region(bbox):
     if len(bbox) == 1:
         return Special(bbox[0])
     elif len(bbox) == 4:
-        return Rectangle(bbox[0], bbox[1], bbox[2], bbox[3])
+        return Rectangle(bbox[0], bbox[1], bbox[2] - bbox[0],
+                         bbox[3] - bbox[1])
     elif len(bbox) % 2 == 0 and len(bbox) > 4:
         return Polygon([(x_, y_) for x_, y_ in zip(bbox[::2], bbox[1::2])])
     else:
@@ -38,11 +42,11 @@ def bbox2region(bbox):
             f'The length of bbox is {len(bbox)}, which is not supported')
 
 
-def trajectory2region(trajectory):
+def trajectory2region(trajectory: List[np.ndarray]) -> List:
     """Convert bbox trajectory to Rectangle or Polygon Class object trajectory.
 
     Args:
-        trajectory (list[ndarray]): The outer list contains bbox of
+        trajectory (List[np.ndarray]): The outer list contains bbox of
             each frame in a video. The bbox is a ndarray.
 
     Returns:
@@ -55,15 +59,16 @@ def trajectory2region(trajectory):
     return traj_region
 
 
-def locate_failures_inits(trajectory):
+def locate_failures_inits(trajectory: List[np.ndarray]) -> Tuple[List, List]:
     """locate the failure frame and initialized frame in a trajectory.
 
     Args:
-        trajectory (list[ndarray]): list of tracking results.
+        trajectory (List[np.ndarray]): list of tracking results.
 
     Returns:
-        fail_inds (list): index of failed frame in a trajectory.
-        init_inds (list): index of initialized frame in a trajectory.
+        Tuple[List, List]:
+            - fail_inds (List): index of failed frame in a trajectory.
+            - init_inds (List): index of initialized frame in a trajectory.
     """
     fail_inds = []
     init_inds = []
@@ -76,11 +81,11 @@ def locate_failures_inits(trajectory):
     return fail_inds, init_inds
 
 
-def count_failures(trajectory):
+def count_failures(trajectory: List[np.ndarray]) -> List:
     """count the number of failed frame in a trajectory.
 
     Args:
-        trajectory (list[ndarray]): list of tracking results.
+        trajectory (List[np.ndarray]): list of tracking results.
 
     Returns:
         List: the number of failed frame in a trajectory.
@@ -92,28 +97,29 @@ def count_failures(trajectory):
     return num_fails
 
 
-def calc_accuracy(gt_trajectory,
-                  pred_trajectory,
-                  burnin=10,
-                  ignore_unknown=True,
-                  video_wh=None):
+def calc_accuracy(gt_trajectory: List[List],
+                  pred_trajectory: List[List],
+                  burnin: int = 10,
+                  ignore_unknown: bool = True,
+                  video_wh: Optional[Tuple[int, int]] = None) -> float:
     """Calculate accuracy over the sequence.
 
     Args:
-        gt_trajectory (list[list]): list of bboxes
-        pred_trajectory (list[ndarray]): The outer list contains the
+        gt_trajectory (List[List]): list of bboxes
+        pred_trajectory (List[np.ndarray]): The outer list contains the
             tracking results of each frame in one video. The ndarray has two
             cases:
-                - bbox: denotes the normal tracking box in [x1, y1, w, h]
-                    format.
+                - bbox: denotes the normal tracking box in
+                    [tl_x, tl_y, br_x, br_y] format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        burnin: number of frames that have to be ignored after the
-            re-initialization when calculating accuracy. Default is 10.
-        ignore_unknown (bool): whether ignore the skipping frames after
-            failures when calculating accuracy. Default is True.
-        video_wh: bounding region (width, height)
+        burnin (int, optional): number of frames that have to be ignored after
+            the re-initialization when calculating accuracy. Default is 10.
+        ignore_unknown (bool, optional): whether ignore the skipping frames
+            after failures when calculating accuracy. Default is True.
+        video_wh (Optional[Tuple[int, int]], optional): bounding region
+            (width, height)
 
     Return:
         Float: accuracy over the sequence.
@@ -135,35 +141,36 @@ def calc_accuracy(gt_trajectory,
     return np.mean(overlaps[mask]) if any(mask) else 0.
 
 
-def eval_sot_accuracy_robustness(results,
-                                 annotations,
-                                 burnin=10,
-                                 ignore_unknown=True,
-                                 videos_wh=None):
+def eval_sot_accuracy_robustness(
+        results: List[List[np.ndarray]],
+        annotations: List[np.ndarray],
+        burnin: int = 10,
+        ignore_unknown: bool = True,
+        videos_wh: Optional[Tuple[int, int]] = None) -> Dict[str, float]:
     """Calculate accuracy and robustness over all tracking sequences.
 
     Args:
-        results (list[list[ndarray]]): The first list contains the
+        results (List[List[np.ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
             tracking results of each frame in one video. The ndarray have two
             cases:
-                - bbox: denotes the normal tracking box in [x1, y1, w, h]
-                    format.
+                - bbox: denotes the normal tracking box in
+                    [tl_x, tl_y, br_x, br_y] format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[ndarray]): The list contains the gt_bboxes of each
+        annotations (List[np.ndarray]): The list contains the gt_bboxes of each
             video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
             Each bbox is in (x1, y1, w, h) format.
-        burnin: number of frames that have to be ignored after the
-            re-initialization when calculating accuracy. Default is 10.
-        ignore_unknown (bool): whether ignore the skipping frames after
-            failures when calculating accuracy. Default is True.
-        videos_wh (list[tuple(width, height), ...]): The list contains the
-            width and height of each video. Default is None.
+        burnin (int, optional): number of frames that have to be ignored after
+            the re-initialization when calculating accuracy. Default is 10.
+        ignore_unknown (bool, optional): whether ignore the skipping frames
+            after failures when calculating accuracy. Default is True.
+        videos_wh (Optional[Tuple[int, int]], optional): bounding region
+            (width, height)
 
     Return:
-        dict{str: float}: accuracy and robustness in EAO evaluation metric.
+        Dict[str: float]: accuracy and robustness in EAO evaluation metric.
     """
     if vot is None:
         raise ImportError(
@@ -191,19 +198,19 @@ def eval_sot_accuracy_robustness(results,
     return dict(accuracy=accuracy, robustness=robustness, num_fails=num_fails)
 
 
-def calc_eao_curve(overlaps, successes):
+def calc_eao_curve(overlaps: List[List], successes: List) -> np.ndarray:
     """Calculate EAO curve over all tracking sequences.
 
     Args:
-        overlaps (list[list]): The outer list contains the overlaps of each
+        overlaps (List[List]): The outer list contains the overlaps of each
             video. The inner list contains the overlap of each frame in one
             video.
-        successes (list): The list contains the tracking states of last frame
+        successes (List): The list contains the tracking states of last frame
             in each fragment.
 
     Return:
-        ndarray: The N-th element in ndarray denotes the average overlaps from
-            1 to N in all fragments.
+        np.ndarray: The N-th element in ndarray denotes the average overlaps
+            from 1 to N in all fragments.
     """
     max_length = max([len(_) for _ in overlaps])
     total_runs = len(overlaps)
@@ -234,20 +241,24 @@ def calc_eao_curve(overlaps, successes):
     return np.sum(overlaps_array_sum * mask, axis=0) / np.sum(mask, axis=0)
 
 
-def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
+def eval_sot_eao(
+        results: List[List[np.ndarray]],
+        annotations: List[np.ndarray],
+        interval: Tuple[int, int] = [100, 356],
+        videos_wh: Optional[Tuple[int, int]] = None) -> Dict[str, float]:
     """Calculate EAO socre over all tracking sequences.
 
     Args:
-        results (list[list[ndarray]]): The first list contains the
+        results (List[List[np.ndarray]]): The first list contains the
             tracking results of each video. The second list contains the
             tracking results of each frame in one video. The ndarray have two
             cases:
-                - bbox: denotes the normal tracking box in [x1, y1, w, h]
-                    format.
+                - bbox: denotes the normal tracking box in
+                    [tl_x, tl_y, br_x, br_y] format.
                 - special tracking state: [0] denotes the unknown state,
                     namely the skipping frame after failure, [1] denotes the
                     initialized state, and [2] denotes the failed state.
-        annotations (list[ndarray]): The list contains the gt_bboxes of each
+        annotations (list[np.ndarray]): The list contains the gt_bboxes of each
             video. The ndarray is gt_bboxes of one video. It's in (N, 4) shape.
             Each bbox is in (x1, y1, w, h) format.
         interval: an specified interval in EAO curve used to calculate the EAO
@@ -257,7 +268,7 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
             width and height of each video. Default is None.
 
     Return:
-        dict[str, float]: EAO score in EAO evaluation metric.
+        Dict[str, float]: EAO score in EAO evaluation metric.
     """
     if vot is None:
         raise ImportError(
@@ -278,7 +289,6 @@ def eval_sot_eao(results, annotations, interval=[100, 356], videos_wh=None):
         assert len(pred_traj[0]) == 1 and pred_traj[0][
             0] == 1, f'{len(pred_traj[0])} == 1 and {pred_traj[0][0]} == 1'
         fail_inds, init_inds = locate_failures_inits(pred_traj)
-
         pred_traj = trajectory2region(pred_traj)
         gt_traj = trajectory2region(gt_traj)
         overlaps = calculate_region_overlaps(pred_traj, gt_traj, videos_wh[i])

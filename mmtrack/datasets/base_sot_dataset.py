@@ -150,7 +150,8 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
             dict: {
                     'video_id': int,
                     'frame_ids': np.ndarray,
-                    'img_paths': list[str]
+                    'img_paths': list[str],
+                    'video_length': int
                   }
         """
         img_paths = []
@@ -163,10 +164,14 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
                 osp.join(self.data_prefix['img_path'],
                          meta_video_info['video_path'],
                          framename_template % frame_id))
-        frame_ids = np.arange(self.get_len_per_video(video_idx))
+        video_len = self.get_len_per_video(video_idx)
+        frame_ids = np.arange(video_len)
 
         img_infos = dict(
-            video_id=video_idx, frame_ids=frame_ids, img_paths=img_paths)
+            video_id=video_idx,
+            frame_ids=frame_ids,
+            img_paths=img_paths,
+            video_length=video_len)
         return img_infos
 
     def get_ann_infos_from_video(self, video_idx: int) -> dict:
@@ -222,6 +227,8 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         results['img_path'] = self.test_memo.video_infos['img_paths'][
             frame_idx]
         results['frame_id'] = frame_idx
+        results['video_id'] = video_idx
+        results['video_length'] = self.test_memo.video_infos['video_length']
 
         results['instances'] = []
         instance = {}

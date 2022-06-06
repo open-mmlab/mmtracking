@@ -42,6 +42,7 @@ linting:
     - pip install -e .[all]
     # - pip install -e .[all] -i https://pypi.tuna.tsinghua.edu.cn/simple/
     - pip install git+https://github.com/JonathonLuiten/TrackEval.git
+    - pip install git+https://github.com/votchallenge/toolkit.git
     - pip install git+https://github.com/TAO-Dataset/tao.git
     - echo "Start testing..."
     - python -c "import mmtrack; print(mmtrack.__version__)"

@@ -65,7 +65,8 @@ class SOTCocoDataset(BaseSOTDataset):
             dict: {
                     'video_id': int,
                     'frame_ids': np.ndarray,
-                    'img_paths': list[str]
+                    'img_paths': list[str],
+                    'video_length': int
                   }
         """
         ann_id = self.get_data_info(video_idx)['ann_id']
@@ -76,7 +77,10 @@ class SOTCocoDataset(BaseSOTDataset):
         ]
         frame_ids = np.arange(self.get_len_per_video(video_idx))
         img_infos = dict(
-            video_id=video_idx, frame_ids=frame_ids, img_paths=img_names)
+            video_id=video_idx,
+            frame_ids=frame_ids,
+            img_paths=img_names,
+            video_length=1)
         return img_infos
 
     @force_full_init

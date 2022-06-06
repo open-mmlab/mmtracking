@@ -3,17 +3,17 @@ import torch
 
 from mmtrack.core.bbox import (bbox_cxcyah_to_xyxy, bbox_cxcywh_to_x1y1wh,
                                bbox_xyxy_to_cxcyah, bbox_xyxy_to_x1y1wh,
-                               quad2bbox)
+                               quad2bbox_cxcywh)
 
 
-def test_quad2bbox():
+def test_quad2bbox_cxcywh():
     quad = torch.zeros((5, 8), dtype=torch.float)
     low_coord_index = torch.tensor([0, 1, 3, 6], dtype=torch.long)
     high_coord_index = torch.tensor([2, 4, 5, 7], dtype=torch.long)
     quad[:, low_coord_index] = torch.randint(1, 10, (5, 4), dtype=torch.float)
     quad[:, high_coord_index] = torch.randint(
         10, 20, (5, 4), dtype=torch.float)
-    bbox = quad2bbox(quad)
+    bbox = quad2bbox_cxcywh(quad)
     assert (bbox > 0).all()
 
 
