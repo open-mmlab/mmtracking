@@ -18,7 +18,7 @@ class VideoSampler(Sampler):
         dataset (Sized): The dataset.
     """
 
-    def __init__(self, dataset: Sized) -> None:
+    def __init__(self, dataset: Sized, seed: int = 0) -> None:
         self.dataset = dataset
         assert self.dataset.test_mode
 

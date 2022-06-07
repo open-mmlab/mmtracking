@@ -42,7 +42,7 @@ train_dataloader = dict(
                 ref_img_sampler=dict(
                     num_ref_imgs=1,
                     frame_range=9,
-                    filter_key_img=False,
+                    filter_key_img=True,
                     method='uniform')),
             dict(
                 type=dataset_type,
@@ -55,7 +55,7 @@ train_dataloader = dict(
                 ref_img_sampler=dict(
                     num_ref_imgs=1,
                     frame_range=0,
-                    filter_key_img=False,
+                    filter_key_img=True,
                     method='uniform'))
         ]))
 val_dataloader = dict(

@@ -21,9 +21,9 @@ model = dict(
     test_cfg=dict(key_frame_interval=10))
 
 # training schedule
-train_cfg = dict(by_epoch=True, max_epochs=7)
-val_cfg = dict(interval=7)
-test_cfg = dict()
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=7, val_interval=7)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 
 # learning rate
 param_scheduler = [
@@ -43,7 +43,9 @@ param_scheduler = [
 ]
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001))
 default_hooks = dict(
     optimizer=dict(
         _delete_=True,
