@@ -2,8 +2,10 @@
 import numpy as np
 from mmdet.core.bbox.demodata import random_boxes
 
-from mmtrack.datasets.transforms import (CropLikeSiamFC, SeqBlurAug,
-                                         SeqColorAug, SeqShiftScaleAug)
+from mmtrack.datasets.transforms import (BrightnessAug, CropLikeSiamFC,
+                                         GrayAug, SeqBboxJitter, SeqBlurAug,
+                                         SeqColorAug, SeqCropLikeStark,
+                                         SeqShiftScaleAug)
 
 
 class TestCropLikeSiamFC:
@@ -71,3 +73,71 @@ class TestSeqBlurAug:
         results = self.seq_blur_aug(self.results)
         assert results['img'][0].shape == (127, 127, 3)
         assert results['img'][1].shape == (255, 255, 3)
+
+
+class TestGrayAug:
+
+    def setup_class(cls):
+        cls.gray_aug = GrayAug(prob=0.2)
+        cls.results = dict(img=np.random.randn(127, 127, 3))
+
+    def test_transform(self):
+        results = self.gray_aug(self.results)
+        assert results['img'].shape == (127, 127, 3)
+
+
+class TestBrightnessAug:
+
+    def setup_class(cls):
+        cls.brightness_aug = BrightnessAug(jitter_range=0.2)
+        cls.results = dict(img=np.random.randn(127, 127, 3))
+
+    def test_transform(self):
+        results = self.brightness_aug(self.results)
+        assert results['img'].shape == (127, 127, 3)
+
+
+class TestSeqBboxJitter:
+
+    def setup_class(cls):
+        cls.seq_shift_scale_aug = SeqBboxJitter(
+            center_jitter_factor=[0, 4.5],
+            scale_jitter_factor=[0, 0.5],
+            crop_size_factor=[2, 5])
+        gt_bbox = random_boxes(1, 256).numpy()
+        cls.results = dict(gt_bboxes=[gt_bbox.copy(), gt_bbox.copy()])
+
+    def test_transform(self):
+        results = self.seq_shift_scale_aug(self.results)
+        assert results['jittered_bboxes'][0].shape == (1, 4)
+        assert results['jittered_bboxes'][1].shape == (1, 4)
+
+
+class TestSeqCropLikeStark:
+
+    def setup_class(cls):
+        cls.seq_crop_like_stark = SeqCropLikeStark(
+            crop_size_factor=[2, 5], output_size=[128, 320])
+        cls.results = dict(
+            img=[np.random.randn(500, 500, 3),
+                 np.random.randn(500, 500, 3)],
+            gt_bboxes=[
+                random_boxes(1, 256).numpy(),
+                random_boxes(1, 256).numpy()
+            ],
+            img_shape=[(500, 500, 3), (500, 500, 3)],
+            jittered_bboxes=[
+                random_boxes(1, 256).numpy(),
+                random_boxes(1, 256).numpy()
+            ])
+
+    def test_transform(self):
+        results = self.seq_crop_like_stark(self.results)
+        assert results['img'][0].shape == (128, 128, 3)
+        assert results['img'][1].shape == (320, 320, 3)
+        assert results['gt_bboxes'][0].shape == (1, 4)
+        assert results['gt_bboxes'][1].shape == (1, 4)
+        assert results['img_shape'][0] == (128, 128, 3)
+        assert results['img_shape'][1] == (320, 320, 3)
+        assert results['padding_mask'][0].shape == (128, 128)
+        assert results['padding_mask'][1].shape == (320, 320)

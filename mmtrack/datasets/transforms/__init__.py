@@ -1,13 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .formatting import (ConcatSameTypeFrames, ConcatVideoReferences,
-                         PackReIDInputs, PackTrackInputs)
+from .formatting import (CheckPadMaskValidity, ConcatSameTypeFrames,
+                         ConcatVideoReferences, PackReIDInputs,
+                         PackTrackInputs)
 from .loading import LoadTrackAnnotations
-from .processing import PairSampling
-from .transforms import (CropLikeSiamFC, SeqBlurAug, SeqColorAug,
+from .processing import PairSampling, TridentSampling
+from .transforms import (BrightnessAug, CropLikeSiamFC, GrayAug, SeqBboxJitter,
+                         SeqBlurAug, SeqColorAug, SeqCropLikeStark,
                          SeqShiftScaleAug)
 
 __all__ = [
     'LoadTrackAnnotations', 'ConcatSameTypeFrames', 'ConcatVideoReferences',
     'PackTrackInputs', 'PackReIDInputs', 'PairSampling', 'CropLikeSiamFC',
-    'SeqShiftScaleAug', 'SeqColorAug', 'SeqBlurAug'
+    'SeqShiftScaleAug', 'SeqColorAug', 'SeqBlurAug', 'TridentSampling',
+    'GrayAug', 'BrightnessAug', 'SeqBboxJitter', 'SeqCropLikeStark',
+    'CheckPadMaskValidity'
 ]

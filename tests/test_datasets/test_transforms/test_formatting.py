@@ -8,7 +8,8 @@ from mmdet.core.mask import BitmapMasks
 from mmengine.data import LabelData
 
 from mmtrack.core import ReIDDataSample
-from mmtrack.datasets.transforms import (ConcatSameTypeFrames, PackReIDInputs,
+from mmtrack.datasets.transforms import (CheckPadMaskValidity,
+                                         ConcatSameTypeFrames, PackReIDInputs,
                                          PackTrackInputs)
 
 
@@ -291,3 +292,24 @@ class TestPackReIDInputs(TestCase):
         self.assertEqual(
             repr(self.pack_reid_inputs),
             f'PackReIDInputs(meta_keys={self.pack_reid_inputs.meta_keys})')
+
+
+class TestCheckPadMaskValidity:
+
+    def setup_class(cls):
+        dummy = np.zeros((50, 50, 3))
+        cls.results = dict(
+            img=[dummy.copy(), dummy.copy(),
+                 dummy.copy()],
+            padding_mask=[dummy.copy(),
+                          dummy.copy(),
+                          dummy.copy()])
+
+        cls.check_pad_mask_validity = CheckPadMaskValidity(stride=16)
+
+    def test_transform(self):
+        results = self.check_pad_mask_validity(self.results)
+        assert results is not None
+        self.results['padding_mask'][1] = np.ones((50, 50, 3))
+        results = self.check_pad_mask_validity(self.results)
+        assert results is None

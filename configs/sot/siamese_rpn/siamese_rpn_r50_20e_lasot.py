@@ -9,11 +9,6 @@ exemplar_size = 127
 search_size = 255
 
 # model settings
-preprocess_cfg = dict(
-    mean=[123.675, 116.28, 103.53],
-    std=[58.395, 57.12, 57.375],
-    to_rgb=False,
-    pad_size_divisor=32)
 model = dict(
     type='SiamRPN',
     backbone=dict(

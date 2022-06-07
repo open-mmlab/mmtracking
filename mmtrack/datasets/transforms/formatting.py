@@ -536,7 +536,8 @@ class PackTrackInputs(BaseTransform):
                 padding_mask, stack=True)
             data_sample.padding_mask = to_tensor(key_padding_mask)
             if ref_padding_mask is not None:
-                data_sample.ref_padding_mask = to_tensor(ref_padding_mask)
+                setattr(data_sample, f'{self.ref_prefix}_padding_mask',
+                        to_tensor(ref_padding_mask))
 
         packed_results['data_sample'] = data_sample
         return packed_results
@@ -550,40 +551,60 @@ class PackTrackInputs(BaseTransform):
 
 
 @TRANSFORMS.register_module()
-class CheckPadMaskValidity(object):
+class CheckPadMaskValidity(BaseTransform):
     """Check the validity of data. Generally, it's used in such case: The image
     padding masks generated in the image preprocess need to be downsampled, and
     then passed into Transformer model, like DETR. The computation in the
     subsequent Transformer model must make sure that the values of downsampled
     mask are not all zeros.
 
+    Required Keys:
+
+    - gt_bboxes (np.float32)
+    - gt_bboxes_labels (np.int32)
+    - gt_instances_id (np.int32)
+    - gt_masks (BitmapMasks | PolygonMasks)
+    - gt_seg_map (np.uint8)
+    - gt_ignore_flags (np.bool)
+    - img
+    - img_shape (optional)
+    - jittered_bboxes (optional)
+    - padding_mask (np.bool)
+
     Args:
         stride (int): the max stride of feature map.
     """
 
-    def __init__(self, stride):
+    def __init__(self, stride: int):
         self.stride = stride
 
-    def __call__(self, results):
-        """Call function.
+    def transform(self, results: dict) -> Optional[dict]:
+        """The transform function.
 
         Args:
             results (dict): Result dict contains the data to be checked.
 
         Returns:
-            dict | None: If invalid, return None; otherwise, return original
+            Optional[dict]: If invalid, return None; otherwise, return original
                 input.
         """
-        for _results in results:
-            assert 'padding_mask' in _results
-            mask = _results['padding_mask'].copy().astype(np.float32)
-            img_h, img_w = _results['img'].shape[:2]
+        assert 'padding_mask' in results
+        masks = results['padding_mask']
+        imgs = results['img']
+        for mask, img in zip(masks, imgs):
+            mask = mask.copy().astype(np.float32)
+            img_h, img_w = img.shape[:2]
             feat_h, feat_w = img_h // self.stride, img_w // self.stride
             downsample_mask = cv2.resize(
                 mask, dsize=(feat_h, feat_w)).astype(bool)
             if (downsample_mask == 1).all():
                 return None
         return results
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'stride={self.stride})'
+        return repr_str
 
 
 @TRANSFORMS.register_module()
