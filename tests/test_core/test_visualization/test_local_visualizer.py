@@ -15,11 +15,10 @@ class TestTrackLocalVisualizer(TestCase):
 
     @staticmethod
     def _get_gt_data_sample():
-        bboxes = np.array([[912, 484, 97, 109], [1338, 418, 167, 379]])
+        bboxes = np.array([[912, 484, 1009, 593], [1338, 418, 1505, 797]])
         masks = np.zeros((2, 1080, 1920), dtype=np.bool_)
         for i, bbox in enumerate(bboxes):
-            masks[i, bbox[1]:bbox[1] + bbox[3],
-                  bbox[0]:bbox[0] + bbox[2]] = True
+            masks[i, bbox[1]:bbox[3], bbox[0]:bbox[2]] = True
         instances_data = dict(
             bboxes=torch.tensor(bboxes),
             masks=masks,
@@ -33,7 +32,8 @@ class TestTrackLocalVisualizer(TestCase):
     @staticmethod
     def _get_pred_data_sample():
         instances_data = dict(
-            bboxes=torch.tensor([[900, 500, 100, 100], [1300, 400, 200, 400]]),
+            bboxes=torch.tensor([[900, 500, 1000, 600], [1300, 400, 1500,
+                                                         800]]),
             instances_id=torch.tensor([1, 2]),
             labels=torch.tensor([0, 1]),
             scores=torch.tensor([0.955, 0.876]))

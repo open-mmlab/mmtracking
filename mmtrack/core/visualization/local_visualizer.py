@@ -108,7 +108,6 @@ class TrackLocalVisualizer(Visualizer):
         if 'bboxes' in instances:
             # draw bboxes
             bboxes = instances.bboxes.clone()
-            bboxes[:, 2:] += bboxes[:, :2]
             self.draw_bboxes(
                 bboxes,
                 edge_colors=colors,
