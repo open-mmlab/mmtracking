@@ -35,7 +35,7 @@ class QuotaSampler(Sampler):
                  dataset: Sized,
                  samples_per_epoch: int,
                  replacement: bool = False,
-                 seed=0) -> None:
+                 seed: int = 0) -> None:
         rank, world_size = get_dist_info()
         self.rank = rank
         self.world_size = world_size

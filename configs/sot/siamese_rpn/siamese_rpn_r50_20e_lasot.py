@@ -63,7 +63,9 @@ model = dict(
                 add_gt_as_proposals=False),
             num_neg=16,
             exemplar_size=exemplar_size,
-            search_size=search_size)),
+            search_size=search_size),
+        backbone_start_train_epoch=10,
+        backbone_train_layers=['layer2', 'layer3', 'layer4']),
     test_cfg=dict(
         exemplar_size=exemplar_size,
         search_size=search_size,
@@ -170,9 +172,10 @@ train_dataloader = dict(
 # test_evaluator = val_evaluator
 
 # training schedule
-train_cfg = dict(by_epoch=True, max_epochs=20)
-# val_cfg = dict(begin=10, interval=1)
-# test_cfg = dict()
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=20, val_begin=10, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 
 # learning rate
 param_scheduler = [
@@ -194,18 +197,9 @@ param_scheduler = [
         endpoint=True)
 ]
 
-# optimizer
-optimizer = dict(
-    type='SGD',
-    lr=0.005,
-    momentum=0.9,
-    weight_decay=0.0001,
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001),
+    clip_grad=dict(max_norm=10.0, norm_type=2),
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
-default_hooks = dict(
-    optimizer=dict(
-        type='SiameseRPNOptimizerHook',
-        _delete_=True,
-        backbone_start_train_epoch=10,
-        backbone_train_layers=['layer2', 'layer3', 'layer4'],
-        grad_clip=dict(max_norm=10.0, norm_type=2)))

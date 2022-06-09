@@ -6,9 +6,10 @@ from typing import List, Optional, Tuple, Union
 import torch
 from addict import Dict
 from mmdet.core.bbox import bbox_cxcywh_to_xyxy
+from mmengine import MessageHub
 from mmengine.data import InstanceData
 from torch import Tensor
-from torch.nn.modules.batchnorm import _BatchNorm
+from torch.nn.modules.batchnorm import BatchNorm2d, _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
 from mmtrack.core import TrackDataSample
@@ -473,3 +474,36 @@ class SiamRPN(BaseSingleObjectTracker):
         losses.update(head_losses)
 
         return losses
+
+    # TODO: This is a temporary sulution. It will wait for the BaseModel in
+    # MMEngine.
+    def train_step(self, *args, **kwargs) -> dict:
+        """The iteration step during training.
+
+        Note the difference between this function and the ``train_step`` in the
+        parent class: We don't train the backbone util the
+        `self.backbone_start_train_epoch`-th epoch. The epoch in this class
+        counts from 0.
+
+        Returns:
+            dict: It should contain at least 3 keys: ``loss``, ``log_vars``, \
+                ``num_samples``.
+
+                - ``loss`` is a tensor for back propagation, which can be a \
+                weighted sum of multiple losses.
+                - ``log_vars`` contains all the variables to be sent to the
+                logger.
+                - ``num_samples`` indicates the batch size (when the model is \
+                DDP, it means the batch size on each GPU), which is used for \
+                averaging the logs.
+        """
+        message_hub = MessageHub.get_current_instance()
+        cur_epoch = message_hub.get_info('epoch')
+        if cur_epoch >= self.train_cfg['backbone_start_train_epoch']:
+            for layer in self.train_cfg['backbone_train_layers']:
+                for param in getattr(self.backbone, layer).parameters():
+                    param.requires_grad = True
+                for m in getattr(self.backbone, layer).modules():
+                    if isinstance(m, BatchNorm2d):
+                        m.train()
+        return super().train_step(*args, **kwargs)
