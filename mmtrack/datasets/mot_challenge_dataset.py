@@ -47,8 +47,9 @@ class MOTChallengeDataset(BaseVideoDataset):
         data_info = {}
 
         data_info.update(img_info)
-        if self.data_prefix.get('img', None) is not None:
-            img_path = osp.join(self.data_prefix['img'], img_info['file_name'])
+        if self.data_prefix.get('img_path', None) is not None:
+            img_path = osp.join(self.data_prefix['img_path'],
+                                img_info['file_name'])
         else:
             img_path = img_info['file_name']
         data_info['img_path'] = img_path
