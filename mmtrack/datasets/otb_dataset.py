@@ -3,10 +3,11 @@ import os
 import os.path as osp
 import re
 import time
+from typing import List
 
 import numpy as np
-from mmdet.datasets import DATASETS
 
+from mmtrack.registry import DATASETS
 from .base_sot_dataset import BaseSOTDataset
 
 
@@ -21,11 +22,8 @@ class OTB100Dataset(BaseSOTDataset):
         """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
-    def load_data_infos(self, split='test'):
+    def load_data_list(self) -> List[dict]:
         """Load dataset information.
-
-        Args:
-            split (str, optional): Dataset split. Defaults to 'test'.
 
         Returns:
             list[dict]: The length of the list is the number of videos. The
@@ -45,8 +43,8 @@ class OTB100Dataset(BaseSOTDataset):
         print('Loading OTB100 dataset...')
         start_time = time.time()
         data_infos = []
-        data_infos_str = self.loadtxt(
-            self.ann_file, return_array=False).split('\n')
+        data_infos_str = self._loadtxt(
+            self.ann_file, return_ndarray=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.
@@ -71,31 +69,33 @@ class OTB100Dataset(BaseSOTDataset):
         print(f'OTB100 dataset loaded! ({time.time()-start_time:.2f} s)')
         return data_infos
 
-    def get_bboxes_from_video(self, video_ind):
+    def get_bboxes_from_video(self, video_ind: int) -> np.ndarray:
         """Get bboxes annotation about the instance in a video.
 
         Args:
             video_ind (int): video index
 
         Returns:
-            ndarray: in [N, 4] shape. The N is the bbox number and the bbox
+            np.ndarray: in [N, 4] shape. The N is the bbox number and the bbox
                 is in (x, y, w, h) format.
         """
-        bboxes_file = osp.join(self.img_prefix,
-                               self.data_infos[video_ind]['ann_path'])
+        meta_video_info = self.get_data_info(video_ind)
+        bbox_path = osp.join(self.data_prefix['img_path'],
+                             meta_video_info['ann_path'])
         bboxes = []
-        bboxes_info = self.loadtxt(bboxes_file, return_array=False).split('\n')
+        bboxes_info = self._loadtxt(
+            bbox_path, return_ndarray=False).split('\n')
         for bbox in bboxes_info:
             bbox = list(map(int, re.findall(r'-?\d+', bbox)))
             bboxes.append(bbox)
         bboxes = np.array(bboxes, dtype=float)
 
-        if 'init_skip_num' in self.data_infos[video_ind]:
-            init_skip_num = self.data_infos[video_ind]['init_skip_num']
+        if 'init_skip_num' in meta_video_info:
+            init_skip_num = meta_video_info['init_skip_num']
             bboxes = bboxes[init_skip_num:]
 
-        end_frame_id = self.data_infos[video_ind]['end_frame_id']
-        start_frame_id = self.data_infos[video_ind]['start_frame_id']
+        end_frame_id = meta_video_info['end_frame_id']
+        start_frame_id = meta_video_info['start_frame_id']
         assert len(bboxes) == (
             end_frame_id - start_frame_id + 1
         ), f'{len(bboxes)} is not equal to {end_frame_id}-{start_frame_id}+1'

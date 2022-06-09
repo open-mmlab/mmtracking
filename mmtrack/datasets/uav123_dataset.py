@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os
 import time
+from typing import List
 
-from mmdet.datasets import DATASETS
-
+from mmtrack.registry import DATASETS
 from .base_sot_dataset import BaseSOTDataset
 
 
@@ -18,11 +18,8 @@ class UAV123Dataset(BaseSOTDataset):
         """Initialization of SOT dataset class."""
         super().__init__(*args, **kwargs)
 
-    def load_data_infos(self, split='test'):
+    def load_data_list(self) -> List[dict]:
         """Load dataset information.
-
-        Args:
-            split (str, optional): Dataset split. Defaults to 'test'.
 
         Returns:
             list[dict]: The length of the list is the number of videos. The
@@ -40,8 +37,8 @@ class UAV123Dataset(BaseSOTDataset):
         print('Loading UAV123 dataset...')
         start_time = time.time()
         data_infos = []
-        data_infos_str = self.loadtxt(
-            self.ann_file, return_array=False).split('\n')
+        data_infos_str = self._loadtxt(
+            self.ann_file, return_ndarray=False).split('\n')
         # the first line of annotation file is a dataset comment.
         for line in data_infos_str[1:]:
             # compatible with different OS.

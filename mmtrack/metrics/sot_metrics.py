@@ -25,7 +25,7 @@ class SOTMetric(BaseVideoMetric):
             Valid metrics are included in ``self.allowed_metrics``.
             Defaults to 'OPE'.
         metric_options (Optional[dict], optional): Options for calculating
-            metrics. Defaults to dict(interval=[100, 356]).
+            metrics. Defaults to dict(vot_dataset_type='vot2018').
         format_only (bool, optional): If True, only formatting the results to
             the official format and not performing evaluation.
             Defaults to False.
@@ -43,10 +43,12 @@ class SOTMetric(BaseVideoMetric):
     """
     default_prefix: Optional[str] = 'sot'
     allowed_metrics = ['OPE', 'VOT']
+    VOT_INTERVAL = dict(vot2018=[100, 356], vot2019=[46, 291])
 
     def __init__(self,
                  metric: Union[str, Sequence[str]] = 'OPE',
-                 metric_options: Optional[dict] = dict(interval=[100, 356]),
+                 metric_options: Optional[dict] = dict(
+                     vot_dataset_type='vot2018'),
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
@@ -155,11 +157,16 @@ class SOTMetric(BaseVideoMetric):
                 eval_results.update(
                     eval_sot_ope(all_pred_bboxes, all_gt_bboxes, all_visible))
             elif metric == 'VOT':
+                if 'interval' in self.metrics_options:
+                    interval = self.metrics_options['interval']
+                else:
+                    interval = self.VOT_INTERVAL.get(
+                        self.metrics_options['vot_dataset_type'], None)
                 eao_scores = eval_sot_eao(
                     all_pred_bboxes,
                     all_gt_bboxes,
                     videos_wh=all_video_sizes,
-                    interval=self.metrics_options.get('interval', None))
+                    interval=interval)
                 eval_results.update(eao_scores)
                 accuracy_robustness = eval_sot_accuracy_robustness(
                     all_pred_bboxes, all_gt_bboxes, videos_wh=all_video_sizes)
