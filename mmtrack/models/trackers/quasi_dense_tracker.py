@@ -187,7 +187,6 @@ class QuasiDenseTracker(BaseTracker):
             model (nn.Module): The forward model.
             bboxes (Tensor): of shape (N, 5).
             labels (Tensor): of shape (N, ).
-            track_feats (Tensor): of shape (N, 256).
             frame_id (int): The id of current frame, 0-index.
 
         Returns:

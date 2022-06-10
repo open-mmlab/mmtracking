@@ -144,29 +144,39 @@ class QuasiDenseTAOTracker(BaseTracker):
         return memo_bboxes, memo_labels, memo_embeds, memo_ids.squeeze(0)
 
     def track(self,
+              img_metas,
+              feats,
+              model,
               bboxes,
               labels,
-              track_feats,
               frame_id,
               temperature=-1,
               **kwargs):
         """Tracking forward function.
 
         Args:
+            img_metas (list[dict]): list of image info dict where each dict
+                has: 'img_shape', 'scale_factor', 'flip', and may also contain
+                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
+            feats (tuple): Backbone features of the input image.
             model (nn.Module): The forward model.
             bboxes (Tensor): of shape (N, 5).
             labels (Tensor): of shape (N, ).
-            track_feats (Tensor): of shape (N, 256).
             frame_id (int): The id of current frame, 0-index.
             temperature (int): similarity temperature.
+
         Returns:
             list: Tracking results.
         """
         # return zero bboxes if there is no track targets
-        if track_feats is None:
-            ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
+        if bboxes.shape[0] == 0:
+            ids = torch.zeros_like(labels)
             return bboxes, labels, ids
-
+        # get track feats
+        track_bboxes = bboxes[:, :-1] * torch.tensor(
+            img_metas[0]['scale_factor']).to(bboxes.device)
+        track_feats = model.track_head.extract_bbox_feats(
+            feats, [track_bboxes])
         # all objects is valid here
         valid_inds = labels > -1
         # inter-class nms
