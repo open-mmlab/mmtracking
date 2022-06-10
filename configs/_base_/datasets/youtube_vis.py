@@ -1,19 +1,13 @@
 # dataset settings
-file_client_args = dict(
-    backend='petrel',
-    path_mapping=dict({
-        './data/': 'openmmlab:s3://openmmlab/datasets/tracking/',
-        'data/': 'openmmlab:s3://openmmlab/datasets/tracking/'
-    }))
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadMultiImagesFromFile', to_float32=True, file_client_args=file_client_args),
+    dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(
         type='SeqLoadAnnotations',
         with_bbox=True,
         with_mask=True,
-        with_track=True, file_client_args=file_client_args),
+        with_track=True),
     dict(
         type='SeqResize',
         share_params=True,
@@ -28,7 +22,7 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile', file_client_args=file_client_args),
+    dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(640, 360),
@@ -46,7 +40,7 @@ dataset_type = 'YouTubeVISDataset'
 data_root = 'data/youtube_vis_2019/'
 dataset_version = data_root[-5:-1]
 data = dict(
-    samples_per_gpu=64,
+    samples_per_gpu=1,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
@@ -58,16 +52,14 @@ data = dict(
             frame_range=100,
             filter_key_img=True,
             method='uniform'),
-        pipeline=train_pipeline,
-        file_client_args=file_client_args),
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         dataset_version=dataset_version,
         ann_file=data_root + 'annotations/youtube_vis_2019_valid.json',
         img_prefix=data_root + 'valid/JPEGImages',
         ref_img_sampler=None,
-        pipeline=test_pipeline,
-        file_client_args=file_client_args),
+        pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         dataset_version=dataset_version,

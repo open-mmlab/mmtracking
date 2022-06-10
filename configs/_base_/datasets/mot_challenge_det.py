@@ -1,17 +1,10 @@
 # dataset settings
-file_client_args = dict(
-    backend='petrel',
-    path_mapping=dict({
-        './data/': 'openmmlab:s3://openmmlab/datasets/tracking/',
-        'data/': 'openmmlab:s3://openmmlab/datasets/tracking/'
-    }))
-
 dataset_type = 'CocoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadImageFromFile', to_float32=True, file_client_args=file_client_args,),
-    dict(type='LoadAnnotations', with_bbox=True,file_client_args=file_client_args, ),
+    dict(type='LoadImageFromFile', to_float32=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(
         type='Resize',
         img_scale=(1088, 1088),
@@ -27,7 +20,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile',file_client_args=file_client_args, ),
+    dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1088, 1088),
@@ -47,21 +40,18 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        file_client_args=file_client_args,
         ann_file=data_root + 'annotations/half-train_cocoformat.json',
         img_prefix=data_root + 'train',
         classes=('pedestrian', ),
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        file_client_args=file_client_args,
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         classes=('pedestrian', ),
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        file_client_args=file_client_args,
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         classes=('pedestrian', ),
