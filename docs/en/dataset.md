@@ -9,6 +9,7 @@ This page provides the instructions for dataset preparation on existing benchmar
   - [CrowdHuman](https://www.crowdhuman.org/)
   - [LVIS](https://www.lvisdataset.org/)
   - [TAO](https://taodataset.org/)
+  - [DanceTrack](https://dancetrack.github.io)
 - Single Object Tracking
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -31,7 +32,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17) and TAO are needed, CrowdHuman and LVIS can be served as comlementary dataset.
+- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17, TAO and DanceTrack) are needed, CrowdHuman and LVIS can be served as comlementary dataset.
 
 - The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 
@@ -98,6 +99,11 @@ mmtracking
 |   |   ├── train
 |   |   ├── test
 │   │
+|   ├── DanceTrack
+|   |   ├── train
+|   |   ├── val
+|   |   ├── test
+|   |
 │   ├── crowdhuman
 │   │   ├── annotation_train.odgt
 │   │   ├── annotation_val.odgt
@@ -230,6 +236,9 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
+# DanceTrack
+python ./tools/convert_datasets/dancetrack/dancetrack2coco.py -i ./data/DanceTrack ./data/DanceTrack/annotations
+
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
@@ -319,6 +328,12 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── DanceTrack
+│   │   ├── train
+│   │   ├── val
+│   │   ├── test
+│   │   ├── annotations
 │   │
 │   ├── crowdhuman
 │   │   ├── annotation_train.odgt

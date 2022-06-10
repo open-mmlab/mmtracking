@@ -155,9 +155,10 @@ class MOTChallengeDataset(CocoVideoDataset):
                 will be formatted.. Defaults to ['track'].
 
         Returns:
-            tuple: (resfiles, names, tmp_dir), resfiles is a dict containing
-            the filepaths, names is a list containing the name of the
-            videos, tmp_dir is the temporal directory created for saving
+            tuple: (resfile_path, resfiles, names, tmp_dir), resfile_path is
+            the path to save the formatted results, resfiles is a dict
+            containing the filepaths, names is a list containing the name of
+            the videos, tmp_dir is the temporal directory created for saving
             files.
         """
         assert isinstance(results, dict), 'results must be a dict.'
@@ -245,12 +246,23 @@ class MOTChallengeDataset(CocoVideoDataset):
                         f'{(y2-y1):.3f},{conf:.3f}\n')
             f.close()
 
-    def get_benchmark(self):
-        """Get benchmark from upeper/lower-case image prefix."""
+    def get_benchmark_and_eval_split(self):
+        """Get benchmark and dataset split to evaluate.
+
+        Get benchmark from upeper/lower-case image prefix and the dataset
+        split to evaluate.
+
+        Returns:
+            tuple(string): The first string denotes the type of dataset.
+            The second string denotes the split of the dataset to eval.
+        """
         BENCHMARKS = ['MOT15', 'MOT16', 'MOT17', 'MOT20']
-        for benchamrk in BENCHMARKS:
-            if benchamrk in self.img_prefix.upper():
-                return benchamrk
+        for benchmark in BENCHMARKS:
+            if benchmark in self.img_prefix.upper():
+                break
+        # We directly return 'train' for the dataset split to evaluate, since
+        # MOT challenge only provides annotations for train split.
+        return benchmark, 'train'
 
     def get_dataset_cfg_for_hota(self, gt_folder, tracker_folder, seqmap):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
@@ -263,6 +275,8 @@ class MOTChallengeDataset(CocoVideoDataset):
         Returns:
             Dataset Configs for MotChallenge2DBox.
         """
+        benchmark, split_to_eval = self.get_benchmark_and_eval_split()
+
         dataset_config = dict(
             # Location of GT data
             GT_FOLDER=gt_folder,
@@ -276,9 +290,9 @@ class MOTChallengeDataset(CocoVideoDataset):
             # Option values: ['pedestrian']
             CLASSES_TO_EVAL=list(self.CLASSES),
             # Option Values: 'MOT17', 'MOT16', 'MOT20', 'MOT15'
-            BENCHMARK=self.get_benchmark(),
+            BENCHMARK=benchmark,
             # Option Values: 'train', 'test'
-            SPLIT_TO_EVAL='train',
+            SPLIT_TO_EVAL=split_to_eval,
             # Whether tracker input files are zipped
             INPUT_AS_ZIP=False,
             # Whether to print current config

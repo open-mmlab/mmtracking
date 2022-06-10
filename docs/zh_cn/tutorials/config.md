@@ -23,7 +23,7 @@
 - 更新列表/元组的值。
 
   如果要更新的值是列表或元组。例如配置文件中通常设置 `workflow=[('train', 1)]` 。如果你想
-  改变这个键值，你可以指定 `--cfg-options workflow="[(train,1),(val,1)]"` 。注意引号\"是为了
+  改变这个键值，你可以指定 `--cfg-options workflow="[(train,1),(val,1)]"` 。注意引号"是为了
   支持列表/元组数据类型，并且在指定键值的引号内 **不允许** 有空格。
 
 ### 配置文件结构
@@ -56,11 +56,11 @@
 - `{backbone}`：主干网络，例如 `r50` (ResNet-50)、`x101` (ResNeXt-101)。
 - `{neck}`：模型颈部，例如 `fpn`、`c5`。
 - `[norm_setting]`：标准化设置，除了`bn`（Batch Normalization）不需要注明以外，其他标准化类型比如`gn`（Group Normalization），`syncbn`（Synchronized Batch Normalization）都应注明。
-    `gn-head`/`gn-neck` 表示 GN 仅应用于模型头部/模型颈部，而 `gn-all` 表示 GN 应用于整个模型，例如主干网络，模型颈部，模型头部。
+  `gn-head`/`gn-neck` 表示 GN 仅应用于模型头部/模型颈部，而 `gn-all` 表示 GN 应用于整个模型，例如主干网络，模型颈部，模型头部。
 - `[misc]`：模型的其他设置/插件，例如`dconv`、`gcb`、`attention`、`albu`、`mstrain`。
 - `[gpu x batch_per_gpu]`：GPU 数目以及每个 GPU 的样本数，默认使用 `8x2`。
 - `{schedule}`：训练时长，选项为 `4e`、`7e`、`20e` 等。
-    `20e` 表示 20 个周期。
+  `20e` 表示 20 个周期。
 - `{dataset}`：数据集如 `imagenetvid`、`mot17`、`lasot`。
 
 ### 配置文件详细解析

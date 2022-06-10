@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import logging
+import os
 import tempfile
 
 import mmcv
@@ -48,15 +49,16 @@ def init_model(config,
         # parameters. If not, the information of initialized parameters will be
         # printed to the console because of the call of
         # `mmcv.runner.BaseModule.init_weights`.
-        with tempfile.NamedTemporaryFile(mode='w+t') as tmp_init_params_file:
-            file_handler = logging.FileHandler(
-                tmp_init_params_file.name, mode='w')
-            model.logger.addHandler(file_handler)
-            # We need call `init_weights()` to load pretained weights in MOT
-            # task.
-            model.init_weights()
-            file_handler.close()
-            model.logger.removeHandler(file_handler)
+        tmp_file = tempfile.NamedTemporaryFile(delete=False)
+        file_handler = logging.FileHandler(tmp_file.name, mode='w')
+        model.logger.addHandler(file_handler)
+        # We need call `init_weights()` to load pretained weights in MOT
+        # task.
+        model.init_weights()
+        file_handler.close()
+        model.logger.removeHandler(file_handler)
+        tmp_file.close()
+        os.remove(tmp_file.name)
     else:
         # We need call `init_weights()` to load pretained weights in MOT task.
         model.init_weights()

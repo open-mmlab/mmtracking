@@ -276,7 +276,7 @@ evaluation = dict(interval=12)  # 每 12 个 epoch 评估一次模型。
 ```
 
 **重要提醒**：配置文件中的默认学习率是针对使用 8 个 GPU 的。
-根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，如果您使用不同数量的 GPU 或每个 GPU 使用不同数量的图片，则需要设置与 batch size 成正比的学习率，例如：`lr=0.01` 用于 8 个 GPU \* 1 img/gpu， `lr=0.04` 用于 16 个 GPU \* 2 imgs/gpu。
+根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677)，如果您使用不同数量的 GPU 或每个 GPU 使用不同数量的图片，则需要设置与 batch size 成正比的学习率，例如：`lr=0.01` 用于 8 个 GPU * 1 img/gpu， `lr=0.04` 用于 16 个 GPU * 2 imgs/gpu。
 
 #### 单 GPU 训练
 
@@ -387,45 +387,45 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 1. 训练检测器
 
-    如果你想要为多目标跟踪器训练检测器，为了兼容 MMDetection, 你只需要在 config 里面增加一行代码 `USE_MMDET=True`, 然后使用与 MMDetection 相同的方式运行它。可参考示例  [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
+   如果你想要为多目标跟踪器训练检测器，为了兼容 MMDetection, 你只需要在 config 里面增加一行代码 `USE_MMDET=True`, 然后使用与 MMDetection 相同的方式运行它。可参考示例  [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py)。
 
-    请注意 MMTracking 和 MMDetection 在 base config 上有些许不同：`detector` 仅仅是 `model` 的一个子模块。例如，MMDetection 中的 Faster R-CNN 的 config如下：
+   请注意 MMTracking 和 MMDetection 在 base config 上有些许不同：`detector` 仅仅是 `model` 的一个子模块。例如，MMDetection 中的 Faster R-CNN 的 config如下：
 
-    ```python
-        model = dict(
-            type='FasterRCNN',
-            ...
-        )
-    ```
+   ```python
+       model = dict(
+           type='FasterRCNN',
+           ...
+       )
+   ```
 
-    但在 MMTracking 中，config 如下：
+   但在 MMTracking 中，config 如下：
 
-    ```python
-    model = dict(
-        detector=dict(
-            type='FasterRCNN',
-            ...
-        )
-    )
-    ```
+   ```python
+   model = dict(
+       detector=dict(
+           type='FasterRCNN',
+           ...
+       )
+   )
+   ```
 
-    这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
+   这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 2. 训练 ReID 模型
 
-    你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的。
+   你可能需要在 MOT 或其它实际应用中训练 ReID 模型。我们在 MMTracking 中也支持 ReID 模型的训练，这是基于 [MMClassification](https://github.com/open-mmlab/mmclassification) 实现的。
 
-    这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
+   这里有一个在 MOT17 上训练检测器模型，并在每个 epoch 结束后评估 bbox mAP 的范例：
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 3. 完成检测器和 ReID 模型训练后，可参考[测试MOT模型示例](https://mmtracking.readthedocs.io/zh_CN/latest/quick_run.html#mot)来测试多目标跟踪器。
 
@@ -433,19 +433,19 @@ bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagene
 
 1. 在 COCO、ImageNet VID 和 ImageNet DET 上训练 SiameseRPN++，然后从第 10 个 epoch 到第 20 个 epoch 评估其 success、precision 和 normed precision。
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 #### 训练 VIS 模型示例
 
 1. 在 YouTube-VIS 2019 数据集上训练 MaskTrack R-CNN。由于 YouTube-VIS 没有提供 validation 集的注释文件，因此在训练过程中不会进行评估。
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 ## 使用自定义数据集和模型运行
 
