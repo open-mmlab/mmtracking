@@ -62,7 +62,8 @@ class TestQuasiDenseTAOTracker(object):
 
     def test_track(self):
         self.tracker.reset()
-        feats_channel = 256
+        img_size, feats_channel = 64, 256
+        img_metas = [dict(scale_factor=1.0)]
 
         model = MagicMock()
         model.track_head.extract_roi_feats = MagicMock(
@@ -71,7 +72,7 @@ class TestQuasiDenseTAOTracker(object):
         model.track_head.simple_test = MagicMock(
             return_value=torch.rand((self.num_objs, self.num_objs + 1)))
 
-        feats = torch.rand((self.num_objs, feats_channel))
+        feats = torch.rand((1, feats_channel, img_size, img_size))
 
         bboxes = random_boxes(self.num_objs, 64)
         scores = torch.rand((self.num_objs, 1))
@@ -80,8 +81,8 @@ class TestQuasiDenseTAOTracker(object):
         labels = torch.arange(self.num_objs)
 
         for frame_id in range(3):
-            bboxes, labels, ids = self.tracker.track(bboxes, labels, feats,
-                                                     frame_id)
+            bboxes, labels, ids = self.tracker.track(img_metas, feats, model,
+                                                     bboxes, labels, frame_id)
 
             assert bboxes.shape[0] == labels.shape[0]
             assert labels.shape[0] == labels.shape[0]
