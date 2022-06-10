@@ -17,7 +17,6 @@
     </sup>
   </div>
   <div>&nbsp;</div>
-  <div>&nbsp;</div>
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
@@ -26,9 +25,9 @@
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
 
-[📘Documentation](https://mmtracking.readthedocs.io/) |
-[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/modelzoo.html) |
+[📘Documentation](https://mmtracking.readthedocs.io/zh_CN/latest/) |
+[🛠️Installation](https://mmtracking.readthedocs.io/zh_CN/latest/install.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/zh_CN/latest/model_zoo.html) |
 [🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
 [🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
