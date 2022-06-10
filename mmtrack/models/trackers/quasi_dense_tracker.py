@@ -8,7 +8,7 @@ from .base_tracker import BaseTracker
 
 
 @TRACKERS.register_module()
-class QuasiDenseEmbedTracker(BaseTracker):
+class QuasiDenseTracker(BaseTracker):
     """Tracker for Quasi-Dense Tracking.
 
     Args:

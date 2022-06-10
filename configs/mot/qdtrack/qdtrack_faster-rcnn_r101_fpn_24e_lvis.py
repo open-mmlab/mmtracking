@@ -70,8 +70,6 @@ model = dict(
         distractor_score_thr=0.5,
         match_metric='bisoftmax',
         match_with_cosine=True))
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
@@ -80,10 +78,11 @@ lr_config = dict(
     warmup_ratio=1.0 / 1000,
     step=[16, 22])
 total_epochs = 24
-load_from = '../aux.pth'
+load_from = None
 resume_from = None
 evaluation = dict(metric=['bbox'], start=16, interval=2)
 work_dir = None
+# TODO: del this
 log_config = dict(
     interval=50,
     hooks=[

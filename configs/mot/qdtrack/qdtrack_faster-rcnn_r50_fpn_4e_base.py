@@ -60,7 +60,7 @@ model = dict(
                 pos_sampler=dict(type='InstanceBalancedPosSampler'),
                 neg_sampler=dict(type='RandomSampler')))),
     tracker=dict(
-        type='QuasiDenseEmbedTracker',
+        type='QuasiDenseTracker',
         init_score_thr=0.9,
         obj_score_thr=0.5,
         match_score_thr=0.5,
