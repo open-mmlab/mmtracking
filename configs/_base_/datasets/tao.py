@@ -37,7 +37,7 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
-data_root = 'data/tao/'
+data_root = '../data/tao/'
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
@@ -48,14 +48,14 @@ data = dict(
             type=dataset_type,
             classes=data_root + 'annotations/tao_classes.txt',
             load_as_video=False,
-            ann_file='data/lvisv0.5+coco_train.json',
-            img_prefix='data/lvis/train2017/',
+            ann_file='../data/lvis/annotations/lvis-0.5_coco2017_train.json',
+            img_prefix='../data/lvis/train/',
             pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         classes=data_root + 'annotations/tao_classes.txt',
         ann_file=data_root +
-        'annotations/qdtrack_482/validation_482_ours.json',
+        'annotations/validation_482_ours.json',
         img_prefix=data_root + 'frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
@@ -63,7 +63,7 @@ data = dict(
         type=dataset_type,
         classes=data_root + 'annotations/tao_classes.txt',
         ann_file=data_root +
-        'annotations/qdtrack_482/validation_482_ours.json',
+        'annotations/validation_482_ours.json',
         img_prefix=data_root + 'frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline))

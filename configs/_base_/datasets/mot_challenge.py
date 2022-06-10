@@ -1,10 +1,16 @@
 # dataset settings
+file_client_args = dict(
+    backend='petrel',
+    path_mapping=dict({
+        './data/': 'openmmlab:s3://openmmlab/datasets/tracking/',
+        'data/': 'openmmlab:s3://openmmlab/datasets/tracking/'
+    }))
 dataset_type = 'MOTChallengeDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
+    dict(type='LoadMultiImagesFromFile', to_float32=True, file_client_args=file_client_args),
+    dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True, file_client_args=file_client_args),
     dict(
         type='SeqResize',
         img_scale=(1088, 1088),
@@ -31,7 +37,7 @@ train_pipeline = [
     dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', file_client_args=file_client_args),
     dict(
         type='MultiScaleFlipAug',
         img_scale=(1088, 1088),
@@ -59,16 +65,19 @@ data = dict(
             frame_range=10,
             filter_key_img=True,
             method='uniform'),
-        pipeline=train_pipeline),
+        pipeline=train_pipeline,
+        file_client_args=file_client_args),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
-        pipeline=test_pipeline),
+        pipeline=test_pipeline,
+        file_client_args=file_client_args),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/half-val_cocoformat.json',
         img_prefix=data_root + 'train',
         ref_img_sampler=None,
-        pipeline=test_pipeline))
+        pipeline=test_pipeline,
+        file_client_args=file_client_args))

@@ -9,7 +9,7 @@ model = dict(
         backbone=dict(
             depth=101,
             init_cfg=dict(
-                type='Pretrained', checkpoint='ckpts/resnet101-5d3b4d8f.pth')),
+                type='Pretrained', checkpoint='../resnet101-63fe2227.pth')),
         roi_head=dict(
             bbox_head=dict(
                 loss_bbox=dict(type='L1Loss', loss_weight=1.0),
@@ -63,13 +63,15 @@ model = dict(
         obj_score_thr=0.0001,
         match_score_thr=0.5,
         memo_frames=10,
-        momentum_embed=0.8,
+        memo_momentum=0.8,
         momentum_obj_score=0.5,
         obj_score_diff_thr=1.0,
         distractor_nms_thr=0.3,
         distractor_score_thr=0.5,
         match_metric='bisoftmax',
         match_with_cosine=True))
+optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
 # learning policy
 lr_config = dict(
     policy='step',
@@ -78,7 +80,13 @@ lr_config = dict(
     warmup_ratio=1.0 / 1000,
     step=[16, 22])
 total_epochs = 24
-load_from = None
+load_from = '../aux.pth'
 resume_from = None
 evaluation = dict(metric=['bbox'], start=16, interval=2)
 work_dir = None
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='WandbLoggerHook', init_kwargs=dict(project='QDtrack'))
+    ])
