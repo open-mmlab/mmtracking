@@ -115,6 +115,7 @@ ckpts
 *.pkl.json
 *.log.json
 work_dirs/
+debug_work_dirs/
 mmtrack/.mim
 
 # Pytorch
