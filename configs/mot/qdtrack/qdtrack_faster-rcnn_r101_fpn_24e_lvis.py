@@ -1,7 +1,6 @@
 # model settings
 _base_ = [
-    './qdtrack_faster-rcnn_r50_fpn_4e_base.py', '../../_base_/datasets/tao.py',
-    '../../_base_/default_runtime.py'
+    './qdtrack_faster-rcnn_r50_fpn_4e_base.py', '../../_base_/datasets/tao.py'
 ]
 model = dict(
     type='QDTrack',
@@ -21,6 +20,7 @@ model = dict(
                 max_per_img=300)),
         init_cfg=None),
     tracker=dict(
+        _delete_=True,
         type='QuasiDenseTAOTracker',
         init_score_thr=0.0001,
         obj_score_thr=0.0001,
