@@ -8,8 +8,8 @@ data = dict(
     train=dict(
         dataset=dict(
             classes=data_root + 'annotations/tao_classes.txt',
-            ann_file=data_root + 'annotations/train_482_ours.json',
-            img_prefix=data_root + 'frames/',
+            ann_file=data_root + 'annotations/train_482_classes.json',
+            img_prefix=data_root + 'train/',
             load_as_video=True,
             key_img_sampler=dict(interval=1),
             ref_img_sampler=dict(
