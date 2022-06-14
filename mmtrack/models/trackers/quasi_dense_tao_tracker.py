@@ -1,6 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from collections import defaultdict
-
 import torch
 from mmdet.core import bbox_overlaps
 
@@ -66,23 +64,13 @@ class QuasiDenseTAOTracker(BaseTracker):
         self.match_metric = match_metric
         self.match_with_cosine = match_with_cosine
 
-        self.reset()
+        self.num_tracks = 0
+        self.tracks = dict()
 
     def reset(self):
         """Reset the buffer of the tracker."""
         self.num_tracks = 0
         self.tracks = dict()
-        # for analysis
-        self.pred_tracks = defaultdict(lambda: defaultdict(list))
-        self.gt_tracks = defaultdict(lambda: defaultdict(list))
-
-    @property
-    def valid_ids(self):
-        """Return ground truth tracks' ids."""
-        valid_ids = []
-        for k, v in self.gt_tracks.items():
-            valid_ids.extend(v['ids'])
-        return list(set(valid_ids))
 
     def update(self, ids, bboxes, labels, embeds, frame_id):
         """Tracking forward function.

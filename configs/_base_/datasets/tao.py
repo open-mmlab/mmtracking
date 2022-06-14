@@ -48,22 +48,20 @@ data = dict(
             type=dataset_type,
             classes=data_root + 'annotations/tao_classes.txt',
             load_as_video=False,
-            ann_file='data/lvisv0.5+coco_train.json',
+            ann_file='data/lvis/annotations/lvisv0.5+coco_train.json',
             img_prefix='data/lvis/train2017/',
             pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         classes=data_root + 'annotations/tao_classes.txt',
-        ann_file=data_root +
-        'annotations/qdtrack_482/validation_482_ours.json',
+        ann_file=data_root + 'annotations/validation_482_ours.json',
         img_prefix=data_root + 'frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
         classes=data_root + 'annotations/tao_classes.txt',
-        ann_file=data_root +
-        'annotations/qdtrack_482/validation_482_ours.json',
+        ann_file=data_root + 'annotations/validation_482_ours.json',
         img_prefix=data_root + 'frames/',
         ref_img_sampler=None,
         pipeline=test_pipeline))
