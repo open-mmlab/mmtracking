@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from copy import deepcopy
 from unittest import TestCase
 
 import mmcv
@@ -6,6 +7,7 @@ import numpy as np
 import torch
 from mmengine.data import InstanceData
 
+from mmtrack.core import TrackDataSample
 from mmtrack.models.track_heads import CorrelationHead, SiameseRPNHead
 from mmtrack.utils import register_all_modules
 from ..utils import _rand_bboxes
@@ -137,40 +139,56 @@ class TestSiameseRPNHead(TestCase):
         assert bbox_targets.shape == (2, 25 * 25 * 5, 4)
         assert bbox_weights.shape == (2, 25 * 25 * 5, 4)
 
-    def test_get_bbox(self):
-
-        cls_score = torch.randn(1, 10, 25, 25)
-        bbox_pred = torch.rand(1, 20, 25, 25)
+    def test_predict(self):
+        z_feats = tuple([
+            torch.rand(1, 1, 7, 7)
+            for i in range(len(self.siamese_rpn_head.cls_heads))
+        ])
+        x_feats = tuple([
+            torch.rand(1, 1, 31, 31)
+            for i in range(len(self.siamese_rpn_head.cls_heads))
+        ])
         prev_bbox = torch.from_numpy(_rand_bboxes(
             self.rng, 1, 10, 10)).squeeze().type(torch.float32)
         scale_factor = torch.Tensor([3.])
-        best_score, final_bbox = self.siamese_rpn_head.get_bbox(
-            cls_score, bbox_pred, prev_bbox, scale_factor)
-        assert best_score >= 0
-        assert final_bbox.shape == (4, )
+
+        data_sample = TrackDataSample()
+        data_sample.set_metainfo(dict(search_ori_shape=(200, 200)))
+        batch_data_samples = [data_sample]
+        results = self.siamese_rpn_head.predict(z_feats, x_feats,
+                                                batch_data_samples, prev_bbox,
+                                                scale_factor)
+        assert results[0].scores >= 0
+        assert results[0].bboxes.shape == (1, 4)
 
     def test_loss(self):
-        cls_score = torch.rand((1, 10, 25, 25))
-        bbox_pred = torch.rand(1, 20, 25, 25)
+        z_feats = tuple([
+            torch.rand(1, 1, 7, 7)
+            for i in range(len(self.siamese_rpn_head.cls_heads))
+        ])
+        x_feats = tuple([
+            torch.rand(1, 1, 31, 31)
+            for i in range(len(self.siamese_rpn_head.cls_heads))
+        ])
 
+        data_sample = TrackDataSample()
         gt_instances = InstanceData()
         gt_instances.bboxes = torch.Tensor(
             [[23.6667, 23.8757, 238.6326, 151.8874]])
         gt_instances.labels = torch.Tensor([True]).long()
-        batch_gt_instances = [gt_instances]
-        bbox_targets = self.siamese_rpn_head.get_targets(
-            batch_gt_instances, cls_score.shape[2:])
+        data_sample.search_gt_instances = gt_instances
+        data_sample.gt_instances = deepcopy(gt_instances)
+        data_sample.set_metainfo(dict(search_ori_shape=(200, 200)))
+        batch_data_samples = [data_sample]
 
-        gt_losses = self.siamese_rpn_head.loss(cls_score, bbox_pred,
-                                               *bbox_targets)
+        gt_losses = self.siamese_rpn_head.loss(z_feats, x_feats,
+                                               batch_data_samples)
         assert gt_losses['loss_rpn_cls'] > 0, 'cls loss should be non-zero'
         assert gt_losses[
             'loss_rpn_bbox'] >= 0, 'box loss should be non-zero or zero'
 
         gt_instances.labels = torch.Tensor([False]).long()
-        bbox_targets = self.siamese_rpn_head.get_targets(
-            batch_gt_instances, cls_score.shape[2:])
-        gt_losses = self.siamese_rpn_head.loss(cls_score, bbox_pred,
-                                               *bbox_targets)
+        gt_losses = self.siamese_rpn_head.loss(z_feats, x_feats,
+                                               batch_data_samples)
         assert gt_losses['loss_rpn_cls'] > 0, 'cls loss should be non-zero'
         assert gt_losses['loss_rpn_bbox'] == 0, 'box loss should be zero'

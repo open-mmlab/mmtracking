@@ -5,6 +5,7 @@ from unittest import TestCase
 import torch
 from parameterized import parameterized
 
+from mmtrack.core import TrackDataSample
 from mmtrack.registry import MODELS
 from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs, _get_model_cfg
@@ -26,12 +27,11 @@ class TestSiameseRPN(TestCase):
         assert model.backbone
         assert model.neck
         assert model.head
-        assert model.device.type == 'cpu'
 
     @parameterized.expand([
         ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
     ])
-    def test_siamese_rpn_forward_train(self, cfg_file, devices):
+    def test_siamese_rpn_forward_loss_mode(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -44,22 +44,22 @@ class TestSiameseRPN(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            assert model.device.type == device
-
+            # forward in ``loss`` mode
             packed_inputs = _demo_mm_inputs(
                 batch_size=1,
                 frame_id=0,
                 num_key_imgs=1,
                 ref_prefix='search',
                 num_items=[1])
-            # Test forward train
-            losses = model.forward(packed_inputs, return_loss=True)
+            batch_inputs, data_samples = model.data_preprocessor(
+                packed_inputs, True)
+            losses = model.forward(batch_inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
         ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
     ])
-    def test_siamese_rpn_forward_test(self, cfg_file, devices):
+    def test_siamese_rpn_forward_predict_mode(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -72,9 +72,7 @@ class TestSiameseRPN(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            assert model.device.type == device
-
-            # Test forward test
+            # forward in ``predict`` mode
             model.eval()
             with torch.no_grad():
                 for i in range(3):
@@ -84,6 +82,9 @@ class TestSiameseRPN(TestCase):
                         num_key_imgs=1,
                         ref_prefix='search',
                         num_items=[1])
+                    batch_inputs, data_samples = model.data_preprocessor(
+                        packed_inputs, False)
                     batch_results = model.forward(
-                        packed_inputs, return_loss=False)
+                        batch_inputs, data_samples, mode='predict')
                     assert len(batch_results) == 1
+                    assert isinstance(batch_results[0], TrackDataSample)

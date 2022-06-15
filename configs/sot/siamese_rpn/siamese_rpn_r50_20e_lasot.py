@@ -11,6 +11,7 @@ search_size = 255
 # model settings
 model = dict(
     type='SiamRPN',
+    data_preprocessor=dict(type='TrackDataPreprocessor'),
     backbone=dict(
         type='SOTResNet',
         depth=50,

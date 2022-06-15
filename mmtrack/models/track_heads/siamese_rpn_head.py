@@ -5,10 +5,11 @@ import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmcv.runner import BaseModule, auto_fp16, force_fp32
-from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
+from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.data import InstanceData
 from torch import Tensor
 
+from mmtrack.core import InstanceList, SampleList
 from mmtrack.core.track import depthwise_correlation
 from mmtrack.registry import MODELS, TASK_UTILS
 
@@ -179,16 +180,16 @@ class SiameseRPNHead(BaseModule):
         self.loss_bbox = MODELS.build(loss_bbox)
 
     @auto_fp16()
-    def forward(self, z_feats: Tuple[Tensor, ...],
-                x_feats: Tuple[Tensor, ...]) -> Tuple[Tensor, Tensor]:
-        """Forward with features `z_feats` of exemplar images and features
-        `x_feats` of search images.
+    def forward(self, template_feats: Tuple[Tensor, ...],
+                search_feats: Tuple[Tensor, ...]) -> Tuple[Tensor, Tensor]:
+        """Forward with features `template_feats` of template images and
+        features `search_feats` of search images.
 
         Args:
-            z_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
-                (N, C, H, W) denoting the multi level feature maps of exemplar
+            template_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+                (N, C, H, W) denoting the multi level feature maps of template
                 images. Typically H and W equal to 7.
-            x_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
                 (N, C, H, W) denoting the multi level feature maps of search
                 images. Typically H and W equal to 31.
 
@@ -200,23 +201,26 @@ class SiameseRPNHead(BaseModule):
                 (N, 4 * num_base_anchors, H, W).
                 Typically H and W equal to 25.
         """
-        assert isinstance(z_feats, tuple) and isinstance(x_feats, tuple)
-        assert len(z_feats) == len(x_feats) and len(z_feats) == len(
-            self.cls_heads)
+        assert isinstance(template_feats, tuple) and isinstance(
+            search_feats, tuple)
+        assert len(template_feats) == len(search_feats) and len(
+            template_feats) == len(self.cls_heads)
 
         if self.weighted_sum:
             cls_weight = nn.functional.softmax(self.cls_weight, dim=0)
             reg_weight = nn.functional.softmax(self.reg_weight, dim=0)
         else:
             reg_weight = cls_weight = [
-                1.0 / len(z_feats) for i in range(len(z_feats))
+                1.0 / len(template_feats) for i in range(len(template_feats))
             ]
 
         cls_score = 0
         bbox_pred = 0
-        for i in range(len(z_feats)):
-            cls_score_single = self.cls_heads[i](z_feats[i], x_feats[i])
-            bbox_pred_single = self.reg_heads[i](z_feats[i], x_feats[i])
+        for i in range(len(template_feats)):
+            cls_score_single = self.cls_heads[i](template_feats[i],
+                                                 search_feats[i])
+            bbox_pred_single = self.reg_heads[i](template_feats[i],
+                                                 search_feats[i])
             cls_score += cls_weight[i] * cls_score_single
             bbox_pred += reg_weight[i] * bbox_pred_single
 
@@ -377,7 +381,7 @@ class SiameseRPNHead(BaseModule):
 
         return labels, labels_weights, bbox_targets, bbox_weights
 
-    def get_targets(self, batch_gt_instances: List[InstanceData],
+    def get_targets(self, batch_gt_instances: InstanceList,
                     score_maps_size: torch.Size) -> Tuple[Tensor, ...]:
         """Generate the training targets for exemplar image and search image
         pairs.
@@ -426,10 +430,44 @@ class SiameseRPNHead(BaseModule):
         return (all_labels, all_labels_weights, all_bbox_targets,
                 all_bbox_weights)
 
+    def loss(self, template_feats: Tuple[Tensor], search_feats: Tuple[Tensor],
+             batch_data_samples: SampleList, **kwargs) -> dict:
+        """Perform forward propagation and loss calculation of the tracking
+        head on the features of the upstream network.
+
+        Args:
+            template_feats (tuple[Tensor, ...]): Tuple of Tensor with
+                shape (N, C, H, W) denoting the multi level feature maps of
+                exemplar images. Typically H and W equal to 7.
+            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+                (N, C, H, W) denoting the multi level feature maps of
+                search images. Typically H and W equal to 31.
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
+
+        Returns:
+            dict: A dictionary of loss components.
+        """
+        outs = self(template_feats, search_feats)
+
+        batch_gt_instances = []
+        batch_img_metas = []
+        batch_search_gt_instances = []
+        for data_sample in batch_data_samples:
+            batch_img_metas.append(data_sample.metainfo)
+            batch_gt_instances.append(data_sample.gt_instances)
+            batch_search_gt_instances.append(data_sample.search_gt_instances)
+
+        loss_inputs = outs + (batch_gt_instances, batch_search_gt_instances,
+                              batch_img_metas)
+        losses = self.loss_by_feat(*loss_inputs)
+        return losses
+
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
-    def loss(self, cls_score: Tensor, bbox_pred: Tensor, labels: Tensor,
-             labels_weights: Tensor, bbox_targets: Tensor,
-             bbox_weights: Tensor) -> dict:
+    def loss_by_feat(self, cls_score: Tensor, bbox_pred: Tensor,
+                     batch_gt_instances: InstanceList,
+                     batch_search_gt_instances: InstanceList,
+                     batch_img_metas: List[dict]) -> dict:
         """Compute loss.
 
         Args:
@@ -446,8 +484,11 @@ class SiameseRPNHead(BaseModule):
         Returns:
             dict[str, Tensor]: A dictionary of loss components.
         """
-        losses = {}
         N, _, H, W = cls_score.shape
+        (labels, labels_weights, bbox_targets,
+         bbox_weights) = self.get_targets(batch_search_gt_instances, (H, W))
+
+        losses = {}
 
         cls_score = cls_score.view(N, 2, -1, H, W)
         cls_score = cls_score.permute(0, 3, 4, 2, 1).contiguous().view(-1, 2)
@@ -458,6 +499,7 @@ class SiameseRPNHead(BaseModule):
 
         bbox_pred = bbox_pred.view(N, 4, -1, H, W)
         bbox_pred = bbox_pred.permute(0, 3, 4, 2, 1).contiguous().view(-1, 4)
+
         bbox_targets = bbox_targets.view(-1, 4)
         bbox_weights = bbox_weights.view(-1, 4)
         losses['loss_rpn_bbox'] = self.loss_bbox(
@@ -465,9 +507,47 @@ class SiameseRPNHead(BaseModule):
 
         return losses
 
+    def predict(self, template_feats: Tuple[Tensor],
+                search_feats: Tuple[Tensor], batch_data_samples: SampleList,
+                prev_bbox: Tensor, scale_factor: Tensor) -> InstanceList:
+        """Perform forward propagation of the tracking head and predict
+        tracking results on the features of the upstream network.
+
+        Args:
+            template_feats (tuple[Tensor, ...]): Tuple of Tensor with
+                shape (N, C, H, W) denoting the multi level feature maps of
+                exemplar images. Typically H and W equal to 7.
+            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+                (N, C, H, W) denoting the multi level feature maps of
+                search images. Typically H and W equal to 31.
+
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensor): scale factor.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        batch_img_metas = [
+            data_samples.metainfo for data_samples in batch_data_samples
+        ]
+        outs = self(template_feats, search_feats)
+        predictions = self.predict_by_feat(
+            *outs,
+            prev_bbox=prev_bbox,
+            scale_factor=scale_factor,
+            batch_img_metas=batch_img_metas)
+        return predictions
+
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
-    def get_bbox(self, cls_score: Tensor, bbox_pred: Tensor, prev_bbox: Tensor,
-                 scale_factor: Tensor) -> Tuple[Tensor, Tensor]:
+    def predict_by_feat(self, cls_score: Tensor, bbox_pred: Tensor,
+                        prev_bbox: Tensor, scale_factor: Tensor,
+                        batch_img_metas: List[dict]) -> InstanceList:
         """Track `prev_bbox` to current frame based on the output of network.
 
         Args:
@@ -475,12 +555,15 @@ class SiameseRPNHead(BaseModule):
             bbox_pred (Tensor): of shape (1, 4 * num_base_anchors, H, W).
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
             scale_factor (Tensor): scale factor.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
 
         Returns:
-            tuple[Tensor, Tensor]: It contains
-              - ``best_score`` is a Tensor denoting the score
-              - ``final_bbox`` is a Tensor of shape (4, ) with [cx, cy, w, h]
-                format, which denotes the best tracked bbox in current frame.
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
         """
         score_maps_size = [(cls_score.shape[2:])]
         if not hasattr(self, 'anchors'):
@@ -505,7 +588,37 @@ class SiameseRPNHead(BaseModule):
         bbox_pred = bbox_pred.view(4, -1, H, W)
         bbox_pred = bbox_pred.permute(2, 3, 1, 0).contiguous().view(-1, 4)
         bbox_pred = self.bbox_coder.decode(self.anchors, bbox_pred)
-        bbox_pred = bbox_xyxy_to_cxcywh(bbox_pred)
+
+        result = InstanceData()
+        result.scores = cls_score
+        result.bboxes = bbox_pred
+
+        return self._bbox_post_process([result],
+                                       prev_bbox,
+                                       scale_factor,
+                                       batch_img_metas=batch_img_metas)
+
+    def _bbox_post_process(self, results: InstanceList, prev_bbox: Tensor,
+                           scale_factor: Tensor, batch_img_metas: List[dict],
+                           **kwargs) -> InstanceList:
+        """The postprocess of tracking bboxes.
+
+        Args:
+            results (InstanceList): tracking results.
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensor): scale factor.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        result = results[0]
+        bbox_pred = bbox_xyxy_to_cxcywh(result.bboxes)
 
         def change_ratio(ratio):
             return torch.max(ratio, 1. / ratio)
@@ -527,16 +640,16 @@ class SiameseRPNHead(BaseModule):
         # penalize cls_score
         penalty = torch.exp(-(aspect_ratio_penalty * scale_penalty - 1) *
                             self.test_cfg.penalty_k)
-        penalty_score = penalty * cls_score
+        penalty_score = penalty * result.scores
 
         # window penalty
         penalty_score = penalty_score * (1 - self.test_cfg.window_influence) \
             + self.windows * self.test_cfg.window_influence
 
         best_idx = torch.argmax(penalty_score)
-        best_score = cls_score[best_idx]
-        best_bbox = bbox_pred[best_idx, :] / scale_factor
+        result = result[best_idx.item()]
 
+        best_bbox = bbox_pred[best_idx, :] / scale_factor
         final_bbox = torch.zeros_like(best_bbox)
 
         # map the bbox center from the searched image to the original image.
@@ -544,8 +657,34 @@ class SiameseRPNHead(BaseModule):
         final_bbox[1] = best_bbox[1] + prev_bbox[1]
 
         # smooth bbox
-        lr = penalty[best_idx] * cls_score[best_idx] * self.test_cfg.lr
+        lr = penalty[best_idx] * result.scores * self.test_cfg.lr
         final_bbox[2] = prev_bbox[2] * (1 - lr) + best_bbox[2] * lr
         final_bbox[3] = prev_bbox[3] * (1 - lr) + best_bbox[3] * lr
 
-        return best_score, final_bbox
+        # clip boundary
+        img_shape = batch_img_metas[0]['search_ori_shape']
+        # rather than [x1, x2, y1, y2] format.
+        final_bbox = self._bbox_clip(final_bbox, img_shape[0], img_shape[1])
+
+        result.bboxes = bbox_cxcywh_to_xyxy(final_bbox)[None]
+
+        return [result]
+
+    def _bbox_clip(self, bbox: Tensor, img_h: int, img_w: int) -> Tensor:
+        """Clip the bbox with [cx, cy, w, h] format.
+
+        Args:
+            img (Tensor): of shape (1, C, H, W) encoding original input
+                image.
+            bbox (Tensor): The given instance bbox of first frame that
+                need be tracked in the following frames. The shape of the box
+                is of (4, ) shape in [cx, cy, w, h] format.
+
+        Returns:
+            Tensor: The clipped boxes.
+        """
+        bbox[0] = bbox[0].clamp(0., img_w)
+        bbox[1] = bbox[1].clamp(0., img_h)
+        bbox[2] = bbox[2].clamp(10., img_w)
+        bbox[3] = bbox[3].clamp(10., img_h)
+        return bbox

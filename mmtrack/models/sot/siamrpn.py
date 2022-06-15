@@ -5,16 +5,18 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from addict import Dict
-from mmdet.core.bbox import bbox_cxcywh_to_xyxy
+from mmdet.core.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine import MessageHub
 from mmengine.data import InstanceData
 from torch import Tensor
 from torch.nn.modules.batchnorm import BatchNorm2d, _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
-from mmtrack.core import TrackDataSample
 from mmtrack.core.bbox import calculate_region_overlap, quad2bbox_cxcywh
 from mmtrack.core.evaluation import bbox2region
+from mmtrack.core.utils import (ForwardResults, OptConfigType, OptMultiConfig,
+                                OptSampleList, SampleList)
+from mmtrack.core.utils.typing import InstanceList
 from mmtrack.registry import MODELS
 from .base import BaseSingleObjectTracker
 
@@ -32,12 +34,13 @@ class SiamRPN(BaseSingleObjectTracker):
                  neck: Optional[dict] = None,
                  head: Optional[dict] = None,
                  pretrains: Optional[dict] = None,
-                 init_cfg: Optional[dict] = None,
                  train_cfg: Optional[dict] = None,
                  test_cfg: Optional[dict] = None,
                  frozen_modules: Optional[Union[List[str], Tuple[str],
-                                                str]] = None):
-        super(SiamRPN, self).__init__(init_cfg)
+                                                str]] = None,
+                 data_preprocessor: OptConfigType = None,
+                 init_cfg: OptMultiConfig = None):
+        super(SiamRPN, self).__init__(data_preprocessor, init_cfg)
         if isinstance(pretrains, dict):
             warnings.warn('DeprecationWarning: pretrains is deprecated, '
                           'please use "init_cfg" instead')
@@ -183,35 +186,12 @@ class SiamRPN(BaseSingleObjectTracker):
             align_corners=False)
         return crop_img
 
-    def _bbox_clip(self, bbox: Tensor, img_h: int, img_w: int) -> Tensor:
-        """Clip the bbox with [cx, cy, w, h] format.
-
-        Args:
-            img (Tensor): of shape (1, C, H, W) encoding original input
-                image.
-            bbox (Tensor): The given instance bbox of first frame that
-                need be tracked in the following frames. The shape of the box
-                is of (4, ) shape in [cx, cy, w, h] format.
-
-        Returns:
-            Tensor: The clipped boxes.
-        """
-        bbox[0] = bbox[0].clamp(0., img_w)
-        bbox[1] = bbox[1].clamp(0., img_h)
-        bbox[2] = bbox[2].clamp(10., img_w)
-        bbox[3] = bbox[3].clamp(10., img_h)
-        return bbox
-
-    def init(self, img: Tensor,
-             bbox: Tensor) -> Tuple[Tuple[Tensor, ...], Tensor]:
+    def init(self, img: Tensor) -> Tuple[Tuple[Tensor, ...], Tensor]:
         """Initialize the single object tracker in the first frame.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            bbox (Tensor): The given instance bbox of first frame that
-                need be tracked in the following frames. The shape of the box
-                is of (4, ) shape in [cx, cy, w, h] format.
 
         Returns:
             Tuple[Tuple[Tensor, ...], Tensor):
@@ -220,6 +200,7 @@ class SiamRPN(BaseSingleObjectTracker):
                 - avg_channel: Tensor with shape (3, ), and denotes the padding
                 values.
         """
+        bbox = self.memo.bbox
         z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
         z_size = torch.round(torch.sqrt(z_width * z_height))
@@ -230,160 +211,53 @@ class SiamRPN(BaseSingleObjectTracker):
         z_feat = self.forward_template(z_crop)
         return z_feat, avg_channel
 
-    def track(self, img: Tensor, bbox: Tensor, z_feat: Tuple[Tensor, ...],
-              avg_channel: Tensor) -> Tuple[Tensor, Tensor]:
+    def track(self, img: Tensor,
+              batch_data_samples: SampleList) -> InstanceList:
         """Track the box `bbox` of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            bbox (Tensor): The bbox in previous frame. The shape of the
-                box is (4, ) in [cx, cy, w, h] format.
-            z_feat (tuple[Tensor, ...]): The multi level feature maps of
-                exemplar image in the first frame.
-            avg_channel (Tensor): of shape (3, ) denoting the padding
-                values.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instances`` and 'metainfo'.
 
         Returns:
-            Tuple[Tensor, Tensor]: It contains
-                - ``best_score``: a Tensor denoting the score of best_bbox.
-                - ``best_bbox``: a Tensor of shape (4, ) in [cx, cy, w, h]
+            InstanceList: Tracking results of each image after the postprocess.
+                - scores: a Tensor denoting the score of best_bbox.
+                - bboxes: a Tensor of shape (4, ) in [x1, x2, y1, y2]
                 format, and denotes the best tracked bbox in current frame.
         """
-        z_width = bbox[2] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
-        z_height = bbox[3] + self.test_cfg.context_amount * (bbox[2] + bbox[3])
+        prev_bbox = self.memo.bbox
+        z_width = prev_bbox[2] + self.test_cfg.context_amount * (
+            prev_bbox[2] + prev_bbox[3])
+        z_height = prev_bbox[3] + self.test_cfg.context_amount * (
+            prev_bbox[2] + prev_bbox[3])
         z_size = torch.sqrt(z_width * z_height)
 
         x_size = torch.round(
             z_size * (self.test_cfg.search_size / self.test_cfg.exemplar_size))
-        x_crop = self.get_cropped_img(img, bbox[0:2],
+        x_crop = self.get_cropped_img(img, prev_bbox[0:2],
                                       self.test_cfg.search_size, x_size,
-                                      avg_channel)
+                                      self.memo.avg_channel)
 
         x_feat = self.forward_search(x_crop)
-        cls_score, bbox_pred = self.head(z_feat, x_feat)
         scale_factor = self.test_cfg.exemplar_size / z_size
-        best_score, best_bbox = self.head.get_bbox(cls_score, bbox_pred, bbox,
-                                                   scale_factor)
 
-        # clip boundary
-        best_bbox = self._bbox_clip(best_bbox, img.shape[2], img.shape[3])
-        return best_score, best_bbox
+        results = self.head.predict(self.memo.z_feat, x_feat,
+                                    batch_data_samples, prev_bbox,
+                                    scale_factor)
 
-    def simple_test_vot(
-            self,
-            img: Tensor,
-            frame_id: int,
-            gt_bboxes: List[Tensor],
-            img_metas: Optional[List[dict]] = None) -> Tuple[Tensor, Tensor]:
+        return results
+
+    def predict_vot(self, batch_inputs: dict,
+                    batch_data_samples: SampleList) -> List[InstanceData]:
         """Test using VOT test mode.
 
         Args:
-            img (Tensor): of shape (1, C, H, W) encoding input image.
-            frame_id (int): the id of current frame in the video.
-            gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
-                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
-            img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-
-        Returns:
-            Tuple[Tensor, Tensor]: Containing two elements:
-                - ``bbox_pred`` (Tensor): of shape (4, ), in
-                [tl_x, tl_y, br_x, br_y] format.
-                - ``best_score`` (Tensor): the tracking bbox confidence in
-                range [0,1], and the score of initial frame is -1.
-        """
-        if frame_id == 0:
-            self.init_frame_id = 0
-        if self.init_frame_id == frame_id:
-            # initialization
-            gt_bboxes = gt_bboxes[0][0]
-            self.memo = Dict()
-            self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
-            self.memo.z_feat, self.memo.avg_channel = self.init(
-                img, self.memo.bbox)
-            # 1 denotes the initialization state
-            bbox_pred = img.new_tensor([1.])
-            best_score = -1.
-        elif self.init_frame_id > frame_id:
-            # 0 denotes unknown state, namely the skipping frame after failure
-            bbox_pred = img.new_tensor([0.])
-            best_score = -1.
-        else:
-            # normal tracking state
-            best_score, self.memo.bbox = self.track(img, self.memo.bbox,
-                                                    self.memo.z_feat,
-                                                    self.memo.avg_channel)
-            # convert bbox to region
-            track_bbox = bbox_cxcywh_to_xyxy(self.memo.bbox).cpu().numpy()
-            track_region = bbox2region(track_bbox)
-            gt_bbox = gt_bboxes[0][0]
-            gt_region = bbox2region(gt_bbox.cpu().numpy())
-
-            if img_metas is not None and 'img_shape' in img_metas[0]:
-                image_shape = img_metas[0]['img_shape']
-                image_wh = (image_shape[1], image_shape[0])
-            else:
-                image_wh = None
-                Warning('image shape are need when calculating bbox overlap')
-            overlap = calculate_region_overlap(
-                track_region, gt_region, bounds=image_wh)
-            if overlap <= 0:
-                # tracking failure
-                self.init_frame_id = frame_id + 5
-                # 2 denotes the failure state
-                bbox_pred = img.new_tensor([2.])
-            else:
-                bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
-
-        return bbox_pred, best_score
-
-    def simple_test_ope(self, img: Tensor, frame_id: int,
-                        gt_bboxes: List[Tensor]) -> Tuple[Tensor, Tensor]:
-        """Test using OPE test mode.
-
-        Args:
-            img (Tensor): of shape (1, C, H, W) encoding input image.
-            frame_id (int): the id of current frame in the video.
-            gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format or
-                shape (1, 8) in [x1, y1, x2, y2, x3, y3, x4, y4].
-
-        Returns:
-            Tuple[Tensor, Tensor]: Containing two elements:
-                - ``bbox_pred``: of shape (4, ),
-                in [tl_x, tl_y, br_x, br_y] format.
-                - ``best_score``: the tracking bbox confidence in range
-                [0,1], and the score of initial frame is -1.
-        """
-        if frame_id == 0:
-            self.memo = Dict()
-            self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
-            self.memo.z_feat, self.memo.avg_channel = self.init(
-                img, self.memo.bbox)
-            best_score = -1.
-        else:
-            best_score, self.memo.bbox = self.track(img, self.memo.bbox,
-                                                    self.memo.z_feat,
-                                                    self.memo.avg_channel)
-        bbox_pred = bbox_cxcywh_to_xyxy(self.memo.bbox)
-
-        return bbox_pred, best_score
-
-    def simple_test(self,
-                    batch_inputs: dict,
-                    batch_data_samples: List[TrackDataSample],
-                    rescale: bool = False):
-        """Test without augmentation.
-
-        Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W)
-                encodingbinput images. Typically these should be mean centered
-                and stdbscaled. The N denotes batch size. The T denotes the
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+                encoding input images. Typically these should be mean centered
+                and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
@@ -391,15 +265,14 @@ class SiamRPN(BaseSingleObjectTracker):
                 ``ref_img``.
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
-                as ``gt_instances``.
-            rescale (bool, Optional): If False, then returned bboxes and masks
-                will fit the scale of img, otherwise, returned bboxes and masks
-                will fit the scale of original image shape. Defaults to False.
+                as ``gt_instances`` and 'metainfo'.
 
         Returns:
-            list[obj:`TrackDataSample`]: Tracking results of the
-                input images. Each TrackDataSample usually contains
-                ``pred_det_instances`` or ``pred_track_instances``.
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
@@ -412,30 +285,138 @@ class SiamRPN(BaseSingleObjectTracker):
         assert frame_id >= 0
         gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
 
+        if frame_id == 0:
+            self.init_frame_id = 0
+        if self.init_frame_id == frame_id:
+            # initialization
+            gt_bboxes = gt_bboxes[0][0]
+            self.memo = Dict()
+            self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
+            self.memo.z_feat, self.memo.avg_channel = self.init(img)
+            # 1 denotes the initialization state
+            results = [InstanceData()]
+            results[0].bboxes = gt_bboxes.new_tensor([[1.]])
+            results[0].scores = gt_bboxes.new_tensor([-1.])
+        elif self.init_frame_id > frame_id:
+            # 0 denotes unknown state, namely the skipping frame after failure
+            results = [InstanceData()]
+            results[0].bboxes = gt_bboxes.new_tensor([[0.]])
+            results[0].scores = gt_bboxes.new_tensor([-1.])
+        else:
+            # normal tracking state
+            results = self.track(img, batch_data_samples)
+            self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes[0])
+
+            # convert bbox to region for overlap calculation
+            track_bbox = results[0].bboxes[0].cpu().numpy()
+            track_region = bbox2region(track_bbox)
+            gt_bbox = gt_bboxes[0][0]
+            gt_region = bbox2region(gt_bbox.cpu().numpy())
+
+            if 'img_shape' in metainfo[0]:
+                image_shape = metainfo[0]['img_shape']
+                image_wh = (image_shape[1], image_shape[0])
+            else:
+                image_wh = None
+                Warning('image shape are need when calculating bbox overlap')
+            overlap = calculate_region_overlap(
+                track_region, gt_region, bounds=image_wh)
+            if overlap <= 0:
+                # tracking failure
+                self.init_frame_id = frame_id + 5
+                # 2 denotes the failure state
+                results[0].bboxes = img.new_tensor([[2.]])
+
+        return results
+
+    def predict_ope(self, batch_inputs: dict,
+                    batch_data_samples: SampleList) -> InstanceList:
+        """Test using OPE test mode.
+
+        Args:
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+                encodingbinput images. Typically these should be mean centered
+                and stdbscaled. The N denotes batch size. The T denotes the
+                number of key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+                In test mode, T = 1 and there is only ``img`` and no
+                ``ref_img``.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instances`` and 'metainfo'.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        img = batch_inputs['img']
+        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        assert img.size(0) == 1, \
+            'Only support 1 batch size per gpu in test mode'
+        img = img[0]
+
+        metainfo = batch_data_samples[0].metainfo
+        frame_id = metainfo.get('frame_id', -1)
+        assert frame_id >= 0
+        gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
+
+        if frame_id == 0:
+            self.memo = Dict()
+            self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
+            self.memo.z_feat, self.memo.avg_channel = self.init(img)
+            results = [InstanceData()]
+            results[0].bboxes = bbox_cxcywh_to_xyxy(self.memo.bbox)[None]
+            results[0].scores = gt_bboxes.new_tensor([-1.])
+        else:
+            results = self.track(img, batch_data_samples)
+
+        return results
+
+    def predict(self, batch_inputs: dict, batch_data_samples: SampleList,
+                **kwargs) -> SampleList:
+        """Test without augmentation.
+
+        Args:
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+                encodingbinput images. Typically these should be mean centered
+                and stdbscaled. The N denotes batch size. The T denotes the
+                number of key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+                In test mode, T = 1 and there is only ``img`` and no
+                ``ref_img``.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instances`` and 'metainfo'.
+
+        Returns:
+            SampleList: Tracking results of the
+                input images. Each TrackDataSample usually contains
+                ``pred_det_instances`` or ``pred_track_instances``.
+        """
         test_mode = self.test_cfg.get('test_mode', 'OPE')
         assert test_mode in ['OPE', 'VOT']
         if test_mode == 'VOT':
-            bbox_pred, best_score = self.simple_test_vot(
-                img, frame_id, gt_bboxes, metainfo)
+            pred_track_instances = self.predict_vot(batch_inputs,
+                                                    batch_data_samples)
         else:
-            bbox_pred, best_score = self.simple_test_ope(
-                img, frame_id, gt_bboxes)
+            pred_track_instances = self.predict_ope(batch_inputs,
+                                                    batch_data_samples)
+        track_data_samples = copy.deepcopy(batch_data_samples)
+        for _data_sample, _pred_instances in zip(track_data_samples,
+                                                 pred_track_instances):
+            _data_sample.pred_track_instances = _pred_instances
+        return track_data_samples
 
-        track_data_sample = copy.deepcopy(batch_data_samples[0])
-        pred_track_instances = InstanceData()
-        pred_track_instances['bboxes'] = bbox_pred[None]
-        pred_track_instances['scores'] = torch.Tensor([best_score]).to(
-            bbox_pred.device) if best_score == -1 else best_score[None]
-        track_data_sample.pred_track_instances = pred_track_instances
-
-        return [track_data_sample]
-
-    def forward_train(self, batch_inputs: dict,
-                      batch_data_samples: List[TrackDataSample],
-                      **kwargs) -> dict:
+    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
+             **kwargs) -> dict:
         """
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size. The T denotes the number of
                 key/reference frames.
@@ -444,15 +425,11 @@ class SiamRPN(BaseSingleObjectTracker):
 
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
-                as `gt_instance`.
+                as ``gt_instance``.
 
         Return:
             dict: A dictionary of loss components.
         """
-        search_gt_instances = [
-            data_sample.search_gt_instances
-            for data_sample in batch_data_samples
-        ]
         search_img = batch_inputs['search_img']
         assert search_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
@@ -465,45 +442,65 @@ class SiamRPN(BaseSingleObjectTracker):
 
         z_feat = self.forward_template(template_img)
         x_feat = self.forward_search(search_img)
-        cls_score, bbox_pred = self.head(z_feat, x_feat)
-
-        losses = dict()
-        bbox_targets = self.head.get_targets(search_gt_instances,
-                                             cls_score.shape[2:])
-        head_losses = self.head.loss(cls_score, bbox_pred, *bbox_targets)
-        losses.update(head_losses)
-
+        losses = self.head.loss(z_feat, x_feat, batch_data_samples, **kwargs)
         return losses
 
-    # TODO: This is a temporary sulution. It will wait for the BaseModel in
-    # MMEngine.
-    def train_step(self, *args, **kwargs) -> dict:
-        """The iteration step during training.
+    def forward(self,
+                batch_inputs: dict,
+                batch_data_samples: OptSampleList = None,
+                mode: str = 'predict',
+                **kwargs) -> ForwardResults:
+        """The unified entry for a forward process in both training and test.
 
-        Note the difference between this function and the ``train_step`` in the
+        The method should accept three modes: "tensor", "predict" and "loss":
+
+        - "tensor": Forward the whole network and return tensor or tuple of
+        tensor without any post-processing, same as a common nn.Module.
+        - "predict": Forward and return the predictions, which are fully
+        processed to a list of :obj:`TrackDataSample`.
+        - "loss": Forward and return a dict of losses according to the given
+        inputs and data samples.
+
+        Note that this method doesn't handle neither back propagation nor
+        optimizer updating, which are done in the :meth:`train_step`.
+
+        Note:
+        the difference between this function and the ``forward`` in the
         parent class: We don't train the backbone util the
         `self.backbone_start_train_epoch`-th epoch. The epoch in this class
         counts from 0.
 
-        Returns:
-            dict: It should contain at least 3 keys: ``loss``, ``log_vars``, \
-                ``num_samples``.
+        Args:
+            batch_inputs (Dict[str, Tensor]): The input tensor with shape
+                (N, C, ...) in general.
+            batch_data_samples (list[:obj:`TrackDataSample`], optional): The
+                annotation data of every samples. Defaults to None.
+            mode (str): Return what kind of value. Defaults to 'tensor'.
 
-                - ``loss`` is a tensor for back propagation, which can be a \
-                weighted sum of multiple losses.
-                - ``log_vars`` contains all the variables to be sent to the
-                logger.
-                - ``num_samples`` indicates the batch size (when the model is \
-                DDP, it means the batch size on each GPU), which is used for \
-                averaging the logs.
+        Returns:
+            The return type depends on ``mode``.
+
+            - If ``mode="tensor"``, return a tensor or a tuple of tensor.
+            - If ``mode="predict"``, return a list of :obj:`TrackDataSample`.
+            - If ``mode="loss"``, return a dict of tensor.
         """
-        message_hub = MessageHub.get_current_instance()
-        cur_epoch = message_hub.get_info('epoch')
-        if cur_epoch >= self.train_cfg['backbone_start_train_epoch']:
-            for layer in self.train_cfg['backbone_train_layers']:
-                for param in getattr(self.backbone, layer).parameters():
-                    param.requires_grad = True
-                for m in getattr(self.backbone, layer).modules():
-                    if isinstance(m, BatchNorm2d):
-                        m.train()
-        return super().train_step(*args, **kwargs)
+        if mode == 'loss':
+            message_hub = MessageHub.get_current_instance()
+            if 'epoch' in message_hub.runtime_info:
+                cur_epoch = message_hub.get_info('epoch')
+                if cur_epoch >= self.train_cfg['backbone_start_train_epoch']:
+                    for layer in self.train_cfg['backbone_train_layers']:
+                        for param in getattr(self.backbone,
+                                             layer).parameters():
+                            param.requires_grad = True
+                        for m in getattr(self.backbone, layer).modules():
+                            if isinstance(m, BatchNorm2d):
+                                m.train()
+            return self.loss(batch_inputs, batch_data_samples, **kwargs)
+        elif mode == 'predict':
+            return self.predict(batch_inputs, batch_data_samples, **kwargs)
+        elif mode == 'tensor':
+            return self._forward(batch_inputs, batch_data_samples, **kwargs)
+        else:
+            raise RuntimeError(f'Invalid mode "{mode}". '
+                               'Only supports loss, predict and tensor mode')

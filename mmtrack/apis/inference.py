@@ -119,7 +119,7 @@ def inference_mot(model, img, frame_id):
         data['img_metas'] = data['img_metas'][0].data
     # forward the model
     with torch.no_grad():
-        result = model(return_loss=False, rescale=True, **data)
+        result = model.test_step(data)
     return result
 
 
@@ -159,7 +159,7 @@ def inference_sot(model, image, init_bbox, frame_id):
 
     # forward the model
     with torch.no_grad():
-        result = model(return_loss=False, rescale=True, **data)
+        result = model.test_step(data)
     return result
 
 
@@ -235,5 +235,5 @@ def inference_vid(model,
 
     # forward the model
     with torch.no_grad():
-        result = model(return_loss=False, rescale=True, **data)
+        result = model.test_step(data)
     return result

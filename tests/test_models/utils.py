@@ -70,7 +70,7 @@ def _demo_mm_inputs(batch_size=1,
     Args:
         batch_size (int): batch size. Default to 2.
         image_shapes (List[tuple], Optional): image shape.
-            Default to (128, 128, 3)
+            Default to (1, 3, 128, 128)
         num_items (None | List[int]): specifies the number
             of boxes in each batch item. Default to None.
         num_classes (int): number of different labels a
@@ -118,6 +118,10 @@ def _demo_mm_inputs(batch_size=1,
             'is_video_data': True,
             'frame_id': frame_id
         }
+        search_img_meta = dict()
+        for key, value in img_meta.items():
+            search_img_meta[f'{ref_prefix}_{key}'] = value
+        img_meta.update(search_img_meta)
 
         data_sample = TrackDataSample()
         data_sample.set_metainfo(img_meta)

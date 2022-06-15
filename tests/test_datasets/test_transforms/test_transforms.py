@@ -78,8 +78,9 @@ class TestSeqBlurAug:
 class TestGrayAug:
 
     def setup_class(cls):
-        cls.gray_aug = GrayAug(prob=0.2)
-        cls.results = dict(img=np.random.randn(127, 127, 3))
+        cls.gray_aug = GrayAug(prob=1)
+        cls.results = dict(
+            img=np.random.randint(0, 255, (127, 127, 3)).astype(np.uint8))
 
     def test_transform(self):
         results = self.gray_aug(self.results)
