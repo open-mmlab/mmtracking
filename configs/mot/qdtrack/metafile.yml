@@ -1,7 +1,7 @@
 Collections:
   - Name: QDTrack
     Metadata:
-      Training Data: MOT17, crowdhuman
+      Training Data: MOT17, crowdhuman, TAO, LVIS
       Training Techniques:
         - SGD
       Training Resources: 8x V100 GPUs
@@ -44,3 +44,35 @@ Models:
           MOTA: 71.7
           IDF1: 71.6
     Weights: https://download.openmmlab.com/mmtracking/mot/qdtrack/mot_dataset/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17_20220315_163453-68899b0a.pth
+
+  - Name: qdtrack_faster-rcnn_r101_fpn_24e_lvis
+    In Collection: QDTrack
+    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_24e_lvis.py
+    Metadata:
+      Training Data: LVIS
+      Training Memory (GB): 9.78
+      Epochs: 24
+    Results:
+      - Task: Multi-object Tracking
+        Dataset: TAO
+        Metrics:
+          AP: 17.2
+          AP50: 28.6
+          AP75: 17.7
+    Weights: https://download.openmmlab.com/mmtracking/mot/qdtrack/mot_dataset/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth
+
+  - Name: qdtrack_faster-rcnn_r101_fpn_12e_tao
+    In Collection: QDTrack
+    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_12e_tao.py
+    Metadata:
+      Training Data: TAO
+      Training Memory (GB): 1.36
+      Epochs: 12
+    Results:
+      - Task: Multi-object Tracking
+        Dataset: TAO
+        Metrics:
+          AP: 0
+          AP50: 0
+          AP75: 0
+    Weights: https://download.openmmlab.com/mmtracking/mot/qdtrack/mot_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth
