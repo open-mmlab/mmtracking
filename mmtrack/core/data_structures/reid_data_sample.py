@@ -78,18 +78,6 @@ class ReIDDataSample(BaseDataElement):
     def gt_label(self):
         del self._gt_label
 
-    @property
-    def pred_label(self):
-        return self._pred_label
-
-    @pred_label.setter
-    def pred_label(self, value: LabelData):
-        self.set_field(value, '_pred_label', dtype=LabelData)
-
-    @pred_label.deleter
-    def pred_label(self):
-        del self._pred_label
-
     def set_gt_label(
         self, value: Union[np.ndarray, torch.Tensor, Sequence[Number], Number]
     ) -> 'ReIDDataSample':
@@ -122,34 +110,14 @@ class ReIDDataSample(BaseDataElement):
             self.gt_label = LabelData(score=value, metainfo=metainfo)
         return self
 
-    def set_pred_label(
-        self, value: Union[np.ndarray, torch.Tensor, Sequence[Number], Number]
-    ) -> 'ReIDDataSample':
-        """Set label of ``pred_label``."""
-        label = format_label(value, self.get('num_classes'))
-        if 'pred_label' in self:  # setting for the second time
-            self.pred_label.label = label.label
-        else:  # setting for the first time
-            self.pred_label = label
-        return self
+    @property
+    def pred_feature(self):
+        return self._pred_feature
 
-    def set_pred_score(self, value: torch.Tensor) -> 'ReIDDataSample':
-        """Set score of ``pred_label``."""
-        assert isinstance(value, torch.Tensor), \
-            f'The value should be a torch.Tensor but got {type(value)}.'
-        assert value.ndim == 1, \
-            f'The dims of value should be 1, but got {value.ndim}.'
+    @pred_feature.setter
+    def pred_feature(self, value: torch.Tensor):
+        self.set_field(value, '_pred_feature', dtype=torch.Tensor)
 
-        if 'num_classes' in self:
-            assert value.size(0) == self.num_classes, \
-                f"The length of value ({value.size(0)}) doesn't " \
-                f'match the num_classes ({self.num_classes}).'
-            metainfo = {'num_classes': self.num_classes}
-        else:
-            metainfo = {'num_classes': value.size(0)}
-
-        if 'pred_label' in self:
-            self.pred_label.score = value
-        else:
-            self.pred_label = LabelData(score=value, metainfo=metainfo)
-        return self
+    @pred_feature.deleter
+    def pred_feature(self):
+        del self._pred_feature

@@ -1,9 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import build_activation_layer, build_norm_layer
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
+
+from mmtrack.registry import MODELS
 
 
+@MODELS.register_module()
 class FcModule(BaseModule):
     """Fully-connected layer module.
 
@@ -15,16 +18,17 @@ class FcModule(BaseModule):
         act_cfg (dict, optional): Configuration of activation method after fc.
             Defaults to dict(type='ReLU').
         inplace (bool, optional): Whether inplace the activatation module.
-        init_cfg (dict or list[dict], optional): Initialization config dict.
+            Defaults to True.
+        init_cfg (dict, optional): Initialization config dict.
             Defaults to dict(type='Kaiming', layer='Linear').
     """
 
     def __init__(self,
-                 in_channels,
-                 out_channels,
-                 norm_cfg=None,
-                 act_cfg=dict(type='ReLU'),
-                 inplace=True,
+                 in_channels: int,
+                 out_channels: int,
+                 norm_cfg: dict = None,
+                 act_cfg: dict = dict(type='ReLU'),
+                 inplace: bool = True,
                  init_cfg=dict(type='Kaiming', layer='Linear')):
         super(FcModule, self).__init__(init_cfg)
         assert norm_cfg is None or isinstance(norm_cfg, dict)

@@ -1,11 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import torch
 import torch.nn as nn
-from mmcls.models.builder import NECKS
-from mmcls.models.necks import GlobalAveragePooling as _GlobalAveragePooling
+from mmengine.model import BaseModule
+
+from mmtrack.registry import MODELS
 
 
-@NECKS.register_module(force=True)
-class GlobalAveragePooling(_GlobalAveragePooling):
+@MODELS.register_module()
+class GlobalAveragePooling(BaseModule):
     """Global Average Pooling neck.
 
     Note that we use `view` to remove extra channel after pooling. We do not
@@ -19,3 +21,15 @@ class GlobalAveragePooling(_GlobalAveragePooling):
             self.gap = nn.AdaptiveAvgPool2d((1, 1))
         else:
             self.gap = nn.AvgPool2d(kernel_size, stride)
+
+    def forward(self, inputs):
+        if isinstance(inputs, tuple):
+            outs = tuple([self.gap(x) for x in inputs])
+            outs = tuple(
+                [out.view(x.size(0), -1) for out, x in zip(outs, inputs)])
+        elif isinstance(inputs, torch.Tensor):
+            outs = self.gap(inputs)
+            outs = outs.view(inputs.size(0), -1)
+        else:
+            raise TypeError('neck inputs should be tuple or torch.tensor')
+        return outs

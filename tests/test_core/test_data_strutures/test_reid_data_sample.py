@@ -32,38 +32,31 @@ class TestReIDDataSample(TestCase):
         self.assertTrue(_equal(data_sample.get('num_classes'), num_classes))
 
     def test_set_gt_label(self):
-        self._test_set_label('gt_label')
-
-    def test_set_pred_label(self):
-        self._test_set_label('pred_label')
-
-    def _test_set_label(self, key):
-        """key: gt_label or pred_label"""
         data_sample = ReIDDataSample(metainfo=dict(num_classes=5))
-        method = getattr(data_sample, 'set_' + key)
+        method = getattr(data_sample, 'set_' + 'gt_label')
 
         # Test number
         method(1)
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.LongTensor)
 
         # Test tensor with single number
         method(torch.tensor(2))
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.LongTensor)
 
         # Test array with single number
         method(np.array(3))
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.LongTensor)
 
         # Test tensor
         _label = torch.tensor([1, 2, 3])
         method(_label)
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.Tensor)
         self.assertTrue(_equal(label.label, _label))
@@ -71,7 +64,7 @@ class TestReIDDataSample(TestCase):
         # Test array
         _label = np.array([1, 2, 3])
         method(_label)
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.Tensor)
         self.assertTrue(_equal(label.label, torch.from_numpy(_label)))
@@ -79,7 +72,7 @@ class TestReIDDataSample(TestCase):
         # Test Sequence
         _label = [1, 2, 3.]
         method(_label)
-        label = data_sample.get(key)
+        label = data_sample.get('gt_label')
         self.assertIsInstance(label, LabelData)
         self.assertIsInstance(label.label, torch.Tensor)
         self.assertTrue(_equal(label.label, torch.tensor(_label)))
@@ -92,29 +85,21 @@ class TestReIDDataSample(TestCase):
             method('hi')
 
     def test_set_gt_score(self):
-        self._test_set_score('gt_score')
-
-    def test_set_pred_score(self):
-        self._test_set_score('pred_score')
-
-    def _test_set_score(self, key):
-        """key: gt_score or pred_score"""
         data_sample = ReIDDataSample(metainfo={'num_classes': 5})
-        method = getattr(data_sample, 'set_' + key)
-        key_label = key.replace('score', 'label')
+        method = getattr(data_sample, 'set_' + 'gt_score')
 
         # Test set
         score = [0.1, 0.1, 0.6, 0.1, 0.1]
         method(torch.tensor(score))
-        sample_key_label = getattr(data_sample, key_label)
-        self.assertIn('score', sample_key_label)
-        torch.testing.assert_allclose(sample_key_label.score, score)
-        self.assertEqual(sample_key_label.num_classes, 5)
+        sample_gt_label = getattr(data_sample, 'gt_label')
+        self.assertIn('score', sample_gt_label)
+        torch.testing.assert_allclose(sample_gt_label.score, score)
+        self.assertEqual(sample_gt_label.num_classes, 5)
 
         # Test set again
         score = [0.2, 0.1, 0.5, 0.1, 0.1]
         method(torch.tensor(score))
-        torch.testing.assert_allclose(sample_key_label.score, score)
+        torch.testing.assert_allclose(sample_gt_label.score, score)
 
         # Test invalid type
         with self.assertRaisesRegex(AssertionError, 'be a torch.Tensor'):
@@ -130,10 +115,10 @@ class TestReIDDataSample(TestCase):
 
         # Test auto inter num_classes
         data_sample = ReIDDataSample()
-        method = getattr(data_sample, 'set_' + key)
+        method = getattr(data_sample, 'set_gt_score')
         method(torch.tensor(score))
-        sample_key_label = getattr(data_sample, key_label)
-        self.assertEqual(sample_key_label.num_classes, len(score))
+        sample_gt_label = getattr(data_sample, 'gt_label')
+        self.assertEqual(sample_gt_label.num_classes, len(score))
 
     def test_del_gt_label(self):
         data_sample = ReIDDataSample()
@@ -142,11 +127,3 @@ class TestReIDDataSample(TestCase):
         self.assertIn('gt_label', data_sample)
         del data_sample.gt_label
         self.assertNotIn('gt_label', data_sample)
-
-    def test_del_pred_label(self):
-        data_sample = ReIDDataSample()
-        self.assertNotIn('pred_label', data_sample)
-        data_sample.set_pred_label(1)
-        self.assertIn('pred_label', data_sample)
-        del data_sample.pred_label
-        self.assertNotIn('pred_label', data_sample)

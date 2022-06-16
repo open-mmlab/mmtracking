@@ -1,11 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn as nn
-from mmdet.models import LOSSES
+from mmengine.model import BaseModule
+
+from mmtrack.registry import MODELS
 
 
-@LOSSES.register_module()
-class TripletLoss(nn.Module):
+@MODELS.register_module()
+class TripletLoss(BaseModule):
     """Triplet loss with hard positive/negative mining.
 
     Reference:
@@ -14,24 +16,34 @@ class TripletLoss(nn.Module):
     Imported from `<https://github.com/KaiyangZhou/deep-person-reid/blob/
         master/torchreid/losses/hard_mine_triplet_loss.py>`_.
     Args:
-        margin (float, optional): Margin for triplet loss. Default to 0.3.
-        loss_weight (float, optional): Weight of the loss. Default to 1.0.
+        margin (float, optional): Margin for triplet loss. Defaults to 0.3.
+        loss_weight (float, optional): Weight of the loss. Defaults to 1.0.
+        hard_mining (bool, optional): Whether to perform hard mining.
+            Defaults to True.
     """
 
-    def __init__(self, margin=0.3, loss_weight=1.0, hard_mining=True):
+    def __init__(self,
+                 margin: float = 0.3,
+                 loss_weight: float = 1.0,
+                 hard_mining=True):
         super(TripletLoss, self).__init__()
         self.margin = margin
         self.ranking_loss = nn.MarginRankingLoss(margin=margin)
         self.loss_weight = loss_weight
         self.hard_mining = hard_mining
 
-    def hard_mining_triplet_loss_forward(self, inputs, targets):
+    def hard_mining_triplet_loss_forward(
+            self, inputs: torch.Tensor,
+            targets: torch.LongTensor) -> torch.Tensor:
         """
         Args:
             inputs (torch.Tensor): feature matrix with shape
                 (batch_size, feat_dim).
             targets (torch.LongTensor): ground truth labels with shape
                 (num_classes).
+
+        Returns:
+            torch.Tensor: triplet loss with hard mining.
         """
 
         batch_size = inputs.size(0)
@@ -58,7 +70,18 @@ class TripletLoss(nn.Module):
         y = torch.ones_like(dist_an)
         return self.loss_weight * self.ranking_loss(dist_an, dist_ap, y)
 
-    def forward(self, inputs, targets, **kwargs):
+    def forward(self, inputs: torch.Tensor,
+                targets: torch.LongTensor) -> torch.Tensor:
+        """
+        Args:
+            inputs (torch.Tensor): feature matrix with shape
+                (batch_size, feat_dim).
+            targets (torch.LongTensor): ground truth labels with shape
+                (num_classes).
+
+        Returns:
+            torch.Tensor: triplet loss.
+        """
         if self.hard_mining:
             return self.hard_mining_triplet_loss_forward(inputs, targets)
         else:
