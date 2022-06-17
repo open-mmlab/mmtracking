@@ -335,8 +335,8 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
-                encodingbinput images. Typically these should be mean centered
-                and stdbscaled. The N denotes batch size. The T denotes the
+                encoding input images. Typically these should be mean centered
+                and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
@@ -382,8 +382,8 @@ class SiamRPN(BaseSingleObjectTracker):
 
         Args:
             batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
-                encodingbinput images. Typically these should be mean centered
-                and stdbscaled. The N denotes batch size. The T denotes the
+                encoding input images. Typically these should be mean centered
+                and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.

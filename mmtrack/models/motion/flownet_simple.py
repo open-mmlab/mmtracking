@@ -162,8 +162,8 @@ class FlowNetSimple(BaseModule):
                 `mmtrack/datasets/transforms/formatting.py:PackTrackInputs`.
             preprocess_cfg (dict): Model preprocessing config
                 for processing the input data. it usually includes
-                ``to_rgb``, ``pad_size_divisor``, ``pad_value``,
-                ``mean`` and ``std``.
+                ``bgr_to_rgb``, ``rgb_to_bgr``, ``pad_size_divisor``,
+                 ``pad_value``, ``mean``, ``std`` and ``batch_augments``.
 
         Returns:
             Tensor: of shape (N, 6, H, W) encoding the input images pairs for

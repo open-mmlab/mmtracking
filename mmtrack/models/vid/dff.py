@@ -6,9 +6,10 @@ from typing import List, Optional, Tuple, Union
 import torch
 from addict import Dict
 from mmengine.data import InstanceData
+from torch import Tensor
 
-from mmtrack.core import TrackDataSample
 from mmtrack.core.motion import flow_warp_feats
+from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
 from mmtrack.registry import MODELS
 from .base import BaseVideoDetector
 
@@ -24,38 +25,39 @@ class DFF(BaseVideoDetector):
     def __init__(self,
                  detector: dict,
                  motion: dict,
-                 preprocess_cfg: Optional[dict] = None,
-                 init_cfg: Optional[dict] = None,
                  train_cfg: Optional[dict] = None,
                  test_cfg: Optional[dict] = None,
                  frozen_modules: Optional[Union[List[str], Tuple[str],
-                                                str]] = None):
-        super().__init__(preprocess_cfg, init_cfg)
+                                                str]] = None,
+                 data_preprocessor: OptConfigType = None,
+                 init_cfg: OptMultiConfig = None):
+        super().__init__(data_preprocessor, init_cfg)
         self.detector = MODELS.build(detector)
         self.motion = MODELS.build(motion)
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.preprocess_cfg = data_preprocessor
 
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def forward_train(self, batch_inputs: dict,
-                      batch_data_samples: List[TrackDataSample],
-                      **kwargs) -> dict:
+    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
+             **kwargs) -> dict:
         """
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
-                scaled. The N denotes batch size and must be 1 in DFF method.
-                The T denotes the number of key/reference frames.
+                scaled. The N denotes batch size. The T denotes the number of
+                key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
+
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
-                as `gt_instance`.
+                as ``gt_instance``.
 
-        Returns:
-            dict[str, Tensor]: a dictionary of loss components
+        Return:
+            dict: A dictionary of loss components.
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
@@ -85,7 +87,6 @@ class DFF(BaseVideoDetector):
 
         losses = dict()
 
-        # TODO: wait for mmdet
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):
             # RPN forward and loss
@@ -99,7 +100,7 @@ class DFF(BaseVideoDetector):
                         torch.zeros_like(data_sample.gt_instances.labels)
 
                 rpn_losses, rpn_results_list = \
-                    self.detector.rpn_head.forward_train(
+                    self.detector.rpn_head.loss_and_predict(
                         x, rpn_data_samples, proposal_cfg=proposal_cfg,
                         **kwargs)
                 # avoid get same name with roi_head loss
@@ -109,28 +110,27 @@ class DFF(BaseVideoDetector):
                         rpn_losses[f'rpn_{key}'] = rpn_losses.pop(key)
                 losses.update(rpn_losses)
             else:
-                # TODO: Need check with Fast R-CNN
                 rpn_results_list = []
                 for i in range(len(batch_data_samples)):
                     results = InstanceData()
                     results.bboxes = batch_data_samples[i].proposals
                     rpn_results_list.append(results)
 
-            roi_losses = self.detector.roi_head.forward_train(
-                x, rpn_results_list, batch_data_samples, **kwargs)
+            roi_losses = self.detector.roi_head.loss(x, rpn_results_list,
+                                                     batch_data_samples,
+                                                     **kwargs)
             losses.update(roi_losses)
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
-            bbox_losses = self.detector.bbox_head.forward_train(
-                x, batch_data_samples, **kwargs)
+            bbox_losses = self.detector.bbox_head.loss(x, batch_data_samples,
+                                                       **kwargs)
             losses.update(bbox_losses)
         else:
             raise TypeError('detector must has roi_head or bbox_head.')
 
         return losses
 
-    def extract_feats(self, img: torch.Tensor,
-                      meta_info: dict) -> torch.Tensor:
+    def extract_feats(self, img: Tensor, metainfo: dict) -> Tensor:
         """Extract features for `img` during testing.
 
         Args:
@@ -145,10 +145,10 @@ class DFF(BaseVideoDetector):
                 `mmtrack/datasets/transforms/formatting.py:PackTrackInputs`.
 
         Returns:
-            list[Tensor]: Multi level feature maps of `img`.
+            tuple[Tensor]: Multi level feature maps of `img`.
         """
         key_frame_interval = self.test_cfg.get('key_frame_interval', 10)
-        frame_id = meta_info.get('frame_id', -1)
+        frame_id = metainfo.get('frame_id', -1)
         assert frame_id >= 0
         is_key_frame = False if frame_id % key_frame_interval else True
 
@@ -159,37 +159,39 @@ class DFF(BaseVideoDetector):
             self.memo.feats = x
         else:
             flow_img = torch.cat((img, self.memo.img), dim=1)
-            flow = self.motion(flow_img, meta_info, self.preprocess_cfg)
+            flow = self.motion(flow_img, metainfo, self.preprocess_cfg)
             x = []
             for i in range(len(self.memo.feats)):
                 x_single = flow_warp_feats(self.memo.feats[i], flow)
                 x.append(x_single)
+            x = tuple(x)
         return x
 
-    def simple_test(self,
-                    batch_inputs: dict,
-                    batch_data_samples: List[TrackDataSample],
-                    rescale: bool = False):
+    def predict(self,
+                batch_inputs: dict,
+                batch_data_samples: SampleList,
+                rescale: bool = False) -> SampleList:
         """Test without augmentation.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
-                input images. Typically these should be mean centered and std
-                scaled. The N denotes batch size and must be 1 in DFF method.
-                The T denotes the number of key/reference frames.
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+                encoding input images. Typically these should be mean centered
+                and std scaled. The N denotes batch size. The T denotes the
+                number of key/reference frames.
                 - img (Tensor) : The key images.
-                - ref_img (Tensor, Optional): The reference images.
+                - ref_img (Tensor): The reference images.
+                In test mode, T = 1 and there is only ``img`` and no
+                ``ref_img``.
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
-                as `gt_instance`.
+                as ``gt_instances`` and 'metainfo'.
             rescale (bool, Optional): If False, then returned bboxes and masks
                 will fit the scale of img, otherwise, returned bboxes and masks
                 will fit the scale of original image shape. Defaults to False.
 
         Returns:
-            list[obj:`TrackDataSample`]: Tracking results of the
-            input images. Each TrackDataSample usually contains
-            ``pred_det_instances`` or ``pred_track_instances``.
+            SampleList: Tracking results of the input images.
+            Each TrackDataSample usually contains ``pred_det_instances``.
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
@@ -205,33 +207,25 @@ class DFF(BaseVideoDetector):
 
         track_data_sample = copy.deepcopy(batch_data_samples[0])
 
-        # TODO: wait for mmdet
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):
             if not hasattr(batch_data_samples[0], 'proposals'):
-                rpn_results_list = self.detector.rpn_head.simple_test(
-                    x, [metainfo], rescale=False)
+                rpn_results_list = self.detector.rpn_head.predict(
+                    x, batch_data_samples, rescale=False)
             else:
-                # TODO: Need check with Fast R-CNN
                 rpn_results_list = []
                 for i in range(len(batch_data_samples)):
                     results = InstanceData()
                     results.bboxes = batch_data_samples[i].proposals
                     rpn_results_list.append(results)
 
-            results_list = self.detector.roi_head.simple_test(
-                x, rpn_results_list, [metainfo], rescale=rescale)
-            # connvert to DetDataSample
-            det_data_sample_list = self.detector.postprocess_result(
-                results_list)
-            assert len(results_list) == 1
-
-            track_data_sample.pred_det_instances = \
-                det_data_sample_list[0].pred_instances
+            results_list = self.detector.roi_head.predict(
+                x, rpn_results_list, batch_data_samples, rescale=rescale)
+            track_data_sample.pred_det_instances = results_list[0]
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
-            results_list = self.detector.bbox_head.simple_test(
-                x, [metainfo], rescale=rescale)
+            results_list = self.detector.bbox_head.predict(
+                x, batch_data_samples, rescale=rescale)
 
             track_data_sample.pred_det_instances = results_list[0]
         else:
