@@ -170,7 +170,7 @@ class DFF(BaseVideoDetector):
     def predict(self,
                 batch_inputs: dict,
                 batch_data_samples: SampleList,
-                rescale: bool = False) -> SampleList:
+                rescale: bool = True) -> SampleList:
         """Test without augmentation.
 
         Args:
