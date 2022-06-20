@@ -1,19 +1,22 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections import defaultdict
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
 from mmcv.runner.base_module import BaseModule
-from mmdet.models import HEADS
-from mmdet.models.builder import build_head, build_loss
 from mmdet.models.utils import Transformer, build_transformer
 from mmdet.models.utils.builder import TRANSFORMER
-from torch import nn
+from mmengine.data import InstanceData
+from torch import Tensor, nn
+
+from mmtrack.core import InstanceList, OptConfigType, SampleList
+from mmtrack.registry import MODELS
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class CornerPredictorHead(BaseModule):
     """Corner Predictor head.
 
@@ -24,13 +27,20 @@ class CornerPredictorHead(BaseModule):
         stride (int): the stride of feature map from the backbone
     """
 
-    def __init__(self, inplanes, channel, feat_size=20, stride=16):
+    def __init__(self,
+                 inplanes: int,
+                 channel: int,
+                 feat_size: int = 20,
+                 stride: int = 16):
         super(CornerPredictorHead, self).__init__()
         self.feat_size = feat_size
         self.stride = stride
         self.img_size = self.feat_size * self.stride
 
-        def conv_module(in_planes, out_planes, kernel_size=3, padding=1):
+        def conv_module(in_planes: int,
+                        out_planes: int,
+                        kernel_size: int = 3,
+                        padding: int = 1):
             # The module's pipeline: Conv -> BN -> ReLU.
             return ConvModule(
                 in_channels=in_planes,
@@ -55,7 +65,7 @@ class CornerPredictorHead(BaseModule):
             conv_module(channel // 4, channel // 8),
             nn.Conv2d(channel // 8, 1, kernel_size=1))
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass with input x.
 
         Args:
@@ -68,7 +78,7 @@ class CornerPredictorHead(BaseModule):
         coorx_br, coory_br = self.soft_argmax(score_map_br)
         return torch.stack((coorx_tl, coory_tl, coorx_br, coory_br), dim=1)
 
-    def get_score_map(self, x):
+    def get_score_map(self, x: Tensor) -> Tuple[Tensor, Tensor]:
         """Score map branch.
 
         Args:
@@ -83,11 +93,11 @@ class CornerPredictorHead(BaseModule):
         score_map_br = self.br_corner_pred(x)
         return score_map_tl, score_map_br
 
-    def soft_argmax(self, score_map):
+    def soft_argmax(self, score_map: Tensor) -> Tuple[Tensor, Tensor]:
         """Get soft-argmax coordinate for the given score map.
 
         Args:
-            score_map (self.feat_size, self.feat_size): the last score map
+            score_map (Tensor): the last score map
                 in bbox_head branch
 
         Returns:
@@ -116,7 +126,7 @@ class CornerPredictorHead(BaseModule):
         return soft_argmax_x, soft_argmax_y
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class ScoreHead(nn.Module):
     """Predict the confidence score of target in current frame.
 
@@ -132,11 +142,11 @@ class ScoreHead(nn.Module):
     """
 
     def __init__(self,
-                 input_dim,
-                 hidden_dim,
-                 output_dim,
-                 num_layers,
-                 use_bn=False):
+                 input_dim: int,
+                 hidden_dim: int,
+                 output_dim: int,
+                 num_layers: int,
+                 use_bn: bool = False):
         super(ScoreHead, self).__init__()
         self.num_layers = num_layers
         hidden_dims = [hidden_dim] * (num_layers - 1)
@@ -151,20 +161,23 @@ class ScoreHead(nn.Module):
                 for n, k in zip([input_dim] + hidden_dims, hidden_dims +
                                 [output_dim]))
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         """Forward function for `ScoreHead`.
 
         Args:
             x (Tensor): of shape (1, bs, num_query, c).
 
         Returns:
-            Tensor: of shape (bs, num_query, 1).
+            Tensor: of shape (bs * num_query, 1).
         """
+        # TODO: Perform sigmoid to the last output here rather than in loss
+        # calculation.
         for i, layer in enumerate(self.layers):
             x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x.squeeze(0)
+        return x.view(-1, 1)
 
 
+# TODO: wait for the registry refactor of Transform in mmdet
 @TRANSFORMER.register_module()
 class StarkTransformer(Transformer):
     """The transformer head used in STARK. `STARK.
@@ -184,11 +197,17 @@ class StarkTransformer(Transformer):
             Defaults to None.
     """
 
-    def __init__(self, encoder=None, decoder=None, init_cfg=None):
+    def __init__(
+        self,
+        encoder: OptConfigType = None,
+        decoder: OptConfigType = None,
+        init_cfg: OptConfigType = None,
+    ):
         super(StarkTransformer, self).__init__(
             encoder=encoder, decoder=decoder, init_cfg=init_cfg)
 
-    def forward(self, x, mask, query_embed, pos_embed):
+    def forward(self, x: Tensor, mask: Tensor, query_embed: Tensor,
+                pos_embed: Tensor) -> Tuple[Tensor, Tensor]:
         """Forward function for `StarkTransformer`.
 
         The difference with transofrmer module in `MMCV` is the input shape.
@@ -213,7 +232,8 @@ class StarkTransformer(Transformer):
             'x_feat_h' and 'x_feat_w' denote the height and width of search
             features respectively.
         Returns:
-            tuple[Tensor]: results of decoder containing the following tensor.
+            tuple[Tensor, Tensor]: results of decoder containing the following
+                tensor.
                 - out_dec: Output from decoder. If return_intermediate_dec \
                       is True, output has shape [num_dec_layers, bs,
                       num_query, embed_dims], else has shape [1, bs, \
@@ -245,7 +265,7 @@ class StarkTransformer(Transformer):
         return out_dec, enc_mem
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class StarkHead(BaseModule):
     """STARK head module for bounding box regression and prediction of
     confidence score of tracking bbox.
@@ -300,20 +320,21 @@ class StarkHead(BaseModule):
                  frozen_modules=None,
                  **kwargs):
         super(StarkHead, self).__init__(init_cfg=init_cfg)
+        # TODO: wait for the registry refactor of Transform in mmdet
         self.transformer = build_transformer(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
         assert bbox_head is not None
-        self.bbox_head = build_head(bbox_head)
+        self.bbox_head = MODELS.build(bbox_head)
         if cls_head is None:
             # the stage-1 training
-            self.loss_bbox = build_loss(loss_bbox)
-            self.loss_iou = build_loss(loss_iou)
+            self.loss_bbox = MODELS.build(loss_bbox)
+            self.loss_iou = MODELS.build(loss_iou)
             self.cls_head = None
         else:
             # the stage-2 training
-            self.cls_head = build_head(cls_head)
-            self.loss_cls = build_loss(loss_cls)
+            self.cls_head = MODELS.build(cls_head)
+            self.loss_cls = MODELS.build(loss_cls)
         self.embed_dims = self.transformer.embed_dims
         self.num_query = num_query
         self.query_embedding = nn.Embedding(self.num_query, self.embed_dims)
@@ -336,7 +357,7 @@ class StarkHead(BaseModule):
         """Parameters initialization."""
         self.transformer.init_weights()
 
-    def _merge_template_search(self, inputs):
+    def _merge_template_search(self, inputs: List[Dict[str, Tensor]]) -> dict:
         """Merge the data of template and search images.
         The merge includes 3 steps: flatten, premute and concatenate.
         Note: the data of search image must be in the last place.
@@ -379,12 +400,12 @@ class StarkHead(BaseModule):
                 seq_dict[name] = torch.cat(x, dim=0)
         return seq_dict
 
-    def forward_bbox_head(self, feat, enc_mem):
+    def forward_bbox_head(self, feat: Tensor, enc_mem: Tensor) -> Tensor:
         """
         Args:
-            feat: output embeddings of decoder, with shape
+            feat (Tensor): output embeddings of decoder, with shape
                 (1, bs, num_query, c).
-            enc_mem: output embeddings of encoder, with shape
+            enc_mem (Tensor): output embeddings of encoder, with shape
                 (feats_flatten_len, bs, C)
 
                 Here, 'feats_flatten_len' = z_feat_h*z_feat_w*2 + \
@@ -394,7 +415,7 @@ class StarkHead(BaseModule):
                 'x_feat_h' and 'x_feat_w' denote the height and width of search
                 features respectively.
         Returns:
-            Tensor: of shape (bs, num_query, 4). The bbox is in
+            Tensor: of shape (bs * num_query, 4). The bbox is in
                 [tl_x, tl_y, br_x, br_y] format.
         """
         z_feat_len = self.bbox_head.feat_size**2
@@ -413,10 +434,9 @@ class StarkHead(BaseModule):
                                    self.bbox_head.feat_size)
         # run the corner prediction head
         outputs_coord = self.bbox_head(bbox_feat)
-        outputs_coord = outputs_coord.view(bs, num_query, 4)
         return outputs_coord
 
-    def forward(self, inputs):
+    def forward(self, inputs: List[dict]) -> dict:
         """"
         Args:
             inputs (list[dict(tuple(Tensor))]): The list contains the
@@ -429,10 +449,10 @@ class StarkHead(BaseModule):
                 image respectively. `stride` is the stride of feature map.
 
         Returns:
-             (dict):
-                - 'pred_bboxes': (Tensor) of shape (bs, num_query, 4), in
+            dict:
+                - 'pred_bboxes': (Tensor) of shape (bs * num_query, 4), in
                     [tl_x, tl_y, br_x, br_y] format
-                - 'pred_logit': (Tensor) of shape (bs, num_query, 1)
+                - 'pred_logit': (Tensor) of shape (bs * num_query, 1)
         """
         # 1. preprocess inputs for transformer
         all_inputs = []
@@ -454,53 +474,256 @@ class StarkHead(BaseModule):
                                              all_inputs['pos_embed'])
 
         # 3. forward bbox head and classification head
-        track_results = {}
         if not self.training:
+            pred_logits = None
             if self.cls_head is not None:
                 # forward the classification head
-                track_results['pred_logits'] = self.cls_head(outs_dec)
-            track_results['pred_bboxes'] = self.forward_bbox_head(
-                outs_dec, enc_mem)
+                pred_logits = self.cls_head(outs_dec)
+            pred_bboxes = self.forward_bbox_head(outs_dec, enc_mem)
         else:
             if self.cls_head is not None:
                 # stage-1 training: forward the classification head
-                track_results['pred_logits'] = self.cls_head(outs_dec)
+                pred_logits = self.cls_head(outs_dec)
+                pred_bboxes = None
             else:
                 # stage-2 training: forward the box prediction head
-                track_results['pred_bboxes'] = self.forward_bbox_head(
-                    outs_dec, enc_mem)
-        return track_results
+                pred_logits = None
+                pred_bboxes = self.forward_bbox_head(outs_dec, enc_mem)
 
-    def loss(self, track_results, gt_bboxes, gt_labels, img_size=None):
+        return pred_logits, pred_bboxes
+
+    def predict(self, inputs: List[dict], batch_data_samples: SampleList,
+                prev_bbox: Tensor, scale_factor: Tensor) -> InstanceList:
+        """Perform forward propagation of the tracking head and predict
+        tracking results on the features of the upstream network.
+
+        Args:
+            inputs (list[dict(tuple(Tensor))]): The list contains the
+                multi-level features and masks of template or search images.
+                    - 'feat': (tuple(Tensor)), the Tensor is of shape
+                        (bs, c, h//stride, w//stride).
+                    - 'mask': (Tensor), of shape (bs, h, w).
+
+                Here, `h` and `w` denote the height and width of input
+                image respectively. `stride` is the stride of feature map.
+
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensor): scale factor.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        batch_img_metas = [
+            data_samples.metainfo for data_samples in batch_data_samples
+        ]
+        outs = self(inputs)
+        predictions = self.predict_by_feat(
+            *outs,
+            prev_bbox=prev_bbox,
+            scale_factor=scale_factor,
+            batch_img_metas=batch_img_metas)
+        return predictions
+
+    def predict_by_feat(self, pred_logits: Tensor, pred_bboxes: Tensor,
+                        prev_bbox: Tensor, scale_factor: Tensor,
+                        batch_img_metas: List[dict]) -> InstanceList:
+        """Track `prev_bbox` to current frame based on the output of network.
+
+        Args:
+            pred_logit: (Tensor) of shape (bs * num_query, 1). This item
+                only exists when the model has classification head.
+            pred_bboxes: (Tensor) of shape (bs * num_query, 4), in
+                [tl_x, tl_y, br_x, br_y] format
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensor): scale factor.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        result = InstanceData()
+        if pred_logits is not None:
+            result.scores = pred_logits.view(-1).sigmoid()
+        else:
+            result.scores = prev_bbox.new_tensor([-1.])
+        result.bboxes = pred_bboxes
+
+        return self._bbox_post_process([result],
+                                       prev_bbox,
+                                       scale_factor,
+                                       batch_img_metas=batch_img_metas)
+
+    def _bbox_post_process(self, results: InstanceList, prev_bbox: Tensor,
+                           scale_factor: Tensor, batch_img_metas: List[dict],
+                           **kwargs) -> InstanceList:
+        """The postprocess of tracking bboxes.
+
+        Args:
+            results (InstanceList): tracking results.
+            prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
+            scale_factor (Tensor): scale factor.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
+
+        Returns:
+            List[:obj:`InstanceData`]: Object tracking results of each image
+            after the post process. Each item usually contains following keys.
+                - scores (Tensor): Classification scores, has a shape (1, )
+                - bboxes (Tensor): Has a shape (1, 4),
+                  the last dimension 4 arrange as [x1, y1, x2, y2].
+        """
+        result = results[0]
+        final_bbox = self._mapping_bbox_back(result.bboxes, prev_bbox,
+                                             scale_factor)
+        img_shape = batch_img_metas[0]['ori_shape']
+        final_bbox = self._bbox_clip(
+            final_bbox, img_shape[0], img_shape[1], margin=10)
+        result.bboxes = final_bbox[None]
+
+        return [result]
+
+    def _mapping_bbox_back(self, pred_bboxes: Tensor, prev_bbox: Tensor,
+                           resize_factor: float) -> Tensor:
+        """Mapping the `prediction bboxes` from resized cropped image to
+        original image. The coordinate origins of them are both the top left
+        corner.
+
+        Args:
+            pred_bboxes (Tensor): the predicted bbox of shape
+                (bs * num_query, 4), in [tl_x, tl_y, br_x, br_y] format.
+                The coordinates are based in the resized cropped image.
+            prev_bbox (Tensor): the previous bbox of shape (B, 4),
+                in [cx, cy, w, h] format. The coordinates are based in the
+                original image.
+            resize_factor (float): the ratio of original image scale to cropped
+                image scale.
+        Returns:
+            (Tensor): of (4, ) shape, in [tl_x, tl_y, br_x, br_y] format.
+        """
+        # based in the original croped image
+        pred_bbox = pred_bboxes.mean(dim=0) / resize_factor
+
+        # the half size of the original croped image
+        cropped_img_half_size = 0.5 * self.test_cfg[
+            'search_size'] / resize_factor
+        # (x_shift, y_shift) is the coordinate of top left corner of the
+        # cropped image based in the original image.
+        x_shift, y_shift = prev_bbox[0] - cropped_img_half_size, prev_bbox[
+            1] - cropped_img_half_size
+        pred_bbox[0:4:2] += x_shift
+        pred_bbox[1:4:2] += y_shift
+
+        return pred_bbox
+
+    def _bbox_clip(self,
+                   bbox: Tensor,
+                   img_h: int,
+                   img_w: int,
+                   margin: int = 0) -> Tensor:
+        """Clip the bbox in [tl_x, tl_y, br_x, br_y] format.
+
+        Args:
+            bbox (Tensor): Bounding bbox.
+            img_h (int): The height of the image.
+            img_w (int): The width of the image.
+            margin (int, optional): The distance from image boundary.
+                Defaults to 0.
+
+        Returns:
+            Tensor: The clipped bounding box.
+        """
+
+        bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        bbox[0] = bbox[0].clamp(0, img_w - margin)
+        bbox[1] = bbox[1].clamp(0, img_h - margin)
+        bbox_w = bbox_w.clamp(margin, img_w)
+        bbox_h = bbox_h.clamp(margin, img_h)
+        bbox[2] = bbox[0] + bbox_w
+        bbox[3] = bbox[1] + bbox_h
+        return bbox
+
+    # TODO: unify the `sefl.predict`, `self.loss` and so on in all the heads of
+    # SOT.
+    def loss(self, inputs: List[dict], batch_data_samples: SampleList,
+             **kwargs) -> dict:
         """Compute loss.
 
         Args:
-            track_results (dict): it may contains the following keys:
-                - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
-                        [tl_x, tl_y, br_x, br_y] format.
-                - 'pred_logits': bboxes of (N, num_query, 1) shape.
-            gt_bboxes (list[Tensor]): ground truth bboxes for search images
-                with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y] format.
-            gt_labels (list[Tensor]): ground truth labels for
-                search images with shape (N, 2).
-            img_size (tuple, optional): the size (h, w) of original
-                search image. Defaults to None.
+            inputs (list[dict(tuple(Tensor))]): The list contains the
+                multi-level features and masks of template or search images.
+                    - 'feat': (tuple(Tensor)), the Tensor is of shape
+                        (bs, c, h//stride, w//stride).
+                    - 'mask': (Tensor), of shape (bs, h, w).
+                Here, `h` and `w` denote the height and width of input
+                image respectively. `stride` is the stride of feature map.
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`
+                and 'metainfo'.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        losses = dict()
+        outs = self(inputs)
 
+        batch_gt_instances = []
+        batch_img_metas = []
+        batch_search_gt_instances = []
+        for data_sample in batch_data_samples:
+            batch_img_metas.append(data_sample.metainfo)
+            batch_gt_instances.append(data_sample.gt_instances)
+            batch_search_gt_instances.append(data_sample.search_gt_instances)
+
+        loss_inputs = outs + (batch_gt_instances, batch_search_gt_instances,
+                              batch_img_metas)
+        losses = self.loss_by_feat(*loss_inputs)
+
+        return losses
+
+    def loss_by_feat(self, pred_logits: Tensor, pred_bboxes: Tensor,
+                     batch_gt_instances: InstanceList,
+                     batch_search_gt_instances: InstanceList,
+                     batch_img_metas: List[dict]) -> dict:
+        """Compute loss.
+
+        Args:
+            pred_logits: (Tensor) of shape (bs * num_query, 1). This item
+                only exists when the model has classification head.
+            pred_bboxes: (Tensor) of shape (bs * num_query, 4), in
+                [tl_x, tl_y, br_x, br_y] format
+            batch_gt_instances (InstanceList): the instances in a batch.
+            batch_search_gt_instances (InstanceList): the search instances in a
+                batch.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
+
+        Returns:
+            dict[str, Tensor]: A dictionary of loss components.
+        """
+        losses = dict()
         if self.cls_head is None:
             # the stage-1 training
-            assert img_size is not None
-            pred_bboxes = track_results['pred_bboxes'][:, 0]  # shape [N, 4]
-            pred_bboxes[:, 0:4:2] = pred_bboxes[:, 0:4:2] / float(img_size[1])
-            pred_bboxes[:, 1:4:2] = pred_bboxes[:, 1:4:2] / float(img_size[0])
+            assert pred_bboxes is not None
+            img_shape = batch_img_metas[0]['search_img_shape']
+            pred_bboxes[:, 0:4:2] = pred_bboxes[:, 0:4:2] / float(img_shape[1])
+            pred_bboxes[:, 1:4:2] = pred_bboxes[:, 1:4:2] / float(img_shape[0])
 
-            gt_bboxes = torch.cat(gt_bboxes, dim=0).type(torch.float32)[:, 1:]
-            gt_bboxes[:, 0:4:2] = gt_bboxes[:, 0:4:2] / float(img_size[1])
-            gt_bboxes[:, 1:4:2] = gt_bboxes[:, 1:4:2] / float(img_size[0])
+            gt_bboxes = [
+                instance['bboxes'] for instance in batch_search_gt_instances
+            ]
+            gt_bboxes = torch.cat(gt_bboxes, dim=0).type(torch.float32)
+            gt_bboxes[:, 0:4:2] = gt_bboxes[:, 0:4:2] / float(img_shape[1])
+            gt_bboxes[:, 1:4:2] = gt_bboxes[:, 1:4:2] / float(img_shape[0])
             gt_bboxes = gt_bboxes.clamp(0., 1.)
 
             # regression IoU loss, default GIoU loss
@@ -515,10 +738,14 @@ class StarkHead(BaseModule):
             losses['loss_bbox'] = self.loss_bbox(pred_bboxes, gt_bboxes)
         else:
             # the stage-2 training
-            assert gt_labels is not None
-            pred_logits = track_results['pred_logits'][:, 0].squeeze()
+            assert pred_logits is not None
+            pred_logits = pred_logits.squeeze()
+
+            gt_labels = [
+                instance['labels'] for instance in batch_search_gt_instances
+            ]
             gt_labels = torch.cat(
-                gt_labels, dim=0).type(torch.float32)[:, 1:].squeeze()
+                gt_labels, dim=0).type(torch.float32).squeeze()
             losses['loss_cls'] = self.loss_cls(pred_logits, gt_labels)
 
         return losses

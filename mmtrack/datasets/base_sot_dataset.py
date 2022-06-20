@@ -235,7 +235,6 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
         instance['bbox'] = self.test_memo.video_infos['bboxes'][frame_idx]
         instance['visible'] = self.test_memo.video_infos['visible'][frame_idx]
         instance['bbox_label'] = np.array([0], dtype=np.int32)
-        instance['ignore_flag'] = False
         results['instances'].append(instance)
 
         results = self.pipeline(results)

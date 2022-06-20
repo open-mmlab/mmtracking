@@ -75,7 +75,7 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
       - bbox_label
       - instance_id (optional)
       - mask (optional)
-      - ignore_flag
+      - ignore_flag (optional)
 
     - seg_map_path (optional)
 
@@ -111,18 +111,25 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
         gt_bboxes = []
         gt_ignore_flags = []
         for instance in results['instances']:
-            gt_bboxes.append(instance['bbox'])
-            gt_ignore_flags.append(instance['ignore_flag'])
-        results['gt_bboxes'] = np.array(
-            gt_bboxes, dtype=np.float32).reshape(-1, 4)
-        results['gt_ignore_flags'] = np.array(gt_ignore_flags, dtype=np.bool)
-
-        if self.denorm_bbox:
-            bbox_num = results['gt_bboxes'].shape[0]
-            if bbox_num != 0:
-                assert 'width' in results and 'height' in results
-                results['gt_bboxes'][:, 0::2] *= results['width']
-                results['gt_bboxes'][:, 1::2] *= results['height']
+            # The datasets which are only format in evaluation don't have
+            # groundtruth boxes.
+            if 'bbox' in instance:
+                gt_bboxes.append(instance['bbox'])
+            if 'ignore_flag' in instance:
+                gt_ignore_flags.append(instance['ignore_flag'])
+        if len(gt_bboxes) > 0:
+            assert len(gt_bboxes) == len(gt_ignore_flags)
+            results['gt_bboxes'] = np.array(
+                gt_bboxes, dtype=np.float32).reshape(-1, 4)
+            if self.denorm_bbox:
+                bbox_num = results['gt_bboxes'].shape[0]
+                if bbox_num != 0:
+                    assert 'width' in results and 'height' in results
+                    results['gt_bboxes'][:, 0::2] *= results['width']
+                    results['gt_bboxes'][:, 1::2] *= results['height']
+        if len(gt_ignore_flags) > 0:
+            results['gt_ignore_flags'] = np.array(
+                gt_ignore_flags, dtype=np.bool)
 
     def _load_instances_id(self, results: dict) -> None:
         """Private function to load instances id annotations.

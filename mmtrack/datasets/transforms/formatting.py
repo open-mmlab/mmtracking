@@ -70,10 +70,10 @@ class ConcatSameTypeFrames(BaseTransform):
         num_key_frames (int): the number of key frames.
         ref_prefix (str): The prefix of key added to the 'reference' frames.
             Defaults to 'ref'.
-        meta_keys (Sequence[str]): Meta keys to be collected in
-            ``data_sample.metainfo``. Defaults to None.
-        default_meta_keys (tuple): Default meta keys. Defaults to ('filename',
-            'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
+        meta_keys (Optional[Union[str, Tuple]], optional): Meta keys to be
+            collected in ``data_sample.metainfo``. Defaults to None.
+        default_meta_keys (tuple, optional): Default meta keys. Defaults to
+            ('filename', 'ori_filename', 'ori_shape', 'img_shape', 'pad_shape',
             'scale_factor', 'flip', 'flip_direction', 'img_norm_cfg',
             'frame_id', 'is_video_data').
     """
@@ -81,7 +81,7 @@ class ConcatSameTypeFrames(BaseTransform):
     def __init__(self,
                  num_key_frames: int,
                  ref_prefix: str = 'ref',
-                 meta_keys: Optional[dict] = None,
+                 meta_keys: Optional[Union[str, Tuple]] = None,
                  default_meta_keys: tuple = ('img_id', 'img_path', 'ori_shape',
                                              'img_shape', 'scale_factor',
                                              'flip', 'flip_direction',
@@ -237,12 +237,15 @@ class PackTrackInputs(BaseTransform):
             Defaults to 'ref'.
         num_key_frames (int): The number of key frames.
         num_template_frames (optional, int): The number of template frames. It
-            is only used in SOT.
+            is only used for training in SOT.
+        pack_single_img (bool, optional): Whether to only pack single image. If
+            True, pack the data as a list additionally. Defaults to False.
         meta_keys (Sequence[str]): Meta keys to be collected in
             ``data_sample.metainfo``. Defaults to None.
         default_meta_keys (tuple): Default meta keys. Defaults to ('img_id',
             'img_path', 'ori_shape', 'img_shape', 'scale_factor',
-            'flip', 'flip_direction', 'frame_id', 'is_video_data').
+            'flip', 'flip_direction', 'frame_id', 'is_video_data',
+            'video_id', 'video_length', 'instances').
     """
     mapping_table = {
         'gt_bboxes': 'bboxes',
@@ -255,11 +258,14 @@ class PackTrackInputs(BaseTransform):
                  ref_prefix: str = 'ref',
                  num_key_frames: int = 1,
                  num_template_frames: Optional[int] = None,
+                 pack_single_img: Optional[bool] = False,
                  meta_keys: Optional[dict] = None,
                  default_meta_keys: tuple = ('img_id', 'img_path', 'ori_shape',
                                              'img_shape', 'scale_factor',
                                              'flip', 'flip_direction',
-                                             'frame_id', 'is_video_data')):
+                                             'frame_id', 'is_video_data',
+                                             'video_id', 'video_length',
+                                             'instances')):
         self.ref_prefix = ref_prefix
         # If ``num_template_frames`` is not None, this class is used in SOT.
         # In this case, we assign the value of ``num_template_frames`` to
@@ -274,6 +280,8 @@ class PackTrackInputs(BaseTransform):
                 assert isinstance(meta_keys, tuple), \
                     'meta_keys must be str or tuple'
             self.meta_keys += meta_keys
+
+        self.pack_single_img = pack_single_img
 
     def _cat_same_type_data(
             self,
@@ -297,7 +305,7 @@ class PackTrackInputs(BaseTransform):
                 concatenated data of key frames, and the second element is the
                 concatenated data of reference frames.
         """
-        if not isinstance(data, list):
+        if self.pack_single_img:
             data = [data]
         key_data = data[:self.num_key_frames]
         ref_data = data[self.num_key_frames:] if len(
@@ -328,7 +336,7 @@ class PackTrackInputs(BaseTransform):
                 concatenated indexes of key frames, and the second element is
                 the concatenated indexes of reference frames.
         """
-        if not isinstance(anns, list):
+        if self.pack_single_img:
             anns = [anns]
         key_img_idx_map = []
         for img_idx, ann in enumerate(anns[:self.num_key_frames]):
@@ -394,9 +402,9 @@ class PackTrackInputs(BaseTransform):
                 continue
             if key == 'gt_masks':
                 gt_masks = results[key]
-                if not isinstance(gt_masks, list):
-                    gt_masks = [gt_masks]
-                gt_masks_ndarray = [mask.to_ndarray() for mask in gt_masks]
+                gt_masks_ndarray = [
+                    mask.to_ndarray() for mask in gt_masks
+                ] if isinstance(gt_masks, list) else gt_masks.to_ndarray()
                 key_gt_masks, ref_gt_masks = self._cat_same_type_data(
                     gt_masks_ndarray)
 

@@ -107,7 +107,7 @@ train_pipeline = [
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadTrackAnnotations', with_instance_id=False),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 
 # dataloader
@@ -142,43 +142,35 @@ train_dataloader = dict(
                 pipeline=train_pipeline,
                 test_mode=False)
         ]))
-# val_dataloader = dict(
-#     batch_size=1,
-#     num_workers=4,
-#     persistent_workers=True,
-#     drop_last=False,
-#     sampler=dict(type='VideoSampler'),
-#     dataset=dict(
-#         type='LaSOTDataset',
-#         ann_file=data_root + 'lasot/annotations/lasot_test_infos.txt',
-#         img_prefix=data_root + 'lasot/LaSOTBenchmark',
-#         pipeline=test_pipeline,
-#         test_mode=True,
-#         only_eval_visible=True))
-# test_dataloader = val_dataloader
-
-# TODO: evaluator
-# evaluation = dict(
-#     metric=['track'],
-#     interval=1,
-#     start=10,
-#     rule='greater',
-#     save_best='success')
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=4,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type='LaSOTDataset',
+        data_root=data_root,
+        ann_file='lasot/annotations/lasot_test_infos.txt',
+        data_prefix=dict(img_path='lasot/LaSOTBenchmark'),
+        pipeline=test_pipeline,
+        test_mode=True))
+test_dataloader = val_dataloader
 
 # evaluator
-# val_evaluator = dict(
-#     type='OPEMetric',
-#     ann_file=data_root + 'annotations/imagenet_vid_val.json',
-#     metric='bbox')
-# test_evaluator = val_evaluator
+val_evaluator = dict(
+    type='SOTMetric',
+    metric='OPE',
+    metric_options=dict(only_eval_visible=True))
+test_evaluator = val_evaluator
 
-# training schedule
+# runner loop
 train_cfg = dict(
     type='EpochBasedTrainLoop', max_epochs=20, val_begin=10, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
-# learning rate
+# learning policy
 param_scheduler = [
     dict(
         type='SiamRPNExpLR',
@@ -198,6 +190,7 @@ param_scheduler = [
         endpoint=True)
 ]
 
+# optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001),

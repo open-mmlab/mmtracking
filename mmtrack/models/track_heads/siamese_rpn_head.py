@@ -473,13 +473,11 @@ class SiameseRPNHead(BaseModule):
         Args:
             cls_score (Tensor): of shape (N, 2 * num_base_anchors, H, W).
             bbox_pred (Tensor): of shape (N, 4 * num_base_anchors, H, W).
-            labels (Tensor): of shape (N, H * W * num_base_anchors).
-            labels_weights (Tensor): of shape
-                (N, H * W * num_base_anchors).
-            bbox_targets (Tensor): of shape
-                (N, H * W * num_base_anchors, 4).
-            bbox_weights (Tensor): of shape
-                (N, H * W * num_base_anchors, 4).
+            batch_gt_instances (InstanceList): the instances in a batch.
+            batch_search_gt_instances (InstanceList): the search instances in a
+                batch.
+            batch_img_metas (List[dict]): the meta information of all images in
+                a batch.
 
         Returns:
             dict[str, Tensor]: A dictionary of loss components.
@@ -662,7 +660,7 @@ class SiameseRPNHead(BaseModule):
         final_bbox[3] = prev_bbox[3] * (1 - lr) + best_bbox[3] * lr
 
         # clip boundary
-        img_shape = batch_img_metas[0]['search_ori_shape']
+        img_shape = batch_img_metas[0]['ori_shape']
         # rather than [x1, x2, y1, y2] format.
         final_bbox = self._bbox_clip(final_bbox, img_shape[0], img_shape[1])
 

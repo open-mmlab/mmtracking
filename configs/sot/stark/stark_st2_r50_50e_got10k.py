@@ -13,10 +13,12 @@ model = dict(
             num_layers=3,
             use_bn=False),
         frozen_modules=['transformer', 'bbox_head', 'query_embedding'],
-        loss_cls=dict(type='CrossEntropyLoss', use_sigmoid=True)),
+        loss_cls=dict(type='mmdet.CrossEntropyLoss', use_sigmoid=True)),
     frozen_modules=['backbone', 'neck'])
 
 data_root = 'data/'
+# the only difference of ``train_pipeline`` compared with that in stark_st1 is
+# ``train_cls_head=True`` in ``TridentSampling``.
 train_pipeline = [
     dict(
         type='TridentSampling',
@@ -25,14 +27,15 @@ train_pipeline = [
         max_frame_range=[200],
         cls_pos_prob=0.5,
         train_cls_head=True),
-    dict(type='LoadMultiImagesFromFile', to_float32=True),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_label=True),
-    dict(type='SeqGrayAug', prob=0.05),
     dict(
-        type='SeqRandomFlip',
-        share_params=True,
-        flip_ratio=0.5,
-        direction='horizontal'),
+        type='TransformBroadcaster',
+        share_random_params=True,
+        transforms=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadTrackAnnotations', with_instance_id=False),
+            dict(type='GrayAug', prob=0.05),
+            dict(type='mmdet.RandomFlip', prob=0.5, direction='horizontal')
+        ]),
     dict(
         type='SeqBboxJitter',
         center_jitter_factor=[0, 0, 4.5],
@@ -42,44 +45,38 @@ train_pipeline = [
         type='SeqCropLikeStark',
         crop_size_factor=[2, 2, 5],
         output_size=[128, 128, 320]),
-    dict(type='SeqBrightnessAug', jitter_range=0.2),
     dict(
-        type='SeqRandomFlip',
-        share_params=False,
-        flip_ratio=0.5,
-        direction='horizontal'),
+        type='TransformBroadcaster',
+        share_random_params=True,
+        transforms=[dict(type='BrightnessAug', jitter_range=0.2)]),
     dict(
-        type='SeqNormalize',
-        mean=[123.675, 116.28, 103.53],
-        std=[58.395, 57.12, 57.375],
-        to_rgb=True),
+        type='TransformBroadcaster',
+        share_random_params=False,
+        transforms=[
+            dict(type='mmdet.RandomFlip', prob=0.5, direction='horizontal')
+        ]),
     dict(type='CheckPadMaskValidity', stride=16),
-    dict(
-        type='VideoCollect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'padding_mask'],
-        meta_keys=('valid')),
-    dict(type='ConcatSameTypeFrames', num_key_frames=2),
-    dict(type='SeqDefaultFormatBundle', ref_prefix='search')
+    dict(type='PackTrackInputs', ref_prefix='search', num_template_frames=2)
 ]
 
 # dataset settings
-data = dict(
-    train=dict(dataset_cfgs=[
-        dict(
-            type='GOT10kDataset',
-            ann_file=data_root + 'got10k/annotations/got10k_train_infos.txt',
-            img_prefix=data_root + 'got10k',
-            pipeline=train_pipeline,
-            split='train',
-            test_mode=False)
-    ]))
+train_dataloader = dict(
+    dataset=dict(
+        type='GOT10kDataset',
+        data_root=data_root,
+        ann_file='got10k/annotations/got10k_train_infos.txt',
+        data_prefix=dict(img_path='got10k'),
+        pipeline=train_pipeline,
+        test_mode=False))
+
+# runner loop
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=50, val_begin=50, val_interval=1)
 
 # learning policy
-lr_config = dict(policy='step', step=[40])
+param_scheduler = dict(type='MultiStepLR', milestones=[40], gamma=0.1)
+
 # checkpoint saving
-checkpoint_config = dict(interval=10)
-evaluation = dict(interval=100, start=51)
-# yapf:enable
-# runtime settings
-total_epochs = 50
+default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=10))
+
 load_from = 'logs/stark_st1_got10k_online/epoch_500.pth'

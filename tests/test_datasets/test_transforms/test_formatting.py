@@ -140,9 +140,11 @@ class TestPackTrackInputs:
         cls.pack_track_inputs = PackTrackInputs(
             num_key_frames=1,
             ref_prefix=cls.ref_prefix,
-            meta_keys=cls.meta_keys)
+            meta_keys=cls.meta_keys,
+            pack_single_img=False)
 
     def test_transform_without_ignore(self):
+        self.pack_track_inputs.pack_single_img = False
         track_results = self.pack_track_inputs(self.results_1)
         assert isinstance(track_results, dict)
 
@@ -185,6 +187,7 @@ class TestPackTrackInputs:
             ] * 2
 
     def test_transform_with_ignore(self):
+        self.pack_track_inputs.pack_single_img = False
         track_results = self.pack_track_inputs(self.results_2)
         assert isinstance(track_results, dict)
 
@@ -227,6 +230,7 @@ class TestPackTrackInputs:
             ] * 2
 
     def test_transform_test_mode(self):
+        self.pack_track_inputs.pack_single_img = True
         track_results = self.pack_track_inputs(self.results_3)
         assert isinstance(track_results, dict)
 

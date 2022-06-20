@@ -11,14 +11,15 @@ from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
-class TestSiameseRPN(TestCase):
+class TestStark(TestCase):
 
     @classmethod
     def setUpClass(cls):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
+        'sot/stark/stark_st1_r50_500e_got10k.py',
+        'sot/stark/stark_st2_r50_50e_got10k.py'
     ])
     def test_init(self, cfg_file):
         model = _get_model_cfg(cfg_file)
@@ -28,10 +29,13 @@ class TestSiameseRPN(TestCase):
         assert model.neck
         assert model.head
 
+    # TODO: reduce the channels of models in all configs for speed up
+    # unit test.
     @parameterized.expand([
-        ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
+        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
     ])
-    def test_siamese_rpn_forward_loss_mode(self, cfg_file, devices):
+    def test_stark_forward_loss_mode(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -48,19 +52,26 @@ class TestSiameseRPN(TestCase):
             packed_inputs = _demo_mm_inputs(
                 batch_size=1,
                 frame_id=0,
-                num_template_imgs=1,
-                num_search_imgs=1,
+                num_template_imgs=2,
+                num_search_imgs=2,
                 ref_prefix='search',
+                image_shapes=[[(3, 128, 128), (3, 320, 320)]],
                 num_items=[1])
+            for input in packed_inputs:
+                input['data_sample'].padding_mask = torch.zeros((2, 128, 128),
+                                                                dtype=bool)
+                input['data_sample'].search_padding_mask = torch.zeros(
+                    (1, 128, 128), dtype=bool)
             batch_inputs, data_samples = model.data_preprocessor(
                 packed_inputs, True)
             losses = model.forward(batch_inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
+        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
     ])
-    def test_siamese_rpn_forward_predict_mode(self, cfg_file, devices):
+    def test_stark_forward_predict_mode(self, cfg_file, devices):
         _model = _get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -82,7 +93,11 @@ class TestSiameseRPN(TestCase):
                         frame_id=i,
                         num_key_imgs=1,
                         num_ref_imgs=0,
+                        image_shapes=[(3, 320, 320)],
                         num_items=[1])
+                    for input in packed_inputs:
+                        input['data_sample'].padding_mask = torch.zeros(
+                            (1, 320, 320), dtype=bool)
                     batch_inputs, data_samples = model.data_preprocessor(
                         packed_inputs, False)
                     batch_results = model.forward(

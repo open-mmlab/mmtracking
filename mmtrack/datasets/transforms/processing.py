@@ -200,8 +200,7 @@ class TridentSampling(BaseTransform):
             instance = [
                 dict(
                     bbox=video_info['bboxes'][frame_ind],
-                    bbox_label=np.array(is_positive_pairs, dtype=np.int32),
-                    ignore_flag=False)
+                    bbox_label=np.array(is_positive_pairs, dtype=np.int32))
             ]
             results['instances'].append(instance)
         return results
@@ -389,8 +388,7 @@ class PairSampling(BaseTransform):
             instance = [
                 dict(
                     bbox=video_info['bboxes'][frame_ind],
-                    bbox_label=np.array(is_positive_pairs, dtype=np.int32),
-                    ignore_flag=False)
+                    bbox_label=np.array(is_positive_pairs, dtype=np.int32))
             ]
             results['instances'].append(instance)
         return results

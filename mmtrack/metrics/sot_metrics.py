@@ -48,7 +48,7 @@ class SOTMetric(BaseVideoMetric):
     def __init__(self,
                  metric: Union[str, Sequence[str]] = 'OPE',
                  metric_options: Optional[dict] = dict(
-                     vot_dataset_type='vot2018'),
+                     vot_dataset_type='vot2018', only_eval_visible=False),
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
@@ -154,8 +154,12 @@ class SOTMetric(BaseVideoMetric):
             logger.info(f'Evaluating {metric}...')
 
             if metric == 'OPE':
-                eval_results.update(
-                    eval_sot_ope(all_pred_bboxes, all_gt_bboxes, all_visible))
+                if self.metrics_options.get('only_eval_visible', False):
+                    results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes,
+                                               all_visible)
+                else:
+                    results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes)
+                eval_results.update(results_ope)
             elif metric == 'VOT':
                 if 'interval' in self.metrics_options:
                     interval = self.metrics_options['interval']

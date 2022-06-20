@@ -98,13 +98,18 @@ class GOT10kDataset(BaseSOTDataset):
         """
         if self.test_memo.get('video_idx', None) != video_idx:
             self.test_memo.video_idx = video_idx
-            self.test_memo.img_infos = self.get_img_infos_from_video(video_idx)
-        assert 'video_idx' in self.test_memo and 'img_infos' in self.test_memo
+            ann_infos = self.get_ann_infos_from_video(video_idx)
+            img_infos = self.get_img_infos_from_video(video_idx)
+            self.test_memo.video_infos = dict(**img_infos, **ann_infos)
+        assert 'video_idx' in self.test_memo and 'video_infos'\
+            in self.test_memo
 
         results = {}
-        results['img_path'] = self.test_memo.img_infos['img_paths'][frame_idx]
+        results['img_path'] = self.test_memo.video_infos['img_paths'][
+            frame_idx]
         results['frame_id'] = frame_idx
         results['video_id'] = video_idx
+        results['video_length'] = self.test_memo.video_infos['video_length']
 
         instance = {}
         if frame_idx == 0:
@@ -114,7 +119,6 @@ class GOT10kDataset(BaseSOTDataset):
         results['instances'] = []
         instance['visible'] = True
         instance['bbox_label'] = np.array([0], dtype=np.int32)
-        instance['ignore_flag'] = False
         results['instances'].append(instance)
         results = self.pipeline(results)
         return results

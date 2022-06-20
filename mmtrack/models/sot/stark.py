@@ -1,18 +1,18 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
 from copy import deepcopy
+from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import torch
 import torch.nn.functional as F
-from addict import Dict
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
-from mmdet.models.builder import build_backbone, build_head, build_neck
+from torch import Tensor
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
-from torchvision.transforms.functional import normalize
 
-from ..builder import MODELS
+from mmtrack.core import (InstanceList, OptConfigType, OptMultiConfig,
+                          SampleList, TrackDataSample)
+from mmtrack.registry import MODELS
 from .base import BaseSingleObjectTracker
 
 
@@ -40,17 +40,21 @@ class Stark(BaseSingleObjectTracker):
     """
 
     def __init__(self,
-                 backbone,
-                 neck=None,
-                 head=None,
-                 init_cfg=None,
-                 frozen_modules=None,
-                 train_cfg=None,
-                 test_cfg=None):
-        super(Stark, self).__init__(init_cfg)
-        self.backbone = build_backbone(backbone)
-        self.neck = build_neck(neck)
-        self.head = build_head(head)
+                 backbone: dict,
+                 neck: Optional[dict] = None,
+                 head: Optional[dict] = None,
+                 pretrains: Optional[dict] = None,
+                 train_cfg: Optional[dict] = None,
+                 test_cfg: Optional[dict] = None,
+                 frozen_modules: Optional[Union[List[str], Tuple[str],
+                                                str]] = None,
+                 data_preprocessor: OptConfigType = None,
+                 init_cfg: OptMultiConfig = None):
+        super(Stark, self).__init__(data_preprocessor, init_cfg)
+        head.update(test_cfg=test_cfg)
+        self.backbone = MODELS.build(backbone)
+        self.neck = MODELS.build(neck)
+        self.head = MODELS.build(head)
 
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
@@ -78,7 +82,7 @@ class Stark(BaseSingleObjectTracker):
         if self.with_head:
             self.head.init_weights()
 
-    def extract_feat(self, img):
+    def extract_feat(self, img: Tensor) -> Tensor:
         """Extract the features of the input image.
 
         Args:
@@ -92,8 +96,9 @@ class Stark(BaseSingleObjectTracker):
         feat = self.neck(feat)
         return feat
 
-    def get_cropped_img(self, img, target_bbox, search_area_factor,
-                        output_size):
+    def get_cropped_img(self, img: Tensor, target_bbox: Tensor,
+                        search_area_factor: float,
+                        output_size: float) -> Union[Tensor, float, Tensor]:
         """ Crop Image
         Only used during testing
         This function mainly contains two steps:
@@ -103,7 +108,7 @@ class Stark(BaseSingleObjectTracker):
 
         args:
             img (Tensor): of shape (1, C, H, W)
-            target_bbox (list | ndarray): in [cx, cy, w, h] format
+            target_bbox (Tensor): in [cx, cy, w, h] format
             search_area_factor (float): Ratio of crop size to target size
             output_size (float): the size of output cropped image
                 (always square).
@@ -165,262 +170,134 @@ class Stark(BaseSingleObjectTracker):
 
         return img_crop_padded, resize_factor, padding_mask
 
-    def init(self, img, bbox):
+    def init(self, img: Tensor):
         """Initialize the single object tracker in the first frame.
 
         Args:
             img (Tensor): input image of shape (1, C, H, W).
-            bbox (list | Tensor): in [cx, cy, w, h] format.
         """
-        self.z_dict_list = []  # store templates
+        self.memo.z_dict_list = []  # store templates
         # get the 1st template
         z_patch, _, z_mask = self.get_cropped_img(
-            img, bbox, self.test_cfg['template_factor'],
+            img, self.memo.bbox, self.test_cfg['template_factor'],
             self.test_cfg['template_size']
         )  # z_patch of shape [1,C,H,W];  z_mask of shape [1,H,W]
-        z_patch = normalize(
-            z_patch.squeeze() / 255.,
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
-        with torch.no_grad():
-            z_feat = self.extract_feat(z_patch)
+        z_feat = self.extract_feat(z_patch)
 
         self.z_dict = dict(feat=z_feat, mask=z_mask)
-        self.z_dict_list.append(self.z_dict)
+        self.memo.z_dict_list.append(self.z_dict)
 
         # get other templates
         for _ in range(self.num_extra_template):
-            self.z_dict_list.append(deepcopy(self.z_dict))
+            self.memo.z_dict_list.append(deepcopy(self.z_dict))
 
-    def update_template(self, img, bbox, conf_score):
+    def update_template(self, img: Tensor, bbox: Union[List, Tensor],
+                        conf_score: float):
         """Update the dymanic templates.
 
         Args:
             img (Tensor): of shape (1, C, H, W).
-            bbox (list | ndarray): in [cx, cy, w, h] format.
+            bbox (list | Tensor): in [cx, cy, w, h] format.
             conf_score (float): the confidence score of the predicted bbox.
         """
         for i, update_interval in enumerate(self.update_intervals):
-            if self.frame_id % update_interval == 0 and conf_score > 0.5:
+            if self.memo.frame_id % update_interval == 0 and conf_score > 0.5:
                 z_patch, _, z_mask = self.get_cropped_img(
                     img,
                     bbox,
                     self.test_cfg['template_factor'],
                     output_size=self.test_cfg['template_size'])
-                z_patch = normalize(
-                    z_patch.squeeze() / 255.,
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225]).unsqueeze(0)
-                with torch.no_grad():
-                    z_feat = self.extract_feat(z_patch)
+                z_feat = self.extract_feat(z_patch)
                 # the 1st element of z_dict_list is the template from the 1st
                 # frame
-                self.z_dict_list[i + 1] = dict(feat=z_feat, mask=z_mask)
+                self.memo.z_dict_list[i + 1] = dict(feat=z_feat, mask=z_mask)
 
-    def mapping_bbox_back(self, pred_bboxes, prev_bbox, resize_factor):
-        """Mapping the `prediction bboxes` from resized cropped image to
-        original image. The coordinate origins of them are both the top left
-        corner.
-
-        Args:
-            pred_bboxes (Tensor): the predicted bbox of shape (B, Nq, 4), in
-                [tl_x, tl_y, br_x, br_y] format. The coordinates are based in
-                the resized cropped image.
-            prev_bbox (Tensor): the previous bbox of shape (B, 4),
-                in [cx, cy, w, h] format. The coordinates are based in the
-                original image.
-            resize_factor (float): the ratio of original image scale to cropped
-                image scale.
-        Returns:
-            (Tensor): in [tl_x, tl_y, br_x, br_y] format.
-        """
-        # based in the resized croped image
-        pred_bboxes = pred_bboxes.view(-1, 4)
-        # based in the original croped image
-        pred_bbox = pred_bboxes.mean(dim=0) / resize_factor
-
-        # the half size of the original croped image
-        cropped_img_half_size = 0.5 * self.test_cfg[
-            'search_size'] / resize_factor
-        # (x_shift, y_shift) is the coordinate of top left corner of the
-        # cropped image based in the original image.
-        x_shift, y_shift = prev_bbox[0] - cropped_img_half_size, prev_bbox[
-            1] - cropped_img_half_size
-        pred_bbox[0:4:2] += x_shift
-        pred_bbox[1:4:2] += y_shift
-
-        return pred_bbox
-
-    def _bbox_clip(self, bbox, img_h, img_w, margin=0):
-        """Clip the bbox in [tl_x, tl_y, br_x, br_y] format."""
-        bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        bbox[0] = bbox[0].clamp(0, img_w - margin)
-        bbox[1] = bbox[1].clamp(0, img_h - margin)
-        bbox_w = bbox_w.clamp(margin, img_w)
-        bbox_h = bbox_h.clamp(margin, img_h)
-        bbox[2] = bbox[0] + bbox_w
-        bbox[3] = bbox[1] + bbox_h
-        return bbox
-
-    def track(self, img, bbox):
-        """Track the box `bbox` of previous frame to current frame `img`.
+    def track(self, img: Tensor,
+              batch_data_samples: SampleList) -> InstanceList:
+        """Track the box of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W).
-            bbox (list | Tensor): The bbox in previous frame. The shape of the
-                bbox is (4, ) in [x, y, w, h] format.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instances`` and 'metainfo'.
 
         Returns:
+            InstanceList: Tracking results of each image after the postprocess.
+                - scores: a Tensor denoting the score of best_bbox.
+                - bboxes: a Tensor of shape (4, ) in [x1, x2, y1, y2]
+                format, and denotes the best tracked bbox in current frame.
         """
-        H, W = img.shape[2:]
-        # get the t-th search region
+        # get the search patches
         x_patch, resize_factor, x_mask = self.get_cropped_img(
-            img, bbox, self.test_cfg['search_factor'],
+            img, self.memo.bbox, self.test_cfg['search_factor'],
             self.test_cfg['search_size']
         )  # bbox: of shape (x1, y1, w, h), x_mask: of shape (1, h, w)
-        x_patch = normalize(
-            x_patch.squeeze() / 255.,
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
-        with torch.no_grad():
-            x_feat = self.extract_feat(x_patch)
-            x_dict = dict(feat=x_feat, mask=x_mask)
-            head_inputs = self.z_dict_list + [x_dict]
-            # run the transformer
-            track_results = self.head(head_inputs)
+        x_feat = self.extract_feat(x_patch)
+        x_dict = dict(feat=x_feat, mask=x_mask)
+        head_inputs = self.memo.z_dict_list + [x_dict]
+        results = self.head.predict(head_inputs, batch_data_samples,
+                                    self.memo.bbox, resize_factor)
 
-        final_bbox = self.mapping_bbox_back(track_results['pred_bboxes'],
-                                            self.memo.bbox, resize_factor)
-        final_bbox = self._bbox_clip(final_bbox, H, W, margin=10)
-
-        conf_score = -1.
-        if self.head.cls_head is not None:
+        if results[0].scores.item() != -1:
             # get confidence score (whether the search region is reliable)
-            conf_score = track_results['pred_logits'].view(-1).sigmoid().item()
-            crop_bbox = bbox_xyxy_to_cxcywh(final_bbox)
-            self.update_template(img, crop_bbox, conf_score)
+            crop_bbox = bbox_xyxy_to_cxcywh(results[0].bboxes.squeeze())
+            self.update_template(img, crop_bbox, results[0].scores.item())
 
-        return conf_score, final_bbox
-
-    def simple_test(self, img, img_metas, gt_bboxes, **kwargs):
-        """Test without augmentation.
-
-        Args:
-            img (Tensor): input image of shape (1, C, H, W).
-            img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-            gt_bboxes (list[Tensor]): list of ground truth bboxes for each
-                image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
-
-        Returns:
-            dict(str : ndarray): the tracking results.
-        """
-        frame_id = img_metas[0].get('frame_id', -1)
-        assert frame_id >= 0
-        assert len(img) == 1, 'only support batch_size=1 when testing'
-        self.frame_id = frame_id
-
-        if frame_id == 0:
-            bbox_pred = gt_bboxes[0][0]
-            self.memo = Dict()
-            self.memo.bbox = bbox_xyxy_to_cxcywh(bbox_pred)
-            self.init(img, self.memo.bbox)
-            best_score = -1.
-        else:
-            best_score, bbox_pred = self.track(img, self.memo.bbox)
-            self.memo.bbox = bbox_xyxy_to_cxcywh(bbox_pred)
-
-        results = dict()
-        results['track_bboxes'] = np.concatenate(
-            (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      search_img,
-                      search_img_metas,
-                      gt_bboxes,
-                      padding_mask,
-                      search_gt_bboxes,
-                      search_padding_mask,
-                      search_gt_labels=None,
-                      **kwargs):
-        """forward of training.
+    def predict_vot(self, batch_inputs: dict,
+                    batch_data_samples: List[TrackDataSample]):
+        raise NotImplementedError(
+            'STARK does not support testing on VOT datasets yet.')
+
+    def loss(self, batch_inputs: dict,
+             batch_data_samples: List[TrackDataSample], **kwargs) -> dict:
+        """Forward of training.
 
         Args:
-            img (Tensor): template images of shape (N, num_templates, C, H, W).
-                Typically, there are 2 template images, and
-                H and W are both equal to 128.
+            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+                input images. Typically these should be mean centered and std
+                scaled. The N denotes batch size. The T denotes the number of
+                key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
 
-            img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
 
-            search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
-                images. 1 denotes there is only one search image for each
-                template image. Typically H and W are both equal to 320.
-
-            search_img_metas (list[list[dict]]): The second list only has one
-                element. The first list contains search image information dict
-                where each dict has: 'img_shape', 'scale_factor', 'flip', and
-                may also contain 'filename', 'ori_shape', 'pad_shape', and
-                'img_norm_cfg'. For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-
-            gt_bboxes (list[Tensor]): Ground truth bboxes for template
-                images with shape (N, 4) in [tl_x, tl_y, br_x, br_y] format.
-
-            padding_mask (Tensor): padding mask of template images.
-                It's of shape (N, num_templates, H, W).
-                Typically, there are 2 padding masks of template images, and
-                H and W are both equal to that of template images.
-
-            search_gt_bboxes (list[Tensor]): Ground truth bboxes for search
-                images with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y]
-                format.
-
-            search_padding_mask (Tensor): padding mask of search images.
-                Its of shape (N, 1, H, W).
-                There are 1 padding masks of search image, and
-                H and W are both equal to that of search image.
-
-            search_gt_labels (list[Tensor], optional): Ground truth labels for
-                search images with shape (N, 2).
-
-        Returns:
-            dict[str, Tensor]: a dictionary of loss components.
+        Return:
+            dict: A dictionary of loss components.
         """
+        template_padding_mask = [
+            data_sample.padding_mask for data_sample in batch_data_samples
+        ]
+        template_padding_mask = torch.stack(template_padding_mask, dim=0)
+        search_padding_mask = [
+            data_sample.search_padding_mask
+            for data_sample in batch_data_samples
+        ]
+        search_padding_mask = torch.stack(search_padding_mask, dim=0)
+
+        search_img = batch_inputs['search_img']
+        assert search_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        template_img = batch_inputs['img']
+        assert template_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+
         head_inputs = []
         for i in range(self.num_extra_template + 1):
-            z_feat = self.extract_feat(img[:, i])
-            z_dict = dict(feat=z_feat, mask=padding_mask[:, i])
+            z_feat = self.extract_feat(template_img[:, i])
+            z_dict = dict(feat=z_feat, mask=template_padding_mask[:, i])
             head_inputs.append(z_dict)
         x_feat = self.extract_feat(search_img[:, 0])
         x_dict = dict(feat=x_feat, mask=search_padding_mask[:, 0])
         head_inputs.append(x_dict)
-        # run the transformer
-        '''
-        `track_results` is a dict containing the following keys:
-            - 'pred_bboxes': bboxes of (N, num_query, 4) shape in
-                    [tl_x, tl_y, br_x, br_y] format.
-            - 'pred_logits': bboxes of (N, num_query, 1) shape.
-        Typically `num_query` is equal to 1.
-        '''
-        track_results = self.head(head_inputs)
 
-        losses = dict()
-        head_losses = self.head.loss(track_results, search_gt_bboxes,
-                                     search_gt_labels,
-                                     search_img[:, 0].shape[-2:])
-
-        losses.update(head_losses)
+        losses = self.head.loss(head_inputs, batch_data_samples)
 
         return losses

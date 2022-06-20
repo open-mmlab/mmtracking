@@ -35,7 +35,7 @@ class TestTrackDataPreprocessor(TestCase):
             frame_id=0,
             num_key_imgs=1,
             ref_prefix='search',
-            image_shapes=[(1, 3, 11, 10)],
+            image_shapes=[(3, 11, 10)],
             num_items=[1])
         inputs, data_samples = processor(data)
         for _, inputs_single_mode in inputs.items():
@@ -56,7 +56,7 @@ class TestTrackDataPreprocessor(TestCase):
             frame_id=0,
             num_key_imgs=1,
             ref_prefix='search',
-            image_shapes=[(1, 3, 10, 11), (1, 3, 9, 14)],
+            image_shapes=[(3, 10, 11), (3, 9, 14)],
             num_items=[1, 1])
         inputs, data_samples = processor(data)
         for _, inputs_single_mode in inputs.items():
@@ -68,7 +68,7 @@ class TestTrackDataPreprocessor(TestCase):
             frame_id=0,
             num_key_imgs=1,
             ref_prefix='search',
-            image_shapes=[(1, 3, 10, 11), (1, 3, 9, 24)],
+            image_shapes=[(3, 10, 11), (3, 9, 24)],
             num_items=[1, 1])
         processor = TrackDataPreprocessor(
             mean=[0., 0., 0.], std=[1., 1., 1.], pad_size_divisor=5)
@@ -87,7 +87,7 @@ class TestTrackDataPreprocessor(TestCase):
             frame_id=0,
             num_key_imgs=1,
             ref_prefix='search',
-            image_shapes=[(1, 3, 10, 11), (1, 3, 9, 24)],
+            image_shapes=[(3, 10, 11), (3, 9, 24)],
             num_items=[1, 1],
             with_mask=True)
         processor = TrackDataPreprocessor(pad_mask=True, mask_pad_value=0)

@@ -1,15 +1,19 @@
+_base_ = ['../../_base_/default_runtime.py']
+
 cudnn_benchmark = False
 deterministic = True
 seed = 1
 
 # model settings
-preprocess_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 model = dict(
     type='Stark',
-    preprocess_cfg=preprocess_cfg,
+    data_preprocessor=dict(
+        type='TrackDataPreprocessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True),
     backbone=dict(
-        type='ResNet',
+        type='mmdet.ResNet',
         depth=50,
         num_stages=3,
         strides=(1, 2, 2),
@@ -20,7 +24,7 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=False),
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     neck=dict(
-        type='ChannelMapper',
+        type='mmdet.ChannelMapper',
         in_channels=[1024],
         out_channels=256,
         kernel_size=1,
@@ -75,8 +79,8 @@ model = dict(
             channel=256,
             feat_size=20,
             stride=16),
-        loss_bbox=dict(type='L1Loss', loss_weight=5.0),
-        loss_iou=dict(type='GIoULoss', loss_weight=2.0)),
+        loss_bbox=dict(type='mmdet.L1Loss', loss_weight=5.0),
+        loss_iou=dict(type='mmdet.GIoULoss', loss_weight=2.0)),
     test_cfg=dict(
         search_factor=5.0,
         search_size=320,
@@ -128,74 +132,58 @@ train_pipeline = [
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadTrackAnnotations', with_instance_id=False),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 
 # dataset settings
-data = dict(
-    samples_per_gpu=16,
-    workers_per_gpu=8,
+train_dataloader = dict(
+    batch_size=16,
+    num_workers=4,
     persistent_workers=True,
-    samples_per_epoch=60000,
-    train=dict(
-        type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[1],
-        dataset_cfgs=[
-            dict(
-                type='GOT10kDataset',
-                ann_file=data_root +
-                'got10k/annotations/got10k_train_infos.txt',
-                img_prefix=data_root + 'got10k',
-                pipeline=train_pipeline,
-                split='train',
-                test_mode=False)
-        ]),
-    val=dict(
+    sampler=dict(type='QuotaSampler', samples_per_epoch=60000),
+    dataset=dict(
         type='GOT10kDataset',
-        ann_file=data_root + 'got10k/annotations/got10k_test_infos.txt',
-        img_prefix=data_root + 'got10k',
-        pipeline=test_pipeline,
-        split='test',
-        test_mode=True),
-    test=dict(
+        data_root=data_root,
+        ann_file='got10k/annotations/got10k_train_infos.txt',
+        data_prefix=dict(img_path='got10k'),
+        pipeline=train_pipeline,
+        test_mode=False))
+
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=4,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
         type='GOT10kDataset',
-        ann_file=data_root + 'got10k/annotations/got10k_test_infos.txt',
-        img_prefix=data_root + 'got10k',
+        data_root=data_root,
+        ann_file='got10k/annotations/got10k_test_infos.txt',
+        data_prefix=dict(img_path='got10k'),
         pipeline=test_pipeline,
-        split='test',
         test_mode=True))
+test_dataloader = val_dataloader
+
+# evaluator
+val_evaluator = dict(type='SOTMetric', metric='OPE', format_only=True)
+test_evaluator = val_evaluator
+
+# runner loop
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=500, val_begin=500, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+
+# learning policy
+param_scheduler = dict(type='MultiStepLR', milestones=[400], gamma=0.1)
 
 # optimizer
-optimizer = dict(
-    type='AdamW',
-    lr=0.0001,
-    weight_decay=0.0001,
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='AdamW', lr=0.0001, weight_decay=0.0001),
+    clip_grad=dict(max_norm=0.1, norm_type=2),
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
-optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-# learning policy
-lr_config = dict(policy='step', step=[400])
+
 # checkpoint saving
-checkpoint_config = dict(interval=100)
-evaluation = dict(
-    metric=['track'],
-    interval=100,
-    start=501,
-    rule='greater',
-    save_best='success')
-# yapf:disable
-log_config = dict(
-    interval=50,
-    hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
-    ])
-# yapf:enable
-# runtime settings
-total_epochs = 500
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-work_dir = './work_dirs/xxx'
-load_from = None
-resume_from = None
-workflow = [('train', 1)]
+default_hooks = dict(checkpoint=dict(type='CheckpointHook', interval=100))

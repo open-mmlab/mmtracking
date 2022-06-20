@@ -70,60 +70,99 @@ def _demo_mm_inputs(batch_size=1,
                     frame_id=0,
                     num_key_imgs=1,
                     num_ref_imgs=1,
-                    image_shapes=[(1, 3, 128, 128)],
+                    image_shapes=[(3, 128, 128)],
                     num_items=None,
                     num_classes=10,
                     ref_prefix='ref',
+                    num_template_imgs=None,
+                    num_search_imgs=None,
                     with_mask=False,
                     with_semantic=False):
     """Create a superset of inputs needed to run test or train batches.
 
     Args:
         batch_size (int): batch size. Default to 2.
+        frame_id (int): the frame id.
+        num_key_imgs (int): the number of key images. This input is used in
+            all methods except for training in SOT.
+        num_ref_imgs (int): the number of reference images. This input is
+            used in all methods except for training in SOT.
         image_shapes (List[tuple], Optional): image shape.
-            Default to (1, 3, 128, 128)
+            Default to (3, 128, 128)
         num_items (None | List[int]): specifies the number
             of boxes in each batch item. Default to None.
         num_classes (int): number of different labels a
             box might have. Default to 10.
+        ref_prefix (str): the prefix of reference images (or search images
+            in SOT).
         with_mask (bool): Whether to return mask annotation.
             Defaults to False.
         with_semantic (bool): whether to return semantic.
             Default to False.
+        num_template_imgs (int): the number of template images. This input is
+            only used in training in SOT.
+        num_search_imgs (int): the number of search images. This input is
+            only used in training in SOT.
     """
+    # Compatible the names of one image group in SOT. `ref_prefix` means the
+    # prefix of search images in SOT.
+    assert (num_template_imgs is None) == (num_search_imgs is None)
+    if num_template_imgs is not None:
+        num_key_imgs, num_ref_imgs = num_template_imgs, num_search_imgs
+
     # from mmdet.core import BitmapMasks
     rng = np.random.RandomState(0)
 
+    # Make sure the length of image_shapes is equal to ``batch_size``
     if isinstance(image_shapes, list):
         assert len(image_shapes) == batch_size
     else:
         image_shapes = [image_shapes] * batch_size
+
+    # Make sure the length of each element in image_shapes is equal to
+    # the number of types of image shapes since key_img and ref_image may have
+    # different shapes.
+    # After these transforms, as for ``image_shapes``, the
+    # length of the outer list is equal to ``batch_size`` and the length of the
+    # inner list is equal to the type of image shapes.
+    num_img_group = int((num_key_imgs > 0) + (num_ref_imgs > 0))
+    if isinstance(image_shapes[0], list):
+        assert len(image_shapes[0]) == num_img_group and isinstance(
+            image_shapes[0][0], tuple)
+    else:
+        assert isinstance(image_shapes[0], tuple)
+        image_shapes = [[shape] * num_img_group for shape in image_shapes]
 
     if isinstance(num_items, list):
         assert len(num_items) == batch_size
 
     packed_inputs = []
     for idx in range(batch_size):
-        image_shape = image_shapes[idx]
-        t, c, h, w = image_shape
-
-        image = rng.randint(0, 255, size=image_shape, dtype=np.uint8)
+        image_shape_group = image_shapes[idx]
+        c, h, w = image_shape_group[0]
 
         mm_inputs = dict(inputs=dict())
         if num_key_imgs > 0:
-            key_img = [image] * num_key_imgs
-            key_img = np.concatenate(key_img)
+            key_img = rng.randint(
+                0,
+                255,
+                size=(num_key_imgs, *image_shape_group[0]),
+                dtype=np.uint8)
             mm_inputs['inputs']['img'] = torch.from_numpy(key_img)
         if num_ref_imgs > 0:
-            ref_img = [image] * num_ref_imgs
-            ref_img = np.concatenate(ref_img)
+            index = int(num_key_imgs > 0)
+            ref_img = rng.randint(
+                0,
+                255,
+                size=(num_ref_imgs, *image_shape_group[index]),
+                dtype=np.uint8)
             mm_inputs['inputs'][f'{ref_prefix}_img'] = torch.from_numpy(
                 ref_img)
 
         img_meta = {
             'img_id': idx,
-            'img_shape': image_shape[2:],
-            'ori_shape': image_shape[2:],
+            'img_shape': image_shape_group[0][-2:],
+            'ori_shape': image_shape_group[0][-2:],
             'filename': '<demo>.png',
             'scale_factor': np.array([1.1, 1.2]),
             'flip': False,
@@ -131,10 +170,15 @@ def _demo_mm_inputs(batch_size=1,
             'is_video_data': True,
             'frame_id': frame_id
         }
-        search_img_meta = dict()
-        for key, value in img_meta.items():
-            search_img_meta[f'{ref_prefix}_{key}'] = value
-        img_meta.update(search_img_meta)
+        if num_ref_imgs > 0:
+            search_img_meta = dict()
+            for key, value in img_meta.items():
+                search_img_meta[f'{ref_prefix}_{key}'] = value
+            search_img_meta[f'{ref_prefix}_img_shape'] = image_shape_group[int(
+                num_key_imgs > 0)][-2:]
+            search_img_meta[f'{ref_prefix}_ori_shape'] = image_shape_group[int(
+                num_key_imgs > 0)][-2:]
+            img_meta.update(search_img_meta)
 
         data_sample = TrackDataSample()
         data_sample.set_metainfo(img_meta)

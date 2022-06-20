@@ -153,7 +153,7 @@ class TestSiameseRPNHead(TestCase):
         scale_factor = torch.Tensor([3.])
 
         data_sample = TrackDataSample()
-        data_sample.set_metainfo(dict(search_ori_shape=(200, 200)))
+        data_sample.set_metainfo(dict(ori_shape=(200, 200)))
         batch_data_samples = [data_sample]
         results = self.siamese_rpn_head.predict(z_feats, x_feats,
                                                 batch_data_samples, prev_bbox,
