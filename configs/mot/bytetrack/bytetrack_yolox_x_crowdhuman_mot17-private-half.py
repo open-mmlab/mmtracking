@@ -4,13 +4,22 @@ _base_ = [
 ]
 
 img_scale = (800, 1440)
-samples_per_gpu = 4
+batch_size = 4
 
 model = dict(
     type='ByteTrack',
+    data_preprocessor=dict(
+        type='TrackDataPreprocessor',
+        pad_size_divisor=32,
+        batch_augments=[
+            dict(
+                type='mmdet.BatchSyncRandomResize',
+                random_size_range=(576, 1024),
+                size_divisor=32,
+                interval=10)
+        ]),
     detector=dict(
-        input_size=img_scale,
-        random_size_range=(18, 32),
+        _scope_='mmdet',
         bbox_head=dict(num_classes=1),
         test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.7)),
         init_cfg=dict(
@@ -29,136 +38,158 @@ model = dict(
 
 train_pipeline = [
     dict(
-        type='Mosaic',
+        type='mmdet.Mosaic',
         img_scale=img_scale,
         pad_val=114.0,
         bbox_clip_border=False),
     dict(
-        type='RandomAffine',
+        type='mmdet.RandomAffine',
         scaling_ratio_range=(0.1, 2),
         border=(-img_scale[0] // 2, -img_scale[1] // 2),
         bbox_clip_border=False),
     dict(
-        type='MixUp',
+        type='mmdet.MixUp',
         img_scale=img_scale,
         ratio_range=(0.8, 1.6),
         pad_val=114.0,
         bbox_clip_border=False),
-    dict(type='YOLOXHSVRandomAug'),
-    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='mmdet.YOLOXHSVRandomAug'),
+    dict(type='mmdet.RandomFlip', prob=0.5),
     dict(
-        type='Resize',
-        img_scale=img_scale,
+        type='mmdet.Resize',
+        scale=img_scale,
         keep_ratio=True,
-        bbox_clip_border=False),
-    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(type='FilterAnnotations', min_gt_bbox_wh=(1, 1), keep_empty=False),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+        clip_object_border=False),
+    dict(
+        type='mmdet.Pad',
+        size_divisor=32,
+        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(
+        type='mmdet.FilterAnnotations',
+        min_gt_bbox_wh=(1, 1),
+        keep_empty=False),
+    dict(type='PackTrackInputs')
 ]
-
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='mmdet.Resize', scale=img_scale, keep_ratio=True),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=img_scale,
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(
-                type='Normalize',
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                to_rgb=False),
-            dict(
-                type='Pad',
-                size_divisor=32,
-                pad_val=dict(img=(114.0, 114.0, 114.0))),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
-        ])
+        type='mmdet.Pad',
+        size_divisor=32,
+        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='PackTrackInputs')
 ]
-data = dict(
-    samples_per_gpu=samples_per_gpu,
-    workers_per_gpu=4,
+
+train_dataloader = dict(
+    _delete_=True,
+    batch_size=batch_size,
+    num_workers=4,
     persistent_workers=True,
-    train=dict(
-        _delete_=True,
-        type='MultiImageMixDataset',
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    dataset=dict(
+        type='mmdet.MultiImageMixDataset',
         dataset=dict(
-            type='CocoDataset',
-            ann_file=[
-                'data/MOT17/annotations/half-train_cocoformat.json',
-                'data/crowdhuman/annotations/crowdhuman_train.json',
-                'data/crowdhuman/annotations/crowdhuman_val.json'
-            ],
-            img_prefix=[
-                'data/MOT17/train', 'data/crowdhuman/train',
-                'data/crowdhuman/val'
-            ],
-            classes=('pedestrian', ),
-            pipeline=[
-                dict(type='LoadImageFromFile'),
-                dict(type='LoadAnnotations', with_bbox=True)
-            ],
-            filter_empty_gt=False),
-        pipeline=train_pipeline),
-    val=dict(
-        pipeline=test_pipeline,
-        interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)),
-    test=dict(
-        pipeline=test_pipeline,
-        interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)))
+            type='mmdet.ConcatDataset',
+            datasets=[
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/MOT17',
+                    ann_file='annotations/half-train_cocoformat.json',
+                    # TODO: mmdet use img as key, but img_path is needed
+                    data_prefix=dict(img='train'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/crowdhuman',
+                    ann_file='annotations/crowdhuman_train.json',
+                    data_prefix=dict(img='train'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/crowdhuman',
+                    ann_file='annotations/crowdhuman_val.json',
+                    data_prefix=dict(img='val'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
+            ]),
+        pipeline=train_pipeline))
 
 # optimizer
 # default 8 gpu
-optimizer = dict(
-    type='SGD',
-    lr=0.001 / 8 * samples_per_gpu,
-    momentum=0.9,
-    weight_decay=5e-4,
-    nesterov=True,
-    paramwise_cfg=dict(norm_decay_mult=0.0, bias_decay_mult=0.0))
-optimizer_config = dict(grad_clip=None)
+lr = 0.001 / 8 * batch_size
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(
+        type='SGD', lr=lr, momentum=0.9, weight_decay=5e-4, nesterov=True),
+    paramwise_cfg=dict(norm_decay_mult=0., bias_decay_mult=0.))
 
 # some hyper parameters
+# training settings
 total_epochs = 80
 num_last_epochs = 10
 resume_from = None
 interval = 5
 
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=total_epochs, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 # learning policy
-lr_config = dict(
-    policy='YOLOX',
-    warmup='exp',
-    by_epoch=False,
-    warmup_by_epoch=True,
-    warmup_ratio=1,
-    warmup_iters=1,
-    num_last_epochs=num_last_epochs,
-    min_lr_ratio=0.05)
+param_scheduler = [
+    dict(
+        # use quadratic formula to warm up 1 epochs
+        # and lr is updated by iteration
+        # TODO: fix default scope in get function
+        type='mmdet.QuadraticWarmupLR',
+        by_epoch=True,
+        begin=0,
+        end=1,
+        convert_to_iter_based=True),
+    dict(
+        # use cosine lr from 1 to 70 epoch
+        type='mmdet.CosineAnnealingLR',
+        eta_min=lr * 0.05,
+        begin=1,
+        T_max=total_epochs - num_last_epochs,
+        end=total_epochs - num_last_epochs,
+        by_epoch=True,
+        convert_to_iter_based=True),
+    dict(
+        # use fixed lr during last 10 epochs
+        type='mmdet.ConstantLR',
+        by_epoch=True,
+        factor=1,
+        begin=total_epochs - num_last_epochs,
+        end=total_epochs,
+    )
+]
 
 custom_hooks = [
     dict(
         type='YOLOXModeSwitchHook',
         num_last_epochs=num_last_epochs,
         priority=48),
+    dict(type='mmdet.SyncNormHook', priority=48),
     dict(
-        type='SyncNormHook',
-        num_last_epochs=num_last_epochs,
-        interval=interval,
-        priority=48),
-    dict(
-        type='ExpMomentumEMAHook',
-        resume_from=resume_from,
+        type='mmdet.EMAHook',
+        ema_type='mmdet.ExpMomentumEMA',
         momentum=0.0001,
+        update_buffers=True,
         priority=49)
 ]
 
-checkpoint_config = dict(interval=1)
-evaluation = dict(metric=['bbox', 'track'], interval=1)
-search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
-
-# you need to set mode='dynamic' if you are using pytorch<=1.5.0
-fp16 = dict(loss_scale=dict(init_scale=512.))
+default_hooks = dict(checkpoint=dict(interval=1))

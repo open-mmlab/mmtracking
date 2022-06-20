@@ -1,69 +1,70 @@
-# # Copyright (c) OpenMMLab. All rights reserved.
-# from unittest import TestCase
-# from unittest.mock import MagicMock
+# Copyright (c) OpenMMLab. All rights reserved.
+from unittest import TestCase
+from unittest.mock import MagicMock
 
-# import torch
-# from mmdet.core.bbox.demodata import random_boxes
+import torch
+from mmdet.core.bbox.demodata import random_boxes
 
-# from mmtrack.registry import MODELS
-# from mmtrack.utils import register_all_modules
-# from ..utils import _demo_mm_inputs
+from mmtrack.registry import MODELS
+from mmtrack.utils import register_all_modules
+from ..utils import _demo_mm_inputs
 
-# class TestByteTracker(TestCase):
 
-#     @classmethod
-#     def setUpClass(cls):
-#         register_all_modules(init_default_scope=True)
-#         cfg = dict(
-#             type='ByteTracker',
-#             obj_score_thrs=dict(high=0.6, low=0.1),
-#             init_track_thr=0.7,
-#             weight_iou_with_det_scores=True,
-#             match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
-#             num_tentatives=3,
-#             num_frames_retain=30)
-#         cls.tracker = MODELS.build(cfg)
-#         cls.tracker.kf = MODELS.build(dict(type='KalmanFilter'))
-#         cls.num_frames_retain = cfg['num_frames_retain']
-#         cls.num_objs = 30
+class TestByteTracker(TestCase):
 
-#     def test_init(self):
-#         bboxes = random_boxes(self.num_objs, 512)
-#         labels = torch.zeros(self.num_objs)
-#         scores = torch.ones(self.num_objs)
-#         ids = torch.arange(self.num_objs)
-#         self.tracker.update(
-#             ids=ids, bboxes=bboxes, scores=scores, labels=labels, frame_ids=0) # noqa: E501
+    @classmethod
+    def setUpClass(cls):
+        register_all_modules(init_default_scope=True)
+        cfg = dict(
+            type='ByteTracker',
+            obj_score_thrs=dict(high=0.6, low=0.1),
+            init_track_thr=0.7,
+            weight_iou_with_det_scores=True,
+            match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
+            num_tentatives=3,
+            num_frames_retain=30)
+        cls.tracker = MODELS.build(cfg)
+        cls.tracker.kf = MODELS.build(dict(type='KalmanFilter'))
+        cls.num_frames_retain = cfg['num_frames_retain']
+        cls.num_objs = 30
 
-#         assert self.tracker.ids == list(ids)
-#         assert self.tracker.memo_items == [
-#             'ids', 'bboxes', 'scores', 'labels', 'frame_ids'
-#         ]
+    def test_init(self):
+        bboxes = random_boxes(self.num_objs, 512)
+        labels = torch.zeros(self.num_objs)
+        scores = torch.ones(self.num_objs)
+        ids = torch.arange(self.num_objs)
+        self.tracker.update(
+            ids=ids, bboxes=bboxes, scores=scores, labels=labels, frame_ids=0)
 
-#     def test_forward(self):
-#         img_size = 64
-#         img = torch.rand((1, 3, img_size, img_size))
+        assert self.tracker.ids == list(ids)
+        assert self.tracker.memo_items == [
+            'ids', 'bboxes', 'scores', 'labels', 'frame_ids'
+        ]
 
-#         model = MagicMock()
-#         packed_inputs = _demo_mm_inputs(
-#             batch_size=1, frame_id=0, num_ref_imgs=0)
-#         data_sample = packed_inputs[0]['data_sample']
-#         data_sample.pred_det_instances = data_sample.gt_instances.clone()
-#         # add fake scores
-#         scores = torch.ones(5)
-#         data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
-#         for frame_id in range(3):
-#             track_data_sample = self.tracker.forward(
-#                 model=model,
-#                 img=img,
-#                 feats=None,
-#                 data_sample=packed_inputs[0]['data_sample'])
-#             pred_track_instances = track_data_sample.get(
-#                 'pred_track_instances', None)
-#             bboxes = pred_track_instances.bboxes
-#             labels = pred_track_instances.labels
-#             ids = pred_track_instances.instances_id
+    def test_track(self):
+        img_size = 64
+        img = torch.rand((1, 3, img_size, img_size))
 
-#             assert bboxes.shape[1] == 4
-#             assert bboxes.shape[0] == labels.shape[0]
-#             assert bboxes.shape[0] == ids.shape[0]
+        model = MagicMock()
+        packed_inputs = _demo_mm_inputs(
+            batch_size=1, frame_id=0, num_ref_imgs=0)
+        data_sample = packed_inputs[0]['data_sample']
+        data_sample.pred_det_instances = data_sample.gt_instances.clone()
+        # add fake scores
+        scores = torch.ones(5)
+        data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
+        for frame_id in range(3):
+            track_data_sample = self.tracker.track(
+                model=model,
+                img=img,
+                feats=None,
+                data_sample=packed_inputs[0]['data_sample'])
+            pred_track_instances = track_data_sample.get(
+                'pred_track_instances', None)
+            bboxes = pred_track_instances.bboxes
+            labels = pred_track_instances.labels
+            ids = pred_track_instances.instances_id
+
+            assert bboxes.shape[1] == 4
+            assert bboxes.shape[0] == labels.shape[0]
+            assert bboxes.shape[0] == ids.shape[0]

@@ -56,6 +56,16 @@ def _rand_bboxes(rng, num_boxes, w, h):
     return bboxes
 
 
+def _rand_masks(rng, num_boxes, bboxes, img_w, img_h):
+    masks = np.zeros((num_boxes, img_h, img_w))
+    for i, bbox in enumerate(bboxes):
+        bbox = bbox.astype(np.int32)
+        mask = (rng.rand(1, bbox[3] - bbox[1], bbox[2] - bbox[0]) >
+                0.3).astype(np.int)
+        masks[i:i + 1, bbox[1]:bbox[3], bbox[0]:bbox[2]] = mask
+    return torch.from_numpy(masks)
+
+
 def _demo_mm_inputs(batch_size=1,
                     frame_id=0,
                     num_key_imgs=1,
@@ -64,6 +74,7 @@ def _demo_mm_inputs(batch_size=1,
                     num_items=None,
                     num_classes=10,
                     ref_prefix='ref',
+                    with_mask=False,
                     with_semantic=False):
     """Create a superset of inputs needed to run test or train batches.
 
@@ -75,6 +86,8 @@ def _demo_mm_inputs(batch_size=1,
             of boxes in each batch item. Default to None.
         num_classes (int): number of different labels a
             box might have. Default to 10.
+        with_mask (bool): Whether to return mask annotation.
+            Defaults to False.
         with_semantic (bool): whether to return semantic.
             Default to False.
     """
@@ -134,11 +147,15 @@ def _demo_mm_inputs(batch_size=1,
             num_boxes = num_items[idx]
 
         bboxes = _rand_bboxes(rng, num_boxes, w, h)
-        labels = rng.randint(1, num_classes, size=num_boxes)
+        labels = rng.randint(0, num_classes, size=num_boxes)
         instances_id = rng.randint(100, num_classes + 100, size=num_boxes)
         gt_instances.bboxes = torch.FloatTensor(bboxes)
         gt_instances.labels = torch.LongTensor(labels)
         gt_instances.instances_id = torch.LongTensor(instances_id)
+
+        if with_mask:
+            masks = _rand_masks(rng, num_boxes, bboxes, w, h)
+            gt_instances.masks = masks
 
         # TODO: waiting for ci to be fixed
         # masks = np.random.randint(0, 2, (len(bboxes), h, w), dtype=np.uint8)

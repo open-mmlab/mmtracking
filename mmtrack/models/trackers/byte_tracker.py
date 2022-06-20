@@ -1,10 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import lap
 import numpy as np
 import torch
-from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
 from mmengine.data import InstanceData
 
@@ -34,8 +33,6 @@ class ByteTracker(BaseTracker):
                 tracklets. Defaults to 0.3.
         num_tentatives (int, optional): Number of continuous frames to confirm
             a track. Defaults to 3.
-        init_cfg (dict or list[dict], optional): Initialization config dict.
-            Defaults to None.
     """
 
     def __init__(self,
@@ -44,9 +41,8 @@ class ByteTracker(BaseTracker):
                  weight_iou_with_det_scores: bool = True,
                  match_iou_thrs: dict = dict(high=0.1, low=0.5, tentative=0.3),
                  num_tentatives: int = 3,
-                 init_cfg: Optional[Union[dict, List[dict]]] = None,
                  **kwargs):
-        super().__init__(init_cfg=init_cfg, **kwargs)
+        super().__init__(**kwargs)
         self.obj_score_thrs = obj_score_thrs
         self.init_track_thr = init_track_thr
 
@@ -92,7 +88,7 @@ class ByteTracker(BaseTracker):
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
-    def pop_invalid_tracks(self, frame_id: int) -> int:
+    def pop_invalid_tracks(self, frame_id: int) -> None:
         """Pop out invalid tracks."""
         invalid_ids = []
         for k, v in self.tracks.items():
@@ -111,7 +107,8 @@ class ByteTracker(BaseTracker):
             det_bboxes: torch.Tensor,
             det_scores: torch.Tensor,
             weight_iou_with_det_scores: Optional[bool] = False,
-            match_iou_thr: Optional[float] = 0.5) -> Tuple[np.array, np.array]:
+            match_iou_thr: Optional[float] = 0.5
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Assign ids.
 
         Args:
@@ -125,7 +122,7 @@ class ByteTracker(BaseTracker):
                 Defaults to 0.5.
 
         Returns:
-            tuple(int): The assigning ids.
+            tuple(np.ndarray, np.ndarray): The assigning ids.
         """
         # get track_bboxes
         track_bboxes = np.zeros((0, 4))
@@ -150,10 +147,9 @@ class ByteTracker(BaseTracker):
             col = np.zeros(len(det_bboxes)).astype(np.int32) - 1
         return row, col
 
-    @force_fp32(apply_to=('img', ))
-    def forward(self, model: torch.nn.Module, img: torch.Tensor,
-                feats: List[torch.Tensor], data_sample: TrackDataSample,
-                **kwargs) -> TrackDataSample:
+    def track(self, model: torch.nn.Module, img: torch.Tensor,
+              feats: List[torch.Tensor], data_sample: TrackDataSample,
+              **kwargs) -> TrackDataSample:
         """Tracking forward function.
 
         Args:

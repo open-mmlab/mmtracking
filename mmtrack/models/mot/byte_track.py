@@ -1,9 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import List, Optional
+from typing import Dict, Optional
 
 import torch
+from torch import Tensor
 
-from mmtrack.core import TrackDataSample
+from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
 from mmtrack.registry import MODELS
 from .base import BaseMultiObjectTracker
 
@@ -19,16 +20,17 @@ class ByteTrack(BaseMultiObjectTracker):
         detector (dict): Configuration of detector. Defaults to None.
         tracker (dict): Configuration of tracker. Defaults to None.
         motion (dict): Configuration of motion. Defaults to None.
-        init_cfg (dict): Configuration of initialization. Defaults to None.
+        init_cfg (dict or list[dict]): Configuration of initialization.
+            Defaults to None.
     """
 
     def __init__(self,
                  detector: Optional[dict] = None,
                  tracker: Optional[dict] = None,
                  motion: Optional[dict] = None,
-                 preprocess_cfg: Optional[dict] = None,
-                 init_cfg: Optional[dict] = None):
-        super().__init__(preprocess_cfg, init_cfg)
+                 data_preprocessor: OptConfigType = None,
+                 init_cfg: OptMultiConfig = None):
+        super().__init__(data_preprocessor, init_cfg)
 
         if detector is not None:
             self.detector = MODELS.build(detector)
@@ -39,12 +41,12 @@ class ByteTrack(BaseMultiObjectTracker):
         if tracker is not None:
             self.tracker = MODELS.build(tracker)
 
-    def forward_train(self, batch_inputs: dict,
-                      batch_data_samples: List[TrackDataSample],
-                      **kwargs) -> dict:
-        """Forward function during training.
+    def loss(self, batch_inputs: Dict[str, Tensor],
+             batch_data_samples: SampleList, **kwargs) -> dict:
+        """Calculate losses from a batch of inputs and data samples.
+
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size.The T denotes the number of
                 key/reference frames.
@@ -55,41 +57,35 @@ class ByteTrack(BaseMultiObjectTracker):
                 as `gt_instance`.
 
         Returns:
-            dict[str, Tensor]: a dictionary of loss components
+            dict: A dictionary of loss components.
         """
         # modify the inputs shape to fit mmdet
         img = batch_inputs['img']
         assert img.size(1) == 1
         # convert batch_inputs' shape to (N, C, H, W)
         img = torch.squeeze(img, dim=1)
+        return self.detector.loss(img, batch_data_samples, **kwargs)
 
-        return self.detector.forward_train(img, batch_data_samples, **kwargs)
-
-    def simple_test(self,
-                    batch_inputs: dict,
-                    batch_data_samples: List[TrackDataSample],
-                    rescale: bool = False,
-                    **kwargs):
-        """Test without augmentation.
+    def predict(self, batch_inputs: Dict[str, Tensor],
+                batch_data_samples: SampleList, **kwargs) -> SampleList:
+        """Predict results from a batch of inputs and data samples with post-
+        processing.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
-                scaled. The N denotes batch size and must be 1 in ByteTrack
-                method.The T denotes the number of key/reference frames.
+                scaled. The N denotes batch size.The T denotes the number of
+                key/reference frames.
                 - img (Tensor) : The key images.
-                - ref_img (Tensor, Optional): The reference images.
+                - ref_img (Tensor): The reference images.
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
-            rescale (bool, Optional): If False, then returned bboxes and masks
-                will fit the scale of img, otherwise, returned bboxes and masks
-                will fit the scale of original image shape. Defaults to False.
 
         Returns:
-            list[obj:`TrackDataSample`]: Tracking results of the
-            input images. Each TrackDataSample usually contains
-            ``pred_det_instances`` or ``pred_track_instances``.
+            SampleList: Tracking results of the
+                input images. Each TrackDataSample usually contains
+                ``pred_det_instances`` or ``pred_track_instances``.
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
@@ -101,16 +97,13 @@ class ByteTrack(BaseMultiObjectTracker):
             'Bytetrack inference only support 1 batch size per gpu for now.'
 
         track_data_sample = batch_data_samples[0]
-        metainfo = track_data_sample.metainfo
 
-        det_results = self.detector.simple_test(
-            img, [metainfo], rescale=rescale)
+        det_results = self.detector.predict(img, batch_data_samples)
         assert len(det_results) == 1, 'Batch inference is not supported.'
-        det_results = det_results[0]
         track_data_sample.pred_det_instances = \
-            det_results.pred_instances.clone()
+            det_results[0].pred_instances.clone()
 
-        track_data_sample = self.tracker(
+        track_data_sample = self.tracker.track(
             model=self,
             img=img,
             feats=None,

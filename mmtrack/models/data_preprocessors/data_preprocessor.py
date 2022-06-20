@@ -4,9 +4,12 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from mmengine.data import BaseDataElement
 from mmengine.model import BaseDataPreprocessor
 
+from mmtrack.core.data_structures import TrackDataSample
 from mmtrack.core.utils import OptSampleList
 from mmtrack.core.utils.misc import stack_batch
 from mmtrack.registry import MODELS
@@ -38,6 +41,9 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
         pad_size_divisor (int): The size of padded image should be
             divisible by ``pad_size_divisor``. Defaults to 1.
         pad_value (Number): The padded pixel value. Defaults to 0.
+        pad_mask (bool): Whether to pad instance masks. Defaults to False.
+        mask_pad_value (int): The padded pixel value for instance masks.
+            Defaults to 0.
         bgr_to_rgb (bool): whether to convert image from BGR to RGB.
             Defaults to False.
         rgb_to_bgr (bool): whether to convert image from RGB to RGB.
@@ -50,6 +56,8 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                  std: Sequence[Number] = None,
                  pad_size_divisor: int = 1,
                  pad_value: Union[float, int] = 0,
+                 pad_mask: bool = False,
+                 mask_pad_value: int = 0,
                  bgr_to_rgb: bool = False,
                  rgb_to_bgr: bool = False,
                  batch_augments: Optional[List[dict]] = None):
@@ -78,11 +86,17 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
         self.channel_conversion = rgb_to_bgr or bgr_to_rgb
         self.pad_size_divisor = pad_size_divisor
         self.pad_value = pad_value
-        self.batch_augments = batch_augments
+        self.pad_mask = pad_mask
+        self.mask_pad_value = mask_pad_value
+        if batch_augments is not None:
+            self.batch_augments = nn.ModuleList(
+                [MODELS.build(aug) for aug in batch_augments])
+        else:
+            self.batch_augments = None
 
     def forward(self,
                 data: Sequence[dict],
-                training: bool = False) -> Tuple[torch.Tensor, Optional[list]]:
+                training: bool = False) -> Tuple[Dict, Optional[list]]:
         """Perform normalization、padding and bgr2rgb conversion based on
         ``TrackDataPreprocessor``.
 
@@ -110,12 +124,6 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             batch_inputs[imgs_key] = stack_batch(imgs, self.pad_size_divisor,
                                                  self.pad_value)
 
-        if training and self.batch_augments is not None:
-            # TODO: mmtrack and mmdet has not been used batch_augments for the
-            # time being.
-            batch_inputs, batch_data_samples = self.batch_augments(
-                batch_inputs, batch_data_samples)
-
         if batch_data_samples is not None:
             # NOTE the batched image size information may be useful, e.g.
             # in DETR, this is needed for the construction of masks, which is
@@ -131,6 +139,19 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                         f'{ref_prefix}pad_shape':
                         pad_shape
                     })
+                if self.pad_mask:
+                    self.pad_gt_masks(batch_data_samples, ref_prefix)
+
+        if training and self.batch_augments is not None:
+            for batch_aug in self.batch_augments:
+                # Only yolox need batch_aug, and yolox can only process
+                # `img` key. Therefore, only img is processed here.
+                # The shape of `img` is (N, T, C, H, W), hence, we use
+                # [:, 0] to change the shape to (N, C, H, W).
+                assert len(batch_inputs) == 1 and 'img' in batch_inputs
+                aug_batch_inputs, batch_data_samples = batch_aug(
+                    batch_inputs['img'][:, 0], batch_data_samples)
+                batch_inputs['img'] = aug_batch_inputs.unsqueeze(1)
 
         return batch_inputs, batch_data_samples
 
@@ -193,3 +214,18 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                 pad_shape.append((pad_h, pad_w))
             batch_pad_shape[imgs_key] = pad_shape
         return batch_pad_shape
+
+    def pad_gt_masks(self, batch_data_samples: Sequence[TrackDataSample],
+                     ref_prefix: str) -> None:
+        """Pad gt_masks to shape of batch_input_shape."""
+        if 'masks' in batch_data_samples[0].get(f'{ref_prefix}gt_instances'):
+            for data_samples in batch_data_samples:
+                masks = data_samples.get(f'{ref_prefix}gt_instances').masks
+                h, w = masks.shape[-2:]
+                pad_h, pad_w = data_samples.get(
+                    f'{ref_prefix}batch_input_shape')
+                data_samples.get(f'{ref_prefix}gt_instances').masks = F.pad(
+                    masks,
+                    pad=(0, pad_w - w, 0, pad_h - h),
+                    mode='constant',
+                    value=self.mask_pad_value)

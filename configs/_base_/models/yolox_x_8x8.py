@@ -2,11 +2,19 @@
 img_scale = (640, 640)
 
 model = dict(
+    data_preprocessor=dict(
+        type='TrackDataPreprocessor',
+        pad_size_divisor=32,
+        batch_augments=[
+            dict(
+                type='mmdet.BatchSyncRandomResize',
+                random_size_range=(480, 800),
+                size_divisor=32,
+                interval=10)
+        ]),
     detector=dict(
+        _scope_='mmdet',
         type='YOLOX',
-        input_size=img_scale,
-        random_size_range=(15, 25),
-        random_size_interval=10,
         backbone=dict(
             type='CSPDarknet', deepen_factor=1.33, widen_factor=1.25),
         neck=dict(

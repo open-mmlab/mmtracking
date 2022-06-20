@@ -80,3 +80,28 @@ class TestTrackDataPreprocessor(TestCase):
                                                               (10, 25)]):
             self.assertEqual(data_sample.pad_shape, expected_shape)
             self.assertEqual(data_sample.search_pad_shape, expected_shape)
+
+        # test pad_mask=True
+        data = _demo_mm_inputs(
+            batch_size=2,
+            frame_id=0,
+            num_key_imgs=1,
+            ref_prefix='search',
+            image_shapes=[(1, 3, 10, 11), (1, 3, 9, 24)],
+            num_items=[1, 1],
+            with_mask=True)
+        processor = TrackDataPreprocessor(pad_mask=True, mask_pad_value=0)
+        mask_pad_sums = [
+            x['data_sample'].gt_instances.masks.sum() for x in data
+        ]
+        inputs, data_samples = processor(data)
+        for data_sample, expected_shape, mask_pad_sum in zip(
+                data_samples, [(10, 24), (10, 24)], mask_pad_sums):
+            self.assertEqual(data_sample.gt_instances.masks.shape[-2:],
+                             expected_shape)
+            self.assertEqual(data_sample.gt_instances.masks.sum(),
+                             mask_pad_sum)
+            self.assertEqual(data_sample.search_gt_instances.masks.shape[-2:],
+                             expected_shape)
+            self.assertEqual(data_sample.search_gt_instances.masks.sum(),
+                             mask_pad_sum)

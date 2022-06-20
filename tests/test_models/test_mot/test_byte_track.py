@@ -1,85 +1,92 @@
-# # Copyright (c) OpenMMLab. All rights reserved.
-# import unittest
-# from unittest import TestCase
+# Copyright (c) OpenMMLab. All rights reserved.
+import time
+import unittest
+from unittest import TestCase
 
-# import torch
-# from parameterized import parameterized
+import torch
+from mmengine.logging import MessageHub
+from parameterized import parameterized
 
-# from mmtrack.registry import MODELS
-# from mmtrack.utils import register_all_modules
-# from ..utils import _demo_mm_inputs, _get_model_cfg
+from mmtrack.registry import MODELS
+from mmtrack.utils import register_all_modules
+from ..utils import _demo_mm_inputs, _get_model_cfg
 
-# class TestByteTrack(TestCase):
 
-#     @classmethod
-#     def setUpClass(cls):
-#         register_all_modules(init_default_scope=True)
+class TestByteTrack(TestCase):
 
-#     @parameterized.expand([
-#         'mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
-#     ])
-#     def test_bytetrack_init(self, cfg_file):
-#         model = _get_model_cfg(cfg_file)
+    @classmethod
+    def setUpClass(cls):
+        register_all_modules(init_default_scope=True)
 
-#         model = MODELS.build(model)
-#         assert model.detector
-#         assert model.motion
-#         assert model.device.type == 'cpu'
+    @parameterized.expand([
+        'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
+    ])
+    def test_bytetrack_init(self, cfg_file):
+        model = _get_model_cfg(cfg_file)
 
-#     @parameterized.expand([
-#         ('mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
-#          ('cpu', 'cuda')),
-#     ])
-#     def test_bytetrack_forward_train(self, cfg_file, devices):
-#         _model = _get_model_cfg(cfg_file)
+        model = MODELS.build(model)
+        assert model.detector
+        assert model.motion
 
-#         assert all([device in ['cpu', 'cuda'] for device in devices])
+    @parameterized.expand([
+        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
+         ('cpu', 'cuda')),
+    ])
+    def test_bytetrack_forward_loss_mode(self, cfg_file, devices):
+        message_hub = MessageHub.get_instance(
+            f'test_bytetrack_forward_loss_mode-{time.time()}')
+        message_hub.update_info('iter', 0)
+        message_hub.update_info('epoch', 0)
+        assert all([device in ['cpu', 'cuda'] for device in devices])
 
-#         for device in devices:
-#             model = MODELS.build(_model)
+        for device in devices:
+            _model = _get_model_cfg(cfg_file)
+            # _scope_ will be popped after build
+            model = MODELS.build(_model)
 
-#             if device == 'cuda':
-#                 if not torch.cuda.is_available():
-#                     return unittest.skip('test requires GPU and torch+cuda')
-#                 model = model.cuda()
+            if device == 'cuda':
+                if not torch.cuda.is_available():
+                    return unittest.skip('test requires GPU and torch+cuda')
+                model = model.cuda()
 
-#             assert model.device.type == device
+            packed_inputs = _demo_mm_inputs(
+                batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
+            batch_inputs, batch_data_samples = model.data_preprocessor(
+                packed_inputs, True)
+            # Test forward
+            losses = model.forward(
+                batch_inputs, batch_data_samples, mode='loss')
+            assert isinstance(losses, dict)
 
-#             packed_inputs = _demo_mm_inputs(
-#                 batch_size=1, frame_id=0, num_ref_imgs=0)
+    @parameterized.expand([
+        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
+         ('cpu', 'cuda')),
+    ])
+    def test_bytetrack_forward_predict_mode(self, cfg_file, devices):
+        message_hub = MessageHub.get_instance(
+            f'test_bytetrack_forward_predict_mode-{time.time()}')
+        message_hub.update_info('iter', 0)
+        message_hub.update_info('epoch', 0)
 
-#             # Test forward train
-#             losses = model.forward(packed_inputs, return_loss=True)
-#             assert isinstance(losses, dict)
+        assert all([device in ['cpu', 'cuda'] for device in devices])
 
-#     @parameterized.expand([
-#         ('mot/bytetrack/bytetrack_retinanet_crowdhuman_mot17-private.py',
-#          ('cpu', 'cuda')),
-#     ])
-#     def test_bytetrack_simple_test(self, cfg_file, devices):
-#         _model = _get_model_cfg(cfg_file)
+        for device in devices:
+            _model = _get_model_cfg(cfg_file)
+            model = MODELS.build(_model)
 
-#         assert all([device in ['cpu', 'cuda'] for device in devices])
+            if device == 'cuda':
+                if not torch.cuda.is_available():
+                    return unittest.skip('test requires GPU and torch+cuda')
+                model = model.cuda()
 
-#         for device in devices:
-#             model = MODELS.build(_model)
+            packed_inputs = _demo_mm_inputs(
+                batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
+            batch_inputs, batch_data_samples = model.data_preprocessor(
+                packed_inputs, True)
 
-#             if device == 'cuda':
-#                 if not torch.cuda.is_available():
-#                     return unittest.skip('test requires GPU and torch+cuda')
-#                 model = model.cuda()
-
-#             assert model.device.type == device
-
-#             packed_inputs = _demo_mm_inputs(
-#                 batch_size=1, frame_id=0, num_ref_imgs=0)
-
-#             # Test forward test
-#             model.eval()
-#             with torch.no_grad():
-#                 for i in range(3):
-#                     packed_inputs = _demo_mm_inputs(
-#                         batch_size=1, frame_id=i, num_ref_imgs=0)
-#                     batch_results = model.forward(
-#                         packed_inputs, return_loss=False)
-#                     assert len(batch_results) == 1
+            # Test forward test
+            model.eval()
+            with torch.no_grad():
+                batch_results = model.forward(
+                    batch_inputs, batch_data_samples, mode='predict')
+                assert len(batch_results) == 1

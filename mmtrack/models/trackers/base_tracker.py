@@ -1,31 +1,28 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
 from addict import Dict
-from mmcv.runner import BaseModule
 
 
-class BaseTracker(BaseModule, metaclass=ABCMeta):
+class BaseTracker(metaclass=ABCMeta):
     """Base tracker model.
 
     Args:
         momentums (dict[str:float], optional): Momentums to update the buffers.
             The `str` indicates the name of the buffer while the `float`
-            indicates the momentum. Default to None.
+            indicates the momentum. Defaults to None.
         num_frames_retain (int, optional). If a track is disappeared more than
             `num_frames_retain` frames, it will be deleted in the memo.
-        init_cfg (dict or list[dict], optional): Initialization config dict.
-            Defaults to None.
+             Defaults to 10.
     """
 
     def __init__(self,
                  momentums: Optional[dict] = None,
-                 num_frames_retain: int = 10,
-                 init_cfg: Optional[Union[List[dict], dict]] = None) -> None:
-        super().__init__(init_cfg)
+                 num_frames_retain: int = 10) -> None:
+        super().__init__()
         if momentums is not None:
             assert isinstance(momentums, dict), 'momentums must be a dict'
         self.momentums = momentums
@@ -152,7 +149,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
 
         Args:
             item (str): The demanded item.
-            ids (list[int]): The demanded ids.
+            ids (list[int], optional): The demanded ids. Defaults to None.
             num_samples (int, optional): Number of samples to calculate the
                 results. Defaults to None.
             behavior (str, optional): Behavior to calculate the results.
@@ -183,7 +180,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
         return torch.cat(outs, dim=0)
 
     @abstractmethod
-    def forward(self, *args, **kwargs):
+    def track(self, *args, **kwargs):
         """Tracking forward function."""
         pass
 
