@@ -70,8 +70,8 @@ def main():
     # test and show/save the images
     for i, img in enumerate(imgs):
         if isinstance(img, str):
-            img = osp.join(args.input, img)
-            img = mmcv.imread(img)
+            img_path = osp.join(args.input, img)
+            img = mmcv.imread(img_path)
         if i == 0:
             if args.gt_bbox_file is not None:
                 bboxes = mmcv.list_from_file(args.gt_bbox_file)
@@ -88,7 +88,7 @@ def main():
             if IN_VIDEO or OUT_VIDEO:
                 out_file = osp.join(out_path, f'{i:06d}.jpg')
             else:
-                out_file = osp.join(out_path, img.rsplit('os.sep', 1)[-1])
+                out_file = osp.join(out_path, img_path.rsplit(os.sep, 1)[-1])
         else:
             out_file = None
         model.show_result(
