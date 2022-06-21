@@ -2,6 +2,7 @@
 import logging
 import os
 import tempfile
+from typing import Optional, Union
 
 import mmcv
 import numpy as np
@@ -10,28 +11,34 @@ from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 from mmdet.datasets.pipelines import Compose
+from mmengine.logging import MMLogger
+from torch import nn
 
-from mmtrack.models import build_model
+from mmtrack.core.utils import SampleList
+from mmtrack.registry import MODELS
 
 
-def init_model(config,
-               checkpoint=None,
-               device='cuda:0',
-               cfg_options=None,
-               verbose_init_params=False):
+def init_model(config: Union[str, mmcv.Config],
+               checkpoint: Optional[str] = None,
+               device: str = 'cuda:0',
+               cfg_options: Optional[dict] = None,
+               verbose_init_params: bool = False) -> nn.Module:
     """Initialize a model from config file.
 
     Args:
         config (str or :obj:`mmcv.Config`): Config file path or the config
             object.
-        checkpoint (str, optional): Checkpoint path. Default as None.
-        cfg_options (dict, optional): Options to override some settings in
-            the used config. Default to None.
+        checkpoint (Optional[str], optional): Checkpoint path. Defaults to
+            None.
+        device (str, optional): The device that the model inferences on.
+            Defaults to `cuda:0`.
+        cfg_options (Optional[dict], optional): Options to override some
+            settings in the used config. Defaults to None.
         verbose_init_params (bool, optional): Whether to print the information
-            of initialized parameters to the console. Default to False.
+            of initialized parameters to the console. Defaults to False.
 
     Returns:
-        nn.Module: The constructed detector.
+        nn.Module: The constructed model.
     """
     if isinstance(config, str):
         config = mmcv.Config.fromfile(config)
@@ -42,7 +49,7 @@ def init_model(config,
         config.merge_from_dict(cfg_options)
     if 'detector' in config.model:
         config.model.detector.pretrained = None
-    model = build_model(config.model)
+    model = MODELS.build(config.model)
 
     if not verbose_init_params:
         # Creating a temporary file to record the information of initialized
@@ -51,12 +58,13 @@ def init_model(config,
         # `mmcv.runner.BaseModule.init_weights`.
         tmp_file = tempfile.NamedTemporaryFile(delete=False)
         file_handler = logging.FileHandler(tmp_file.name, mode='w')
-        model.logger.addHandler(file_handler)
+        logger = MMLogger.get_current_instance()
+        logger.addHandler(file_handler)
         # We need call `init_weights()` to load pretained weights in MOT
         # task.
         model.init_weights()
         file_handler.close()
-        model.logger.removeHandler(file_handler)
+        logger.removeHandler(file_handler)
         tmp_file.close()
         os.remove(tmp_file.name)
     else:
@@ -123,17 +131,18 @@ def inference_mot(model, img, frame_id):
     return result
 
 
-def inference_sot(model, image, init_bbox, frame_id):
+def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
+                  frame_id: int) -> SampleList:
     """Inference image with the single object tracker.
 
     Args:
         model (nn.Module): The loaded tracker.
-        image (ndarray): Loaded images.
-        init_bbox (ndarray): The target needs to be tracked.
+        image (np.ndarray): Loaded images.
+        init_bbox (np.ndarray): The target needs to be tracked.
         frame_id (int): frame id.
 
     Returns:
-        dict[str : ndarray]: The tracking results.
+        SampleList: The tracking data samples.
     """
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
@@ -141,25 +150,24 @@ def inference_sot(model, image, init_bbox, frame_id):
     data = dict(
         img=image.astype(np.float32),
         gt_bboxes=np.array(init_bbox).astype(np.float32),
-        img_info=dict(frame_id=frame_id))
+        frame_id=frame_id,
+        ori_shape=image.shape[:2])
     # remove the "LoadImageFromFile" and "LoadAnnotations" in pipeline
-    test_pipeline = Compose(cfg.data.test.pipeline[2:])
+    test_pipeline = Compose(cfg.test_dataloader.dataset.pipeline[2:])
     data = test_pipeline(data)
-    data = collate([data], samples_per_gpu=1)
-    if next(model.parameters()).is_cuda:
-        # scatter to specified GPU
-        data = scatter(data, [device])[0]
-    else:
+    data['data_sample'] = data['data_sample'].to(device)
+    for key, value in data['inputs'].items():
+        data['inputs'][key] = value.to(device)
+
+    if not next(model.parameters()).is_cuda:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-        # just get the actual data from DataContainer
-        data['img_metas'] = data['img_metas'][0].data
 
     # forward the model
     with torch.no_grad():
-        result = model.test_step(data)
+        result = model.test_step([data])
     return result
 
 
