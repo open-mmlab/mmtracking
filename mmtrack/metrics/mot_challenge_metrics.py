@@ -116,14 +116,13 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 gt_instances = data_sample['instances']
                 gt_strings = [
                     '%d,%d,%d,%d,%d,%d,%d,%d,%d\n' %
-                    (frame_id + 1, gt_instances['instances_id'][i],
-                     gt_instances['bboxes'][i][0],
-                     gt_instances['bboxes'][i][1],
-                     gt_instances['bboxes'][i][2],
-                     gt_instances['bboxes'][i][3], gt_instances['mot_conf'][i],
-                     gt_instances['mot_class_id'][i],
-                     gt_instances['visibility'][i])
-                    for i in range(len(gt_instances['instances_id']))
+                    (frame_id + 1, gt_instances[i]['instance_id'],
+                     gt_instances[i]['bbox'][0], gt_instances[i]['bbox'][1],
+                     gt_instances[i]['bbox'][2], gt_instances[i]['bbox'][3],
+                     gt_instances[i]['mot_conf'],
+                     gt_instances[i]['mot_class_id'],
+                     gt_instances[i]['visibility'])
+                    for i in range(len(gt_instances))
                 ]
                 self.seq_info[video]['gt_strings'].extend(gt_strings)
 
@@ -138,7 +137,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                     pred_instances['bboxes'][i][1],
                     pred_instances['bboxes'][i][2],
                     pred_instances['bboxes'][i][3],
-                    pred_instances['mot_conf'][i],
+                    pred_instances['scores'][i],
                 ) for i in range(len(pred_instances['instances_id']))
             ]
             self.seq_info[video]['pred_strings'].extend(pred_strings)

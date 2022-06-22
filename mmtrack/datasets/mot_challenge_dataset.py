@@ -28,11 +28,6 @@ class MOTChallengeDataset(BaseVideoDataset):
         self.detection_file = detection_file
         super().__init__(*args, **kwargs)
 
-    def load_detections(self):
-        """Load public detections."""
-        # TODO: wait for TrackDataSample to be written
-        pass
-
     def parse_data_info(self, raw_data_info: dict) -> Union[dict, List[dict]]:
         """Parse raw annotation to target format.
 
@@ -81,6 +76,9 @@ class MOTChallengeDataset(BaseVideoDataset):
             instance['bbox'] = bbox
             instance['bbox_label'] = self.cat2label[ann['category_id']]
             instance['instance_id'] = ann['instance_id']
+            instance['mot_class_id'] = ann['mot_class_id']
+            instance['mot_conf'] = ann['mot_conf']
+            instance['visibility'] = ann['visibility']
             if len(instance) > 0:
                 instances.append(instance)
         data_info['instances'] = instances

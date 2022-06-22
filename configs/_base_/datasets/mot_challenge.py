@@ -1,6 +1,6 @@
 # dataset settings
 dataset_type = 'MOTChallengeDataset'
-data_root = '../data/MOT17/'
+data_root = 'data/MOT17/'
 
 # data pipeline
 train_pipeline = [
@@ -38,8 +38,9 @@ train_pipeline = [
 # TODO: wait mmdet, MultiScaleFlipAug
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='LoadTrackAnnotations', with_instance_id=True),
     dict(type='mmdet.Resize', scale=(1088, 1088), keep_ratio=True),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 
 # dataloader

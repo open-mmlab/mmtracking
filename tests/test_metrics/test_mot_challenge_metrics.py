@@ -17,13 +17,23 @@ class TestMOTChallengeMetrics(TestCase):
 
     @staticmethod
     def _get_data_batch_demo():
-        gt_instances_data = dict(
-            bboxes=torch.tensor([[0, 0, 100, 100], [0, 0, 100, 100]]),
-            instances_id=torch.tensor([1, 2]),
-            mot_conf=torch.tensor([1.0, 1.0]),
-            mot_class_id=torch.tensor([1, 1]),
-            visibility=torch.tensor([1.0, 1.0]))
-        gt_instances = InstanceData(**gt_instances_data)
+        instances = [{
+            'bbox_label': 0,
+            'bbox': [0, 0, 100, 100],
+            'ignore_flag': 0,
+            'instance_id': 1,
+            'mot_conf': 1.0,
+            'mot_class_id': 1,
+            'visibility': 1.0
+        }, {
+            'bbox_label': 0,
+            'bbox': [0, 0, 100, 100],
+            'ignore_flag': 0,
+            'instance_id': 2,
+            'mot_conf': 1.0,
+            'mot_class_id': 1,
+            'visibility': 1.0
+        }]
         data_batch = [
             dict(
                 data_sample={
@@ -31,7 +41,7 @@ class TestMOTChallengeMetrics(TestCase):
                     'video_length': 1,
                     'img_id': 1,
                     'img_path': r'xxx/MOT17-09-DPM/img1/000001.jpg',
-                    'instances': gt_instances
+                    'instances': instances
                 })
         ]
         return data_batch
@@ -44,7 +54,7 @@ class TestMOTChallengeMetrics(TestCase):
                 [0, 0, 100, 40],
             ]),
             instances_id=torch.tensor([1, 2]),
-            mot_conf=torch.tensor([1.0, 1.0]))
+            scores=torch.tensor([1.0, 1.0]))
         pred_instances = InstanceData(**pred_instances_data)
         predictions = [dict(pred_track_instances=pred_instances)]
         return predictions
