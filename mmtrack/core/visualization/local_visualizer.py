@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import random
 from typing import Dict, Optional, Union
 
 import mmcv
@@ -18,9 +17,9 @@ from mmtrack.registry import VISUALIZERS
 
 def random_color(seed):
     """Random a color according to the input seed."""
-    random.seed(seed)
+    np.random.seed(seed)
     colors = sns.color_palette()
-    color = random.choice(colors)
+    color = colors[np.random.choice(range(len(colors)))]
     color = tuple([int(255 * c) for c in color])
     return color
 

@@ -205,13 +205,16 @@ class BaseTracker(metaclass=ABCMeta):
         Returns:
             Tensor: Image tensor of shape (T, C, H, W).
         """
-        h, w, _ = meta_info['img_shape']
+        h, w = meta_info['img_shape']
         img = img[:, :, :h, :w]
         if rescale:
-            bboxes[:, :4] *= torch.tensor(meta_info['scale_factor']).to(
-                bboxes.device)
-        bboxes[:, 0::2] = torch.clamp(bboxes[:, 0::2], min=0, max=w)
-        bboxes[:, 1::2] = torch.clamp(bboxes[:, 1::2], min=0, max=h)
+            factor_x, factor_y = meta_info['scale_factor']
+            bboxes[:, :4] *= torch.tensor(
+                [factor_x, factor_y, factor_x, factor_y]).to(bboxes.device)
+        bboxes[:, 0] = torch.clamp(bboxes[:, 0], min=0, max=w - 1)
+        bboxes[:, 1] = torch.clamp(bboxes[:, 1], min=0, max=h - 1)
+        bboxes[:, 2] = torch.clamp(bboxes[:, 2], min=1, max=w)
+        bboxes[:, 3] = torch.clamp(bboxes[:, 3], min=1, max=h)
 
         crop_imgs = []
         for bbox in bboxes:
@@ -231,5 +234,8 @@ class BaseTracker(metaclass=ABCMeta):
 
         if len(crop_imgs) > 0:
             return torch.cat(crop_imgs, dim=0)
+        elif self.reid.get('img_scale', False):
+            _h, _w = self.reid['img_scale']
+            return img.new_zeros((0, 3, _h, _w))
         else:
-            return img.new_zeros((0, ))
+            return img.new_zeros((0, 3, h, w))

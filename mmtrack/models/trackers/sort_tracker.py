@@ -1,25 +1,28 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import List, Tuple
+
 import numpy as np
 import torch
-from mmcv.runner import force_fp32
 from mmdet.core import bbox_overlaps
+from mmengine.data import InstanceData
 from motmetrics.lap import linear_sum_assignment
+from torch import Tensor
 
-from mmtrack.core import imrenormalize
+from mmtrack.core import TrackDataSample, imrenormalize
 from mmtrack.core.bbox import bbox_xyxy_to_cxcyah
-from mmtrack.models import TRACKERS
+from mmtrack.core.utils import OptConfigType
+from mmtrack.registry import MODELS
 from .base_tracker import BaseTracker
 
 
-@TRACKERS.register_module()
-class SortTracker(BaseTracker):
-    """Tracker for DeepSORT.
+@MODELS.register_module()
+class SORTTracker(BaseTracker):
+    """Tracker for SORT/DeepSORT.
 
     Args:
         obj_score_thr (float, optional): Threshold to filter the objects.
             Defaults to 0.3.
         reid (dict, optional): Configuration for the ReID model.
-
             - num_samples (int, optional): Number of samples to calculate the
                 feature embeddings of a track. Default to 10.
             - image_scale (tuple, optional): Input scale of the ReID model.
@@ -32,34 +35,31 @@ class SortTracker(BaseTracker):
             Defaults to 0.7.
         num_tentatives (int, optional): Number of continuous frames to confirm
             a track. Defaults to 3.
-        init_cfg (dict or list[dict], optional): Initialization config dict.
-            Defaults to None.
     """
 
     def __init__(self,
-                 obj_score_thr=0.3,
-                 reid=dict(
+                 obj_score_thr: float = 0.3,
+                 reid: dict = dict(
                      num_samples=10,
                      img_scale=(256, 128),
                      img_norm_cfg=None,
                      match_score_thr=2.0),
-                 match_iou_thr=0.7,
-                 num_tentatives=3,
-                 init_cfg=None,
+                 match_iou_thr: float = 0.7,
+                 num_tentatives: int = 3,
                  **kwargs):
-        super().__init__(init_cfg=init_cfg, **kwargs)
+        super().__init__(**kwargs)
         self.obj_score_thr = obj_score_thr
         self.reid = reid
         self.match_iou_thr = match_iou_thr
         self.num_tentatives = num_tentatives
 
     @property
-    def confirmed_ids(self):
+    def confirmed_ids(self) -> List:
         """Confirmed ids in the tracker."""
         ids = [id for id, track in self.tracks.items() if not track.tentative]
         return ids
 
-    def init_track(self, id, obj):
+    def init_track(self, id: int, obj: Tuple[Tensor]) -> None:
         """Initialize a track."""
         super().init_track(id, obj)
         self.tracks[id].tentative = True
@@ -69,7 +69,7 @@ class SortTracker(BaseTracker):
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.initiate(
             bbox)
 
-    def update_track(self, id, obj):
+    def update_track(self, id: int, obj: Tuple[Tensor]) -> None:
         """Update a track."""
         super().update_track(id, obj)
         if self.tracks[id].tentative:
@@ -81,7 +81,7 @@ class SortTracker(BaseTracker):
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
-    def pop_invalid_tracks(self, frame_id):
+    def pop_invalid_tracks(self, frame_id: int) -> None:
         """Pop out invalid tracks."""
         invalid_ids = []
         for k, v in self.tracks.items():
@@ -94,48 +94,63 @@ class SortTracker(BaseTracker):
         for invalid_id in invalid_ids:
             self.tracks.pop(invalid_id)
 
-    @force_fp32(apply_to=('img', ))
     def track(self,
-              img,
-              img_metas,
-              model,
-              bboxes,
-              labels,
-              frame_id,
-              rescale=False,
-              **kwargs):
+              model: torch.nn.Module,
+              img: Tensor,
+              feats: List[Tensor],
+              data_sample: TrackDataSample,
+              data_preprocessor: OptConfigType = None,
+              rescale: bool = False,
+              **kwargs) -> TrackDataSample:
         """Tracking forward function.
 
         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
-                Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
             model (nn.Module): MOT model.
-            bboxes (Tensor): of shape (N, 5).
-            labels (Tensor): of shape (N, ).
-            frame_id (int): The id of current frame, 0-index.
+            img (Tensor): of shape (T, C, H, W) encoding input image.
+                Typically these should be mean centered and std scaled.
+                The T denotes the number of key images and usually is 1 in
+                ByteTrack method.
+            feats (list[Tensor]): Multi level feature maps of `img`.
+            data_sample (:obj:`TrackDataSample`): The data sample.
+                It includes information such as `pred_det_instances`.
+            data_preprocessor (dict or ConfigDict, optional): The pre-process
+               config of :class:`TrackDataPreprocessor`.  it usually includes,
+                ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
             rescale (bool, optional): If True, the bounding boxes should be
                 rescaled to fit the original scale of the image. Defaults to
                 False.
 
         Returns:
-            tuple: Tracking results.
+            :obj:`TrackDataSample`: Tracking results of the input images.
+            Each TrackDataSample usually contains ``pred_det_instances``
+            or ``pred_track_instances``.
         """
+        metainfo = data_sample.metainfo
+        bboxes = data_sample.pred_det_instances.bboxes
+        labels = data_sample.pred_det_instances.labels
+        scores = data_sample.pred_det_instances.scores
+
+        frame_id = metainfo.get('frame_id', -1)
+        if frame_id == 0:
+            self.reset()
         if not hasattr(self, 'kf'):
             self.kf = model.motion
 
         if self.with_reid:
             if self.reid.get('img_norm_cfg', False):
-                reid_img = imrenormalize(img, img_metas[0]['img_norm_cfg'],
+                img_norm_cfg = dict(
+                    mean=data_preprocessor['mean'],
+                    std=data_preprocessor['std'],
+                    to_bgr=data_preprocessor['rgb_to_bgr'])
+                reid_img = imrenormalize(img, img_norm_cfg,
                                          self.reid['img_norm_cfg'])
             else:
                 reid_img = img.clone()
 
-        valid_inds = bboxes[:, -1] > self.obj_score_thr
+        valid_inds = scores > self.obj_score_thr
         bboxes = bboxes[valid_inds]
         labels = labels[valid_inds]
+        scores = scores[valid_inds]
 
         if self.empty or bboxes.size(0) == 0:
             num_new_tracks = bboxes.size(0)
@@ -145,9 +160,9 @@ class SortTracker(BaseTracker):
                 dtype=torch.long)
             self.num_tracks += num_new_tracks
             if self.with_reid:
-                embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
-                                   rescale))
+                crops = self.crop_imgs(reid_img, metainfo, bboxes.clone(),
+                                       rescale)
+                embeds = model.reid(crops, mode='tensor')
         else:
             ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
 
@@ -158,9 +173,10 @@ class SortTracker(BaseTracker):
 
             active_ids = self.confirmed_ids
             if self.with_reid:
-                embeds = model.reid.simple_test(
-                    self.crop_imgs(reid_img, img_metas, bboxes[:, :4].clone(),
-                                   rescale))
+                crops = self.crop_imgs(reid_img, metainfo, bboxes.clone(),
+                                       rescale)
+                embeds = model.reid(crops, mode='tensor')
+
                 # reid
                 if len(active_ids) > 0:
                     track_embeds = self.get(
@@ -189,8 +205,8 @@ class SortTracker(BaseTracker):
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)
-                ious = bbox_overlaps(
-                    track_bboxes, bboxes[active_dets][:, :-1]).cpu().numpy()
+                ious = bbox_overlaps(track_bboxes,
+                                     bboxes[active_dets]).cpu().numpy()
                 dists = 1 - ious
                 row, col = linear_sum_assignment(dists)
                 for r, c in zip(row, col):
@@ -207,9 +223,18 @@ class SortTracker(BaseTracker):
 
         self.update(
             ids=ids,
-            bboxes=bboxes[:, :4],
-            scores=bboxes[:, -1],
+            bboxes=bboxes,
+            scores=scores,
             labels=labels,
             embeds=embeds if self.with_reid else None,
             frame_ids=frame_id)
-        return bboxes, labels, ids
+
+        # update pred_track_instances
+        pred_track_instances = InstanceData()
+        pred_track_instances.bboxes = bboxes
+        pred_track_instances.labels = labels
+        pred_track_instances.scores = scores
+        pred_track_instances.instances_id = ids
+        data_sample.pred_track_instances = pred_track_instances
+
+        return data_sample

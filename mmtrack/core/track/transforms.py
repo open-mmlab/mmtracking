@@ -1,11 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Union
+
 import mmcv
 import numpy as np
 import torch
 from mmdet.core import bbox2result
+from torch import Tensor
 
 
-def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+def imrenormalize(img: Union[Tensor, np.ndarray], img_norm_cfg: dict,
+                  new_img_norm_cfg: dict) -> Union[Tensor, np.ndarray]:
     """Re-normalize the image.
 
     Args:
@@ -29,7 +33,8 @@ def imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
         return _imrenormalize(img, img_norm_cfg, new_img_norm_cfg)
 
 
-def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
+def _imrenormalize(img: Union[Tensor, np.ndarray], img_norm_cfg: dict,
+                   new_img_norm_cfg: dict) -> Union[Tensor, np.ndarray]:
     """Re-normalize the image."""
     img_norm_cfg = img_norm_cfg.copy()
     new_img_norm_cfg = new_img_norm_cfg.copy()
@@ -37,9 +42,9 @@ def _imrenormalize(img, img_norm_cfg, new_img_norm_cfg):
         if (k == 'mean' or k == 'std') and not isinstance(v, np.ndarray):
             img_norm_cfg[k] = np.array(v, dtype=img.dtype)
     # reverse cfg
-    if 'to_rgb' in img_norm_cfg:
-        img_norm_cfg['to_bgr'] = img_norm_cfg['to_rgb']
-        img_norm_cfg.pop('to_rgb')
+    if 'bgr_to_rgb' in img_norm_cfg:
+        img_norm_cfg['rgb_to_bgr'] = img_norm_cfg['bgr_to_rgb']
+        img_norm_cfg.pop('bgr_to_rgb')
     for k, v in new_img_norm_cfg.items():
         if (k == 'mean' or k == 'std') and not isinstance(v, np.ndarray):
             new_img_norm_cfg[k] = np.array(v, dtype=img.dtype)

@@ -15,15 +15,10 @@ model = dict(
         )),
     motion=dict(type='KalmanFilter', center_only=False),
     tracker=dict(
-        type='SortTracker', obj_score_thr=0.5, match_iou_thr=0.5, reid=None))
-# learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=100,
-    warmup_ratio=1.0 / 100,
-    step=[3])
-# runtime settings
-total_epochs = 4
-evaluation = dict(metric=['bbox', 'track'], interval=1)
-search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+        type='SORTTracker', obj_score_thr=0.5, match_iou_thr=0.5, reid=None))
+
+train_dataloader = None
+
+train_cfg = None
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')

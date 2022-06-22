@@ -187,7 +187,7 @@ class DFF(BaseVideoDetector):
                 as ``gt_instances`` and 'metainfo'.
             rescale (bool, Optional): If False, then returned bboxes and masks
                 will fit the scale of img, otherwise, returned bboxes and masks
-                will fit the scale of original image shape. Defaults to False.
+                will fit the scale of original image shape. Defaults to True.
 
         Returns:
             SampleList: Tracking results of the input images.
@@ -226,7 +226,6 @@ class DFF(BaseVideoDetector):
         elif hasattr(self.detector, 'bbox_head'):
             results_list = self.detector.bbox_head.predict(
                 x, batch_data_samples, rescale=rescale)
-
             track_data_sample.pred_det_instances = results_list[0]
         else:
             raise TypeError('detector must has roi_head or bbox_head.')

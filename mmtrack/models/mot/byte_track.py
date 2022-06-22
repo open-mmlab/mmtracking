@@ -20,6 +20,9 @@ class ByteTrack(BaseMultiObjectTracker):
         detector (dict): Configuration of detector. Defaults to None.
         tracker (dict): Configuration of tracker. Defaults to None.
         motion (dict): Configuration of motion. Defaults to None.
+            data_preprocessor (dict or ConfigDict, optional): The pre-process
+           config of :class:`TrackDataPreprocessor`.  it usually includes,
+            ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
         init_cfg (dict or list[dict]): Configuration of initialization.
             Defaults to None.
     """
