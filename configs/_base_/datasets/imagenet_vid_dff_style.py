@@ -13,7 +13,7 @@ train_pipeline = [
             dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
             dict(type='RandomFlip', prob=0.5),
         ]),
-    dict(type='PackTrackInputs', ref_prefix='ref', num_key_frames=1)
+    dict(type='PackTrackInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),

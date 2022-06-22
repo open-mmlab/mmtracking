@@ -1,13 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import List, Optional, Union
+
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmcv.runner import BaseModule
 
-from ..builder import AGGREGATORS
+from mmtrack.registry import MODELS
 
 
-@AGGREGATORS.register_module()
+@MODELS.register_module()
 class EmbedAggregator(BaseModule):
     """Embedding convs to aggregate multi feature maps.
 
@@ -27,12 +29,12 @@ class EmbedAggregator(BaseModule):
     """
 
     def __init__(self,
-                 num_convs=1,
-                 channels=256,
-                 kernel_size=3,
-                 norm_cfg=None,
-                 act_cfg=dict(type='ReLU'),
-                 init_cfg=None):
+                 num_convs: int = 1,
+                 channels: int = 256,
+                 kernel_size: int = 3,
+                 norm_cfg: Optional[dict] = None,
+                 act_cfg: dict = dict(type='ReLU'),
+                 init_cfg: Optional[Union[dict, List[dict]]] = None):
         super(EmbedAggregator, self).__init__(init_cfg)
         assert num_convs > 0, 'The number of convs must be bigger than 1.'
         self.embed_convs = nn.ModuleList()
@@ -52,7 +54,7 @@ class EmbedAggregator(BaseModule):
                     norm_cfg=new_norm_cfg,
                     act_cfg=new_act_cfg))
 
-    def forward(self, x, ref_x):
+    def forward(self, x: torch.Tensor, ref_x: torch.Tensor) -> torch.Tensor:
         """Aggregate reference feature maps `ref_x`.
 
         The aggregation mainly contains two steps:
@@ -62,7 +64,7 @@ class EmbedAggregator(BaseModule):
 
         Args:
             x (Tensor): of shape [1, C, H, W]
-            ref_x (Tensor): of shape [N, C, H, W]. N is the number of reference
+            ref_x (Tensor): of shape [T, C, H, W]. T is the number of reference
                 feature maps.
 
         Returns:

@@ -235,7 +235,7 @@ class PackTrackInputs(BaseTransform):
     Args:
         ref_prefix (str): The prefix of key added to the 'reference' frames.
             Defaults to 'ref'.
-        num_key_frames (int): The number of key frames.
+        num_key_frames (int): The number of key frames. Defaults to 1.
         num_template_frames (optional, int): The number of template frames. It
             is only used for training in SOT.
         pack_single_img (bool, optional): Whether to only pack single image. If

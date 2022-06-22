@@ -1,80 +1,92 @@
 # dataset settings
 dataset_type = 'ImagenetVIDDataset'
 data_root = 'data/ILSVRC/'
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+
+# data pipeline
 train_pipeline = [
-    dict(type='LoadMultiImagesFromFile'),
-    dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
-    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
-    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.5),
-    dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=16),
     dict(
-        type='VideoCollect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids']),
-    dict(type='ConcatVideoReferences'),
-    dict(type='SeqDefaultFormatBundle', ref_prefix='ref')
+        type='TransformBroadcaster',
+        share_random_params=True,
+        transforms=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadTrackAnnotations', with_instance_id=True),
+            dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
+            dict(type='RandomFlip', prob=0.5),
+        ]),
+    dict(type='PackTrackInputs')
 ]
 test_pipeline = [
-    dict(type='LoadMultiImagesFromFile'),
-    dict(type='SeqResize', img_scale=(1000, 600), keep_ratio=True),
-    dict(type='SeqRandomFlip', share_params=True, flip_ratio=0.0),
-    dict(type='SeqNormalize', **img_norm_cfg),
-    dict(type='SeqPad', size_divisor=16),
     dict(
-        type='VideoCollect',
-        keys=['img'],
-        meta_keys=('num_left_ref_imgs', 'frame_stride')),
-    dict(type='ConcatVideoReferences'),
-    dict(type='MultiImagesToTensor', ref_prefix='ref'),
-    dict(type='ToList')
+        type='TransformBroadcaster',
+        share_random_params=True,
+        transforms=[
+            dict(type='LoadImageFromFile'),
+            dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
+        ]),
+    dict(type='PackTrackInputs')
 ]
-data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=2,
-    train=[
-        dict(
-            type=dataset_type,
-            ann_file=data_root + 'annotations/imagenet_vid_train.json',
-            img_prefix=data_root + 'Data/VID',
-            ref_img_sampler=dict(
-                num_ref_imgs=2,
-                frame_range=9,
-                filter_key_img=True,
-                method='bilateral_uniform'),
-            pipeline=train_pipeline),
-        dict(
-            type=dataset_type,
-            load_as_video=False,
-            ann_file=data_root + 'annotations/imagenet_det_30plus1cls.json',
-            img_prefix=data_root + 'Data/DET',
-            ref_img_sampler=dict(
-                num_ref_imgs=2,
-                frame_range=0,
-                filter_key_img=False,
-                method='bilateral_uniform'),
-            pipeline=train_pipeline)
-    ],
-    val=dict(
+
+# dataloader
+train_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
+    dataset=dict(
+        type='ConcatDataset',
+        datasets=[
+            dict(
+                type=dataset_type,
+                data_root=data_root,
+                ann_file='annotations/imagenet_vid_train.json',
+                data_prefix=dict(img_path='Data/VID'),
+                filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                pipeline=train_pipeline,
+                load_as_video=True,
+                ref_img_sampler=dict(
+                    num_ref_imgs=2,
+                    frame_range=9,
+                    filter_key_img=True,
+                    method='bilateral_uniform')),
+            dict(
+                type=dataset_type,
+                data_root=data_root,
+                ann_file='annotations/imagenet_det_30plus1cls.json',
+                data_prefix=dict(img_path='Data/DET'),
+                filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                pipeline=train_pipeline,
+                load_as_video=False,
+                ref_img_sampler=dict(
+                    num_ref_imgs=2,
+                    frame_range=0,
+                    filter_key_img=False,
+                    method='bilateral_uniform'))
+        ]))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/imagenet_vid_val.json',
-        img_prefix=data_root + 'Data/VID',
+        data_root=data_root,
+        ann_file='annotations/imagenet_vid_val.json',
+        data_prefix=dict(img_path='Data/VID'),
+        pipeline=test_pipeline,
+        load_as_video=True,
         ref_img_sampler=dict(
             num_ref_imgs=30,
             frame_range=[-15, 15],
             stride=1,
             method='test_with_fix_stride'),
-        pipeline=test_pipeline,
-        test_mode=True),
-    test=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/imagenet_vid_val.json',
-        img_prefix=data_root + 'Data/VID',
-        ref_img_sampler=dict(
-            num_ref_imgs=30,
-            frame_range=[-15, 15],
-            stride=1,
-            method='test_with_fix_stride'),
-        pipeline=test_pipeline,
         test_mode=True))
+test_dataloader = val_dataloader
+
+# evaluator
+val_evaluator = dict(
+    type='CocoVideoMetric',
+    ann_file=data_root + 'annotations/imagenet_vid_val.json',
+    metric='bbox')
+test_evaluator = val_evaluator
