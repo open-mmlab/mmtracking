@@ -72,7 +72,7 @@ Models:
       - Task: Multi-object Tracking
         Dataset: TAO
         Metrics:
-          AP: 0
-          AP50: 0
-          AP75: 0
+          AP: 11.0
+          AP50: 15.8
+          AP75: 6.1
     Weights: https://download.openmmlab.com/mmtracking/mot/qdtrack/mot_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth
