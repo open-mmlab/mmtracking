@@ -1,12 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 
 
-def embed_similarity(key_embeds,
-                     ref_embeds,
-                     method='dot_product',
-                     temperature=-1):
+def embed_similarity(key_embeds: Tensor,
+                     ref_embeds: Tensor,
+                     method: str = 'dot_product',
+                     temperature: int = -1) -> Tensor:
     """Calculate feature similarity from embeddings.
 
     Args:

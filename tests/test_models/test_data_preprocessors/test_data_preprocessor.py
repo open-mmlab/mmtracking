@@ -92,16 +92,17 @@ class TestTrackDataPreprocessor(TestCase):
             with_mask=True)
         processor = TrackDataPreprocessor(pad_mask=True, mask_pad_value=0)
         mask_pad_sums = [
-            x['data_sample'].gt_instances.masks.sum() for x in data
+            x['data_sample'].gt_instances.masks.masks.sum() for x in data
         ]
         inputs, data_samples = processor(data)
         for data_sample, expected_shape, mask_pad_sum in zip(
                 data_samples, [(10, 24), (10, 24)], mask_pad_sums):
-            self.assertEqual(data_sample.gt_instances.masks.shape[-2:],
+            self.assertEqual(data_sample.gt_instances.masks.masks.shape[-2:],
                              expected_shape)
-            self.assertEqual(data_sample.gt_instances.masks.sum(),
+            self.assertEqual(data_sample.gt_instances.masks.masks.sum(),
                              mask_pad_sum)
-            self.assertEqual(data_sample.search_gt_instances.masks.shape[-2:],
-                             expected_shape)
-            self.assertEqual(data_sample.search_gt_instances.masks.sum(),
+            self.assertEqual(
+                data_sample.search_gt_instances.masks.masks.shape[-2:],
+                expected_shape)
+            self.assertEqual(data_sample.search_gt_instances.masks.masks.sum(),
                              mask_pad_sum)

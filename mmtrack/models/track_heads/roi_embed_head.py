@@ -1,18 +1,21 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from collections import defaultdict
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
-from mmcv.runner import BaseModule, auto_fp16, force_fp32
-from mmdet.models import HEADS, build_loss
+from mmdet.core.bbox import SamplingResult
 from mmdet.models.losses import accuracy
+from mmengine.model import BaseModule
+from torch import Tensor
 from torch.nn.modules.utils import _pair
 
 from mmtrack.core import embed_similarity
+from mmtrack.registry import MODELS
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class RoIEmbedHead(BaseModule):
     """The roi embed head.
 
@@ -42,20 +45,20 @@ class RoIEmbedHead(BaseModule):
     """
 
     def __init__(self,
-                 num_convs=0,
-                 num_fcs=0,
-                 roi_feat_size=7,
-                 in_channels=256,
-                 conv_out_channels=256,
-                 with_avg_pool=False,
-                 fc_out_channels=1024,
-                 conv_cfg=None,
-                 norm_cfg=None,
-                 loss_match=dict(
-                     type='CrossEntropyLoss',
+                 num_convs: int = 0,
+                 num_fcs: int = 0,
+                 roi_feat_size: int = 7,
+                 in_channels: int = 256,
+                 conv_out_channels: int = 256,
+                 with_avg_pool: bool = False,
+                 fc_out_channels: int = 1024,
+                 conv_cfg: Optional[dict] = None,
+                 norm_cfg: Optional[dict] = None,
+                 loss_match: dict = dict(
+                     type='mmdet.CrossEntropyLoss',
                      use_sigmoid=False,
                      loss_weight=1.0),
-                 init_cfg=None,
+                 init_cfg: Optional[dict] = None,
                  **kwargs):
         super(RoIEmbedHead, self).__init__(init_cfg=init_cfg)
         self.num_convs = num_convs
@@ -68,7 +71,7 @@ class RoIEmbedHead(BaseModule):
         self.fc_out_channels = fc_out_channels
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
-        self.loss_match = build_loss(loss_match)
+        self.loss_match = MODELS.build(loss_match)
         self.fp16_enabled = False
 
         if self.with_avg_pool:
@@ -78,8 +81,9 @@ class RoIEmbedHead(BaseModule):
             self.num_convs, self.num_fcs, self.in_channels)
         self.relu = nn.ReLU(inplace=True)
 
-    def _add_conv_fc_branch(self, num_branch_convs, num_branch_fcs,
-                            in_channels):
+    def _add_conv_fc_branch(
+            self, num_branch_convs: int, num_branch_fcs: int,
+            in_channels: int) -> Tuple[nn.ModuleList, nn.ModuleList, int]:
         """Add shared or separable branch.
 
         convs -> avg pool (optional) -> fcs
@@ -119,8 +123,9 @@ class RoIEmbedHead(BaseModule):
     def custom_activation(self):
         return getattr(self.loss_match, 'custom_activation', False)
 
-    def _forward(self, x, num_x_per_img):
-        """Forward the input `x`, and split the output to a list.
+    def extract_feat(self, x: Tensor,
+                     num_x_per_img: List[int]) -> Tuple[Tensor]:
+        """Extract feature from the input `x`, and split the output to a list.
 
         Args:
             x (Tensor): of shape [N, C, H, W]. N is the number of proposals.
@@ -148,8 +153,10 @@ class RoIEmbedHead(BaseModule):
         x_split = torch.split(x, num_x_per_img, dim=0)
         return x_split
 
-    @auto_fp16(apply_to=('x', 'ref_x'))
-    def forward(self, x, ref_x, num_x_per_img, num_x_per_ref_img):
+    def forward(
+            self, x: Tensor, ref_x: Tensor, num_x_per_img: List[int],
+            num_x_per_ref_img: List[int]
+    ) -> Tuple[Tuple[Tensor], Tuple[Tensor]]:
         """Computing the similarity scores between `x` and `ref_x`.
 
         Args:
@@ -165,28 +172,22 @@ class RoIEmbedHead(BaseModule):
                 proposals for each reference image.
 
         Returns:
-            list[Tensor]: The predicted similarity_logits of each pair of key
-            image and reference image.
+            tuple[tuple[Tensor], tuple[Tensor]]: Each tuple of tensor denotes
+            the embed features belonging to an image in a batch.
         """
-        x_split = self._forward(x, num_x_per_img)
-        ref_x_split = self._forward(ref_x, num_x_per_ref_img)
+        x_split = self.extract_feat(x, num_x_per_img)
+        ref_x_split = self.extract_feat(ref_x, num_x_per_ref_img)
 
-        similarity_logits = []
-        for one_x, one_ref_x in zip(x_split, ref_x_split):
-            similarity_logit = embed_similarity(
-                one_x, one_ref_x, method='dot_product')
-            dummy = similarity_logit.new_zeros(one_x.shape[0], 1)
-            similarity_logit = torch.cat((dummy, similarity_logit), dim=1)
-            similarity_logits.append(similarity_logit)
-        return similarity_logits
+        return x_split, ref_x_split
 
-    def get_targets(self, sampling_results, gt_instance_ids,
-                    ref_gt_instance_ids):
+    def get_targets(self, sampling_results: List[SamplingResult],
+                    gt_instance_ids: List[Tensor],
+                    ref_gt_instance_ids: List[Tensor]) -> Tuple[List, List]:
         """Calculate the ground truth for all samples in a batch according to
         the sampling_results.
 
         Args:
-            sampling_results (List[obj:SamplingResults]): Assign results of
+            sampling_results (List[obj:SamplingResult]): Assign results of
                 all images in a batch after sampling.
             gt_instance_ids (list[Tensor]): The instance ids of gt_bboxes of
                 all images in a batch, each tensor has shape (num_gt, ).
@@ -227,35 +228,92 @@ class RoIEmbedHead(BaseModule):
 
         return track_id_targets, track_id_weights
 
-    @force_fp32(apply_to=('similarity_logits', ))
-    def loss(self,
-             similarity_logits,
-             track_id_targets,
-             track_id_weights,
-             reduction_override=None):
+    def loss(
+        self,
+        bbox_feats: Tensor,
+        ref_bbox_feats: Tensor,
+        num_bbox_per_img: int,
+        num_bbox_per_ref_img: int,
+        sampling_results: List[SamplingResult],
+        gt_instance_ids: List[Tensor],
+        ref_gt_instance_ids: List[Tensor],
+        reduction_override: Optional[str] = None,
+    ) -> dict:
         """Calculate the loss in a batch.
 
         Args:
-            similarity_logits (list[Tensor]): The predicted similarity_logits
-                of each pair of key image and reference image.
-            track_id_targets (list[Tensor]): The instance ids of Gt_labels for
-                all proposals in a batch, each tensor in list has shape
-                (num_proposals,).
-            track_id_weights (list[Tensor]): Labels_weights for
-                all proposals in a batch, each tensor in list has shape
-                (num_proposals,).
+            bbox_feats (Tensor): of shape [N, C, H, W]. N is the number of
+                bboxes.
+            ref_bbox_feats (Tensor): of shape [M, C, H, W]. M is the number of
+                reference bboxes.
+            num_bbox_per_img (list[int]): The `bbox_feats` contains proposals
+                of multi-images. `num_bbox_per_img` denotes the number of
+                proposals for each key image.
+            num_bbox_per_ref_img (list[int]): The `ref_bbox_feats` contains
+                proposals of multi-images. `num_bbox_per_ref_img` denotes the
+                number of proposals for each reference image.
+            sampling_results (List[obj:SamplingResult]): Assign results of
+                all images in a batch after sampling.
+            gt_instance_ids (list[Tensor]): The instance ids of gt_bboxes of
+                all images in a batch, each tensor has shape (num_gt, ).
+            ref_gt_instance_ids (list[Tensor]): The instance ids of gt_bboxes
+                of all reference images in a batch, each tensor has shape
+                (num_gt, ).
             reduction_override (str, optional): The method used to reduce the
                 loss. Options are "none", "mean" and "sum".
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        assert isinstance(similarity_logits, list)
+        x_split, ref_x_split = self(bbox_feats, ref_bbox_feats,
+                                    num_bbox_per_img, num_bbox_per_ref_img)
+
+        losses = self.loss_by_feat(x_split, ref_x_split, sampling_results,
+                                   gt_instance_ids, ref_gt_instance_ids,
+                                   reduction_override)
+        return losses
+
+    def loss_by_feat(self,
+                     x_split: Tuple[Tensor],
+                     ref_x_split: Tuple[Tensor],
+                     sampling_results: List[SamplingResult],
+                     gt_instance_ids: List[Tensor],
+                     ref_gt_instance_ids: List[Tensor],
+                     reduction_override: Optional[str] = None) -> dict:
+        """Calculate losses.
+
+        Args:
+            x_split (Tensor): The embed features belonging to key image.
+            ref_x_split (Tensor): The embed features belonging to ref image.
+            sampling_results (List[obj:SamplingResult]): Assign results of
+                all images in a batch after sampling.
+            gt_instance_ids (list[Tensor]): The instance ids of gt_bboxes of
+                all images in a batch, each tensor has shape (num_gt, ).
+            ref_gt_instance_ids (list[Tensor]): The instance ids of gt_bboxes
+                of all reference images in a batch, each tensor has shape
+                (num_gt, ).
+            reduction_override (str, optional): The method used to reduce the
+                loss. Options are "none", "mean" and "sum".
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components.
+        """
+        track_id_targets, track_id_weights = self.get_targets(
+            sampling_results, gt_instance_ids, ref_gt_instance_ids)
         assert isinstance(track_id_targets, list)
         assert isinstance(track_id_weights, list)
-        assert len(similarity_logits) == len(track_id_targets)
         assert len(track_id_weights) == len(track_id_targets)
+
         losses = defaultdict(list)
+        similarity_logits = []
+        for one_x, one_ref_x in zip(x_split, ref_x_split):
+            similarity_logit = embed_similarity(
+                one_x, one_ref_x, method='dot_product')
+            dummy = similarity_logit.new_zeros(one_x.shape[0], 1)
+            similarity_logit = torch.cat((dummy, similarity_logit), dim=1)
+            similarity_logits.append(similarity_logit)
+        assert isinstance(similarity_logits, list)
+        assert len(similarity_logits) == len(track_id_targets)
 
         for similarity_logit, track_id_target, track_id_weight in zip(
                 similarity_logits, track_id_targets, track_id_weights):
@@ -289,3 +347,45 @@ class RoIEmbedHead(BaseModule):
         for key, value in losses.items():
             losses[key] = sum(losses[key]) / len(similarity_logits)
         return losses
+
+    def predict(self, roi_feats: Tensor,
+                prev_roi_feats: Tensor) -> List[Tensor]:
+        """Perform forward propagation of the tracking head and predict
+        tracking results on the features of the upstream network.
+
+        Args:
+            roi_feats (Tensor): Feature map of current images rois.
+            prev_roi_feats (Tensor): Feature map of previous images rois.
+
+        Returns:
+            list[Tensor]: The predicted similarity_logits of each pair of key
+            image and reference image.
+        """
+        x_split, ref_x_split = self(roi_feats, prev_roi_feats,
+                                    [roi_feats.shape[0]],
+                                    [prev_roi_feats.shape[0]])
+
+        similarity_logits = self.predict_by_feat(x_split, ref_x_split)
+
+        return similarity_logits
+
+    def predict_by_feat(self, x_split: Tuple[Tensor],
+                        ref_x_split: Tuple[Tensor]) -> List[Tensor]:
+        """Get similarity_logits.
+
+        Args:
+            x_split (Tensor): The embed features belonging to key image.
+            ref_x_split (Tensor): The embed features belonging to ref image.
+
+        Returns:
+            list[Tensor]: The predicted similarity_logits of each pair of key
+            image and reference image.
+        """
+        similarity_logits = []
+        for one_x, one_ref_x in zip(x_split, ref_x_split):
+            similarity_logit = embed_similarity(
+                one_x, one_ref_x, method='dot_product')
+            dummy = similarity_logit.new_zeros(one_x.shape[0], 1)
+            similarity_logit = torch.cat((dummy, similarity_logit), dim=1)
+            similarity_logits.append(similarity_logit)
+        return similarity_logits

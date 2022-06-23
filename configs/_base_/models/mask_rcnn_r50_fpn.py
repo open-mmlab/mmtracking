@@ -1,6 +1,13 @@
 # model settings
 model = dict(
+    data_preprocessor=dict(
+        type='TrackDataPreprocessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True,
+        pad_size_divisor=32),
     detector=dict(
+        _scope_='mmdet',
         type='MaskRCNN',
         backbone=dict(
             type='ResNet',

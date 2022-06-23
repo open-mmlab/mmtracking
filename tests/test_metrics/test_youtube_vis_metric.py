@@ -34,7 +34,7 @@ class TestYouTubeVISMetric(TestCase):
             bboxes=torch.from_numpy(bboxes),
             scores=torch.from_numpy(scores),
             labels=torch.from_numpy(labels),
-            instance_id=torch.from_numpy(instance_id),
+            instances_id=torch.from_numpy(instance_id),
             masks=torch.from_numpy(dummy_mask))
 
     def test_format_only(self):

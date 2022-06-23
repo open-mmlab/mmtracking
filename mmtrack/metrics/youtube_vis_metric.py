@@ -86,7 +86,7 @@ class YouTubeVISMetric(BaseVideoMetric):
             result['bboxes'] = pred['bboxes'].cpu().numpy()
             result['scores'] = pred['scores'].cpu().numpy()
             result['labels'] = pred['labels'].cpu().numpy()
-            result['instance_id'] = pred['instance_id'].cpu().numpy()
+            result['instances_id'] = pred['instances_id'].cpu().numpy()
             # encode mask to RLE
             assert 'masks' in pred, \
                 'masks must exist in YouTube-VIS metric'
@@ -239,7 +239,7 @@ class YouTubeVISMetric(BaseVideoMetric):
         collect_data = dict()
         for frame_id, (masks, scores, labels, ids) in enumerate(
                 zip(preds['masks'], preds['scores'], preds['labels'],
-                    preds['instance_id'])):
+                    preds['instances_id'])):
 
             assert len(masks) == len(labels)
             for j, id in enumerate(ids):
@@ -247,7 +247,7 @@ class YouTubeVISMetric(BaseVideoMetric):
                     collect_data[id] = dict(
                         category_ids=[], scores=[], segmentations=dict())
                 collect_data[id]['category_ids'].append(labels[j])
-                collect_data[id]['scores'].append(scores)
+                collect_data[id]['scores'].append(scores[j])
                 if isinstance(masks[j]['counts'], bytes):
                     masks[j]['counts'] = masks[j]['counts'].decode()
                 collect_data[id]['segmentations'][frame_id] = masks[j]

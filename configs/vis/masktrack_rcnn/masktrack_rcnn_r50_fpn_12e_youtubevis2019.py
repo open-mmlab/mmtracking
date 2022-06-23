@@ -22,6 +22,7 @@ model = dict(
         type='RoITrackHead',
         roi_extractor=dict(
             type='SingleRoIExtractor',
+            _scope_='mmdet',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
             featmap_strides=[4, 8, 16, 32]),
@@ -34,6 +35,7 @@ model = dict(
         train_cfg=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
+                _scope_='mmdet',
                 pos_iou_thr=0.5,
                 neg_iou_thr=0.5,
                 min_pos_iou=0.5,
@@ -41,6 +43,7 @@ model = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',
+                _scope_='mmdet',
                 num=128,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
@@ -53,16 +56,32 @@ model = dict(
         num_frames_retain=20))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.00125, momentum=0.9, weight_decay=0.0001)
-optimizer_config = dict(
-    _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.00125, momentum=0.9, weight_decay=0.0001),
+    clip_grad=dict(max_norm=35, norm_type=2))
+
 # learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=1.0 / 3,
-    step=[8, 11])
+param_scheduler = [
+    dict(
+        type='mmdet.LinearLR',
+        start_factor=1.0 / 3.0,
+        by_epoch=False,
+        begin=0,
+        end=500),
+    dict(
+        type='mmdet.MultiStepLR',
+        begin=0,
+        end=12,
+        by_epoch=True,
+        milestones=[8, 11],
+        gamma=0.1)
+]
 # runtime settings
-total_epochs = 12
-evaluation = dict(metric=['track_segm'], interval=13)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_begin=13)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+
+# evaluator
+val_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap')
+test_evaluator = val_evaluator

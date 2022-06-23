@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from mmdet.core.mask import BitmapMasks
 from mmengine.data import BaseDataElement
 from mmengine.model import BaseDataPreprocessor
 
@@ -221,11 +221,10 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
         if 'masks' in batch_data_samples[0].get(f'{ref_prefix}gt_instances'):
             for data_samples in batch_data_samples:
                 masks = data_samples.get(f'{ref_prefix}gt_instances').masks
-                h, w = masks.shape[-2:]
+                assert isinstance(masks, BitmapMasks)
                 pad_h, pad_w = data_samples.get(
                     f'{ref_prefix}batch_input_shape')
-                data_samples.get(f'{ref_prefix}gt_instances').masks = F.pad(
-                    masks,
-                    pad=(0, pad_w - w, 0, pad_h - h),
-                    mode='constant',
-                    value=self.mask_pad_value)
+                data_samples.get(
+                    f'{ref_prefix}gt_instances').masks = masks.pad(
+                        data_samples.get(f'{ref_prefix}batch_input_shape'),
+                        pad_val=self.mask_pad_value)

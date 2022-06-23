@@ -1,12 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from abc import ABCMeta
+from typing import List, Optional, Tuple
 
-from mmcv.runner import BaseModule
-from mmdet.core import bbox2roi, build_assigner, build_sampler
-from mmdet.models import HEADS, build_head, build_roi_extractor
+from mmdet.core import bbox2roi
+from mmdet.core.bbox import SamplingResult
+from mmengine.model import BaseModule
+from torch import Tensor
+
+from mmtrack.core.utils import InstanceList, SampleList
+from mmtrack.registry import MODELS, TASK_UTILS
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class RoITrackHead(BaseModule, metaclass=ABCMeta):
     """The roi track head.
 
@@ -22,12 +27,12 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
     """
 
     def __init__(self,
-                 roi_extractor=None,
-                 embed_head=None,
-                 regress_head=None,
-                 train_cfg=None,
-                 test_cfg=None,
-                 init_cfg=None,
+                 roi_extractor: Optional[dict] = None,
+                 embed_head: Optional[dict] = None,
+                 regress_head: Optional[dict] = None,
+                 train_cfg: Optional[dict] = None,
+                 test_cfg: Optional[dict] = None,
+                 init_cfg: Optional[dict] = None,
                  *args,
                  **kwargs):
         super().__init__(init_cfg=init_cfg)
@@ -42,131 +47,149 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
 
         self.init_assigner_sampler()
 
-    def init_embed_head(self, roi_extractor, embed_head):
+    def init_embed_head(self, roi_extractor, embed_head) -> None:
         """Initialize ``embed_head``"""
-        self.roi_extractor = build_roi_extractor(roi_extractor)
-        self.embed_head = build_head(embed_head)
+        self.roi_extractor = MODELS.build(roi_extractor)
+        self.embed_head = MODELS.build(embed_head)
 
-    def init_assigner_sampler(self):
+    def init_assigner_sampler(self) -> None:
         """Initialize assigner and sampler."""
         self.bbox_assigner = None
         self.bbox_sampler = None
         if self.train_cfg:
-            self.bbox_assigner = build_assigner(self.train_cfg.assigner)
-            self.bbox_sampler = build_sampler(
-                self.train_cfg.sampler, context=self)
+            self.bbox_assigner = TASK_UTILS.build(self.train_cfg.assigner)
+            self.bbox_sampler = TASK_UTILS.build(
+                self.train_cfg.sampler, default_args=dict(context=self))
 
     @property
-    def with_track(self):
-        """bool: whether the mulit-object tracker has a embed head"""
+    def with_track(self) -> bool:
+        """bool: whether the multi-object tracker has an embed head"""
         return hasattr(self, 'embed_head') and self.embed_head is not None
 
-    def extract_roi_feats(self, x, bboxes):
-        """Extract roi features."""
+    def extract_roi_feats(
+            self, feats: List[Tensor],
+            bboxes: List[Tensor]) -> Tuple[Tuple[Tensor], List[int]]:
+        """Extract roi features.
+
+        Args:
+            feats (list[Tensor]): list of multi-level image features.
+            bboxes (list[Tensor]): list of bboxes in sampling result.
+
+        Returns:
+            tuple[tuple[Tensor], list[int]]: The extracted roi features and
+            the number of bboxes in each image.
+        """
         rois = bbox2roi(bboxes)
-        bbox_feats = self.roi_extractor(x[:self.roi_extractor.num_inputs],
+        bbox_feats = self.roi_extractor(feats[:self.roi_extractor.num_inputs],
                                         rois)
         num_bbox_per_img = [len(bbox) for bbox in bboxes]
         return bbox_feats, num_bbox_per_img
 
-    def forward_train(self,
-                      x,
-                      ref_x,
-                      img_metas,
-                      proposal_list,
-                      gt_bboxes,
-                      ref_gt_bboxes,
-                      gt_labels,
-                      gt_instance_ids,
-                      ref_gt_instance_ids,
-                      gt_bboxes_ignore=None,
-                      **kwargs):
-        """
+    def loss(self, key_feats: List[Tensor], ref_feats: List[Tensor],
+             rpn_results_list: InstanceList, batch_data_samples: SampleList,
+             **kwargs) -> dict:
+        """Calculate losses from a batch of inputs and data samples.
+
         Args:
-            x (list[Tensor]): list of multi-level image features.
+            key_feats (list[Tensor]): list of multi-level image features.
+            ref_feats (list[Tensor]): list of multi-level ref_img features.
+            rpn_results_list (list[:obj:`InstanceData`]): List of region
+                proposals.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
 
-            ref_x (list[Tensor]): list of multi-level ref_img features.
-
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
-                `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
-
-            proposal_list (list[Tensors]): list of region proposals.
-
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
-                shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
-
-            ref_gt_bboxes (list[Tensor]): Ground truth bboxes for each
-                reference image with shape (num_gts, 4) in
-                [tl_x, tl_y, br_x, br_y] format.
-
-            gt_labels (list[Tensor]): class indices corresponding to each box.
-
-            gt_instance_ids (None | list[Tensor]): specify the instance id for
-                each ground truth bbox.
-
-            ref_gt_instance_ids (None | list[Tensor]): specify the instance id
-                for each ground truth bbox of reference images.
-
-            gt_bboxes_ignore (None | list[Tensor]): specify which bounding
-                boxes can be ignored when computing the loss.
         Returns:
-            dict[str, Tensor]: a dictionary of loss components
+            dict: A dictionary of loss components.
         """
-        # assign gts and sample proposals
+        assert len(rpn_results_list) == len(batch_data_samples)
+        batch_gt_instances = []
+        batch_gt_instances_ignore = []
+        for data_sample in batch_data_samples:
+            batch_gt_instances.append(data_sample.gt_instances)
+            if 'ignored_instances' in data_sample:
+                batch_gt_instances_ignore.append(data_sample.ignored_instances)
+            else:
+                batch_gt_instances_ignore.append(None)
+
         if self.with_track:
-            num_imgs = len(img_metas)
-            if gt_bboxes_ignore is None:
-                gt_bboxes_ignore = [None for _ in range(num_imgs)]
+            num_imgs = len(batch_data_samples)
+            if batch_gt_instances_ignore is None:
+                batch_gt_instances_ignore = [None] * num_imgs
             sampling_results = []
             for i in range(num_imgs):
+                rpn_results = rpn_results_list[i]
+
                 assign_result = self.bbox_assigner.assign(
-                    proposal_list[i], gt_bboxes[i], gt_bboxes_ignore[i],
-                    gt_labels[i])
+                    rpn_results, batch_gt_instances[i],
+                    batch_gt_instances_ignore[i])
                 sampling_result = self.bbox_sampler.sample(
                     assign_result,
-                    proposal_list[i],
-                    gt_bboxes[i],
-                    gt_labels[i],
-                    feats=[lvl_feat[i][None] for lvl_feat in x])
+                    rpn_results,
+                    batch_gt_instances[i],
+                    feats=[lvl_feat[i][None] for lvl_feat in key_feats])
                 sampling_results.append(sampling_result)
 
         losses = dict()
 
         if self.with_track:
-            track_results = self._track_forward_train(x, ref_x,
-                                                      sampling_results,
-                                                      ref_gt_bboxes,
-                                                      gt_instance_ids,
-                                                      ref_gt_instance_ids)
+            track_results = self.track_loss(key_feats, ref_feats,
+                                            sampling_results,
+                                            batch_data_samples)
             losses.update(track_results['loss_track'])
 
         return losses
 
-    def _track_forward_train(self, x, ref_x, sampling_results, ref_gt_bboxes,
-                             gt_instance_ids, ref_gt_instance_ids, **kwargs):
-        """Run forward function and calculate loss for track head in
-        training."""
+    def track_loss(self, key_feats: List[Tensor], ref_feats: List[Tensor],
+                   sampling_results: List[SamplingResult],
+                   batch_data_samples: SampleList, **kwargs) -> dict:
+        """Run forward function and calculate loss for track head in training.
+
+        Args:
+            key_feats (list[Tensor]): list of multi-level image features.
+            ref_feats (list[Tensor]): list of multi-level ref_img features.
+            sampling_results (list[:obj:`SamplingResult`]): List of Bbox
+                sampling result.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
+
+        Returns:
+            dict: A dictionary of loss components.
+        """
         bboxes = [res.bboxes for res in sampling_results]
-        bbox_feats, num_bbox_per_img = self.extract_roi_feats(x, bboxes)
+        bbox_feats, num_bbox_per_img = self.extract_roi_feats(
+            key_feats, bboxes)
+        # batch_size is 1
+        ref_gt_bboxes = [batch_data_samples[0].ref_gt_instances.bboxes]
         ref_bbox_feats, num_bbox_per_ref_img = self.extract_roi_feats(
-            ref_x, ref_gt_bboxes)
+            ref_feats, ref_gt_bboxes)
 
-        similarity_logits = self.embed_head(bbox_feats, ref_bbox_feats,
-                                            num_bbox_per_img,
-                                            num_bbox_per_ref_img)
+        gt_instance_ids = [batch_data_samples[0].gt_instances.instances_id]
+        ref_gt_instance_ids = [
+            batch_data_samples[0].ref_gt_instances.instances_id
+        ]
 
-        track_targets = self.embed_head.get_targets(sampling_results,
-                                                    gt_instance_ids,
-                                                    ref_gt_instance_ids)
-        loss_track = self.embed_head.loss(similarity_logits, *track_targets)
+        loss_track = self.embed_head.loss(bbox_feats, ref_bbox_feats,
+                                          num_bbox_per_img,
+                                          num_bbox_per_ref_img,
+                                          sampling_results, gt_instance_ids,
+                                          ref_gt_instance_ids)
         track_results = dict(loss_track=loss_track)
 
         return track_results
 
-    def simple_test(self, roi_feats, prev_roi_feats):
-        """Test without augmentations."""
-        return self.embed_head(roi_feats, prev_roi_feats, [roi_feats.shape[0]],
-                               [prev_roi_feats.shape[0]])[0]
+    def predict(self, roi_feats: Tensor,
+                prev_roi_feats: Tensor) -> List[Tensor]:
+        """Perform forward propagation of the tracking head and predict
+        tracking results on the features of the upstream network.
+
+        Args:
+            roi_feats (Tensor): Feature map of current images rois.
+            prev_roi_feats (Tensor): Feature map of previous images rois.
+
+        Returns:
+            list[Tensor]: The predicted similarity_logits of each pair of key
+            image and reference image.
+        """
+        return self.embed_head.predict(roi_feats, prev_roi_feats)[0]
