@@ -2,7 +2,7 @@
 import random
 from typing import List, Optional
 
-from torch.utils.data.dataset import ConcatDataset
+from mmengine.dataset import ConcatDataset
 
 from mmtrack.registry import DATASETS
 

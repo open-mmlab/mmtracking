@@ -84,7 +84,7 @@ class TestSOTMetric(TestCase):
         # 3. VOT evaluation
         self.sot_metric.format_only = False
         self.sot_metric.metrics = ['VOT']
-        self.sot_metric.metrics_options['interval'] = [1, 3]
+        self.sot_metric.metric_options['interval'] = [1, 3]
         gts, preds = self._create_eval_inputs('vot2018_track_results.txt',
                                               'vot2018_gt_for_eval.txt')
         for gt, pred in zip(gts, preds):

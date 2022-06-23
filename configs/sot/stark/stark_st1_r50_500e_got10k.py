@@ -165,7 +165,11 @@ val_dataloader = dict(
 test_dataloader = val_dataloader
 
 # evaluator
-val_evaluator = dict(type='SOTMetric', metric='OPE', format_only=True)
+val_evaluator = dict(
+    type='SOTMetric',
+    metric='OPE',
+    format_only=True,
+    metric_options=dict(dataset_type='got10k'))
 test_evaluator = val_evaluator
 
 # runner loop

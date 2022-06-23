@@ -118,7 +118,12 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
             if 'ignore_flag' in instance:
                 gt_ignore_flags.append(instance['ignore_flag'])
 
-        assert len(gt_bboxes) == len(gt_ignore_flags)
+        if len(gt_bboxes) != len(gt_ignore_flags):
+            # There may be no ``gt_ignore_flags`` in some cases, we treat them
+            # as all False in order to keep the length of ``gt_bboxes`` and
+            # ``gt_ignore_flags`` the same
+            gt_ignore_flags = [False] * len(gt_bboxes)
+
         results['gt_bboxes'] = np.array(
             gt_bboxes, dtype=np.float32).reshape(-1, 4)
         if self.denorm_bbox:

@@ -177,6 +177,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         else:
             self.memo.frame_id = frame_id
             results = self.track(img, batch_data_samples)
+            self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes.squeeze())
 
         return results
 
@@ -239,7 +240,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             # normal tracking state
             self.memo.frame_id = frame_id
             results = self.track(img, batch_data_samples)
-            self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes[0])
+            self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes.squeeze())
 
             # convert bbox to region for overlap calculation
             track_bbox = results[0].bboxes[0].cpu().numpy()

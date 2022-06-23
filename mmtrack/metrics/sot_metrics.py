@@ -25,7 +25,8 @@ class SOTMetric(BaseVideoMetric):
             Valid metrics are included in ``self.allowed_metrics``.
             Defaults to 'OPE'.
         metric_options (Optional[dict], optional): Options for calculating
-            metrics. Defaults to dict(vot_dataset_type='vot2018').
+            metrics. Defaults to dict(dataset_type='vot2018',
+            only_eval_visible=False).
         format_only (bool, optional): If True, only formatting the results to
             the official format and not performing evaluation.
             Defaults to False.
@@ -43,12 +44,13 @@ class SOTMetric(BaseVideoMetric):
     """
     default_prefix: Optional[str] = 'sot'
     allowed_metrics = ['OPE', 'VOT']
+    allowed_metric_options = ['dataset_type', 'only_eval_visible']
     VOT_INTERVAL = dict(vot2018=[100, 356], vot2019=[46, 291])
 
     def __init__(self,
                  metric: Union[str, Sequence[str]] = 'OPE',
                  metric_options: Optional[dict] = dict(
-                     vot_dataset_type='vot2018', only_eval_visible=False),
+                     dataset_type='vot2018', only_eval_visible=False),
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
@@ -60,12 +62,17 @@ class SOTMetric(BaseVideoMetric):
         ), 'We can not evaluate one tracking result on both OPE and '
         'VOT metrics since the track result on VOT mode '
         'may be not the true bbox coordinates.'
-        self.metrics_options = metric_options
+        self.metric_options = metric_options
         for metric in self.metrics:
             if metric not in self.allowed_metrics:
                 raise KeyError(
                     f'metric should be in {str(self.allowed_metrics)}, '
                     f'but got {metric}.')
+        for metric_option in self.metric_options:
+            if metric_option not in self.allowed_metric_options:
+                raise KeyError(
+                    f'metric option should be in {str(self.allowed_metric_options)}, '  # noqa: E501
+                    f'but got {metric_option}.')
         self.outfile_prefix = outfile_prefix
         self.format_only = format_only
         self.preds_per_video, self.gts_per_video = [], []
@@ -125,7 +132,8 @@ class SOTMetric(BaseVideoMetric):
         """Compute the metrics from processed results.
 
         Args:
-            results (List): The processed results of each batch.
+            results (List): The processed results of all data. The elements of
+                the list are the processed results of one video.
 
         Returns:
             Dict[str, float]: The computed metrics. The keys are the names of
@@ -154,18 +162,18 @@ class SOTMetric(BaseVideoMetric):
             logger.info(f'Evaluating {metric}...')
 
             if metric == 'OPE':
-                if self.metrics_options.get('only_eval_visible', False):
+                if self.metric_options.get('only_eval_visible', False):
                     results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes,
                                                all_visible)
                 else:
                     results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes)
                 eval_results.update(results_ope)
             elif metric == 'VOT':
-                if 'interval' in self.metrics_options:
-                    interval = self.metrics_options['interval']
+                if 'interval' in self.metric_options:
+                    interval = self.metric_options['interval']
                 else:
                     interval = self.VOT_INTERVAL.get(
-                        self.metrics_options['vot_dataset_type'], None)
+                        self.metric_options['dataset_type'], None)
                 eao_scores = eval_sot_eao(
                     all_pred_bboxes,
                     all_gt_bboxes,
@@ -183,27 +191,17 @@ class SOTMetric(BaseVideoMetric):
 
         return eval_results
 
-    def save_formatted_results(self, results: List[List[np.ndarray]],
-                               video_names: List[str]):
-        """Save the formatted results for evaluation on the test server.
+    def save_formatted_results_got10k(self, results: List[List[np.ndarray]],
+                                      video_names: List[str],
+                                      outfile_prefix: str):
+        """Save the formatted results in TrackingNet dataset for evaluation on
+        the test server.
 
         Args:
             results (List[List[np.ndarray]]): The formatted results.
             video_names (List[str]): The video names.
+            outfile_prefix (str): The prefix of output files.
         """
-        logger: MMLogger = MMLogger.get_current_instance()
-
-        # prepare saved dir
-        if self.outfile_prefix is None:
-            tmp_dir = tempfile.TemporaryDirectory()
-            outfile_prefix = osp.join(tmp_dir.name, 'results')
-        else:
-            outfile_prefix = self.outfile_prefix
-
-        if not osp.isdir(outfile_prefix):
-            os.makedirs(outfile_prefix, exist_ok=True)
-
-        # save the results in the standard format for the test server.
         for result, video_name in zip(results, video_names):
             video_outfile_dir = osp.join(outfile_prefix, video_name)
             if not osp.isdir(video_outfile_dir):
@@ -228,6 +226,58 @@ class SOTMetric(BaseVideoMetric):
                     # time in order to test on the server.
                     f_time.writelines('0.0001\n')
 
+    def save_formatted_results_trackingnet(self,
+                                           results: List[List[np.ndarray]],
+                                           video_names: List[str],
+                                           outfile_prefix: str):
+        """Save the formatted results in TrackingNet dataset for evaluation on
+        the test server.
+
+        Args:
+            results (List[List[np.ndarray]]): The formatted results.
+            video_names (List[str]): The video names.
+            outfile_prefix (str): The prefix of output files.
+        """
+        for result, video_name in zip(results, video_names):
+            video_txt = osp.join(outfile_prefix, f'{video_name}.txt')
+            with open(video_txt, 'w') as f:
+                for bbox in result:
+                    bbox = [
+                        str(f'{bbox[0]:.4f}'),
+                        str(f'{bbox[1]:.4f}'),
+                        str(f'{(bbox[2] - bbox[0]):.4f}'),
+                        str(f'{(bbox[3] - bbox[1]):.4f}')
+                    ]
+                    line = ','.join(bbox) + '\n'
+                    f.writelines(line)
+
+    def save_formatted_results(self, results: List[List[np.ndarray]],
+                               video_names: List[str]):
+        """Save the formatted results for evaluation on the test server.
+
+        Args:
+            results (List[List[np.ndarray]]): The formatted results.
+            video_names (List[str]): The video names.
+        """
+        logger: MMLogger = MMLogger.get_current_instance()
+
+        # prepare saved dir
+        if self.outfile_prefix is None:
+            tmp_dir = tempfile.TemporaryDirectory()
+            outfile_prefix = osp.join(tmp_dir.name, 'results')
+        else:
+            outfile_prefix = self.outfile_prefix
+
+        if not osp.isdir(outfile_prefix):
+            os.makedirs(outfile_prefix, exist_ok=True)
+
+        dataset_type = self.metric_options.get('dataset_type', 'got10k')
+        if dataset_type == 'got10k':
+            self.save_formatted_results_got10k(results, video_names,
+                                               outfile_prefix)
+        elif dataset_type == 'trackingnet':
+            self.save_formatted_results_trackingnet(results, video_names,
+                                                    outfile_prefix)
         shutil.make_archive(outfile_prefix, 'zip', outfile_prefix)
         shutil.rmtree(outfile_prefix)
         logger.info(
