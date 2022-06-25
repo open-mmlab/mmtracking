@@ -1,25 +1,26 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
+from torch import Tensor
 
-from ..builder import MOTION
+from mmtrack.registry import TASK_UTILS
 
 
-@MOTION.register_module()
-class LinearMotion(object):
+@TASK_UTILS.register_module()
+class LinearMotion:
     """Linear motion while tracking.
 
     Args:
         num_samples (int, optional): Number of samples to calculate the
-            velocity. Default to 2.
+            velocity. Defaults to 2.
         center_motion (bool, optional): Whether use center location or
-            bounding box location to estimate the velocity. Default to False.
+            bounding box location to estimate the velocity. Defaults to False.
     """
 
-    def __init__(self, num_samples=2, center_motion=False):
+    def __init__(self, num_samples: int = 2, center_motion: bool = False):
         self.num_samples = num_samples
         self.center_motion = center_motion
 
-    def center(self, bbox):
+    def center(self, bbox: Tensor) -> Tensor:
         """Get the center of the box."""
         if bbox.ndim == 2:
             assert bbox.shape[0] == 1
@@ -27,7 +28,7 @@ class LinearMotion(object):
         x1, y1, x2, y2 = bbox
         return torch.Tensor([(x2 + x1) / 2, (y2 + y1) / 2]).to(bbox.device)
 
-    def get_velocity(self, bboxes, num_samples=None):
+    def get_velocity(self, bboxes: Tensor, num_samples: int = None) -> Tensor:
         """Get velocities of the input objects."""
         if num_samples is None:
             num_samples = min(len(bboxes), self.num_samples)
@@ -41,7 +42,7 @@ class LinearMotion(object):
             vs.append(v)
         return torch.stack(vs, dim=0).mean(dim=0)
 
-    def step(self, bboxes, velocity=None):
+    def step(self, bboxes: Tensor, velocity: Tensor = None) -> Tensor:
         """Step forward with the velocity."""
         assert isinstance(bboxes, list)
         if velocity is None:
@@ -62,7 +63,7 @@ class LinearMotion(object):
             bbox += velocity
         return bbox
 
-    def track(self, tracks, frame_id):
+    def track(self, tracks: dict, frame_id: int) -> dict:
         """Tracking forward."""
         for k, v in tracks.items():
             if int(v.frame_ids[-1]) == frame_id - 1:

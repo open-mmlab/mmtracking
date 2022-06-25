@@ -14,15 +14,12 @@ model = dict(
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15_20210803_192157-65b5e2d7.pth'  # noqa: E501
         )))
-# data
+
+# dataloader
 data_root = 'data/MOT15/'
-data = dict(
-    train=dict(
-        ann_file=data_root + 'annotations/half-train_cocoformat.json',
-        img_prefix=data_root + 'train'),
-    val=dict(
-        ann_file=data_root + 'annotations/half-val_cocoformat.json',
-        img_prefix=data_root + 'train'),
-    test=dict(
-        ann_file=data_root + 'annotations/half-val_cocoformat.json',
-        img_prefix=data_root + 'train'))
+val_dataloader = dict(
+    dataset=dict(
+        data_root=data_root,
+        ann_file='annotations/half-val_cocoformat.json',
+    ))
+test_dataloader = val_dataloader

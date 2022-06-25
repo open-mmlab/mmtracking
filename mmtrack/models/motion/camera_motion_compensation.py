@@ -2,29 +2,31 @@
 import cv2
 import numpy as np
 import torch
+from torch import Tensor
 
-from ..builder import MOTION
+from mmtrack.registry import TASK_UTILS
 
 
-@MOTION.register_module()
-class CameraMotionCompensation(object):
+@TASK_UTILS.register_module()
+class CameraMotionCompensation:
     """Camera motion compensation.
 
     Args:
         warp_mode (str): Warp mode in opencv.
-        num_iters (int): Number of the iterations.
-        stop_eps (float): Terminate threshold.
+            Defaults to 'cv2.MOTION_EUCLIDEAN'.
+        num_iters (int): Number of the iterations. Defaults to 50.
+        stop_eps (float): Terminate threshold. Defaults to 0.001.
     """
 
     def __init__(self,
-                 warp_mode='cv2.MOTION_EUCLIDEAN',
-                 num_iters=50,
-                 stop_eps=0.001):
+                 warp_mode: str = 'cv2.MOTION_EUCLIDEAN',
+                 num_iters: int = 50,
+                 stop_eps: float = 0.001):
         self.warp_mode = eval(warp_mode)
         self.num_iters = num_iters
         self.stop_eps = stop_eps
 
-    def get_warp_matrix(self, img, ref_img):
+    def get_warp_matrix(self, img: np.ndarray, ref_img: np.ndarray) -> Tensor:
         """Calculate warping matrix between two images."""
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2GRAY)
@@ -38,7 +40,7 @@ class CameraMotionCompensation(object):
         warp_matrix = torch.from_numpy(warp_matrix)
         return warp_matrix
 
-    def warp_bboxes(self, bboxes, warp_matrix):
+    def warp_bboxes(self, bboxes: Tensor, warp_matrix: Tensor) -> Tensor:
         """Warp bounding boxes according to the warping matrix."""
         tl, br = bboxes[:, :2], bboxes[:, 2:]
         tl = torch.cat((tl, torch.ones(tl.shape[0], 1).to(bboxes.device)),
@@ -50,7 +52,8 @@ class CameraMotionCompensation(object):
         trans_bboxes = torch.cat((trans_tl, trans_br), dim=1)
         return trans_bboxes.to(bboxes.device)
 
-    def track(self, img, ref_img, tracks, num_samples, frame_id):
+    def track(self, img: Tensor, ref_img: Tensor, tracks: dict,
+              num_samples: int, frame_id: int) -> dict:
         """Tracking forward."""
         img = img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         ref_img = ref_img.squeeze(0).cpu().numpy().transpose((1, 2, 0))

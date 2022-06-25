@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
-from mmtrack.registry import MODELS
+from mmtrack.registry import MODELS, TASK_UTILS
 from .base import BaseMultiObjectTracker
 
 
@@ -39,7 +39,7 @@ class ByteTrack(BaseMultiObjectTracker):
             self.detector = MODELS.build(detector)
 
         if motion is not None:
-            self.motion = MODELS.build(motion)
+            self.motion = TASK_UTILS.build(motion)
 
         if tracker is not None:
             self.tracker = MODELS.build(tracker)

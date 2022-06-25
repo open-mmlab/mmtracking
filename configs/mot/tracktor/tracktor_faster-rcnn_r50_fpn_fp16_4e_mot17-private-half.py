@@ -13,4 +13,5 @@ model = dict(
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/fp16/reid_r50_fp16_8x32_6e_mot17_20210731_033055-4747ee95.pth'  # noqa: E501
         )))
+# TODO: wait for mmengine
 fp16 = dict(loss_scale=512.)

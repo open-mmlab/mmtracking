@@ -5,11 +5,11 @@ import numpy as np
 import scipy.linalg
 import torch
 
-from mmtrack.registry import MODELS
+from mmtrack.registry import TASK_UTILS
 
 
-@MODELS.register_module()
-class KalmanFilter(object):
+@TASK_UTILS.register_module()
+class KalmanFilter:
     """A simple Kalman filter for tracking bounding boxes in image space.
 
     The implementation is referred to https://github.com/nwojke/deep_sort.

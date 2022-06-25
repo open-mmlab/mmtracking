@@ -7,12 +7,12 @@ model = dict(
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
         )))
-# data
-data_root = 'data/MOT17/'
-test_set = 'test'
-data = dict(
-    train=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
-    val=dict(ann_file=data_root + 'annotations/train_cocoformat.json'),
-    test=dict(
-        ann_file=data_root + f'annotations/{test_set}_cocoformat.json',
-        img_prefix=data_root + test_set))
+
+# dataloader
+val_dataloader = dict(
+    dataset=dict(ann_file='annotations/train_cocoformat.json', ))
+test_dataloader = dict(
+    dataset=dict(
+        ann_file='annotations/test_cocoformat.json',
+        data_prefix=dict(img_path='test'),
+    ))

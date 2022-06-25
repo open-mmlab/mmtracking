@@ -1,10 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Dict
+from typing import Dict, Optional
 
 from torch import Tensor
 
 from mmtrack.core.utils import OptConfigType, SampleList
-from mmtrack.registry import MODELS
+from mmtrack.registry import MODELS, TASK_UTILS
 from .base import BaseMultiObjectTracker
 
 
@@ -27,12 +27,12 @@ class DeepSORT(BaseMultiObjectTracker):
     """
 
     def __init__(self,
-                 detector=None,
-                 reid=None,
-                 tracker=None,
-                 motion=None,
+                 detector: Optional[dict] = None,
+                 reid: Optional[dict] = None,
+                 tracker: Optional[dict] = None,
+                 motion: Optional[dict] = None,
                  data_preprocessor: OptConfigType = None,
-                 init_cfg=None):
+                 init_cfg: OptConfigType = None):
         super().__init__(data_preprocessor, init_cfg)
 
         if detector is not None:
@@ -42,7 +42,7 @@ class DeepSORT(BaseMultiObjectTracker):
             self.reid = MODELS.build(reid)
 
         if motion is not None:
-            self.motion = MODELS.build(motion)
+            self.motion = TASK_UTILS.build(motion)
 
         if tracker is not None:
             self.tracker = MODELS.build(tracker)

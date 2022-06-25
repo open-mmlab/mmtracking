@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import torch
 from mmdet.core.bbox.demodata import random_boxes
 
-from mmtrack.registry import MODELS
+from mmtrack.registry import MODELS, TASK_UTILS
 from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs
 
@@ -24,7 +24,7 @@ class TestByteTracker(TestCase):
             num_tentatives=3,
             num_frames_retain=30)
         cls.tracker = MODELS.build(cfg)
-        cls.tracker.kf = MODELS.build(dict(type='KalmanFilter'))
+        cls.tracker.kf = TASK_UTILS.build(dict(type='KalmanFilter'))
         cls.num_frames_retain = cfg['num_frames_retain']
         cls.num_objs = 30
 
@@ -46,14 +46,16 @@ class TestByteTracker(TestCase):
         img = torch.rand((1, 3, img_size, img_size))
 
         model = MagicMock()
-        packed_inputs = _demo_mm_inputs(
-            batch_size=1, frame_id=0, num_ref_imgs=0)
-        data_sample = packed_inputs[0]['data_sample']
-        data_sample.pred_det_instances = data_sample.gt_instances.clone()
-        # add fake scores
-        scores = torch.ones(5)
-        data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
+
         for frame_id in range(3):
+            packed_inputs = _demo_mm_inputs(
+                batch_size=1, frame_id=frame_id, num_ref_imgs=0)
+            data_sample = packed_inputs[0]['data_sample']
+            data_sample.pred_det_instances = data_sample.gt_instances.clone()
+            # add fake scores
+            scores = torch.ones(5)
+            data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
+
             track_data_sample = self.tracker.track(
                 model=model,
                 img=img,
