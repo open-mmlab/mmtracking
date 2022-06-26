@@ -89,7 +89,7 @@ class TAOMetric(BaseVideoMetric):
             result['bboxes'] = pred['bboxes'].cpu().numpy()
             result['scores'] = pred['scores'].cpu().numpy()
             result['labels'] = pred['labels'].cpu().numpy()
-            result['instance_id'] = pred['instance_id'].cpu().numpy()
+            result['instances_id'] = pred['instances_id'].cpu().numpy()
 
             # parse gt
             gt = dict()
@@ -227,7 +227,7 @@ class TAOMetric(BaseVideoMetric):
 
         for img_id, bboxes, scores, labels, ins_ids in zip(
                 preds['img_id'], preds['bboxes'], preds['scores'],
-                preds['labels'], preds['instance_id']):
+                preds['labels'], preds['instances_id']):
             for bbox, score, label, ins_id in zip(bboxes, scores, labels,
                                                   ins_ids):
                 data = dict(

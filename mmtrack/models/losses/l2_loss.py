@@ -1,12 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional, Tuple, Union
+
 import numpy as np
 import torch
-import torch.nn as nn
-from mmdet.models import LOSSES, weighted_loss
+from mmdet.models import weighted_loss
+from mmengine.model import BaseModule
+from torch import Tensor
+
+from mmtrack.registry import MODELS
 
 
 @weighted_loss
-def l2_loss(pred, target):
+def l2_loss(pred: Tensor, target: Tensor) -> Tensor:
     """L2 loss.
 
     Args:
@@ -21,8 +26,8 @@ def l2_loss(pred, target):
     return loss
 
 
-@LOSSES.register_module()
-class L2Loss(nn.Module):
+@MODELS.register_module()
+class L2Loss(BaseModule):
     """L2 loss.
 
     Args:
@@ -32,12 +37,12 @@ class L2Loss(nn.Module):
     """
 
     def __init__(self,
-                 neg_pos_ub=-1,
-                 pos_margin=-1,
-                 neg_margin=-1,
-                 hard_mining=False,
-                 reduction='mean',
-                 loss_weight=1.0):
+                 neg_pos_ub: int = -1,
+                 pos_margin: float = -1,
+                 neg_margin: float = -1,
+                 hard_mining: bool = False,
+                 reduction: str = 'mean',
+                 loss_weight: float = 1.0):
         super(L2Loss, self).__init__()
         self.neg_pos_ub = neg_pos_ub
         self.pos_margin = pos_margin
@@ -47,11 +52,11 @@ class L2Loss(nn.Module):
         self.loss_weight = loss_weight
 
     def forward(self,
-                pred,
-                target,
-                weight=None,
-                avg_factor=None,
-                reduction_override=None):
+                pred: Tensor,
+                target: Tensor,
+                weight: Optional[Tensor] = None,
+                avg_factor: Optional[float] = None,
+                reduction_override: Optional[str] = None) -> Tensor:
         """Forward function.
 
         Args:
@@ -59,8 +64,8 @@ class L2Loss(nn.Module):
             target (torch.Tensor): The learning target of the prediction.
             weight (torch.Tensor, optional): The weight of loss for each
                 prediction. Defaults to None.
-            avg_factor (int, optional): Average factor that is used to average
-                the loss. Defaults to None.
+            avg_factor (float, optional): Average factor that is used to
+                average the loss. Defaults to None.
             reduction_override (str, optional): The reduction method used to
                 override the original reduction method of the loss.
                 Defaults to None.
@@ -74,7 +79,8 @@ class L2Loss(nn.Module):
             pred, target, weight, reduction=reduction, avg_factor=avg_factor)
         return loss_bbox
 
-    def update_weight(self, pred, target, weight, avg_factor):
+    def update_weight(self, pred: Tensor, target: Tensor, weight: Tensor,
+                      avg_factor: float) -> Tuple[Tensor, Tensor, float]:
         """Update the weight according to targets."""
         if weight is None:
             weight = target.new_ones(target.size())
@@ -115,7 +121,8 @@ class L2Loss(nn.Module):
         return pred, weight, avg_factor
 
     @staticmethod
-    def random_choice(gallery, num):
+    def random_choice(gallery: Union[list, np.ndarray, Tensor],
+                      num: int) -> np.ndarray:
         """Random select some elements from the gallery.
 
         It seems that Pytorch's implementation is slower than numpy so we use

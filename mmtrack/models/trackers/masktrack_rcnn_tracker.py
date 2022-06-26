@@ -108,7 +108,7 @@ class MaskTrackRCNNTracker(BaseTracker):
             img (Tensor): of shape (T, C, H, W) encoding input image.
                 Typically these should be mean centered and std scaled.
                 The T denotes the number of key images and usually is 1 in
-                ByteTrack method.
+                MaskTrackRCNN method.
             feats (list[Tensor]): Multi level feature maps of `img`.
             data_sample (:obj:`TrackDataSample`): The data sample.
                 It includes information such as `pred_det_instances`.

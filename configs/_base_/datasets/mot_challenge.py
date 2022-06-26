@@ -13,9 +13,9 @@ train_pipeline = [
             dict(
                 type='mmdet.Resize',
                 scale=(1088, 1088),
-                ratio_range=(0.8, 1.2),
+                scale_factor=(0.8, 1.2),
                 keep_ratio=True,
-                bbox_clip_border=False),
+                clip_object_border=False),
             dict(type='mmdet.PhotoMetricDistortion')
         ]),
     dict(

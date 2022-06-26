@@ -32,7 +32,7 @@ class TestTAOMetric(TestCase):
             bboxes=torch.from_numpy(bboxes),
             scores=torch.from_numpy(scores),
             labels=torch.from_numpy(labels),
-            instance_id=torch.from_numpy(instance_id))
+            instances_id=torch.from_numpy(instance_id))
 
     def test_format_only(self):
         outfile_prefix = f'{self.tmp_dir.name}/result'

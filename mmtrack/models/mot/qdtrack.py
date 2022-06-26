@@ -1,10 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import torch
-from mmdet.models import build_detector, build_head
+import copy
+from typing import Dict, Optional
 
-from mmtrack.core import outs2results, results2outs
-from mmtrack.models.mot import BaseMultiObjectTracker
-from ..builder import MODELS, build_tracker
+from torch import Tensor
+
+from mmtrack.core import TrackDataSample
+from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
+from mmtrack.registry import MODELS
+from .base import BaseMultiObjectTracker
 
 
 @MODELS.register_module()
@@ -20,163 +23,168 @@ class QDTrack(BaseMultiObjectTracker):
         tracker (dict): Configuration of tracker. Defaults to None.
         freeze_detector (bool): If True, freeze the detector weights.
             Defaults to False.
+        data_preprocessor (dict or ConfigDict, optional): The pre-process
+           config of :class:`TrackDataPreprocessor`.  it usually includes,
+            ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
+        init_cfg (dict or list[dict]): Configuration of initialization.
+            Defaults to None.
     """
 
     def __init__(self,
-                 detector=None,
-                 track_head=None,
-                 tracker=None,
-                 freeze_detector=False,
-                 *args,
-                 **kwargs):
-        super().__init__(*args, **kwargs)
+                 detector: Optional[dict] = None,
+                 track_head: Optional[dict] = None,
+                 tracker: Optional[dict] = None,
+                 freeze_detector: bool = False,
+                 data_preprocessor: OptConfigType = None,
+                 init_cfg: OptMultiConfig = None):
+        super().__init__(data_preprocessor, init_cfg)
         if detector is not None:
-            self.detector = build_detector(detector)
+            self.detector = MODELS.build(detector)
 
         if track_head is not None:
-            self.track_head = build_head(track_head)
+            self.track_head = MODELS.build(track_head)
 
         if tracker is not None:
-            self.tracker = build_tracker(tracker)
+            self.tracker = MODELS.build(tracker)
 
         self.freeze_detector = freeze_detector
         if self.freeze_detector:
             self.freeze_module('detector')
 
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      gt_bboxes,
-                      gt_labels,
-                      gt_match_indices,
-                      ref_img,
-                      ref_img_metas,
-                      ref_gt_bboxes,
-                      ref_gt_labels,
-                      gt_bboxes_ignore=None,
-                      gt_masks=None,
-                      ref_gt_bboxes_ignore=None,
-                      ref_gt_masks=None,
-                      **kwargs):
-        """Forward function during training.
+    def loss(self, batch_inputs: Dict[str, Tensor],
+             batch_data_samples: SampleList, **kwargs) -> dict:
+        """Calculate losses from a batch of inputs and data samples.
 
-         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
-                Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-            gt_bboxes (list[Tensor]): Ground truth bboxes of the image,
-                each item has a shape (num_gts, 4).
-            gt_labels (list[Tensor]): Ground truth labels of all images.
-                each has a shape (num_gts,).
-            gt_match_indices (list(Tensor)): Mapping from gt_instance_ids to
-                ref_gt_instance_ids of the same tracklet in a pair of images.
-            ref_img (Tensor): of shape (N, C, H, W) encoding input reference
-                images. Typically these should be mean centered and std scaled.
-            ref_img_metas (list[dict]): list of reference image info dict where
-                each dict has: 'img_shape', 'scale_factor', 'flip', and may
-                also contain 'filename', 'ori_shape', 'pad_shape',
-                and 'img_norm_cfg'.
-            ref_gt_bboxes (list[Tensor]): Ground truth bboxes of the
-                reference image, each item has a shape (num_gts, 4).
-            ref_gt_labels (list[Tensor]): Ground truth labels of all
-                reference images, each has a shape (num_gts,).
-            gt_masks (list[Tensor]) : Masks for each bbox, has a shape
-                (num_gts, h , w).
-            gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes to be
-                ignored, each item has a shape (num_ignored_gts, 4).
-            ref_gt_bboxes_ignore (list[Tensor], None): Ground truth bboxes
-                of reference images to be ignored,
-                each item has a shape (num_ignored_gts, 4).
-            ref_gt_masks (list[Tensor]) : Masks for each reference bbox,
-                has a shape (num_gts, h , w).
+        Args:
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+                input images. Typically these should be mean centered and std
+                scaled. The N denotes batch size.The T denotes the number of
+                key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
 
         Returns:
-            dict[str : Tensor]: All losses.
+            dict: A dictionary of loss components.
         """
+        # modify the inputs shape to fit mmdet
+        img = batch_inputs['img']
+        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        assert img.size(1) == 1, \
+            'QDTrack can only have 1 key frame and 1 reference frame.'
+        img = img[:, 0]
+
+        ref_img = batch_inputs['ref_img']
+        assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        assert ref_img.size(1) == 1, \
+            'QDTrack can only have 1 key frame and 1 reference frame.'
+        ref_img = ref_img[:, 0]
+
         x = self.detector.extract_feat(img)
+        ref_x = self.detector.extract_feat(ref_img)
 
         losses = dict()
 
         # RPN forward and loss
-        if self.detector.with_rpn:
-            proposal_cfg = self.detector.train_cfg.get(
-                'rpn_proposal', self.detector.test_cfg.rpn)
-            rpn_losses, proposal_list = self.detector.rpn_head.forward_train(
-                x,
-                img_metas,
-                gt_bboxes,
-                gt_labels=None,
-                gt_bboxes_ignore=gt_bboxes_ignore,
-                proposal_cfg=proposal_cfg)
-            losses.update(rpn_losses)
+        assert self.detector.with_rpn, \
+            'QDTrack only support detector with RPN.'
 
-        roi_losses = self.detector.roi_head.forward_train(
-            x, img_metas, proposal_list, gt_bboxes, gt_labels,
-            gt_bboxes_ignore, gt_masks, **kwargs)
+        proposal_cfg = self.detector.train_cfg.get('rpn_proposal',
+                                                   self.detector.test_cfg.rpn)
+        rpn_data_samples = copy.deepcopy(batch_data_samples)
+        rpn_losses, rpn_results_list = self.detector.rpn_head. \
+            loss_and_predict(x,
+                             rpn_data_samples,
+                             proposal_cfg=proposal_cfg,
+                             **kwargs)
+        # avoid get same name with roi_head loss
+        keys = rpn_losses.keys()
+        for key in keys:
+            if 'loss' in key and 'rpn' not in key:
+                rpn_losses[f'rpn_{key}'] = rpn_losses.pop(key)
+        losses.update(rpn_losses)
 
-        losses.update(roi_losses)
+        losses_detect = self.detector.roi_head.loss(x, rpn_results_list,
+                                                    batch_data_samples,
+                                                    **kwargs)
+        losses.update(losses_detect)
 
-        ref_x = self.detector.extract_feat(ref_img)
-        ref_proposals = self.detector.rpn_head.simple_test_rpn(
-            ref_x, ref_img_metas)
-
-        track_losses = self.track_head.forward_train(
-            x, img_metas, proposal_list, gt_bboxes, gt_labels,
-            gt_match_indices, ref_x, ref_img_metas, ref_proposals,
-            ref_gt_bboxes, ref_gt_labels, gt_bboxes_ignore, gt_masks,
-            ref_gt_bboxes_ignore)
-
-        losses.update(track_losses)
+        # adjust the key of ref_img in batch_data_samples
+        ref_rpn_data_samples = []
+        for data_sample in batch_data_samples:
+            ref_rpn_data_sample = TrackDataSample()
+            ref_rpn_data_sample.set_metainfo(
+                metainfo=dict(
+                    img_shape=data_sample.metainfo['ref_img_shape'],
+                    scale_factor=data_sample.metainfo['ref_scale_factor']))
+            ref_rpn_data_samples.append(ref_rpn_data_sample)
+        ref_rpn_results_list = self.detector.rpn_head.predict(
+            ref_x, ref_rpn_data_samples, **kwargs)
+        losses_track = self.track_head.loss(x, ref_x, rpn_results_list,
+                                            ref_rpn_results_list,
+                                            batch_data_samples, **kwargs)
+        losses.update(losses_track)
 
         return losses
 
-    def simple_test(self, img, img_metas, rescale=False):
-        """Test forward.
+    def predict(self,
+                batch_inputs: Dict[str, Tensor],
+                batch_data_samples: SampleList,
+                rescale: bool = False,
+                **kwargs) -> SampleList:
+        """Predict results from a batch of inputs and data samples with post-
+        processing.
 
-         Args:
-            img (Tensor): of shape (N, C, H, W) encoding input images.
-                Typically these should be mean centered and std scaled.
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-            rescale (bool): whether to rescale the bboxes.
+        Args:
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+                input images. Typically these should be mean centered and std
+                scaled. The N denotes batch size.The T denotes the number of
+                key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
+            rescale (bool, Optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to True.
 
         Returns:
-            dict[str : Tensor]: Track results.
+            SampleList: Tracking results of the input images.
+            Each TrackDataSample usually contains ``pred_det_instances``
+            or ``pred_track_instances``.
         """
-        # TODO inherit from a base tracker
-        assert self.with_track_head, 'track head must be implemented.'  # noqa
-        frame_id = img_metas[0].get('frame_id', -1)
+        img = batch_inputs['img']
+        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        assert img.size(1) == 1, \
+            'QDTrack can only have 1 key frame.'
+        img = img[:, 0]
+
+        assert len(batch_data_samples) == 1, \
+            'QDTrack only support 1 batch size per gpu for now.'
+        metainfo = batch_data_samples[0].metainfo
+        frame_id = metainfo.get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()
 
         x = self.detector.extract_feat(img)
-        proposal_list = self.detector.rpn_head.simple_test_rpn(x, img_metas)
+        rpn_results_list = self.detector.rpn_head.predict(
+            x, batch_data_samples)
+        det_results = self.detector.roi_head.predict(
+            x, rpn_results_list, batch_data_samples, rescale=rescale)
 
-        det_results = self.detector.roi_head.simple_test(
-            x, proposal_list, img_metas, rescale=rescale)
+        track_data_sample = batch_data_samples[0]
+        track_data_sample.pred_det_instances = \
+            det_results[0].clone()
 
-        bbox_results = det_results[0]
-        num_classes = len(bbox_results)
-        outs_det = results2outs(bbox_results=bbox_results)
-
-        det_bboxes = torch.tensor(outs_det['bboxes']).to(img)
-        det_labels = torch.tensor(outs_det['labels']).to(img).long()
-
-        track_bboxes, track_labels, track_ids = self.tracker.track(
-            img_metas=img_metas,
-            feats=x,
+        track_data_sample = self.tracker.track(
             model=self,
-            bboxes=det_bboxes,
-            labels=det_labels,
-            frame_id=frame_id)
+            img=img,
+            feats=x,
+            data_sample=track_data_sample,
+            rescale=rescale,
+            **kwargs)
 
-        track_bboxes = outs2results(
-            bboxes=track_bboxes,
-            labels=track_labels,
-            ids=track_ids,
-            num_classes=num_classes)['bbox_results']
-
-        return dict(det_bboxes=bbox_results, track_bboxes=track_bboxes)
+        return [track_data_sample]

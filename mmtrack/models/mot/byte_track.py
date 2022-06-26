@@ -20,7 +20,7 @@ class ByteTrack(BaseMultiObjectTracker):
         detector (dict): Configuration of detector. Defaults to None.
         tracker (dict): Configuration of tracker. Defaults to None.
         motion (dict): Configuration of motion. Defaults to None.
-            data_preprocessor (dict or ConfigDict, optional): The pre-process
+        data_preprocessor (dict or ConfigDict, optional): The pre-process
            config of :class:`TrackDataPreprocessor`.  it usually includes,
             ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
         init_cfg (dict or list[dict]): Configuration of initialization.
@@ -86,9 +86,9 @@ class ByteTrack(BaseMultiObjectTracker):
                 as `gt_instance`.
 
         Returns:
-            SampleList: Tracking results of the
-                input images. Each TrackDataSample usually contains
-                ``pred_det_instances`` or ``pred_track_instances``.
+            SampleList: Tracking results of the input images.
+            Each TrackDataSample usually contains ``pred_det_instances``
+            or ``pred_track_instances``.
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'

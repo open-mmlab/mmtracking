@@ -1,13 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import List, Optional, Tuple
+
 import torch
 import torch.nn as nn
-from mmdet.models import HEADS, build_loss
+from mmdet.core.bbox import SamplingResult
+from torch import Tensor
 
 from mmtrack.core import embed_similarity
+from mmtrack.registry import MODELS
 from .roi_embed_head import RoIEmbedHead
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class QuasiDenseEmbedHead(RoIEmbedHead):
     """The quasi-dense roi embed head.
 
@@ -22,17 +26,16 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
     """
 
     def __init__(self,
-                 embed_channels=256,
-                 softmax_temp=-1,
-                 loss_track=dict(
-                     type='MultiPosCrossEntropyLoss', loss_weight=0.25),
-                 loss_track_aux=dict(
+                 embed_channels: int = 256,
+                 softmax_temp: int = -1,
+                 loss_track: Optional[dict] = None,
+                 loss_track_aux: dict = dict(
                      type='L2Loss',
                      sample_ratio=3,
                      margin=0.3,
                      loss_weight=1.0,
                      hard_mining=True),
-                 init_cfg=dict(
+                 init_cfg: dict = dict(
                      type='Xavier',
                      layer='Linear',
                      distribution='uniform',
@@ -43,21 +46,22 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
                          mean=0,
                          std=0.01,
                          bias=0)),
-                 *args,
                  **kwargs):
-        super(QuasiDenseEmbedHead, self).__init__(
-            init_cfg=init_cfg, *args, **kwargs)
+        super(QuasiDenseEmbedHead, self).__init__(init_cfg=init_cfg, **kwargs)
+
+        if loss_track is None:
+            loss_track = dict(
+                type='MultiPosCrossEntropyLoss', loss_weight=0.25)
 
         self.fc_embed = nn.Linear(self.last_layer_dim, embed_channels)
-
         self.softmax_temp = softmax_temp
-        self.loss_track = build_loss(loss_track)
+        self.loss_track = MODELS.build(loss_track)
         if loss_track_aux is not None:
-            self.loss_track_aux = build_loss(loss_track_aux)
+            self.loss_track_aux = MODELS.build(loss_track_aux)
         else:
             self.loss_track_aux = None
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input `x`."""
 
         if self.num_convs > 0:
@@ -70,18 +74,20 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
         x = self.fc_embed(x)
         return x
 
-    def get_targets(self, gt_match_indices, key_sampling_results,
-                    ref_sampling_results):
+    def get_targets(
+            self, gt_match_indices: List[Tensor],
+            key_sampling_results: List[SamplingResult],
+            ref_sampling_results: List[SamplingResult]) -> Tuple[List, List]:
         """Calculate the track targets and track weights for all samples in a
         batch according to the sampling_results.
 
         Args:
-            key_sampling_results (List[obj:SamplingResults]): Assign results of
-                all images in a batch after sampling.
-            ref_sampling_results (List[obj:SamplingResults]): Assign results of
-                all reference images in a batch after sampling.
             gt_match_indices (list(Tensor)): Mapping from gt_instance_ids to
                 ref_gt_instance_ids of the same tracklet in a pair of images.
+            key_sampling_results (List[obj:SamplingResult]): Assign results of
+                all images in a batch after sampling.
+            ref_sampling_results (List[obj:SamplingResult]): Assign results of
+                all reference images in a batch after sampling.
 
         Returns:
             Tuple[list[Tensor]]: Association results.
@@ -113,8 +119,11 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
             track_weights.append(weights)
         return track_targets, track_weights
 
-    def match(self, key_embeds, ref_embeds, key_sampling_results,
-              ref_sampling_results):
+    def match(
+        self, key_embeds: Tensor, ref_embeds: Tensor,
+        key_sampling_results: List[SamplingResult],
+        ref_sampling_results: List[SamplingResult]
+    ) -> Tuple[List[Tensor], List[Tensor]]:
         """Calculate the dist matrixes for loss measurement.
 
         Args:
@@ -122,7 +131,7 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
                 of key image.
             ref_embeds (Tensor): Embeds of all bboxes in sampling results
                 of the reference image.
-            keysampling_results (List[obj:SamplingResults]): Assign results of
+            key_sampling_results (List[obj:SamplingResults]): Assign results of
                 all images in a batch after sampling.
             ref_sampling_results (List[obj:SamplingResults]): Assign results of
                 all reference images in a batch after sampling.
@@ -160,21 +169,24 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
                 cos_dists.append(None)
         return dists, cos_dists
 
-    def loss(self, dists, cos_dists, targets, weights):
+    def loss(self, key_roi_feats: Tensor, ref_roi_feats: Tensor,
+             key_sampling_results: List[SamplingResult],
+             ref_sampling_results: List[SamplingResult],
+             gt_match_indices_list: List[Tensor]) -> dict:
         """Calculate the track loss and the auxiliary track loss.
 
         Args:
-            dists (list[Tensor]): Dot-product dists between
-                key_embeds and ref_embeds.
-            cos_dists (list[Tensor]): Cosine dists between
-                key_embeds and ref_embeds.
-            targets (list[Tensor]): The mapping instance ids from all
-                positive proposals in the key image to all proposals
-                in the reference image, each tensor in list has
-                shape (len(key_pos_bboxes), len(ref_bboxes)).
-            weights (list[Tensor]): Loss weights for all positive
-                proposals in a batch, each tensor in list has
-                shape (len(key_pos_bboxes),).
+            key_roi_feats (Tensor): Embeds of positive bboxes in sampling
+                results of key image.
+            ref_roi_feats (Tensor): Embeds of all bboxes in sampling results
+                of the reference image.
+            key_sampling_results (List[obj:SamplingResults]): Assign results of
+                all images in a batch after sampling.
+            ref_sampling_results (List[obj:SamplingResults]): Assign results of
+                all reference images in a batch after sampling.
+            gt_match_indices_list (list(Tensor)): Mapping from gt_instances_id
+                to ref_gt_instances_id of the same tracklet in a pair of
+                images.
 
         Returns:
             Dict [str: Tensor]: Calculation results.
@@ -183,7 +195,46 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
                 - loss_track (Tensor): Results of loss_track function.
                 - loss_track_aux (Tensor): Results of loss_track_aux function.
         """
+        key_track_feats = self(key_roi_feats)
+        ref_track_feats = self(ref_roi_feats)
 
+        losses = self.loss_by_feat(key_track_feats, ref_track_feats,
+                                   key_sampling_results, ref_sampling_results,
+                                   gt_match_indices_list)
+        return losses
+
+    def loss_by_feat(self, key_track_feats: Tensor, ref_track_feats: Tensor,
+                     key_sampling_results: List[SamplingResult],
+                     ref_sampling_results: List[SamplingResult],
+                     gt_match_indices_list: List[Tensor]) -> dict:
+        """Calculate the track loss and the auxiliary track loss.
+
+        Args:
+            key_track_feats (Tensor): Embeds of positive bboxes in sampling
+                results of key image.
+            ref_track_feats (Tensor): Embeds of all bboxes in sampling results
+                of the reference image.
+            key_sampling_results (List[obj:SamplingResults]): Assign results of
+                all images in a batch after sampling.
+            ref_sampling_results (List[obj:SamplingResults]): Assign results of
+                all reference images in a batch after sampling.
+            gt_match_indices_list (list(Tensor)): Mapping from gt_instances_id
+                to ref_gt_instances_id of the same tracklet in a pair of
+                images.
+
+        Returns:
+            Dict [str: Tensor]: Calculation results.
+            Containing the following list of Tensors:
+
+                - loss_track (Tensor): Results of loss_track function.
+                - loss_track_aux (Tensor): Results of loss_track_aux function.
+        """
+        dists, cos_dists = self.match(key_track_feats, ref_track_feats,
+                                      key_sampling_results,
+                                      ref_sampling_results)
+        targets, weights = self.get_targets(gt_match_indices_list,
+                                            key_sampling_results,
+                                            ref_sampling_results)
         losses = dict()
 
         loss_track = 0.
@@ -200,3 +251,16 @@ class QuasiDenseEmbedHead(RoIEmbedHead):
             losses['loss_track_aux'] = loss_track_aux / len(dists)
 
         return losses
+
+    def predict(self, bbox_feats: Tensor) -> Tensor:
+        """Perform forward propagation of the tracking head and predict
+        tracking results on the features of the upstream network.
+
+        Args:
+            bbox_feats: The extracted roi features.
+
+        Returns:
+            Tensor: The extracted track features.
+        """
+        track_feats = self(bbox_feats)
+        return track_feats

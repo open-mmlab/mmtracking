@@ -1,24 +1,29 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional
+
 import torch
-import torch.nn as nn
-from mmdet.models import LOSSES, weight_reduce_loss
+from mmdet.models import weight_reduce_loss
+from mmengine.model import BaseModule
+from torch import Tensor
+
+from mmtrack.registry import MODELS
 
 
-@LOSSES.register_module()
-class MultiPosCrossEntropyLoss(nn.Module):
+@MODELS.register_module()
+class MultiPosCrossEntropyLoss(BaseModule):
     """multi-positive targets cross entropy loss."""
 
-    def __init__(self, reduction='mean', loss_weight=1.0):
+    def __init__(self, reduction: str = 'mean', loss_weight: float = 1.0):
         super(MultiPosCrossEntropyLoss, self).__init__()
         self.reduction = reduction
         self.loss_weight = loss_weight
 
     def multi_pos_cross_entropy(self,
-                                pred,
-                                label,
-                                weight=None,
-                                reduction='mean',
-                                avg_factor=None):
+                                pred: Tensor,
+                                label: Tensor,
+                                weight: Optional[Tensor] = None,
+                                reduction: str = 'mean',
+                                avg_factor: Optional[float] = None) -> Tensor:
         """
         Args:
             pred (torch.Tensor): The prediction.
@@ -55,12 +60,12 @@ class MultiPosCrossEntropyLoss(nn.Module):
         return loss
 
     def forward(self,
-                cls_score,
-                label,
-                weight=None,
-                avg_factor=None,
-                reduction_override=None,
-                **kwargs):
+                cls_score: Tensor,
+                label: Tensor,
+                weight: Optional[Tensor] = None,
+                avg_factor: Optional[float] = None,
+                reduction_override: Optional[str] = None,
+                **kwargs) -> Tensor:
         """Forward function.
 
         Args:
@@ -69,7 +74,7 @@ class MultiPosCrossEntropyLoss(nn.Module):
             weight (torch.Tensor): The element-wise weight.
             avg_factor (float): Average factor when computing
                 the mean of losses.
-            reduction (str): Same as built-in losses of PyTorch.
+            reduction_override (str): Same as built-in losses of PyTorch.
         Returns:
             torch.Tensor: Calculated loss
         """
@@ -82,6 +87,5 @@ class MultiPosCrossEntropyLoss(nn.Module):
             label,
             weight,
             reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+            avg_factor=avg_factor)
         return loss_cls
