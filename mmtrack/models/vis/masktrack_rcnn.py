@@ -170,12 +170,13 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         track_data_sample.pred_det_instances = \
             det_results[0].clone()
 
-        track_data_sample = self.tracker.track(
+        pred_track_instances = self.tracker.track(
             model=self,
             img=img,
             feats=x,
             data_sample=track_data_sample,
             rescale=rescale,
             **kwargs)
+        track_data_sample.pred_track_instances = pred_track_instances
 
         return [track_data_sample]

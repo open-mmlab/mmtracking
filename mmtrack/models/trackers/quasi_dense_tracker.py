@@ -192,7 +192,7 @@ class QuasiDenseTracker(BaseTracker):
               feats: List[torch.Tensor],
               data_sample: TrackDataSample,
               rescale=True,
-              **kwargs) -> TrackDataSample:
+              **kwargs) -> InstanceData:
         """Tracking forward function.
 
         Args:
@@ -209,9 +209,9 @@ class QuasiDenseTracker(BaseTracker):
                 True.
 
         Returns:
-            :obj:`TrackDataSample`: Tracking results of the input images.
-            Each TrackDataSample usually contains ``pred_det_instances``
-            or ``pred_track_instances``.
+            :obj:`InstanceData`: Tracking results of the input images.
+            Each InstanceData usually contains ``bboxes``, ``labels``,
+            ``scores`` and ``instances_id``.
         """
         metainfo = data_sample.metainfo
         bboxes = data_sample.pred_det_instances.bboxes
@@ -227,8 +227,7 @@ class QuasiDenseTracker(BaseTracker):
             ids = torch.zeros_like(labels)
             pred_track_instances = data_sample.pred_det_instances.clone()
             pred_track_instances.instances_id = ids
-            data_sample.pred_track_instances = pred_track_instances
-            return data_sample
+            return pred_track_instances
 
         # get track feats
         rescaled_bboxes = bboxes.clone()
@@ -313,6 +312,5 @@ class QuasiDenseTracker(BaseTracker):
         pred_track_instances.labels = labels
         pred_track_instances.scores = scores
         pred_track_instances.instances_id = ids
-        data_sample.pred_track_instances = pred_track_instances
-        # TODO: update all trackers return, the UT need update as well
-        return data_sample
+
+        return pred_track_instances

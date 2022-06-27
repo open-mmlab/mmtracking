@@ -89,13 +89,12 @@ class TestQuasiDenseTAOTracker(TestCase):
             # add fake scores
             scores = torch.ones(5)
             data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
-            track_data_sample = self.tracker.track(
+            pred_track_instances = self.tracker.track(
                 model=model,
                 img=img,
                 feats=feats,
                 data_sample=packed_inputs[0]['data_sample'])
-            pred_track_instances = track_data_sample.get(
-                'pred_track_instances', None)
+
             bboxes = pred_track_instances.bboxes
             labels = pred_track_instances.labels
             ids = pred_track_instances.instances_id

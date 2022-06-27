@@ -127,7 +127,7 @@ class Tracktor(BaseMultiObjectTracker):
         assert len(det_results) == 1, 'Batch inference is not supported.'
         track_data_sample.pred_det_instances = det_results[0]
 
-        track_data_sample = self.tracker.track(
+        pred_track_instances = self.tracker.track(
             model=self,
             img=img,
             feats=x,
@@ -135,5 +135,6 @@ class Tracktor(BaseMultiObjectTracker):
             data_preprocessor=self.preprocess_cfg,
             rescale=rescale,
             **kwargs)
+        track_data_sample.pred_track_instances = pred_track_instances
 
         return [track_data_sample]

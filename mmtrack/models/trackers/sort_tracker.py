@@ -101,7 +101,7 @@ class SORTTracker(BaseTracker):
               data_sample: TrackDataSample,
               data_preprocessor: OptConfigType = None,
               rescale: bool = False,
-              **kwargs) -> TrackDataSample:
+              **kwargs) -> InstanceData:
         """Tracking forward function.
 
         Args:
@@ -121,9 +121,9 @@ class SORTTracker(BaseTracker):
                 False.
 
         Returns:
-            :obj:`TrackDataSample`: Tracking results of the input images.
-            Each TrackDataSample usually contains ``pred_det_instances``
-            or ``pred_track_instances``.
+            :obj:`InstanceData`: Tracking results of the input images.
+            Each InstanceData usually contains ``bboxes``, ``labels``,
+            ``scores`` and ``instances_id``.
         """
         metainfo = data_sample.metainfo
         bboxes = data_sample.pred_det_instances.bboxes
@@ -235,6 +235,5 @@ class SORTTracker(BaseTracker):
         pred_track_instances.labels = labels
         pred_track_instances.scores = scores
         pred_track_instances.instances_id = ids
-        data_sample.pred_track_instances = pred_track_instances
 
-        return data_sample
+        return pred_track_instances

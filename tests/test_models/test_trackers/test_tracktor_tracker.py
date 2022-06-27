@@ -59,14 +59,13 @@ class TestTracktorTracker(TestCase):
         scores = torch.ones(5)
         data_sample.pred_det_instances.scores = torch.FloatTensor(scores)
         for frame_id in range(3):
-            track_data_sample = tracker.track(
+            pred_track_instances = tracker.track(
                 model=model,
                 img=img,
                 feats=x,
                 data_sample=packed_inputs[0]['data_sample'],
                 data_preprocessor=cfg['data_preprocessor'])
-            pred_track_instances = track_data_sample.get(
-                'pred_track_instances', None)
+
             bboxes = pred_track_instances.bboxes
             labels = pred_track_instances.labels
             ids = pred_track_instances.instances_id
