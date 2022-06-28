@@ -23,7 +23,7 @@ test_pipeline = [
             dict(type='LoadImageFromFile'),
             dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
         ]),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=False)
 ]
 
 # dataloader

@@ -174,11 +174,16 @@ def _demo_mm_inputs(batch_size=1,
         if num_ref_imgs > 0:
             search_img_meta = dict()
             for key, value in img_meta.items():
-                search_img_meta[f'{ref_prefix}_{key}'] = value
-            search_img_meta[f'{ref_prefix}_img_shape'] = image_shape_group[int(
-                num_key_imgs > 0)][-2:]
-            search_img_meta[f'{ref_prefix}_ori_shape'] = image_shape_group[int(
-                num_key_imgs > 0)][-2:]
+                search_img_meta[f'{ref_prefix}_{key}'] = [
+                    value
+                ] * num_ref_imgs if num_ref_imgs > 1 else value
+            search_shape = image_shape_group[int(num_key_imgs > 0)][-2:]
+            search_img_meta[f'{ref_prefix}_img_shape'] = [
+                search_shape
+            ] * num_ref_imgs if num_ref_imgs > 1 else search_shape
+            search_img_meta[f'{ref_prefix}_ori_shape'] = [
+                search_shape
+            ] * num_ref_imgs if num_ref_imgs > 1 else search_shape
             img_meta.update(search_img_meta)
 
         data_sample = TrackDataSample()

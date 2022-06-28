@@ -11,36 +11,30 @@ from mmtrack.utils import register_all_modules
 from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
-class TestStark(TestCase):
+class TestVideoDetector(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        register_all_modules(init_default_scope=True)
+        register_all_modules()
 
     @parameterized.expand([
-        'sot/stark/stark_st1_r50_500e_got10k.py',
-        'sot/stark/stark_st2_r50_50e_got10k.py'
+        'vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py',
     ])
     def test_init(self, cfg_file):
         model = _get_model_cfg(cfg_file)
-
         model = MODELS.build(model)
-        assert model.backbone
-        assert model.neck
-        assert model.head
+        assert model.detector
 
-    # TODO: reduce the channels of models in all configs for speed up
-    # unit test.
     @parameterized.expand([
-        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
-        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
+        ('vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu',
+                                                                   'cuda'))
     ])
-    def test_stark_forward_loss_mode(self, cfg_file, devices):
-        _model = _get_model_cfg(cfg_file)
-
+    def test_selsa_forward_loss_mode(self, cfg_file, devices):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
+            _model = _get_model_cfg(cfg_file)
+            # _scope_ will be popped after build
             model = MODELS.build(_model)
 
             if device == 'cuda':
@@ -48,35 +42,25 @@ class TestStark(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            # forward in ``loss`` mode
             packed_inputs = _demo_mm_inputs(
-                batch_size=1,
-                frame_id=0,
-                num_template_imgs=2,
-                num_search_imgs=1,
-                ref_prefix='search',
-                image_shapes=[[(3, 128, 128), (3, 320, 320)]],
-                num_items=[1])
-            for input in packed_inputs:
-                input['data_sample'].padding_mask = torch.zeros((2, 128, 128),
-                                                                dtype=bool)
-                input['data_sample'].search_padding_mask = torch.zeros(
-                    (1, 128, 128), dtype=bool)
+                batch_size=1, frame_id=0, num_ref_imgs=2)
             batch_inputs, data_samples = model.data_preprocessor(
                 packed_inputs, True)
+
+            # forward in ``loss`` mode
             losses = model.forward(batch_inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
-        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
+        ('vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu',
+                                                                   'cuda'))
     ])
-    def test_stark_forward_predict_mode(self, cfg_file, devices):
-        _model = _get_model_cfg(cfg_file)
-
+    def test_selsa_forward_predict_mode(self, cfg_file, devices):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
+            _model = _get_model_cfg(cfg_file)
+            # _scope_ will be popped after build
             model = MODELS.build(_model)
 
             if device == 'cuda':
@@ -89,15 +73,7 @@ class TestStark(TestCase):
             with torch.no_grad():
                 for i in range(3):
                     packed_inputs = _demo_mm_inputs(
-                        batch_size=1,
-                        frame_id=i,
-                        num_key_imgs=1,
-                        num_ref_imgs=0,
-                        image_shapes=[(3, 320, 320)],
-                        num_items=[1])
-                    for input in packed_inputs:
-                        input['data_sample'].padding_mask = torch.zeros(
-                            (1, 320, 320), dtype=bool)
+                        batch_size=1, frame_id=i, num_ref_imgs=2)
                     batch_inputs, data_samples = model.data_preprocessor(
                         packed_inputs, False)
                     batch_results = model.forward(

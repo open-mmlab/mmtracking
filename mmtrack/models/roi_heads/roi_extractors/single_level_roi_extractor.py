@@ -1,11 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from mmcv.runner import force_fp32
-from mmdet.models.builder import ROI_EXTRACTORS
+from typing import Tuple
+
 from mmdet.models.roi_heads.roi_extractors import \
     SingleRoIExtractor as _SingleRoIExtractor
+from torch import Tensor
+
+from mmtrack.registry import MODELS
 
 
-@ROI_EXTRACTORS.register_module(force=True)
+@MODELS.register_module()
 class SingleRoIExtractor(_SingleRoIExtractor):
     """Extract RoI features from a single level feature map.
 
@@ -14,7 +17,19 @@ class SingleRoIExtractor(_SingleRoIExtractor):
     accept external arguments.
     """
 
-    @force_fp32(apply_to=('feats', ), out_fp16=True)
-    def forward(self, feats, rois, roi_scale_factor=None, **kwargs):
-        """Forward function."""
+    def forward(self,
+                feats: Tuple[Tensor],
+                rois: Tensor,
+                roi_scale_factor: float = None,
+                **kwargs) -> Tensor:
+        """Forward function.
+        Args:
+            feats (Tuple[Tensor]): The feature maps.
+            rois (Tensor): The RoIs.
+            roi_scale_factor (float): Scale factor that RoI will be multiplied
+                by.
+
+        Returns:
+            Tensor: RoI features.
+        """
         return super().forward(feats, rois, roi_scale_factor)

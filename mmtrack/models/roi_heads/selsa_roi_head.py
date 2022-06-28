@@ -1,84 +1,100 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from mmdet.core import bbox2result, bbox2roi
-from mmdet.models import HEADS, StandardRoIHead
+from typing import List, Tuple
+
+from mmdet.core import bbox2roi
+from mmdet.models import StandardRoIHead
+from torch import Tensor
+
+from mmtrack.core.utils.typing import ConfigType, InstanceList, SampleList
+from mmtrack.registry import MODELS
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class SelsaRoIHead(StandardRoIHead):
     """selsa roi head."""
 
-    def forward_train(self,
-                      x,
-                      ref_x,
-                      img_metas,
-                      proposal_list,
-                      ref_proposal_list,
-                      gt_bboxes,
-                      gt_labels,
-                      gt_bboxes_ignore=None,
-                      gt_masks=None):
+    def loss(self, x: Tuple[Tensor], ref_x: Tuple[Tensor],
+             rpn_results_list: InstanceList,
+             ref_rpn_results_list: InstanceList,
+             batch_data_samples: SampleList) -> dict:
         """
         Args:
-            x (list[Tensor]): list of multi-level img features.
-            ref_x (list[Tensor]): list of multi-level ref_img features.
-            img_metas (list[dict]): list of image info dict where each dict
-                has: 'img_shape', 'scale_factor', 'flip', and may also contain
-                'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'.
-                For details on the values of these keys see
-                `mmdet/datasets/pipelines/formatting.py:Collect`.
-            proposal_list (list[Tensors]): list of region proposals.
-            ref_proposal_list (list[Tensors]): list of region proposals
-                from ref_imgs.
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
-                shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
-            gt_labels (list[Tensor]): class indices corresponding to each box
-            gt_bboxes_ignore (None | list[Tensor]): specify which bounding
-                boxes can be ignored when computing the loss.
-            gt_masks (None | Tensor) : true segmentation masks for each box
-                used if the architecture supports a segmentation task.
+            x (Tuple[Tensor]): list of multi-level img features.
+            ref_x (Tuple[Tensor]): list of multi-level ref_img features.
+            rpn_results_list (InstanceList): list of region proposals.
+            ref_rpn_results_list (InstanceList): list of region proposals
+                from reference images.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance` and 'metainfo'.
 
         Returns:
-            dict[str, Tensor]: a dictionary of loss components
+            dict[str, Tensor]: a dictionary of loss components.
         """
+        assert len(rpn_results_list) == len(batch_data_samples)
+        batch_gt_instances = []
+        batch_gt_instances_ignore = []
+        for data_sample in batch_data_samples:
+            batch_gt_instances.append(data_sample.gt_instances)
+            if 'ignored_instances' in data_sample:
+                batch_gt_instances_ignore.append(data_sample.ignored_instances)
+            else:
+                batch_gt_instances_ignore.append(None)
+
         # assign gts and sample proposals
         if self.with_bbox or self.with_mask:
-            num_imgs = len(img_metas)
-            if gt_bboxes_ignore is None:
-                gt_bboxes_ignore = [None for _ in range(num_imgs)]
+            num_imgs = len(batch_data_samples)
             sampling_results = []
             for i in range(num_imgs):
+                # rename rpn_results.bboxes to rpn_results.priors
+                rpn_results = rpn_results_list[i]
+                rpn_results.priors = rpn_results.pop('bboxes')
                 assign_result = self.bbox_assigner.assign(
-                    proposal_list[i], gt_bboxes[i], gt_bboxes_ignore[i],
-                    gt_labels[i])
+                    rpn_results, batch_gt_instances[i],
+                    batch_gt_instances_ignore[i])
                 sampling_result = self.bbox_sampler.sample(
                     assign_result,
-                    proposal_list[i],
-                    gt_bboxes[i],
-                    gt_labels[i],
+                    rpn_results,
+                    batch_gt_instances[i],
                     feats=[lvl_feat[i][None] for lvl_feat in x])
                 sampling_results.append(sampling_result)
 
         losses = dict()
         # bbox head forward and loss
         if self.with_bbox:
-            bbox_results = self._bbox_forward_train(x, ref_x, sampling_results,
-                                                    ref_proposal_list,
-                                                    gt_bboxes, gt_labels)
+            bbox_results = self.bbox_loss(x, ref_x, sampling_results,
+                                          ref_rpn_results_list)
             losses.update(bbox_results['loss_bbox'])
 
         # mask head forward and loss
         if self.with_mask:
-            mask_results = self._mask_forward_train(x, sampling_results,
-                                                    bbox_results['bbox_feats'],
-                                                    gt_masks, img_metas)
-            # TODO: Support empty tensor input. #2280
-            if mask_results['loss_mask'] is not None:
-                losses.update(mask_results['loss_mask'])
+            mask_results = self.mask_loss(x, sampling_results,
+                                          bbox_results['bbox_feats'],
+                                          batch_gt_instances)
+            losses.update(mask_results['loss_mask'])
 
         return losses
 
-    def _bbox_forward(self, x, ref_x, rois, ref_rois):
-        """Box head forward function used in both training and testing."""
+    def _bbox_forward(self, x: Tuple[Tensor], ref_x: Tuple[Tensor],
+                      rois: Tensor, ref_rois: Tensor) -> dict:
+        """Box head forward function used in both training and testing.
+
+        Args:
+            x (Tuple[Tensor]): List of multi-level img features.
+            ref_x (Tuple[Tensor]): List of multi-level reference img features.
+            rois (Tensor): RoIs with the shape (n, 5) where the first
+                column indicates batch id of each RoI.
+            ref_rois (Tensor): Reference RoIs with the shape (n, 5) where the
+                first column indicates batch id of each RoI.
+
+        Returns:
+            dict[str, Tensor]: Usually returns a dictionary with keys:
+
+                - `cls_score` (Tensor): Classification scores.
+                - `bbox_pred` (Tensor): Box energies / deltas.
+                - `bbox_feats` (Tensor): Extract bbox RoI features.
+        """
+
         # TODO: a more flexible way to decide which feature maps to use
         bbox_feats = self.bbox_roi_extractor(
             x[:self.bbox_roi_extractor.num_inputs],
@@ -96,73 +112,135 @@ class SelsaRoIHead(StandardRoIHead):
             cls_score=cls_score, bbox_pred=bbox_pred, bbox_feats=bbox_feats)
         return bbox_results
 
-    def _bbox_forward_train(self, x, ref_x, sampling_results,
-                            ref_proposal_list, gt_bboxes, gt_labels):
-        """Run forward function and calculate loss for box head in training."""
+    def bbox_loss(self, x: Tuple[Tensor], ref_x: Tuple[Tensor],
+                  sampling_results: InstanceList,
+                  ref_rpn_results_list: InstanceList):
+        """Run forward function and calculate loss for box head in training.
+
+        Args:
+            x (Tuple[Tensor]): list of multi-level img features.
+            ref_x (Tuple[Tensor]): list of multi-level ref_img features.
+            sampling_results (InstanceList): Sampleing results.
+            ref_rpn_results_list (InstanceList): list of region proposals
+                from reference images.
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components.
+        """
         rois = bbox2roi([res.bboxes for res in sampling_results])
-        ref_rois = bbox2roi(ref_proposal_list)
+        ref_rois = bbox2roi([res.bboxes for res in ref_rpn_results_list])
         bbox_results = self._bbox_forward(x, ref_x, rois, ref_rois)
 
-        bbox_targets = self.bbox_head.get_targets(sampling_results, gt_bboxes,
-                                                  gt_labels, self.train_cfg)
-        loss_bbox = self.bbox_head.loss(bbox_results['cls_score'],
-                                        bbox_results['bbox_pred'], rois,
-                                        *bbox_targets)
+        bbox_loss_and_target = self.bbox_head.loss_and_target(
+            cls_score=bbox_results['cls_score'],
+            bbox_pred=bbox_results['bbox_pred'],
+            rois=rois,
+            sampling_results=sampling_results,
+            rcnn_train_cfg=self.train_cfg)
 
-        bbox_results.update(loss_bbox=loss_bbox)
+        bbox_results.update(loss_bbox=bbox_loss_and_target['loss_bbox'])
         return bbox_results
 
-    def simple_test(self,
-                    x,
-                    ref_x,
-                    proposals_list,
-                    ref_proposals_list,
-                    img_metas,
-                    proposals=None,
-                    rescale=False):
-        """Test without augmentation."""
+    def predict(self,
+                x: Tuple[Tensor],
+                ref_x: Tuple[Tensor],
+                rpn_results_list: InstanceList,
+                ref_rpn_results_list: InstanceList,
+                batch_data_samples: SampleList,
+                rescale: bool = False) -> InstanceList:
+        """Perform forward propagation of the roi head and predict detection
+        results on the features of the upstream network.
+
+        Args:
+            x (Tuple[Tensor]): All scale level feature maps of images.
+            ref_x (Tuple[Tensor]): All scale level feature maps of reference
+                mages.
+            rpn_results_list (InstanceList): list of region proposals.
+            ref_rpn_results_list (InstanceList): list of region
+                proposals from reference images.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance` and 'metainfo'.
+            rescale (bool, optional): If True, return boxes in original image
+                space. Defaults to False.
+
+        Returns:
+            list[:obj:`InstanceData`]: Detection results of each image
+            after the post process.
+            Each item usually contains following keys.
+
+                - scores (Tensor): Classification scores, has a shape
+                  (num_instance, )
+                - labels (Tensor): Labels of bboxes, has a shape
+                  (num_instances, ).
+                - bboxes (Tensor): Has a shape (num_instances, 4),
+                  the last dimension 4 arrange as (x1, y1, x2, y2).
+        """
         assert self.with_bbox, 'Bbox head must be implemented.'
 
-        det_bboxes, det_labels = self.simple_test_bboxes(
-            x,
-            ref_x,
-            proposals_list,
-            ref_proposals_list,
-            img_metas,
-            self.test_cfg,
-            rescale=rescale)
-        bbox_results = [
-            bbox2result(det_bboxes[i], det_labels[i],
-                        self.bbox_head.num_classes)
-            for i in range(len(det_bboxes))
+        batch_img_metas = [
+            data_samples.metainfo for data_samples in batch_data_samples
         ]
 
-        if not self.with_mask:
-            return bbox_results
-        else:
-            mask_results = self.simple_test_mask(
-                x, img_metas, det_bboxes, det_labels, rescale=rescale)
-            return list(zip(bbox_results, mask_results))
+        results_list = self.predict_bbox(
+            x,
+            ref_x,
+            rpn_results_list,
+            ref_rpn_results_list,
+            batch_img_metas,
+            self.test_cfg,
+            rescale=rescale)
 
-    def simple_test_bboxes(self,
-                           x,
-                           ref_x,
-                           proposals,
-                           ref_proposals,
-                           img_metas,
-                           rcnn_test_cfg,
-                           rescale=False):
-        """Test only det bboxes without augmentation."""
-        rois = bbox2roi(proposals)
-        ref_rois = bbox2roi(ref_proposals)
+        if self.with_mask:
+            results_list = self.predict_mask(
+                x, batch_img_metas, results_list, rescale=rescale)
+
+        return results_list
+
+    def predict_bbox(self,
+                     x: Tuple[Tensor],
+                     ref_x: Tuple[Tensor],
+                     rpn_results_list: InstanceList,
+                     ref_rpn_results_list: InstanceList,
+                     batch_img_metas: List[dict],
+                     rcnn_test_cfg: ConfigType,
+                     rescale: bool = False) -> InstanceList:
+        """Perform forward propagation of the bbox head and predict detection
+        results on the features of the upstream network.
+
+        Args:
+            x (Tuple[Tensor]): All scale level feature maps of images.
+            ref_x (Tuple[Tensor]): All scale level feature maps of reference
+                mages.
+            rpn_results_list (InstanceList): List of region proposals.
+            ref_rpn_results_list (InstanceList): List of region
+                proposals from reference images.
+            batch_img_metas (List[dict]): _List of image information.
+            rcnn_test_cfg (ConfigType): `test_cfg` of R-CNN.
+            rescale (bool, optional): If True, return boxes in original image
+                space. Defaults to False.
+
+        Returns:
+            list[obj:`InstanceData`]: Detection results of each image.
+            Each item usually contains following keys.
+
+                - scores (Tensor): Classification scores, has a shape
+                  (num_instance, )
+                - labels (Tensor): Labels of bboxes, has a shape
+                  (num_instances, ).
+                - bboxes (Tensor): Has a shape (num_instances, 4),
+                  the last dimension 4 arrange as (x1, y1, x2, y2).
+                - masks (Tensor): Has a shape (num_instances, H, W).
+        """
+
+        rois = bbox2roi([res.bboxes for res in rpn_results_list])
+        ref_rois = bbox2roi([res.bboxes for res in ref_rpn_results_list])
         bbox_results = self._bbox_forward(x, ref_x, rois, ref_rois)
-        img_shapes = tuple(meta['img_shape'] for meta in img_metas)
-        scale_factors = tuple(meta['scale_factor'] for meta in img_metas)
 
         # split batch bbox prediction back to each image
         cls_score = bbox_results['cls_score']
         bbox_pred = bbox_results['bbox_pred']
-        num_proposals_per_img = tuple(len(p) for p in proposals)
+        num_proposals_per_img = tuple(len(p) for p in rpn_results_list)
         rois = rois.split(num_proposals_per_img, 0)
         cls_score = cls_score.split(num_proposals_per_img, 0)
         # some detector with_reg is False, bbox_pred will be None
@@ -171,17 +249,12 @@ class SelsaRoIHead(StandardRoIHead):
             0) if bbox_pred is not None else [None, None]
 
         # apply bbox post-processing to each image individually
-        det_bboxes = []
-        det_labels = []
-        for i in range(len(proposals)):
-            det_bbox, det_label = self.bbox_head.get_bboxes(
-                rois[i],
-                cls_score[i],
-                bbox_pred[i],
-                img_shapes[i],
-                scale_factors[i],
-                rescale=rescale,
-                cfg=rcnn_test_cfg)
-            det_bboxes.append(det_bbox)
-            det_labels.append(det_label)
-        return det_bboxes, det_labels
+        result_list = self.bbox_head.predict_by_feat(
+            rois,
+            cls_score,
+            bbox_pred,
+            batch_img_metas=batch_img_metas,
+            rcnn_test_cfg=rcnn_test_cfg,
+            rescale=rescale)
+
+        return result_list

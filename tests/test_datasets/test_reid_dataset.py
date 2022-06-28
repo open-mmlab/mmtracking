@@ -16,15 +16,13 @@ class TestReIDDataset(TestCase):
         cls.num_ids = 8
         cls.ins_per_id = 4
         cls.dataset = ReIDDataset(
-            pipeline=[],
-            ann_file=REID_ANN_FILE,
-            data_prefix=dict(img_path=None))
+            pipeline=[], ann_file=REID_ANN_FILE, data_prefix=dict(img_path=''))
         cls.dataset_triplet = ReIDDataset(
             pipeline=[],
             triplet_sampler=dict(
                 num_ids=cls.num_ids, ins_per_id=cls.ins_per_id),
             ann_file=REID_ANN_FILE,
-            data_prefix=dict(img_path=None))
+            data_prefix=dict(img_path=''))
 
     def test_get_data_info(self):
         # id 0 has 21 objects

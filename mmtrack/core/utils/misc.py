@@ -3,12 +3,15 @@ import multiprocessing as mp
 import os
 import platform
 import warnings
-from typing import List, Union
+from copy import deepcopy
+from typing import List, Tuple, Union
 
 import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
+
+from mmtrack.core import TrackDataSample
 
 
 def setup_multi_processes(cfg):
@@ -95,3 +98,44 @@ def stack_batch(tensors: List[torch.Tensor],
             padded_samples.append(F.pad(tensor, padding_size, value=pad_value))
 
     return torch.stack(padded_samples, dim=0)
+
+
+def convert_data_sample_type(
+        data_sample: TrackDataSample,
+        num_ref_imgs: int = 1) -> Tuple[List[TrackDataSample], List[dict]]:
+    """Convert the type of ``data_sample`` from dict[list] to list[dict].
+
+    Note: This function is mainly used to be compatible with the
+        interface of MMDetection. It make sure that the information of
+        each reference image can be independently packed into
+        ``data_sample`` in which all the keys are without prefix "ref_".
+
+    Args:
+        data_sample (TrackDataSample): Data sample input.
+        num_ref_imgs (int, optional): The numbe of reference images in the
+            ``data_sample``. Defaults to 1.
+
+    Returns:
+        Tuple[List[TrackDataSample], List[dict]]: The first element is the
+            list of object of TrackDataSample. The second element is the
+            list of meta information of reference images.
+    """
+    ref_data_samples, ref_metainfos = [], []
+    for _ in range(num_ref_imgs):
+        ref_data_samples.append(deepcopy(data_sample))
+        ref_metainfos.append(deepcopy(data_sample.metainfo))
+
+    for key, value in data_sample.metainfo.items():
+        if key.startswith('ref_'):
+            new_key = key[4:]
+            if num_ref_imgs == 1:
+                value = [value]
+            assert len(value) == num_ref_imgs
+            for i, v in enumerate(value):
+                ref_metainfos[i][new_key] = v
+                ref_data_samples[i].set_metainfo(dict(new_key=v))
+                # pop the redundant original reference key.
+                ref_metainfos[i].pop(key)
+                ref_data_samples[i].pop(key)
+
+    return ref_data_samples, ref_metainfos

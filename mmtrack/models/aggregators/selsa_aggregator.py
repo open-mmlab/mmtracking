@@ -2,11 +2,13 @@
 import torch
 import torch.nn as nn
 from mmcv.runner import BaseModule
+from torch import Tensor
 
-from ..builder import AGGREGATORS
+from mmtrack.core.utils import OptConfigType
+from mmtrack.registry import MODELS
 
 
-@AGGREGATORS.register_module()
+@MODELS.register_module()
 class SelsaAggregator(BaseModule):
     """Selsa aggregator module.
 
@@ -14,15 +16,18 @@ class SelsaAggregator(BaseModule):
     Object Detection". `SELSA <https://arxiv.org/abs/1907.06390>`_.
 
     Args:
-        in_channels (int): The number of channels of the features of
+        in_channels (int, optional): The number of channels of the features of
             proposal.
-        num_attention_blocks (int): The number of attention blocks used in
-            selsa aggregator module. Defaults to 16.
-        init_cfg (dict or list[dict], optional): Initialization config dict.
+        num_attention_blocks (int, optional): The number of attention blocks
+            used in selsa aggregator module. Defaults to 16.
+        init_cfg (OptConfigType, optional): Initialization config dict.
             Defaults to None.
     """
 
-    def __init__(self, in_channels, num_attention_blocks=16, init_cfg=None):
+    def __init__(self,
+                 in_channels: int,
+                 num_attention_blocks: int = 16,
+                 init_cfg: OptConfigType = None):
         super(SelsaAggregator, self).__init__(init_cfg)
         self.fc_embed = nn.Linear(in_channels, in_channels)
         self.ref_fc_embed = nn.Linear(in_channels, in_channels)
@@ -30,7 +35,7 @@ class SelsaAggregator(BaseModule):
         self.ref_fc = nn.Linear(in_channels, in_channels)
         self.num_attention_blocks = num_attention_blocks
 
-    def forward(self, x, ref_x):
+    def forward(self, x: Tensor, ref_x: Tensor) -> Tensor:
         """Aggregate the features `ref_x` of reference proposals.
 
         The aggregation mainly contains two steps:
