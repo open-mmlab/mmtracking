@@ -16,7 +16,7 @@
 
 新建一个文件 `mmtrack/models/motion/my_flownet.py`。
 
-``` python
+```python
 from mmcv.runner import BaseModule
 
 from ..builder import MOTION

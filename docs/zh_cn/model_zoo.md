@@ -3,21 +3,27 @@
 ## 通用设置
 
 - 我们默认使用分布式训练。
+
 - 所有 pytorch 类型的预训练骨干网络都是来自 Pytorch 的模型库。
+
 - 为了与其他代码库进行公平比较，我们以全部 8 个 GPU 的 `torch.cuda.max_memory_allocated()` 的最大值作为 GPU 显存使用量。请注意，此值通常小于 `nvidia-smi` 显示的值。
+
 - 该推理时间不包含数据加载时间，推理时间结果是通过脚本 `tools/analysis/benchmark.py` 获得的，该脚本计算处理 2000 张图像的平均时间。
+
 - 速度基准测试的环境如下：
 
-    硬件环境：
-    - 8 NVIDIA Tesla V100 (32G) GPUs
-    - Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+  硬件环境：
 
-    软件环境：
-    - Python 3.7
-    - PyTorch 1.5
-    - CUDA 10.1
-    - CUDNN 7.6.03
-    - NCCL 2.4.08
+  - 8 NVIDIA Tesla V100 (32G) GPUs
+  - Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+
+  软件环境：
+
+  - Python 3.7
+  - PyTorch 1.5
+  - CUDA 10.1
+  - CUDNN 7.6.03
+  - NCCL 2.4.08
 
 ## 视频目标检测基线
 

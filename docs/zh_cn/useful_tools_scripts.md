@@ -9,39 +9,39 @@
 
 1. 定义所需的评测指标。
 
-    比如你可以定义如下评测指标
+   比如你可以定义如下评测指标
 
-    ```python
-    search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
-    ```
+   ```python
+   search_metrics = ['MOTA', 'IDF1', 'FN', 'FP', 'IDs', 'MT', 'ML']
+   ```
 
 2. 定义需要被搜索的参数和数值
 
-    假设你的跟踪器如下所示
+   假设你的跟踪器如下所示
 
-    ```python
-    model = dict(
-        tracker=dict(
-            type='BaseTracker',
-            obj_score_thr=0.5,
-            match_iou_thr=0.5
-        )
-    )
-    ```
+   ```python
+   model = dict(
+       tracker=dict(
+           type='BaseTracker',
+           obj_score_thr=0.5,
+           match_iou_thr=0.5
+       )
+   )
+   ```
 
-    如果你想搜索这个跟踪器的参数，只需要将对应数值改成列表即可
+   如果你想搜索这个跟踪器的参数，只需要将对应数值改成列表即可
 
-    ```python
-    model = dict(
-        tracker=dict(
-            type='BaseTracker',
-            obj_score_thr=[0.4, 0.5, 0.6],
-            match_iou_thr=[0.4, 0.5, 0.6, 0.7]
-        )
-    )
-    ```
+   ```python
+   model = dict(
+       tracker=dict(
+           type='BaseTracker',
+           obj_score_thr=[0.4, 0.5, 0.6],
+           match_iou_thr=[0.4, 0.5, 0.6, 0.7]
+       )
+   )
+   ```
 
-    脚本将测试共12个案例，并记录相应测试结果。
+   脚本将测试共12个案例，并记录相应测试结果。
 
 ## SiameseRPN++ 测试时参数搜索
 
@@ -75,7 +75,7 @@
 
 `tools/analysis/analyze_logs.py` 脚本可以根据训练日志文件绘制损失函数以及 mAP 曲线。
 
- ```shell
+```shell
 python tools/analysis/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TITLE}] [--legend ${LEGEND}] [--backend ${BACKEND}] [--style ${STYLE}] [--out ${OUT_FILE}]
 ```
 
@@ -83,37 +83,37 @@ python tools/analysis/analyze_logs.py plot_curve [--keys ${KEYS}] [--title ${TIT
 
 - 绘制某次运行时的分类损失函数。
 
-    ```shell
-    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
-    ```
+  ```shell
+  python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls --legend loss_cls
+  ```
 
 - 绘制某次运行时的分类以及回归损失函数，并且保存成 pdf 文件。
 
-    ```shell
-    python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
-    ```
+  ```shell
+  python tools/analysis/analyze_logs.py plot_curve log.json --keys loss_cls loss_bbox --out losses.pdf
+  ```
 
 - 在同一张图中比较两次运行的 bbox mAP。
 
-    ```shell
-    python tools/analysis/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
-    ```
+  ```shell
+  python tools/analysis/analyze_logs.py plot_curve log1.json log2.json --keys bbox_mAP --legend run1 run2
+  ```
 
 - 计算平均运行速度
 
-    ```shell
-    python tools/analysis/analyze_logs.py cal_train_time log.json [--include-outliers]
-    ```
+  ```shell
+  python tools/analysis/analyze_logs.py cal_train_time log.json [--include-outliers]
+  ```
 
-    输出如下所示：
+  输出如下所示：
 
-    ```text
-    -----Analyze train time of work_dirs/some_exp/20190611_192040.log.json-----
-    slowest epoch 11, average time is 1.2024
-    fastest epoch 1, average time is 1.1909
-    time std over epochs is 0.0028
-    average iter time: 1.1959 s/iter
-    ```
+  ```text
+  -----Analyze train time of work_dirs/some_exp/20190611_192040.log.json-----
+  slowest epoch 11, average time is 1.2024
+  fastest epoch 1, average time is 1.1909
+  time std over epochs is 0.0028
+  average iter time: 1.1959 s/iter
+  ```
 
 ## 模型转换
 

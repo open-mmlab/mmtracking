@@ -85,6 +85,10 @@ class ByteTracker(BaseTracker):
         bbox = bbox_xyxy_to_cxcyah(self.tracks[id].bboxes[-1])  # size = (1, 4)
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
+        track_label = self.tracks[id]['labels'][-1]
+        label_idx = self.memo_items.index('labels')
+        obj_label = obj[label_idx]
+        assert obj_label == track_label
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox)
 
