@@ -7,11 +7,30 @@ from collections import defaultdict
 from typing import List, Optional, Sequence, Union
 
 import numpy as np
+import torch
 import trackeval
-from mmengine.dist import broadcast_object_list, is_main_process
+from mmengine.dist import (all_gather_object, barrier, broadcast,
+                           broadcast_object_list, get_dist_info,
+                           is_main_process)
+from mmengine.logging import MMLogger
 
 from mmtrack.metrics import BaseVideoMetric
 from mmtrack.registry import METRICS
+
+
+def get_tmpdir() -> str:
+    """return the same tmpdir for all processes."""
+    rank, world_size = get_dist_info()
+    MAX_LEN = 512
+    # 32 is whitespace
+    dir_tensor = torch.full((MAX_LEN, ), 32, dtype=torch.uint8)
+    if rank == 0:
+        tmpdir = tempfile.mkdtemp()
+        tmpdir = torch.tensor(bytearray(tmpdir.encode()), dtype=torch.uint8)
+        dir_tensor[:len(tmpdir)] = tmpdir
+    broadcast(dir_tensor, 0)
+    tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
+    return tmpdir
 
 
 @METRICS.register_module()
@@ -67,26 +86,32 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr
         self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir.name = get_tmpdir()
         self.seq_info = defaultdict(
             lambda: dict(seq_length=-1, gt_strings=[], pred_strings=[]))
-        self.gt_dir = self._get_output_dir('gt')
-        self.pred_dir = self._get_output_dir('pred')
-        self.resfile_path = self._get_resfile_path(resfile_path)
+        self.gt_dir = self._get_gt_dir()
+        self.pred_dir = self._get_pred_dir(resfile_path)
+        self.seqmap = osp.join(self.pred_dir, 'videoseq.txt')
+        with open(self.seqmap, 'w') as f:
+            f.write('name\n')
 
-    def _get_resfile_path(self, resfile_path):
-        """Get path to save the formatted results."""
+    def _get_pred_dir(self, resfile_path):
+        """Get directory to save the prediction results."""
+        logger: MMLogger = MMLogger.get_current_instance()
+
         if resfile_path is None:
             resfile_path = self.tmp_dir.name
         else:
-            # TODO: add an log info for "remove previous results".
             if osp.exists(resfile_path):
+                logger.info('remove previous results.')
                 shutil.rmtree(resfile_path)
-        resfile_path = osp.join(resfile_path, self.TRACKER)
-        return resfile_path
+        pred_dir = osp.join(resfile_path, self.TRACKER)
+        os.makedirs(pred_dir, exist_ok=True)
+        return pred_dir
 
-    def _get_output_dir(self, name: str):
-        """Get directory to save the gt and prediction files."""
-        output_dir = osp.join(self.tmp_dir.name, name)
+    def _get_gt_dir(self):
+        """Get directory to save the gt files."""
+        output_dir = osp.join(self.tmp_dir.name, 'gt')
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
@@ -115,12 +140,13 @@ class MOTChallengeMetrics(BaseVideoMetric):
             if 'instances' in data_sample:
                 gt_instances = data_sample['instances']
                 gt_strings = [
-                    '%d,%d,%d,%d,%d,%d,%d,%d,%d\n' %
+                    '%d,%d,%d,%d,%d,%d,%d,%d,%.5f\n' %
                     (frame_id + 1, gt_instances[i]['instance_id'],
                      gt_instances[i]['bbox'][0], gt_instances[i]['bbox'][1],
-                     gt_instances[i]['bbox'][2], gt_instances[i]['bbox'][3],
+                     gt_instances[i]['bbox'][2] - gt_instances[i]['bbox'][0],
+                     gt_instances[i]['bbox'][3] - gt_instances[i]['bbox'][1],
                      gt_instances[i]['mot_conf'],
-                     gt_instances[i]['mot_class_id'],
+                     gt_instances[i]['category_id'],
                      gt_instances[i]['visibility'])
                     for i in range(len(gt_instances))
                 ]
@@ -135,8 +161,10 @@ class MOTChallengeMetrics(BaseVideoMetric):
                     pred_instances['instances_id'][i],
                     pred_instances['bboxes'][i][0],
                     pred_instances['bboxes'][i][1],
-                    pred_instances['bboxes'][i][2],
-                    pred_instances['bboxes'][i][3],
+                    pred_instances['bboxes'][i][2] -
+                    pred_instances['bboxes'][i][0],
+                    pred_instances['bboxes'][i][3] -
+                    pred_instances['bboxes'][i][1],
                     pred_instances['scores'][i],
                 ) for i in range(len(pred_instances['instances_id']))
             ]
@@ -162,6 +190,10 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 for line in info['gt_strings']:
                     f.writelines(line)
             info['gt_strings'].clear()
+        # save seq info
+        with open(self.seqmap, 'a') as f:
+            f.write(seq + '\n')
+            f.close()
 
     def compute_metrics(self, results: list = None) -> dict:
         """Compute the metrics from processed results.
@@ -174,27 +206,20 @@ class MOTChallengeMetrics(BaseVideoMetric):
             dict: The computed metrics. The keys are the names of the metrics,
             and the values are corresponding results.
         """
+        logger: MMLogger = MMLogger.get_current_instance()
+
         # NOTICE: don't access `self.results` from the method.
         eval_results = dict()
-        shutil.move(self.pred_dir, self.resfile_path)
 
         if self.format_only:
             return eval_results
-
-        seqmap = osp.join(self.resfile_path, 'videoseq.txt')
-        with open(seqmap, 'w') as f:
-            f.write('name\n')
-            for video in self.seq_info.keys():
-                f.write(video + '\n')
-            f.close()
 
         eval_config = trackeval.Evaluator.get_default_eval_config()
 
         # need to split out the tracker name
         # caused by the implementation of TrackEval
-        resfile_path_tmp = self.resfile_path.rsplit(osp.sep, 1)[0]
-        dataset_config = self.get_dataset_cfg(self.gt_dir, resfile_path_tmp,
-                                              seqmap)
+        pred_dir_tmp = self.pred_dir.rsplit(osp.sep, 1)[0]
+        dataset_config = self.get_dataset_cfg(self.gt_dir, pred_dir_tmp)
 
         evaluator = trackeval.Evaluator(eval_config)
         dataset = [trackeval.datasets.MotChallenge2DBox(dataset_config)]
@@ -208,11 +233,13 @@ class MOTChallengeMetrics(BaseVideoMetric):
             self.TRACKER]['COMBINED_SEQ']['pedestrian']
 
         if 'HOTA' in self.metrics:
+            logger.info('Evaluating HOTA Metrics...')
             eval_results['HOTA'] = np.average(output_res['HOTA']['HOTA'])
             eval_results['AssA'] = np.average(output_res['HOTA']['AssA'])
             eval_results['DetA'] = np.average(output_res['HOTA']['DetA'])
 
         if 'CLEAR' in self.metrics:
+            logger.info('Evaluating CLEAR Metrics...')
             eval_results['MOTA'] = np.average(output_res['CLEAR']['MOTA'])
             eval_results['MOTP'] = np.average(output_res['CLEAR']['MOTP'])
             eval_results['IDSW'] = np.average(output_res['CLEAR']['IDSW'])
@@ -224,6 +251,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
             eval_results['ML'] = np.average(output_res['CLEAR']['ML'])
 
         if 'Identity' in self.metrics:
+            logger.info('Evaluating Identity Metrics...')
             eval_results['IDF1'] = np.average(output_res['Identity']['IDF1'])
             eval_results['IDTP'] = np.average(output_res['Identity']['IDTP'])
             eval_results['IDFN'] = np.average(output_res['Identity']['IDFN'])
@@ -246,6 +274,17 @@ class MOTChallengeMetrics(BaseVideoMetric):
             dict: Evaluation metrics dict on the val dataset. The keys are the
             names of the metrics, and the values are corresponding results.
         """
+        # wait for all processes to complete prediction.
+        barrier()
+
+        # gather seq_info and convert the list of dict to a dict.
+        # convert self.seq_info to dict first to make it picklable.
+        gathered_seq_info = all_gather_object(dict(self.seq_info))
+        all_seq_info = dict()
+        for _seq_info in gathered_seq_info:
+            all_seq_info.update(_seq_info)
+        self.seq_info = all_seq_info
+
         if is_main_process():
             _metrics = self.compute_metrics()  # type: ignore
             # Add prefix to metric names
@@ -264,14 +303,12 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.results.clear()
         return metrics[0]
 
-    def get_dataset_cfg(self, gt_folder: str, tracker_folder: str,
-                        seqmap: str):
+    def get_dataset_cfg(self, gt_folder: str, tracker_folder: str):
         """Get default configs for trackeval.datasets.MotChallenge2DBox.
 
         Args:
             gt_folder (str): the name of the GT folder
             tracker_folder (str): the name of the tracker folder
-            seqmap (str): the file that contains the sequence of video names
 
         Returns:
             Dataset Configs for MotChallenge2DBox.
@@ -287,7 +324,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
             # Use self.TRACKER as the default tracker
             TRACKERS_TO_EVAL=[self.TRACKER],
             # Option values: ['pedestrian']
-            CLASSES_TO_EVAL=list(self._dataset_meta['CLASSES']),
+            CLASSES_TO_EVAL=['pedestrian'],
             # Option Values: 'MOT15', 'MOT16', 'MOT17', 'MOT20'
             BENCHMARK=self.benchmark,
             # Option Values: 'train', 'test'
@@ -313,10 +350,9 @@ class MOTChallengeMetrics(BaseVideoMetric):
             SEQMAP_FOLDER=None,
             # Directly specify seqmap file
             # (if none use seqmap_folder/benchmark-split_to_eval)
-            SEQMAP_FILE=seqmap,
+            SEQMAP_FILE=self.seqmap,
             # If not None, specify sequences to eval
             # and their number of timesteps
-            # SEQ_INFO=None,
             SEQ_INFO={
                 seq: info['seq_length']
                 for seq, info in self.seq_info.items()

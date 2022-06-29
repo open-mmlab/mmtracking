@@ -28,7 +28,7 @@
             "visibility": 1.0,
             "mot_instance_id": 1,
             "mot_conf": 1.0,
-            "mot_class_id": 1,
+            "category_id": 1,
             "id": 1,
             "image_id": 1,
             "instance_id": 0
@@ -46,7 +46,7 @@
             "visibility": 1.0,
             "mot_instance_id": 19,
             "mot_conf": 1.0,
-            "mot_class_id": 1,
+            "category_id": 1,
             "id": 2,
             "image_id": 1,
             "instance_id": 1
@@ -64,7 +64,7 @@
             "visibility": 0.22293,
             "mot_instance_id": 20,
             "mot_conf": 1.0,
-            "mot_class_id": 1,
+            "category_id": 1,
             "id": 3,
             "image_id": 1,
             "instance_id": 2

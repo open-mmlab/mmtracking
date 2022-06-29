@@ -17,7 +17,12 @@ class MOTChallengeDataset(BaseVideoDataset):
             detection file. Default to None.
     """
 
-    METAINFO = {'CLASSES': ('pedestrian', )}
+    METAINFO = {
+        'CLASSES':
+        ('pedestrian', 'person_on_vehicle', 'car', 'bicycle', 'motorbike',
+         'non_mot_vehicle', 'static_person', 'distractor', 'occluder',
+         'occluder_on_ground', 'occluder_full', 'reflection', 'crowd')
+    }
 
     def __init__(self,
                  visibility_thr: float = -1,
@@ -76,7 +81,7 @@ class MOTChallengeDataset(BaseVideoDataset):
             instance['bbox'] = bbox
             instance['bbox_label'] = self.cat2label[ann['category_id']]
             instance['instance_id'] = ann['instance_id']
-            instance['mot_class_id'] = ann['mot_class_id']
+            instance['category_id'] = ann['category_id']
             instance['mot_conf'] = ann['mot_conf']
             instance['visibility'] = ann['visibility']
             if len(instance) > 0:

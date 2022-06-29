@@ -12,23 +12,7 @@
 #   DETs and Results:
 #       <frame_id>, <instance_id>, <x1>, <y1>, <w>, <h>, <conf>,
 #       <x>, <y>, <z> # for 3D objects
-#
-# Classes in MOT:
-#   1: 'pedestrian'
-#   2: 'person on vehicle'
-#   3: 'car'
-#   4: 'bicycle'
-#   5: 'motorbike'
-#   6: 'non motorized vehicle'
-#   7: 'static person'
-#   8: 'distractor'
-#   9: 'occluder'
-#   10: 'occluder on the ground',
-#   11: 'occluder full'
-#   12: 'reflection'
-#
-#   USELESS classes are not included into the json file.
-#   IGNORES classes are included with `ignore=True`.
+
 import argparse
 import os
 import os.path as osp
@@ -38,8 +22,22 @@ import mmcv
 import numpy as np
 from tqdm import tqdm
 
-USELESS = [3, 4, 5, 6, 9, 10, 11]
-IGNORES = [2, 7, 8, 12, 13]
+# Classes in MOT:
+CLASSES = [
+    dict(id=1, name='pedestrian'),
+    dict(id=2, name='person_on_vehicle'),
+    dict(id=3, name='car'),
+    dict(id=4, name='bicycle'),
+    dict(id=5, name='motorbike'),
+    dict(id=6, name='non_mot_vehicle'),
+    dict(id=7, name='static_person'),
+    dict(id=8, name='distractor'),
+    dict(id=9, name='occluder'),
+    dict(id=10, name='occluder_on_ground'),
+    dict(id=11, name='occluder_full'),
+    dict(id=12, name='reflection'),
+    dict(id=13, name='crowd')
+]
 
 
 def parse_args():
@@ -67,25 +65,20 @@ def parse_gts(gts, is_mot15):
         bbox = list(map(float, gt[2:6]))
         if is_mot15:
             conf = 1.
-            class_id = 1
+            category_id = 1
             visibility = 1.
         else:
             conf = float(gt[6])
-            class_id = int(gt[7])
+            category_id = int(gt[7])
             visibility = float(gt[8])
-        if class_id in USELESS:
-            continue
-        elif class_id in IGNORES:
-            continue
         anns = dict(
-            category_id=1,
+            category_id=category_id,
             bbox=bbox,
             area=bbox[2] * bbox[3],
             iscrowd=False,
             visibility=visibility,
             mot_instance_id=ins_id,
-            mot_conf=conf,
-            mot_class_id=class_id)
+            mot_conf=conf)
         outputs[frame_id].append(anns)
     return outputs
 
@@ -125,7 +118,7 @@ def main():
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
-        outputs['categories'] = [dict(id=1, name='pedestrian')]
+        outputs['categories'] = CLASSES
         if args.convert_det:
             det_file = osp.join(args.output, f'{subset}_detections.pkl')
             detections = dict(det_bboxes=dict())

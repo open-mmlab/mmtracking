@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 from unittest import TestCase
 
 import torch
@@ -23,7 +24,7 @@ class TestMOTChallengeMetrics(TestCase):
             'ignore_flag': 0,
             'instance_id': 1,
             'mot_conf': 1.0,
-            'mot_class_id': 1,
+            'category_id': 1,
             'visibility': 1.0
         }, {
             'bbox_label': 0,
@@ -31,16 +32,18 @@ class TestMOTChallengeMetrics(TestCase):
             'ignore_flag': 0,
             'instance_id': 2,
             'mot_conf': 1.0,
-            'mot_class_id': 1,
+            'category_id': 1,
             'visibility': 1.0
         }]
+        sep = os.sep
         data_batch = [
             dict(
                 data_sample={
                     'frame_id': 0,
                     'video_length': 1,
                     'img_id': 1,
-                    'img_path': r'xxx/MOT17-09-DPM/img1/000001.jpg',
+                    'img_path':
+                    f'xxx{sep}MOT17-09-DPM{sep}img1{sep}000001.jpg',
                     'instances': instances
                 })
         ]
