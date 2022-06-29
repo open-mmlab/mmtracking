@@ -10,7 +10,7 @@ import numpy as np
 from mmdet.core import eval_recalls
 from mmdet.core.mask import encode_mask_results
 from mmdet.datasets.api_wrappers import COCO, COCOeval
-from mmengine.fileio import dump, load
+from mmengine.fileio import FileClient, dump, load
 from mmengine.logging import MMLogger
 from terminaltables import AsciiTable
 
@@ -95,7 +95,12 @@ class CocoVideoMetric(BaseVideoMetric):
 
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
-        self._coco_api = COCO(ann_file) if ann_file else None
+        if ann_file:
+            file_client = FileClient.infer_client(uri=ann_file)
+            with file_client.get_local_path(ann_file) as local_path:
+                self._coco_api = COCO(local_path)
+        else:
+            self._coco_api = None
 
         # handle dataset lazy init
         self.cat_ids = None

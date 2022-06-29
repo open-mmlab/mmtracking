@@ -5,6 +5,7 @@ import random
 from typing import Any, List, Tuple
 
 from mmengine.dataset import BaseDataset, force_full_init
+from mmengine.fileio import FileClient
 from mmengine.logging import MMLogger
 
 from mmtrack.registry import DATASETS
@@ -76,7 +77,9 @@ class BaseVideoDataset(BaseDataset):
             tuple(list[dict], list): A list of annotation and a list of
             valid data indices.
         """
-        coco = CocoVID(self.ann_file)
+        file_client = FileClient.infer_client(uri=self.ann_file)
+        with file_client.get_local_path(self.ann_file) as local_path:
+            coco = CocoVID(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])

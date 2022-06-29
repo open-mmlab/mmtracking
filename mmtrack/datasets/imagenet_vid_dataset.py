@@ -3,6 +3,7 @@ import copy
 from typing import List, Tuple
 
 from mmdet.datasets.api_wrappers import COCO
+from mmengine.fileio import FileClient
 
 from mmtrack.registry import DATASETS
 from .base_video_dataset import BaseVideoDataset
@@ -46,7 +47,9 @@ class ImagenetVIDDataset(BaseVideoDataset):
             tuple(list[dict], list): A list of annotation and a list of
             valid data indices.
         """
-        coco = CocoVID(self.ann_file)
+        file_client = FileClient.infer_client(uri=self.ann_file)
+        with file_client.get_local_path(self.ann_file) as local_path:
+            coco = CocoVID(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
@@ -97,7 +100,9 @@ class ImagenetVIDDataset(BaseVideoDataset):
             tuple(list[dict], list): A list of annotation and a list of
             valid data indices.
         """
-        coco = COCO(self.ann_file)
+        file_client = FileClient.infer_client(uri=self.ann_file)
+        with file_client.get_local_path(self.ann_file) as local_path:
+            coco = COCO(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
