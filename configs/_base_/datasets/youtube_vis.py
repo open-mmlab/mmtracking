@@ -15,7 +15,7 @@ train_pipeline = [
         ]),
     dict(type='PackTrackInputs', ref_prefix='ref', num_key_frames=1)
 ]
-# TODO: wait mmdet, MultiScaleFlipAug is needed
+
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(

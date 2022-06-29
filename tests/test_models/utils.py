@@ -207,10 +207,6 @@ def _demo_mm_inputs(batch_size=1,
             masks = _rand_masks(rng, num_boxes, bboxes, w, h)
             gt_instances.masks = masks
 
-        # TODO: waiting for ci to be fixed
-        # masks = np.random.randint(0, 2, (len(bboxes), h, w), dtype=np.uint8)
-        # gt_instances.mask = BitmapMasks(masks, h, w)
-
         data_sample.gt_instances = gt_instances
         # ignore_instances
         ignore_instances = InstanceData()
@@ -225,14 +221,6 @@ def _demo_mm_inputs(batch_size=1,
             ref_ignored_instances = copy.deepcopy(ignore_instances)
             setattr(data_sample, f'{ref_prefix}_ignored_instances',
                     ref_ignored_instances)
-
-        # TODO: add gt_sem_seg
-        # if with_semantic:
-        #     # assume gt_semantic_seg using scale 1/8 of the img
-        #     gt_semantic_seg = np.random.randint(
-        #         0, num_classes, (1, 1, h // 8, w // 8), dtype=np.uint8)
-        #     gt_sem_seg_data = dict(sem_seg=gt_semantic_seg)
-        #     data_sample.gt_sem_seg = PixelData(**gt_sem_seg_data)
 
         mm_inputs['data_sample'] = data_sample
 

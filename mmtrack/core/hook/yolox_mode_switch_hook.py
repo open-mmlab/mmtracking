@@ -24,7 +24,6 @@ class YOLOXModeSwitchHook(_YOLOXModeSwitchHook):
         epoch = runner.epoch
         train_loader = runner.train_dataloader
         model = runner.model
-        # TODO: refactor after mmengine using model wrapper
         if is_model_wrapper(model):
             model = model.module
         if (epoch + 1) == runner.max_epochs - self.num_last_epochs:
