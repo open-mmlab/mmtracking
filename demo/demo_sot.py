@@ -55,7 +55,7 @@ def main():
         else:
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
-    fps = args.fps
+    fps = int(args.fps)
     if args.show or OUT_VIDEO:
         if fps is None and IN_VIDEO:
             fps = imgs.fps
