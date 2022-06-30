@@ -166,7 +166,7 @@ class SELSA(BaseVideoDetector):
             for i in range(len(x)):
                 ref_x[i] = torch.cat((ref_x[i], x[i]), dim=0)
             ref_img_metas = self.memo.img_metas.copy()
-            ref_img_metas.extend(img_metas)
+            ref_img_metas.append(img_metas)
         # test with fixed stride
         else:
             if frame_id == 0:
@@ -253,13 +253,19 @@ class SELSA(BaseVideoDetector):
         img_metas = data_sample.metainfo
 
         if ref_img is not None:
-            ref_data_samples, ref_img_metas = convert_data_sample_type(
+            _, ref_img_metas = convert_data_sample_type(
                 data_sample, num_ref_imgs=len(ref_img))
         else:
-            ref_data_samples = ref_img_metas = None
+            ref_img_metas = None
 
         x, img_metas, ref_x, ref_img_metas = self.extract_feats(
             img, img_metas, ref_img, ref_img_metas)
+
+        ref_data_samples = [
+            deepcopy(data_sample) for _ in range(len(ref_img_metas))
+        ]
+        for i in range(len(ref_img_metas)):
+            ref_data_samples[i].set_metainfo(ref_img_metas[i])
 
         if batch_data_samples[0].get('proposals', None) is None:
             proposal_list = self.detector.rpn_head.predict(

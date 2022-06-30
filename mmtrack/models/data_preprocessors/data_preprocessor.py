@@ -129,15 +129,17 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             # in DETR, this is needed for the construction of masks, which is
             # then used for the transformer_head.
             for key, imgs in batch_inputs.items():
-                imgs_shape = tuple(imgs.size()[-2:])
+                img_shape = tuple(imgs.size()[-2:])
+                imgs_shape = [img_shape] * imgs.size(1) if imgs.size(
+                    1) > 1 else img_shape
                 ref_prefix = key[:-3]
-                for data_sample, pad_shape in zip(batch_data_samples,
-                                                  batch_pad_shape[key]):
+                for data_sample, pad_shapes in zip(batch_data_samples,
+                                                   batch_pad_shape[key]):
                     data_sample.set_metainfo({
                         f'{ref_prefix}batch_input_shape':
                         imgs_shape,
                         f'{ref_prefix}pad_shape':
-                        pad_shape
+                        pad_shapes
                     })
                 if self.pad_mask:
                     self.pad_gt_masks(batch_data_samples, ref_prefix)
@@ -202,7 +204,7 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
         """
         batch_pad_shape = dict()
         for imgs_key in data[0]['inputs']:
-            pad_shape = []
+            pad_shape_list = []
             for _data in data:
                 imgs = _data['inputs'][imgs_key]
                 pad_h = int(
@@ -211,8 +213,11 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                 pad_w = int(
                     np.ceil(imgs.shape[-1] /
                             self.pad_size_divisor)) * self.pad_size_divisor
-                pad_shape.append((pad_h, pad_w))
-            batch_pad_shape[imgs_key] = pad_shape
+                pad_shapes = [
+                    (pad_h, pad_w)
+                ] * imgs.size(0) if imgs.size(0) > 1 else (pad_h, pad_w)
+                pad_shape_list.append(pad_shapes)
+            batch_pad_shape[imgs_key] = pad_shape_list
         return batch_pad_shape
 
     def pad_gt_masks(self, batch_data_samples: Sequence[TrackDataSample],

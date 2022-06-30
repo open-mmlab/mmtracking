@@ -56,8 +56,8 @@ def main(args):
         else:
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
-    fps = int(args.fps)
-    if args.show or OUT_VIDEO:
+    fps = args.fps
+    if OUT_VIDEO:
         if fps is None and IN_VIDEO:
             fps = imgs.fps
         if not fps:
@@ -109,7 +109,7 @@ def main(args):
             pred_sample=result[0],
             show=args.show,
             out_file=out_file,
-            wait_time=int(1000 / fps) if fps else 0,
+            wait_time=int(1000 / int(fps)) if fps else 0,
             pred_score_thr=-100,
             step=i)
 

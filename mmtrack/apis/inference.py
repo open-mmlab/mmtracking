@@ -10,7 +10,7 @@ import torch
 from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
-from mmdet.datasets.pipelines import Compose
+from mmengine.dataset import Compose
 from mmengine.logging import MMLogger
 from torch import nn
 
@@ -145,8 +145,6 @@ def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
         SampleList: The tracking data samples.
     """
     cfg = model.cfg
-    device = next(model.parameters()).device  # model device
-
     data = dict(
         img=image.astype(np.float32),
         gt_bboxes=np.array(init_bbox).astype(np.float32),
@@ -155,9 +153,6 @@ def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
     # remove the "LoadImageFromFile" and "LoadAnnotations" in pipeline
     test_pipeline = Compose(cfg.test_dataloader.dataset.pipeline[2:])
     data = test_pipeline(data)
-    data['data_sample'] = data['data_sample'].to(device)
-    for key, value in data['inputs'].items():
-        data['inputs'][key] = value.to(device)
 
     if not next(model.parameters()).is_cuda:
         for m in model.modules():
