@@ -211,6 +211,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             'Only support 1 batch size per gpu in test mode'
         img = img[0]
 
+        gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
         metainfo = batch_data_samples[0].metainfo
         frame_id = metainfo.get('frame_id', -1)
         assert frame_id >= 0
@@ -223,7 +224,6 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             # information in ``self.memo``.
             self.memo = addict.Dict()
             self.memo.frame_id = frame_id
-            gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
             self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
             self.init(img)
             # 1 denotes the initialization state
@@ -245,11 +245,10 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             # convert bbox to region for overlap calculation
             track_bbox = results[0].bboxes[0].cpu().numpy()
             track_region = bbox2region(track_bbox)
-            gt_bbox = gt_bboxes[0][0]
-            gt_region = bbox2region(gt_bbox.cpu().numpy())
+            gt_region = bbox2region(gt_bboxes[0].cpu().numpy())
 
-            if 'img_shape' in metainfo[0]:
-                image_shape = metainfo[0]['img_shape']
+            if 'img_shape' in metainfo:
+                image_shape = metainfo['img_shape']
                 image_wh = (image_shape[1], image_shape[0])
             else:
                 image_wh = None

@@ -11,6 +11,8 @@ test_dataloader = val_dataloader
 # evaluator
 val_evaluator = dict(
     type='SOTMetric',
+    _delete_=True,
     format_only=True,
-    outfile_prefix='results/submitted_trackingnet')
+    metric_options=dict(dataset_type='trackingnet'),
+    outfile_prefix='results/submitted_siamrpn++_trackingnet')
 test_evaluator = val_evaluator

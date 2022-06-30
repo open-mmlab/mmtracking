@@ -13,7 +13,7 @@ except ImportError:
     vot = None
 
 
-def bbox2region(bbox: np.ndarray) -> Union[Rectangle, Polygon]:
+def bbox2region(bbox: np.ndarray) -> 'Union[Rectangle, Polygon]':
     """Convert bbox to Rectangle or Polygon Class object.
 
     Args:
@@ -138,7 +138,7 @@ def calc_accuracy(gt_trajectory: List[List],
                 mask[j] = False
         elif is_special(region, Special.FAILURE):
             mask[i] = False
-    return np.mean(overlaps[mask]) if any(mask) else 0.
+    return np.mean(overlaps[mask]).item() if any(mask) else 0.
 
 
 def eval_sot_accuracy_robustness(
@@ -309,6 +309,6 @@ def eval_sot_eao(
             all_successes.append(True)
 
     eao_curve = calc_eao_curve(all_overlaps, all_successes)
-    eao_score = np.mean(eao_curve[interval[0]:interval[1] + 1])
+    eao_score = np.mean(eao_curve[interval[0]:interval[1] + 1]).item()
     eao = dict(eao=eao_score)
     return eao

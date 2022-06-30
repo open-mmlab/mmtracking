@@ -4,16 +4,15 @@ _base_ = ['./siamese_rpn_r50_20e_lasot.py']
 model = dict(
     test_cfg=dict(rpn=dict(penalty_k=0.1, window_influence=0.1, lr=0.5)))
 
-data_root = 'data/'
-# dataset settings
-data = dict(
-    val=dict(
+# dataloader
+val_dataloader = dict(
+    dataset=dict(
         type='UAV123Dataset',
-        ann_file=data_root + 'UAV123/annotations/uav123_infos.txt',
-        img_prefix=data_root + 'UAV123',
-        only_eval_visible=False),
-    test=dict(
-        type='UAV123Dataset',
-        ann_file=data_root + 'UAV123/annotations/uav123_infos.txt',
-        img_prefix=data_root + 'UAV123',
-        only_eval_visible=False))
+        ann_file='UAV123/annotations/uav123_infos.txt',
+        data_prefix=dict(img_path='UAV123')))
+test_dataloader = val_dataloader
+
+# evaluator
+val_evaluator = dict(
+    type='SOTMetric', metric_options=dict(only_eval_visible=False))
+test_evaluator = val_evaluator

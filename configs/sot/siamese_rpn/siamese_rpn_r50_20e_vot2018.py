@@ -6,18 +6,18 @@ model = dict(
         rpn=dict(penalty_k=0.04, window_influence=0.44, lr=0.33),
         test_mode='VOT'))
 
-data_root = 'data/'
-# dataset settings
-data = dict(
-    val=dict(
+# dataloader
+val_dataloader = dict(
+    dataset=dict(
         type='VOTDataset',
-        dataset_type='vot2018',
-        ann_file=data_root + 'vot2018/annotations/vot2018_infos.txt',
-        img_prefix=data_root + 'vot2018'),
-    test=dict(
-        type='VOTDataset',
-        dataset_type='vot2018',
-        ann_file=data_root + 'vot2018/annotations/vot2018_infos.txt',
-        img_prefix=data_root + 'vot2018'))
-evaluation = dict(
-    metric=['track'], interval=1, start=10, rule='greater', save_best='eao')
+        ann_file='vot2018/annotations/vot2018_infos.txt',
+        data_prefix=dict(img_path='vot2018')))
+test_dataloader = val_dataloader
+
+# evaluator
+val_evaluator = dict(
+    type='SOTMetric',
+    _delete_=True,
+    metric='VOT',
+    metric_options=dict(dataset_type='vot2018'))
+test_evaluator = val_evaluator

@@ -123,9 +123,20 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
             # ``gt_ignore_flags`` the same
             gt_ignore_flags = [False] * len(gt_bboxes)
 
-        results['gt_bboxes'] = np.array(
-            gt_bboxes, dtype=np.float32).reshape(-1, 4)
+        if len(gt_bboxes) > 0 and gt_bboxes[0].shape[0] == 8:
+            # The bbox of VOT2018 has (N, 8) shape and it's not possible to be
+            # empty.
+            results['gt_bboxes'] = np.array(
+                gt_bboxes, dtype=np.float32).reshape(-1, 8)
+        else:
+            # Some tasks, such as VID, may have empty bboxes and their bboxes
+            # need to be reshaped to (0, 4) format forcely in order to be
+            # compatible with ``TransformBroadcaster``.
+            results['gt_bboxes'] = np.array(
+                gt_bboxes, dtype=np.float32).reshape(-1, 4)
+
         if self.denorm_bbox:
+            assert results['gt_bboxes'].shape[1] == 4
             bbox_num = results['gt_bboxes'].shape[0]
             if bbox_num != 0:
                 assert 'width' in results and 'height' in results
