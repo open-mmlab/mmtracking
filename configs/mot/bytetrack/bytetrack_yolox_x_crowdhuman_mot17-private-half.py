@@ -3,6 +3,9 @@ _base_ = [
     '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 
+dataset_type = 'MOTChallengeDataset'
+data_root = 'data/MOT17/'
+
 img_scale = (800, 1440)
 batch_size = 4
 
@@ -68,7 +71,7 @@ train_pipeline = [
         type='mmdet.FilterAnnotations',
         min_gt_bbox_wh=(1, 1),
         keep_empty=False),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -77,7 +80,7 @@ test_pipeline = [
         type='mmdet.Pad',
         size_divisor=32,
         pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(type='PackTrackInputs')
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 
 train_dataloader = dict(
@@ -127,7 +130,22 @@ train_dataloader = dict(
                     ]),
             ]),
         pipeline=train_pipeline))
-
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        ann_file='annotations/half-val_cocoformat.json',
+        data_prefix=dict(img_path='train'),
+        ref_img_sampler=None,
+        load_as_video=True,
+        test_mode=True,
+        pipeline=test_pipeline))
+test_dataloader = val_dataloader
 # optimizer
 # default 8 gpu
 lr = 0.001 / 8 * batch_size

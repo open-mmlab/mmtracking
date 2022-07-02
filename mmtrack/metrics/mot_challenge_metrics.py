@@ -4,6 +4,7 @@ import os.path as osp
 import shutil
 import tempfile
 from collections import defaultdict
+from glob import glob
 from typing import List, Optional, Sequence, Union
 
 import numpy as np
@@ -94,6 +95,12 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.seqmap = osp.join(self.pred_dir, 'videoseq.txt')
         with open(self.seqmap, 'w') as f:
             f.write('name\n')
+
+    def __del__(self):
+        # To avoid tmpdir being cleaned up too early, because in multiple
+        # consecutive ValLoops, the value of `self.tmp_dir.name` is unchanged,
+        # and calling `tmp_dir.cleanup()` in compute_metrics will cause errors.
+        self.tmp_dir.cleanup()
 
     def _get_pred_dir(self, resfile_path):
         """Get directory to save the prediction results."""
@@ -259,7 +266,9 @@ class MOTChallengeMetrics(BaseVideoMetric):
             eval_results['IDP'] = np.average(output_res['Identity']['IDP'])
             eval_results['IDR'] = np.average(output_res['Identity']['IDR'])
 
-        self.tmp_dir.cleanup()
+        # clean all txt file
+        for txt_name in glob(osp.join(self.tmp_dir.name, '*.txt')):
+            os.remove(txt_name)
         return eval_results
 
     def evaluate(self, size: int = None) -> dict:

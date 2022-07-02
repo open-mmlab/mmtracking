@@ -1,76 +1,138 @@
 _base_ = ['./bytetrack_yolox_x_crowdhuman_mot17-private-half.py']
 
+dataset_type = 'MOTChallengeDataset'
+
 img_scale = (896, 1600)
 
 model = dict(
-    detector=dict(input_size=img_scale, random_size_range=(20, 36)),
+    data_preprocessor=dict(
+        type='TrackDataPreprocessor',
+        pad_size_divisor=32,
+        batch_augments=[
+            dict(
+                type='mmdet.BatchSyncRandomResize',
+                random_size_range=(640, 1152))
+        ]),
     tracker=dict(
         weight_iou_with_det_scores=False,
         match_iou_thrs=dict(high=0.3),
     ))
 
 train_pipeline = [
-    dict(type='Mosaic', img_scale=img_scale, pad_val=114.0),
     dict(
-        type='RandomAffine',
+        type='mmdet.Mosaic',
+        img_scale=img_scale,
+        pad_val=114.0,
+        bbox_clip_border=True),
+    dict(
+        type='mmdet.RandomAffine',
         scaling_ratio_range=(0.1, 2),
-        border=(-img_scale[0] // 2, -img_scale[1] // 2)),
+        border=(-img_scale[0] // 2, -img_scale[1] // 2),
+        bbox_clip_border=True),
     dict(
-        type='MixUp',
+        type='mmdet.MixUp',
         img_scale=img_scale,
         ratio_range=(0.8, 1.6),
-        pad_val=114.0),
-    dict(type='YOLOXHSVRandomAug'),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=img_scale, keep_ratio=True),
-    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(type='FilterAnnotations', min_gt_bbox_wh=(1, 1), keep_empty=False),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+        pad_val=114.0,
+        bbox_clip_border=True),
+    dict(type='mmdet.YOLOXHSVRandomAug'),
+    dict(type='mmdet.RandomFlip', prob=0.5),
+    dict(
+        type='mmdet.Resize',
+        scale=img_scale,
+        keep_ratio=True,
+        clip_object_border=True),
+    dict(
+        type='mmdet.Pad',
+        size_divisor=32,
+        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(
+        type='mmdet.FilterAnnotations',
+        min_gt_bbox_wh=(1, 1),
+        keep_empty=False),
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='mmdet.Resize', scale=img_scale, keep_ratio=True),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=img_scale,
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(
-                type='Normalize',
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                to_rgb=False),
-            dict(
-                type='Pad',
-                size_divisor=32,
-                pad_val=dict(img=(114.0, 114.0, 114.0))),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='VideoCollect', keys=['img'])
-        ])
+        type='mmdet.Pad',
+        size_divisor=32,
+        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='PackTrackInputs', pack_single_img=True)
 ]
-data = dict(
-    train=dict(
+
+train_dataloader = dict(
+    dataset=dict(
+        type='mmdet.MultiImageMixDataset',
         dataset=dict(
-            ann_file=[
-                'data/MOT20/annotations/train_cocoformat.json',
-                'data/crowdhuman/annotations/crowdhuman_train.json',
-                'data/crowdhuman/annotations/crowdhuman_val.json'
-            ],
-            img_prefix=[
-                'data/MOT20/train', 'data/crowdhuman/train',
-                'data/crowdhuman/val'
+            type='mmdet.ConcatDataset',
+            datasets=[
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/MOT20',
+                    ann_file='annotations/train_cocoformat.json',
+                    # TODO: mmdet use img as key, but img_path is needed
+                    data_prefix=dict(img='train'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/crowdhuman',
+                    ann_file='annotations/crowdhuman_train.json',
+                    data_prefix=dict(img='train'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
+                dict(
+                    type='mmdet.CocoDataset',
+                    data_root='data/crowdhuman',
+                    ann_file='annotations/crowdhuman_val.json',
+                    data_prefix=dict(img='val'),
+                    filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                    metainfo=dict(CLASSES=('pedestrian')),
+                    pipeline=[
+                        dict(type='LoadImageFromFile'),
+                        dict(type='LoadTrackAnnotations'),
+                    ]),
             ]),
-        pipeline=train_pipeline),
-    val=dict(
-        ann_file='data/MOT17/annotations/train_cocoformat.json',
-        img_prefix='data/MOT17/train',
-        pipeline=test_pipeline),
-    test=dict(
-        ann_file='data/MOT20/annotations/test_cocoformat.json',
-        img_prefix='data/MOT20/test',
+        pipeline=train_pipeline))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type=dataset_type,
+        data_root='data/MOT17',
+        ann_file='annotations/train_cocoformat.json',
+        data_prefix=dict(img_path='train'),
+        ref_img_sampler=None,
+        load_as_video=True,
+        test_mode=True,
+        pipeline=test_pipeline))
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type=dataset_type,
+        data_root='data/MOT20',
+        ann_file='annotations/test_cocoformat.json',
+        data_prefix=dict(img_path='test'),
+        ref_img_sampler=None,
+        load_as_video=True,
+        test_mode=True,
         pipeline=test_pipeline))
 
-checkpoint_config = dict(interval=1)
-evaluation = dict(metric=['bbox', 'track'], interval=1)
+test_evaluator = dict(type='MOTChallengeMetrics', format_only=True)
