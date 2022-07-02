@@ -157,14 +157,18 @@ class SORTTracker(BaseTracker):
             ids = torch.arange(
                 self.num_tracks,
                 self.num_tracks + num_new_tracks,
-                dtype=torch.long)
+                dtype=torch.long).to(bboxes.device)
             self.num_tracks += num_new_tracks
             if self.with_reid:
                 crops = self.crop_imgs(reid_img, metainfo, bboxes.clone(),
                                        rescale)
-                embeds = model.reid(crops, mode='tensor')
+                if crops.size(0) > 0:
+                    embeds = model.reid(crops, mode='tensor')
+                else:
+                    embeds = crops.new_zeros((0, model.reid.head.out_channels))
         else:
-            ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
+            ids = torch.full((bboxes.size(0), ), -1,
+                             dtype=torch.long).to(bboxes.device)
 
             # motion
             if model.with_motion:
@@ -218,7 +222,7 @@ class SORTTracker(BaseTracker):
             ids[new_track_inds] = torch.arange(
                 self.num_tracks,
                 self.num_tracks + new_track_inds.sum(),
-                dtype=torch.long)
+                dtype=torch.long).to(bboxes.device)
             self.num_tracks += new_track_inds.sum()
 
         self.update(

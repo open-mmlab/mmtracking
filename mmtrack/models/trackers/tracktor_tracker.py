@@ -78,6 +78,11 @@ class TracktorTracker(BaseTracker):
             factor_x, factor_y = metainfo['scale_factor']
             bboxes *= torch.tensor([factor_x, factor_y, factor_x,
                                     factor_y]).to(bboxes.device)
+
+        if bboxes.size(0) == 0:
+            return bboxes.new_zeros((0, 4)), bboxes.new_zeros(0), \
+                   ids.new_zeros(0), ids.new_zeros(0),
+
         proposals = InstanceData(**dict(bboxes=bboxes))
         det_results = detector.roi_head.predict_bbox(x, [metainfo],
                                                      [proposals], None,
@@ -95,7 +100,6 @@ class TracktorTracker(BaseTracker):
         track_bboxes = _track_bboxes[:, :-1].clone()
         track_scores = _track_bboxes[:, -1].clone()
         valid_inds = track_scores > self.regression['obj_score_thr']
-
         return track_bboxes[valid_inds], track_scores[
             valid_inds], track_labels[valid_inds], ids[valid_inds]
 
@@ -160,12 +164,15 @@ class TracktorTracker(BaseTracker):
             ids = torch.arange(
                 self.num_tracks,
                 self.num_tracks + num_new_tracks,
-                dtype=torch.long)
+                dtype=torch.long).to(bboxes.device)
             self.num_tracks += num_new_tracks
             if self.with_reid:
                 crops = self.crop_imgs(reid_img, metainfo, bboxes.clone(),
                                        rescale)
-                embeds = model.reid(crops, mode='tensor')
+                if crops.size(0) > 0:
+                    embeds = model.reid(crops, mode='tensor')
+                else:
+                    embeds = crops.new_zeros((0, model.reid.head.out_channels))
         else:
             # motion
             if model.with_cmc:
@@ -190,20 +197,25 @@ class TracktorTracker(BaseTracker):
             bboxes = bboxes[valid_inds]
             labels = labels[valid_inds]
             scores = scores[valid_inds]
-            ids = torch.full((bboxes.size(0), ), -1, dtype=torch.long)
+            ids = torch.full((bboxes.size(0), ), -1,
+                             dtype=torch.long).to(bboxes.device)
 
             if self.with_reid:
-                prop_embeds = model.reid(
-                    self.crop_imgs(reid_img, metainfo, prop_bboxes.clone(),
-                                   rescale),
-                    mode='tensor')
+                prop_crops = self.crop_imgs(reid_img, metainfo,
+                                            prop_bboxes.clone(), rescale)
+                if prop_crops.size(0) > 0:
+                    prop_embeds = model.reid(prop_crops, mode='tensor')
+                else:
+                    prop_embeds = prop_crops.new_zeros(
+                        (0, model.reid.head.out_channels))
                 if bboxes.size(0) > 0:
                     embeds = model.reid(
                         self.crop_imgs(reid_img, metainfo, bboxes.clone(),
                                        rescale),
                         mode='tensor')
                 else:
-                    embeds = prop_embeds.new_zeros((0, prop_embeds.size(1)))
+                    embeds = prop_embeds.\
+                        new_zeros((0, model.reid.head.out_channels))
                 # reid
                 active_ids = [int(_) for _ in self.ids if _ not in prop_ids]
                 if len(active_ids) > 0 and bboxes.size(0) > 0:
@@ -230,7 +242,7 @@ class TracktorTracker(BaseTracker):
             ids[new_track_inds] = torch.arange(
                 self.num_tracks,
                 self.num_tracks + new_track_inds.sum(),
-                dtype=torch.long)
+                dtype=torch.long).to(bboxes.device)
             self.num_tracks += new_track_inds.sum()
 
             bboxes = torch.cat((prop_bboxes, bboxes), dim=0)

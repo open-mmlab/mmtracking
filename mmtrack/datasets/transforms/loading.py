@@ -123,7 +123,7 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
             # ``gt_ignore_flags`` the same
             gt_ignore_flags = [False] * len(gt_bboxes)
 
-        if len(gt_bboxes) > 0 and gt_bboxes[0].shape[0] == 8:
+        if len(gt_bboxes) > 0 and len(gt_bboxes[0]) == 8:
             # The bbox of VOT2018 has (N, 8) shape and it's not possible to be
             # empty.
             results['gt_bboxes'] = np.array(

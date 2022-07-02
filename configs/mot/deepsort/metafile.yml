@@ -1,5 +1,5 @@
 Collections:
-  - Name: SORT
+  - Name: DeepSORT
     Metadata:
       Training Techniques:
         - SGD with Momentum
@@ -8,82 +8,14 @@ Collections:
         - ResNet
         - FPN
     Paper:
-        URL: https://arxiv.org/abs/1602.00763
-        Title: Simple Online and Realtime Tracking
+        URL: https://arxiv.org/abs/1703.07402
+        Title: Simple Online and Realtime Tracking with a Deep Association Metric
     README: configs/mot/deepsort/README.md
 
 Models:
-  - Name: sort_faster-rcnn_fpn_4e_mot17-public-half
-    In Collection: SORT
-    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-public-half.py
-    Metadata:
-      Training Data: MOT17-half-train
-      inference time (ms/im):
-        - value: 35.3
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
-    Results:
-      - Task: Multiple Object Tracking
-        Dataset: MOT17-half-val
-        Metrics:
-          MOTA: 46.0
-          IDF1: 46.6
-    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
-
-  - Name: sort_faster-rcnn_fpn_4e_mot17-private-half
-    In Collection: SORT
-    Config: configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private-half.py
-    Metadata:
-      Training Data: MOT17-half-train
-      inference time (ms/im):
-        - value: 53.8
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
-    Results:
-      - Task: Multiple Object Tracking
-        Dataset: MOT17-half-val
-        Metrics:
-          MOTA: 62.0
-          IDF1: 57.8
-    Weights: https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
-
-  - Name: deepsort_faster-rcnn_fpn_4e_mot17-public-half
-    In Collection: SORT
-    Config: configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
-    Paper:
-        URL: https://arxiv.org/abs/1703.07402
-        Title: Simple Online and Realtime Tracking with a Deep Association Metric
-    Metadata:
-      Training Data: MOT17-half-train
-      inference time (ms/im):
-        - value: 49.0
-          hardware: V100
-          backend: PyTorch
-          batch size: 1
-          mode: FP32
-          resolution: (640, 1088)
-    Results:
-      - Task: Multiple Object Tracking
-        Dataset: MOT17-half-val
-        Metrics:
-          MOTA: 48.1
-          IDF1: 60.8
-    Weights:
-      - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
-      - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
-
   - Name: deepsort_faster-rcnn_fpn_4e_mot17-private-half
-    In Collection: SORT
+    In Collection: DeepSORT
     Config: configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py
-    Paper:
-        URL: https://arxiv.org/abs/1703.07402
-        Title: Simple Online and Realtime Tracking with a Deep Association Metric
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):
@@ -97,8 +29,9 @@ Models:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
         Metrics:
-          MOTA: 63.8
-          IDF1: 69.6
+          MOTA: 63.7
+          IDF1: 69.5
+          HOTA: 56.9
     Weights:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
