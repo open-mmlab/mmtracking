@@ -11,7 +11,7 @@ train_pipeline = [
                 with_mask=True,
                 with_bbox=True),
             dict(type='mmdet.Resize', scale=(640, 360), keep_ratio=True),
-            dict(type='RandomFlip', prob=0.5),
+            dict(type='mmdet.RandomFlip', prob=0.5),
         ]),
     dict(type='PackTrackInputs', ref_prefix='ref', num_key_frames=1)
 ]
@@ -23,7 +23,7 @@ test_pipeline = [
         with_instance_id=True,
         with_mask=True,
         with_bbox=True),
-    dict(type='mmdet.Resize', scale=(1000, 600), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(640, 360), keep_ratio=True),
     dict(type='PackTrackInputs', pack_single_img=True)
 ]
 
@@ -36,7 +36,7 @@ train_dataloader = dict(
     num_workers=2,
     persistent_workers=True,
     drop_last=False,
-    sampler=dict(type='DefaultSampler', shuffle=False),
+    sampler=dict(type='DefaultSampler', shuffle=True),
     batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
     dataset=dict(
         type=dataset_type,
@@ -62,7 +62,7 @@ val_dataloader = dict(
         data_root=data_root,
         dataset_version=dataset_version,
         ann_file='annotations/youtube_vis_2019_valid.json',
-        data_prefix=dict(img_path='val/JPEGImages'),
+        data_prefix=dict(img_path='valid/JPEGImages'),
         pipeline=test_pipeline,
         load_as_video=True,
         ref_img_sampler=None,

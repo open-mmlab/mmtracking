@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import tempfile
+import warnings
 import zipfile
 from collections import OrderedDict, defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
@@ -8,11 +9,14 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import mmcv
 import numpy as np
 from mmdet.core.mask import encode_mask_results
+from mmengine.dist import (all_gather_object, barrier, broadcast_object_list,
+                           is_main_process)
 from mmengine.logging import MMLogger
 
 from mmtrack.core.evaluation import YTVIS, YTVISeval
 from mmtrack.metrics import BaseVideoMetric
 from mmtrack.registry import METRICS
+from .base_video_metrics import collect_tracking_results
 
 
 @METRICS.register_module()
@@ -183,11 +187,6 @@ class YouTubeVISMetric(BaseVideoMetric):
             val = float(
                 f'{ytvisEval.stats[coco_metric_names[metric_item]]:.3f}')
             eval_results[key] = val
-
-        ap = ytvisEval.stats[:6]
-        eval_results[f'{metric}_mAP_copypaste'] = (
-            f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
-            f'{ap[4]:.3f} {ap[5]:.3f}')
 
         return eval_results
 
@@ -390,3 +389,51 @@ class YouTubeVISMetric(BaseVideoMetric):
                     'please submmit the zip file to the test server')
         zf.write(f'{outfile_prefix}.json', 'results.json')
         zf.close()
+
+    def evaluate(self, size: int) -> dict:
+        """Evaluate the model performance of the whole dataset after processing
+        all batches.
+
+        Args:
+            size (int): Length of the entire validation dataset.
+
+        Returns:
+            dict: Evaluation metrics dict on the val dataset. The keys are the
+            names of the metrics, and the values are corresponding results.
+        """
+        # wait for all processes to complete prediction.
+        barrier()
+
+        if len(self.results) == 0:
+            warnings.warn(
+                f'{self.__class__.__name__} got empty `self.results`. Please '
+                'ensure that the processed results are properly added into '
+                '`self.results` in `process` method.')
+
+        results = collect_tracking_results(self.results, self.collect_device)
+
+        # gather seq_info
+        gathered_seq_info = all_gather_object(self._vis_meta_info['videos'])
+        all_seq_info = []
+        for _seq_info in gathered_seq_info:
+            all_seq_info.extend(_seq_info)
+        # update self._vis_meta_info
+        self._vis_meta_info = dict(videos=all_seq_info)
+
+        if is_main_process():
+            _metrics = self.compute_metrics(results)  # type: ignore
+            # Add prefix to metric names
+            if self.prefix:
+                _metrics = {
+                    '/'.join((self.prefix, k)): v
+                    for k, v in _metrics.items()
+                }
+            metrics = [_metrics]
+        else:
+            metrics = [None]  # type: ignore
+
+        broadcast_object_list(metrics)
+
+        # reset the results list
+        self.results.clear()
+        return metrics[0]

@@ -83,5 +83,9 @@ val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
 # evaluator
-val_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap')
+val_evaluator = dict(
+    type='YouTubeVISMetric',
+    metric='youtube_vis_ap',
+    outfile_prefix='./youtube_vis_results',
+    format_only=True)
 test_evaluator = val_evaluator

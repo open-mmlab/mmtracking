@@ -143,5 +143,12 @@ class TestYouTubeVISMetric(TestCase):
         ], [dict(pred_track_instances=dummy_pred_3)])
 
         eval_results = vis_metric.evaluate(size=3)
-        assert eval_results['youtube_vis/segm_mAP_copypaste'] \
-               == '1.000 1.000 1.000 1.000 -1.000 -1.000'
+        target = {
+            'youtube_vis/segm_mAP': 1.0,
+            'youtube_vis/segm_mAP_50': 1.0,
+            'youtube_vis/segm_mAP_75': 1.0,
+            'youtube_vis/segm_mAP_s': 1.0,
+            'youtube_vis/segm_mAP_m': -1.0,
+            'youtube_vis/segm_mAP_l': -1.0,
+        }
+        self.assertDictEqual(eval_results, target)
