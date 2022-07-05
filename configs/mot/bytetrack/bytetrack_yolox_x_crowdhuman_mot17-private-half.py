@@ -209,5 +209,8 @@ custom_hooks = [
         update_buffers=True,
         priority=49)
 ]
-
 default_hooks = dict(checkpoint=dict(interval=1))
+# evaluator
+val_evaluator = dict(
+    interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20))
+test_evaluator = val_evaluator

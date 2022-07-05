@@ -2,7 +2,9 @@
 import numpy as np
 
 
-def _interpolate_track(track, track_id, max_num_frames=20):
+def _interpolate_track(track: np.ndarray,
+                       track_id: int,
+                       max_num_frames: int = 20) -> np.ndarray:
     """Interpolate a track linearly to make the track more complete.
 
     Args:
@@ -46,7 +48,9 @@ def _interpolate_track(track, track_id, max_num_frames=20):
     return interpolated_track
 
 
-def interpolate_tracks(tracks, min_num_frames=5, max_num_frames=20):
+def interpolate_tracks(tracks: np.ndarray,
+                       min_num_frames: int = 5,
+                       max_num_frames: int = 20) -> np.ndarray:
     """Interpolate tracks linearly to make tracks more complete.
 
     This function is proposed in

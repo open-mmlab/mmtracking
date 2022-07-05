@@ -135,4 +135,7 @@ test_dataloader = dict(
         test_mode=True,
         pipeline=test_pipeline))
 
-test_evaluator = dict(type='MOTChallengeMetrics', format_only=True)
+test_evaluator = dict(
+    type='MOTChallengeMetrics',
+    interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20),
+    format_only=True)

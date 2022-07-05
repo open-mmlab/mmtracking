@@ -15,6 +15,7 @@ from mmengine.dist import (all_gather_object, barrier, broadcast,
                            is_main_process)
 from mmengine.logging import MMLogger
 
+from mmtrack.core import interpolate_tracks
 from mmtrack.metrics import BaseVideoMetric
 from mmtrack.registry import METRICS
 
@@ -49,6 +50,12 @@ class MOTChallengeMetrics(BaseVideoMetric):
         benchmark (str): Benchmark to be evaluated. Defaults to 'MOT17'.
         format_only (bool): If True, only formatting the results to the
             official format and not performing evaluation. Defaults to False.
+        interpolate_tracks_cfg (dict, optional): If not None, Interpolate
+            tracks linearly to make tracks more complete. Defaults to None.
+            - min_num_frames (int, optional): The minimum length of a track
+                that will be interpolated. Defaults to 5.
+            - max_num_frames (int, optional): The maximum disconnected length
+                in a track. Defaults to 20.
         collect_device (str): Device name used for collecting results from
             different ranks during distributed training. Must be 'cpu' or
             'gpu'. Defaults to 'cpu'.
@@ -69,6 +76,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
+                 interpolate_tracks_cfg: Optional[dict] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
@@ -83,13 +91,14 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 raise KeyError(f'metric {metric} is not supported.')
         self.metrics = metrics
         self.format_only = format_only
+        self.interpolate_tracks_cfg = interpolate_tracks_cfg
         assert benchmark in self.allowed_benchmarks
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_dir.name = get_tmpdir()
         self.seq_info = defaultdict(
-            lambda: dict(seq_length=-1, gt_strings=[], pred_strings=[]))
+            lambda: dict(seq_length=-1, gt_tracks=[], pred_tracks=[]))
         self.gt_dir = self._get_gt_dir()
         self.pred_dir = self._get_pred_dir(resfile_path)
         self.seqmap = osp.join(self.pred_dir, 'videoseq.txt')
@@ -146,36 +155,37 @@ class MOTChallengeMetrics(BaseVideoMetric):
             # load gts
             if 'instances' in data_sample:
                 gt_instances = data_sample['instances']
-                gt_strings = [
-                    '%d,%d,%d,%d,%d,%d,%d,%d,%.5f\n' %
-                    (frame_id + 1, gt_instances[i]['instance_id'],
-                     gt_instances[i]['bbox'][0], gt_instances[i]['bbox'][1],
-                     gt_instances[i]['bbox'][2] - gt_instances[i]['bbox'][0],
-                     gt_instances[i]['bbox'][3] - gt_instances[i]['bbox'][1],
-                     gt_instances[i]['mot_conf'],
-                     gt_instances[i]['category_id'],
-                     gt_instances[i]['visibility'])
-                    for i in range(len(gt_instances))
+                gt_tracks = [
+                    np.array([
+                        frame_id + 1, gt_instances[i]['instance_id'],
+                        gt_instances[i]['bbox'][0], gt_instances[i]['bbox'][1],
+                        gt_instances[i]['bbox'][2] -
+                        gt_instances[i]['bbox'][0],
+                        gt_instances[i]['bbox'][3] -
+                        gt_instances[i]['bbox'][1],
+                        gt_instances[i]['mot_conf'],
+                        gt_instances[i]['category_id'],
+                        gt_instances[i]['visibility']
+                    ]) for i in range(len(gt_instances))
                 ]
-                self.seq_info[video]['gt_strings'].extend(gt_strings)
+                self.seq_info[video]['gt_tracks'].extend(gt_tracks)
 
             # load predictions
             assert 'pred_track_instances' in pred
             pred_instances = pred['pred_track_instances']
-            pred_strings = [
-                '%d,%d,%.3f,%.3f,%.3f,%.3f,%.3f,-1,-1,-1\n' % (
-                    frame_id + 1,
-                    pred_instances['instances_id'][i],
-                    pred_instances['bboxes'][i][0],
-                    pred_instances['bboxes'][i][1],
-                    pred_instances['bboxes'][i][2] -
-                    pred_instances['bboxes'][i][0],
-                    pred_instances['bboxes'][i][3] -
-                    pred_instances['bboxes'][i][1],
-                    pred_instances['scores'][i],
-                ) for i in range(len(pred_instances['instances_id']))
+            pred_tracks = [
+                np.array([
+                    frame_id + 1, pred_instances['instances_id'][i].cpu(),
+                    pred_instances['bboxes'][i][0].cpu(),
+                    pred_instances['bboxes'][i][1].cpu(),
+                    (pred_instances['bboxes'][i][2] -
+                     pred_instances['bboxes'][i][0]).cpu(),
+                    (pred_instances['bboxes'][i][3] -
+                     pred_instances['bboxes'][i][1]).cpu(),
+                    pred_instances['scores'][i].cpu()
+                ]) for i in range(len(pred_instances['instances_id']))
             ]
-            self.seq_info[video]['pred_strings'].extend(pred_strings)
+            self.seq_info[video]['pred_tracks'].extend(pred_tracks)
 
             if frame_id == video_length - 1:
                 self._save_one_video_gts_preds(video)
@@ -186,17 +196,31 @@ class MOTChallengeMetrics(BaseVideoMetric):
         info = self.seq_info[seq]
         # save predictions
         pred_file = osp.join(self.pred_dir, seq + '.txt')
+
+        pred_tracks = np.array(info['pred_tracks'])
+        if self.interpolate_tracks_cfg is not None:
+            # interpolate tracks
+            pred_tracks = interpolate_tracks(pred_tracks,
+                                             **self.interpolate_tracks_cfg)
+
         with open(pred_file, 'wt') as f:
-            for line in info['pred_strings']:
+            for tracks in pred_tracks:
+                line = '%d,%d,%.3f,%.3f,%.3f,%.3f,%.3f,-1,-1,-1\n' % (
+                    tracks[0], tracks[1], tracks[2], tracks[3], tracks[4],
+                    tracks[5], tracks[6])
                 f.writelines(line)
-        info['pred_strings'].clear()
+
+        info['pred_tracks'].clear()
         # save gts
-        if info['gt_strings']:
+        if info['gt_tracks']:
             gt_file = osp.join(self.gt_dir, seq + '.txt')
             with open(gt_file, 'wt') as f:
-                for line in info['gt_strings']:
+                for tracks in info['gt_tracks']:
+                    line = '%d,%d,%d,%d,%d,%d,%d,%d,%.5f\n' % (
+                        tracks[0], tracks[1], tracks[2], tracks[3], tracks[4],
+                        tracks[5], tracks[6], tracks[7], tracks[8])
                     f.writelines(line)
-            info['gt_strings'].clear()
+            info['gt_tracks'].clear()
         # save seq info
         with open(self.seqmap, 'a') as f:
             f.write(seq + '\n')
