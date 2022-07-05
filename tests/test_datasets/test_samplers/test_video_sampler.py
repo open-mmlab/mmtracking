@@ -6,7 +6,7 @@ from unittest import TestCase
 from mmtrack.datasets import BaseVideoDataset, LaSOTDataset, VideoSampler
 
 PREFIX = osp.join(osp.dirname(__file__), '../../data')
-DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann.json'
+DEMO_ANN_FILE = f'{PREFIX}/demo_cocovid_data/ann_vid.json'
 SOT_DATA_PREFIX = f'{PREFIX}/demo_sot_data'
 
 

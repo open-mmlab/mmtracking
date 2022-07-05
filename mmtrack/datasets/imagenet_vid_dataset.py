@@ -27,7 +27,9 @@ class ImagenetVIDDataset(BaseVideoDataset):
         super().__init__(*args, **kwargs)
 
     def load_data_list(self) -> Tuple[List[dict], List]:
-        """Load annotations from an annotation file named as ``self.ann_file``
+        """Load annotations from an annotation file named as ``self.ann_file``.
+        Specifically, if self.load_as_video is True, it loads from the video
+        annotation file. Otherwise, from the image annotation file.
 
         Returns:
             tuple(list[dict], list): A list of annotation and a list of
@@ -41,7 +43,8 @@ class ImagenetVIDDataset(BaseVideoDataset):
         return data_list, valid_data_indices
 
     def _load_video_data_list(self) -> Tuple[List[dict], List]:
-        """Load annotations from an annotation file named as ``self.ann_file``
+        """Load annotations from a video annotation file named as
+        ``self.ann_file``.
 
         Returns:
             tuple(list[dict], list): A list of annotation and a list of
@@ -94,7 +97,8 @@ class ImagenetVIDDataset(BaseVideoDataset):
         return data_list, valid_data_indices
 
     def _load_image_data_list(self) -> Tuple[List[dict], List]:
-        """Load annotations from an annotation file named as ``self.ann_file``
+        """Load annotations from an image annotation file named as
+        ``self.ann_file``.
 
         Returns:
             tuple(list[dict], list): A list of annotation and a list of

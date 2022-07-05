@@ -98,7 +98,7 @@ class TestSOTCocoDataset(TestLaSOTDataset):
     @classmethod
     def setUpClass(cls):
         cls.dataset = SOTCocoDataset(
-            ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
+            ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann_vid.json'),
             data_prefix=dict(img_path=PREFIX),
             test_mode=False)
 
@@ -118,7 +118,7 @@ class TestSOTImageNetVIDDataset(TestLaSOTDataset):
     @classmethod
     def setUpClass(cls):
         cls.dataset = SOTImageNetVIDDataset(
-            ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann.json'),
+            ann_file=osp.join(PREFIX, 'demo_cocovid_data', 'ann_vid.json'),
             data_prefix=dict(img_path=PREFIX),
             test_mode=False)
 
