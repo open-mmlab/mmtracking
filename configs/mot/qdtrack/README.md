@@ -42,11 +42,11 @@ Similarity learning has been recognized as a crucial step for object tracking. H
 
 ## Results and models on TAO dataset
 
-Note: If you want to achieve a tack AP of 11.0 on the TAO dataset, you need to do pre-training on LVIS dataset.
+Note: If you want to achieve a track AP of 11.0 on the TAO dataset, you need to do pre-training on LVIS dataset.
 
 a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set.
 
-The pre-trained checkpoint is given above.([model](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth))
+The pre-trained checkpoint is given above([model](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth)).
 
 b. Save the model to `ckpts/tao/**.pth`, and modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
 
