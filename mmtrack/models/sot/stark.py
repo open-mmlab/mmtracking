@@ -59,9 +59,13 @@ class Stark(BaseSingleObjectTracker):
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
 
+        self.num_templates = self.test_cfg['num_templates']
+
         # Set the update interval
-        self.update_intervals = self.test_cfg['update_intervals']
-        self.num_extra_template = len(self.update_intervals)
+        self.update_intervals = self.test_cfg.get('update_intervals', None)
+        if isinstance(self.update_intervals, (int, float)):
+            self.update_intervals = [int(self.update_intervals)
+                                     ] * self.num_templates
 
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
@@ -189,7 +193,7 @@ class Stark(BaseSingleObjectTracker):
         self.memo.z_dict_list.append(self.z_dict)
 
         # get other templates
-        for _ in range(self.num_extra_template):
+        for _ in range(self.num_templates - 1):
             self.memo.z_dict_list.append(deepcopy(self.z_dict))
 
     def update_template(self, img: Tensor, bbox: Union[List, Tensor],
@@ -290,7 +294,7 @@ class Stark(BaseSingleObjectTracker):
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
 
         head_inputs = []
-        for i in range(self.num_extra_template + 1):
+        for i in range(self.num_templates):
             z_feat = self.extract_feat(template_img[:, i])
             z_dict = dict(feat=z_feat, mask=template_padding_mask[:, i])
             head_inputs.append(z_dict)

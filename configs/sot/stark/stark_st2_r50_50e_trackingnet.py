@@ -1,12 +1,10 @@
-_base_ = ['./stark_st2_r50_50e_lasot.py']
+_base_ = [
+    '../../_base_/datasets/trackingnet.py', './stark_st2_r50_50e_base.py'
+]
 
 # model setting
 model = dict(test_cfg=dict(update_intervals=[25]))
 
-data_root = 'data/'
-data = dict(
-    test=dict(
-        type='TrackingNetDataset',
-        ann_file=data_root +
-        'trackingnet/annotations/trackingnet_test_infos.txt',
-        img_prefix=data_root + 'trackingnet'))
+# evaluator
+val_evaluator = dict(outfile_prefix='results/stark_st2_trackingnet')
+test_evaluator = val_evaluator

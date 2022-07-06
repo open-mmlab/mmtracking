@@ -46,14 +46,14 @@ Please download the datasets from the official websites. It is recommended to sy
 
 ```shell
 # download OTB100 dataset by web crawling
-python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/OTB100/zips -p 8
 ```
 
 - For VOT2018, we use the official downloading script.
 
 ```shell
 # download VOT2018 dataset by web crawling
-python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/VOT2018/data
 ```
 
 #### 1.4 Video Instance Segmentation
@@ -146,7 +146,7 @@ mmtracking
 │   │   ├── train
 │   │   ├── val
 │   │
-│   ├── lasot
+│   ├── LaSOT_full
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
 |   │   │   │   ├── airplane-1
@@ -163,19 +163,19 @@ mmtracking
 │   │   ├── anno
 │   │   │   ├── UAV123
 │   │
-│   ├── trackingnet
+│   ├── TrackingNet
 │   │   ├── TEST.zip
 │   │   ├── TRAIN_0.zip
 │   │   ├── ......
 │   │   ├── TRAIN_11.zip
 │   │
-│   ├── otb100
+│   ├── OTB100
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
 │   │   │   │──
 │   │
-│   ├── got10k
+│   ├── GOT10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -185,7 +185,7 @@ mmtracking
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │
-|   ├── vot2018
+|   ├── VOT2018
 |   |   ├── data
 |   |   |   ├── ants1
 |   │   │   │   ├──color
@@ -251,34 +251,34 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
-python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/LaSOT_full/LaSOTBenchmark -o ./data/LaSOT_full/annotations
 
 # UAV123
 # download annotations
 # due to the annotations of all videos in UAV123 are inconsistent, we just download the information file generated in advance.
-wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
+wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/UAV123/annotations
 
 # TrackingNet
 # unzip files in 'data/trackingnet/*.zip'
-bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/TrackingNet
 # generate annotations
-python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
+python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/TrackingNet -o ./data/TrackingNet/annotations
 
 # OTB100
 # unzip files in 'data/otb100/zips/*.zip'
-bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
+bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/OTB100
 # download annotations
 # due to the annotations of all videos in OTB100 are inconsistent, we just need to download the information file generated in advance.
-wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
+wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/OTB100/annotations
 
 # GOT10k
-# unzip 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' and files in 'data/got10k/full_data/train_data/*.zip'
-bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
+# unzip 'data/GOT10k/full_data/test_data.zip', 'data/GOT10k/full_data/val_data.zip' and files in 'data/GOT10k/full_data/train_data/*.zip'
+bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/GOT10k
 # generate annotations
-python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
+python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/GOT10k -o ./data/GOT10k/annotations
 
 # VOT2018
-python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
+python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/VOT2018 -o ./data/VOT2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
 python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
@@ -384,7 +384,7 @@ mmtracking
 │   │   ├── train
 │   │   ├── val
 │   │
-│   ├── lasot
+│   ├── LaSOT_full
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
 |   │   │   │   ├── airplane-1
@@ -403,7 +403,7 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
 │   │
-│   ├── trackingnet
+│   ├── TrackingNet
 │   │   ├── TEST
 │   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
@@ -422,7 +422,7 @@ mmtracking
 │   │   ├── TRAIN_11
 │   │   ├── annotations (the converted annotation file)
 │   │
-│   ├── otb100
+│   ├── OTB100
 │   │   ├── zips
 │   │   │   ├── Basketball.zip
 │   │   │   ├── Biker.zip
@@ -433,7 +433,7 @@ mmtracking
 │   │   │   │   ├── img
 │   │   │   ├── ......
 │   │
-│   ├── got10k
+│   ├── GOT10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -459,7 +459,7 @@ mmtracking
 │   │   │   ├── list.txt
 │   │   │── annotations
 │   │
-|   ├── vot2018
+|   ├── VOT2018
 |   |   ├── data
 |   |   |   ├── ants1
 |   │   │   │   ├──color
@@ -607,14 +607,14 @@ There are 9 JSON files in `data/tao/annotations`:
 
 `validation_with_freeform.json`: JSON file containing annotations for all categories in TAO validation.
 
-#### The folder of annotations in lasot
+#### The folder of annotations in LaSOT
 
-There are 2 JSON files in `data/lasot/annotations`:
+There are 2 JSON files in `data/LaSOT_full/annotations`:
 
 `lasot_train.json`:  JSON file containing the annotations information of the training set in LaSOT dataset.
 `lasot_test.json`:  JSON file containing the annotations information of the testing set in LaSOT dataset.
 
-There are 2 TEXT files in `data/lasot/annotations`:
+There are 2 TEXT files in `data/LaSOT_full/annotations`:
 
 `lasot_train_infos.txt`:  TEXT file containing the annotations information of the training set in LaSOT dataset.
 `lasot_test_infos.txt`:  TEXT file containing the annotations information of the testing set in LaSOT dataset.
@@ -631,35 +631,35 @@ There are only 1 TEXT files in `data/UAV123/annotations`:
 
 #### The folder of frames and annotations in TrackingNet
 
-There are 511 video directories of TrackingNet testset in `data/trackingnet/TEST/frames`, and each video directory contains all images of the video. Similar file structures can be seen in `data/trackingnet/TRAIN_{*}/frames`.
+There are 511 video directories of TrackingNet testset in `data/TrackingNet/TEST/frames`, and each video directory contains all images of the video. Similar file structures can be seen in `data/TrackingNet/TRAIN_{*}/frames`.
 
-There are 2 JSON files in `data/trackingnet/annotations`:
+There are 2 JSON files in `data/TrackingNet/annotations`:
 
 `trackingnet_test.json`:  JSON file containing the annotations information of the testing set in TrackingNet dataset.
 `trackingnet_train.json`:  JSON file containing the annotations information of the training set in TrackingNet dataset.
 
-There are 2 TEXT files in `data/trackingnet/annotations`:
+There are 2 TEXT files in `data/TrackingNet/annotations`:
 
 `trackingnet_test_infos.txt`:  TEXT file containing the information of the testing set in TrackingNet dataset.
 `trackingnet_train_infos.txt`:  TEXT file containing the information of the training set in TrackingNet dataset.
 
 #### The folder of data and annotations in OTB100
 
-There are 98 video directories of OTB100 dataset in `data/otb100/data`, and the `img` folder under each video directory contains all images of the video.
+There are 98 video directories of OTB100 dataset in `data/OTB100/data`, and the `img` folder under each video directory contains all images of the video.
 
-There are only 1 JSON files in `data/otb100/annotations`:
+There are only 1 JSON files in `data/OTB100/annotations`:
 
 `otb100.json`:  JSON file containing the annotations information of the OTB100 dataset.
 
-There are only 1 TEXT files in `data/otb100/annotations`:
+There are only 1 TEXT files in `data/OTB100/annotations`:
 
 `otb100_infos.txt`:  TEXT file containing the information of the OTB100 dataset.
 
 #### The folder of frames and annotations in GOT10k
 
-There are training video directories in `data/got10k/train`, and each video directory contains all images of the video. Similar file structures can be seen in `data/got10k/test` and `data/got10k/val`.
+There are training video directories in `data/GOT10k/train`, and each video directory contains all images of the video. Similar file structures can be seen in `data/GOT10k/test` and `data/GOT10k/val`.
 
-There are 3 JSON files in `data/got10k/annotations`:
+There are 3 JSON files in `data/GOT10k/annotations`:
 
 `got10k_train.json`:  JSON file containing the annotations information of the training set in GOT10k dataset.
 
@@ -667,7 +667,7 @@ There are 3 JSON files in `data/got10k/annotations`:
 
 `got10k_val.json`:  JSON file containing the annotations information of the valuation set in GOT10k dataset.
 
-There are 5 TEXT files in `data/got10k/annotations`:
+There are 5 TEXT files in `data/GOT10k/annotations`:
 
 `got10k_train_infos.txt`:  TEXT file containing the information of the training set in GOT10k dataset.
 
@@ -681,13 +681,13 @@ There are 5 TEXT files in `data/got10k/annotations`:
 
 #### The folder of data and annotations in VOT2018
 
-There are 60 video directories of VOT2018 dataset in `data/vot2018/data`, and the `color` folder under each video directory contains all images of the video.
+There are 60 video directories of VOT2018 dataset in `data/VOT2018/data`, and the `color` folder under each video directory contains all images of the video.
 
-There are only 1 JSON files in `data/vot2018/annotations`:
+There are only 1 JSON files in `data/VOT2018/annotations`:
 
 `vot2018.json`:  JSON file containing the annotations information of the VOT2018 dataset.
 
-There are only 1 TEXT files in `data/vot2018/annotations`:
+There are only 1 TEXT files in `data/VOT2018/annotations`:
 
 `vot2018_infos.txt`:  TEXT file containing the information of the VOT2018 dataset.
 

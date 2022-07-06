@@ -46,14 +46,14 @@
 
 ```shell
 # 通过网页爬虫下载 OTB100 数据集
-python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
+python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/OTB100/zips -p 8
 ```
 
 - 对于 VOT2018, 我们使用官方的下载脚本。
 
 ```shell
 # 通过网页爬虫下载 VOT2018 数据集
-python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/vot2018/data
+python ./tools/convert_datasets/vot/download_vot.py --dataset vot2018 --save_path ./data/VOT2018/data
 ```
 
 #### 1.4 视频实例分割
@@ -146,7 +146,7 @@ mmtracking
 │   │   ├── train
 │   │   ├── val
 │   │
-│   ├── lasot
+│   ├── LaSOT_full
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
 |   │   │   │   ├── airplane-1
@@ -163,19 +163,19 @@ mmtracking
 │   │   ├── anno
 │   │   │   ├── UAV123
 │   │
-│   ├── trackingnet
+│   ├── TrackingNet
 │   │   ├── TEST.zip
 │   │   ├── TRAIN_0.zip
 │   │   ├── ......
 │   │   ├── TRAIN_11.zip
 │   │
-│   ├── otb100
+│   ├── OTB100
 │   │   │── zips
 │   │   │   │── Basketball.zip
 │   │   │   │── Biker.zip
 │   │   │   │──
 │   │
-│   ├── got10k
+│   ├── GOT10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -185,7 +185,7 @@ mmtracking
 │   │   │   │── test_data.zip
 │   │   │   │── val_data.zip
 │   │
-|   ├── vot2018
+|   ├── VOT2018
 |   |   ├── data
 |   |   |   ├── ants1
 |   │   │   │   ├──color
@@ -252,34 +252,34 @@ python ./tools/convert_datasets/tao/merge_coco_with_lvis.py --lvis ./data/lvis/a
 python ./tools/convert_datasets/tao/tao2coco.py -i ./data/tao/annotations --filter-classes
 
 # LaSOT
-python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/lasot/LaSOTBenchmark -o ./data/lasot/annotations
+python ./tools/convert_datasets/lasot/gen_lasot_infos.py -i ./data/LaSOT_full/LaSOTBenchmark -o ./data/LaSOT_full/annotations
 
 # UAV123
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/uav123/annotations
+wget https://download.openmmlab.com/mmtracking/data/uav123_infos.txt -P data/UAV123/annotations
 
 # TrackingNet
 # 解压目录 'data/trackingnet/' 下的所有 '*.zip' 文件
-bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/trackingnet
+bash ./tools/convert_datasets/trackingnet/unzip_trackingnet.sh ./data/TrackingNet
 # 生成标注
-python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/trackingnet -o ./data/trackingnet/annotations
+python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/TrackingNet -o ./data/TrackingNet/annotations
 
 # OTB100
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
-bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
+bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/OTB100
 # 下载标注
 # 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
-wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
+wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/OTB100/annotations
 
 # GOT10k
-# 解压 'data/got10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/got10k/full_data/train_data/' 下的所有 '*.zip' 文件
-bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/got10k
+# 解压 'data/GOT10k/full_data/test_data.zip', 'data/got10k/full_data/val_data.zip' 和 目录'data/GOT10k/full_data/train_data/' 下的所有 '*.zip' 文件
+bash ./tools/convert_datasets/got10k/unzip_got10k.sh ./data/GOT10k
 # 生成标注
-python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/got10k -o ./data/got10k/annotations
+python ./tools/convert_datasets/got10k/gen_got10k_infos.py -i ./data/GOT10k -o ./data/GOT10k/annotations
 
 # VOT2018
-python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/vot2018 -o ./data/vot2018/annotations --dataset_type vot2018
+python ./tools/convert_datasets/vot/gen_vot_infos.py -i ./data/VOT2018 -o ./data/VOT2018/annotations --dataset_type vot2018
 
 # YouTube-VIS 2019
 python ./tools/convert_datasets/youtubevis/youtubevis2coco.py -i ./data/youtube_vis_2019 -o ./data/youtube_vis_2019/annotations --version 2019
@@ -385,7 +385,7 @@ mmtracking
 │   │   ├── train
 │   │   ├── val
 │   │
-│   ├── lasot
+│   ├── LaSOT_full
 │   │   ├── LaSOTBenchmark
 │   │   │   ├── airplane
 |   │   │   │   ├── airplane-1
@@ -404,7 +404,7 @@ mmtracking
 │   │   │   ├── UAV123
 │   │   ├── annotations (the converted annotation file)
 │   │
-│   ├── trackingnet
+│   ├── TrackingNet
 │   │   ├── TEST
 │   │   │   ├── anno (the official annotation files)
 │   │   │   ├── zips
@@ -423,7 +423,7 @@ mmtracking
 │   │   ├── TRAIN_11
 │   │   ├── annotations (the converted annotation file)
 │   │
-│   ├── otb100
+│   ├── OTB100
 │   │   ├── zips
 │   │   │   ├── Basketball.zip
 │   │   │   ├── Biker.zip
@@ -434,7 +434,7 @@ mmtracking
 │   │   │   │   ├── img
 │   │   │   ├── ......
 │   │
-│   ├── got10k
+│   ├── GOT10k
 │   │   │── full_data
 │   │   │   │── train_data
 │   │   │   │   ├── GOT-10k_Train_split_01.zip
@@ -460,7 +460,7 @@ mmtracking
 │   │   │   ├── list.txt
 │   │   │── annotations
 │   │
-|   ├── vot2018
+|   ├── VOT2018
 |   |   ├── data
 |   |   |   ├── ants1
 |   │   │   │   ├──color
@@ -613,9 +613,9 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `validation_with_freeform.json`: 包含 TAO 验证集所有类别标注的 JSON 文件。
 
-#### lasot 的标注文件夹
+#### LaSOT 的标注文件夹
 
-在 `data/lasot/annotations` 中有 2 个 JSON 文件:
+在 `data/LaSOT_full/annotations` 中有 2 个 JSON 文件:
 
 `lasot_train.json`:  包含 LaSOT 训练集标注信息的 JSON 文件。
 `lasot_test.json`:  包含 LaSOT 测试集标注信息的 JSON 文件。
@@ -637,9 +637,9 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### TrackingNet 的标注和视频帧文件夹
 
-在 `data/trackingnet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。`data/trackingnet/TRAIN_{*}/frames` 下具有类似的文件目录结构。
+在 `data/TrackingNet/TEST/frames` 文件夹下有 TrackingNet 测试集的 511 个视频目录， 每个视频目录下面包含该视频所有图片。`data/TrackingNet/TRAIN_{*}/frames` 下具有类似的文件目录结构。
 
-在 `data/trackingnet/annotations` 中有 2 个 JSON 文件：
+在 `data/TrackingNet/annotations` 中有 2 个 JSON 文件：
 
 `trackingnet_train.json`： 包含 TrackingNet 训练集标注信息的 JSON 文件。
 `trackingnet_test.json`： 包含 TrackingNet 测试集标注信息的 JSON 文件。
@@ -651,21 +651,21 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 #### OTB100 的标注和视频帧文件夹
 
-在 `data/otb100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
+在 `data/OTB100/data` 文件夹下有 OTB100 数据集的 98 个视频目录， 每个视频目录下的 `img` 文件夹包含该视频所有图片。
 
-在 `data/otb100/data/annotations` 中只有 1 个 JSON 文件：
+在 `data/OTB100/data/annotations` 中只有 1 个 JSON 文件：
 
 `otb100.json`： 包含 OTB100 数据集标注信息的 JSON 文件
 
-在 `data/otb100/annotations` 中有 1 个 TEXT 文件:
+在 `data/OTB100/annotations` 中有 1 个 TEXT 文件:
 
 `otb100_infos.txt`:  包含 OTB100 数据信息的 TEXT 文件。
 
 #### GOT10k 的标注和视频帧文件夹
 
-在 `data/got10k/train` 文件夹下有 GOT10k 训练集的视频目录， 每个视频目录下面包含该视频所有图片。`data/got10k/test` 和 `data/got10k/val` 下具有类似的文件目录结构。
+在 `data/GOT10k/train` 文件夹下有 GOT10k 训练集的视频目录， 每个视频目录下面包含该视频所有图片。`data/GOT10k/test` 和 `data/GOT10k/val` 下具有类似的文件目录结构。
 
-在 `data/got10k/annotations` 中有 3 个 JSON 文件：
+在 `data/GOT10k/annotations` 中有 3 个 JSON 文件：
 
 `got10k_train.json`： 包含 GOT10k 训练集标注信息的 JSON 文件。
 
@@ -673,7 +673,7 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `got10k_val.json`： 包含 GOT10k 验证集标注信息的 JSON 文件。
 
-在 `data/got10k/annotations` 中有 5 个 TEXT 文件：
+在 `data/GOT10k/annotations` 中有 5 个 TEXT 文件：
 
 `got10k_train_infos.txt`： 包含 GOT10k 训练集信息的 TEXT 文件。
 
@@ -685,15 +685,15 @@ MOT17-02-FRCNN_000009/000081.jpg 3
 
 `got10k_val_vot_infos.txt`： 包含 GOT10k `val_vot` 划分集信息的 TEXT 文件。
 
-#### VOT2018的标注和视频帧文件夹
+#### VOT2018 的标注和视频帧文件夹
 
-在 `data/vot2018/data` 文件夹下有 VOT2018 数据集的 60 个视频目录， 每个视频目录下的 `color` 文件夹包含该视频所有图片。
+在 `data/VOT2018/data` 文件夹下有 VOT2018 数据集的 60 个视频目录， 每个视频目录下的 `color` 文件夹包含该视频所有图片。
 
-在 `data/vot2018/data/annotations` 中只有一个 JSON 文件：
+在 `data/VOT2018/data/annotations` 中只有一个 JSON 文件：
 
 `vot2018.json`： 包含 VOT2018 数据集标注信息的 JSON 文件。
 
-在 `data/vot2018/data/annotations` 中只有一个 TEXT 文件：
+在 `data/VOT2018/data/annotations` 中只有一个 TEXT 文件：
 
 `vot2018_infos.txt`： 包含 VOT2018 数据集信息的 TEXT 文件。
 

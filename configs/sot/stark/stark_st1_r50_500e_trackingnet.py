@@ -1,9 +1,7 @@
-_base_ = ['./stark_st1_r50_500e_lasot.py']
+_base_ = [
+    '../../_base_/datasets/trackingnet.py', './stark_st1_r50_500e_base.py'
+]
 
-data_root = 'data/'
-data = dict(
-    test=dict(
-        type='TrackingNetDataset',
-        ann_file=data_root +
-        'trackingnet/annotations/trackingnet_test_infos.txt',
-        img_prefix=data_root + 'trackingnet'))
+# evaluator
+val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')
+test_evaluator = val_evaluator

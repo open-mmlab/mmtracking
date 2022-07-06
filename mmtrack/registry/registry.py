@@ -15,6 +15,7 @@ from mmengine.registry import MODEL_WRAPPERS as MMENGINE_MODEL_WRAPPERS
 from mmengine.registry import MODELS as MMENGINE_MODELS
 from mmengine.registry import \
     OPTIM_WRAPPER_CONSTRUCTORS as MMENGINE_OPTIM_WRAPPER_CONSTRUCTORS
+from mmengine.registry import OPTIM_WRAPPERS as MMENGINE_OPTIM_WRAPPERS
 from mmengine.registry import OPTIMIZERS as MMENGINE_OPTIMIZERS
 from mmengine.registry import PARAM_SCHEDULERS as MMENGINE_PARAM_SCHEDULERS
 from mmengine.registry import \
@@ -53,6 +54,8 @@ WEIGHT_INITIALIZERS = Registry(
 
 # mangage all kinds of optimizers like `SGD` and `Adam`
 OPTIMIZERS = Registry('optimizer', parent=MMENGINE_OPTIMIZERS)
+# manage optimizer wrapper
+OPTIM_WRAPPERS = Registry('optim_wrapper', parent=MMENGINE_OPTIM_WRAPPERS)
 # manage constructors that customize the optimization hyperparameters.
 OPTIM_WRAPPER_CONSTRUCTORS = Registry(
     'optimizer constructor', parent=MMENGINE_OPTIM_WRAPPER_CONSTRUCTORS)

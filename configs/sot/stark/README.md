@@ -32,7 +32,15 @@ The STARK is trained in 2 stages. We denote the 1st-stage model as `STARK-ST1`, 
 
 Models from the 2 stages have different configurations. For example, `stark_st1_r50_500e_got10k` is the configuration of the 1st-stage model and `stark_st2_r50_50e_got10k` is the configuration of the 2nd-stage model.
 
-Note: We have to pass an extra parameter `cfg-options` containing the key `load_from` from shell command to load the pretrained 1st-stage model when training the 2nd-stage model. Here is an example:
+The shell command to train the 1st-stage model:
+
+```
+bash ./tools/dist_train.sh \
+    ${CONFIG_FILE} \
+    ${GPU_NUM} \
+```
+
+When training the 2nd-stage model, we have to pass an extra parameter `cfg-options` containing the key `load_from` from shell command to load the pretrained 1st-stage model. Here is an example:
 
 ```
 bash ./tools/dist_train.sh \

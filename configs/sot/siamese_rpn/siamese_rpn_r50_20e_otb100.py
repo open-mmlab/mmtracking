@@ -1,4 +1,4 @@
-_base_ = ['./siamese_rpn_r50_20e_lasot.py']
+_base_ = ['../../_base_/datasets/otb100.py', './siamese_rpn_r50_20e_base.py']
 
 crop_size = 511
 exemplar_size = 127
@@ -8,7 +8,7 @@ search_size = 255
 model = dict(
     test_cfg=dict(rpn=dict(penalty_k=0.4, window_influence=0.5, lr=0.4)))
 
-data_root = 'data/'
+data_root = {{_base_.data_root}}
 train_pipeline = [
     dict(
         type='PairSampling',
@@ -67,14 +67,3 @@ train_dataloader = dict(
             pipeline=train_pipeline,
             test_mode=False)
     ]))
-val_dataloader = dict(
-    dataset=dict(
-        type='OTB100Dataset',
-        ann_file='otb100/annotations/otb100_infos.txt',
-        data_prefix=dict(img_path='otb100')))
-test_dataloader = val_dataloader
-
-# evaluator
-val_evaluator = dict(
-    type='SOTMetric', metric_options=dict(only_eval_visible=False))
-test_evaluator = val_evaluator
