@@ -274,55 +274,24 @@ class PackTrackInputs(BaseTransform):
         # 3. Pack metainfo
         new_img_metas = {}
         for key in self.meta_keys:
-            # TODO: Wait until mmcv is modified and deleted.
-            if (key == 'ori_shape' and 'ori_height' in results
-                    and 'ori_width' in results):
-                ori_height = results['ori_height']
-                ori_width = results['ori_width']
-                key_ori_height, ref_ori_height = self._cat_same_type_data(
-                    ori_height, return_ndarray=False)
-                key_ori_width, ref_ori_width = self._cat_same_type_data(
-                    ori_width, return_ndarray=False)
-                assert len(key_ori_height) == len(key_ori_width)
-                # To compatible the interface of ``MMDet``, we don't use
-                # the fotmat of list when the length of meta information is
-                # equal to 1.
-                if len(key_ori_height) > 1:
-                    new_img_metas[key] = [
-                        (h, w) for h, w in zip(key_ori_height, key_ori_width)
-                    ]
-                else:
-                    new_img_metas[key] = (key_ori_height[0], key_ori_width[0])
-                if ref_ori_height is not None and ref_ori_width is not None:
-                    assert len(ref_ori_height) == len(ref_ori_width)
-                    if len(ref_ori_height) > 1:
-                        new_img_metas[f'{self.ref_prefix}_{key}'] = [
-                            (h, w)
-                            for h, w in zip(ref_ori_height, ref_ori_width)
-                        ]
-                    else:
-                        new_img_metas[f'{self.ref_prefix}_{key}'] = (
-                            ref_ori_height[0], ref_ori_width[0])
+            if key not in results:
+                continue
+            img_metas = results[key]
+            key_img_metas, ref_img_metas = self._cat_same_type_data(
+                img_metas, return_ndarray=False)
+            # To compatible the interface of ``MMDet``, we don't use
+            # the fotmat of list when the length of meta information is
+            # equal to 1.
+            if len(key_img_metas) > 1:
+                new_img_metas[key] = key_img_metas
             else:
-                if key not in results:
-                    continue
-                img_metas = results[key]
-                key_img_metas, ref_img_metas = self._cat_same_type_data(
-                    img_metas, return_ndarray=False)
-                # To compatible the interface of ``MMDet``, we don't use
-                # the fotmat of list when the length of meta information is
-                # equal to 1.
-                if len(key_img_metas) > 1:
-                    new_img_metas[key] = key_img_metas
+                new_img_metas[key] = key_img_metas[0]
+            if ref_img_metas is not None:
+                if len(ref_img_metas) > 1:
+                    new_img_metas[f'{self.ref_prefix}_{key}'] = ref_img_metas
                 else:
-                    new_img_metas[key] = key_img_metas[0]
-                if ref_img_metas is not None:
-                    if len(ref_img_metas) > 1:
-                        new_img_metas[
-                            f'{self.ref_prefix}_{key}'] = ref_img_metas
-                    else:
-                        new_img_metas[
-                            f'{self.ref_prefix}_{key}'] = ref_img_metas[0]
+                    new_img_metas[f'{self.ref_prefix}_{key}'] = ref_img_metas[
+                        0]
 
         data_sample.set_metainfo(new_img_metas)
 
@@ -482,16 +451,7 @@ class PackReIDInputs(BaseTransform):
 
         meta_info = dict()
         for key in self.meta_keys:
-            if key == 'ori_shape' and 'ori_height' in results \
-                    and 'ori_width' in results:
-                if _type == list:
-                    meta_info[key] = [(h, w) for h, w in zip(
-                        results['ori_height'], results['ori_width'])]
-                else:
-                    meta_info[key] = (results['ori_height'],
-                                      results['ori_width'])
-            elif key in results:
-                meta_info[key] = results[key]
+            meta_info[key] = results[key]
         data_sample.set_metainfo(meta_info)
         packed_results['data_sample'] = data_sample
 
