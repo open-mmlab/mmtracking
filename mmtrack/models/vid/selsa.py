@@ -90,9 +90,14 @@ class SELSA(BaseVideoDetector):
         if self.detector.with_rpn:
             proposal_cfg = self.detector.train_cfg.get(
                 'rpn_proposal', self.detector.test_cfg.rpn)
+            rpn_data_samples = deepcopy(batch_data_samples)
+            # set cat_id of gt_labels to 0 in RPN
+            for data_sample in rpn_data_samples:
+                data_sample.gt_instances.labels = torch.zeros_like(
+                    data_sample.gt_instances.labels)
             (rpn_losses,
              proposal_list) = self.detector.rpn_head.loss_and_predict(
-                 x, batch_data_samples, proposal_cfg=proposal_cfg)
+                 x, rpn_data_samples, proposal_cfg=proposal_cfg)
             losses.update(rpn_losses)
             ref_proposals_list = self.detector.rpn_head.predict(
                 ref_x, ref_data_samples)
