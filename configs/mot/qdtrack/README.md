@@ -50,6 +50,8 @@ The pre-trained checkpoint is given above([model](https://download.openmmlab.com
 
 b. Save the model to `ckpts/tao/**.pth`, and modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
 
+We observe around 0.5 track AP fluctuations in performance, and provide the best model.
+
 | Method  |   Detector   | Train Set |    Test Set    | Inf time (fps) | Track AP(50:75) | Track AP50 | Track AP75 |                      Config                       |                                                                                                                                        Download                                                                                                                                        |
 | :-----: | :----------: | :-------: | :------------: | :------------: | :-------------: | :--------: | :--------: | :-----------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | QDTrack | Faster R-CNN | TAO train | TAO validation |       -        |      11.0       |    15.8    |    6.1     | [config](qdtrack_faster-rcnn_r101_fpn_12e_tao.py) | [model](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934.log.json) |
