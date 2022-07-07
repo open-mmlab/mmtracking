@@ -27,7 +27,7 @@ def main():
         '--color', default=(0, 255, 0), help='Color of tracked bbox lines.')
     parser.add_argument(
         '--thickness', default=3, type=int, help='Thickness of bbox lines.')
-    parser.add_argument('--fps', help='FPS of the output video')
+    parser.add_argument('--fps', type=int, help='FPS of the output video')
     parser.add_argument('--gt_bbox_file', help='The path of gt_bbox file')
     args = parser.parse_args()
 
@@ -55,7 +55,7 @@ def main():
         else:
             out_path = args.output
             os.makedirs(out_path, exist_ok=True)
-    fps = int(args.fps)
+    fps = args.fps
     if args.show or OUT_VIDEO:
         if fps is None and IN_VIDEO:
             fps = imgs.fps
