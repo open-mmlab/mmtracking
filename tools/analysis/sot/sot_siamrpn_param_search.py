@@ -107,9 +107,9 @@ def parameter_search(runner, args):
         for lr in args.lr_range:
             for win_influ in args.win_influ_range:
                 case_count += 1
-                cfg.model.test_cfg.rpn.penalty_k = penalty_k
-                cfg.model.test_cfg.rpn.lr = lr
-                cfg.model.test_cfg.rpn.window_influence = win_influ
+                runner.model.test_cfg.rpn.penalty_k = penalty_k
+                runner.model.test_cfg.rpn.lr = lr
+                runner.model.test_cfg.rpn.window_influence = win_influ
                 print_log(f'-----------[{case_count}/{num_cases}]-----------',
                           logger)
                 print_log(

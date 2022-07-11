@@ -1,62 +1,35 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
+import os.path as osp
 from itertools import product
 
-import mmcv
-import torch
-from dotty_dict import dotty
-from mmcv import Config, DictAction, get_logger, print_log
-from mmcv.cnn import fuse_conv_bn
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
-                         wrap_fp16_model)
-from mmdet.datasets import build_dataset
+from mmengine.config import Config, DictAction
+from mmengine.dist import get_dist_info
+from mmengine.logging import MMLogger, print_log
+from mmengine.runner import Runner
 
-from mmtrack.models import build_tracker
+from mmtrack.utils import register_all_modules
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='mmtrack test model')
+    parser = argparse.ArgumentParser(
+        description='MMTrack test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file')
-    parser.add_argument('--out', help='output result file')
-    parser.add_argument('--log', help='log file')
     parser.add_argument(
-        '--fuse-conv-bn',
-        action='store_true',
-        help='Whether to fuse conv and bn, this will slightly increase'
-        'the inference speed')
-    parser.add_argument(
-        '--format-only',
-        action='store_true',
-        help='Format the output results without perform evaluation. It is'
-        'useful when you want to format the result to a specific format and '
-        'submit it to the test server')
-    parser.add_argument('--eval', type=str, nargs='+', help='eval types')
-    parser.add_argument('--show', action='store_true', help='show results')
-    parser.add_argument(
-        '--show-dir', help='directory where painted images will be saved')
-    parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='whether to use gpu to collect results.')
-    parser.add_argument(
-        '--tmpdir',
-        help='tmp directory used for collecting results from multiple '
-        'workers, available when gpu-collect is not specified')
+        '--work-dir',
+        help='the directory to save the file containing evaluation metrics')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
         action=DictAction,
         help='override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file.')
-    parser.add_argument(
-        '--eval-options',
-        nargs='+',
-        action=DictAction,
-        help='custom options for evaluation, the key-value pair in xxx=yyy '
-        'format will be kwargs for dataset.evaluate() function')
+        'in xxx=yyy format will be merged into config file. If the value to '
+        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
+        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
+        'Note that the quotation marks are necessary and that no white space '
+        'is allowed.')
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
@@ -90,130 +63,72 @@ def main():
 
     args = parse_args()
 
-    assert args.out or args.eval or args.format_only or args.show \
-        or args.show_dir, \
-        ('Please specify at least one operation (save/eval/format/show the '
-         'results / save the results) with the argument "--out", "--eval"'
-         ', "--format-only", "--show" or "--show-dir"')
+    # register all modules in mmtrack into the registries
+    # do not init the default scope here because it will be init in the runner
+    register_all_modules(init_default_scope=False)
 
-    if args.eval and args.format_only:
-        raise ValueError('--eval and --format_only cannot be both specified')
-
-    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
-        raise ValueError('The output file must be a pkl file.')
-
+    # load config
     cfg = Config.fromfile(args.config)
-    if cfg.get('USE_MMDET', False):
-        from mmdet.apis import multi_gpu_test, single_gpu_test
-        from mmdet.datasets import build_dataloader
-        from mmdet.models import build_detector as build_model
-    else:
-        from mmtrack.apis import multi_gpu_test, single_gpu_test
-        from mmtrack.datasets import build_dataloader
-        from mmtrack.models import build_model
+    cfg.launcher = args.launcher
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
-    # set cudnn_benchmark
-    if cfg.get('cudnn_benchmark', False):
-        torch.backends.cudnn.benchmark = True
-    # cfg.model.pretrains = None
-    if hasattr(cfg.model, 'detector'):
-        cfg.model.detector.pretrained = None
-    cfg.data.test.test_mode = True
 
-    # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
-        distributed = False
-    else:
-        distributed = True
-        init_dist(args.launcher, **cfg.dist_params)
+    # work_dir is determined in this priority: CLI > segment in file > filename
+    if args.work_dir is not None:
+        # update configs according to CLI args if args.work_dir is not None
+        cfg.work_dir = args.work_dir
+    elif cfg.get('work_dir', None) is None:
+        # use config filename as default work_dir if cfg.work_dir is None
+        cfg.work_dir = osp.join('./work_dirs',
+                                osp.splitext(osp.basename(args.config))[0])
 
-    # build the dataloader
-    dataset = build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=distributed,
-        shuffle=False)
+    cfg.load_from = args.checkpoint
 
-    logger = get_logger('ParamsSearcher', log_file=args.log)
+    logger = MMLogger.get_instance(name='ParamsSearcher', logger_name='Logger')
     # get all cases
     search_params = get_search_params(cfg.model.tracker, logger=logger)
-    combinations = [p for p in product(*search_params.values())]
-    search_cfgs = []
-    for c in combinations:
-        search_cfg = dotty(cfg.model.tracker.copy())
-        for i, k in enumerate(search_params.keys()):
-            search_cfg[k] = c[i]
-        search_cfgs.append(dict(search_cfg))
-    print_log(f'Totally {len(search_cfgs)} cases.', logger)
-    # init with the first one
-    cfg.model.tracker = search_cfgs[0].copy()
+    search_params_names = tuple(search_params.keys())
+    all_search_cases = []
+    for values in product(*search_params.values()):
+        search = dict()
+        for k, v in zip(search_params_names, values):
+            search[k] = v
+        all_search_cases.append(search)
 
-    # build the model and load checkpoint
-    if cfg.get('test_cfg', False):
-        model = build_model(
-            cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
-    else:
-        model = build_model(cfg.model)
-    # We need call `init_weights()` to load pretained weights in MOT task.
-    model.init_weights()
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
+    print_log(f'Totally {len(all_search_cases)} cases.', logger)
 
-    if args.checkpoint is not None:
-        checkpoint = load_checkpoint(
-            model, args.checkpoint, map_location='cpu')
-        if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
-            model.CLASSES = checkpoint['meta']['CLASSES']
-    if not hasattr(model, 'CLASSES'):
-        model.CLASSES = dataset.CLASSES
+    search_metrics = []
+    metrics_types = [cfg.test_evaluator.metric] if isinstance(
+        cfg.test_evaluator.metric, str) else cfg.test_evaluator.metric
+    if 'HOTA' in metrics_types:
+        search_metrics.extend(['HOTA', 'AssA', 'DetA'])
+    if 'CLEAR' in metrics_types:
+        search_metrics.extend(
+            ['MOTA', 'MOTP', 'IDSW', 'TP', 'FN', 'FP', 'Frag', 'MT', 'ML'])
+    if 'Identity' in metrics_types:
+        search_metrics.extend(['IDF1', 'IDTP', 'IDFN', 'IDFP', 'IDP', 'IDR'])
+    print_log(f'Record {search_metrics}.', logger)
 
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
-
-    if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
-    else:
-        model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
-            broadcast_buffers=False)
-
-    print_log(f'Record {cfg.search_metrics}.', logger)
-    for i, search_cfg in enumerate(search_cfgs):
-        if not distributed:
-            model.module.tracker = build_tracker(search_cfg)
-            outputs = single_gpu_test(model, data_loader, args.show,
-                                      args.show_dir)
-        else:
-            model.module.tracker = build_tracker(search_cfg)
-            outputs = multi_gpu_test(model, data_loader, args.tmpdir,
-                                     args.gpu_collect)
+    runner = Runner.from_cfg(cfg)
+    for case in all_search_cases:
+        for name, value in case.items():
+            if hasattr(runner.model, 'module'):
+                setattr(runner.model.module.tracker, name, value)
+            else:
+                setattr(runner.model.tracker, name, value)
+        runner.test()
         rank, _ = get_dist_info()
         if rank == 0:
-            if args.out:
-                print(f'\nwriting results to {args.out}')
-                mmcv.dump(outputs, args.out)
-            kwargs = {} if args.eval_options is None else args.eval_options
-            if args.format_only:
-                dataset.format_results(outputs, **kwargs)
-            if args.eval:
-                eval_kwargs = cfg.get('evaluation', {}).copy()
-                # hard-code way to remove EvalHook args
-                for key in ['interval', 'tmpdir', 'start', 'gpu_collect']:
-                    eval_kwargs.pop(key, None)
-                eval_kwargs.update(dict(metric=args.eval, **kwargs))
-                results = dataset.evaluate(outputs, **eval_kwargs)
-                _records = []
-                for k in cfg.search_metrics:
-                    if isinstance(results[k], float):
-                        _records.append(f'{(results[k]):.3f}')
-                    else:
-                        _records.append(f'{(results[k])}')
-                print_log(f'{combinations[i]}: {_records}', logger)
+            _records = []
+            for metric in search_metrics:
+                res = runner.message_hub.get_scalar(
+                    'test/motchallenge-metric/' + metric).current()
+                if isinstance(res, float):
+                    _records.append(f'{res:.3f}')
+                else:
+                    _records.append(f'{res}')
+            print_log(f'-------------- {case}: {_records} --------------',
+                      logger)
 
 
 if __name__ == '__main__':

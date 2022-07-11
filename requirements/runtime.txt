@@ -1,5 +1,4 @@
 attributee
-dotty_dict
 lap
 matplotlib
 mmcls>=0.16.0
