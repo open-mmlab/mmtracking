@@ -224,7 +224,7 @@ class TestPackReIDInputs(TestCase):
     def test_transform(self):
         results = self.pack_reid_inputs(self.results)
         self.assertIn('inputs', results)
-        self.assertIsInstance(results['inputs']['img'], torch.Tensor)
+        self.assertIsInstance(results['inputs'], torch.Tensor)
         self.assertIn('data_sample', results)
         data_sample = results['data_sample']
         self.assertIsInstance(data_sample, ReIDDataSample)

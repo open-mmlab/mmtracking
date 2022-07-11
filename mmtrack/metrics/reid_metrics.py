@@ -125,7 +125,7 @@ class ReIDMetrics(BaseMetric):
         assert num_valid_q > 0, \
             'Error: all query identities do not appear in gallery'
 
-        all_cmc = np.asarray(all_cmc).astype(np.float32)
+        all_cmc = np.asarray(all_cmc)
         all_cmc = all_cmc.sum(0) / num_valid_q
         mAP = np.mean(all_AP)
 

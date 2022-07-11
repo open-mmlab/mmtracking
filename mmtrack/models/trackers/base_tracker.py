@@ -219,9 +219,9 @@ class BaseTracker(metaclass=ABCMeta):
         crop_imgs = []
         for bbox in bboxes:
             x1, y1, x2, y2 = map(int, bbox)
-            if x2 == x1:
+            if x2 <= x1:
                 x2 = x1 + 1
-            if y2 == y1:
+            if y2 <= y1:
                 y2 = y1 + 1
             crop_img = img[:, :, y1:y2, x1:x2]
             if self.reid.get('img_scale', False):

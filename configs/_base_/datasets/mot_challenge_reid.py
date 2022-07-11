@@ -32,9 +32,10 @@ train_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
         type=dataset_type,
+        data_root=data_root,
         triplet_sampler=dict(num_ids=8, ins_per_id=4),
-        data_prefix=data_root + 'reid/imgs',
-        ann_file=data_root + 'reid/meta/train_80.txt',
+        data_prefix=dict(img_path='reid/imgs'),
+        ann_file='reid/meta/train_80.txt',
         pipeline=train_pipeline))
 val_dataloader = dict(
     batch_size=1,
@@ -44,9 +45,10 @@ val_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type=dataset_type,
+        data_root=data_root,
         triplet_sampler=None,
-        data_prefix=data_root + 'reid/imgs',
-        ann_file=data_root + 'reid/meta/val_20.txt',
+        data_prefix=dict(img_path='reid/imgs'),
+        ann_file='reid/meta/val_20.txt',
         pipeline=test_pipeline))
 test_dataloader = val_dataloader
 

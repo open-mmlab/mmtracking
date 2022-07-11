@@ -11,9 +11,9 @@ train_pipeline = [
             dict(type='LoadImageFromFile'),
             dict(type='LoadTrackAnnotations', with_instance_id=True),
             dict(
-                type='mmdet.Resize',
+                type='mmdet.RandomResize',
                 scale=(1088, 1088),
-                scale_factor=(0.8, 1.2),
+                ratio_range=(0.8, 1.2),
                 keep_ratio=True,
                 clip_object_border=False),
             dict(type='mmdet.PhotoMetricDistortion')

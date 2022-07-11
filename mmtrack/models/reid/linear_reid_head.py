@@ -141,10 +141,9 @@ class LinearReIDHead(BaseModule):
             cls_score = self.classifier(feats_bn)
             losses['ce_loss'] = self.loss_cls(cls_score, gt_label)
             acc = Accuracy.calculate(cls_score, gt_label, topk=self.topk)
-            losses['accuracy'] = {
-                f'top-{k}': a
-                for k, a in zip(self.topk, acc)
-            }
+            losses.update(
+                {f'accuracy_top-{k}': a
+                 for k, a in zip(self.topk, acc)})
 
         return losses
 

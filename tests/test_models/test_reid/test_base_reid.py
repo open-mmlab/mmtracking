@@ -22,7 +22,7 @@ class TestBaseReID(TestCase):
     def test_forward(self, cfg_file):
         model_cfg = _get_model_cfg(cfg_file)
         model = MODELS.build(model_cfg)
-        inputs = torch.rand(4, 3, 256, 128)
+        inputs = torch.rand(1, 4, 3, 256, 128)
         data_samples = [
             ReIDDataSample().set_gt_label(label) for label in (0, 0, 1, 1)
         ]
@@ -33,10 +33,9 @@ class TestBaseReID(TestCase):
 
         # test mode='loss'
         losses = model(inputs, data_samples, mode='loss')
-        assert losses.keys() == {'triplet_loss', 'ce_loss', 'accuracy'}
+        assert losses.keys() == {'triplet_loss', 'ce_loss', 'accuracy_top-1'}
         assert losses['ce_loss'].item() > 0
         assert losses['triplet_loss'].item() > 0
-        assert 'top-1' in losses['accuracy']
 
         # test mode='predict'
         predictions = model(inputs, data_samples, mode='predict')

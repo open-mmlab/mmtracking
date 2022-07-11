@@ -1,15 +1,7 @@
-TRAIN_REID = True
 _base_ = ['./resnet50_b32x8_MOT17.py']
-model = dict(reid=dict(head=dict(num_classes=371)))
+model = dict(head=dict(num_classes=371))
 # data
 data_root = 'data/MOT16/'
-data = dict(
-    train=dict(
-        data_prefix=data_root + 'reid/imgs',
-        ann_file=data_root + 'reid/meta/train_80.txt'),
-    val=dict(
-        data_prefix=data_root + 'reid/imgs',
-        ann_file=data_root + 'reid/meta/val_20.txt'),
-    test=dict(
-        data_prefix=data_root + 'reid/imgs',
-        ann_file=data_root + 'reid/meta/val_20.txt'))
+train_dataloader = dict(dataset=dict(data_root=data_root))
+val_dataloader = dict(dataset=dict(data_root=data_root))
+test_dataloader = val_dataloader

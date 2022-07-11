@@ -56,6 +56,6 @@ param_scheduler = [
 ]
 
 # train, val, test setting
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=6, val_interval=6)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=6, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')

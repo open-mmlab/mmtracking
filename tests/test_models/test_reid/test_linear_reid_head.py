@@ -36,10 +36,9 @@ class TestLinearReIDHead(TestCase):
 
     def test_loss(self):
         losses = self.head.loss(self.inputs, self.data_samples)
-        assert losses.keys() == {'triplet_loss', 'ce_loss', 'accuracy'}
+        assert losses.keys() == {'triplet_loss', 'ce_loss', 'accuracy_top-1'}
         assert losses['ce_loss'].item() >= 0
         assert losses['triplet_loss'].item() >= 0
-        assert 'top-1' in losses['accuracy']
 
     def test_predict(self):
         predictions = self.head.predict(self.inputs, self.data_samples)

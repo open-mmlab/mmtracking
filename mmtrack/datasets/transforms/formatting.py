@@ -444,7 +444,7 @@ class PackReIDInputs(BaseTransform):
         img = img.transpose(3, 2, 0, 1)  # (N, C, H, W)
         img = np.ascontiguousarray(img)
 
-        packed_results['inputs']['img'] = to_tensor(img)
+        packed_results['inputs'] = to_tensor(img)
 
         data_sample = ReIDDataSample()
         data_sample.set_gt_label(label)
