@@ -17,9 +17,6 @@
 # Classes in DanceTrack:
 #   1: 'pedestrian'
 #
-#   USELESS classes are not included into the json file.
-#   IGNORES classes are included with `ignore=True`.
-#
 # This file is adapted from the data label conversion file for MOT
 # But as Dancetrack does not provide public detections and provides
 # official train/val/test splitting, we make necessary adaptation.
@@ -32,8 +29,8 @@ from collections import defaultdict
 import mmcv
 from tqdm import tqdm
 
-USELESS = [3, 4, 5, 6, 9, 10, 11]
-IGNORES = [2, 7, 8, 12, 13]
+# Classes in DanceTrack:
+CLASSES = [dict(id=1, name='pedestrian')]
 
 
 def parse_args():
@@ -53,21 +50,16 @@ def parse_gts(gts):
         frame_id, ins_id = map(int, gt[:2])
         bbox = list(map(float, gt[2:6]))
         conf = float(gt[6])
-        class_id = int(gt[7])
+        category_id = int(gt[7])
         visibility = float(gt[8])
-        if class_id in USELESS:
-            continue
-        elif class_id in IGNORES:
-            continue
         anns = dict(
-            category_id=1,
+            category_id=category_id,
             bbox=bbox,
             area=bbox[2] * bbox[3],
             iscrowd=False,
             visibility=visibility,
             mot_instance_id=ins_id,
-            mot_conf=conf,
-            mot_class_id=class_id)
+            mot_conf=conf)
         outputs[frame_id].append(anns)
     return outputs
 
@@ -86,7 +78,7 @@ def main():
         in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
-        outputs['categories'] = [dict(id=1, name='pedestrian')]
+        outputs['categories'] = CLASSES
 
         video_names = os.listdir(in_folder)
         video_names = [d for d in video_names if d != '.DS_Store']
