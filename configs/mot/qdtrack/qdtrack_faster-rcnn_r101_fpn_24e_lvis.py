@@ -7,18 +7,21 @@ model = dict(
     detector=dict(
         backbone=dict(
             depth=101,
+            norm_cfg=dict(requires_grad=True),
+            style='pytorch',
             init_cfg=dict(
                 type='Pretrained', checkpoint='torchvision://resnet101')),
+        rpn_head=dict(bbox_coder=dict(clip_border=True)),
         roi_head=dict(
-            bbox_head=dict(
-                loss_bbox=dict(type='L1Loss', loss_weight=1.0),
-                num_classes=482)),
+            bbox_head=dict(bbox_coder=dict(
+                clip_border=True), num_classes=482)),
         test_cfg=dict(
             rcnn=dict(
                 score_thr=0.0001,
                 nms=dict(type='nms', iou_threshold=0.5),
                 max_per_img=300)),
         init_cfg=None),
+    track_head=dict(train_cfg=dict(assigner=dict(neg_iou_thr=0.3))),
     tracker=dict(
         _delete_=True,
         type='QuasiDenseTAOTracker',
@@ -33,6 +36,7 @@ model = dict(
         distractor_score_thr=0.5,
         match_metric='bisoftmax',
         match_with_cosine=True))
+
 # learning policy
 lr_config = dict(
     policy='step',
