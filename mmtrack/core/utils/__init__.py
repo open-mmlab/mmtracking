@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .image import crop_image
-from .misc import convert_data_sample_type, stack_batch
+from .image import crop_image, ndarray2tensor, rotate_image, tensor2ndarray
+from .misc import convert_data_sample_type, max2d, stack_batch
 from .typing import (ConfigType, ForwardResults, InstanceList, MultiConfig,
                      OptConfigType, OptInstanceList, OptMultiConfig,
                      OptSampleList, SampleList)
@@ -8,5 +8,7 @@ from .typing import (ConfigType, ForwardResults, InstanceList, MultiConfig,
 __all__ = [
     'crop_image', 'stack_batch', 'ConfigType', 'ForwardResults',
     'InstanceList', 'MultiConfig', 'OptConfigType', 'OptInstanceList',
-    'OptMultiConfig', 'OptSampleList', 'SampleList', 'convert_data_sample_type'
+    'OptMultiConfig', 'OptSampleList', 'SampleList',
+    'convert_data_sample_type', 'ndarray2tensor', 'rotate_image',
+    'tensor2ndarray', 'max2d'
 ]

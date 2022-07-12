@@ -96,3 +96,44 @@ def bbox_cxcyah_to_xyxy(bboxes: torch.Tensor) -> torch.Tensor:
     w = ratio * h
     x1y1x2y2 = [cx - w / 2.0, cy - h / 2.0, cx + w / 2.0, cy + h / 2.0]
     return torch.cat(x1y1x2y2, dim=-1)
+
+
+def bbox_rect_to_rel(bboxes, size_norm=None):
+    """Convert standard rectangular parametrization of the bounding box.
+
+        [x, y, w, h] to relative parametrization [cx/sw, cy/sh, log(w), log(h)]
+        , where [cx, cy] is the center coordinate.
+
+    Args:
+        bboxes (Tensor): of shape (N, 4) in [x, y, w, h] format.
+        size_norm (Tensor, optional): It contains values of [sw, sh] and it's
+            of shape (N, 2).
+    """
+
+    c = bboxes[..., :2] + 0.5 * bboxes[..., 2:]
+    if size_norm is None:
+        c_rel = c / bboxes[..., 2:]
+    else:
+        c_rel = c / size_norm
+
+    sz_rel = torch.log(bboxes[..., 2:])
+    return torch.cat((c_rel, sz_rel), dim=-1)
+
+
+def bbox_rel_to_rect(bboxes, size_norm=None):
+    """Inverts the effect of `bbox_rect_to_rel`.
+
+    Args:
+        bboxes (Tensor): of shape (N, 4) in [cx/sw, cy/sh, log(w), log(h)]
+            format.
+        size_norm (Tensor, optional): It contains values of [sw, sh] and it's
+            of shape (N, 2).
+    """
+
+    sz = torch.exp(bboxes[..., 2:])
+    if size_norm is None:
+        c = bboxes[..., :2] * sz
+    else:
+        c = bboxes[..., :2] * size_norm
+    tl = c - 0.5 * sz
+    return torch.cat((tl, sz), dim=-1)
