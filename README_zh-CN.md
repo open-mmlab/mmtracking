@@ -197,7 +197,7 @@ MMTracking是一款开源项目，我们欢迎任何贡献和反馈。我们希�
 扫描下方的二维码可关注 OpenMMLab 团队的 [知乎官方账号](https://www.zhihu.com/people/openmmlab)，加入 OpenMMLab 团队的 [官方交流 QQ 群](https://jq.qq.com/?_wv=1027&k=aCvMxdr3)
 
 <div align="center">
-<img src="https://user-images.githubusercontent.com/24663779/116371114-a8005e80-a83d-11eb-9123-17fc9cfe7475.jpg" height="400" />  <img src="resources/qq_group_qrcode.png" height="400" />
+<img src="https://user-images.githubusercontent.com/24663779/116371114-a8005e80-a83d-11eb-9123-17fc9cfe7475.jpg" height="400" />  <img src="https://user-images.githubusercontent.com/26813582/178631055-246cd5d1-11fc-4f18-b604-5d70b6c44eca.png" height="400" />
 </div>
 
 我们会在 OpenMMLab 社区为大家
