@@ -67,7 +67,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
     """
     TRACKER = 'default-tracker'
     allowed_metrics = ['HOTA', 'CLEAR', 'Identity']
-    allowed_benchmarks = ['MOT15', 'MOT16', 'MOT17', 'MOT20']
+    allowed_benchmarks = ['MOT15', 'MOT16', 'MOT17', 'MOT20', 'DanceTrack']
     default_prefix: Optional[str] = 'motchallenge-metric'
 
     def __init__(self,
@@ -358,10 +358,10 @@ class MOTChallengeMetrics(BaseVideoMetric):
             TRACKERS_TO_EVAL=[self.TRACKER],
             # Option values: ['pedestrian']
             CLASSES_TO_EVAL=['pedestrian'],
-            # Option Values: 'MOT15', 'MOT16', 'MOT17', 'MOT20'
+            # Option Values: 'MOT15', 'MOT16', 'MOT17', 'MOT20', 'DanceTrack'
             BENCHMARK=self.benchmark,
             # Option Values: 'train', 'test'
-            SPLIT_TO_EVAL='train',
+            SPLIT_TO_EVAL='val' if self.benchmark == 'DanceTrack' else 'train',
             # Whether tracker input files are zipped
             INPUT_AS_ZIP=False,
             # Whether to print current config

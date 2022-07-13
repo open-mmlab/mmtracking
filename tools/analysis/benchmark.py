@@ -1,104 +1,133 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
-import time
+import os
 
-import torch
-from mmcv import Config
-from mmcv.cnn import fuse_conv_bn
-from mmcv.parallel import MMDataParallel
-from mmcv.runner import load_checkpoint, wrap_fp16_model
-from mmdet.datasets import replace_ImageToTensor
+import mmcv
+from mmcv import Config, DictAction
+from mmengine import MMLogger
+from mmengine.dist import init_dist
 
-from mmtrack.datasets import build_dataloader, build_dataset
-from mmtrack.models import build_model
+from mmtrack.utils import register_all_modules
+from mmtrack.utils.benchmark import (DataLoaderBenchmark, DatasetBenchmark,
+                                     InferenceBenchmark)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='MMTrack benchmark a model')
+    parser = argparse.ArgumentParser(description='MMTrack benchmark')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('--checkpoint', help='checkpoint file')
     parser.add_argument(
-        '--log-interval', default=50, help='interval of logging')
+        '--task',
+        choices=['inference', 'dataloader', 'dataset'],
+        default='dataloader',
+        help='Which task do you want to go to benchmark')
+    parser.add_argument(
+        '--repeat-num',
+        type=int,
+        default=1,
+        help='number of repeat times of measurement for averaging the results')
+    parser.add_argument(
+        '--max-iter', type=int, default=2000, help='num of max iter')
+    parser.add_argument(
+        '--log-interval', type=int, default=50, help='interval of logging')
+    parser.add_argument(
+        '--num-warmup', type=int, default=5, help='Number of warmup')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
         help='Whether to fuse conv and bn, this will slightly increase'
         'the inference speed')
+    parser.add_argument(
+        '--dataset-type',
+        choices=['train', 'val', 'test'],
+        default='test',
+        help='Benchmark dataset type. only supports train, val and test')
+    parser.add_argument(
+        '--work-dir',
+        help='the directory to save the file containing '
+        'benchmark metrics')
+    parser.add_argument(
+        '--cfg-options',
+        nargs='+',
+        action=DictAction,
+        help='override some settings in the used config, the key-value pair '
+        'in xxx=yyy format will be merged into config file. If the value to '
+        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
+        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
+        'Note that the quotation marks are necessary and that no white space '
+        'is allowed.')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
+    parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
     return args
 
 
+def inference_benchmark(args, cfg, distributed, logger):
+    benchmark = InferenceBenchmark(
+        cfg,
+        args.checkpoint,
+        distributed,
+        args.fuse_conv_bn,
+        args.max_iter,
+        args.log_interval,
+        args.num_warmup,
+        logger=logger)
+    return benchmark
+
+
+def dataloader_benchmark(args, cfg, distributed, logger):
+    benchmark = DataLoaderBenchmark(
+        cfg,
+        distributed,
+        args.dataset_type,
+        args.max_iter,
+        args.log_interval,
+        args.num_warmup,
+        logger=logger)
+    return benchmark
+
+
+def dataset_benchmark(args, cfg, distributed, logger):
+    benchmark = DatasetBenchmark(
+        cfg,
+        args.dataset_type,
+        args.max_iter,
+        args.log_interval,
+        args.num_warmup,
+        logger=logger)
+    return benchmark
+
+
 def main():
+    register_all_modules()
+
     args = parse_args()
-
     cfg = Config.fromfile(args.config)
-    # import modules from string list.
-    if cfg.get('custom_imports', None):
-        from mmcv.utils import import_modules_from_strings
-        import_modules_from_strings(**cfg['custom_imports'])
-    # set cudnn_benchmark
-    if cfg.get('cudnn_benchmark', False):
-        torch.backends.cudnn.benchmark = True
-    if hasattr(cfg.model, 'detector'):
-        cfg.model.detector.pretrained = None
-    cfg.data.test.test_mode = True
 
-    # build the dataloader
-    samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
-    if samples_per_gpu > 1:
-        # Replace 'ImageToTensor' to 'DefaultFormatBundle'
-        cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
-    dataset = build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=False,
-        shuffle=False)
+    if args.cfg_options is not None:
+        cfg.merge_from_dict(args.cfg_options)
 
-    # build the model and load checkpoint
-    model = build_model(cfg.model)
-    # We need call `init_weights()` to load pretained weights in MOT task.
-    model.init_weights()
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
-    if args.checkpoint is not None:
-        load_checkpoint(model, args.checkpoint, map_location='cpu')
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
+    distributed = False
+    if args.launcher != 'none':
+        init_dist(args.launcher, **cfg.get('env_cfg', {}).get('dist_cfg', {}))
+        distributed = True
 
-    model = MMDataParallel(model, device_ids=[0])
+    log_file = None
+    if args.work_dir:
+        log_file = os.path.join(args.work_dir, 'benchmark.log')
+        mmcv.mkdir_or_exist(args.work_dir)
 
-    model.eval()
+    logger = MMLogger.get_instance(
+        'mmtrack', log_file=log_file, log_level='INFO')
 
-    # the first several iterations may be very slow so skip them
-    num_warmup = 5
-    pure_inf_time = 0
-
-    # benchmark with 2000 image and take the average
-    for i, data in enumerate(data_loader):
-
-        torch.cuda.synchronize()
-        start_time = time.perf_counter()
-
-        with torch.no_grad():
-            model(return_loss=False, rescale=True, **data)
-
-        torch.cuda.synchronize()
-        elapsed = time.perf_counter() - start_time
-
-        if i >= num_warmup:
-            pure_inf_time += elapsed
-            if (i + 1) % args.log_interval == 0:
-                fps = (i + 1 - num_warmup) / pure_inf_time
-                print(f'Done image [{i + 1:<3}/ 2000], fps: {fps:.1f} img / s')
-
-        if (i + 1) == 2000:
-            pure_inf_time += elapsed
-            fps = (i + 1 - num_warmup) / pure_inf_time
-            print(f'Overall fps: {fps:.1f} img / s')
-            break
+    benchmark = eval(f'{args.task}_benchmark')(args, cfg, distributed, logger)
+    benchmark.run(args.repeat_num)
 
 
 if __name__ == '__main__':
