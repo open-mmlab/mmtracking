@@ -55,7 +55,8 @@ class PackTrackInputs(BaseTransform):
                                              'flip', 'flip_direction',
                                              'frame_id', 'is_video_data',
                                              'video_id', 'video_length',
-                                             'instances')):
+                                             'instances', 'num_left_ref_imgs',
+                                             'frame_stride')):
         self.ref_prefix = ref_prefix
         # If ``num_template_frames`` is not None, this class is used in SOT.
         # In this case, we assign the value of ``num_template_frames`` to

@@ -135,14 +135,6 @@ class LoadTrackAnnotations(MMDet_LoadAnnotations):
             results['gt_bboxes'] = np.array(
                 gt_bboxes, dtype=np.float32).reshape(-1, 4)
 
-        if self.denorm_bbox:
-            assert results['gt_bboxes'].shape[1] == 4
-            bbox_num = results['gt_bboxes'].shape[0]
-            if bbox_num != 0:
-                assert 'width' in results and 'height' in results
-                results['gt_bboxes'][:, 0::2] *= results['width']
-                results['gt_bboxes'][:, 1::2] *= results['height']
-
         results['gt_ignore_flags'] = np.array(gt_ignore_flags, dtype=np.bool)
 
     def _load_instances_id(self, results: dict) -> None:

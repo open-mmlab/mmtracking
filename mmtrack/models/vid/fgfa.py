@@ -139,7 +139,7 @@ class FGFA(BaseVideoDetector):
         return losses
 
     def extract_feats(self, img: Tensor, ref_img: Union[Tensor, None],
-                      metainfo: dict) -> Tensor:
+                      metainfo: dict) -> List[Tensor]:
         """Extract features for `img` during testing.
 
         Args:
