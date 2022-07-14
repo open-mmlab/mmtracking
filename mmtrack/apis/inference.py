@@ -9,7 +9,6 @@ import mmcv
 import numpy as np
 import torch
 from mmcv.ops import RoIPool
-from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 from mmengine.dataset import Compose
 from mmengine.logging import MMLogger
@@ -86,47 +85,34 @@ def init_model(config: Union[str, mmcv.Config],
     return model
 
 
-def inference_mot(model, img, frame_id):
+def inference_mot(model: nn.Module, img: np.ndarray,
+                  frame_id: int) -> SampleList:
     """Inference image(s) with the mot model.
 
     Args:
         model (nn.Module): The loaded mot model.
-        img (str | ndarray): Either image name or loaded image.
+        img (np.ndarray): Loaded image.
         frame_id (int): frame id.
 
     Returns:
-        dict[str : ndarray]: The tracking results.
+        SampleList: The tracking data samples.
     """
     cfg = model.cfg
-    device = next(model.parameters()).device  # model device
-    # prepare data
-    if isinstance(img, np.ndarray):
-        # directly add img
-        data = dict(img=img, img_info=dict(frame_id=frame_id), img_prefix=None)
-        cfg = cfg.copy()
-        # set loading pipeline type
-        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
-    else:
-        # add information into dict
-        data = dict(
-            img_info=dict(filename=img, frame_id=frame_id), img_prefix=None)
-    # build the data pipeline
-    test_pipeline = Compose(cfg.data.test.pipeline)
+    data = dict(
+        img=img.astype(np.float32), frame_id=frame_id, ori_shape=img.shape[:2])
+    # remove the "LoadImageFromFile" and "LoadTrackAnnotations" in pipeline
+    test_pipeline = Compose(cfg.test_dataloader.dataset.pipeline[2:])
     data = test_pipeline(data)
-    data = collate([data], samples_per_gpu=1)
-    if next(model.parameters()).is_cuda:
-        # scatter to specified GPU
-        data = scatter(data, [device])[0]
-    else:
+
+    if not next(model.parameters()).is_cuda:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-        # just get the actual data from DataContainer
-        data['img_metas'] = data['img_metas'][0].data
+
     # forward the model
     with torch.no_grad():
-        result = model.test_step(data)
+        result = model.test_step([data])
     return result
 
 
