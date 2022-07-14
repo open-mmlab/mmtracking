@@ -2,22 +2,26 @@
 import argparse
 import os
 import os.path as osp
+import re
 
 import mmcv
 import motmetrics as mm
 import numpy as np
 from mmcv import Config
 from mmcv.utils import print_log
+from torch.utils.data import Dataset
 
 from mmtrack.core.utils import imshow_mot_errors
-from mmtrack.datasets import build_dataset
+from mmtrack.registry import DATASETS
+from mmtrack.utils import register_all_modules
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='visualize errors for multiple object tracking')
     parser.add_argument('config', help='path of the config file')
-    parser.add_argument('--result-file', help='path of the inference result')
+    parser.add_argument(
+        '--result-dir', help='directory of the inference result')
     parser.add_argument(
         '--out-dir',
         help='directory where painted images or videos will be saved')
@@ -37,11 +41,11 @@ def parse_args():
     return args
 
 
-def compare_res_gts(resfiles, dataset, video_name):
+def compare_res_gts(results_dir: str, dataset: Dataset, video_name: str):
     """Evaluate the results of the video.
 
     Args:
-        resfiles (dict): A dict containing the directory of the MOT results.
+        results_dir (str): the directory of the MOT results.
         dataset (Dataset): MOT dataset of the video to be evaluated.
         video_name (str): Name of the video to be evaluated.
 
@@ -50,17 +54,19 @@ def compare_res_gts(resfiles, dataset, video_name):
         res is the results of inference and gt is the ground truth.
     """
     if 'half-train' in dataset.ann_file:
-        gt_file = osp.join(dataset.img_prefix,
+        gt_file = osp.join(dataset.data_prefix['img_path'],
                            f'{video_name}/gt/gt_half-train.txt')
     elif 'half-val' in dataset.ann_file:
-        gt_file = osp.join(dataset.img_prefix,
+        gt_file = osp.join(dataset.data_prefix['img_path'],
                            f'{video_name}/gt/gt_half-val.txt')
     else:
-        gt_file = osp.join(dataset.img_prefix, f'{video_name}/gt/gt.txt')
-    res_file = osp.join(resfiles['track'], f'{video_name}.txt')
+        gt_file = osp.join(dataset.data_prefix['img_path'],
+                           f'{video_name}/gt/gt.txt')
+    res_file = osp.join(results_dir, f'{video_name}.txt')
     gt = mm.io.loadtxt(gt_file)
     res = mm.io.loadtxt(res_file)
-    ini_file = osp.join(dataset.img_prefix, f'{video_name}/seqinfo.ini')
+    ini_file = osp.join(dataset.data_prefix['img_path'],
+                        f'{video_name}/seqinfo.ini')
     if osp.exists(ini_file):
         acc, ana = mm.utils.CLEAR_MOT_M(gt, res, ini_file)
     else:
@@ -76,9 +82,6 @@ def main():
         ('Please specify at least one operation (show the results '
          '/ save the results) with the argument "--show" or "--out-dir"')
 
-    if not args.result_file.endswith(('.pkl', 'pickle')):
-        raise ValueError('The result file must be a pkl file.')
-
     if args.out_dir is not None:
         os.makedirs(args.out_dir, exist_ok=True)
 
@@ -88,27 +91,31 @@ def main():
               'and the blue bounding box denotes ID switch.')
 
     cfg = Config.fromfile(args.config)
-    dataset = build_dataset(cfg.data.val, dict(test_mode=True))
-    results = mmcv.load(args.result_file)
+
+    register_all_modules(init_default_scope=True)
+    dataset = DATASETS.build(cfg.val_dataloader.dataset)
 
     # create index from frame_id to filename
     filenames_dict = dict()
-    for data_info in dataset.data_infos:
-        video_name = data_info['filename'].split(os.sep, 1)[0]
-        frame_id = int(data_info['filename'].rsplit(os.sep,
-                                                    1)[-1].split('.')[0])
+    for i in range(len(dataset)):
+        data_info = dataset.get_data_info(i)
+        # the `data_info['file_name']` usually has the same format
+        # with "MOT17-09-DPM/img1/000003.jpg"
+        # split with both '\' and '/' to be compatible with different OS.
+        split_path = re.split(r'[\\/]', data_info['file_name'])
+        video_name = split_path[-3]
+        frame_id = int(split_path[-1].split('.')[0])
         if video_name not in filenames_dict:
             filenames_dict[video_name] = dict()
-        filenames_dict[video_name][frame_id] = data_info['filename']
-
-    # format the results to txts
-    resfile_path, resfiles, video_names, tmp_dir = dataset.format_results(
-        results, None, ['track'])
+        # the data_info['img_path'] usually has the same format
+        # with `img_path_prefix + "MOT17-09-DPM/img1/000003.jpg"`
+        filenames_dict[video_name][frame_id] = data_info['img_path']
+    video_names = tuple(filenames_dict.keys())
 
     for video_name in video_names:
         print_log(f'Start processing video {video_name}')
 
-        acc, res, gt = compare_res_gts(resfiles, dataset, video_name)
+        acc, res, gt = compare_res_gts(args.result_dir, dataset, video_name)
 
         frames_id_list = sorted(
             list(set(acc.mot_events.index.get_level_values(0))))
@@ -118,8 +125,7 @@ def main():
             cur_res = res.loc[frame_id] if frame_id in res.index else None
             cur_gt = gt.loc[frame_id] if frame_id in gt.index else None
             # path of image
-            img = osp.join(dataset.img_prefix,
-                           filenames_dict[video_name][frame_id])
+            img = filenames_dict[video_name][frame_id]
             fps = events[events.Type == 'FP']
             fns = events[events.Type == 'MISS']
             idsws = events[events.Type == 'SWITCH']
