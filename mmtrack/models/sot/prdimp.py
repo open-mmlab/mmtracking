@@ -308,11 +308,6 @@ class Prdimp(BaseSingleObjectTracker):
             mode=self.test_cfg['border_mode'],
             max_scale_change=self.test_cfg['patch_max_scale_change'])
 
-        # img_patch = normalize(
-        #     img_patch / 255,
-        #     mean=(0.485, 0.456, 0.406),
-        #     std=(0.229, 0.224, 0.225))
-
         with torch.no_grad():
             backbone_feats = self.backbone(img_patch)
 
@@ -320,18 +315,6 @@ class Prdimp(BaseSingleObjectTracker):
         sample_center = patch_coord[:, :2]
         sample_scales = (patch_coord[:, 2:] /
                          self.sample_size).prod(dim=1).sqrt()
-
-        # Extract classification features
-        # with torch.no_grad():
-        #     scores_raw, test_feat = self.classifier.classify(
-        #         backbone_feats[-1])
-        #     scores = torch.softmax(
-        #         scores_raw.view(-1), dim=0).view(scores_raw.shape)
-
-        # Localize the target
-        # displacement_center, flag = self.classifier.localize_target(
-        #     scores, sample_center, sample_scales, self.sample_size, bbox)
-        # new_bbox_center = sample_center[0, :] + displacement_center
 
         new_bbox_center, scores, test_feat, flag = self.classifier.predict(
             backbone_feats, bbox, patch_coord, self.sample_size)

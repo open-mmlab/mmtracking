@@ -441,13 +441,9 @@ class PrdimpClsHead(BaseModule):
                 - bboxes (Tensor): Has a shape (1, 4),
                   the last dimension 4 arrange as [x1, y1, x2, y2].
         """
-        # batch_img_metas = [
-        #     data_samples.metainfo for data_samples in batch_data_samples
-        # ]
         sample_center = patch_coord[:, :2]
         sample_scales = (patch_coord[:, 2:] / sample_size).prod(dim=1).sqrt()
 
-        # outs = self(inputs)
         with torch.no_grad():
             scores_raw, test_feat = self(backbone_feats[-1])
             scores = torch.softmax(
