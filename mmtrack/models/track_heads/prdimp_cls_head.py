@@ -176,8 +176,9 @@ class PrdimpClsHead(BaseModule):
             self.update_cfg['sample_memory_size'], *aug_feats.shape[1:])
         self.memo.training_samples[:self.num_init_samples] = aug_feats
 
-    def localize_target(self, scores, sample_center, sample_scale, sample_size,
+    def predict_by_feat(self, scores, sample_center, sample_scale, sample_size,
                         prev_bbox):
+        # TODO: set the center of prev_bbox is equal to the sample_ceter
         """Run the target localization based on the score map.
 
         Args:
@@ -187,7 +188,7 @@ class PrdimpClsHead(BaseModule):
                 [x, y] format.
             sample_scale (int | Tensor): The scale of the cropped sample.
                 It's of shape (1,) when it's a tensor.
-            sample_size (Tensor): The scale of the cropped sample. It's of
+            sample_size (Tensor): The size of the cropped sample. It's of
                 shape (2,) in [h, w] format.
             prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
 
@@ -283,7 +284,7 @@ class PrdimpClsHead(BaseModule):
         # 4. Normal target
         return target_disp, 'normal'
 
-    def classify(self, backbone_feats):
+    def forward(self, backbone_feats):
         """Run classifier on the backbone features.
 
         Args:
@@ -448,11 +449,11 @@ class PrdimpClsHead(BaseModule):
 
         # outs = self(inputs)
         with torch.no_grad():
-            scores_raw, test_feat = self.classify(backbone_feats[-1])
+            scores_raw, test_feat = self(backbone_feats[-1])
             scores = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
-        displacement_center, flag = self.localize_target(
+        displacement_center, flag = self.predict_by_feat(
             scores, sample_center, sample_scales, sample_size, prev_bbox)
 
         new_bbox_center = sample_center[0, :] + displacement_center

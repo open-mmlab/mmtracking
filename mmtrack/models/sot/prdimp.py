@@ -74,17 +74,17 @@ class Prdimp(BaseSingleObjectTracker):
             aug_expansion_sz = (self.sample_size * aug_expansion_factor).long()
             # keep the same parity with `self.sample_size`
             # TODO: verifiy the necessity of these code
-            aug_expansion_sz += (aug_expansion_sz -
-                                 self.sample_size.long()) % 2
+            # aug_expansion_sz += (aug_expansion_sz -
+            #                      self.sample_size.long()) % 2
             aug_expansion_sz = aug_expansion_sz.float()
             aug_output_sz = self.sample_size.long().cpu().tolist()
 
         # Crop image patches and bboxes
         img_patch, _ = self.get_cropped_img(
-            img, init_bbox[:2].round(), self.target_scale * aug_expansion_sz,
+            img, init_bbox[:2].round(), self.resize_factor * aug_expansion_sz,
             aug_expansion_sz)
         init_bbox = self.generate_bbox(init_bbox, init_bbox[:2].round(),
-                                       self.target_scale)
+                                       self.resize_factor)
 
         # Crop patches from the image and perform augmentation on the image
         # patches
@@ -138,12 +138,14 @@ class Prdimp(BaseSingleObjectTracker):
         # Set search area
         search_area = torch.prod(init_bbox[2:4] *
                                  self.test_cfg['search_area_scale'])
-        # target_scale is the ratio of the size of original bbox to that
-        # of the resized bbox in the resized image
-        self.target_scale = search_area.sqrt() / self.sample_size.prod().sqrt()
+        # resize_factor is the ratio of the size of original image to that
+        # of the resized image. Correspondingly, the original bbox is also
+        # resized by the same factor.
+        self.resize_factor = search_area.sqrt() / self.sample_size.prod().sqrt(
+        )
 
-        # base_target_sz is the size of the init bbox in resized image
-        self.base_target_sz = init_bbox[2:4] / self.target_scale
+        # base_target_sz is the size of the init bbox in the resized image
+        self.base_target_sz = init_bbox[2:4] / self.resize_factor
 
         # Set scale bounds
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
@@ -294,14 +296,14 @@ class Prdimp(BaseSingleObjectTracker):
         # TODO: remove `self.cls_feat_size`
         sample_center_crop = bbox[:2] + (
             (self.cls_feat_size + self.filter_size) % 2
-        ) * (self.target_scale * self.sample_size) / (2 * self.cls_feat_size)
+        ) * (self.resize_factor * self.sample_size) / (2 * self.cls_feat_size)
 
         # `img_patch` is of (1, c, h, w) shape
         # `patch_coord` is of (1, 4) shape in [cx, cy, w, h] format.
         img_patch, patch_coord = self.get_cropped_img(
             img,
             sample_center_crop,
-            self.target_scale * self.sample_size,
+            self.resize_factor * self.sample_size,
             self.sample_size,
             mode=self.test_cfg['border_mode'],
             max_scale_change=self.test_cfg['patch_max_scale_change'])
@@ -353,9 +355,9 @@ class Prdimp(BaseSingleObjectTracker):
                                                    sample_scales,
                                                    self.sample_size)
             if new_bbox is not None:
-                # Crop the original image based on the `self.target_scale`
-                self.target_scale = torch.sqrt(new_bbox[2:4].prod() /
-                                               self.base_target_sz.prod())
+                # Crop the original image based on the `self.resize_factor`
+                self.resize_factor = torch.sqrt(new_bbox[2:4].prod() /
+                                                self.base_target_sz.prod())
                 bbox = new_bbox
 
         # Update the classifier
@@ -393,7 +395,7 @@ class Prdimp(BaseSingleObjectTracker):
         There are 3 steps:
             1. Downsample the image according to the ratio of `crop_size` to
                 `output_size`
-            2. Crop the image to a designated size (by the way of
+            2. Crop the image to a designated size (in the way of
                 `torch.nn.functional.pad`)
             3. Reize the image to the `output_size`
 
@@ -415,6 +417,7 @@ class Prdimp(BaseSingleObjectTracker):
             patch_coord (Tensor): the coordinate of image patch among the
                 original image. It's of shape (1, 4) in [cx, cy, w, h] format.
         """
+
         # TODO: Simplify this preprocess
         # copy and convert
         crop_center_copy = crop_center.long().clone()
