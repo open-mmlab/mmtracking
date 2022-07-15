@@ -382,6 +382,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         return result
 
+    '''
     def get_cropped_img(self,
                         img: torch.Tensor,
                         crop_center: torch.Tensor,
@@ -489,6 +490,77 @@ class Prdimp(BaseSingleObjectTracker):
         # Get image coordinates
         patch_coord = resize_factor * torch.cat((tl, br)).view(1, 4)
         patch_coord = bbox_xyxy_to_cxcywh(patch_coord)
+
+        if output_size is None or (img_patch.shape[-2] == output_size[0]
+                                   and img_patch.shape[-1] == output_size[1]):
+            return img_patch.clone(), patch_coord
+
+        # Resize
+        if not is_mask:
+            img_patch = F.interpolate(
+                img_patch,
+                output_size.long().flip(0).tolist(),
+                mode='bilinear',
+                align_corners=True)
+        else:
+            img_patch = F.interpolate(
+                img_patch, output_size.long().flip(0).tolist(), mode='nearest')
+
+        return img_patch, patch_coord
+    '''
+
+    def get_cropped_img(self,
+                        img: torch.Tensor,
+                        crop_center: torch.Tensor,
+                        crop_size: torch.Tensor,
+                        output_size: torch.Tensor = None,
+                        mode: str = 'replicate',
+                        max_scale_change=None,
+                        is_mask=False):
+        pad_mode = mode
+        # Get new sample size if forced inside the image
+        if mode == 'inside' or mode == 'inside_major':
+            pad_mode = 'replicate'
+            img_sz = torch.Tensor([img.shape[3],
+                                   img.shape[2]]).to(crop_size.device)
+            shrink_factor = (crop_size.float() / img_sz)
+            if mode == 'inside':
+                shrink_factor = shrink_factor.max()
+            elif mode == 'inside_major':
+                shrink_factor = shrink_factor.min()
+            shrink_factor.clamp_(min=1, max=max_scale_change)
+            crop_size = (crop_size.float() / shrink_factor).long()
+
+        tl = (crop_center - crop_size // 2).long()
+        br = (crop_center + crop_size // 2).long()
+
+        # Shift the crop to inside
+        if mode == 'inside' or mode == 'inside_major':
+            img2_sz = torch.LongTensor([img.shape[3],
+                                        img.shape[2]]).to(crop_center.device)
+            shift = (-tl).clamp(0) - (br - img2_sz).clamp(0)
+            tl += shift
+            br += shift
+
+            outside = torch.floor_divide(
+                ((-tl).clamp(0) + (br - img2_sz).clamp(0)), 2)
+            shift = (-tl - outside) * (outside > 0).long()
+            tl += shift
+            br += shift
+
+        patch_coord = torch.cat((tl, br)).view(1, 4)
+        patch_coord = bbox_xyxy_to_cxcywh(patch_coord)
+
+        # Crop image patch
+        if not is_mask:
+            img_patch = F.pad(img,
+                              (-tl[0].item(), br[0].item() - img.shape[3],
+                               -tl[1].item(), br[1].item() - img.shape[2]),
+                              pad_mode)
+        else:
+            img_patch = F.pad(img,
+                              (-tl[0].item(), br[0].item() - img.shape[3],
+                               -tl[1].item(), br[1].item() - img.shape[2]))
 
         if output_size is None or (img_patch.shape[-2] == output_size[0]
                                    and img_patch.shape[-1] == output_size[1]):
