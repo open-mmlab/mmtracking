@@ -300,7 +300,7 @@ class Prdimp(BaseSingleObjectTracker):
             bbox[:2].long(),
             self.resize_factor * self.sample_size,
             self.sample_size,
-            mode=self.test_cfg['border_mode'],
+            border_mode=self.test_cfg['border_mode'],
             max_scale_change=self.test_cfg['patch_max_scale_change'])
 
         with torch.no_grad():
