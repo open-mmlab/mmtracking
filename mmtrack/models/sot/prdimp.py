@@ -48,6 +48,8 @@ class Prdimp(BaseSingleObjectTracker):
                  init_cfg: OptMultiConfig = None):
         super(Prdimp, self).__init__(data_preprocessor, init_cfg)
         self.backbone = MODELS.build(backbone)
+        cls_head.update(test_cfg=test_cfg)
+        bbox_head.update(test_cfg=test_cfg)
         self.classifier = MODELS.build(cls_head)
         self.bbox_regressor = MODELS.build(bbox_head)
         self.test_cfg = test_cfg
@@ -65,7 +67,7 @@ class Prdimp(BaseSingleObjectTracker):
         # Set size for image and cropped sample. img_size is in [w, h] format.
         self.img_size = torch.Tensor([img.shape[-1],
                                       img.shape[-2]]).to(init_bbox.device)
-        sample_size = self.test_cfg['image_sample_size']
+        sample_size = self.test_cfg['img_sample_size']
         sample_size = torch.Tensor([sample_size, sample_size] if isinstance(
             sample_size, int) else sample_size)
         self.sample_size = sample_size.to(init_bbox.device)
@@ -254,8 +256,6 @@ class Prdimp(BaseSingleObjectTracker):
         bbox = self.memo.bbox.clone()
 
         # 1. Extract backbone features
-        # `img_patch` is of (1, c, h, w) shape
-        # `patch_coord` is of (1, 4) shape in [cx, cy, w, h] format.
         img_patch, patch_coord = self.get_cropped_img(
             img,
             bbox.round(),
@@ -264,37 +264,34 @@ class Prdimp(BaseSingleObjectTracker):
             border_mode=self.test_cfg['border_mode'],
             max_scale_change=self.test_cfg['patch_max_scale_change'])
 
-        with torch.no_grad():
-            backbone_feats = self.backbone(img_patch)
+        backbone_feats = self.backbone(img_patch)
+
+        # location of sample
+        sample_center = patch_coord[:, :2].squeeze()
+        sample_scale_factor = (patch_coord[:, 2:] /
+                               self.sample_size).prod(dim=1).sqrt()
 
         # 2. Locate the target roughly using score map.
         new_bbox_center, score_map, state = self.classifier.predict(
-            backbone_feats, bbox, patch_coord, self.sample_size)
+            backbone_feats, batch_data_samples, bbox, sample_center,
+            sample_scale_factor)
 
         # 3. Refine position and scale of the target.
         if state != 'not_found':
-            # TODO: hard code here
-            inside_ratio = 0.2
-            inside_offset = (inside_ratio - 0.5) * bbox[2:4]
+            inside_offset = (self.test_cfg['bbox_inside_ratio'] -
+                             0.5) * bbox[2:4]
             # clip the coordinates of the center of the target on the original
             # image
             bbox[:2] = torch.max(
                 torch.min(new_bbox_center, self.img_size - inside_offset),
                 inside_offset)
 
-            # location of sample
-            sample_center = patch_coord[:, :2]
-            sample_scales = (patch_coord[:, 2:] /
-                             self.sample_size).prod(dim=1).sqrt()
-
-            # TODO: unify the bbox format of classifier and the bbox regressor
-            # and not re-generate bbox
-            cls_bboxes = self.generate_bbox(bbox, sample_center[0],
-                                            sample_scales[0])
-            new_bbox = self.bbox_regressor.predict(cls_bboxes, backbone_feats,
-                                                   sample_center,
-                                                   sample_scales,
-                                                   self.sample_size)
+            cls_bboxes = self.generate_bbox(bbox, sample_center,
+                                            sample_scale_factor)
+            new_bbox = self.bbox_regressor.predict(backbone_feats,
+                                                   batch_data_samples,
+                                                   cls_bboxes, sample_center,
+                                                   sample_scale_factor)
             if new_bbox is not None:
                 bbox = new_bbox
 
@@ -304,8 +301,8 @@ class Prdimp(BaseSingleObjectTracker):
         # target
         if update_flag:
             # Create the target_bbox using the refined predicted boxes
-            target_bbox = self.generate_bbox(bbox, sample_center[0],
-                                             sample_scales[0])
+            target_bbox = self.generate_bbox(bbox, sample_center,
+                                             sample_scale_factor)
             hard_neg_flag = (state == 'hard_negative')
             # Update the filter of classifier using it's optimizer module
             self.classifier.update_classifier(target_bbox, self.frame_num,
@@ -341,7 +338,8 @@ class Prdimp(BaseSingleObjectTracker):
                 Defaults to False.
 
         Returns:
-            _type_: _description_
+            img_patch: of (1, c, h, w) shape.
+            patch_coord: of (1, 4) shape in [cx, cy, w, h] format.
         """
         crop_size = target_bbox[2:4].prod().sqrt() * search_scale_factor
 

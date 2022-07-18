@@ -4,9 +4,11 @@ import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmengine.model import BaseModule
+from torch import Tensor
 
 from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
                                bbox_rel_to_rect)
+from mmtrack.core.utils import SampleList
 from mmtrack.registry import MODELS
 from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
 
@@ -75,10 +77,12 @@ class IouNetHead(BaseModule):
                  pred_inter_dim=(256, 256),
                  bbox_cfg=None,
                  train_cfg=None,
+                 test_cfg=None,
                  loss_bbox=None,
                  **kwargs):
         super().__init__()
         self.bbox_cfg = bbox_cfg
+        self.test_cfg = test_cfg
 
         def conv_module(in_planes, out_planes, kernel_size=3, padding=1):
             # The module's pipeline: Conv -> BN -> ReLU.
@@ -227,7 +231,7 @@ class IouNetHead(BaseModule):
 
         return fc34_3_temp, fc34_4_temp
 
-    def get_iou_feat(self, feats):
+    def forward(self, feats):
         """Get IoU prediction features from a 4 or 5 dimensional backbone
         input.
 
@@ -313,8 +317,8 @@ class IouNetHead(BaseModule):
 
         return output_bboxes.view(-1, 4), iou_outputs.detach().view(-1)
 
-    def predict(self, init_bbox, backbone_feats, sample_center, sample_scale,
-                sample_size):
+    def predict(self, backbone_feats: Tensor, batch_data_samples: SampleList,
+                init_bbox: Tensor, sample_center: Tensor, scale_factor: float):
         """Refine the target bounding box.
 
         Args:
@@ -324,21 +328,34 @@ class IouNetHead(BaseModule):
             sample_center (Tensor): The center of the cropped
                 sample on the original image. It's of shape (1,2) in [x, y]
                 format.
-            sample_scale (int | Tensor): The scale of the cropped sample.
-                It's of shape (1,) when it's a tensor.
-            sample_size (Tensor): The scale of the cropped sample. It's of
-                shape (2,) in [h, w] format.
+            scale_factor (float): The size ratio of the cropped patch to the
+                resized image.
 
         Returns:
             Tensor: new target bbox in [cx, cy, w, h] format.
         """
         init_bbox = init_bbox.squeeze()
         sample_center = sample_center.squeeze()
-        sample_size = sample_size.squeeze()
-        assert sample_center.dim() == sample_size.dim() == 1
+        assert sample_center.dim() == 1
 
-        with torch.no_grad():
-            iou_features = self.get_iou_feat(backbone_feats)
+        iou_features = self(backbone_feats)
+        return self.predict_by_feat(iou_features, init_bbox, sample_center,
+                                    scale_factor)
+
+    def predict_by_feat(self, iou_features: Tensor, init_bbox: Tensor,
+                        sample_center: Tensor, scale_factor: Tensor):
+        """_summary_
+
+        Args:
+            init_bbox (Tensor): _description_
+            iou_features (Tensor): _description_
+            sample_center (Tensor): _description_
+            sample_size (Tensor): _description_
+            scale_factor (Tensor): _description_
+
+        Returns:
+            _type_: _description_
+        """
 
         # Generate some random initial boxes based on the `init_bbox`
         init_bbox = init_bbox.view(1, 4)
@@ -362,13 +379,29 @@ class IouNetHead(BaseModule):
         # Optimize the boxes
         out_bboxes, out_iou = self.optimize_bboxes(iou_features, init_bboxes)
 
+        return self._bbox_post_process(out_bboxes, out_iou, sample_center,
+                                       scale_factor)
+
+    def _bbox_post_process(self, out_bboxes: Tensor, out_ious: Tensor,
+                           sample_center: Tensor, scale_factor: float):
+        """_summary_
+
+        Args:
+            out_bboxes (Tensor): _description_
+            out_ious (Tensor): _description_
+            sample_center (Tensor): _description_
+            scale_factor (float): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # Remove weird boxes according to the ratio of aspect
         out_bboxes[:, 2:].clamp_(1)
         aspect_ratio = out_bboxes[:, 2] / out_bboxes[:, 3]
         keep_ind = (aspect_ratio < self.bbox_cfg['max_aspect_ratio']) * (
             aspect_ratio > 1 / self.bbox_cfg['max_aspect_ratio'])
         out_bboxes = out_bboxes[keep_ind, :]
-        out_iou = out_iou[keep_ind]
+        out_ious = out_ious[keep_ind]
 
         # If no box found
         if out_bboxes.shape[0] == 0:
@@ -377,15 +410,15 @@ class IouNetHead(BaseModule):
         # Predict box
         k = self.bbox_cfg['iounet_topk']
         topk = min(k, out_bboxes.shape[0])
-        _, inds = torch.topk(out_iou, topk)
+        _, inds = torch.topk(out_ious, topk)
         # in [x,y,w,h] format
         predicted_box = out_bboxes[inds, :].mean(0)
 
         # Convert the bbox of the cropped sample to that of original image.
         # TODO: this postprocess about mapping back can be moved to other place
         new_bbox_center = predicted_box[:2] + predicted_box[2:] / 2
-        new_bbox_center = (new_bbox_center -
-                           sample_size / 2) * sample_scale + sample_center
-        new_target_size = predicted_box[2:] * sample_scale
+        new_bbox_center = (new_bbox_center - self.test_cfg['img_sample_size'] /
+                           2) * scale_factor + sample_center
+        new_target_size = predicted_box[2:] * scale_factor
 
         return torch.cat([new_bbox_center, new_target_size], dim=-1)

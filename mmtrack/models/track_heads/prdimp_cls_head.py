@@ -10,8 +10,7 @@ from mmengine.model import BaseModule
 from torch import Tensor, nn
 
 from mmtrack.core.filter import filter as filter_layer
-from mmtrack.core.utils import max2d
-from mmtrack.core.utils.typing import OptConfigType
+from mmtrack.core.utils import OptConfigType, SampleList, max2d
 from mmtrack.registry import MODELS
 
 
@@ -48,6 +47,7 @@ class PrdimpClsHead(BaseModule):
                  optimizer_cfg: OptConfigType = None,
                  loss_cls: OptConfigType = None,
                  train_cfg: OptConfigType = None,
+                 test_cfg: OptConfigType = None,
                  **kwargs):
         super().__init__()
         filter_size = filter_initializer.filter_size
@@ -61,6 +61,7 @@ class PrdimpClsHead(BaseModule):
         self.locate_cfg = locate_cfg
         self.update_cfg = update_cfg
         self.optimizer_cfg = optimizer_cfg
+        self.test_cfg = test_cfg
 
         if isinstance(filter_size, (int, float)):
             filter_size = [filter_size, filter_size]
@@ -170,114 +171,6 @@ class PrdimpClsHead(BaseModule):
         self.memo.training_samples = aug_feats.new_zeros(
             self.update_cfg['sample_memory_size'], *aug_feats.shape[1:])
         self.memo.training_samples[:self.num_init_samples] = aug_feats
-
-    def predict_by_feat(self, scores: Tensor, sample_center: Tensor,
-                        sample_scale: Tensor, sample_size: Tensor,
-                        prev_bbox: Tensor) -> Union[Tensor, bool]:
-        """Run the target localization based on the score map.
-
-        Args:
-            scores (Tensor): It's of shape (1, h, w) or (h, w).
-            sample_center (Tensor): The center of the cropped
-                sample on the original image. It's of shape (1,2) or (2,) in
-                [x, y] format.
-            sample_scale (int | Tensor): The scale of the cropped sample.
-                It's of shape (1,) when it's a tensor.
-            sample_size (Tensor): The size of the cropped sample. It's of
-                shape (2,) in [h, w] format.
-            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
-
-        Return:
-            Tensor: The displacement of the target to the center of original
-                image
-            bool: The tracking state
-        """
-        sample_center = sample_center.squeeze()
-        scores = scores.squeeze()
-        prev_bbox = prev_bbox.squeeze()
-        sample_size = sample_size.squeeze()
-        assert scores.dim() == 2
-        assert sample_center.dim() == sample_size.dim() == prev_bbox.dim() == 1
-
-        score_size = torch.tensor([scores.shape[-1], scores.shape[-2]])
-        output_size = (score_size - (self.filter_size + 1) % 2).to(
-            sample_size.device)
-        score_center = (score_size / 2).to(scores.device)
-
-        max_score, max_pos = max2d(scores)
-        max_pos = max_pos.flip(0).float()
-        # the displacement of target to the center of score map
-        target_disp_score_map = max_pos - score_center
-        # the ratio of the size of original image to to that of score map
-        ratio_size = (sample_size / output_size) * sample_scale
-        # the displcement of the target to the center of original image
-        target_disp = target_disp_score_map * ratio_size
-
-        # Handle different cases
-        # 1. Target is not found
-        if max_score.item() < self.locate_cfg['no_target_min_score']:
-            return target_disp, 'not_found'
-
-        # Analysis whether there is a distractor
-        # Calculate the size of neighborhood near the current target
-        target_neigh_sz = self.locate_cfg['target_neighborhood_scale'] * (
-            prev_bbox[2:4] / ratio_size)
-
-        top_left = (max_pos - target_neigh_sz / 2).round().long()
-        top_left = torch.clamp_min(top_left, 0).tolist()
-        bottom_right = (max_pos + target_neigh_sz / 2).round().long()
-        bottom_right = torch.clamp_max(bottom_right,
-                                       score_size.min().item()).tolist()
-        scores_masked = scores.clone()
-        scores_masked[top_left[1]:bottom_right[1],
-                      top_left[0]:bottom_right[0]] = 0
-
-        # Find new maximum except the neighborhood of the target
-        second_max_score, second_max_pos = max2d(scores_masked)
-        second_max_pos = second_max_pos.flip(0).float().view(-1)
-        distractor_disp_score_map = second_max_pos - score_center
-        distractor_disp = distractor_disp_score_map * ratio_size
-        # The displacement of previout target bbox to the center of the score
-        # map.
-        # Note that `sample_center`` may not be equal to the center of previous
-        # tracking bbox due to different cropping mode
-        prev_target_disp_score_map = (prev_bbox[:2] -
-                                      sample_center) / ratio_size
-
-        # 2. There is a distractor
-        if second_max_score > self.locate_cfg['distractor_thres'] * max_score:
-            target_disp_diff = torch.sqrt(
-                torch.sum(
-                    (target_disp_score_map - prev_target_disp_score_map)**2))
-            # `distractor_disp_diff` is the displacement between current
-            # tracking bbox and previous tracking bbox.
-            distractor_disp_diff = torch.sqrt(
-                torch.sum((distractor_disp_score_map -
-                           prev_target_disp_score_map)**2))
-            disp_diff_thres = self.locate_cfg[
-                'dispalcement_scale'] * score_size.prod().float().sqrt() / 2
-
-            if (distractor_disp_diff > disp_diff_thres
-                    and target_disp_diff < disp_diff_thres):
-                return target_disp, 'hard_negative'
-            if (distractor_disp_diff < disp_diff_thres
-                    and target_disp_diff > disp_diff_thres):
-                # The true target may be the `distractor` instead of the
-                # `target` on this frame
-                return distractor_disp, 'hard_negative'
-            else:
-                # If both the displacement of target and distractor is larger
-                # or smaller than the threshold, return the displacement of the
-                # highest score.
-                return target_disp, 'uncertain'
-
-        # 3. There is a hard negative object
-        if (second_max_score > self.locate_cfg['hard_neg_thres'] * max_score
-                and second_max_score > self.locate_cfg['no_target_min_score']):
-            return target_disp, 'hard_negative'
-
-        # 4. Normal target
-        return target_disp, 'normal'
 
     def forward(self, backbone_feats: Tensor) -> Union[Tensor, Tensor]:
         """Run classifier on the backbone features.
@@ -411,22 +304,14 @@ class PrdimpClsHead(BaseModule):
                     bboxes=target_bboxes,
                     sample_weights=sample_weights)
 
-    def predict(self, backbone_feats: Tuple[Tensor], prev_bbox: Tensor,
-                patch_coord: Tensor,
-                sample_size: Tensor) -> Union[Tensor, Tensor, Tensor, bool]:
+    def predict(self, backbone_feats: Tuple[Tensor],
+                batch_data_samples: SampleList, prev_bbox: Tensor,
+                sample_center: Tensor,
+                scale_factor: float) -> Union[Tensor, Tensor, bool]:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
 
         Args:
-            template_feats (tuple[Tensor, ...]): Tuple of Tensor with
-                shape (N, C, H, W) denoting the multi level feature maps of
-                exemplar images. Typically H and W equal to 7.
-            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
-                (N, C, H, W) denoting the multi level feature maps of
-                search images. Typically H and W equal to 31.
-
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
-                Samples. It usually includes information such as `gt_instance`.
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
             scale_factor (Tensor): scale factor.
 
@@ -436,19 +321,121 @@ class PrdimpClsHead(BaseModule):
             test_feat:
             flag:
         """
-        sample_center = patch_coord[:, :2]
-        sample_scales = (patch_coord[:, 2:] / sample_size).prod(dim=1).sqrt()
-
         with torch.no_grad():
-            # ``self.memo.sample_feat`` are used to update the training samples
+            # ``self.memo.sample_feat`` is used to update the training samples
             # in the memory on some conditions.
             scores_raw, self.memo.sample_feat = self(backbone_feats[-1])
             scores_map = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
-        displacement_center, flag = self.predict_by_feat(
-            scores_map, sample_center, sample_scales, sample_size, prev_bbox)
-
-        new_bbox_center = sample_center[0, :] + displacement_center
+        new_bbox_center, flag = self.predict_by_feat(scores_map, prev_bbox,
+                                                     sample_center,
+                                                     scale_factor)
 
         return new_bbox_center, scores_map, flag
+
+    def predict_by_feat(self, scores: Tensor, prev_bbox: Tensor,
+                        sample_center: Tensor,
+                        scale_factor: float) -> Union[Tensor, bool]:
+        """Run the target localization based on the score map.
+
+        Args:
+            scores (Tensor): It's of shape (1, h, w) or (h, w).
+            sample_center (Tensor): The center of the cropped
+                sample on the original image. It's of shape (1,2) or (2,) in
+                [x, y] format.
+            scale_factor (float): The scale of the cropped sample.
+                It's of shape (1,) when it's a tensor.
+            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
+
+        Return:
+            Tensor: The displacement of the target to the center of original
+                image
+            bool: The tracking state
+        """
+        sample_center = sample_center.squeeze()
+        scores = scores.squeeze()
+        prev_bbox = prev_bbox.squeeze()
+        assert scores.dim() == 2
+        assert sample_center.dim() == prev_bbox.dim() == 1
+
+        score_size = torch.tensor([scores.shape[-1], scores.shape[-2]])
+        output_size = (score_size - (self.filter_size + 1) % 2).to(
+            scores.device)
+        score_center = (score_size / 2).to(scores.device)
+
+        max_score, max_pos = max2d(scores)
+        max_pos = max_pos.flip(0).float()
+        # the displacement of target to the center of score map
+        target_disp_score_map = max_pos - score_center
+        # the ratio of the size of original image to to that of score map
+        ratio_size = (self.test_cfg['img_sample_size'] /
+                      output_size) * scale_factor
+        # the displcement of the target to the center of original image
+        target_disp = target_disp_score_map * ratio_size
+
+        # Handle different cases
+        # 1. Target is not found
+        if max_score.item() < self.locate_cfg['no_target_min_score']:
+            return target_disp + sample_center, 'not_found'
+
+        # Analysis whether there is a distractor
+        # Calculate the size of neighborhood near the current target
+        target_neigh_sz = self.locate_cfg['target_neighborhood_scale'] * (
+            prev_bbox[2:4] / ratio_size)
+
+        top_left = (max_pos - target_neigh_sz / 2).round().long()
+        top_left = torch.clamp_min(top_left, 0).tolist()
+        bottom_right = (max_pos + target_neigh_sz / 2).round().long()
+        bottom_right = torch.clamp_max(bottom_right,
+                                       score_size.min().item()).tolist()
+        scores_masked = scores.clone()
+        scores_masked[top_left[1]:bottom_right[1],
+                      top_left[0]:bottom_right[0]] = 0
+
+        # Find new maximum except the neighborhood of the target
+        second_max_score, second_max_pos = max2d(scores_masked)
+        second_max_pos = second_max_pos.flip(0).float().view(-1)
+        distractor_disp_score_map = second_max_pos - score_center
+        distractor_disp = distractor_disp_score_map * ratio_size
+        # The displacement of previout target bbox to the center of the score
+        # map.
+        # Note that `sample_center`` may not be equal to the center of previous
+        # tracking bbox due to different cropping mode
+        prev_target_disp_score_map = (prev_bbox[:2] -
+                                      sample_center) / ratio_size
+
+        # 2. There is a distractor
+        if second_max_score > self.locate_cfg['distractor_thres'] * max_score:
+            target_disp_diff = torch.sqrt(
+                torch.sum(
+                    (target_disp_score_map - prev_target_disp_score_map)**2))
+            # `distractor_disp_diff` is the displacement between current
+            # tracking bbox and previous tracking bbox.
+            distractor_disp_diff = torch.sqrt(
+                torch.sum((distractor_disp_score_map -
+                           prev_target_disp_score_map)**2))
+            disp_diff_thres = self.locate_cfg[
+                'dispalcement_scale'] * score_size.prod().float().sqrt() / 2
+
+            if (distractor_disp_diff > disp_diff_thres
+                    and target_disp_diff < disp_diff_thres):
+                return target_disp + sample_center, 'hard_negative'
+            if (distractor_disp_diff < disp_diff_thres
+                    and target_disp_diff > disp_diff_thres):
+                # The true target may be the `distractor` instead of the
+                # `target` on this frame
+                return distractor_disp + sample_center, 'hard_negative'
+            else:
+                # If both the displacement of target and distractor is larger
+                # or smaller than the threshold, return the displacement of the
+                # highest score.
+                return target_disp + sample_center, 'uncertain'
+
+        # 3. There is a hard negative object
+        if (second_max_score > self.locate_cfg['hard_neg_thres'] * max_score
+                and second_max_score > self.locate_cfg['no_target_min_score']):
+            return target_disp + sample_center[0, :], 'hard_negative'
+
+        # 4. Normal target
+        return target_disp + sample_center, 'normal'
