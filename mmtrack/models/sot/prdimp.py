@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -72,10 +72,6 @@ class Prdimp(BaseSingleObjectTracker):
         aug_output_sz = None
         if aug_expansion_factor is not None and aug_expansion_factor != 1:
             aug_expansion_sz = (self.sample_size * aug_expansion_factor).long()
-            # keep the same parity with `self.sample_size`
-            # TODO: verifiy the necessity of these code
-            # aug_expansion_sz += (aug_expansion_sz -
-            #                      self.sample_size.long()) % 2
             aug_expansion_sz = aug_expansion_sz.float()
             aug_output_sz = self.sample_size.long().cpu().tolist()
 
@@ -90,12 +86,6 @@ class Prdimp(BaseSingleObjectTracker):
         # patches
         aug_img_patches, aug_cls_bboxes = self.gen_aug_imgs_bboxes(
             img_patch, init_bbox, aug_output_sz)
-
-        # Extract initial backbone features
-        # aug_img_patches = normalize(
-        #     aug_img_patches / 255,
-        #     mean=(0.485, 0.456, 0.406),
-        #     std=(0.229, 0.224, 0.225))
 
         # `init_backbone_feats` is a tuple containing the features of `layer2`
         # and `layer3`
@@ -120,12 +110,12 @@ class Prdimp(BaseSingleObjectTracker):
         init_iou_features = [x[:1] for x in init_backbone_feats]
         self.bbox_regressor.init_iou_net(init_iou_features, init_bbox)
 
-    def init_params(self, img_hw, init_bbox):
+    def init_params(self, img_hw: Tensor, init_bbox: Tensor):
         """Initilatize some important global parameters in tracking.
 
         Args:
-            img_hw (ndarray): the height and width of the image.
-            init_bbox (ndarray | list): in [cx, cy, w, h] format.
+            img_hw (Tensor): the height and width of the image.
+            init_bbox (Tensor): in [cx, cy, w, h] format.
         """
         # Set size for image. img_size is in [w, h] format.
         self.img_size = torch.Tensor([img_hw[1],
@@ -151,7 +141,10 @@ class Prdimp(BaseSingleObjectTracker):
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
         self.max_scale_factor = torch.min(self.img_size / self.base_target_sz)
 
-    def img_shift_crop(self, img, output_size=None, shift=None):
+    def img_shift_crop(self,
+                       img: Tensor,
+                       output_size: Optional[List] = None,
+                       shift: Optional[List] = None):
         """Shift and crop the image.
 
         Args:
@@ -182,7 +175,8 @@ class Prdimp(BaseSingleObjectTracker):
         return F.pad(img, (pad_left, pad_right, pad_top, pad_bottom),
                      'replicate')
 
-    def gen_aug_imgs_bboxes(self, img, init_bbox, output_size):
+    def gen_aug_imgs_bboxes(self, img: Tensor, init_bbox: Tensor,
+                            output_size: Tensor):
         """Perform data augmentation.
 
         Args:
@@ -259,21 +253,22 @@ class Prdimp(BaseSingleObjectTracker):
         aug_bboxes = torch.stack(aug_bboxes)
         return aug_imgs, aug_bboxes
 
-    def generate_bbox(self, bbox, sample_center, sample_scale):
+    def generate_bbox(self, bbox: Tensor, sample_center: Tensor,
+                      resize_factor: float):
         """All inputs are based in original image coordinates and the outputs
         are based on the resized cropped image sample.
 
         Args:
             bbox (Tensor): of shape (4,) in [cx, cy, w, h] format
             sample_center (Tensor): of shape (2,)
-            sample_scale (int):
+            resize_factor (float):
 
         Return:
             Tensor: in [cx, cy, w, h] format
         """
-        bbox_center = (bbox[:2] - sample_center) / sample_scale + (
+        bbox_center = (bbox[:2] - sample_center) / resize_factor + (
             self.sample_size / 2)
-        bbox_size = bbox[2:4] / sample_scale
+        bbox_size = bbox[2:4] / resize_factor
         return torch.cat([bbox_center, bbox_size])
 
     def track(self, img: Tensor,
@@ -294,15 +289,15 @@ class Prdimp(BaseSingleObjectTracker):
 
         # Extract backbone features
         # TODO: remove `self.cls_feat_size`
-        sample_center_crop = bbox[:2] + (
-            (self.cls_feat_size + self.filter_size) % 2
-        ) * (self.resize_factor * self.sample_size) / (2 * self.cls_feat_size)
+        # sample_center_crop = bbox[:2] + (
+        #     (self.cls_feat_size + self.filter_size) % 2
+        # ) * (self.resize_factor * self.sample_size) / (2 * self.cls_feat_size) # noqa
 
         # `img_patch` is of (1, c, h, w) shape
         # `patch_coord` is of (1, 4) shape in [cx, cy, w, h] format.
         img_patch, patch_coord = self.get_cropped_img(
             img,
-            sample_center_crop,
+            bbox[:2].long(),
             self.resize_factor * self.sample_size,
             self.sample_size,
             mode=self.test_cfg['border_mode'],
@@ -365,151 +360,42 @@ class Prdimp(BaseSingleObjectTracker):
 
         return result
 
-    '''
     def get_cropped_img(self,
-                        img: torch.Tensor,
-                        crop_center: torch.Tensor,
-                        crop_size: torch.Tensor,
-                        output_size: torch.Tensor = None,
-                        mode: str = 'replicate',
-                        max_scale_change=None,
-                        is_mask=False):
-        """Crop an image patch from the original image. The target is centered
-            at the cropped image patch.
-        There are 3 steps:
-            1. Downsample the image according to the ratio of `crop_size` to
-                `output_size`
-            2. Crop the image to a designated size (in the way of
-                `torch.nn.functional.pad`)
-            3. Reize the image to the `output_size`
-
-        When mode is 'inside' or 'inside_major', the cropped patch may not be
-        centered at the `crop_center`
+                        img: Tensor,
+                        crop_center: Tensor,
+                        crop_size: Tensor,
+                        output_size: Optional[Tensor] = None,
+                        border_mode: str = 'replicate',
+                        max_scale_change: Optional[float] = None,
+                        is_mask: Optional[bool] = False):
+        """Get the cropped patch based on the original image.
 
         Args:
-            img (Tensor): Input image.
-            crop_center (Tensor): center position of crop in [x, y] format.
-            crop_size (Tensor): size to crop in [w, h] format.
-            output_size (Tensor): size to resize to in [w, h] format.
-            mode: how to treat image borders: 'replicate' (default), 'inside'
-                or 'inside_major'
-            max_scale_change: maximgum allowed scale change when using 'inside'
-                and 'inside_major' mode
+            img (Tensor): The original image.
+            crop_center (Tensor): The cropped center.
+            crop_size (Tensor): The cropped size.
+            output_size (Optional[Tensor], optional): The output size.
+                Defaults to None.
+            border_mode (str, optional): The border mode. Defaults to
+                'replicate'.
+            max_scale_change (Optional[float], optional): The max scale change.
+                Defaults to None.
+            is_mask (Optional[bool], optional): Whether is mask.
+                Defaults to False.
 
         Returns:
-            img_patch (Tensor): of shape (1, c, h, w)
-            patch_coord (Tensor): the coordinate of image patch among the
-                original image. It's of shape (1, 4) in [cx, cy, w, h] format.
+            _type_: _description_
         """
-
-        # TODO: Simplify this preprocess
-        # copy and convert
-        crop_center_copy = crop_center.long().clone()
-        pad_mode = mode
+        pad_border_mode = border_mode
         # Get new sample size if forced inside the image
-        if mode == 'inside' or mode == 'inside_major':
-            pad_mode = 'replicate'
+        if border_mode == 'inside' or border_mode == 'inside_major':
+            pad_border_mode = 'replicate'
             img_sz = torch.Tensor([img.shape[3],
                                    img.shape[2]]).to(crop_size.device)
             shrink_factor = (crop_size.float() / img_sz)
-            if mode == 'inside':
+            if border_mode == 'inside':
                 shrink_factor = shrink_factor.max()
-            elif mode == 'inside_major':
-                shrink_factor = shrink_factor.min()
-            shrink_factor.clamp_(min=1, max=max_scale_change)
-            crop_size = (crop_size.float() / shrink_factor).long()
-
-        # Compute pre-downsampling factor
-        # requires resize_factor >= 1 and is type of int
-        if output_size is not None:
-            resize_factor = torch.min(crop_size.float() /
-                                      output_size.float()).item()
-            resize_factor = int(max(int(resize_factor - 0.1), 1))
-        else:
-            resize_factor = torch.Tensor(1)
-
-        # Do downsampling to get `img2`
-        if resize_factor > 1:
-            offset = crop_center_copy % resize_factor  # offset
-            crop_center_copy = torch.floor_divide(
-                crop_center_copy - offset, resize_factor)  # new position
-            img2 = img[..., offset[1].item()::resize_factor,
-                       offset[0].item()::resize_factor]  # downsample
-        else:
-            img2 = img
-
-        # cropped image size
-        cropped_img_size = crop_size.float() / resize_factor
-        cropped_img_size = torch.clamp_min(cropped_img_size.round(), 2).long()
-        # Extract top and bottom coordinates
-        tl = crop_center_copy - torch.floor_divide(cropped_img_size, 2)
-        br = crop_center_copy + torch.floor_divide(cropped_img_size, 2)
-
-        # Shift the crop to inside
-        if mode == 'inside' or mode == 'inside_major':
-            img2_sz = torch.LongTensor([img2.shape[3],
-                                        img2.shape[2]]).to(crop_center.device)
-            shift = (-tl).clamp(0) - (br - img2_sz).clamp(0)
-            tl += shift
-            br += shift
-
-            outside = torch.floor_divide(
-                ((-tl).clamp(0) + (br - img2_sz).clamp(0)), 2)
-            shift = (-tl - outside) * (outside > 0).long()
-            tl += shift
-            br += shift
-
-        # Crop image patch
-        if not is_mask:
-            img_patch = F.pad(img2,
-                              (-tl[0].item(), br[0].item() - img2.shape[3],
-                               -tl[1].item(), br[1].item() - img2.shape[2]),
-                              pad_mode)
-        else:
-            img_patch = F.pad(img2,
-                              (-tl[0].item(), br[0].item() - img2.shape[3],
-                               -tl[1].item(), br[1].item() - img2.shape[2]))
-
-        # Get image coordinates
-        patch_coord = resize_factor * torch.cat((tl, br)).view(1, 4)
-        patch_coord = bbox_xyxy_to_cxcywh(patch_coord)
-
-        if output_size is None or (img_patch.shape[-2] == output_size[0]
-                                   and img_patch.shape[-1] == output_size[1]):
-            return img_patch.clone(), patch_coord
-
-        # Resize
-        if not is_mask:
-            img_patch = F.interpolate(
-                img_patch,
-                output_size.long().flip(0).tolist(),
-                mode='bilinear',
-                align_corners=True)
-        else:
-            img_patch = F.interpolate(
-                img_patch, output_size.long().flip(0).tolist(), mode='nearest')
-
-        return img_patch, patch_coord
-    '''
-
-    def get_cropped_img(self,
-                        img: torch.Tensor,
-                        crop_center: torch.Tensor,
-                        crop_size: torch.Tensor,
-                        output_size: torch.Tensor = None,
-                        mode: str = 'replicate',
-                        max_scale_change=None,
-                        is_mask=False):
-        pad_mode = mode
-        # Get new sample size if forced inside the image
-        if mode == 'inside' or mode == 'inside_major':
-            pad_mode = 'replicate'
-            img_sz = torch.Tensor([img.shape[3],
-                                   img.shape[2]]).to(crop_size.device)
-            shrink_factor = (crop_size.float() / img_sz)
-            if mode == 'inside':
-                shrink_factor = shrink_factor.max()
-            elif mode == 'inside_major':
+            elif border_mode == 'inside_major':
                 shrink_factor = shrink_factor.min()
             shrink_factor.clamp_(min=1, max=max_scale_change)
             crop_size = (crop_size.float() / shrink_factor).long()
@@ -518,7 +404,7 @@ class Prdimp(BaseSingleObjectTracker):
         br = (crop_center + crop_size // 2).long()
 
         # Shift the crop to inside
-        if mode == 'inside' or mode == 'inside_major':
+        if border_mode == 'inside' or border_mode == 'inside_major':
             img2_sz = torch.LongTensor([img.shape[3],
                                         img.shape[2]]).to(crop_center.device)
             shift = (-tl).clamp(0) - (br - img2_sz).clamp(0)
@@ -539,7 +425,7 @@ class Prdimp(BaseSingleObjectTracker):
             img_patch = F.pad(img,
                               (-tl[0].item(), br[0].item() - img.shape[3],
                                -tl[1].item(), br[1].item() - img.shape[2]),
-                              pad_mode)
+                              pad_border_mode)
         else:
             img_patch = F.pad(img,
                               (-tl[0].item(), br[0].item() - img.shape[3],
