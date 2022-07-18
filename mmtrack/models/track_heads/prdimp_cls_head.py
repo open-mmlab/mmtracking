@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -9,9 +9,9 @@ from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
 from mmengine.model import BaseModule
 from torch import Tensor, nn
 
-from mmtrack.core import InstanceList
 from mmtrack.core.filter import filter as filter_layer
 from mmtrack.core.utils import max2d
+from mmtrack.core.utils.typing import OptConfigType
 from mmtrack.registry import MODELS
 
 
@@ -39,15 +39,15 @@ class PrdimpClsHead(BaseModule):
     """
 
     def __init__(self,
-                 in_dim=1024,
-                 out_dim=512,
-                 filter_initializer=None,
-                 filter_optimizer=None,
-                 locate_cfg=None,
-                 update_cfg=None,
-                 optimizer_cfg=None,
-                 loss_cls=None,
-                 train_cfg=None,
+                 in_dim: int = 1024,
+                 out_dim: int = 512,
+                 filter_initializer: OptConfigType = None,
+                 filter_optimizer: OptConfigType = None,
+                 locate_cfg: OptConfigType = None,
+                 update_cfg: OptConfigType = None,
+                 optimizer_cfg: OptConfigType = None,
+                 loss_cls: OptConfigType = None,
+                 train_cfg: OptConfigType = None,
                  **kwargs):
         super().__init__()
         filter_size = filter_initializer.filter_size
@@ -79,7 +79,7 @@ class PrdimpClsHead(BaseModule):
                 m.bias.data.zero_()
         self.filter_initializer.init_weights()
 
-    def get_cls_feats(self, backbone_feats):
+    def get_cls_feats(self, backbone_feats: Tensor) -> Tensor:
         """Get features for classification.
 
         Args:
@@ -98,18 +98,15 @@ class PrdimpClsHead(BaseModule):
         return cls_feats
 
     def init_classifier(self,
-                        backbone_feats,
-                        target_bboxes,
-                        dropout_probs=None):
+                        backbone_feats: Tensor,
+                        target_bboxes: Tensor,
+                        dropout_probs: Optional[List] = None) -> List:
         """Initialize the filter and memory in the classifier.
 
         Args:
             backbone_feats (Tensor): The features from backbone.
             target_bboxes (Tensor): in [cx, cy, w, h] format.
             dropout_probs (list, optional): Defaults to None.
-
-        Returns:
-            _type_: _description_
         """
         with torch.no_grad():
             cls_feats = self.get_cls_feats(backbone_feats)
@@ -138,9 +135,7 @@ class PrdimpClsHead(BaseModule):
         # Initialize memory
         self.init_memory(cls_feats, target_bboxes)
 
-        return [cls_feats.shape[-1], cls_feats.shape[-2]]
-
-    def init_memory(self, aug_feats, target_bboxes):
+    def init_memory(self, aug_feats: Tensor, target_bboxes: Tensor):
         """Initialize the some properties about training samples in memory:
 
             - `bboxes` (N, 4): the gt_bboxes of all samples in [cx, cy, w, h]
@@ -176,9 +171,9 @@ class PrdimpClsHead(BaseModule):
             self.update_cfg['sample_memory_size'], *aug_feats.shape[1:])
         self.memo.training_samples[:self.num_init_samples] = aug_feats
 
-    def predict_by_feat(self, scores, sample_center, sample_scale, sample_size,
-                        prev_bbox):
-        # TODO: set the center of prev_bbox is equal to the sample_ceter
+    def predict_by_feat(self, scores: Tensor, sample_center: Tensor,
+                        sample_scale: Tensor, sample_size: Tensor,
+                        prev_bbox: Tensor) -> Union[Tensor, bool]:
         """Run the target localization based on the score map.
 
         Args:
@@ -284,7 +279,7 @@ class PrdimpClsHead(BaseModule):
         # 4. Normal target
         return target_disp, 'normal'
 
-    def forward(self, backbone_feats):
+    def forward(self, backbone_feats: Tensor) -> Union[Tensor, Tensor]:
         """Run classifier on the backbone features.
 
         Args:
@@ -300,11 +295,12 @@ class PrdimpClsHead(BaseModule):
         scores = filter_layer.apply_filter(feats, self.target_filter)
         return scores, feats
 
-    def update_memory(self, sample_x, target_bbox, learning_rate=None):
+    def update_memory(self,
+                      target_bbox: Tensor,
+                      learning_rate: Optional[float] = None):
         """Update the tracking state in memory.
 
         Args:
-            sample_x (Tensor): The feature from backbone.
             target_bbox (Tensor): of shape (1,4) in [x, y, w, h] format.
             learning_rate (float, optional): The learning rate about updating.
                 Defaults to None.
@@ -314,11 +310,12 @@ class PrdimpClsHead(BaseModule):
         self.memo.replace_ind = replace_ind
 
         # Update training samples and bboxes in memory
-        self.memo.training_samples[replace_ind:replace_ind + 1, ...] = sample_x
+        self.memo.training_samples[replace_ind:replace_ind + 1,
+                                   ...] = self.memo.sample_feat
         self.memo.bboxes[replace_ind, :] = target_bbox
         self.memo.num_samples += 1
 
-    def update_sample_weights(self, learning_rate=None):
+    def update_sample_weights(self, learning_rate=None) -> int:
         """Update the weights of samples in memory.
 
         Args:
@@ -372,14 +369,12 @@ class PrdimpClsHead(BaseModule):
         return replace_ind
 
     def update_classifier(self,
-                          train_feat,
-                          target_bbox,
-                          frame_num,
-                          hard_neg_flag=False):
+                          target_bbox: Tensor,
+                          frame_num: int,
+                          hard_neg_flag: Optional[bool] = False) -> None:
         """Update the classifier with the refined bbox.
 
         Args:
-            train_feat (Tensor): The feature from backbone.
             target_bbox (Tensor): of shape (1, 4) in [x, y, w, h] format.
             frame_num (int): The ID of frame.
             hard_neg_flag (bool, optional): Whether is the hard negative
@@ -392,7 +387,7 @@ class PrdimpClsHead(BaseModule):
 
         # Update the tracker memory
         if hard_neg_flag:
-            self.update_memory(train_feat, target_bbox, learning_rate)
+            self.update_memory(target_bbox, learning_rate)
 
         # Decide the number of iterations to run
         num_iters = 0
@@ -417,7 +412,8 @@ class PrdimpClsHead(BaseModule):
                     sample_weights=sample_weights)
 
     def predict(self, backbone_feats: Tuple[Tensor], prev_bbox: Tensor,
-                patch_coord: Tensor, sample_size: Tensor) -> InstanceList:
+                patch_coord: Tensor,
+                sample_size: Tensor) -> Union[Tensor, Tensor, Tensor, bool]:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
 
@@ -435,23 +431,24 @@ class PrdimpClsHead(BaseModule):
             scale_factor (Tensor): scale factor.
 
         Returns:
-            List[:obj:`InstanceData`]: Object tracking results of each image
-            after the post process. Each item usually contains following keys.
-                - scores (Tensor): Classification scores, has a shape (1, )
-                - bboxes (Tensor): Has a shape (1, 4),
-                  the last dimension 4 arrange as [x1, y1, x2, y2].
+            new_bbox_center:
+            scores_map:
+            test_feat:
+            flag:
         """
         sample_center = patch_coord[:, :2]
         sample_scales = (patch_coord[:, 2:] / sample_size).prod(dim=1).sqrt()
 
         with torch.no_grad():
-            scores_raw, test_feat = self(backbone_feats[-1])
-            scores = torch.softmax(
+            # ``self.memo.sample_feat`` are used to update the training samples
+            # in the memory on some conditions.
+            scores_raw, self.memo.sample_feat = self(backbone_feats[-1])
+            scores_map = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
         displacement_center, flag = self.predict_by_feat(
-            scores, sample_center, sample_scales, sample_size, prev_bbox)
+            scores_map, sample_center, sample_scales, sample_size, prev_bbox)
 
         new_bbox_center = sample_center[0, :] + displacement_center
 
-        return new_bbox_center, scores, test_feat, flag
+        return new_bbox_center, scores_map, flag

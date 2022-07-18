@@ -1,6 +1,6 @@
 _base_ = ['../../_base_/default_runtime.py']
 
-randomness = dict(seed=1, deterministic=True)
+randomness = dict(seed=1, deterministic=False)
 
 # model setting
 model = dict(
@@ -71,7 +71,7 @@ model = dict(
     test_cfg=dict(
         image_sample_size=22 * 16,
         feature_stride=16,
-        search_area_scale=6,
+        search_scale_factor=6,
         patch_max_scale_change=1.5,
         border_mode='inside_major',
         init_aug_cfg=dict(
