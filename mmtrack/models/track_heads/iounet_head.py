@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
@@ -8,7 +10,7 @@ from torch import Tensor
 
 from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
                                bbox_rel_to_rect)
-from mmtrack.core.utils import SampleList
+from mmtrack.core.utils import OptConfigType, SampleList
 from mmtrack.registry import MODELS
 from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
 
@@ -28,12 +30,12 @@ class LinearBlock(nn.Module):
     """
 
     def __init__(self,
-                 in_planes,
-                 out_planes,
-                 input_size,
-                 bias=True,
-                 batch_norm=True,
-                 relu=True):
+                 in_planes: int,
+                 out_planes: int,
+                 input_size: int,
+                 bias: bool = True,
+                 batch_norm: bool = True,
+                 relu: bool = True):
         super().__init__()
         self.linear = nn.Linear(
             in_planes * input_size * input_size, out_planes, bias=bias)
@@ -72,13 +74,13 @@ class IouNetHead(BaseModule):
     """
 
     def __init__(self,
-                 in_dim=(128, 256),
-                 pred_in_dim=(256, 256),
-                 pred_inter_dim=(256, 256),
-                 bbox_cfg=None,
-                 train_cfg=None,
-                 test_cfg=None,
-                 loss_bbox=None,
+                 in_dim: Tuple = (128, 256),
+                 pred_in_dim: Tuple = (256, 256),
+                 pred_inter_dim: Tuple = (256, 256),
+                 bbox_cfg: OptConfigType = None,
+                 train_cfg: OptConfigType = None,
+                 test_cfg: OptConfigType = None,
+                 loss_bbox: OptConfigType = None,
                  **kwargs):
         super().__init__()
         self.bbox_cfg = bbox_cfg
@@ -135,16 +137,17 @@ class IouNetHead(BaseModule):
                 m.weight.data.uniform_()
                 m.bias.data.zero_()
 
-    def predict_iou(self, modulations, feats, proposals):
+    def predict_iou(self, modulations: Tuple[Tensor], feats: Tensor,
+                    proposals: Tensor) -> Tensor:
         """Predicts IoU for the give proposals.
 
         Args:
-            modulations (tuple(Tensor)): contains the features from two layers.
+            modulations (Tuple(Tensor)): contains the features from two layers.
                 The inner tensors are of shape (bs, c, 1, 1)
-            feats (tuple(Tensor)):  IoU features for test images.
+            feats (Tuple(Tensor)):  IoU features for test images.
                 The inner tensors are of shape (bs, c, h, w).
-            proposals:  Proposal boxes for which the IoU will be predicted
-                (bs, num_proposals, 4).
+            proposals (Tuple[Tensor]):  Proposal boxes for which the IoU will
+                be predicted (bs, num_proposals, 4).
 
         Returns:
             Tensor: IoU between the proposals with the groundtruth boxes. It's
@@ -191,14 +194,15 @@ class IouNetHead(BaseModule):
 
         return iou_pred
 
-    def get_modulation(self, feats, bboxes):
+    def get_modulation(self, feats: Tuple[Tensor],
+                       bboxes: Tensor) -> Tuple[Tensor, Tensor]:
         """Get modulation vectors for the targets in the search branch.
 
         Args:
             feats (tuple(Tensor)): Backbone features from template branch.
                 It's of shape (bs, c, h, w).
-            bboxes: Target boxes (x1, y1, x2, y2) in image coords in the
-                template branch. It's of shape (bs, 4).
+            bboxes (Tensor): Target boxes (x1, y1, x2, y2) in image coords in
+                the template branch. It's of shape (bs, 4).
 
         Returns:
             fc34_3_temp (Tensor): of shape (bs, c, 1, 1).
@@ -231,7 +235,7 @@ class IouNetHead(BaseModule):
 
         return fc34_3_temp, fc34_4_temp
 
-    def forward(self, feats):
+    def forward(self, feats: Tuple[Tensor]) -> Tuple[Tensor, Tensor]:
         """Get IoU prediction features from a 4 or 5 dimensional backbone
         input.
 
@@ -255,7 +259,7 @@ class IouNetHead(BaseModule):
 
         return conv3_search, conv4_search
 
-    def init_iou_net(self, iou_backbone_feats, bboxes):
+    def init_iou_net(self, iou_backbone_feats: Tensor, bboxes: Tensor):
         """Initialize the IoUNet with feature are from the 'layer2' and
         'layer3' of backbone.
 
@@ -269,7 +273,8 @@ class IouNetHead(BaseModule):
             self.iou_modulation = self.get_modulation(iou_backbone_feats,
                                                       bboxes)
 
-    def optimize_bboxes(self, iou_features, init_bboxes):
+    def optimize_bboxes(self, iou_features: Tuple[Tensor],
+                        init_bboxes: Tensor) -> Tuple[Tensor, Tensor]:
         """Optimize the bboxes.
 
         Args:
@@ -318,7 +323,8 @@ class IouNetHead(BaseModule):
         return output_bboxes.view(-1, 4), iou_outputs.detach().view(-1)
 
     def predict(self, backbone_feats: Tensor, batch_data_samples: SampleList,
-                init_bbox: Tensor, sample_center: Tensor, scale_factor: float):
+                init_bbox: Tensor, sample_center: Tensor,
+                scale_factor: float) -> Tensor:
         """Refine the target bounding box.
 
         Args:
@@ -326,13 +332,12 @@ class IouNetHead(BaseModule):
                 formmat.
             backbone_feats (tuple(Tensor)): of shape (1, c, h, w)
             sample_center (Tensor): The center of the cropped
-                sample on the original image. It's of shape (1,2) in [x, y]
-                format.
+                sample on the original image. It's in [x, y] format.
             scale_factor (float): The size ratio of the cropped patch to the
                 resized image.
 
         Returns:
-            Tensor: new target bbox in [cx, cy, w, h] format.
+            Tensor: The refined target bbox in [cx, cy, w, h] format.
         """
         init_bbox = init_bbox.squeeze()
         sample_center = sample_center.squeeze()
@@ -343,18 +348,19 @@ class IouNetHead(BaseModule):
                                     scale_factor)
 
     def predict_by_feat(self, iou_features: Tensor, init_bbox: Tensor,
-                        sample_center: Tensor, scale_factor: Tensor):
-        """_summary_
+                        sample_center: Tensor, scale_factor: Tensor) -> Tensor:
+        """Refine the target bounding box.
 
         Args:
-            init_bbox (Tensor): _description_
-            iou_features (Tensor): _description_
-            sample_center (Tensor): _description_
-            sample_size (Tensor): _description_
-            scale_factor (Tensor): _description_
+            init_bbox (Tensor): The init target bbox.
+            iou_features (Tensor): The features for IoU prefiction.
+            sample_center (Tensor): The coordinate of the sample center based
+                on the original image.
+            scale_factor (float): The size ratio of the cropped patch to the
+                resized image.
 
         Returns:
-            _type_: _description_
+            Tensor: The refined target bbox in [cx, cy, w, h] format.
         """
 
         # Generate some random initial boxes based on the `init_bbox`
@@ -383,17 +389,20 @@ class IouNetHead(BaseModule):
                                        scale_factor)
 
     def _bbox_post_process(self, out_bboxes: Tensor, out_ious: Tensor,
-                           sample_center: Tensor, scale_factor: float):
-        """_summary_
+                           sample_center: Tensor,
+                           scale_factor: float) -> Tensor:
+        """The post process about bbox.
 
         Args:
-            out_bboxes (Tensor): _description_
-            out_ious (Tensor): _description_
-            sample_center (Tensor): _description_
-            scale_factor (float): _description_
+            out_bboxes (Tensor): The several optimized bboxes.
+            out_ious (Tensor): The IoUs about the optimized bboxes.
+            sample_center (Tensor): The coordinate of the sample center based
+                on the original image.
+            scale_factor (float): The size ratio of the cropped patch to the
+                resized image.
 
         Returns:
-            _type_: _description_
+            Tensor: The refined target bbox in [cx, cy, w, h] format.
         """
         # Remove weird boxes according to the ratio of aspect
         out_bboxes[:, 2:].clamp_(1)
