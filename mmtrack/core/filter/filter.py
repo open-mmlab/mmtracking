@@ -1,9 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # The codes are modified from https://github.com/visionml/pytracking/blob/master/ltr/models/layers/filter.py # noqa: E501
 import torch.nn.functional as F
+from torch import Tensor
 
 
-def apply_filter(feat, filter):
+def apply_filter(feat: Tensor, filter: Tensor) -> Tensor:
     """Applies the filter on the input features.
 
     The number of groups is automatically calculated.
@@ -31,7 +32,10 @@ def apply_filter(feat, filter):
     return scores
 
 
-def apply_feat_transpose(feat, activation, filter_size_hw, training=True):
+def apply_feat_transpose(feat: Tensor,
+                         activation: Tensor,
+                         filter_size_hw: Tensor,
+                         training: bool = True) -> Tensor:
     """The transposed operation of `apply_filter` w.r.t the filter. It can be
     used to compute the filter gradient. There are two implements: the one
     forwards slowly and backwards fast, which used in training, and the other
@@ -51,7 +55,7 @@ def apply_feat_transpose(feat, activation, filter_size_hw, training=True):
             implementation is chose according to this.
 
     Returns:
-        (Tensor). There are two possible shape in the
+        Tensor. There are two possible shape in the
             different mode:
             - training mode: of shape (bs, c, filter_h, fiter_w).
             - test mode: of shape (1, c, filter_h, fiter_w).

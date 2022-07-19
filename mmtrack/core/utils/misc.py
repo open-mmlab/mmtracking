@@ -5,6 +5,7 @@ from typing import List, Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 
 from mmtrack.core import TrackDataSample
 
@@ -104,7 +105,7 @@ def convert_data_sample_type(
     return ref_data_samples, ref_metainfos
 
 
-def max2d(input):
+def max2d(input: Tensor) -> Tuple[Tensor, Tensor]:
     """Computes the value and position of maximum in the last two dimensions.
 
     Args:

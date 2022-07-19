@@ -1,9 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
+from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
 from mmengine.model import BaseModule
+from torch import Tensor
 
 from mmtrack.core.filter import filter as filter_layer
 from mmtrack.registry import MODELS
@@ -35,14 +37,14 @@ class PrDiMPSteepestDescentNewton(BaseModule):
     """
 
     def __init__(self,
-                 num_iters=1,
-                 feat_stride=16,
-                 init_step_length=1.0,
-                 init_filter_regular=1e-2,
-                 gauss_sigma=1.0,
-                 min_filter_regular=1e-3,
-                 alpha_eps=0.0,
-                 label_thres=0.0):
+                 num_iters: int = 1,
+                 feat_stride: int = 16,
+                 init_step_length: float = 1.0,
+                 init_filter_regular: float = 1e-2,
+                 gauss_sigma: float = 1.0,
+                 min_filter_regular: float = 1e-3,
+                 alpha_eps: float = 0.0,
+                 label_thres: float = 0.0):
         super().__init__()
 
         self.num_iters = num_iters
@@ -55,7 +57,8 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         self.alpha_eps = alpha_eps
         self.label_thres = label_thres
 
-    def gen_label_density(self, center_yx, output_size_hw):
+    def gen_label_density(self, center_yx: Tensor,
+                          output_size_hw: Tensor) -> Tensor:
         """Generate label density.
 
         Args:
@@ -100,11 +103,11 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         return gauss_density
 
     def forward(self,
-                filter,
-                feat,
-                bboxes,
-                num_iters=None,
-                sample_weights=None):
+                filter: Tensor,
+                feat: Tensor,
+                bboxes: Tensor,
+                num_iters: Optional[int] = None,
+                sample_weights: Optional[Tensor] = None) -> Tuple[Tensor, ...]:
         """Runs the optimizer module.
 
         Note that [] denotes an optional dimension. Generally speaking, inputs
@@ -206,8 +209,9 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         else:
             return filter
 
-    def get_step_length(self, feat, sample_weights, scores, filter_grad,
-                        filter_regular):
+    def get_step_length(self, feat: Tensor, sample_weights: Tensor,
+                        scores: Tensor, filter_grad: Tensor,
+                        filter_regular: Tensor) -> Tensor:
         """Compute the step length of updating the filter.
 
         Args:
@@ -245,8 +249,9 @@ class PrDiMPSteepestDescentNewton(BaseModule):
 
         return alpha
 
-    def _compute_loss(self, scores, sample_weights, label_density, filter,
-                      filter_regular):
+    def _compute_loss(self, scores: Tensor, sample_weights: Tensor,
+                      label_density: Tensor, filter: Tensor,
+                      filter_regular: Tensor) -> Tensor:
         """Compute loss in the box optimization.
 
         Args:
