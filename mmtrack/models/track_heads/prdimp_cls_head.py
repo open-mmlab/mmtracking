@@ -345,12 +345,12 @@ class PrdimpClsHead(BaseModule):
 
         Args:
             scores (Tensor): It's of shape (1, h, w) or (h, w).
+            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
             sample_center (Tensor): The center of the cropped
                 sample on the original image. It's of shape (1,2) or (2,) in
                 [x, y] format.
             scale_factor (float): The scale of the cropped sample.
                 It's of shape (1,) when it's a tensor.
-            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
 
         Return:
             Tensor: The displacement of the target to the center of original
