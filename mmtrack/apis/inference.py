@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import copy
 import logging
 import os
 import tempfile
@@ -8,7 +9,6 @@ import mmcv
 import numpy as np
 import torch
 from mmcv.ops import RoIPool
-from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 from mmengine.dataset import Compose
 from mmengine.logging import MMLogger
@@ -47,8 +47,6 @@ def init_model(config: Union[str, mmcv.Config],
                         f'but got {type(config)}')
     if cfg_options is not None:
         config.merge_from_dict(cfg_options)
-    if 'detector' in config.model:
-        config.model.detector.pretrained = None
     model = MODELS.build(config.model)
 
     if not verbose_init_params:
@@ -87,47 +85,34 @@ def init_model(config: Union[str, mmcv.Config],
     return model
 
 
-def inference_mot(model, img, frame_id):
+def inference_mot(model: nn.Module, img: np.ndarray,
+                  frame_id: int) -> SampleList:
     """Inference image(s) with the mot model.
 
     Args:
         model (nn.Module): The loaded mot model.
-        img (str | ndarray): Either image name or loaded image.
+        img (np.ndarray): Loaded image.
         frame_id (int): frame id.
 
     Returns:
-        dict[str : ndarray]: The tracking results.
+        SampleList: The tracking data samples.
     """
     cfg = model.cfg
-    device = next(model.parameters()).device  # model device
-    # prepare data
-    if isinstance(img, np.ndarray):
-        # directly add img
-        data = dict(img=img, img_info=dict(frame_id=frame_id), img_prefix=None)
-        cfg = cfg.copy()
-        # set loading pipeline type
-        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
-    else:
-        # add information into dict
-        data = dict(
-            img_info=dict(filename=img, frame_id=frame_id), img_prefix=None)
-    # build the data pipeline
-    test_pipeline = Compose(cfg.data.test.pipeline)
+    data = dict(
+        img=img.astype(np.float32), frame_id=frame_id, ori_shape=img.shape[:2])
+    # remove the "LoadImageFromFile" and "LoadTrackAnnotations" in pipeline
+    test_pipeline = Compose(cfg.test_dataloader.dataset.pipeline[2:])
     data = test_pipeline(data)
-    data = collate([data], samples_per_gpu=1)
-    if next(model.parameters()).is_cuda:
-        # scatter to specified GPU
-        data = scatter(data, [device])[0]
-    else:
+
+    if not next(model.parameters()).is_cuda:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-        # just get the actual data from DataContainer
-        data['img_metas'] = data['img_metas'][0].data
+
     # forward the model
     with torch.no_grad():
-        result = model.test_step(data)
+        result = model.test_step([data])
     return result
 
 
@@ -166,10 +151,12 @@ def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
     return result
 
 
-def inference_vid(model,
-                  image,
-                  frame_id,
-                  ref_img_sampler=dict(frame_stride=10, num_left_ref_imgs=10)):
+def inference_vid(
+    model: nn.Module,
+    image: np.ndarray,
+    frame_id: int,
+    ref_img_sampler: dict = dict(frame_stride=2, num_left_ref_imgs=10)
+) -> SampleList:
     """Inference image with the video object detector.
 
     Args:
@@ -181,62 +168,57 @@ def inference_vid(model,
             dict(frame_stride=2, num_left_ref_imgs=10).
 
     Returns:
-        dict[str : ndarray]: The detection results.
+        SampleList: The detection results.
     """
     cfg = model.cfg
-    device = next(model.parameters()).device  # model device
 
-    if cfg.data.test.pipeline[0].type == 'LoadImageFromFile':
+    first_transform = cfg.test_dataloader.dataset.pipeline[0]
+    if first_transform.type == 'LoadImageFromFile':
         data = dict(
             img=image.astype(np.float32).copy(),
-            img_info=dict(frame_id=frame_id))
-
+            frame_id=frame_id,
+            ori_shape=image.shape[:2])
         # remove the "LoadImageFromFile" in pipeline
-        test_pipeline = Compose(cfg.data.test.pipeline[1:])
-
-    elif cfg.data.test.pipeline[0].type == 'LoadMultiImagesFromFile':
-        data = [
-            dict(
-                img=image.astype(np.float32).copy(),
-                img_info=dict(frame_id=frame_id))
-        ]
+        test_pipeline = Compose(cfg.test_dataloader.dataset.pipeline[1:])
+    elif first_transform.type == 'TransformBroadcaster':
+        assert first_transform.transforms[0].type == 'LoadImageFromFile'
+        # Only used under video detector of fgfa style.
+        data = dict(
+            img=[image.astype(np.float32).copy()],
+            frame_id=[frame_id],
+            ori_shape=[image.shape[:2]])
 
         num_left_ref_imgs = ref_img_sampler.get('num_left_ref_imgs')
         frame_stride = ref_img_sampler.get('frame_stride')
         if frame_id == 0:
             for i in range(num_left_ref_imgs):
-                one_ref_img = dict(
-                    img=image.astype(np.float32).copy(),
-                    img_info=dict(frame_id=frame_id))
-                data.append(one_ref_img)
+                data['img'].append(image.astype(np.float32).copy())
+                data['frame_id'].append(frame_id)
+                data['ori_shape'].append(image.shape[:2])
         elif frame_id % frame_stride == 0:
-            one_ref_img = dict(
-                img=image.astype(np.float32).copy(),
-                img_info=dict(frame_id=frame_id))
-            data.append(one_ref_img)
-
-        # remove the "LoadMultiImagesFromFile" in pipeline
-        test_pipeline = Compose(cfg.data.test.pipeline[1:])
-
+            data['img'].append(image.astype(np.float32).copy())
+            data['frame_id'].append(frame_id)
+            data['ori_shape'].append(image.shape[:2])
+        # In order to pop the LoadImageFromFile, test_pipeline[0] is
+        # `TransformBroadcaster` and test_pipeline[0].transforms[0]
+        # is 'LoadImageFromFile'.
+        test_pipeline = copy.deepcopy(cfg.test_dataloader.dataset.pipeline)
+        test_pipeline[0].transforms.pop(0)
+        test_pipeline = Compose(test_pipeline)
     else:
         print('Not supported loading data pipeline type: '
-              f'{cfg.data.test.pipeline[0].type}')
+              f'{first_transform.type}')
         raise NotImplementedError
 
     data = test_pipeline(data)
-    data = collate([data], samples_per_gpu=1)
-    if next(model.parameters()).is_cuda:
-        # scatter to specified GPU
-        data = scatter(data, [device])[0]
-    else:
+
+    if not next(model.parameters()).is_cuda:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-        # just get the actual data from DataContainer
-        data['img_metas'] = data['img_metas'][0].data
 
     # forward the model
     with torch.no_grad():
-        result = model.test_step(data)
+        result = model.test_step([data])
     return result
