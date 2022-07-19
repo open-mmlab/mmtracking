@@ -312,14 +312,18 @@ class PrdimpClsHead(BaseModule):
         tracking results on the features of the upstream network.
 
         Args:
+            backbone_feats (Tuple[Tensor]): The features from backbone.
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
+            sample_center (Tensor): The coordinate of the sample center based
+                on the original image.
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
-            scale_factor (Tensor): scale factor.
+            scale_factor (float): scale factor.
 
         Returns:
-            new_bbox_center:
-            scores_map:
-            test_feat:
-            flag:
+            new_bbox_center (Tensor): The center of the new bbox.
+            scores_map (Tensor): The score map from the classifier.
+            state (Tensor): The tracking state.
         """
         with torch.no_grad():
             # ``self.memo.sample_feat`` is used to update the training samples
@@ -328,16 +332,16 @@ class PrdimpClsHead(BaseModule):
             scores_map = torch.softmax(
                 scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
-        new_bbox_center, flag = self.predict_by_feat(scores_map, prev_bbox,
-                                                     sample_center,
-                                                     scale_factor)
+        new_bbox_center, state = self.predict_by_feat(scores_map, prev_bbox,
+                                                      sample_center,
+                                                      scale_factor)
 
-        return new_bbox_center, scores_map, flag
+        return new_bbox_center, scores_map, state
 
     def predict_by_feat(self, scores: Tensor, prev_bbox: Tensor,
                         sample_center: Tensor,
                         scale_factor: float) -> Union[Tensor, bool]:
-        """Run the target localization based on the score map.
+        """Track `prev_bbox` to current frame based on the output of network.
 
         Args:
             scores (Tensor): It's of shape (1, h, w) or (h, w).
@@ -351,7 +355,7 @@ class PrdimpClsHead(BaseModule):
         Return:
             Tensor: The displacement of the target to the center of original
                 image
-            bool: The tracking state
+            bool: The tracking state.
         """
         sample_center = sample_center.squeeze()
         scores = scores.squeeze()
@@ -435,7 +439,7 @@ class PrdimpClsHead(BaseModule):
         # 3. There is a hard negative object
         if (second_max_score > self.locate_cfg['hard_neg_thres'] * max_score
                 and second_max_score > self.locate_cfg['no_target_min_score']):
-            return target_disp + sample_center[0, :], 'hard_negative'
+            return target_disp + sample_center, 'hard_negative'
 
         # 4. Normal target
         return target_disp + sample_center, 'normal'

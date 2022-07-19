@@ -135,7 +135,7 @@ class IouNetHead(BaseModule):
                 m.weight.data.uniform_()
                 m.bias.data.zero_()
 
-    def predict_iou(self, modulations, feats, proposals):
+    def predict_iou(self, modulations, feats, proposals) -> Tensor:
         """Predicts IoU for the give proposals.
 
         Args:
@@ -326,8 +326,7 @@ class IouNetHead(BaseModule):
                 formmat.
             backbone_feats (tuple(Tensor)): of shape (1, c, h, w)
             sample_center (Tensor): The center of the cropped
-                sample on the original image. It's of shape (1,2) in [x, y]
-                format.
+                sample on the original image. It's in [x, y] format.
             scale_factor (float): The size ratio of the cropped patch to the
                 resized image.
 
@@ -344,17 +343,18 @@ class IouNetHead(BaseModule):
 
     def predict_by_feat(self, iou_features: Tensor, init_bbox: Tensor,
                         sample_center: Tensor, scale_factor: Tensor):
-        """_summary_
+        """Refine the target bounding box.
 
         Args:
-            init_bbox (Tensor): _description_
-            iou_features (Tensor): _description_
-            sample_center (Tensor): _description_
-            sample_size (Tensor): _description_
-            scale_factor (Tensor): _description_
+            init_bbox (Tensor): The init target bbox.
+            iou_features (Tensor): The features for IoU prefiction.
+            sample_center (Tensor): The coordinate of the sample center based
+                on the original image.
+            scale_factor (float): The size ratio of the cropped patch to the
+                resized image.
 
         Returns:
-            _type_: _description_
+            Tensor: The refined bbox.
         """
 
         # Generate some random initial boxes based on the `init_bbox`
@@ -383,17 +383,20 @@ class IouNetHead(BaseModule):
                                        scale_factor)
 
     def _bbox_post_process(self, out_bboxes: Tensor, out_ious: Tensor,
-                           sample_center: Tensor, scale_factor: float):
-        """_summary_
+                           sample_center: Tensor,
+                           scale_factor: float) -> Tensor:
+        """The post process about bbox.
 
         Args:
-            out_bboxes (Tensor): _description_
-            out_ious (Tensor): _description_
-            sample_center (Tensor): _description_
-            scale_factor (float): _description_
+            out_bboxes (Tensor): The several optimized bboxes.
+            out_ious (Tensor): The IoUs about the optimized bboxes.
+            sample_center (Tensor): The coordinate of the sample center based
+                on the original image.
+            scale_factor (float): The size ratio of the cropped patch to the
+                resized image.
 
         Returns:
-            _type_: _description_
+            Tensor: The refined bbox.
         """
         # Remove weird boxes according to the ratio of aspect
         out_bboxes[:, 2:].clamp_(1)
