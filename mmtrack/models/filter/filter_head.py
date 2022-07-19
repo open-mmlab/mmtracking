@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 from mmengine.model import BaseModule
-from torch import nn
+from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
 from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
@@ -18,7 +18,10 @@ class FilterClassifierInitializer(BaseModule):
         feature_stride (int, optional):  Input feature stride. Defaults to 16.
     """
 
-    def __init__(self, filter_size=4, feature_dim=512, feature_stride=16):
+    def __init__(self,
+                 filter_size: int = 4,
+                 feature_dim: int = 512,
+                 feature_stride: int = 16):
         super().__init__()
         self.filter_conv = nn.Conv2d(
             feature_dim, feature_dim, kernel_size=3, padding=1)
@@ -36,7 +39,7 @@ class FilterClassifierInitializer(BaseModule):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def forward(self, feat, bboxes):
+    def forward(self, feat: Tensor, bboxes: Tensor) -> Tensor:
         """Runs the initializer module. Note that [] denotes an optional
         dimension.
 

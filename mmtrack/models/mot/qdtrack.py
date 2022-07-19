@@ -132,7 +132,7 @@ class QDTrack(BaseMultiObjectTracker):
     def predict(self,
                 batch_inputs: Dict[str, Tensor],
                 batch_data_samples: SampleList,
-                rescale: bool = False,
+                rescale: bool = True,
                 **kwargs) -> SampleList:
         """Predict results from a batch of inputs and data samples with post-
         processing.

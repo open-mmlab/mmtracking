@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -101,7 +101,7 @@ class PrdimpClsHead(BaseModule):
     def init_classifier(self,
                         backbone_feats: Tensor,
                         target_bboxes: Tensor,
-                        dropout_probs: Optional[List] = None) -> List:
+                        dropout_probs: Optional[List] = None):
         """Initialize the filter and memory in the classifier.
 
         Args:
@@ -172,7 +172,7 @@ class PrdimpClsHead(BaseModule):
             self.update_cfg['sample_memory_size'], *aug_feats.shape[1:])
         self.memo.training_samples[:self.num_init_samples] = aug_feats
 
-    def forward(self, backbone_feats: Tensor) -> Union[Tensor, Tensor]:
+    def forward(self, backbone_feats: Tensor) -> Tuple[Tensor, Tensor]:
         """Run classifier on the backbone features.
 
         Args:
@@ -264,7 +264,7 @@ class PrdimpClsHead(BaseModule):
     def update_classifier(self,
                           target_bbox: Tensor,
                           frame_num: int,
-                          hard_neg_flag: Optional[bool] = False) -> None:
+                          hard_neg_flag: Optional[bool] = False):
         """Update the classifier with the refined bbox.
 
         Args:
@@ -307,7 +307,7 @@ class PrdimpClsHead(BaseModule):
     def predict(self, backbone_feats: Tuple[Tensor],
                 batch_data_samples: SampleList, prev_bbox: Tensor,
                 sample_center: Tensor,
-                scale_factor: float) -> Union[Tensor, Tensor, bool]:
+                scale_factor: float) -> Tuple[Tensor, Tensor, bool]:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
 
@@ -340,17 +340,17 @@ class PrdimpClsHead(BaseModule):
 
     def predict_by_feat(self, scores: Tensor, prev_bbox: Tensor,
                         sample_center: Tensor,
-                        scale_factor: float) -> Union[Tensor, bool]:
+                        scale_factor: float) -> Tuple[Tensor, bool]:
         """Track `prev_bbox` to current frame based on the output of network.
 
         Args:
             scores (Tensor): It's of shape (1, h, w) or (h, w).
+            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
             sample_center (Tensor): The center of the cropped
                 sample on the original image. It's of shape (1,2) or (2,) in
                 [x, y] format.
             scale_factor (float): The scale of the cropped sample.
                 It's of shape (1,) when it's a tensor.
-            prev_bbox (Tensor): It's of shape (4,) in [cx, cy, w, h] format.
 
         Return:
             Tensor: The displacement of the target to the center of original

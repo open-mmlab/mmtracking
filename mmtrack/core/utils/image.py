@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional, Tuple
+
 import cv2
 import numpy as np
 import torch
@@ -57,18 +59,18 @@ def crop_image(image, crop_region, crop_size, padding=(0, 0, 0)):
     return crop_image
 
 
-def rotate_image(img,
-                 angle,
-                 center=None,
-                 scale=1.0,
-                 border_mode='constant',
-                 border_value=0,
-                 interpolation='bilinear',
-                 auto_bound=False):
+def rotate_image(img: np.ndarray,
+                 angle: float,
+                 center: Optional[Tuple[float, float]] = None,
+                 scale: float = 1.0,
+                 border_mode: str = 'constant',
+                 border_value: int = 0,
+                 interpolation: str = 'bilinear',
+                 auto_bound: bool = False) -> np.ndarray:
     """Rotate an image.
 
     Args:
-        img (ndarray): of shape (H, W, 3).
+        img (np.ndarray): of shape (H, W, 3).
         angle (float): Rotation angle in degrees, positive values mean
             clockwise rotation.
         center (tuple[float], optional): Center point (w, h) of the rotation in
@@ -82,7 +84,7 @@ def rotate_image(img,
         auto_bound (bool): Whether to adjust the image size to cover the whole
             rotated image.
     Returns:
-        ndarray: The rotated image.
+        np.ndarray: The rotated image.
     """
     if center is not None and auto_bound:
         raise ValueError('`auto_bound` conflicts with `center`')

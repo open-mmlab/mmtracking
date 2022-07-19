@@ -111,7 +111,7 @@ class Prdimp(BaseSingleObjectTracker):
     def img_shift_crop(self,
                        img: Tensor,
                        output_size: Optional[List] = None,
-                       shift: Optional[List] = None):
+                       shift: Optional[List] = None) -> Tensor:
         """Shift and crop the image.
 
         Args:
@@ -120,7 +120,7 @@ class Prdimp(BaseSingleObjectTracker):
             shift (list): in [x, y] fotmat.
 
         Returns:
-            Tensor: Output image.
+            Tensor: Augmented image.
         """
         img_size = [img.shape[-1], img.shape[-2]]
         # img_size = img.shape[-2:]
@@ -143,7 +143,7 @@ class Prdimp(BaseSingleObjectTracker):
                      'replicate')
 
     def gen_aug_imgs_bboxes(self, img: Tensor, init_bbox: Tensor,
-                            output_size: Tensor):
+                            output_size: Tensor) -> Tensor:
         """Perform data augmentation.
 
         Args:
@@ -222,7 +222,7 @@ class Prdimp(BaseSingleObjectTracker):
         return aug_imgs, aug_bboxes
 
     def generate_bbox(self, bbox: Tensor, sample_center: Tensor,
-                      resize_factor: float):
+                      resize_factor: float) -> Tensor:
         """All inputs are based in original image coordinates and the outputs
         are based on the resized cropped image sample.
 
@@ -314,13 +314,14 @@ class Prdimp(BaseSingleObjectTracker):
 
         return result
 
-    def get_cropped_img(self,
-                        img: Tensor,
-                        target_bbox: Tensor,
-                        search_scale_factor: float,
-                        output_size: Optional[Tensor] = None,
-                        border_mode: str = 'replicate',
-                        max_scale_change: Optional[float] = None):
+    def get_cropped_img(
+            self,
+            img: Tensor,
+            target_bbox: Tensor,
+            search_scale_factor: float,
+            output_size: Optional[Tensor] = None,
+            border_mode: str = 'replicate',
+            max_scale_change: Optional[float] = None) -> Tuple[Tensor, Tensor]:
         """Get the cropped patch based on the original image.
 
         Args:
@@ -338,8 +339,8 @@ class Prdimp(BaseSingleObjectTracker):
                 Defaults to False.
 
         Returns:
-            img_patch: of (1, c, h, w) shape.
-            patch_coord: of (1, 4) shape in [cx, cy, w, h] format.
+            img_patch (Tensor): of (1, c, h, w) shape.
+            patch_coord (Tensor): of (1, 4) shape in [cx, cy, w, h] format.
         """
         crop_size = target_bbox[2:4].prod().sqrt() * search_scale_factor
 

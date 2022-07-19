@@ -14,9 +14,10 @@ train_pipeline = [
             dict(type='LoadImageFromFile'),
             dict(type='LoadTrackAnnotations', with_instance_id=True),
             dict(
-                type='mmdet.Resize',
+                type='mmdet.RandomResize',
+                resize_type='mmdet.Resize',
                 scale=(1088, 1088),
-                scale_factor=(0.8, 1.2),
+                ratio_range=(0.8, 1.2),
                 keep_ratio=True,
                 clip_object_border=False),
             dict(type='mmdet.PhotoMetricDistortion')
@@ -60,7 +61,8 @@ train_dataloader = dict(
 
 # evaluator
 val_evaluator = [
-    dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity']),
-    dict(type='CocoVideoMetric', metric=['bbox'])
+    dict(type='CocoVideoMetric', metric=['bbox'], classwise=True),
+    dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
 ]
+
 test_evaluator = val_evaluator

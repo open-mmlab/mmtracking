@@ -1,6 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Optional
+
 import torch
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
+from torch import Tensor
 
 
 def quad2bbox_cxcywh(quad: torch.Tensor):
@@ -98,7 +101,8 @@ def bbox_cxcyah_to_xyxy(bboxes: torch.Tensor) -> torch.Tensor:
     return torch.cat(x1y1x2y2, dim=-1)
 
 
-def bbox_rect_to_rel(bboxes, size_norm=None):
+def bbox_rect_to_rel(bboxes: Tensor,
+                     size_norm: Optional[Tensor] = None) -> Tensor:
     """Convert standard rectangular parametrization of the bounding box.
 
         [x, y, w, h] to relative parametrization [cx/sw, cy/sh, log(w), log(h)]
@@ -108,6 +112,9 @@ def bbox_rect_to_rel(bboxes, size_norm=None):
         bboxes (Tensor): of shape (N, 4) in [x, y, w, h] format.
         size_norm (Tensor, optional): It contains values of [sw, sh] and it's
             of shape (N, 2).
+
+    Returns:
+        Tensor: The converted bbox.
     """
 
     c = bboxes[..., :2] + 0.5 * bboxes[..., 2:]
@@ -120,7 +127,8 @@ def bbox_rect_to_rel(bboxes, size_norm=None):
     return torch.cat((c_rel, sz_rel), dim=-1)
 
 
-def bbox_rel_to_rect(bboxes, size_norm=None):
+def bbox_rel_to_rect(bboxes: Tensor,
+                     size_norm: Optional[Tensor] = None) -> Tensor:
     """Inverts the effect of `bbox_rect_to_rel`.
 
     Args:
@@ -128,6 +136,9 @@ def bbox_rel_to_rect(bboxes, size_norm=None):
             format.
         size_norm (Tensor, optional): It contains values of [sw, sh] and it's
             of shape (N, 2).
+
+    Returns:
+        Tensor: The converted bbox.
     """
 
     sz = torch.exp(bboxes[..., 2:])
