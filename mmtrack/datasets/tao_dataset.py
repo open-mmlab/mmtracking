@@ -41,6 +41,7 @@ class TaoDataset(BaseVideoDataset):
         file_client = FileClient.infer_client(uri=self.ann_file)
         with file_client.get_local_path(self.ann_file) as local_path:
             coco = CocoVID(local_path)
+        self._metainfo['categories'] = coco.cats
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])

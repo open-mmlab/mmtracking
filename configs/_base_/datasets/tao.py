@@ -37,16 +37,18 @@ train_dataloader = dict(
     batch_size=2,
     num_workers=2,
     persistent_workers=True,
-    sampler=dict(type='DefaultSampler', shuffle=False),
+    sampler=dict(type='DefaultSampler', shuffle=True),
     batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
-    # TODO: wait mmdet.ClassBalancedDataset
     dataset=dict(
-        type=dataset_type,
-        data_root=data_root,
-        load_as_video=False,
-        metainfo=dict(CLASSES=data_root + 'annotations/tao_classes.txt'),
-        ann_file='annotations/lvisv0.5+coco_train.json',
-        pipeline=train_pipeline))
+        type='ClassBalancedDataset',
+        oversample_thr=1e-3,
+        dataset=dict(
+            type=dataset_type,
+            data_root=data_root,
+            load_as_video=False,
+            metainfo=dict(CLASSES=data_root + 'annotations/tao_classes.txt'),
+            ann_file='annotations/lvisv0.5+coco_train.json',
+            pipeline=train_pipeline)))
 val_dataloader = dict(
     batch_size=1,
     num_workers=2,
