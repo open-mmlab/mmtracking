@@ -7,9 +7,9 @@ from addict import Dict
 from mmengine.data import InstanceData
 from torch import Tensor
 
-from mmtrack.core.utils import (ConfigType, OptConfigType, SampleList,
-                                convert_data_sample_type)
 from mmtrack.registry import MODELS
+from mmtrack.utils import (ConfigType, OptConfigType, SampleList,
+                           convert_data_sample_type)
 from .base import BaseVideoDetector
 
 

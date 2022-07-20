@@ -3,12 +3,11 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import torch
-from mmdet.core.bbox.demodata import random_boxes
 from parameterized import parameterized
 
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.testing import demo_mm_inputs, get_model_cfg, random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestSORTTracker(TestCase):
@@ -21,7 +20,7 @@ class TestSORTTracker(TestCase):
     @parameterized.expand(
         ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
     def test_init(self, cfg_file):
-        cfg = _get_model_cfg(cfg_file)
+        cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
         tracker.kf = TASK_UTILS.build(cfg['motion'])
 
@@ -42,7 +41,7 @@ class TestSORTTracker(TestCase):
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 128, 128))
 
-        cfg = _get_model_cfg(cfg_file)
+        cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
         tracker.kf = TASK_UTILS.build(cfg['motion'])
 
@@ -52,7 +51,7 @@ class TestSORTTracker(TestCase):
 
         with torch.no_grad():
             for frame_id in range(3):
-                packed_inputs = _demo_mm_inputs(
+                packed_inputs = demo_mm_inputs(
                     batch_size=1, frame_id=frame_id, num_ref_imgs=0)
                 data_sample = packed_inputs[0]['data_sample']
                 data_sample.pred_det_instances = \

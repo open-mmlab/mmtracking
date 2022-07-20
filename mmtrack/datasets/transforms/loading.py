@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from mmdet.datasets.pipelines import LoadAnnotations as MMDet_LoadAnnotations
+from mmdet.datasets.transforms import LoadAnnotations as MMDet_LoadAnnotations
 
 from mmtrack.registry import TRANSFORMS
 

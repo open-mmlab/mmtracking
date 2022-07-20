@@ -5,13 +5,14 @@ import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmcv.runner import BaseModule, auto_fp16, force_fp32
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.structures.bbox.transforms import (bbox_cxcywh_to_xyxy,
+                                              bbox_xyxy_to_cxcywh)
 from mmengine.data import InstanceData
 from torch import Tensor
 
-from mmtrack.core import InstanceList, SampleList
-from mmtrack.core.track import depthwise_correlation
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.utils import InstanceList, SampleList
+from ..task_modules.track import depthwise_correlation
 
 
 @MODELS.register_module()

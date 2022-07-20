@@ -8,8 +8,8 @@ from mmcv.transforms import BaseTransform
 from mmcv.transforms.utils import cache_randomness
 from mmcv.utils import print_log
 
-from mmtrack.core import crop_image
 from mmtrack.registry import TRANSFORMS
+from mmtrack.utils import crop_image
 
 
 @TRANSFORMS.register_module()

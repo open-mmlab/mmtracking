@@ -4,12 +4,12 @@ from typing import List, Optional, Tuple
 import lap
 import numpy as np
 import torch
-from mmdet.core import bbox_overlaps
+from mmdet.structures.bbox import bbox_overlaps
 from mmengine.data import InstanceData
 
-from mmtrack.core import TrackDataSample
-from mmtrack.core.bbox import bbox_cxcyah_to_xyxy, bbox_xyxy_to_cxcyah
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.structures.bbox import bbox_cxcyah_to_xyxy, bbox_xyxy_to_cxcyah
 from .base_tracker import BaseTracker
 
 

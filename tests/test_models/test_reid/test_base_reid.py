@@ -4,10 +4,10 @@ from unittest import TestCase
 import torch
 from parameterized import parameterized
 
-from mmtrack.core import ReIDDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import ReIDDataSample
+from mmtrack.testing import get_model_cfg
 from mmtrack.utils import register_all_modules
-from ..utils import _get_model_cfg
 
 
 class TestBaseReID(TestCase):
@@ -20,7 +20,7 @@ class TestBaseReID(TestCase):
         'reid/resnet50_b32x8_MOT17.py',
     ])
     def test_forward(self, cfg_file):
-        model_cfg = _get_model_cfg(cfg_file)
+        model_cfg = get_model_cfg(cfg_file)
         model = MODELS.build(model_cfg)
         inputs = torch.rand(1, 4, 3, 256, 128)
         data_samples = [

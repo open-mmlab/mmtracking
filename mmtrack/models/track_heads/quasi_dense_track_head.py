@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from typing import List
 
-from mmdet.core import bbox2roi
+from mmdet.structures.bbox import bbox2roi
 from torch import Tensor
 
-from mmtrack.core.utils import InstanceList, SampleList
 from mmtrack.registry import MODELS
+from mmtrack.utils import InstanceList, SampleList
 from .roi_track_head import RoITrackHead
 
 

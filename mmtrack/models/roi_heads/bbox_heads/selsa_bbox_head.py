@@ -5,8 +5,8 @@ import torch.nn as nn
 from mmdet.models import ConvFCBBoxHead
 from torch import Tensor
 
-from mmtrack.core.utils import ConfigType
 from mmtrack.registry import MODELS
+from mmtrack.utils import ConfigType
 
 
 @MODELS.register_module()

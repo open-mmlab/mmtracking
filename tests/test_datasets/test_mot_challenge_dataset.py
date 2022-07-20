@@ -3,7 +3,7 @@ import os.path as osp
 from unittest import TestCase
 
 from mmtrack.datasets import MOTChallengeDataset
-from mmtrack.datasets.parsers import CocoVID
+from mmtrack.datasets.api_wrappers import CocoVID
 
 PREFIX = osp.join(osp.dirname(__file__), '../data')
 # This is a demo annotation file for MOTChallengeDataset

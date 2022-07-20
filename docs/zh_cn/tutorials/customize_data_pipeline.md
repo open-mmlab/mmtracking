@@ -58,7 +58,7 @@ class CocoVideoDataset(CocoDataset):
 
 ```python
 from mmdet.datasets.builder import PIPELINES
-from mmdet.datasets.pipelines import LoadImageFromFile
+from mmdet.datasets.transforms import LoadImageFromFile
 
 @PIPELINES.register_module()
 class LoadMultiImagesFromFile(LoadImageFromFile):

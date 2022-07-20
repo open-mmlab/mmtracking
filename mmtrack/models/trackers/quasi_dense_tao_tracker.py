@@ -2,12 +2,13 @@
 from typing import List, Tuple
 
 import torch
-from mmdet.core import bbox_overlaps
+from mmdet.structures.bbox import bbox_overlaps
 from mmengine.data import InstanceData
 from torch import Tensor
 
-from mmtrack.core import TrackDataSample, embed_similarity
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from ..task_modules.track import embed_similarity
 from .base_tracker import BaseTracker
 
 

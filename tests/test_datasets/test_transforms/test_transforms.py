@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from mmdet.core.bbox.demodata import random_boxes
 
 from mmtrack.datasets.transforms import (BrightnessAug, CropLikeSiamFC,
                                          GrayAug, SeqBboxJitter, SeqBlurAug,
                                          SeqColorAug, SeqCropLikeStark,
                                          SeqShiftScaleAug)
+from mmtrack.testing import random_boxes
 
 
 class TestCropLikeSiamFC:
