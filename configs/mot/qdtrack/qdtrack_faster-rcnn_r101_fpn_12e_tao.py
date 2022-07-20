@@ -13,6 +13,7 @@ train_dataloader = dict(
     dataset=dict(
         dataset=dict(
             data_root=data_root,
+            data_prefix=dict(img_path=''),
             load_as_video=True,
             metainfo=dict(CLASSES=(data_root + 'annotations/tao_classes.txt')),
             ann_file='annotations/train_482_classes.json',
