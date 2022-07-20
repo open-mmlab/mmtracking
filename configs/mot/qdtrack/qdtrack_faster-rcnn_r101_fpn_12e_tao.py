@@ -11,12 +11,13 @@ train_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
     dataset=dict(
-        data_root=data_root,
-        load_as_video=True,
-        metainfo=dict(CLASSES=(data_root + 'annotations/tao_classes.txt')),
-        ann_file='annotations/train_482_classes.json',
-        ref_img_sampler=dict(
-            num_ref_imgs=1, frame_range=[-1, 1], method='uniform')))
+        dataset=dict(
+            data_root=data_root,
+            load_as_video=True,
+            metainfo=dict(CLASSES=(data_root + 'annotations/tao_classes.txt')),
+            ann_file='annotations/train_482_classes.json',
+            ref_img_sampler=dict(
+                num_ref_imgs=1, frame_range=[-1, 1], method='uniform'))))
 
 # learning policy
 param_scheduler = [
