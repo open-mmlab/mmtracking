@@ -6,8 +6,8 @@ import numpy as np
 from mmengine.dataset import force_full_init
 from mmengine.fileio.file_client import FileClient
 
-from mmtrack.datasets.parsers import CocoVID
 from mmtrack.registry import DATASETS
+from .api_wrappers import CocoVID
 from .base_sot_dataset import BaseSOTDataset
 
 

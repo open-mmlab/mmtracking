@@ -4,11 +4,11 @@ from typing import List, Optional, Sequence, Tuple, Union
 import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform, to_tensor
-from mmdet.core.mask import BitmapMasks
+from mmdet.structures.mask import BitmapMasks
 from mmengine.data import InstanceData
 
-from mmtrack.core import ReIDDataSample, TrackDataSample
 from mmtrack.registry import TRANSFORMS
+from mmtrack.structures import ReIDDataSample, TrackDataSample
 
 
 @TRANSFORMS.register_module()

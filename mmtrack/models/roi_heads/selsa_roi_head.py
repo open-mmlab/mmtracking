@@ -1,12 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from typing import List, Tuple
 
-from mmdet.core import bbox2roi
 from mmdet.models import StandardRoIHead
+from mmdet.structures.bbox import bbox2roi
 from torch import Tensor
 
-from mmtrack.core.utils.typing import ConfigType, InstanceList, SampleList
 from mmtrack.registry import MODELS
+from mmtrack.utils import ConfigType, InstanceList, SampleList
 
 
 @MODELS.register_module()

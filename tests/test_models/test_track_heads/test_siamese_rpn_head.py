@@ -7,10 +7,10 @@ import numpy as np
 import torch
 from mmengine.data import InstanceData
 
-from mmtrack.core import TrackDataSample
 from mmtrack.models.track_heads import CorrelationHead, SiameseRPNHead
+from mmtrack.structures import TrackDataSample
+from mmtrack.testing import random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _rand_bboxes
 
 
 class TestCorrelationHead(TestCase):
@@ -81,8 +81,7 @@ class TestSiameseRPNHead(TestCase):
         assert bbox_weights.shape == (25 * 25 * 5, 4)
 
     def test_get_positive_pair_targets(self):
-        gt_bboxes = torch.from_numpy(_rand_bboxes(self.rng, 1, 10,
-                                                  10)).type(torch.float32)
+        gt_bboxes = random_boxes(1, 50)
         gt_instances = InstanceData()
         gt_instances.bboxes = gt_bboxes
         gt_instances.labels = torch.Tensor([True]).long()
@@ -95,8 +94,7 @@ class TestSiameseRPNHead(TestCase):
         assert bbox_weights.shape == (1, 25 * 25 * 5, 4)
 
     def test_get_negative_pair_targets(self):
-        gt_bboxes = torch.from_numpy(_rand_bboxes(self.rng, 1, 10,
-                                                  10)).type(torch.float32)
+        gt_bboxes = random_boxes(1, 50)
         gt_instances = InstanceData()
         gt_instances.bboxes = gt_bboxes
         gt_instances.labels = torch.Tensor([False]).long()
@@ -123,8 +121,7 @@ class TestSiameseRPNHead(TestCase):
 
     def test_get_targets(self):
         batch_gt_instances = []
-        gt_bboxes = torch.from_numpy(_rand_bboxes(self.rng, 2, 10,
-                                                  10)).type(torch.float32)
+        gt_bboxes = random_boxes(2, 50)
         gt_labels = torch.randint(2, (2, 1)).long()
         for i in range(2):
             gt_instances = InstanceData()
@@ -148,8 +145,7 @@ class TestSiameseRPNHead(TestCase):
             torch.rand(1, 1, 31, 31)
             for i in range(len(self.siamese_rpn_head.cls_heads))
         ])
-        prev_bbox = torch.from_numpy(_rand_bboxes(
-            self.rng, 1, 10, 10)).squeeze().type(torch.float32)
+        prev_bbox = random_boxes(1, 50).squeeze()
         scale_factor = torch.Tensor([3.])
 
         data_sample = TrackDataSample()

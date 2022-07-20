@@ -5,14 +5,13 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
-from mmdet.core.mask import BitmapMasks
+from mmdet.structures.mask import BitmapMasks
 from mmengine.data import BaseDataElement
 from mmengine.model import BaseDataPreprocessor
 
-from mmtrack.core.data_structures import TrackDataSample
-from mmtrack.core.utils import OptSampleList
-from mmtrack.core.utils.misc import stack_batch
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.utils import OptSampleList, stack_batch
 
 
 @MODELS.register_module()

@@ -5,14 +5,14 @@ from typing import List, Optional, Tuple
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
-from mmdet.core.bbox import SamplingResult
 from mmdet.models.losses import accuracy
+from mmdet.models.task_modules import SamplingResult
 from mmengine.model import BaseModule
 from torch import Tensor
 from torch.nn.modules.utils import _pair
 
-from mmtrack.core import embed_similarity
 from mmtrack.registry import MODELS
+from ..task_modules.track import embed_similarity
 
 
 @MODELS.register_module()

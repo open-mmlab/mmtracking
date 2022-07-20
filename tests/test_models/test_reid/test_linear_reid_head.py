@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import torch
 
-from mmtrack.core import ReIDDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import ReIDDataSample
 from mmtrack.utils import register_all_modules
 
 

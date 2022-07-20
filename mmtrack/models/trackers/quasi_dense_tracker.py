@@ -3,12 +3,12 @@ from typing import List, Tuple
 
 import torch
 import torch.nn.functional as F
-from mmdet.core import bbox_overlaps
+from mmdet.structures.bbox import bbox_overlaps
 from mmengine.data import InstanceData
 from torch import Tensor
 
-from mmtrack.core import TrackDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
 from .base_tracker import BaseTracker
 
 

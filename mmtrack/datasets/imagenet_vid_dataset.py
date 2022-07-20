@@ -6,8 +6,8 @@ from mmdet.datasets.api_wrappers import COCO
 from mmengine.fileio import FileClient
 
 from mmtrack.registry import DATASETS
+from .api_wrappers import CocoVID
 from .base_video_dataset import BaseVideoDataset
-from .parsers import CocoVID
 
 
 @DATASETS.register_module()

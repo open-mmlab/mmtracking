@@ -2,7 +2,7 @@
 from unittest import TestCase
 
 from mmtrack.models.data_preprocessors import TrackDataPreprocessor
-from ..utils import _demo_mm_inputs
+from mmtrack.testing import demo_mm_inputs
 
 
 class TestTrackDataPreprocessor(TestCase):
@@ -30,7 +30,7 @@ class TestTrackDataPreprocessor(TestCase):
     def test_forward(self):
         processor = TrackDataPreprocessor(mean=[0, 0, 0], std=[1, 1, 1])
 
-        data = _demo_mm_inputs(
+        data = demo_mm_inputs(
             batch_size=1,
             frame_id=0,
             num_key_imgs=1,
@@ -51,7 +51,7 @@ class TestTrackDataPreprocessor(TestCase):
         self.assertEqual(len(data_samples), 1)
 
         # test padding
-        data = _demo_mm_inputs(
+        data = demo_mm_inputs(
             batch_size=2,
             frame_id=0,
             num_key_imgs=1,
@@ -63,7 +63,7 @@ class TestTrackDataPreprocessor(TestCase):
             self.assertEqual(inputs_single_mode.shape, (2, 1, 3, 10, 14))
 
         # test pad_size_divisor
-        data = _demo_mm_inputs(
+        data = demo_mm_inputs(
             batch_size=2,
             frame_id=0,
             num_key_imgs=1,
@@ -82,7 +82,7 @@ class TestTrackDataPreprocessor(TestCase):
             self.assertEqual(data_sample.search_pad_shape, expected_shape)
 
         # test pad_mask=True
-        data = _demo_mm_inputs(
+        data = demo_mm_inputs(
             batch_size=2,
             frame_id=0,
             num_key_imgs=1,

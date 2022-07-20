@@ -3,8 +3,8 @@ from typing import Dict
 
 from torch import Tensor
 
-from mmtrack.core.utils import OptConfigType, SampleList
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.utils import OptConfigType, SampleList
 from ..motion import CameraMotionCompensation, LinearMotion
 from .base import BaseMultiObjectTracker
 

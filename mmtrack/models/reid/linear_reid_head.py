@@ -4,11 +4,11 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from mmcls.metrics import Accuracy
+from mmcls.evaluation.metrics import Accuracy
 from mmengine.model import BaseModule
 
-from mmtrack.core import ReIDDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import ReIDDataSample
 from .fc_module import FcModule
 
 

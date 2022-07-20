@@ -8,8 +8,8 @@ from mmengine.logging import MessageHub
 from parameterized import parameterized
 
 from mmtrack.registry import MODELS
+from mmtrack.testing import demo_mm_inputs, get_model_cfg
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestMaskTrackRCNN(TestCase):
@@ -22,7 +22,7 @@ class TestMaskTrackRCNN(TestCase):
         'vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py',
     ])
     def test_mask_track_rcnn_init(self, cfg_file):
-        model = _get_model_cfg(cfg_file)
+        model = get_model_cfg(cfg_file)
 
         model = MODELS.build(model)
         assert model.detector
@@ -41,7 +41,7 @@ class TestMaskTrackRCNN(TestCase):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
-            _model = _get_model_cfg(cfg_file)
+            _model = get_model_cfg(cfg_file)
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 
@@ -50,7 +50,7 @@ class TestMaskTrackRCNN(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1,
                 frame_id=0,
                 num_ref_imgs=1,
@@ -76,7 +76,7 @@ class TestMaskTrackRCNN(TestCase):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
-            _model = _get_model_cfg(cfg_file)
+            _model = get_model_cfg(cfg_file)
             model = MODELS.build(_model)
 
             if device == 'cuda':
@@ -84,7 +84,7 @@ class TestMaskTrackRCNN(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1,
                 frame_id=0,
                 num_ref_imgs=1,

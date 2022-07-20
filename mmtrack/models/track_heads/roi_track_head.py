@@ -2,13 +2,13 @@
 from abc import ABCMeta
 from typing import List, Optional, Tuple
 
-from mmdet.core import bbox2roi
-from mmdet.core.bbox import SamplingResult
+from mmdet.models.task_modules import SamplingResult
+from mmdet.structures.bbox import bbox2roi
 from mmengine.model import BaseModule
 from torch import Tensor
 
-from mmtrack.core.utils import InstanceList, SampleList
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.utils import InstanceList, SampleList
 
 
 @MODELS.register_module()

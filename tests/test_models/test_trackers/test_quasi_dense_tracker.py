@@ -3,11 +3,10 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import torch
-from mmdet.core.bbox.demodata import random_boxes
 
 from mmtrack.registry import MODELS
+from mmtrack.testing import demo_mm_inputs, random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs
 
 
 class TestQuasiDenseTracker(TestCase):
@@ -82,7 +81,7 @@ class TestQuasiDenseTracker(TestCase):
 
         model = MagicMock()
         for frame_id in range(3):
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0)
             data_sample = packed_inputs[0]['data_sample']
             data_sample.pred_det_instances = data_sample.gt_instances.clone()

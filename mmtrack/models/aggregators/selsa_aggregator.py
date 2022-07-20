@@ -4,8 +4,8 @@ import torch.nn as nn
 from mmcv.runner import BaseModule
 from torch import Tensor
 
-from mmtrack.core.utils import OptConfigType
 from mmtrack.registry import MODELS
+from mmtrack.utils import OptConfigType
 
 
 @MODELS.register_module()

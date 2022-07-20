@@ -5,8 +5,8 @@ from typing import Dict, List, Tuple, Union
 from mmengine.model import BaseModel
 from torch import Tensor
 
-from mmtrack.core.utils import (ForwardResults, OptConfigType, OptMultiConfig,
-                                OptSampleList, SampleList)
+from mmtrack.utils import (ForwardResults, OptConfigType, OptMultiConfig,
+                           OptSampleList, SampleList)
 
 
 class BaseVideoDetector(BaseModel, metaclass=ABCMeta):

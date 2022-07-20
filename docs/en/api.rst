@@ -46,7 +46,7 @@ datasets
 
 parsers
 ^^^^^^^^^^
-.. automodule:: mmtrack.datasets.parsers
+.. automodule:: mmtrack.datasets.api_wrappers
     :members:
 
 pipelines

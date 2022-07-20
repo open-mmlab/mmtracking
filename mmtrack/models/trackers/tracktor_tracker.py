@@ -2,15 +2,16 @@
 from typing import List
 
 import torch
-from mmdet.core import bbox_overlaps, multiclass_nms
+from mmdet.models.layers import multiclass_nms
+from mmdet.structures.bbox import bbox_overlaps
 from mmengine.data import InstanceData
 # TODO: unify the linear_assignment package for different trackers
 from scipy.optimize import linear_sum_assignment
 from torch import Tensor, nn
 
-from mmtrack.core import TrackDataSample, imrenormalize
-from mmtrack.core.utils import OptConfigType
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.utils import OptConfigType, imrenormalize
 from .base_tracker import BaseTracker
 
 

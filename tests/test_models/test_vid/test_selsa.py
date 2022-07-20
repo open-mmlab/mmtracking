@@ -5,10 +5,10 @@ from unittest import TestCase
 import torch
 from parameterized import parameterized
 
-from mmtrack.core import TrackDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.testing import demo_mm_inputs, get_model_cfg
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestVideoDetector(TestCase):
@@ -23,7 +23,7 @@ class TestVideoDetector(TestCase):
         'selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid.py'
     ])
     def test_init(self, cfg_file):
-        model = _get_model_cfg(cfg_file)
+        model = get_model_cfg(cfg_file)
         model = MODELS.build(model)
         assert model.detector
 
@@ -38,7 +38,7 @@ class TestVideoDetector(TestCase):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
-            _model = _get_model_cfg(cfg_file)
+            _model = get_model_cfg(cfg_file)
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 
@@ -47,7 +47,7 @@ class TestVideoDetector(TestCase):
                     return unittest.skip('test requires GPU and torch+cuda')
                 model = model.cuda()
 
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=2)
             batch_inputs, data_samples = model.data_preprocessor(
                 packed_inputs, True)
@@ -67,7 +67,7 @@ class TestVideoDetector(TestCase):
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
         for device in devices:
-            _model = _get_model_cfg(cfg_file)
+            _model = get_model_cfg(cfg_file)
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 
@@ -80,7 +80,7 @@ class TestVideoDetector(TestCase):
             model.eval()
             with torch.no_grad():
                 for i in range(3):
-                    packed_inputs = _demo_mm_inputs(
+                    packed_inputs = demo_mm_inputs(
                         batch_size=1, frame_id=i, num_ref_imgs=2)
                     batch_inputs, data_samples = model.data_preprocessor(
                         packed_inputs, False)

@@ -3,12 +3,11 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 import torch
-from mmdet.core.bbox.demodata import random_boxes
 from parameterized import parameterized
 
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.testing import demo_mm_inputs, get_model_cfg, random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestTracktorTracker(TestCase):
@@ -21,7 +20,7 @@ class TestTracktorTracker(TestCase):
     @parameterized.expand(
         ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
     def test_init(self, cfg_file):
-        cfg = _get_model_cfg(cfg_file)
+        cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
 
         bboxes = random_boxes(self.num_objs, 512)
@@ -42,7 +41,7 @@ class TestTracktorTracker(TestCase):
         img = torch.rand((1, 3, 256, 256))
         x = [torch.rand(1, 256, 4, 4)]
 
-        cfg = _get_model_cfg(cfg_file)
+        cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
 
         model = MagicMock()
@@ -51,7 +50,7 @@ class TestTracktorTracker(TestCase):
         model.cmc = TASK_UTILS.build(cfg['motion'])
         model.with_linear_motion = False
 
-        packed_inputs = _demo_mm_inputs(
+        packed_inputs = demo_mm_inputs(
             batch_size=1, frame_id=0, num_ref_imgs=0)
         data_sample = packed_inputs[0]['data_sample']
         data_sample.pred_det_instances = data_sample.gt_instances.clone()
