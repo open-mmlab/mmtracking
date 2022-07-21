@@ -8,6 +8,9 @@ configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvi
 configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py
 configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py
 configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
+configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py
 
 # SOT
 configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py
+configs/sot/stark/stark_st1_r50_500e_lasot.py
+configs/sot/stark/stark_st2_r50_50e_lasot.py

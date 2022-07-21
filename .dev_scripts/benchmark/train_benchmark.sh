@@ -28,6 +28,11 @@ WORK_DIR=bytetrack_yolox_x_crowdhuman_mot17-private-half
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
+CONFIG=configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py
+WORK_DIR=qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half
+echo ${CONFIG} &
+./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
+
 # VIS
 CONFIG=configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py
 WORK_DIR=masktrack_rcnn_r50_fpn_12e_youtubevis2019
@@ -39,6 +44,16 @@ CONFIG=configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py
 WORK_DIR=siamese_rpn_r50_20e_lasot
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
+
+CONFIG=configs/sot/stark/stark_st1_r50_500e_lasot.py
+ST1_WORK_DIR=stark_st1_r50_500e_lasot
+echo ${CONFIG} &
+./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST1_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
+
+CONFIG=configs/sot/stark/stark_st2_r50_50e_lasot.py
+ST2_WORK_DIR=stark_st2_r50_50e_lasot
+echo ${CONFIG} &
+./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST2_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 load_from=${ROOT_DIR}/${ST1_WORK_DIR}/epoch_500.pth >/dev/null &
 
 # MOT
 REID_CONFIG=configs/reid/resnet50_b32x8_MOT17.py
