@@ -2,8 +2,7 @@
 from .benchmark import (DataLoaderBenchmark, DatasetBenchmark,
                         InferenceBenchmark)
 from .collect_env import collect_env
-from .image import (crop_image, imrenormalize, ndarray2tensor, rotate_image,
-                    tensor2ndarray)
+from .image import crop_image, imrenormalize, rotate_image
 from .misc import convert_data_sample_type, max2d, stack_batch
 from .mot_error_visualization import imshow_mot_errors
 from .setup_env import register_all_modules
@@ -17,6 +16,5 @@ __all__ = [
     'stack_batch', 'ConfigType', 'ForwardResults', 'InstanceList',
     'MultiConfig', 'OptConfigType', 'OptInstanceList', 'OptMultiConfig',
     'OptSampleList', 'SampleList', 'convert_data_sample_type',
-    'imshow_mot_errors', 'rotate_image', 'ndarray2tensor', 'tensor2ndarray',
-    'max2d'
+    'imshow_mot_errors', 'rotate_image', 'max2d'
 ]

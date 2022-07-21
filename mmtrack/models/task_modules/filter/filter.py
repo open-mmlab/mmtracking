@@ -77,6 +77,7 @@ def apply_feat_transpose(feat: Tensor,
             padding=transpose_pad,
             groups=num_img_per_seq * batch_size)
 
+        # The shape of returns is (bs, c, filter_h, fiter_w)
         if num_img_per_seq == 1:
             return filter_grad.permute(1, 0, 2, 3)
         return filter_grad.view(-1, num_img_per_seq, batch_size,
@@ -92,6 +93,7 @@ def apply_feat_transpose(feat: Tensor,
             padding=transpose_pad,
             groups=batch_size)
 
+        # The shape of returns is (1, c, filter_h, fiter_w)
         return filter_grad.view(batch_size, 1, -1,
                                 *filter_grad.shape[-2:]).sum(dim=0).flip(
                                     (2, 3))

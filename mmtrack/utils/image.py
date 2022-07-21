@@ -23,19 +23,6 @@ cv2_border_modes = {
 }
 
 
-def ndarray2tensor(x: np.ndarray, device='cpu'):
-    assert isinstance(x, np.ndarray)
-    return torch.from_numpy(x.transpose(2, 0,
-                                        1)).float().unsqueeze(0).to(device)
-
-
-def tensor2ndarray(x: torch.Tensor):
-    assert isinstance(x, torch.Tensor)
-    if x.is_cuda:
-        x = x.cpu()
-    return x.squeeze(0).permute(1, 2, 0).numpy()
-
-
 def crop_image(image, crop_region, crop_size, padding=(0, 0, 0)):
     """Crop image based on `crop_region` and `crop_size`.
 

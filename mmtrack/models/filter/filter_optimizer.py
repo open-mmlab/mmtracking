@@ -103,7 +103,7 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         return gauss_density
 
     def forward(self,
-                filter: Tensor,
+                filter_weights: Tensor,
                 feat: Tensor,
                 bboxes: Tensor,
                 num_iters: Optional[int] = None,
@@ -114,7 +114,7 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         in test mode don't have the dim of [].
 
         Args:
-            filter (Tensor):  Initial filter with shape
+            filter_weights (Tensor):  Initial filter with shape
                 training mode: (bs, c, fitler_h, filter_w)
                 test mode: (1, c, fitler_h, filter_w)
             feat (Tensor):  Input feature maps with shape
@@ -127,7 +127,7 @@ class PrDiMPSteepestDescentNewton(BaseModule):
                 sample with shape (num_img_per_seq, [bs]). Defaults to None.
 
         Returns:
-            filter (Tensor):  The final oprimized filter.
+            filter_weights (Tensor):  The final oprimized filter.
             filter_iters (Tensor, optional):  The filter computed in each
                 iteration (including initial input and final output), returned
                 only in training
@@ -139,9 +139,9 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         num_iters = self.num_iters if num_iters is None else num_iters
         num_img_per_seq = feat.shape[0]
         batch_size = feat.shape[1] if feat.dim() == 5 else 1
-        filter_size_hw = (filter.shape[-2], filter.shape[-1])
-        output_size_hw = (feat.shape[-2] + (filter.shape[-2] + 1) % 2,
-                          feat.shape[-1] + (filter.shape[-1] + 1) % 2)
+        filter_size_hw = (filter_weights.shape[-2], filter_weights.shape[-1])
+        output_size_hw = (feat.shape[-2] + (filter_weights.shape[-2] + 1) % 2,
+                          feat.shape[-1] + (filter_weights.shape[-1] + 1) % 2)
 
         # Get learnable scalars
         step_length_factor = torch.exp(self.log_step_length)
@@ -166,13 +166,17 @@ class PrDiMPSteepestDescentNewton(BaseModule):
         elif isinstance(sample_weights, torch.Tensor):
             sample_weights = sample_weights.reshape(num_img_per_seq,
                                                     batch_size, 1, 1)
+        else:
+            raise NotImplementedError(
+                "Only support two types of 'sample_weights': "
+                'torch.Tensor or None')
 
         filter_iters = []
         losses = []
 
         for _ in range(num_iters):
             # Get scores by applying the filter on the features
-            scores = filter_layer.apply_filter(feat, filter)
+            scores = filter_layer.apply_filter(feat, filter_weights)
             scores = torch.softmax(
                 scores.reshape(num_img_per_seq, batch_size, -1),
                 dim=2).reshape(scores.shape)
@@ -180,34 +184,35 @@ class PrDiMPSteepestDescentNewton(BaseModule):
             # Compute loss and record the filter of each iteration in training
             # mode.
             if self.training:
-                filter_iters.append(filter)
+                filter_iters.append(filter_weights)
                 losses.append(
                     self._compute_loss(scores, sample_weights, label_density,
-                                       filter, filter_regular))
+                                       filter_weights, filter_regular))
 
             # Compute gradient and step_length
             res = sample_weights * (scores - label_density)
             filter_grad = filter_layer.apply_feat_transpose(
                 feat, res, filter_size_hw,
-                training=self.training) + filter_regular * filter
+                training=self.training) + filter_regular * filter_weights
 
             step_length = self.get_step_length(feat, sample_weights, scores,
                                                filter_grad, filter_regular)
 
             # Update filter
-            filter = filter - (step_length_factor *
-                               step_length.reshape(-1, 1, 1, 1)) * filter_grad
+            filter_weights = filter_weights - (
+                step_length_factor *
+                step_length.reshape(-1, 1, 1, 1)) * filter_grad
 
         if self.training:
-            filter_iters.append(filter)
+            filter_iters.append(filter_weights)
             # Get scores by applying the final filter on the feature map
-            scores = filter_layer.apply_filter(feat, filter)
+            scores = filter_layer.apply_filter(feat, filter_weights)
             losses.append(
                 self._compute_loss(scores, sample_weights, label_density,
-                                   filter, filter_regular))
-            return filter, filter_iters, losses
+                                   filter_weights, filter_regular))
+            return filter_weights, filter_iters, losses
         else:
-            return filter
+            return filter_weights
 
     def get_step_length(self, feat: Tensor, sample_weights: Tensor,
                         scores: Tensor, filter_grad: Tensor,

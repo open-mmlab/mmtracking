@@ -11,8 +11,7 @@ from torchvision.transforms.functional import gaussian_blur
 
 from mmtrack.registry import MODELS
 from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
-                           SampleList, ndarray2tensor, rotate_image,
-                           tensor2ndarray)
+                           SampleList, rotate_image)
 from .base import BaseSingleObjectTracker
 
 
@@ -198,14 +197,15 @@ class Prdimp(BaseSingleObjectTracker):
 
         if 'rotate' in augs:
             for angle in augs['rotate']:
-                img_numpy = tensor2ndarray(img)
+                img_numpy = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
                 assert img_numpy.ndim == 3
                 rotated_img = rotate_image(
                     img_numpy,
                     angle,
                     border_mode='replicate',
                 )
-                img_tensor = ndarray2tensor(rotated_img, device=img.device)
+                img_tensor = torch.from_numpy(rotated_img.transpose(
+                    2, 0, 1)).float().unsqueeze(0).to(img.device)
                 shift = get_rand_shift()
                 aug_imgs.append(
                     self.img_shift_crop(img_tensor, output_size, shift))
