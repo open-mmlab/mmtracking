@@ -10,8 +10,9 @@ from mmengine.model import BaseModule
 from torch import Tensor
 
 from mmtrack.registry import MODELS
-from mmtrack.structures.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
-                                     bbox_rel_to_rect)
+from mmtrack.structures.bbox import (bbox_cxcywh_to_x1y1wh,
+                                     bbox_rel_cxcywh_to_xywh,
+                                     bbox_xywh_to_rel_cxcywh)
 from mmtrack.utils import OptConfigType, SampleList
 
 
@@ -297,7 +298,8 @@ class IouNetHead(BaseModule):
         output_bboxes = bbox_cxcywh_to_x1y1wh(init_bboxes)
         output_bboxes = output_bboxes.view(1, -1, 4)
         bboxes_sz_norm = output_bboxes[:, :1, 2:].clone()
-        output_bboxes_rel = bbox_rect_to_rel(output_bboxes, bboxes_sz_norm)
+        output_bboxes_rel = bbox_xywh_to_rel_cxcywh(output_bboxes,
+                                                    bboxes_sz_norm)
 
         with torch.set_grad_enabled(True):
             for _ in range(self.bbox_cfg['box_refine_iter']):
@@ -305,7 +307,8 @@ class IouNetHead(BaseModule):
                 bboxes_init_rel = output_bboxes_rel.clone().detach()
                 bboxes_init_rel.requires_grad = True
 
-                bboxes_init = bbox_rel_to_rect(bboxes_init_rel, bboxes_sz_norm)
+                bboxes_init = bbox_rel_cxcywh_to_xywh(bboxes_init_rel,
+                                                      bboxes_sz_norm)
                 iou_outputs = self.predict_iou(self.iou_modulation,
                                                iou_features, bboxes_init)
                 # Backward
@@ -318,7 +321,8 @@ class IouNetHead(BaseModule):
 
                 step_length *= self.bbox_cfg['box_refine_step_decay']
 
-        output_bboxes = bbox_rel_to_rect(output_bboxes_rel, bboxes_sz_norm)
+        output_bboxes = bbox_rel_cxcywh_to_xywh(output_bboxes_rel,
+                                                bboxes_sz_norm)
 
         return output_bboxes.view(-1, 4), iou_outputs.detach().view(-1)
 

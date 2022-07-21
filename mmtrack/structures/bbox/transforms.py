@@ -101,8 +101,8 @@ def bbox_cxcyah_to_xyxy(bboxes: torch.Tensor) -> torch.Tensor:
     return torch.cat(x1y1x2y2, dim=-1)
 
 
-def bbox_rect_to_rel(bboxes: Tensor,
-                     size_norm: Optional[Tensor] = None) -> Tensor:
+def bbox_xywh_to_rel_cxcywh(bboxes: Tensor,
+                            size_norm: Optional[Tensor] = None) -> Tensor:
     """Convert standard rectangular parametrization of the bounding box.
 
         [x, y, w, h] to relative parametrization [cx/sw, cy/sh, log(w), log(h)]
@@ -127,9 +127,9 @@ def bbox_rect_to_rel(bboxes: Tensor,
     return torch.cat((c_rel, sz_rel), dim=-1)
 
 
-def bbox_rel_to_rect(bboxes: Tensor,
-                     size_norm: Optional[Tensor] = None) -> Tensor:
-    """Inverts the effect of `bbox_rect_to_rel`.
+def bbox_rel_cxcywh_to_xywh(bboxes: Tensor,
+                            size_norm: Optional[Tensor] = None) -> Tensor:
+    """Inverts the effect of `bbox_xywh_to_rel_cxcywh`.
 
     Args:
         bboxes (Tensor): of shape (N, 4) in [cx/sw, cy/sh, log(w), log(h)]
