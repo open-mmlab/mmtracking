@@ -36,7 +36,8 @@ param_scheduler = [
         milestones=[8, 11])
 ]
 # runtime settings
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=12, val_begin=0, val_interval=1)
 
 # optimizer
 optim_wrapper = dict(
