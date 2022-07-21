@@ -14,8 +14,8 @@ from mmengine.dataset import Compose
 from mmengine.logging import MMLogger
 from torch import nn
 
-from mmtrack.core.utils import SampleList
 from mmtrack.registry import MODELS
+from mmtrack.utils import SampleList
 
 
 def init_model(config: Union[str, mmcv.Config],

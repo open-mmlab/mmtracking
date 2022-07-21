@@ -4,15 +4,15 @@ from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.data import InstanceData
 from torch import Tensor
 from torchvision.transforms.functional import gaussian_blur
 
-from mmtrack.core.utils import (OptConfigType, OptMultiConfig, SampleList,
-                                ndarray2tensor, rotate_image, tensor2ndarray)
-from mmtrack.core.utils.typing import InstanceList
 from mmtrack.registry import MODELS
+from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
+                           SampleList, ndarray2tensor, rotate_image,
+                           tensor2ndarray)
 from .base import BaseSingleObjectTracker
 
 

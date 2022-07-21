@@ -17,10 +17,13 @@ def register_all_modules(init_default_scope: bool = True) -> None:
             to https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/registry.md
             Defaults to True.
     """  # noqa
-    import mmtrack.core  # noqa: F401,F403
     import mmtrack.datasets  # noqa: F401,F403
-    import mmtrack.metrics  # noqa: F401,F403
+    import mmtrack.datasets.samplers  # noqa: F401,F403
+    import mmtrack.datasets.transforms  # noqa: F401,F403
+    import mmtrack.engine  # noqa: F401,F403
+    import mmtrack.evaluation  # noqa: F401,F403
     import mmtrack.models  # noqa: F401,F403
+    import mmtrack.visualization  # noqa: F401,F403
 
     register_all_mmdet_modules(init_default_scope=False)
 

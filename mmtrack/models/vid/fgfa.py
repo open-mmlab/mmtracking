@@ -8,9 +8,9 @@ from addict import Dict
 from mmengine.data import InstanceData
 from torch import Tensor
 
-from mmtrack.core.motion import flow_warp_feats
-from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
 from mmtrack.registry import MODELS
+from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
+from ..task_modules.motion import flow_warp_feats
 from .base import BaseVideoDetector
 
 

@@ -2,13 +2,12 @@
 from unittest import TestCase
 
 import torch
-from mmdet.core.bbox.demodata import random_boxes
 from mmengine.config import Config
 from mmengine.data import InstanceData
 
 from mmtrack.registry import MODELS
+from mmtrack.testing import demo_mm_inputs, random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs
 
 
 def _fake_proposals(img_metas, proposal_len):
@@ -74,7 +73,7 @@ class TestQuasiDenseTrackHead(TestCase):
         cls.track_head = MODELS.build(cfg)
 
     def test_quasi_dense_track_head_loss(self):
-        packed_inputs = _demo_mm_inputs(
+        packed_inputs = demo_mm_inputs(
             batch_size=1,
             frame_id=0,
             num_ref_imgs=1,

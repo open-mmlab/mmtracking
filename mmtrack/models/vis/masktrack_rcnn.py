@@ -4,9 +4,9 @@ from typing import Dict, Optional
 
 from torch import Tensor
 
-from mmtrack.core.utils import OptConfigType, OptMultiConfig, SampleList
 from mmtrack.models.mot import BaseMultiObjectTracker
 from mmtrack.registry import MODELS
+from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
 
 
 @MODELS.register_module()

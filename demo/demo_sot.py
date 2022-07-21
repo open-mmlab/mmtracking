@@ -8,7 +8,7 @@ import cv2
 import mmcv
 
 from mmtrack.apis import inference_sot, init_model
-from mmtrack.registry.registry import VISUALIZERS
+from mmtrack.registry import VISUALIZERS
 from mmtrack.utils import register_all_modules
 
 
@@ -109,7 +109,7 @@ def main(args):
             pred_sample=result[0],
             show=args.show,
             out_file=out_file,
-            wait_time=int(1000 / int(fps)) if fps else 0,
+            wait_time=float(1 / int(fps)) if fps else 0,
             pred_score_thr=-100,
             step=i)
 

@@ -1,10 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
+from mmcv.ops import PrRoIPool
 from mmengine.model import BaseModule
 from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
-from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
 
 
 @MODELS.register_module()
@@ -25,8 +25,7 @@ class FilterClassifierInitializer(BaseModule):
         super().__init__()
         self.filter_conv = nn.Conv2d(
             feature_dim, feature_dim, kernel_size=3, padding=1)
-        self.filter_pool = PrRoIPool2D(filter_size, filter_size,
-                                       1 / feature_stride)
+        self.filter_pool = PrRoIPool(filter_size, 1 / feature_stride)
 
     def init_weights(self):
         """Initialize the parameters of this module."""

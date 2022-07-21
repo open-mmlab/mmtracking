@@ -7,8 +7,8 @@ import torch
 from mmengine.data import InstanceData
 
 from mmtrack.registry import MODELS
+from mmtrack.testing import demo_mm_inputs
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs
 
 
 class TestSelsaRoIHead(TestCase):
@@ -105,7 +105,7 @@ class TestSelsaRoIHead(TestCase):
 
         # When truth is non-empty then both cls, box
         # should be nonzero for random inputs
-        packed_inputs = _demo_mm_inputs(
+        packed_inputs = demo_mm_inputs(
             batch_size=1,
             image_shapes=[(3, 256, 256)],
             frame_id=0,
@@ -126,7 +126,7 @@ class TestSelsaRoIHead(TestCase):
         # there should be no box and mask loss.
         proposal_list, feats = self._fake_inputs(256, 100)
         ref_proposal_list, ref_feats = self._fake_inputs(256, 100)
-        packed_inputs = _demo_mm_inputs(
+        packed_inputs = demo_mm_inputs(
             batch_size=1,
             image_shapes=[(3, 256, 256)],
             num_items=[0],
@@ -155,7 +155,7 @@ class TestSelsaRoIHead(TestCase):
 
         proposal_list, feats = self._fake_inputs(256, 100)
         ref_proposal_list, ref_feats = self._fake_inputs(256, 100)
-        packed_inputs = _demo_mm_inputs(
+        packed_inputs = demo_mm_inputs(
             batch_size=1,
             image_shapes=[(3, 256, 256)],
             frame_id=0,

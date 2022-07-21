@@ -4,12 +4,12 @@ from unittest import TestCase
 
 import numpy as np
 import torch
-from mmdet.core.mask import BitmapMasks
+from mmdet.structures.mask import BitmapMasks
 from mmengine.data import LabelData
 
-from mmtrack.core import ReIDDataSample
 from mmtrack.datasets.transforms import (CheckPadMaskValidity, PackReIDInputs,
                                          PackTrackInputs)
+from mmtrack.structures import ReIDDataSample
 
 
 class TestPackTrackInputs:

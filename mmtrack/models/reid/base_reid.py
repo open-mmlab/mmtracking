@@ -4,8 +4,8 @@ from typing import List, Optional
 import torch
 from mmcls.models.classifiers import ImageClassifier
 
-from mmtrack.core import ReIDDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import ReIDDataSample
 
 
 @MODELS.register_module()

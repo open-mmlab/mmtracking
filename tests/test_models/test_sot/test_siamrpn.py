@@ -5,10 +5,10 @@ from unittest import TestCase
 import torch
 from parameterized import parameterized
 
-from mmtrack.core import TrackDataSample
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.testing import demo_mm_inputs, get_model_cfg
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestSiameseRPN(TestCase):
@@ -21,7 +21,7 @@ class TestSiameseRPN(TestCase):
         'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
     ])
     def test_init(self, cfg_file):
-        model = _get_model_cfg(cfg_file)
+        model = get_model_cfg(cfg_file)
 
         model = MODELS.build(model)
         assert model.backbone
@@ -32,7 +32,7 @@ class TestSiameseRPN(TestCase):
         ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
     ])
     def test_siamese_rpn_forward_loss_mode(self, cfg_file, devices):
-        _model = _get_model_cfg(cfg_file)
+        _model = get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
@@ -45,7 +45,7 @@ class TestSiameseRPN(TestCase):
                 model = model.cuda()
 
             # forward in ``loss`` mode
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1,
                 frame_id=0,
                 num_template_imgs=1,
@@ -61,7 +61,7 @@ class TestSiameseRPN(TestCase):
         ('sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py', ('cpu', 'cuda')),
     ])
     def test_siamese_rpn_forward_predict_mode(self, cfg_file, devices):
-        _model = _get_model_cfg(cfg_file)
+        _model = get_model_cfg(cfg_file)
 
         assert all([device in ['cpu', 'cuda'] for device in devices])
 
@@ -77,7 +77,7 @@ class TestSiameseRPN(TestCase):
             model.eval()
             with torch.no_grad():
                 for i in range(3):
-                    packed_inputs = _demo_mm_inputs(
+                    packed_inputs = demo_mm_inputs(
                         batch_size=1,
                         frame_id=i,
                         num_key_imgs=1,

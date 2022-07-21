@@ -7,10 +7,9 @@ from torch import Tensor
 from torch.nn.modules.batchnorm import BatchNorm2d, _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
-from mmtrack.core.utils import (ForwardResults, OptConfigType, OptMultiConfig,
-                                OptSampleList, SampleList)
-from mmtrack.core.utils.typing import InstanceList
 from mmtrack.registry import MODELS
+from mmtrack.utils import (ForwardResults, InstanceList, OptConfigType,
+                           OptMultiConfig, OptSampleList, SampleList)
 from .base import BaseSingleObjectTracker
 
 

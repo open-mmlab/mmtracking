@@ -4,15 +4,15 @@ from copy import deepcopy
 from typing import Dict, List, Tuple, Union
 
 import addict
-from mmdet.core.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
+from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.data import InstanceData
 from mmengine.model import BaseModel
 from torch import Tensor
 
-from mmtrack.core.bbox import calculate_region_overlap, quad2bbox_cxcywh
-from mmtrack.core.evaluation import bbox2region
-from mmtrack.core.utils import (ForwardResults, InstanceList, OptConfigType,
-                                OptMultiConfig, OptSampleList, SampleList)
+from mmtrack.evaluation import bbox2region
+from mmtrack.structures.bbox import calculate_region_overlap, quad2bbox_cxcywh
+from mmtrack.utils import (ForwardResults, InstanceList, OptConfigType,
+                           OptMultiConfig, OptSampleList, SampleList)
 
 
 class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):

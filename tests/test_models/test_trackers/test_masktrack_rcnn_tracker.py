@@ -2,12 +2,11 @@
 from unittest import TestCase
 
 import torch
-from mmdet.core.bbox.demodata import random_boxes
 from parameterized import parameterized
 
 from mmtrack.registry import MODELS
+from mmtrack.testing import demo_mm_inputs, get_model_cfg, random_boxes
 from mmtrack.utils import register_all_modules
-from ..utils import _demo_mm_inputs, _get_model_cfg
 
 
 class TestMaskTrackRCNNTracker(TestCase):
@@ -36,12 +35,12 @@ class TestMaskTrackRCNNTracker(TestCase):
     @parameterized.expand(
         ['vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py'])
     def test_track(self, cfg_file):
-        _model = _get_model_cfg(cfg_file)
+        _model = get_model_cfg(cfg_file)
         # _scope_ will be popped after build
         model = MODELS.build(_model)
 
         for frame_id in range(3):
-            packed_inputs = _demo_mm_inputs(
+            packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, with_mask=True)
             data_sample = packed_inputs[0]['data_sample']
             img = packed_inputs[0]['inputs']['img']

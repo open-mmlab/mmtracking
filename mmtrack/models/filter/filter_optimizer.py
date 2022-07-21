@@ -7,8 +7,8 @@ import torch.nn as nn
 from mmengine.model import BaseModule
 from torch import Tensor
 
-from mmtrack.core.filter import filter as filter_layer
 from mmtrack.registry import MODELS
+from ..task_modules.filter import filter as filter_layer
 
 
 @MODELS.register_module()

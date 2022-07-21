@@ -10,7 +10,7 @@ from mmengine.fileio import FileClient
 from mmengine.logging import MMLogger
 
 from mmtrack.registry import DATASETS
-from .parsers import CocoVID
+from .api_wrappers import CocoVID
 
 
 @DATASETS.register_module()

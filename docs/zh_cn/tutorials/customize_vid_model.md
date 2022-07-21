@@ -17,7 +17,7 @@
 新建一个文件 `mmtrack/models/motion/my_flownet.py`。
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import MOTION
 
@@ -66,7 +66,7 @@ motion=dict(
 创建一个新文件 `mmtrack/models/aggregators/my_aggregator.py`。
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import AGGREGATORS
 

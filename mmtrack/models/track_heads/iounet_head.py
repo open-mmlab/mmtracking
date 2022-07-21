@@ -4,15 +4,15 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
+from mmcv.ops import PrRoIPool
+from mmdet.structures.bbox import bbox_cxcywh_to_xyxy
 from mmengine.model import BaseModule
 from torch import Tensor
 
-from mmtrack.core.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
-                               bbox_rel_to_rect)
-from mmtrack.core.utils import OptConfigType, SampleList
 from mmtrack.registry import MODELS
-from ..utils.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
+from mmtrack.structures.bbox import (bbox_cxcywh_to_x1y1wh, bbox_rect_to_rel,
+                                     bbox_rel_to_rect)
+from mmtrack.utils import OptConfigType, SampleList
 
 
 class LinearBlock(nn.Module):
@@ -102,24 +102,24 @@ class IouNetHead(BaseModule):
         # The `number` in the names of variables are block indexes in the
         # backbone or indexes of head layer.
         self.conv3_temp = conv_module(in_dim[0], 128)
-        self.roi3_temp = PrRoIPool2D(3, 3, 1 / 8)
+        self.roi3_temp = PrRoIPool(3, 1 / 8)
         self.fc3_temp = conv_module(128, 256, padding=0)
         self.fc34_3_temp = conv_module(
             256 + 256, pred_in_dim[0], kernel_size=1, padding=0)
 
         self.conv4_temp = conv_module(in_dim[1], 256)
-        self.roi4_temp = PrRoIPool2D(1, 1, 1 / 16)
+        self.roi4_temp = PrRoIPool(1, 1 / 16)
         self.fc34_4_temp = conv_module(
             256 + 256, pred_in_dim[1], kernel_size=1, padding=0)
 
         self.conv3_search = nn.Sequential(
             conv_module(in_dim[0], 256), conv_module(256, pred_in_dim[0]))
-        self.roi3_search = PrRoIPool2D(5, 5, 1 / 8)
+        self.roi3_search = PrRoIPool(5, 1 / 8)
         self.fc3_search = LinearBlock(pred_in_dim[0], pred_inter_dim[0], 5)
 
         self.conv4_search = nn.Sequential(
             conv_module(in_dim[1], 256), conv_module(256, pred_in_dim[1]))
-        self.roi4_search = PrRoIPool2D(3, 3, 1 / 16)
+        self.roi4_search = PrRoIPool(3, 1 / 16)
         self.fc4_search = LinearBlock(pred_in_dim[1], pred_inter_dim[1], 3)
 
         self.iou_predictor = nn.Linear(

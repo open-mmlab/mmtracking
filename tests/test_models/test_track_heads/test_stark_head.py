@@ -3,15 +3,14 @@ from copy import deepcopy
 from unittest import TestCase
 
 import mmcv
-import numpy as np
 import torch
 from mmengine.data import InstanceData
 
-from mmtrack.core import TrackDataSample
 from mmtrack.models.track_heads.stark_head import (CornerPredictorHead,
                                                    ScoreHead, StarkHead,
                                                    StarkTransformer)
-from ..utils import _rand_bboxes
+from mmtrack.structures import TrackDataSample
+from mmtrack.testing import random_boxes
 
 
 class TestCornerPredictorHead(TestCase):
@@ -197,7 +196,6 @@ class TestStarkHead(TestCase):
                 ori_shape=(500, 500),
                 search_img_shape=[320, 320]))
         cls.batch_data_samples = [data_sample]
-        cls.rng = np.random.RandomState(0)
 
     def test_loss(self):
         """Test the forward of stark head in loss mode."""
@@ -214,8 +212,7 @@ class TestStarkHead(TestCase):
 
     def test_predict(self):
         """Test the forward of stark head in predict mode."""
-        prev_bbox = torch.from_numpy(_rand_bboxes(
-            self.rng, 1, 10, 10)).squeeze().type(torch.float32)
+        prev_bbox = random_boxes(1, 50).squeeze()
         scale_factor = torch.Tensor([3.])
 
         self.stark_head_st2.eval()

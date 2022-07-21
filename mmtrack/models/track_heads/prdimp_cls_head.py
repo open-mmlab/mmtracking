@@ -5,13 +5,13 @@ from typing import List, Optional, Tuple
 import torch
 import torch.nn.functional as F
 from addict import Dict
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy
+from mmdet.structures.bbox import bbox_cxcywh_to_xyxy
 from mmengine.model import BaseModule
 from torch import Tensor, nn
 
-from mmtrack.core.filter import filter as filter_layer
-from mmtrack.core.utils import OptConfigType, SampleList, max2d
 from mmtrack.registry import MODELS
+from mmtrack.utils import OptConfigType, SampleList, max2d
+from ..task_modules.filter import filter as filter_layer
 
 
 @MODELS.register_module()

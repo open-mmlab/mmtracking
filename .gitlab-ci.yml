@@ -34,7 +34,7 @@ linting:
     - pip install -e /mmdet
     - python -c "import mmdet; print(mmdet.__version__)"
     - echo "Installing mmcls..."
-    - git clone --branch refactor_dev -c core.sshCommand="/usr/bin/ssh -i /root/.ssh/id_gitlab" git@gitlab.sh.sensetime.com:openmmlab-enterprise/openmmlab-ce/mmclassification.git /mmclassification
+    - git clone --branch dev-1.x -c core.sshCommand="/usr/bin/ssh -i /root/.ssh/id_gitlab" git@gitlab.sh.sensetime.com:openmmlab-enterprise/openmmlab-ce/mmclassification.git /mmclassification
     # - pip install -e /mmdet -i https://pypi.tuna.tsinghua.edu.cn/simple/
     - pip install -e /mmclassification
     - python -c "import mmcls; print(mmcls.__version__)"

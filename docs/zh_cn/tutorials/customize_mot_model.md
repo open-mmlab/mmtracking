@@ -72,7 +72,7 @@ tracker=dict(
 如果该运动估计模型是一个深度学习模块，你可以继承 `mmcv.runner` 的 `BaseModule`，否则继承 `Object`。
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import MOTION
 
@@ -121,7 +121,7 @@ motion=dict(
 新建一个文件 `mmtrack/models/motion/my_flownet.py`。
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import REID
 
@@ -171,7 +171,7 @@ motion=dict(
 新建一个文件 `mmtrack/models/track_heads/my_head.py`。
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models import HEADS
 

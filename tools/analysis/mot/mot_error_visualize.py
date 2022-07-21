@@ -11,9 +11,8 @@ from mmcv import Config
 from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
-from mmtrack.core.utils import imshow_mot_errors
 from mmtrack.registry import DATASETS
-from mmtrack.utils import register_all_modules
+from mmtrack.utils import imshow_mot_errors, register_all_modules
 
 
 def parse_args():
