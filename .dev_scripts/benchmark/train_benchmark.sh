@@ -47,13 +47,13 @@ echo ${CONFIG} &
 
 CONFIG=configs/sot/stark/stark_st1_r50_500e_lasot.py
 ST1_WORK_DIR=stark_st1_r50_500e_lasot
-echo ${CONFIG} &
-./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST1_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
+echo ${CONFIG}
+./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST1_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null
 
 CONFIG=configs/sot/stark/stark_st2_r50_50e_lasot.py
 ST2_WORK_DIR=stark_st2_r50_50e_lasot
-echo ${CONFIG} &
-./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST2_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 load_from=${ROOT_DIR}/${ST1_WORK_DIR}/epoch_500.pth >/dev/null &
+echo ${CONFIG}
+./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST2_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 load_from=${ROOT_DIR}/${ST1_WORK_DIR}/epoch_500.pth >/dev/null
 
 # MOT
 REID_CONFIG=configs/reid/resnet50_b32x8_MOT17.py
