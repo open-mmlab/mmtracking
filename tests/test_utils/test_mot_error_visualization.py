@@ -6,7 +6,7 @@ import tempfile
 import numpy as np
 import pytest
 
-from mmtrack.utils import visualization as vis
+from mmtrack.utils import mot_error_visualization as vis
 
 
 def test_imshow_mot_errors():
