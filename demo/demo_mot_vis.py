@@ -103,7 +103,7 @@ def main(args):
         # show the results
         visualizer.add_datasample(
             'mot',
-            img[::-1],
+            img[..., ::-1],
             pred_sample=result[0],
             show=args.show,
             out_file=out_file,

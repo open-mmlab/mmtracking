@@ -109,8 +109,7 @@ class PrdimpClsHead(BaseModule):
             target_bboxes (Tensor): in [cx, cy, w, h] format.
             dropout_probs (list, optional): Defaults to None.
         """
-        with torch.no_grad():
-            cls_feats = self.get_cls_feats(backbone_feats)
+        cls_feats = self.get_cls_feats(backbone_feats)
 
         # add features through the augmentation of `dropout`
         if dropout_probs is not None:
@@ -124,14 +123,12 @@ class PrdimpClsHead(BaseModule):
         # Get target filter by running the discriminative model prediction
         # module
         target_bboxes_xyxy = bbox_cxcywh_to_xyxy(target_bboxes)
-        with torch.no_grad():
-            init_filter = self.filter_initializer(cls_feats,
-                                                  target_bboxes_xyxy)
-            self.target_filter = self.filter_optimizer(
-                init_filter,
-                feat=cls_feats,
-                bboxes=target_bboxes,
-                num_iters=self.optimizer_cfg['init_update_iters'])
+        init_filter = self.filter_initializer(cls_feats, target_bboxes_xyxy)
+        self.target_filter = self.filter_optimizer(
+            init_filter,
+            feat=cls_feats,
+            bboxes=target_bboxes,
+            num_iters=self.optimizer_cfg['init_update_iters'])
 
         # Initialize memory
         self.init_memory(cls_feats, target_bboxes)
@@ -183,8 +180,7 @@ class PrdimpClsHead(BaseModule):
             scores (Tensor): of shape (bs, 1, h, w)
             feats (Tensor): features for classification.
         """
-        with torch.no_grad():
-            feats = self.get_cls_feats(backbone_feats)
+        feats = self.get_cls_feats(backbone_feats)
         scores = filter_layer.apply_filter(feats, self.target_filter)
         return scores, feats
 
@@ -296,13 +292,12 @@ class PrdimpClsHead(BaseModule):
             sample_weights = self.memo.sample_weights[:self.memo.num_samples]
 
             # Run the filter optimizer module
-            with torch.no_grad():
-                self.target_filter = self.filter_optimizer(
-                    self.target_filter,
-                    num_iters=num_iters,
-                    feat=samples,
-                    bboxes=target_bboxes,
-                    sample_weights=sample_weights)
+            self.target_filter = self.filter_optimizer(
+                self.target_filter,
+                num_iters=num_iters,
+                feat=samples,
+                bboxes=target_bboxes,
+                sample_weights=sample_weights)
 
     def predict(self, backbone_feats: Tuple[Tensor],
                 batch_data_samples: SampleList, prev_bbox: Tensor,
@@ -325,12 +320,11 @@ class PrdimpClsHead(BaseModule):
             scores_map (Tensor): The score map from the classifier.
             state (Tensor): The tracking state.
         """
-        with torch.no_grad():
-            # ``self.memo.sample_feat`` is used to update the training samples
-            # in the memory on some conditions.
-            scores_raw, self.memo.sample_feat = self(backbone_feats[-1])
-            scores_map = torch.softmax(
-                scores_raw.view(-1), dim=0).view(scores_raw.shape)
+        # ``self.memo.sample_feat`` is used to update the training samples
+        # in the memory on some conditions.
+        scores_raw, self.memo.sample_feat = self(backbone_feats[-1])
+        scores_map = torch.softmax(
+            scores_raw.view(-1), dim=0).view(scores_raw.shape)
 
         new_bbox_center, state = self.predict_by_feat(scores_map, prev_bbox,
                                                       sample_center,

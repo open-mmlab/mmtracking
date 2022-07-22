@@ -94,8 +94,7 @@ class Prdimp(BaseSingleObjectTracker):
 
         # `init_backbone_feats` is a tuple containing the features of `layer2`
         # and `layer3`
-        with torch.no_grad():
-            init_backbone_feats = self.backbone(aug_img_patches)
+        init_backbone_feats = self.backbone(aug_img_patches)
 
         # Initialize the classifier with bboxes and features of `layer3`
         # get the augmented bboxes on the augmented image patches

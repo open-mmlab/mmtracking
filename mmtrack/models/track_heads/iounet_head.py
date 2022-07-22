@@ -270,9 +270,7 @@ class IouNetHead(BaseModule):
         """
         bboxes = bbox_cxcywh_to_xyxy(bboxes.view(-1, 4))
         # Get modulation vector
-        with torch.no_grad():
-            self.iou_modulation = self.get_modulation(iou_backbone_feats,
-                                                      bboxes)
+        self.iou_modulation = self.get_modulation(iou_backbone_feats, bboxes)
 
     def optimize_bboxes(self, iou_features: Tuple[Tensor],
                         init_bboxes: Tensor) -> Tuple[Tensor, Tensor]:
