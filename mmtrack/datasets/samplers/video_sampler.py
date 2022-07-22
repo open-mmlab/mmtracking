@@ -29,6 +29,9 @@ class SOTVideoSampler(Sampler):
     def __iter__(self):
         return iter(self.indices)
 
+    def __len__(self):
+        return len(self.dataset)
+
 
 class DistributedVideoSampler(_DistributedSampler):
     """Put videos to multi gpus during testing.
