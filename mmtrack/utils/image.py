@@ -1,26 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Optional, Tuple, Union
+from typing import Union
 
 import cv2
 import mmcv
 import numpy as np
 import torch
 from torch import Tensor
-
-cv2_interp_codes = {
-    'nearest': cv2.INTER_NEAREST,
-    'bilinear': cv2.INTER_LINEAR,
-    'bicubic': cv2.INTER_CUBIC,
-    'area': cv2.INTER_AREA,
-    'lanczos': cv2.INTER_LANCZOS4
-}
-
-cv2_border_modes = {
-    'constant': cv2.BORDER_CONSTANT,
-    'replicate': cv2.BORDER_REPLICATE,
-    'reflect': cv2.BORDER_REFLECT,
-    'wrap': cv2.BORDER_WRAP,
-}
 
 
 def crop_image(image, crop_region, crop_size, padding=(0, 0, 0)):
@@ -91,56 +76,3 @@ def _imrenormalize(img: Union[Tensor, np.ndarray], img_norm_cfg: dict,
     img = mmcv.imdenormalize(img, **img_norm_cfg)
     img = mmcv.imnormalize(img, **new_img_norm_cfg)
     return img
-
-
-def rotate_image(img: np.ndarray,
-                 angle: float,
-                 center: Optional[Tuple[float, float]] = None,
-                 scale: float = 1.0,
-                 border_mode: str = 'constant',
-                 border_value: int = 0,
-                 interpolation: str = 'bilinear',
-                 auto_bound: bool = False) -> np.ndarray:
-    """Rotate an image.
-
-    Args:
-        img (np.ndarray): of shape (H, W, 3).
-        angle (float): Rotation angle in degrees, positive values mean
-            clockwise rotation.
-        center (tuple[float], optional): Center point (w, h) of the rotation in
-            the source image. If not specified, the center of the image will be
-            used.
-        scale (float): Isotropic scale factor.
-        border_mode (cv2.BorderTypes): Default to `cv2.BORDER_CONSTANT`
-        border_value (int): Border value onlu used in `cv2.BORDER_CONSTANT`
-            mode.
-        interpolation (str): Default to `cv2.INTER_LINEAR`
-        auto_bound (bool): Whether to adjust the image size to cover the whole
-            rotated image.
-    Returns:
-        np.ndarray: The rotated image.
-    """
-    if center is not None and auto_bound:
-        raise ValueError('`auto_bound` conflicts with `center`')
-    h, w = img.shape[:2]
-    if center is None:
-        center = ((w - 1) * 0.5, (h - 1) * 0.5)
-    assert isinstance(center, tuple)
-
-    matrix = cv2.getRotationMatrix2D(center, -angle, scale)
-    if auto_bound:
-        cos = np.abs(matrix[0, 0])
-        sin = np.abs(matrix[0, 1])
-        new_w = h * sin + w * cos
-        new_h = h * cos + w * sin
-        matrix[0, 2] += (new_w - w) * 0.5
-        matrix[1, 2] += (new_h - h) * 0.5
-        w = int(np.round(new_w))
-        h = int(np.round(new_h))
-    rotated = cv2.warpAffine(
-        img,
-        matrix, (w, h),
-        flags=cv2_interp_codes[interpolation],
-        borderMode=cv2_border_modes[border_mode],
-        borderValue=border_value)
-    return rotated

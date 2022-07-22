@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
+from mmcv.image import imrotate
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.data import InstanceData
 from torch import Tensor
@@ -11,7 +12,7 @@ from torchvision.transforms.functional import gaussian_blur
 
 from mmtrack.registry import MODELS
 from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
-                           SampleList, rotate_image)
+                           SampleList)
 from .base import BaseSingleObjectTracker
 
 
@@ -199,11 +200,8 @@ class Prdimp(BaseSingleObjectTracker):
             for angle in augs['rotate']:
                 img_numpy = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
                 assert img_numpy.ndim == 3
-                rotated_img = rotate_image(
-                    img_numpy,
-                    angle,
-                    border_mode='replicate',
-                )
+                # TODO: wait for MMCV to support 'replicate' border_mode.
+                rotated_img = imrotate(img_numpy, angle)
                 img_tensor = torch.from_numpy(rotated_img.transpose(
                     2, 0, 1)).float().unsqueeze(0).to(img.device)
                 shift = get_rand_shift()
