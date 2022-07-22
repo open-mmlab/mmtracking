@@ -94,7 +94,7 @@ def main(args):
         # show the results
         visualizer.add_datasample(
             'vid',
-            img,
+            img[..., ::-1],
             pred_sample=result[0],
             show=args.show,
             out_file=out_file,

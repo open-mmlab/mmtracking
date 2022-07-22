@@ -215,7 +215,7 @@ class TrackLocalVisualizer(Visualizer):
             self.add_image(name, drawn_img, step)
 
         if out_file is not None:
-            mmcv.imwrite(drawn_img, out_file)
+            mmcv.imwrite(drawn_img[..., ::-1], out_file)
 
 
 @VISUALIZERS.register_module()
