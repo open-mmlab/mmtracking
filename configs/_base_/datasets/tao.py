@@ -11,10 +11,9 @@ train_pipeline = [
             dict(type='LoadImageFromFile'),
             dict(type='LoadTrackAnnotations', with_instance_id=True),
             dict(
-                type='RandomChoiceResize',
+                type='RandomResize',
                 scales=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
                         (1333, 768), (1333, 800)],
-                resize_type='mmdet.Resize',
                 keep_ratio=True),
             dict(type='mmdet.RandomFlip', prob=0.5),
         ]),
