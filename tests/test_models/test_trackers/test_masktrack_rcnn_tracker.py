@@ -24,7 +24,7 @@ class TestMaskTrackRCNNTracker(TestCase):
     def test_get_match_score(self):
         bboxes = random_boxes(self.num_objs, 64)
         labels = torch.arange(self.num_objs)
-        scores = torch.arange(self.num_objs)
+        scores = torch.arange(self.num_objs, dtype=torch.float32)
         similarity_logits = torch.randn(self.num_objs, self.num_objs + 1)
 
         match_score = self.tracker.get_match_score(bboxes, labels, scores,
