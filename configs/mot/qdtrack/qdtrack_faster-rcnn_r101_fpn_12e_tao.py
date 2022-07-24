@@ -8,7 +8,7 @@ train_dataloader = dict(
     batch_size=2,
     num_workers=2,
     persistent_workers=True,
-    sampler=dict(type='DefaultSampler', shuffle=False),
+    sampler=dict(type='DefaultSampler', shuffle=True),
     batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
     dataset=dict(
         dataset=dict(
@@ -43,7 +43,7 @@ train_cfg = dict(
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001),
-    clip_grad=dict(max_norm=35, norm_type=2))
+    clip_grad=None)
 
 val_evaluator = dict(type='TAOMetric', metric=['tao_track_ap'])
 test_evaluator = val_evaluator
