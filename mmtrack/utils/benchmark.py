@@ -42,7 +42,7 @@ def print_log(msg: str, logger: Optional[MMLogger] = None) -> None:
         logger.info(msg)
 
 
-def print_process_memory(p: psutil.Process,
+def print_process_memory(p: 'psutil.Process',
                          logger: Optional[MMLogger] = None) -> None:
     """print process memory info."""
     mem_used = gb_round(psutil.virtual_memory().used)
