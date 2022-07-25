@@ -16,15 +16,21 @@ class VideoSampler(Sampler):
 
     Args:
         dataset (Sized): The dataset.
+        iter_by_video (bool): Whether to sample the entire video.
+            Defaults to False.
     """
 
-    def __init__(self, dataset: Sized, seed: int = 0) -> None:
+    def __init__(self,
+                 dataset: Sized,
+                 iter_by_video: bool = False,
+                 seed: int = 0) -> None:
         self.dataset = dataset
         assert self.dataset.test_mode
 
         rank, world_size = get_dist_info()
         self.rank = rank
         self.world_size = world_size
+        self.iter_by_video = iter_by_video
 
         if isinstance(self.dataset, BaseSOTDataset):
             # The input of '__getitem__' function in SOT dataset class must be
@@ -58,15 +64,34 @@ class VideoSampler(Sampler):
                 raise ValueError(
                     f'only {len(first_frame_indices)} videos loaded,'
                     f'but {self.world_size} gpus were given.')
+            if iter_by_video:
+                self.indices = [
+                    list(
+                        range(first_frame_indices[i],
+                              first_frame_indices[i + 1]))
+                    for i in range(len(first_frame_indices) - 1)
+                ]
+                self.indices.append(
+                    list(range(first_frame_indices[-1], len(self.dataset))))
 
-            chunks = np.array_split(first_frame_indices, self.world_size)
-            split_flags = [c[0] for c in chunks]
-            split_flags.append(len(self.dataset))
+                video_indices = list(range(len(first_frame_indices)))
+                chunks = np.array_split(video_indices, self.world_size)
+                split_flags = [c[0] for c in chunks]
+                split_flags.append(len(video_indices))
 
-            self.indices = [
-                list(range(split_flags[i], split_flags[i + 1]))
-                for i in range(self.world_size)
-            ]
+                self.indices = [
+                    self.indices[split_flags[i]:split_flags[i + 1]]
+                    for i in range(self.world_size)
+                ]
+            else:
+                chunks = np.array_split(first_frame_indices, self.world_size)
+                split_flags = [c[0] for c in chunks]
+                split_flags.append(len(self.dataset))
+
+                self.indices = [
+                    list(range(split_flags[i], split_flags[i + 1]))
+                    for i in range(self.world_size)
+                ]
 
     def __iter__(self) -> Iterator[int]:
         """Iterate the indices."""
