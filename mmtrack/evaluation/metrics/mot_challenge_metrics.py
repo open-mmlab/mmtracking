@@ -15,7 +15,8 @@ from mmengine.dist import (all_gather_object, barrier, broadcast,
                            is_main_process)
 from mmengine.logging import MMLogger
 
-from mmtrack.models.task_modules import interpolate_tracks
+from mmtrack.models.task_modules import \
+    interpolate_tracks, appearance_free_link
 from mmtrack.registry import METRICS
 from .base_video_metrics import BaseVideoMetric
 
@@ -56,6 +57,14 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 that will be interpolated. Defaults to 5.
             - max_num_frames (int, optional): The maximum disconnected length
                 in a track. Defaults to 20.
+        aflink_cfg (dict, optional): If not None, apply the AFLink to associate
+            tracklets with only motion information. Defaults to None.
+            - temporal_threshold (tuple, optional): The temporal constraint
+                for tracklets association. Defaults to (0, 30).
+            - spatial_threshold (int, optional): The spatial constraint for
+                tracklets association. Defaults to 75.
+            - confidence_threshold (float, optional): The minimum confidence
+                threshold for tracklets association. Defaults to 0.95.
         collect_device (str): Device name used for collecting results from
             different ranks during distributed training. Must be 'cpu' or
             'gpu'. Defaults to 'cpu'.
@@ -77,6 +86,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
                  interpolate_tracks_cfg: Optional[dict] = None,
+                 aflink_cfg: Optional[dict] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
@@ -92,6 +102,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.metrics = metrics
         self.format_only = format_only
         self.interpolate_tracks_cfg = interpolate_tracks_cfg
+        self.aflink_cfg = aflink_cfg
         assert benchmark in self.allowed_benchmarks
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr
@@ -198,6 +209,12 @@ class MOTChallengeMetrics(BaseVideoMetric):
         pred_file = osp.join(self.pred_dir, seq + '.txt')
 
         pred_tracks = np.array(info['pred_tracks'])
+
+        if self.aflink_cfg is not None:
+            # associate tracks
+            pred_tracks = appearance_free_link(pred_tracks,
+                                               **self.aflink_cfg)
+
         if self.interpolate_tracks_cfg is not None:
             # interpolate tracks
             pred_tracks = interpolate_tracks(pred_tracks,

@@ -6,8 +6,10 @@ from .quasi_dense_tao_tracker import QuasiDenseTAOTracker
 from .quasi_dense_tracker import QuasiDenseTracker
 from .sort_tracker import SORTTracker
 from .tracktor_tracker import TracktorTracker
+from .strongsort_tracker import StrongSORTTracker
 
 __all__ = [
     'BaseTracker', 'ByteTracker', 'MaskTrackRCNNTracker', 'SORTTracker',
-    'QuasiDenseTracker', 'QuasiDenseTAOTracker', 'TracktorTracker'
+    'QuasiDenseTracker', 'QuasiDenseTAOTracker', 'TracktorTracker',
+    'StrongSORTTracker'
 ]
