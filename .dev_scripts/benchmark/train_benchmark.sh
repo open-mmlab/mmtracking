@@ -3,16 +3,16 @@ ROOT_DIR=$2
 
 # VID
 CONFIG=configs/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid.py
-WORK_DIR=dff_faster_rcnn_r50_dc5_1x_imagenetvid
+WORK_DIR=dff_faster_rcnn_r50_dc5_7e_imagenetvid
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
-CONFIG=configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid.py
+CONFIG=configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_7e_imagenetvid.py
 WORK_DIR=fgfa_faster_rcnn_r50_dc5_1x_imagenetvid
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
-CONFIG=configs/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid.py
+CONFIG=configs/vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py
 WORK_DIR=selsa_faster_rcnn_r50_dc5_1x_imagenetvid
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
@@ -47,12 +47,12 @@ echo ${CONFIG} &
 
 CONFIG=configs/sot/stark/stark_st1_r50_500e_lasot.py
 ST1_WORK_DIR=stark_st1_r50_500e_lasot
-echo ${CONFIG}
+echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST1_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null
 
 CONFIG=configs/sot/stark/stark_st2_r50_50e_lasot.py
 ST2_WORK_DIR=stark_st2_r50_50e_lasot
-echo ${CONFIG}
+echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST2_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 load_from=${ROOT_DIR}/${ST1_WORK_DIR}/epoch_500.pth >/dev/null
 
 # MOT

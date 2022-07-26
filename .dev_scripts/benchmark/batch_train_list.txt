@@ -1,7 +1,7 @@
 # VID
-configs/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid.py
-configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid.py
-configs/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid.py
+configs/vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py
+configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_7e_imagenetvid.py
+configs/vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py
 configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid.py
 
 # MOT
