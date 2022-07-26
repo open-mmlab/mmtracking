@@ -18,8 +18,8 @@ class KalmanFilter:
         center_only (bool): If True, distance computation is done with
             respect to the bounding box center position only.
             Defaults to False.
-        nsa (bool): If use the NSA Kalman Filter. More details in
-            https://arxiv.org/abs/2202.11983.
+        nsa (bool): Whether to use the NSA Kalman Filter. More details in
+            https://arxiv.org/abs/2202.11983. Defaults to False.
     """
     chi2inv95 = {
         1: 3.8415,
