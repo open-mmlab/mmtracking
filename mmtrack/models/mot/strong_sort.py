@@ -5,12 +5,11 @@ from torch import Tensor
 
 from mmtrack.utils import OptConfigType, SampleList
 from mmtrack.registry import MODELS, TASK_UTILS
-from ..motion import CameraMotionCompensation, KalmanFilter
-from .base import BaseMultiObjectTracker
+from .deep_sort import DeepSORT
 
 
 @MODELS.register_module()
-class StrongSORT(BaseMultiObjectTracker):
+class StrongSORT(DeepSORT):
     """StrongSORT: Make DeepSORT Great Again.
 
     Details can be found at `StrongSORT<https://arxiv.org/abs/2202.13514>`_.
@@ -37,7 +36,8 @@ class StrongSORT(BaseMultiObjectTracker):
                  cmc: Optional[dict] = None,
                  data_preprocessor: OptConfigType = None,
                  init_cfg: OptConfigType = None):
-        super().__init__(data_preprocessor, init_cfg)
+        super().__init__(data_preprocessor=data_preprocessor,
+                         init_cfg=init_cfg)
 
         if detector is not None:
             self.detector = MODELS.build(detector)
@@ -67,13 +67,6 @@ class StrongSORT(BaseMultiObjectTracker):
     def with_kalman_filter(self):
         """bool: whether the framework has a Kalman filter."""
         return hasattr(self, 'kalman') and self.kalman is not None
-
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> dict:
-        """Calculate losses from a batch of inputs and data samples."""
-        raise NotImplementedError(
-            'Please train `detector` and `reid` models firstly, then \
-                inference with StrongSORT.')
 
     def predict(self,
                 batch_inputs: Dict[str, Tensor],
@@ -107,27 +100,10 @@ class StrongSORT(BaseMultiObjectTracker):
         assert img.size(0) == 1, \
             'StrongSORT inference only support ' \
             '1 batch size per gpu for now.'
-        img = img[0]
 
         assert len(batch_data_samples) == 1, \
             'StrongSORT inference only support ' \
             '1 batch size per gpu for now.'
 
-        track_data_sample = batch_data_samples[0]
-
-        det_results = self.detector.predict(img, batch_data_samples)
-        assert len(det_results) == 1, 'Batch inference is not supported.'
-        track_data_sample.pred_det_instances = det_results[
-            0].pred_instances.clone()
-
-        pred_track_instances = self.tracker.track(
-            model=self,
-            img=img,
-            feats=None,
-            data_sample=track_data_sample,
-            data_preprocessor=self.preprocess_cfg,
-            rescale=rescale,
-            **kwargs)
-        track_data_sample.pred_track_instances = pred_track_instances
-
-        return [track_data_sample]
+        return super().predict(
+            batch_inputs, batch_data_samples, rescale, **kwargs)
