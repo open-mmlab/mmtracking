@@ -32,7 +32,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 #### 1.2 Multiple Object Tracking
 
-- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17, TAO and DanceTrack) are needed, CrowdHuman and LVIS can be served as comlementary dataset.
+- For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17, TAO and DanceTrack) are needed, CrowdHuman and LVIS can be served as complementary dataset.
 
 - The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 
