@@ -1,18 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os.path as osp
 import tempfile
-import warnings
 from collections import defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import mmcv
 import numpy as np
-from mmengine.dist import (all_gather_object, barrier, broadcast_object_list,
-                           is_main_process)
 from mmengine.logging import MMLogger
 
 from mmtrack.registry import METRICS
-from .base_video_metrics import BaseVideoMetric, collect_tracking_results
+from .base_video_metrics import BaseVideoMetric
 
 try:
     import tao
@@ -73,7 +70,6 @@ class TAOMetric(BaseVideoMetric):
         self.outfile_prefix = outfile_prefix
         self.per_video_res = []
         self.img_ids = []
-        self._tao_meta_info = defaultdict(list)
 
     def process(self, data_batch: Sequence[dict],
                 predictions: Sequence[dict]) -> None:
@@ -133,13 +129,13 @@ class TAOMetric(BaseVideoMetric):
             if frame_id == video_length - 1:
                 preds, gts = zip(*self.per_video_res)
                 # format the results
-                gt_results = self._format_one_video_gts(gts)
-                pred_track_results, pred_det_results =\
-                    self._format_one_video_preds(preds)
+                gt_results, tao_meta_info = self._format_one_video_gts(gts)
+                pred_track_results, pred_det_results = \
+                    self._format_one_video_preds(preds, tao_meta_info)
                 self.per_video_res.clear()
                 # add converted result to the results list
-                self.results.append(
-                    (pred_track_results, pred_det_results, gt_results))
+                self.results.append((pred_track_results, pred_det_results,
+                                     gt_results, tao_meta_info))
 
     def compute_metrics(self, results: List) -> Dict[str, float]:
         """Compute the metrics from processed results.
@@ -153,9 +149,10 @@ class TAOMetric(BaseVideoMetric):
         """
         logger: MMLogger = MMLogger.get_current_instance()
         # split gt and prediction list
-        tmp_pred_track_results, tmp_pred_det_results, tmp_gt_results = zip(
-            *results)
-        gt_results = self.format_gts(tmp_gt_results)
+        tmp_pred_track_results, tmp_pred_det_results, \
+            tmp_gt_results, tmp_meta_info = zip(*results)
+        tao_meta_info = self.format_meta(tmp_meta_info)
+        gt_results = self.format_gts(tmp_gt_results, tao_meta_info)
         pred_track_results = self.format_preds(tmp_pred_track_results)
         pred_det_results = self.format_preds(tmp_pred_det_results)
 
@@ -226,18 +223,38 @@ class TAOMetric(BaseVideoMetric):
         tmp_dir.cleanup()
         return eval_results
 
-    def format_gts(self, gts: Tuple[List]) -> dict:
+    def format_meta(self, parts_meta: Tuple[dict]) -> dict:
+        """Gather all meta info from self.results."""
+        all_seq_vids_info = []
+        all_seq_imgs_info = []
+        all_seq_tracks_info = []
+        for _seq_info in parts_meta:
+            all_seq_vids_info.extend(_seq_info['videos'])
+        for _seq_info in parts_meta:
+            all_seq_imgs_info.extend(_seq_info['images'])
+        for _seq_info in parts_meta:
+            all_seq_tracks_info.extend(_seq_info['tracks'])
+
+        # update tao_meta_info
+        tao_meta_info = dict(
+            videos=all_seq_vids_info,
+            images=all_seq_imgs_info,
+            tracks=all_seq_tracks_info)
+
+        return tao_meta_info
+
+    def format_gts(self, gts: Tuple[List], tao_meta_info: dict) -> dict:
         """Gather all ground-truth from self.results."""
         categories = list(self.dataset_meta['categories'].values())
-        for img_info in self._tao_meta_info['images']:
+        for img_info in tao_meta_info['images']:
             self.img_ids.append(img_info['id'])
         gt_results = dict(
             info=dict(),
-            images=self._tao_meta_info['images'],
+            images=tao_meta_info['images'],
             categories=categories,
-            videos=self._tao_meta_info['videos'],
+            videos=tao_meta_info['videos'],
             annotations=[],
-            tracks=self._tao_meta_info['tracks'])
+            tracks=tao_meta_info['tracks'])
 
         ann_id = 1
         for gt_result in gts:
@@ -265,14 +282,16 @@ class TAOMetric(BaseVideoMetric):
             pred_results.extend(pred_result)
         return pred_results
 
-    def _format_one_video_preds(self,
-                                pred_dicts: Tuple[dict]) -> Tuple[List, List]:
+    def _format_one_video_preds(self, pred_dicts: Tuple[dict],
+                                tao_meta_info: Dict) -> Tuple[List, List]:
         """Convert the annotation to the format of YouTube-VIS.
 
         This operation is to make it easier to use the official eval API.
 
         Args:
             pred_dicts (Tuple[dict]): Prediction of the dataset.
+            tao_meta_info (dict): A dict containing videos and images
+                information of TAO.
 
         Returns:
             List: The formatted predictions.
@@ -284,7 +303,7 @@ class TAOMetric(BaseVideoMetric):
             for key in pred.keys():
                 preds[key].append(pred[key])
 
-        vid_infos = self._tao_meta_info['videos']
+        vid_infos = tao_meta_info['videos']
         track_json_results = []
         det_json_results = []
         video_id = vid_infos[-1]['id']
@@ -328,7 +347,8 @@ class TAOMetric(BaseVideoMetric):
 
         return track_json_results, det_json_results
 
-    def _format_one_video_gts(self, gt_dicts: Tuple[dict]) -> List:
+    def _format_one_video_gts(self,
+                              gt_dicts: Tuple[dict]) -> Tuple[list, dict]:
         """Convert the annotation to the format of YouTube-VIS.
 
         This operation is to make it easier to use the official eval API.
@@ -337,13 +357,15 @@ class TAOMetric(BaseVideoMetric):
             gt_dicts (Tuple[dict]): Ground truth of the dataset.
 
         Returns:
-            list: The formatted gts.
+            Tuple[list, dict]: The formatted gts and a dict containing videos
+            and images information of TAO.
         """
         video_infos = []
         image_infos = []
         track_infos = []
         annotations = []
         instance_flag = dict()  # flag the ins_id is used or not
+        tao_meta_info = defaultdict(list)
         cat_ids = list(self.dataset_meta['categories'].keys())
 
         # get video infos
@@ -406,11 +428,11 @@ class TAOMetric(BaseVideoMetric):
                 annotations.append(annotation)
 
         # update tao meta info
-        self._tao_meta_info['images'].extend(image_infos)
-        self._tao_meta_info['videos'].extend(video_infos)
-        self._tao_meta_info['tracks'].extend(track_infos)
+        tao_meta_info['images'].extend(image_infos)
+        tao_meta_info['videos'].extend(video_infos)
+        tao_meta_info['tracks'].extend(track_infos)
 
-        return annotations
+        return annotations, tao_meta_info
 
     def save_pred_results(self, pred_results: List, res_type: str) -> None:
         """Save the results to a zip file.
@@ -429,66 +451,3 @@ class TAOMetric(BaseVideoMetric):
         mmcv.dump(pred_results, f'{outfile_prefix}_{res_type}.json')
 
         logger.info(f'save the results to {outfile_prefix}_{res_type}.json')
-
-    def evaluate(self, size: int) -> dict:
-        """Evaluate the model performance of the whole dataset after processing
-        all batches.
-
-        Args:
-            size (int): Length of the entire validation dataset.
-
-        Returns:
-            dict: Evaluation metrics dict on the val dataset. The keys are the
-            names of the metrics, and the values are corresponding results.
-        """
-        # wait for all processes to complete prediction.
-        barrier()
-
-        if len(self.results) == 0:
-            warnings.warn(
-                f'{self.__class__.__name__} got empty `self.results`. Please '
-                'ensure that the processed results are properly added into '
-                '`self.results` in `process` method.')
-
-        results = collect_tracking_results(self.results, self.collect_device)
-
-        # gather seq_info
-        gathered_seq_vids_info = all_gather_object(
-            self._tao_meta_info['videos'])
-        gathered_seq_imgs_info = all_gather_object(
-            self._tao_meta_info['images'])
-        gathered_seq_tracks_info = all_gather_object(
-            self._tao_meta_info['tracks'])
-        all_seq_vids_info = []
-        all_seq_imgs_info = []
-        all_seq_tracks_info = []
-        for _seq_info in gathered_seq_vids_info:
-            all_seq_vids_info.extend(_seq_info)
-        for _seq_info in gathered_seq_imgs_info:
-            all_seq_imgs_info.extend(_seq_info)
-        for _seq_info in gathered_seq_tracks_info:
-            all_seq_tracks_info.extend(_seq_info)
-
-        # update self._tao_meta_info
-        self._tao_meta_info = dict(
-            videos=all_seq_vids_info,
-            images=all_seq_imgs_info,
-            tracks=all_seq_tracks_info)
-
-        if is_main_process():
-            _metrics = self.compute_metrics(results)  # type: ignore
-            # Add prefix to metric names
-            if self.prefix:
-                _metrics = {
-                    '/'.join((self.prefix, k)): v
-                    for k, v in _metrics.items()
-                }
-            metrics = [_metrics]
-        else:
-            metrics = [None]  # type: ignore
-
-        broadcast_object_list(metrics)
-
-        # reset the results list
-        self.results.clear()
-        return metrics[0]
