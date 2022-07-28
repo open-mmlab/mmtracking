@@ -49,7 +49,7 @@ Please download the datasets from the official websites. It is recommended to sy
 python ./tools/convert_datasets/otb100/download_otb100.py -o ./data/otb100/zips -p 8
 ```
 
-- For VOT2018, we use the official downloading script.
+- For VOT2018, we use the official download script.
 
 ```shell
 # download VOT2018 dataset by web crawling
