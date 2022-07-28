@@ -4,12 +4,13 @@ import math
 from typing import Optional
 
 import torch
-from mmcv.cnn.bricks.transformer import POSITIONAL_ENCODING
 from mmengine.model import BaseModule
 from torch import Tensor
 
+from mmtrack.registry import MODELS
 
-@POSITIONAL_ENCODING.register_module()
+
+@MODELS.register_module()
 class SinePositionalEncoding3D(BaseModule):
     """Position encoding with sine and cosine functions.
 

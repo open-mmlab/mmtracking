@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import torch
 from mmdet.structures.mask import mask2bbox
@@ -118,16 +118,3 @@ class Mask2Former(BaseMultiObjectTracker):
                 results.append(track_data_sample)
 
         return results
-
-    def test_step(self, data: List[List[dict]]) -> List[SampleList]:
-        """``BaseModel`` implements ``test_step`` the same as ``val_step``.
-
-        Args:
-            data (List[List[dict]]): Data sampled from dataloader.
-
-        Returns:
-            List[BaseDataElement]: The predictions of given data.
-        """
-        data[:] = data[0][:]
-        inputs, data_sample = self.data_preprocessor(data, False)
-        return self(inputs, data_sample, mode='predict')

@@ -1,24 +1,23 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import Conv2d, build_plugin_layer, caffe2_xavier_init
-from mmcv.cnn.bricks.transformer import (build_positional_encoding,
-                                         build_transformer_layer_sequence)
+from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
 from mmcv.runner import ModuleList
-from mmdet.models.dense_heads import MaskFormerHead
-from mmdet.structures import SampleList
+from mmdet.models.dense_heads import AnchorFreeHead
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.utils import InstanceList, OptInstanceList, SampleList
 
 
 @MODELS.register_module()
-class Mask2FormerHead(MaskFormerHead):
+class Mask2FormerHead(AnchorFreeHead):
     """Implements the Mask2Former head.
 
     See `Masked-attention Mask Transformer for Universal Image
@@ -73,7 +72,7 @@ class Mask2FormerHead(MaskFormerHead):
                  test_cfg: OptConfigType = None,
                  init_cfg: OptMultiConfig = None,
                  **kwargs) -> None:
-        super(MaskFormerHead, self).__init__(init_cfg=init_cfg)
+        super(AnchorFreeHead, self).__init__(init_cfg=init_cfg)
         self.num_classes = num_classes
         self.num_queries = num_queries
         self.num_frames = num_frames
@@ -88,6 +87,7 @@ class Mask2FormerHead(MaskFormerHead):
             in_channels=in_channels,
             feat_channels=feat_channels,
             out_channels=out_channels)
+        # TODO: change to `MODELS.build`
         self.pixel_decoder = build_plugin_layer(pixel_decoder_)[1]
         self.transformer_decoder = build_transformer_layer_sequence(
             transformer_decoder)
@@ -103,8 +103,7 @@ class Mask2FormerHead(MaskFormerHead):
                         feat_channels, self.decoder_embed_dims, kernel_size=1))
             else:
                 self.decoder_input_projs.append(nn.Identity())
-        self.decoder_positional_encoding = build_positional_encoding(
-            positional_encoding)
+        self.decoder_positional_encoding = MODELS.build(positional_encoding)
         self.query_embed = nn.Embedding(self.num_queries, feat_channels)
         self.query_feat = nn.Embedding(self.num_queries, feat_channels)
         # from low resolution to high resolution
@@ -138,6 +137,19 @@ class Mask2FormerHead(MaskFormerHead):
         for p in self.transformer_decoder.parameters():
             if p.dim() > 1:
                 nn.init.xavier_normal_(p)
+
+    def get_targets(self, points: List[Tensor],
+                    batch_gt_instances: InstanceList) -> Any:
+        pass
+
+    def loss_by_feat(
+            self,
+            cls_scores: List[Tensor],
+            bbox_preds: List[Tensor],
+            batch_gt_instances: InstanceList,
+            batch_img_metas: List[dict],
+            batch_gt_instances_ignore: OptInstanceList = None) -> dict:
+        pass
 
     def _forward_head(
         self, decoder_out: Tensor, mask_feature: Tensor,
@@ -222,7 +234,6 @@ class Mask2FormerHead(MaskFormerHead):
         decoder_positional_encodings = []
         for i in range(self.num_transformer_feat_level):
             decoder_input = self.decoder_input_projs[i](multi_scale_memorys[i])
-
             decoder_input = decoder_input.flatten(2)
             level_embed = self.level_embed.weight[i][None, :, None]
             decoder_input = decoder_input + level_embed

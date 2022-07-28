@@ -123,7 +123,8 @@ test_cfg = dict(type='TestLoop')
 val_dataloader = dict(
     batch_size=1,
     num_workers=2,
-    sampler=dict(type='VideoSampler', iter_by_video=True),
+    sampler=dict(type='VideoSampler'),
+    batch_sampler=dict(type='EntireVideoBatchSampler'),
 )
 test_dataloader = val_dataloader
 
