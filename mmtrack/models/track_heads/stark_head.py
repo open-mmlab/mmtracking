@@ -6,10 +6,10 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
-from mmcv.runner.base_module import BaseModule
 from mmdet.models.layers import Transformer, build_transformer
 from mmdet.models.layers.builder import TRANSFORMER
 from mmengine.data import InstanceData
+from mmengine.model import BaseModule
 from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
