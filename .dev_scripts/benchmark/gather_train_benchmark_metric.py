@@ -67,14 +67,16 @@ if __name__ == '__main__':
             if osp.exists(result_path):
                 # 1 read config and excel
                 cfg = mmcv.Config.fromfile(config)
-                total_epochs = cfg.total_epochs
+                total_epochs = cfg.train_cfg.max_epochs
 
                 # the first metric will be used to find the best ckpt
                 has_final_ckpt = True
                 if 'vid' in config:
-                    eval_metrics = ['bbox_mAP_50']
+                    eval_metrics = ['coco/bbox_mAP_50']
                 elif 'mot' in config:
-                    eval_metrics = ['MOTA', 'IDF1']
+                    eval_metrics = [
+                        'motchallenge-metric/MOTA', 'motchallenge-metric/IDF1'
+                    ]
                     # tracktor and deepsort don't have ckpt.
                     has_final_ckpt = False
                 elif 'sot' in config:
@@ -103,23 +105,23 @@ if __name__ == '__main__':
                 if osp.exists(osp.join(result_path, ckpt_path)) or \
                         not has_final_ckpt:
                     log_json_path = list(
-                        sorted(glob.glob(osp.join(result_path,
-                                                  '*.log.json'))))[-1]
+                        sorted(
+                            glob.glob(
+                                osp.join(result_path, '*', 'vis_data',
+                                         'scalars.json'))))[-1]
 
                     # 3 read metric
                     result_dict = dict()
                     with open(log_json_path, 'r') as f:
                         for line in f.readlines():
                             log_line = json.loads(line)
-                            if 'mode' not in log_line.keys():
+                            if 'lr' in log_line.keys():
                                 continue
 
-                            if log_line['mode'] == 'val' or \
-                                    log_line['mode'] == 'test':
-                                result_dict[f"epoch_{log_line['epoch']}"] = {
-                                    key: log_line[key]
-                                    for key in eval_metrics if key in log_line
-                                }
+                            result_dict[f"epoch_{log_line['step']}"] = {
+                                key: log_line[key]
+                                for key in eval_metrics if key in log_line
+                            }
                     # 4 find the best ckpt
                     best_epoch_results = dict()
                     for epoch in result_dict:
@@ -129,7 +131,7 @@ if __name__ == '__main__':
                             if best_epoch_results[eval_metrics[
                                     0]] < result_dict[epoch][eval_metrics[0]]:
                                 best_epoch_results = result_dict[epoch]
-
+                    print(result_dict)
                     for metric in best_epoch_results:
                         if 'success' in best_epoch_results:
                             performance = round(best_epoch_results[metric], 1)
