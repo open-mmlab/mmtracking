@@ -4,10 +4,10 @@ from typing import List, Optional, Tuple
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
-from mmcv.runner import BaseModule, auto_fp16, force_fp32
 from mmdet.structures.bbox.transforms import (bbox_cxcywh_to_xyxy,
                                               bbox_xyxy_to_cxcywh)
 from mmengine.data import InstanceData
+from mmengine.model import BaseModule
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS
@@ -180,7 +180,6 @@ class SiameseRPNHead(BaseModule):
         self.loss_cls = MODELS.build(loss_cls)
         self.loss_bbox = MODELS.build(loss_bbox)
 
-    @auto_fp16()
     def forward(self, template_feats: Tuple[Tensor, ...],
                 search_feats: Tuple[Tensor, ...]) -> Tuple[Tensor, Tensor]:
         """Forward with features `template_feats` of template images and
@@ -464,7 +463,6 @@ class SiameseRPNHead(BaseModule):
         losses = self.loss_by_feat(*loss_inputs)
         return losses
 
-    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss_by_feat(self, cls_score: Tensor, bbox_pred: Tensor,
                      batch_gt_instances: InstanceList,
                      batch_search_gt_instances: InstanceList,
@@ -543,7 +541,6 @@ class SiameseRPNHead(BaseModule):
             batch_img_metas=batch_img_metas)
         return predictions
 
-    @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def predict_by_feat(self, cls_score: Tensor, bbox_pred: Tensor,
                         prev_bbox: Tensor, scale_factor: Tensor,
                         batch_img_metas: List[dict]) -> InstanceList:
