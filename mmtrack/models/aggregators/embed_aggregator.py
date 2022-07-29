@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 import torch
 import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmtrack.registry import MODELS
 
