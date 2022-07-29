@@ -35,11 +35,12 @@ model = dict(
     head=dict(
         type='MixFormerHead',
         bbox_head=dict(
-            type='CornerPredictorHead',
+            type='MixformerCornerPredictorHead',
             inplanes=384,
             channel=384,
-            feat_size=20,
+            feat_sz=20,
             stride=16,
+            freeze_bn=False
         ),
         score_head=dict(
             type='ScoreDecoder',
@@ -54,8 +55,8 @@ model = dict(
         search_size=320,
         template_factor=2.0,
         template_size=128,
-        update_interval=200,
-        online_size=3
+        update_interval=[200],
+        online_size=[2],
     )
 )
 
