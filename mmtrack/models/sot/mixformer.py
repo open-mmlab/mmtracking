@@ -292,6 +292,8 @@ class MixFormer(BaseSingleObjectTracker):
         bbox_w, bbox_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         bbox[0] = bbox[0].clamp(0, img_w - margin)
         bbox[1] = bbox[1].clamp(0, img_h - margin)
+        bbox_w = bbox_w.clamp(margin, img_w)
+        bbox_h = bbox_h.clamp(margin, img_h)
         bbox[2] = bbox[0] + bbox_w
         bbox[3] = bbox[1] + bbox_h
         return bbox
