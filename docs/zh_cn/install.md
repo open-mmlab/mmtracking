@@ -187,5 +187,5 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 运行 MOT 演示脚本您可以看到输出一个命名为 `mot.mp4` 的视频文件：
 
 ```shell
-python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
+python demo/demo_mot_vis.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
