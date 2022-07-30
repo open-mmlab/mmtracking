@@ -126,11 +126,16 @@ class MLP(nn.Module):
 class ScoreDecoder(nn.Module):
     def __init__(self,
                  pool_size=4,
+                 feat_sz=20,
+                 stride=16,
                  num_heads=6,
                  hidden_dim=384,
                  num_layers=3
                  ):
         super().__init__()
+        self.feat_sz = feat_sz
+        self.stride = stride
+        self.img_sz = feat_sz * stride
         self.num_heads = num_heads
         self.pool_size = pool_size
         self.score_head = MLP(hidden_dim, hidden_dim, 1, num_layers)
@@ -149,8 +154,20 @@ class ScoreDecoder(nn.Module):
         trunc_normal_(self.score_token, std=.02)
 
     def forward(self, search_feat, template_feat, search_box):
+        """
+        Args:
+            search_feat (Tensor): Search region features extracted from backbone 
+            with shape (N, C, H, W).
+            template_feat (Tensor): Template features extracted from backbone 
+            with shape (N, C, H, W).
+            search_box (Tensor): of shape (B, 4), in
+            [tl_x, tl_y, br_x, br_y] format.
+        Returns:
+            out_score (Tensor): Confidence score of the predicted result.
+                of shape (b, 1, 1)
+        """
         b, c, h, w = search_feat.shape
-        search_box = search_box.clone() * w
+        search_box = search_box.clone() / self.img_sz * w
         # bb_pool = box_cxcywh_to_xyxy(search_box.view(-1, 4))
         bb_pool = search_box.view(-1, 4)
         # Add batch_index to rois
