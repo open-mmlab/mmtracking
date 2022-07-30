@@ -20,7 +20,7 @@
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/en/latest/)
+[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/zh_CN/latest/)
 [![badge](https://github.com/open-mmlab/mmtracking/workflows/build/badge.svg)](https://github.com/open-mmlab/mmtracking/actions)
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
@@ -28,7 +28,7 @@
 [📘Documentation](https://mmtracking.readthedocs.io/zh_CN/latest/) |
 [🛠️Installation](https://mmtracking.readthedocs.io/zh_CN/latest/install.html) |
 [👀Model Zoo](https://mmtracking.readthedocs.io/zh_CN/latest/model_zoo.html) |
-[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
+[🆕Update News](https://mmtracking.readthedocs.io/zh_CN/latest/changelog.html) |
 [🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
 </div>
@@ -53,7 +53,7 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 - **首个开源一体化视频目标感知平台**
 
-  MMTracking 是首个开源一体化视频目标感知工具箱，同时支持视频目标检测，多目标跟踪，单目标跟踪和视频个例分割等多种任务和算法。
+  MMTracking 是首个开源一体化视频目标感知工具箱，同时支持视频目标检测，多目标跟踪，单目标跟踪和视频实例分割等多种任务和算法。
 
 - **模块化设计**
 
@@ -69,23 +69,23 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 ## 更新
 
-v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/en/changelog.md)了解更多细节以及发布历史。
+v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/zh_cn/changelog.md)了解更多细节以及发布历史。
 
 ## 安装
 
-请参考[安装指南](docs/en/install.md)进行安装。
+请参考[安装指南](docs/zh_cn/install.md)进行安装。
 
 ## 开始使用MMTracking
 
-请参考[数据集](docs/en/dataset.md)和[快速开始](docs/en/quick_run.md)了解MMTracking的基本使用。
+请参考[数据集](docs/zh_cn/dataset.md)和[快速开始](docs/zh_cn/quick_run.md)了解MMTracking的基本使用。
 
 我们提供了跟踪的Colab教程，您可以在[这里](<(./demo/MMTracking_Tutorial.ipynb)>)预览或者直接在[Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb)上运行。
 
-MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置文件简介](docs/en/tutorials/config.md), [视频目标检测器配置文件详解](docs/en/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/en/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/en/tutorials/config_sot.md), [自定义数据集](docs/en/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/en/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/en/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/en/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/en/tutorials/customize_sot_model.md), [自定义训练配置](docs/en/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/en/useful_tools_scripts.md).
+MMTracking也提供了更详细的[教程](docs/zh_cn/tutorials/)，比如[配置文件简介](docs/zh_cn/tutorials/config.md), [视频目标检测器配置文件详解](docs/zh_cn/tutorials/config_vid.md), [多目标跟踪器配置文件详解](docs/zh_cn/tutorials/config_mot.md), [单目标跟踪器配置文件详解](docs/zh_cn/tutorials/config_sot.md), [自定义数据集](docs/zh_cn/tutorials/customize_dataset.md), [自定义数据预处理流程](docs/zh_cn/tutorials/customize_data_pipeline.md), [自定义视频目标检测器](docs/zh_cn/tutorials/customize_vid_model.md), [自定义多目标跟踪器](docs/zh_cn/tutorials/customize_mot_model.md), [自定义单目标跟踪器](docs/zh_cn/tutorials/customize_sot_model.md), [自定义训练配置](docs/zh_cn/tutorials/customize_runtime.md) 以及 [有用的工具和脚本](docs/zh_cn/useful_tools_scripts.md)。
 
 ## 基准测试与模型库
 
-本工具箱支持的各个模型的结果和设置都可以在[模型库](docs/en/model_zoo.md)页面中查看。
+本工具箱支持的各个模型的结果和设置都可以在[模型库](docs/zh_cn/model_zoo.md)页面中查看。
 
 ### 视频目标检测
 
