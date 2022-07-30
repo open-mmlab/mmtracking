@@ -5,8 +5,8 @@
 - PyTorch 1.3+
 - CUDA 9.2+ (如果您从源代码构建 PyTorch, 那么 CUDA9.0也是兼容的)
 - GCC 5+
-- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
-- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
+- [MMCV](https://mmcv.readthedocs.io/zh_CN/latest/#installation)
+- [MMDetection](https://mmdetection.readthedocs.io/zh_CN/latest/#installation)
 
 兼容的 MMTracking，MMCV 和 MMDetection 版本如下，请安装正确的版本以避免安装问题。
 
