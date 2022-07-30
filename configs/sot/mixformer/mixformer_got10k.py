@@ -45,13 +45,15 @@ model = dict(
         score_head=dict(
             type='ScoreDecoder',
             pool_size=4,
+            feat_sz=20,
+            stride=16,
             num_heads=6,
             hidden_dim=384,
             num_layers=3
         )
    ),
     test_cfg=dict(
-        search_factor=4.5,
+        search_factor=5.0,
         search_size=320,
         template_factor=2.0,
         template_size=128,
