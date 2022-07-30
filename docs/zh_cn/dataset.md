@@ -32,7 +32,7 @@
 
 #### 1.2 多目标跟踪
 
-- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17, TAO和DanceTrack)， CrowdHuman 和 LVIS 可以作为补充数据。
+- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17, TAO和DanceTrack）， CrowdHuman 和 LVIS 可以作为补充数据。
 
 - `tao` 文件夹下包含官方标注的 `annotations` 可以从[这里](https://github.com/TAO-Dataset/annotations)获取。
 
