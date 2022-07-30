@@ -80,7 +80,9 @@ if __name__ == '__main__':
                     # tracktor and deepsort don't have ckpt.
                     has_final_ckpt = False
                 elif 'sot' in config:
-                    eval_metrics = ['success', 'norm_precision', 'precision']
+                    eval_metrics = [
+                        'sot/success', 'sot/norm_precision', 'sot/precision'
+                    ]
                 else:
                     raise NotImplementedError(
                         f'Not supported config: {config}')
