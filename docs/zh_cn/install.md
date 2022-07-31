@@ -5,8 +5,8 @@
 - PyTorch 1.3+
 - CUDA 9.2+ (如果您从源代码构建 PyTorch, 那么 CUDA9.0也是兼容的)
 - GCC 5+
-- [MMCV](https://mmcv.readthedocs.io/en/latest/#installation)
-- [MMDetection](https://mmdetection.readthedocs.io/en/latest/#installation)
+- [MMCV](https://mmcv.readthedocs.io/zh_CN/latest/#installation)
+- [MMDetection](https://mmdetection.readthedocs.io/zh_CN/latest/#installation)
 
 兼容的 MMTracking，MMCV 和 MMDetection 版本如下，请安装正确的版本以避免安装问题。
 
@@ -187,5 +187,5 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 运行 MOT 演示脚本您可以看到输出一个命名为 `mot.mp4` 的视频文件：
 
 ```shell
-python demo/demo_mot.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
+python demo/demo_mot_vis.py configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py --input demo/demo.mp4 --output mot.mp4
 ```
