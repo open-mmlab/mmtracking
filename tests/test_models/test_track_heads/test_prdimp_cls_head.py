@@ -15,12 +15,12 @@ class TestLinearBlock(TestCase):
                 in_dim=32,
                 out_dim=16,
                 filter_initializer=dict(
-                    type='FilterClassifierInitializer',
+                    type='FilterInitializer',
                     filter_size=4,
                     feature_dim=16,
                     feature_stride=16),
                 filter_optimizer=dict(
-                    type='PrDiMPSteepestDescentNewton',
+                    type='PrdimpFilterOptimizer',
                     num_iters=5,
                     feat_stride=16,
                     init_step_length=1.0,

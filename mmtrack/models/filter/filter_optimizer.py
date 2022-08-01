@@ -12,11 +12,11 @@ from ..task_modules.filter import filter as filter_layer
 
 
 @MODELS.register_module()
-class PrDiMPSteepestDescentNewton(BaseModule):
-    """Optimizer module of PrDiMP.
+class PrdimpFilterOptimizer(BaseModule):
+    """Optimizer module of filter in PrDiMP.
 
     It unrolls the steepest descent with Newton iterations to optimize the
-        target filter. It's used on PrDiMP.
+        target filter.
 
     Args:
         num_iters (int, optional):  Number of default optimization iterations.

@@ -8,7 +8,7 @@ from mmtrack.registry import MODELS
 
 
 @MODELS.register_module()
-class FilterClassifierInitializer(BaseModule):
+class FilterInitializer(BaseModule):
     """Initializes a target classification filter.
 
     Args:

@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 
-from mmtrack.models import PrDiMPSteepestDescentNewton
+from mmtrack.models import PrdimpFilterOptimizer
 
 
 def test_prdimp_steepest_descent_newton():
-    optimizer = PrDiMPSteepestDescentNewton(
+    optimizer = PrdimpFilterOptimizer(
         num_iters=5,
         feat_stride=16,
         init_step_length=1.0,
