@@ -16,7 +16,8 @@ model = dict(
             norm_cfg=dict(requires_grad=False),
             style='caffe',
             init_cfg=dict(
-                type='Pretrained', checkpoint='torchvision://resnet50')),
+                type='Pretrained',
+                checkpoint='open-mmlab://detectron2/resnet50_caffe')),
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
             bbox_head=dict(

@@ -65,9 +65,10 @@ if __name__ == '__main__':
             config_name = osp.splitext(config_name)[0]
             result_path = osp.join(root_path, config_name)
             if osp.exists(result_path):
+
                 # 1 read config and excel
                 cfg = mmcv.Config.fromfile(config)
-                total_epochs = cfg.train_cfg.max_epochs
+                total_epochs = cfg.train_cfg.max_epochs if cfg.train_cfg else 0
 
                 # the first metric will be used to find the best ckpt
                 has_final_ckpt = True
@@ -78,7 +79,8 @@ if __name__ == '__main__':
                         'motchallenge-metric/MOTA', 'motchallenge-metric/IDF1'
                     ]
                     # tracktor and deepsort don't have ckpt.
-                    has_final_ckpt = False
+                    if 'deepsort' in result_path or 'tracktor' in result_path:
+                        has_final_ckpt = False
                 elif 'sot' in config:
                     eval_metrics = [
                         'sot/success', 'sot/norm_precision', 'sot/precision'
@@ -106,11 +108,17 @@ if __name__ == '__main__':
                 ckpt_path = f'epoch_{total_epochs}.pth'
                 if osp.exists(osp.join(result_path, ckpt_path)) or \
                         not has_final_ckpt:
-                    log_json_path = list(
-                        sorted(
-                            glob.glob(
-                                osp.join(result_path, '*', 'vis_data',
-                                         'scalars.json'))))[-1]
+                    if has_final_ckpt:
+                        log_json_path = list(
+                            sorted(
+                                glob.glob(
+                                    osp.join(result_path, '*', 'vis_data',
+                                             'scalars.json'))))[-1]
+                    else:
+                        log_json_path = list(
+                            sorted(
+                                glob.glob(
+                                    osp.join(result_path, '*', '*.json'))))[-1]
 
                     # 3 read metric
                     result_dict = dict()
@@ -119,11 +127,16 @@ if __name__ == '__main__':
                             log_line = json.loads(line)
                             if 'lr' in log_line.keys():
                                 continue
-
-                            result_dict[f"epoch_{log_line['step']}"] = {
-                                key: log_line[key]
-                                for key in eval_metrics if key in log_line
-                            }
+                            if has_final_ckpt:
+                                result_dict[f"epoch_{log_line['step']}"] = {
+                                    key: log_line[key]
+                                    for key in eval_metrics if key in log_line
+                                }
+                            else:
+                                result_dict['test'] = {
+                                    key: log_line[key]
+                                    for key in eval_metrics if key in log_line
+                                }
                     # 4 find the best ckpt
                     best_epoch_results = dict()
                     for epoch in result_dict:
@@ -133,9 +146,9 @@ if __name__ == '__main__':
                             if best_epoch_results[eval_metrics[
                                     0]] < result_dict[epoch][eval_metrics[0]]:
                                 best_epoch_results = result_dict[epoch]
-                    print(result_dict)
+
                     for metric in best_epoch_results:
-                        if 'success' in best_epoch_results:
+                        if 'sot/success' in best_epoch_results:
                             performance = round(best_epoch_results[metric], 1)
                         else:
                             performance = round(
