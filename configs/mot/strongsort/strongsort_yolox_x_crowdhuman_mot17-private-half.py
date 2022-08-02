@@ -114,7 +114,7 @@ test_cfg = dict(type='TestLoop')
 val_evaluator = dict(postprocess_tracklet_cfg=[
     dict(
         type='AppearanceFreeLink',
-        checkpoint=
+        checkpoint=  # noqa: E251
         '/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
         temporal_threshold=(0, 30),
         spatial_threshold=50,
