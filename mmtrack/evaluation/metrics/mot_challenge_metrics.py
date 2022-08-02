@@ -15,9 +15,7 @@ from mmengine.dist import (all_gather_object, barrier, broadcast,
                            is_main_process)
 from mmengine.logging import MMLogger
 
-from mmtrack.models.task_modules import \
-    interpolate_tracks, appearance_free_link
-from mmtrack.registry import METRICS
+from mmtrack.registry import METRICS, TASK_UTILS
 from .base_video_metrics import BaseVideoMetric
 
 
@@ -51,20 +49,27 @@ class MOTChallengeMetrics(BaseVideoMetric):
         benchmark (str): Benchmark to be evaluated. Defaults to 'MOT17'.
         format_only (bool): If True, only formatting the results to the
             official format and not performing evaluation. Defaults to False.
-        interpolate_tracks_cfg (dict, optional): If not None, Interpolate
-            tracks linearly to make tracks more complete. Defaults to None.
-            - min_num_frames (int, optional): The minimum length of a track
-                that will be interpolated. Defaults to 5.
-            - max_num_frames (int, optional): The maximum disconnected length
-                in a track. Defaults to 20.
-        aflink_cfg (dict, optional): If not None, apply the AFLink to associate
-            tracklets with only motion information. Defaults to None.
-            - temporal_threshold (tuple, optional): The temporal constraint
-                for tracklets association. Defaults to (0, 30).
-            - spatial_threshold (int, optional): The spatial constraint for
-                tracklets association. Defaults to 75.
-            - confidence_threshold (float, optional): The minimum confidence
-                threshold for tracklets association. Defaults to 0.95.
+        postprocess_tracklet_cfg (List[dict], optional): configs for tracklets
+            postprocessing methods. `AppearanceFreeLink` and
+            `InterpolateTracklets` are supported. Defaults to [].
+            - AppearanceFreeLink:
+                - checkpoint (str): Checkpoint path.
+                - temporal_threshold (tuple, optional): The temporal constraint
+                    for tracklets association. Defaults to (0, 30).
+                - spatial_threshold (int, optional): The spatial constraint for
+                    tracklets association. Defaults to 75.
+                - confidence_threshold (float, optional): The minimum
+                    confidence threshold for tracklets association.
+                    Defaults to 0.95.
+            - InterpolateTracklets:
+                - min_num_frames (int, optional): The minimum length of a
+                    track that will be interpolated. Defaults to 5.
+                - max_num_frames (int, optional): The maximum disconnected
+                    length in a track. Defaults to 20.
+                - use_gsi (bool, optional): Whether to use the GSI (Gaussian-
+                    smoothed interpolation) method. Defaults to False.
+                - smooth_tau (int, optional): smoothing parameter in GSI.
+                    Defaults to 10.
         collect_device (str): Device name used for collecting results from
             different ranks during distributed training. Must be 'cpu' or
             'gpu'. Defaults to 'cpu'.
@@ -85,8 +90,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
-                 interpolate_tracks_cfg: Optional[dict] = None,
-                 aflink_cfg: Optional[dict] = None,
+                 postprocess_tracklet_cfg: List[dict] = [],
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
@@ -101,8 +105,8 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 raise KeyError(f'metric {metric} is not supported.')
         self.metrics = metrics
         self.format_only = format_only
-        self.interpolate_tracks_cfg = interpolate_tracks_cfg
-        self.aflink_cfg = aflink_cfg
+        self.postprocess_tracklet_cfg = postprocess_tracklet_cfg.copy()
+        self.postprocess_tracklet_methods = [TASK_UTILS.build(cfg) for cfg in self.postprocess_tracklet_cfg]
         assert benchmark in self.allowed_benchmarks
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr
@@ -210,15 +214,8 @@ class MOTChallengeMetrics(BaseVideoMetric):
 
         pred_tracks = np.array(info['pred_tracks'])
 
-        if self.aflink_cfg is not None:
-            # associate tracks
-            pred_tracks = appearance_free_link(pred_tracks,
-                                               **self.aflink_cfg)
-
-        if self.interpolate_tracks_cfg is not None:
-            # interpolate tracks
-            pred_tracks = interpolate_tracks(pred_tracks,
-                                             **self.interpolate_tracks_cfg)
+        for postprocess_tracklet_methods in self.postprocess_tracklet_methods:
+            pred_tracks = postprocess_tracklet_methods.forward(pred_tracks)
 
         with open(pred_file, 'wt') as f:
             for tracks in pred_tracks:

@@ -18,7 +18,9 @@ class KalmanFilter:
         center_only (bool): If True, distance computation is done with
             respect to the bounding box center position only.
             Defaults to False.
-        nsa (bool): Whether to use the NSA Kalman Filter. More details in
+        use_nsa (bool): Whether to use the NSA (Noise Scale Adaptive) Kalman
+            Filter, which adaptively modulates the noise scale according to
+            the quality of detections. More details in
             https://arxiv.org/abs/2202.11983. Defaults to False.
     """
     chi2inv95 = {
@@ -33,14 +35,14 @@ class KalmanFilter:
         9: 16.919
     }
 
-    def __init__(self, center_only: bool = False, nsa: bool = False):
+    def __init__(self, center_only: bool = False, use_nsa: bool = False):
         self.center_only = center_only
         if self.center_only:
             self.gating_threshold = self.chi2inv95[2]
         else:
             self.gating_threshold = self.chi2inv95[4]
 
-        self.nsa = nsa
+        self.use_nsa = use_nsa
         ndim, dt = 4, 1.
 
         # Create Kalman filter model matrices.
@@ -118,14 +120,14 @@ class KalmanFilter:
 
     def project(self, mean: np.array,
                 covariance: np.array,
-                confidence: float = 0.) -> Tuple[np.array, np.array]:
+                bbox_score: float = 0.) -> Tuple[np.array, np.array]:
         """Project state distribution to measurement space.
 
         Args:
             mean (ndarray): The state's mean vector (8 dimensional array).
             covariance (ndarray): The state's covariance matrix (8x8
                 dimensional).
-            confidence (float): The confidence score of the bbox.
+            bbox_score (float): The confidence score of the bbox.
                 Defaults to 0.
 
         Returns:
@@ -138,7 +140,8 @@ class KalmanFilter:
             self._std_weight_position * mean[3]
         ]
 
-        std = [(1 - confidence) * x for x in std]
+        if self.use_nsa:
+            std = [(1 - bbox_score) * x for x in std]
 
         innovation_cov = np.diag(np.square(std))
 
@@ -148,7 +151,7 @@ class KalmanFilter:
         return mean, covariance + innovation_cov
 
     def update(self, mean: np.array, covariance: np.array,
-               measurement: np.array, confidence: float = 0.
+               measurement: np.array, bbox_score: float = 0.
                ) -> Tuple[np.array, np.array]:
         """Run Kalman filter correction step.
 
@@ -159,7 +162,7 @@ class KalmanFilter:
             measurement (ndarray): The 4 dimensional measurement vector
                 (x, y, a, h), where (x, y) is the center position, a the
                 aspect ratio, and h the height of the bounding box.
-            confidence (float): The confidence score of the bbox.
+            bbox_score (float): The confidence score of the bbox.
                 Defaults to 0.
 
         Returns:
@@ -167,7 +170,7 @@ class KalmanFilter:
              distribution.
         """
         projected_mean, projected_cov = \
-            self.project(mean, covariance, confidence)
+            self.project(mean, covariance, bbox_score)
 
         chol_factor, lower = scipy.linalg.cho_factor(
             projected_cov, lower=True, check_finite=False)

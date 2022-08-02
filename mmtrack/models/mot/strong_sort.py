@@ -36,8 +36,8 @@ class StrongSORT(DeepSORT):
                  cmc: Optional[dict] = None,
                  data_preprocessor: OptConfigType = None,
                  init_cfg: OptConfigType = None):
-        super().__init__(data_preprocessor=data_preprocessor,
-                         init_cfg=init_cfg)
+        super().__init__(detector, reid, tracker, kalman,
+                         data_preprocessor, init_cfg)
 
         if detector is not None:
             self.detector = MODELS.build(detector)
@@ -95,15 +95,5 @@ class StrongSORT(DeepSORT):
                 input images. Each TrackDataSample usually contains
                 ``pred_det_instances`` or ``pred_track_instances``.
         """
-        img = batch_inputs['img']
-        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
-        assert img.size(0) == 1, \
-            'StrongSORT inference only support ' \
-            '1 batch size per gpu for now.'
-
-        assert len(batch_data_samples) == 1, \
-            'StrongSORT inference only support ' \
-            '1 batch size per gpu for now.'
-
         return super().predict(
             batch_inputs, batch_data_samples, rescale, **kwargs)

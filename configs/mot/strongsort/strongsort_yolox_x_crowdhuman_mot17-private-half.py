@@ -25,7 +25,7 @@ model = dict(
             checkpoint=  # noqa: E251
             '/data1/dyh/models/mmtracking/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0_detector.pth'  # noqa: E501  # TODO
         )),
-    kalman=dict(type='KalmanFilter', center_only=False, nsa=True),
+    kalman=dict(type='KalmanFilter', center_only=False, use_nsa=True),
     cmc=dict(
         type='CameraMotionCompensation',
         warp_mode='cv2.MOTION_EUCLIDEAN',
@@ -117,12 +117,21 @@ test_cfg = dict(type='TestLoop')
 
 # evaluator
 val_evaluator = dict(
-    interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20, gsi=True, smooth_tau=10),
-    aflink_cfg=dict(
-        temporal_threshold=(0, 30),
-        spatial_threshold=50,
-        confidence_threshold=0.95,
-        checkpoint='/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth'  # TODO
-    ),
+    postprocess_tracklet_cfg=[
+        dict(
+            type='AppearanceFreeLink',
+            checkpoint='/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
+            temporal_threshold=(0, 30),
+            spatial_threshold=50,
+            confidence_threshold=0.95,
+        ),
+        dict(
+            type='InterpolateTracklets',
+            min_num_frames=5,
+            max_num_frames=20,
+            use_gsi=True,
+            smooth_tau=10
+        )
+    ]
 )
 test_evaluator = val_evaluator

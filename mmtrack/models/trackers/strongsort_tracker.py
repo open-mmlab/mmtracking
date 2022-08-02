@@ -15,7 +15,16 @@ from mmtrack.registry import MODELS
 from .sort_tracker import SORTTracker
 
 
-def cosine_distance(x, y):
+def cosine_distance(x: Tensor, y: Tensor):
+    """compute the cosine distance
+
+    Args:
+        x (Tensor): embeddings with shape (N,C).
+        y (Tensor): embeddings with shape (M,C).
+
+    Returns:
+        ndarray: cosine distance with shape (N,M).
+    """
     x = x.cpu().numpy()
     y = y.cpu().numpy()
     x = x / np.linalg.norm(x, axis=1, keepdims=True)

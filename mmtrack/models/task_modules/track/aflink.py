@@ -1,5 +1,3 @@
-from typing import Optional
-
 import torch
 import numpy as np
 from torch import nn
@@ -9,18 +7,24 @@ from scipy.optimize import linear_sum_assignment
 from mmengine.model import BaseModule
 from mmengine.runner.checkpoint import load_checkpoint
 
-from mmtrack.registry import MODELS
+from mmtrack.registry import TASK_UTILS
 INFINITY = 1e5
 
 
 class TemporalBlock(BaseModule):
-    def __init__(self, cin, cout):
+    """The temporal block of AFLink model.
+
+    Args:
+        in_channel (int): the dimension of the input channels.
+        out_channel (int): the dimension of the output channels.
+    """
+    def __init__(self, in_channel, out_channel):
         super(TemporalBlock, self).__init__()
-        self.conv = nn.Conv2d(cin, cout, (7, 1), bias=False)
+        self.conv = nn.Conv2d(in_channel, out_channel, (7, 1), bias=False)
         self.relu = nn.ReLU(inplace=True)
-        self.bnf = nn.BatchNorm1d(cout)
-        self.bnx = nn.BatchNorm1d(cout)
-        self.bny = nn.BatchNorm1d(cout)
+        self.bnf = nn.BatchNorm1d(out_channel)
+        self.bnx = nn.BatchNorm1d(out_channel)
+        self.bny = nn.BatchNorm1d(out_channel)
 
     def bn(self, x):
         x[:, :, :, 0] = self.bnf(x[:, :, :, 0])
@@ -36,10 +40,16 @@ class TemporalBlock(BaseModule):
 
 
 class FusionBlock(BaseModule):
-    def __init__(self, cin, cout):
+    """The fusion block of AFLink model.
+
+    Args:
+        in_channel (int): the dimension of the input channels.
+        out_channel (int): the dimension of the output channels.
+    """
+    def __init__(self, in_channel, out_channel):
         super(FusionBlock, self).__init__()
-        self.conv = nn.Conv2d(cin, cout, (1, 3), bias=False)
-        self.bn = nn.BatchNorm2d(cout)
+        self.conv = nn.Conv2d(in_channel, out_channel, (1, 3), bias=False)
+        self.bn = nn.BatchNorm2d(out_channel)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -50,11 +60,16 @@ class FusionBlock(BaseModule):
 
 
 class Classifier(BaseModule):
-    def __init__(self, cin):
+    """The classifier of AFLink model.
+
+    Args:
+        in_channel (int): the dimension of the input channels.
+    """
+    def __init__(self, in_channel):
         super(Classifier, self).__init__()
-        self.fc1 = nn.Linear(cin*2, cin//2)
+        self.fc1 = nn.Linear(in_channel*2, in_channel//2)
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear(cin//2, 2)
+        self.fc2 = nn.Linear(in_channel//2, 2)
 
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), dim=1)
@@ -64,7 +79,6 @@ class Classifier(BaseModule):
         return x
 
 
-@MODELS.register_module()
 class AFLinkModel(BaseModule):
     """Appearance-Free Link Model."""
 
@@ -102,40 +116,8 @@ class AFLinkModel(BaseModule):
         return y
 
 
-def data_transform(track1, track2, length=30):
-    # fill or cut track1
-    length_1 = track1.shape[0]
-    track1 = track1[-length:] if length_1 >= length else \
-        np.pad(track1, ((length - length_1, 0), (0, 0)))
-    
-    # fill or cut track1
-    length_2 = track2.shape[0]
-    track2 = track2[:length] if length_2 >= length else \
-        np.pad(track2, ((0, length - length_2), (0, 0)))
-
-    # min-max normalization
-    min_ = np.concatenate((track1, track2), axis=0).min(axis=0)
-    max_ = np.concatenate((track1, track2), axis=0).max(axis=0)
-    subtractor = (max_ + min_) / 2
-    divisor = (max_ - min_) / 2 + 1e-5
-    track1 = (track1 - subtractor) / divisor
-    track2 = (track2 - subtractor) / divisor
-
-    # numpy to torch
-    track1 = torch.tensor(track1, dtype=torch.float)
-    track2 = torch.tensor(track2, dtype=torch.float)
-
-    # unsqueeze channel=1
-    track1 = track1.unsqueeze(0).unsqueeze(0).cuda()  # TODO: device
-    track2 = track2.unsqueeze(0).unsqueeze(0).cuda()
-    return track1, track2
-
-
-def appearance_free_link(tracks: np.array,
-                         temporal_threshold: tuple = (0, 30),
-                         spatial_threshold: int = 75,
-                         confidence_threshold: float = 0.95,
-                         checkpoint: Optional[str] = None) -> np.array:
+@TASK_UTILS.register_module()
+class AppearanceFreeLink:
     """Appearance-Free Link method.
 
     This method is proposed in
@@ -143,81 +125,133 @@ def appearance_free_link(tracks: np.array,
     `StrongSORT<https://arxiv.org/abs/2202.13514>`_.
 
     Args:
-        tracks (ndarray): With shape (N, 7). Each row denotes
-            (frame_id, track_id, x1, y1, x2, y2, score).
+        checkpoint (str): Checkpoint path.
         temporal_threshold (tuple, optional): The temporal constraint
             for tracklets association. Defaults to (0, 30).
         spatial_threshold (int, optional): The spatial constraint for
             tracklets association. Defaults to 75.
         confidence_threshold (float, optional): The minimum confidence
             threshold for tracklets association. Defaults to 0.95.
-        checkpoint (Optional[str], optional): Checkpoint path. Defaults to
-            None.
-    Returns:
-        ndarray: The interpolated tracks with shape (N, 7). Each row denotes
-            (frame_id, track_id, x1, y1, x2, y2, score)
+
+
     """
-    model = AFLinkModel()
-    if checkpoint is not None:
-        load_checkpoint(model, checkpoint)
-    model.cuda()
-    model.eval()
+    def __init__(self,
+                 checkpoint: str,
+                 temporal_threshold: tuple = (0, 30),
+                 spatial_threshold: int = 75,
+                 confidence_threshold: float = 0.95):
+        self.temporal_threshold = temporal_threshold
+        self.spatial_threshold = spatial_threshold
+        self.confidence_threshold = confidence_threshold
 
-    fn_l2 = lambda x, y: np.sqrt(x ** 2 + y ** 2)
+        self.model = AFLinkModel()
+        if checkpoint:
+            load_checkpoint(self.model, checkpoint)
+        self.model.cuda()
+        self.model.eval()
 
-    # sort tracks by the frame id
-    tracks = tracks[np.argsort(tracks[:, 0])]
+        self.fn_l2 = lambda x, y: np.sqrt(x ** 2 + y ** 2)
 
-    # gather tracks information
-    id2info = defaultdict(list)
-    for row in tracks:
-        frame_id, track_id, x1, y1, x2, y2 = row[:6]
-        id2info[track_id].append([frame_id, x1, y1, x2 - x1, y2 - y1])
-    id2info = {k: np.array(v) for k, v in id2info.items()}
-    num_track = len(id2info)
-    track_ids = np.array(list(id2info))
-    cost_matrix = np.full((num_track, num_track), INFINITY)
+    def data_transform(self, track1, track2, length=30):
+        """Data Transformation. This is used to standardize the length of tracks
+        to a unified length. Then perform min-max normalization to the motion
+        embeddings.
 
-    # compute the cost matrix
-    for i, id_i in enumerate(track_ids):
-        for j, id_j in enumerate(track_ids):
-            if id_i == id_j:
-                continue
-            info_i, info_j = id2info[id_i], id2info[id_j]
-            frame_i, box_i = info_i[-1][0], info_i[-1][1: 3]
-            frame_j, box_j = info_j[0][0], info_j[0][1: 3]
-            # temporal constraint
-            if not temporal_threshold[0] <= \
-                   frame_j - frame_i <= temporal_threshold[1]:
-                continue
-            # spatial constraint
-            if fn_l2(box_i[0] - box_j[0], box_i[1] - box_j[1]) \
-                    > spatial_threshold:
-                continue
-            # confidence constraint
-            track_i, track_j = data_transform(info_i, info_j)
-            confidence = model(track_i, track_j).detach().cpu().numpy()
-            if confidence >= confidence_threshold:
-                cost_matrix[i, j] = 1 - confidence
+        Args:
+            track1 (ndarray): the first track with shape (N,C).
+            track2 (ndarray): the second track with shape (M,C).
+            length (int): the unified length of tracks. Defaults to 30.
+        """
+        # fill or cut track1
+        length_1 = track1.shape[0]
+        track1 = track1[-length:] if length_1 >= length else \
+            np.pad(track1, ((length - length_1, 0), (0, 0)))
 
-    # linear assignment
-    indices = linear_sum_assignment(cost_matrix)
-    _id2id = dict()  # the temporary assignment results
-    id2id = dict()  # the final assignment results
-    for i, j in zip(indices[0], indices[1]):
-        if cost_matrix[i, j] < INFINITY:
-            _id2id[i] = j
-    for k, v in _id2id.items():
-        if k in id2id:
-            id2id[v] = id2id[k]
-        else:
-            id2id[v] = k
+        # fill or cut track1
+        length_2 = track2.shape[0]
+        track2 = track2[:length] if length_2 >= length else \
+            np.pad(track2, ((0, length - length_2), (0, 0)))
 
-    # link
-    for k, v in id2id.items():
-        tracks[tracks[:, 1] == k, 1] = v
+        # min-max normalization
+        min_ = np.concatenate((track1, track2), axis=0).min(axis=0)
+        max_ = np.concatenate((track1, track2), axis=0).max(axis=0)
+        subtractor = (max_ + min_) / 2
+        divisor = (max_ - min_) / 2 + 1e-5
+        track1 = (track1 - subtractor) / divisor
+        track2 = (track2 - subtractor) / divisor
 
-    # deduplicate
-    _, index = np.unique(tracks[:, :2], return_index=True, axis=0)
+        # numpy to torch
+        track1 = torch.tensor(track1, dtype=torch.float)
+        track2 = torch.tensor(track2, dtype=torch.float)
 
-    return tracks[index]
+        # unsqueeze channel=1
+        track1 = track1.unsqueeze(0).unsqueeze(0).cuda()  # TODO: device
+        track2 = track2.unsqueeze(0).unsqueeze(0).cuda()
+        return track1, track2
+
+    def forward(self, pred_tracks: np.ndarray):
+        """Forward function.
+
+        pred_tracks (ndarray): With shape (N, 7). Each row denotes
+            (frame_id, track_id, x1, y1, x2, y2, score).
+
+        Returns:
+            ndarray: The linked tracks with shape (N, 7). Each row denotes
+                (frame_id, track_id, x1, y1, x2, y2, score)
+        """
+        # sort tracks by the frame id
+        pred_tracks = pred_tracks[np.argsort(pred_tracks[:, 0])]
+
+        # gather tracks information
+        id2info = defaultdict(list)
+        for row in pred_tracks:
+            frame_id, track_id, x1, y1, x2, y2 = row[:6]
+            id2info[track_id].append([frame_id, x1, y1, x2 - x1, y2 - y1])
+        id2info = {k: np.array(v) for k, v in id2info.items()}
+        num_track = len(id2info)
+        track_ids = np.array(list(id2info))
+        cost_matrix = np.full((num_track, num_track), INFINITY)
+
+        # compute the cost matrix
+        for i, id_i in enumerate(track_ids):
+            for j, id_j in enumerate(track_ids):
+                if id_i == id_j:
+                    continue
+                info_i, info_j = id2info[id_i], id2info[id_j]
+                frame_i, box_i = info_i[-1][0], info_i[-1][1: 3]
+                frame_j, box_j = info_j[0][0], info_j[0][1: 3]
+                # temporal constraint
+                if not self.temporal_threshold[0] <= \
+                       frame_j - frame_i <= self.temporal_threshold[1]:
+                    continue
+                # spatial constraint
+                if self.fn_l2(box_i[0] - box_j[0], box_i[1] - box_j[1]) \
+                        > self.spatial_threshold:
+                    continue
+                # confidence constraint
+                track_i, track_j = self.data_transform(info_i, info_j)
+                confidence = self.model(track_i, track_j).detach().cpu().numpy()
+                if confidence >= self.confidence_threshold:
+                    cost_matrix[i, j] = 1 - confidence
+
+        # linear assignment
+        indices = linear_sum_assignment(cost_matrix)
+        _id2id = dict()  # the temporary assignment results
+        id2id = dict()  # the final assignment results
+        for i, j in zip(indices[0], indices[1]):
+            if cost_matrix[i, j] < INFINITY:
+                _id2id[i] = j
+        for k, v in _id2id.items():
+            if k in id2id:
+                id2id[v] = id2id[k]
+            else:
+                id2id[v] = k
+
+        # link
+        for k, v in id2id.items():
+            pred_tracks[pred_tracks[:, 1] == k, 1] = v
+
+        # deduplicate
+        _, index = np.unique(pred_tracks[:, :2], return_index=True, axis=0)
+
+        return pred_tracks[index]
