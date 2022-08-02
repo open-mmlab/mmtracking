@@ -704,6 +704,8 @@ class ConvolutionalVisionTransformer(BaseModule):
         self.norm = norm_layer(dim_embed)
         self.cls_token = spec['CLS_TOKEN'][-1]
 
+        # Classifier head
+        self.head = nn.Linear(dim_embed, 1000)
 
     def forward(self, template, online_template, search):
         """
