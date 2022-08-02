@@ -12,7 +12,7 @@ from ..task_modules.filter import filter as filter_layer
 
 
 @MODELS.register_module()
-class PrdimpFilterOptimizer(BaseModule):
+class PrDiMPFilterOptimizer(BaseModule):
     """Optimizer module of filter in PrDiMP.
 
     It unrolls the steepest descent with Newton iterations to optimize the

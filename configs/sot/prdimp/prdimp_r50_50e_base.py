@@ -4,7 +4,7 @@ randomness = dict(seed=1, deterministic=False)
 
 # model setting
 model = dict(
-    type='Prdimp',
+    type='PrDiMP',
     data_preprocessor=dict(
         type='TrackDataPreprocessor',
         mean=[123.675, 116.28, 103.53],
@@ -21,7 +21,7 @@ model = dict(
         norm_eval=False,
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
     cls_head=dict(
-        type='PrdimpClsHead',
+        type='PrDiMPClsHead',
         in_dim=1024,
         out_dim=512,
         filter_initializer=dict(
@@ -30,7 +30,7 @@ model = dict(
             feature_dim=512,
             feature_stride=16),
         filter_optimizer=dict(
-            type='PrdimpFilterOptimizer',
+            type='PrDiMPFilterOptimizer',
             num_iters=5,
             feat_stride=16,
             init_step_length=1.0,

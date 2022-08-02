@@ -4,7 +4,7 @@ from unittest import TestCase
 import mmcv
 import torch
 
-from mmtrack.models.track_heads.prdimp_cls_head import PrdimpClsHead
+from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
 
 
 class TestLinearBlock(TestCase):
@@ -20,7 +20,7 @@ class TestLinearBlock(TestCase):
                     feature_dim=16,
                     feature_stride=16),
                 filter_optimizer=dict(
-                    type='PrdimpFilterOptimizer',
+                    type='PrDiMPFilterOptimizer',
                     num_iters=5,
                     feat_stride=16,
                     init_step_length=1.0,
@@ -46,7 +46,7 @@ class TestLinearBlock(TestCase):
                     init_update_iters=10, update_iters=2, hard_neg_iters=1),
                 test_cfg=dict(img_sample_size=352)))
 
-        self.model = PrdimpClsHead(**cfg)
+        self.model = PrDiMPClsHead(**cfg)
 
     def test_prdimp_cls_head_predict_mode(self):
         self.model.eval()

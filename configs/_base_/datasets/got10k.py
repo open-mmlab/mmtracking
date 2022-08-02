@@ -14,7 +14,7 @@ val_dataloader = dict(
     sampler=dict(type='VideoSampler'),
     dataset=dict(
         type='GOT10kDataset',
-        data_root='openmmlab:s3://openmmlab/datasets/tracking/',
+        data_root='data/',
         ann_file='GOT10k/annotations/got10k_test_infos.txt',
         data_prefix=dict(img_path='GOT10k'),
         pipeline=test_pipeline,

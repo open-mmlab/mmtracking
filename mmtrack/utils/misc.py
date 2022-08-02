@@ -105,7 +105,7 @@ def convert_data_sample_type(
     return ref_data_samples, ref_metainfos
 
 
-def max2d(input: Tensor) -> Tuple[Tensor, Tensor]:
+def max_last2d(input: Tensor) -> Tuple[Tensor, Tensor]:
     """Computes the value and position of maximum in the last two dimensions.
 
     Args:

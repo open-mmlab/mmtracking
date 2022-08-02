@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .iounet_head import IouNetHead
-from .prdimp_cls_head import PrdimpClsHead
+from .prdimp_cls_head import PrDiMPClsHead
 from .quasi_dense_embed_head import QuasiDenseEmbedHead
 from .quasi_dense_track_head import QuasiDenseTrackHead
 from .roi_embed_head import RoIEmbedHead
@@ -11,5 +11,5 @@ from .stark_head import CornerPredictorHead, StarkHead
 __all__ = [
     'CorrelationHead', 'SiameseRPNHead', 'RoIEmbedHead', 'RoITrackHead',
     'StarkHead', 'CornerPredictorHead', 'QuasiDenseEmbedHead',
-    'QuasiDenseTrackHead', 'PrdimpClsHead', 'IouNetHead'
+    'QuasiDenseTrackHead', 'PrDiMPClsHead', 'IouNetHead'
 ]
