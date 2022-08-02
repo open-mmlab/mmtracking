@@ -159,6 +159,9 @@ class AppearanceFreeLink:
             track1 (ndarray): the first track with shape (N,C).
             track2 (ndarray): the second track with shape (M,C).
             length (int): the unified length of tracks. Defaults to 30.
+
+        Returns:
+            Tuple[Tensor]: the transformed track1 and track2.
         """
         # fill or cut track1
         length_1 = track1.shape[0]
