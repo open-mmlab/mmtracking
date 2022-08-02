@@ -17,8 +17,7 @@ class TestInterpolateTracklets(TestCase):
             min_num_frames=5,
             max_num_frames=20,
             use_gsi=True,
-            smooth_tau=10
-        )
+            smooth_tau=10)
 
     def test_init(self):
         interpolation = TASK_UTILS.build(self.cfg)

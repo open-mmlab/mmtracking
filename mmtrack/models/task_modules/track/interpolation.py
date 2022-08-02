@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.gaussian_process import GaussianProcessRegressor as GPR
+from sklearn.gaussian_process.kernels import RBF
 
 from mmtrack.registry import TASK_UTILS
 
@@ -19,6 +19,7 @@ class InterpolateTracklets:
             interpolation) method. Defaults to False.
         smooth_tau (int, optional): smoothing parameter in GSI. Defaults to 10.
     """
+
     def __init__(self,
                  min_num_frames: int = 5,
                  max_num_frames: int = 20,
@@ -76,13 +77,14 @@ class InterpolateTracklets:
                     interpolated_track = np.concatenate(
                         (interpolated_track, cur_result[None]), axis=0)
 
-        interpolated_track = np.concatenate((track, interpolated_track), axis=0)
+        interpolated_track = np.concatenate((track, interpolated_track),
+                                            axis=0)
         return interpolated_track
 
     def gaussian_smoothed_interpolation(self,
                                         track: np.ndarray,
                                         smooth_tau: int = 10) -> np.ndarray:
-        """Gaussian-Smoothed Interpolation
+        """Gaussian-Smoothed Interpolation.
 
         This function is proposed in
         "StrongSORT: Make DeepSORT Great Again"
@@ -97,8 +99,8 @@ class InterpolateTracklets:
             ndarray: The interpolated tracks with shape (N, 7). Each row denotes
                 (frame_id, track_id, x1, y1, x2, y2, score)
         """
-        len_scale = np.clip(smooth_tau * np.log(smooth_tau ** 3 / len(track)),
-                            smooth_tau ** -1, smooth_tau ** 2)
+        len_scale = np.clip(smooth_tau * np.log(smooth_tau**3 / len(track)),
+                            smooth_tau**-1, smooth_tau**2)
         gpr = GPR(RBF(len_scale, 'fixed'))
         t = track[:, 0].reshape(-1, 1)
         x1 = track[:, 2].reshape(-1, 1)
@@ -113,10 +115,10 @@ class InterpolateTracklets:
         x2_gpr = gpr.predict(t)
         gpr.fit(t, y2)
         y2_gpr = gpr.predict(t)
-        gsi_track = [
-            [t[i, 0], track[i, 1], x1_gpr[i], y1_gpr[i], x2_gpr[i], y2_gpr[i],
-            track[i, 6]] for i in range(len(t))
-        ]
+        gsi_track = [[
+            t[i, 0], track[i, 1], x1_gpr[i], y1_gpr[i], x2_gpr[i], y2_gpr[i],
+            track[i, 6]
+        ] for i in range(len(t))]
         return np.array(gsi_track)
 
     def forward(self, pred_tracks: np.ndarray):

@@ -1,13 +1,15 @@
-import torch
-import numpy as np
-from torch import nn
+# Copyright (c) OpenMMLab. All rights reserved.
 from collections import defaultdict
-from scipy.optimize import linear_sum_assignment
 
+import numpy as np
+import torch
 from mmengine.model import BaseModule
 from mmengine.runner.checkpoint import load_checkpoint
+from scipy.optimize import linear_sum_assignment
+from torch import nn
 
 from mmtrack.registry import TASK_UTILS
+
 INFINITY = 1e5
 
 
@@ -18,6 +20,7 @@ class TemporalBlock(BaseModule):
         in_channel (int): the dimension of the input channels.
         out_channel (int): the dimension of the output channels.
     """
+
     def __init__(self, in_channel, out_channel):
         super(TemporalBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, (7, 1), bias=False)
@@ -46,6 +49,7 @@ class FusionBlock(BaseModule):
         in_channel (int): the dimension of the input channels.
         out_channel (int): the dimension of the output channels.
     """
+
     def __init__(self, in_channel, out_channel):
         super(FusionBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, (1, 3), bias=False)
@@ -65,11 +69,12 @@ class Classifier(BaseModule):
     Args:
         in_channel (int): the dimension of the input channels.
     """
+
     def __init__(self, in_channel):
         super(Classifier, self).__init__()
-        self.fc1 = nn.Linear(in_channel*2, in_channel//2)
+        self.fc1 = nn.Linear(in_channel * 2, in_channel // 2)
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear(in_channel//2, 2)
+        self.fc2 = nn.Linear(in_channel // 2, 2)
 
     def forward(self, x1, x2):
         x = torch.cat((x1, x2), dim=1)
@@ -85,24 +90,18 @@ class AFLinkModel(BaseModule):
     def __init__(self):
         super(AFLinkModel, self).__init__()
         self.TemporalModule_1 = nn.Sequential(
-            TemporalBlock(1, 32),
-            TemporalBlock(32, 64),
-            TemporalBlock(64, 128),
-            TemporalBlock(128, 256)
-        )
+            TemporalBlock(1, 32), TemporalBlock(32, 64),
+            TemporalBlock(64, 128), TemporalBlock(128, 256))
         self.TemporalModule_2 = nn.Sequential(
-            TemporalBlock(1, 32),
-            TemporalBlock(32, 64),
-            TemporalBlock(64, 128),
-            TemporalBlock(128, 256)
-        )
+            TemporalBlock(1, 32), TemporalBlock(32, 64),
+            TemporalBlock(64, 128), TemporalBlock(128, 256))
         self.FusionBlock_1 = FusionBlock(256, 256)
         self.FusionBlock_2 = FusionBlock(256, 256)
         self.pooling = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = Classifier(256)
 
     def forward(self, x1, x2):
-        assert not self.training, "Only testing is supported for AFLink."
+        assert not self.training, 'Only testing is supported for AFLink.'
         x1 = x1[:, :, :, :3]
         x2 = x2[:, :, :, :3]
         x1 = self.TemporalModule_1(x1)  # [B,1,30,3] -> [B,256,6,3]
@@ -132,9 +131,8 @@ class AppearanceFreeLink:
             tracklets association. Defaults to 75.
         confidence_threshold (float, optional): The minimum confidence
             threshold for tracklets association. Defaults to 0.95.
-
-
     """
+
     def __init__(self,
                  checkpoint: str,
                  temporal_threshold: tuple = (0, 30),
@@ -150,12 +148,12 @@ class AppearanceFreeLink:
         self.model.cuda()
         self.model.eval()
 
-        self.fn_l2 = lambda x, y: np.sqrt(x ** 2 + y ** 2)
+        self.fn_l2 = lambda x, y: np.sqrt(x**2 + y**2)
 
     def data_transform(self, track1, track2, length=30):
-        """Data Transformation. This is used to standardize the length of tracks
-        to a unified length. Then perform min-max normalization to the motion
-        embeddings.
+        """Data Transformation. This is used to standardize the length of
+        tracks to a unified length. Then perform min-max normalization to the
+        motion embeddings.
 
         Args:
             track1 (ndarray): the first track with shape (N,C).
@@ -218,8 +216,8 @@ class AppearanceFreeLink:
                 if id_i == id_j:
                     continue
                 info_i, info_j = id2info[id_i], id2info[id_j]
-                frame_i, box_i = info_i[-1][0], info_i[-1][1: 3]
-                frame_j, box_j = info_j[0][0], info_j[0][1: 3]
+                frame_i, box_i = info_i[-1][0], info_i[-1][1:3]
+                frame_j, box_j = info_j[0][0], info_j[0][1:3]
                 # temporal constraint
                 if not self.temporal_threshold[0] <= \
                        frame_j - frame_i <= self.temporal_threshold[1]:
@@ -230,7 +228,8 @@ class AppearanceFreeLink:
                     continue
                 # confidence constraint
                 track_i, track_j = self.data_transform(info_i, info_j)
-                confidence = self.model(track_i, track_j).detach().cpu().numpy()
+                confidence = self.model(track_i,
+                                        track_j).detach().cpu().numpy()
                 if confidence >= self.confidence_threshold:
                     cost_matrix[i, j] = 1 - confidence
 

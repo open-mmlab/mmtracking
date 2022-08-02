@@ -118,7 +118,8 @@ class KalmanFilter:
 
         return mean, covariance
 
-    def project(self, mean: np.array,
+    def project(self,
+                mean: np.array,
                 covariance: np.array,
                 bbox_score: float = 0.) -> Tuple[np.array, np.array]:
         """Project state distribution to measurement space.
@@ -150,9 +151,11 @@ class KalmanFilter:
             (self._update_mat, covariance, self._update_mat.T))
         return mean, covariance + innovation_cov
 
-    def update(self, mean: np.array, covariance: np.array,
-               measurement: np.array, bbox_score: float = 0.
-               ) -> Tuple[np.array, np.array]:
+    def update(self,
+               mean: np.array,
+               covariance: np.array,
+               measurement: np.array,
+               bbox_score: float = 0.) -> Tuple[np.array, np.array]:
         """Run Kalman filter correction step.
 
         Args:

@@ -106,7 +106,9 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.metrics = metrics
         self.format_only = format_only
         self.postprocess_tracklet_cfg = postprocess_tracklet_cfg.copy()
-        self.postprocess_tracklet_methods = [TASK_UTILS.build(cfg) for cfg in self.postprocess_tracklet_cfg]
+        self.postprocess_tracklet_methods = [
+            TASK_UTILS.build(cfg) for cfg in self.postprocess_tracklet_cfg
+        ]
         assert benchmark in self.allowed_benchmarks
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr

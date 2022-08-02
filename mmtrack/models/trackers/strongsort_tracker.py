@@ -8,15 +8,15 @@ from mmengine.data import InstanceData
 from motmetrics.lap import linear_sum_assignment
 from torch import Tensor
 
-from mmtrack.structures import TrackDataSample
-from mmtrack.utils import imrenormalize, OptConfigType
-from mmtrack.structures.bbox import bbox_xyxy_to_cxcyah
 from mmtrack.registry import MODELS
+from mmtrack.structures import TrackDataSample
+from mmtrack.structures.bbox import bbox_xyxy_to_cxcyah
+from mmtrack.utils import OptConfigType, imrenormalize
 from .sort_tracker import SORTTracker
 
 
 def cosine_distance(x: Tensor, y: Tensor):
-    """compute the cosine distance
+    """compute the cosine distance.
 
     Args:
         x (Tensor): embeddings with shape (N,C).
@@ -64,8 +64,7 @@ class StrongSORTTracker(SORTTracker):
                      img_scale=(256, 128),
                      img_norm_cfg=None,
                      match_score_thr=0.3,
-                     motion_weight=0.02
-                 ),
+                     motion_weight=0.02),
                  match_iou_thr: float = 0.7,
                  num_tentatives: int = 2,
                  **kwargs):
@@ -196,7 +195,8 @@ class StrongSORTTracker(SORTTracker):
                     # reid_dists = torch.cdist(track_embeds, embeds).cpu().numpy()
                     reid_dists = cosine_distance(track_embeds, embeds)
                     valid_inds = [list(self.ids).index(_) for _ in active_ids]
-                    reid_dists[~np.isfinite(motion_dists[valid_inds, :])] = np.nan
+                    reid_dists[~np.isfinite(motion_dists[
+                        valid_inds, :])] = np.nan
 
                     weight_motion = self.reid.get('motion_weight')
                     match_dists = (1 - weight_motion) * reid_dists + \

@@ -3,8 +3,8 @@ from typing import Dict, Optional
 
 from torch import Tensor
 
-from mmtrack.utils import OptConfigType, SampleList
 from mmtrack.registry import MODELS, TASK_UTILS
+from mmtrack.utils import OptConfigType, SampleList
 from .deep_sort import DeepSORT
 
 
@@ -36,8 +36,8 @@ class StrongSORT(DeepSORT):
                  cmc: Optional[dict] = None,
                  data_preprocessor: OptConfigType = None,
                  init_cfg: OptConfigType = None):
-        super().__init__(detector, reid, tracker, kalman,
-                         data_preprocessor, init_cfg)
+        super().__init__(detector, reid, tracker, kalman, data_preprocessor,
+                         init_cfg)
 
         if detector is not None:
             self.detector = MODELS.build(detector)
@@ -95,5 +95,5 @@ class StrongSORT(DeepSORT):
                 input images. Each TrackDataSample usually contains
                 ``pred_det_instances`` or ``pred_track_instances``.
         """
-        return super().predict(
-            batch_inputs, batch_data_samples, rescale, **kwargs)
+        return super().predict(batch_inputs, batch_data_samples, rescale,
+                               **kwargs)

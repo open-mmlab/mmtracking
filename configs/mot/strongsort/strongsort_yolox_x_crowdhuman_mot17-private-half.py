@@ -14,8 +14,7 @@ model = dict(
                 random_size_range=(480, 800),
                 size_divisor=32,
                 interval=10)
-        ]
-    ),
+        ]),
     detector=dict(
         _scope_='mmdet',
         bbox_head=dict(num_classes=1),
@@ -66,18 +65,14 @@ model = dict(
             img_norm_cfg=dict(
                 mean=[123.675, 116.28, 103.53],
                 std=[58.395, 57.12, 57.375],
-                to_rgb=True
-            ),
+                to_rgb=True),
             match_score_thr=0.3,
             motion_weight=0.02,
         ),
         match_iou_thr=0.7,
-        momentums=dict(
-            embeds=0.1,
-        ),
+        momentums=dict(embeds=0.1, ),
         num_tentatives=2,
-        num_frames_retain=100
-    ))
+        num_frames_retain=100))
 
 dataset_type = 'MOTChallengeDataset'
 data_root = 'data/MOT17/'
@@ -116,22 +111,20 @@ val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
 # evaluator
-val_evaluator = dict(
-    postprocess_tracklet_cfg=[
-        dict(
-            type='AppearanceFreeLink',
-            checkpoint='/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
-            temporal_threshold=(0, 30),
-            spatial_threshold=50,
-            confidence_threshold=0.95,
-        ),
-        dict(
-            type='InterpolateTracklets',
-            min_num_frames=5,
-            max_num_frames=20,
-            use_gsi=True,
-            smooth_tau=10
-        )
-    ]
-)
+val_evaluator = dict(postprocess_tracklet_cfg=[
+    dict(
+        type='AppearanceFreeLink',
+        checkpoint=
+        '/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
+        temporal_threshold=(0, 30),
+        spatial_threshold=50,
+        confidence_threshold=0.95,
+    ),
+    dict(
+        type='InterpolateTracklets',
+        min_num_frames=5,
+        max_num_frames=20,
+        use_gsi=True,
+        smooth_tau=10)
+])
 test_evaluator = val_evaluator
