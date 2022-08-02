@@ -43,8 +43,8 @@ class InterpolateTracklets:
         Args:
             track (ndarray): With shape (N, 7). Each row denotes
                 (frame_id, track_id, x1, y1, x2, y2, score).
-            max_num_frames (int, optional): The maximum disconnected length in the
-                track. Defaults to 20.
+            max_num_frames (int, optional): The maximum disconnected length in
+                the track. Defaults to 20.
 
         Returns:
             ndarray: The interpolated track with shape (N, 7). Each row denotes
@@ -93,11 +93,12 @@ class InterpolateTracklets:
         Args:
             track (ndarray): With shape (N, 7). Each row denotes
                 (frame_id, track_id, x1, y1, x2, y2, score).
-            smooth_tau (int, optional): smoothing parameter in GSI. Defaults to 10.
+            smooth_tau (int, optional): smoothing parameter in GSI.
+                Defaults to 10.
 
         Returns:
-            ndarray: The interpolated tracks with shape (N, 7). Each row denotes
-                (frame_id, track_id, x1, y1, x2, y2, score)
+            ndarray: The interpolated tracks with shape (N, 7). Each row
+                denotes (frame_id, track_id, x1, y1, x2, y2, score)
         """
         len_scale = np.clip(smooth_tau * np.log(smooth_tau**3 / len(track)),
                             smooth_tau**-1, smooth_tau**2)

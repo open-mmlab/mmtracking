@@ -220,7 +220,7 @@ class AppearanceFreeLink:
                 frame_j, box_j = info_j[0][0], info_j[0][1:3]
                 # temporal constraint
                 if not self.temporal_threshold[0] <= \
-                       frame_j - frame_i <= self.temporal_threshold[1]:
+                        frame_j - frame_i <= self.temporal_threshold[1]:
                     continue
                 # spatial constraint
                 if self.fn_l2(box_i[0] - box_j[0], box_i[1] - box_j[1]) \

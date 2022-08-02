@@ -192,7 +192,6 @@ class StrongSORTTracker(SORTTracker):
                         active_ids,
                         self.reid.get('num_samples', None),
                         behavior='mean')
-                    # reid_dists = torch.cdist(track_embeds, embeds).cpu().numpy()
                     reid_dists = cosine_distance(track_embeds, embeds)
                     valid_inds = [list(self.ids).index(_) for _ in active_ids]
                     reid_dists[~np.isfinite(motion_dists[
@@ -200,7 +199,7 @@ class StrongSORTTracker(SORTTracker):
 
                     weight_motion = self.reid.get('motion_weight')
                     match_dists = (1 - weight_motion) * reid_dists + \
-                                  weight_motion * motion_dists[valid_inds]
+                        weight_motion * motion_dists[valid_inds]
 
                     row, col = linear_sum_assignment(match_dists)
                     for r, c in zip(row, col):
