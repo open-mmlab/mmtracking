@@ -53,7 +53,7 @@ model = dict(
         )
    ),
     test_cfg=dict(
-        search_factor=5.0,
+        search_factor=4.55,
         search_size=320,
         template_factor=2.0,
         template_size=128,
