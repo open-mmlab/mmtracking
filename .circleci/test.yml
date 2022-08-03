@@ -109,7 +109,7 @@ jobs:
           name: Build Docker image
           command: |
             docker build .circleci/docker -t mmtrack:gpu --build-arg PYTORCH=<< parameters.torch >> --build-arg CUDA=<< parameters.cuda >> --build-arg CUDNN=<< parameters.cudnn >>
-            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -v /home/circleci/mmclassification:/mmclassification -w /mmtrack --name mmtrack mmtrack:gpu
+            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -w /mmtrack --name mmtrack mmtrack:gpu
       - run:
           name: Install mmtrack dependencies
           command: |
@@ -146,6 +146,17 @@ workflows:
           filters:
             branches:
               ignore:
+                - dev-1.x
+      - build_cuda:
+          name: minimum_version_gpu
+          torch: 1.6.0
+          # Use double quotation mark to explicitly specify its type
+          # as string instead of number
+          mmcv: https://download.openmmlab.com/mmcv/dev-2.x/cu101/torch1.6.0/mmcv_full-2.0.0rc0-cp37-cp37m-manylinux1_x86_64.whl
+          cuda: "10.1"
+          filters:
+            branches:
+              only:
                 - dev-1.x
       - build_cpu:
           name: minimum_version_cpu
