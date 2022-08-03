@@ -111,20 +111,22 @@ val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
 # evaluator
-val_evaluator = dict(postprocess_tracklet_cfg=[
-    dict(
-        type='AppearanceFreeLink',
-        checkpoint=  # noqa: E251
-        '/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
-        temporal_threshold=(0, 30),
-        spatial_threshold=50,
-        confidence_threshold=0.95,
-    ),
-    dict(
-        type='InterpolateTracklets',
-        min_num_frames=5,
-        max_num_frames=20,
-        use_gsi=True,
-        smooth_tau=10)
-])
+val_evaluator = dict(
+    postprocess_tracklet_cfg=[
+        dict(
+            type='AppearanceFreeLink',
+            checkpoint=  # noqa: E251
+            '/data1/dyh/results/StrongSORT_Git/AFLink_epoch20.pth',  # TODO
+            temporal_threshold=(0, 30),
+            spatial_threshold=50,
+            confidence_threshold=0.95,
+        ),
+        dict(
+            type='InterpolateTracklets',
+            min_num_frames=5,
+            max_num_frames=20,
+            use_gsi=True,
+            smooth_tau=10)
+    ]
+)
 test_evaluator = val_evaluator
