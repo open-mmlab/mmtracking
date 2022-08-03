@@ -37,7 +37,25 @@ class Mask2Former(BaseMultiObjectTracker):
 
     def loss(self, batch_inputs: Dict[str, Tensor],
              batch_data_samples: SampleList, **kwargs) -> Union[dict, tuple]:
-        pass
+        """
+        Args:
+            batch_inputs (Tensor): Input images of shape (N, C, H, W).
+                These should usually be mean centered and std scaled.
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as `gt_instance`.
+
+        Returns:
+            dict[str, Tensor]: a dictionary of loss components
+        """
+        img = batch_inputs['img']
+        assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        img = img.flatten(0, 1)
+
+        x = self.backbone(img)
+        losses = self.track_head.loss(x, batch_data_samples)
+
+        return losses
 
     def predict(self,
                 batch_inputs: dict,

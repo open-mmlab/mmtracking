@@ -1,6 +1,9 @@
 _base_ = [
     '../../_base_/datasets/youtube_vis.py', '../../_base_/default_runtime.py'
 ]
+
+num_classes = 40
+num_frames = 2
 model = dict(
     type='Mask2Former',
     data_preprocessor=dict(
@@ -8,6 +11,7 @@ model = dict(
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         bgr_to_rgb=True,
+        pad_mask=True,
         pad_size_divisor=32),
     backbone=dict(
         _scope_='mmdet',
@@ -26,9 +30,9 @@ model = dict(
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,
-        num_classes=40,
+        num_classes=num_classes,
         num_queries=100,
-        num_frames=2,
+        num_frames=num_frames,
         num_transformer_feat_level=3,
         pixel_decoder=dict(
             type='MSDeformAttnPixelDecoder',
@@ -91,35 +95,110 @@ model = dict(
                 feedforward_channels=2048,
                 operation_order=('cross_attn', 'norm', 'self_attn', 'norm',
                                  'ffn', 'norm')),
-            init_cfg=None)))
+            init_cfg=None),
+        loss_cls=dict(
+            type='mmdet.CrossEntropyLoss',
+            use_sigmoid=False,
+            loss_weight=2.0,
+            reduction='mean',
+            class_weight=[1.0] * num_classes + [0.1]),
+        loss_mask=dict(
+            type='mmdet.CrossEntropyLoss',
+            use_sigmoid=True,
+            reduction='mean',
+            loss_weight=5.0),
+        loss_dice=dict(
+            type='mmdet.DiceLoss',
+            use_sigmoid=True,
+            activate=True,
+            reduction='mean',
+            naive_dice=True,
+            eps=1.0,
+            loss_weight=5.0),
+        train_cfg=dict(
+            num_points=12544,
+            oversample_ratio=3.0,
+            importance_sample_ratio=0.75,
+            assigner=dict(
+                type='mmtrack.VideoHungarianAssigner',
+                match_costs=[
+                    dict(type='mmdet.ClassificationCost', weight=2.0),
+                    dict(
+                        type='mmdet.CrossEntropyLossCost',
+                        weight=5.0,
+                        use_sigmoid=True),
+                    dict(
+                        type='mmdet.DiceCost',
+                        weight=5.0,
+                        pred_act=True,
+                        eps=1.0)
+                ]),
+            sampler=dict(type='mmdet.MaskPseudoSampler'))))
 
 # optimizer
+embed_multi = dict(lr_mult=1.0, decay_mult=0.0)
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='SGD', lr=0.00125, momentum=0.9, weight_decay=0.0001),
-    clip_grad=dict(max_norm=35, norm_type=2))
+    optimizer=dict(
+        type='AdamW',
+        lr=0.0001,
+        weight_decay=0.05,
+        eps=1e-8,
+        betas=(0.9, 0.999)),
+    paramwise_cfg=dict(
+        custom_keys={
+            'backbone': dict(lr_mult=0.1, decay_mult=1.0),
+            'query_embed': embed_multi,
+            'query_feat': embed_multi,
+            'level_embed': embed_multi,
+        },
+        norm_decay_mult=0.0),
+    clip_grad=dict(max_norm=0.01, norm_type=2))
 
 # learning policy
-param_scheduler = [
-    dict(
-        type='mmdet.LinearLR',
-        start_factor=1.0 / 3.0,
-        by_epoch=False,
-        begin=0,
-        end=500),
-    dict(
-        type='mmdet.MultiStepLR',
-        begin=0,
-        end=12,
-        by_epoch=True,
-        milestones=[8, 11],
-        gamma=0.1)
-]
+max_iters = 6000
+param_scheduler = dict(
+    type='MultiStepLR',
+    begin=0,
+    end=max_iters,
+    by_epoch=False,
+    milestones=[
+        4000,
+    ],
+    gamma=0.1)
 # runtime settings
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_begin=13)
+train_cfg = dict(
+    type='IterBasedTrainLoop', max_iters=max_iters, val_interval=6001)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
+train_pipeline = [
+    dict(
+        type='TransformBroadcaster',
+        share_random_params=True,
+        transforms=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='LoadTrackAnnotations',
+                with_instance_id=True,
+                with_mask=True,
+                with_bbox=True),
+            dict(type='mmdet.Resize', scale=(640, 360), keep_ratio=True),
+            dict(type='mmdet.RandomFlip', prob=0.5),
+        ]),
+    dict(type='PackTrackInputs', num_key_frames=num_frames)
+]
+# dataloader
+train_dataloader = dict(
+    batch_size=4,
+    num_workers=4,
+    dataset=dict(
+        pipeline=train_pipeline,
+        ref_img_sampler=dict(
+            num_ref_imgs=1,
+            frame_range=5,
+            filter_key_img=True,
+            method='uniform')))
 val_dataloader = dict(
     batch_size=1,
     num_workers=2,
