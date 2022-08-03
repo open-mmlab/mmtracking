@@ -46,7 +46,7 @@ class MixFormer(BaseSingleObjectTracker):
         print("Update interval is: ", self.update_interval)
         self.online_size = self.test_cfg['online_size'][0]
         print("Online size is: ", self.online_size)
-        self.max_score_decay = 1.0
+        self.max_score_decay = self.test_cfg['max_score_decay'][0]
         print("Max score decay is: ", self.max_score_decay)
 
         # Set update interval, forget, online size

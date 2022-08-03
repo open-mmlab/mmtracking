@@ -53,12 +53,13 @@ model = dict(
         )
    ),
     test_cfg=dict(
-        search_factor=4.5,
+        search_factor=5.0,
         search_size=320,
         template_factor=2.0,
         template_size=128,
         update_interval=[10],
         online_size=[2],
+        max_score_decay=[0.98],
     )
 )
 
@@ -91,3 +92,13 @@ data = dict(
         pipeline=test_pipeline,
         split='test',
         test_mode=True))
+
+# yapf:enable
+# runtime settings
+total_epochs = 500
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+work_dir = './work_dirs/xxx'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
