@@ -70,6 +70,7 @@ jobs:
             python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
             python -m pip install git+https://github.com/TAO-Dataset/tao.git
+            pip install numpy==1.19.5
       - run:
           name: Build and install
           command: |
