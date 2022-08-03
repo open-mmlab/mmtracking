@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Tuple
 from collections import defaultdict
 
 import numpy as np
@@ -6,7 +7,7 @@ import torch
 from mmengine.model import BaseModule
 from mmengine.runner.checkpoint import load_checkpoint
 from scipy.optimize import linear_sum_assignment
-from torch import nn
+from torch import nn, Tensor
 
 from mmtrack.registry import TASK_UTILS
 
@@ -21,7 +22,7 @@ class TemporalBlock(BaseModule):
         out_channel (int): the dimension of the output channels.
     """
 
-    def __init__(self, in_channel, out_channel):
+    def __init__(self, in_channel: int, out_channel: int):
         super(TemporalBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, (7, 1), bias=False)
         self.relu = nn.ReLU(inplace=True)
@@ -29,13 +30,13 @@ class TemporalBlock(BaseModule):
         self.bnx = nn.BatchNorm1d(out_channel)
         self.bny = nn.BatchNorm1d(out_channel)
 
-    def bn(self, x):
+    def bn(self, x: Tensor) -> Tensor:
         x[:, :, :, 0] = self.bnf(x[:, :, :, 0])
         x[:, :, :, 1] = self.bnx(x[:, :, :, 1])
         x[:, :, :, 2] = self.bny(x[:, :, :, 2])
         return x
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
         x = self.bn(x)
         x = self.relu(x)
@@ -50,13 +51,13 @@ class FusionBlock(BaseModule):
         out_channel (int): the dimension of the output channels.
     """
 
-    def __init__(self, in_channel, out_channel):
+    def __init__(self, in_channel: int, out_channel: int):
         super(FusionBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, (1, 3), bias=False)
         self.bn = nn.BatchNorm2d(out_channel)
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
         x = self.bn(x)
         x = self.relu(x)
@@ -70,13 +71,13 @@ class Classifier(BaseModule):
         in_channel (int): the dimension of the input channels.
     """
 
-    def __init__(self, in_channel):
+    def __init__(self, in_channel: int):
         super(Classifier, self).__init__()
         self.fc1 = nn.Linear(in_channel * 2, in_channel // 2)
         self.relu = nn.ReLU(inplace=True)
         self.fc2 = nn.Linear(in_channel // 2, 2)
 
-    def forward(self, x1, x2):
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = torch.cat((x1, x2), dim=1)
         x = self.fc1(x)
         x = self.relu(x)
@@ -100,7 +101,7 @@ class AFLinkModel(BaseModule):
         self.pooling = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = Classifier(256)
 
-    def forward(self, x1, x2):
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         assert not self.training, 'Only testing is supported for AFLink.'
         x1 = x1[:, :, :, :3]
         x2 = x2[:, :, :, :3]
@@ -150,7 +151,8 @@ class AppearanceFreeLink:
 
         self.fn_l2 = lambda x, y: np.sqrt(x**2 + y**2)
 
-    def data_transform(self, track1, track2, length=30):
+    def data_transform(self, track1: np.ndarray, track2: np.ndarray,
+                       length: int = 30) -> Tuple[Tensor]:
         """Data Transformation. This is used to standardize the length of
         tracks to a unified length. Then perform min-max normalization to the
         motion embeddings.
@@ -190,7 +192,7 @@ class AppearanceFreeLink:
         track2 = track2.unsqueeze(0).unsqueeze(0).cuda()
         return track1, track2
 
-    def forward(self, pred_tracks: np.ndarray):
+    def forward(self, pred_tracks: np.ndarray) -> np.ndarray:
         """Forward function.
 
         pred_tracks (ndarray): With shape (N, 7). Each row denotes
