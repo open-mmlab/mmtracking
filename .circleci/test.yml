@@ -154,10 +154,6 @@ workflows:
           # as string instead of number
           mmcv: https://download.openmmlab.com/mmcv/dev-2.x/cu101/torch1.6.0/mmcv_full-2.0.0rc0-cp37-cp37m-manylinux1_x86_64.whl
           cuda: "10.1"
-          filters:
-            branches:
-              only:
-                - dev-1.x
       - build_cpu:
           name: minimum_version_cpu
           torch: 1.6.0
