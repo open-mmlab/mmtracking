@@ -68,8 +68,8 @@ jobs:
             python -m pip install git+ssh://git@github.com/open-mmlab/mmclassification.git@dev-1.x
             python -m pip install -r requirements.txt
             python -m pip install git+https://github.com/votchallenge/toolkit.git
-            pip install git+https://github.com/JonathonLuiten/TrackEval.git
-            pip install git+https://github.com/TAO-Dataset/tao.git
+            python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            python -m pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
           command: |
@@ -105,14 +105,12 @@ jobs:
             git clone -b main --depth 1 ssh://git@github.com/open-mmlab/mmengine.git /home/circleci/mmengine
             git clone -b dev-3.x --depth 1 ssh://git@github.com/open-mmlab/mmdetection.git /home/circleci/mmdetection
             git clone -b dev-1.x --depth 1 ssh://git@github.com/open-mmlab/mmclassification.git /home/circleci/mmclassification
-            git clone -b master --depth 1 ssh://git@github.com/votchallenge/toolkit.git /home/circleci/votchallenge_toolkit
-            git clone -b master --depth 1 ssh://git@github.com/JonathonLuiten/TrackEval /home/circleci/TrackEval
-            git clone -b master --depth 1 ssh://git@github.com/TAO-Dataset/tao /home/circleci/tao
+            
       - run:
           name: Build Docker image
           command: |
             docker build .circleci/docker -t mmtrack:gpu --build-arg PYTORCH=<< parameters.torch >> --build-arg CUDA=<< parameters.cuda >> --build-arg CUDNN=<< parameters.cudnn >>
-            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -v /home/circleci/mmclassification:/mmclassification -v /home/circleci/votchallenge_toolkit:/votchallenge_toolkit -v /home/circleci/TrackEval:/TrackEval -v /home/circleci/tao:/tao -w /mmtrack --name mmtrack mmtrack:gpu
+            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -v /home/circleci/mmclassification:/mmclassification -w /mmtrack --name mmtrack mmtrack:gpu
       - run:
           name: Install mmtrack dependencies
           command: |
@@ -122,9 +120,9 @@ jobs:
             docker exec mmtrack pip install -e /mmdetection
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
-            docker exec mmtrack pip install -e /votchallenge_toolkit
-            docker exec mmtrack pip install -e /TrackEval
-            docker exec mmtrack pip install -e /tao
+            docker exec mmtrack python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            docker exec mmtrack python -m pip install git+https://github.com/lvis-dataset/lvis-api.git
+            docker exec mmtrack python -m pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
           command: |
@@ -154,6 +152,13 @@ workflows:
             branches:
               ignore:
                 - dev-1.x
+      - build_cuda:
+          name: minimum_version_gpu
+          torch: 1.6.0
+          # Use double quotation mark to explicitly specify its type
+          # as string instead of number
+          mmcv: https://download.openmmlab.com/mmcv/dev-2.x/cu101/torch1.6.0/mmcv_full-2.0.0rc0-cp37-cp37m-manylinux1_x86_64.whl
+          cuda: "10.1"
       - build_cpu:
           name: minimum_version_cpu
           torch: 1.6.0
