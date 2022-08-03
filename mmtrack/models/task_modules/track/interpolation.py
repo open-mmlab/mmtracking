@@ -122,7 +122,7 @@ class InterpolateTracklets:
         ] for i in range(len(t))]
         return np.array(gsi_track)
 
-    def forward(self, pred_tracks: np.ndarray):
+    def forward(self, pred_tracks: np.ndarray) -> np.ndarray:
         """Forward function.
 
         pred_tracks (ndarray): With shape (N, 7). Each row denotes
