@@ -105,7 +105,7 @@ class MixFormer(BaseSingleObjectTracker):
                         output_size):
         """ Crop Image
         Only used during testing
-        This functino mainly contains two steps:
+        This function mainly contains two steps:
         1. Crop `img` based on target_bbox and search_area_factor.  If the 
         cropped image/mask is out of boundary of `img`, use 0 to pad.
         2. Resize the cropped image/mask to `output_size`.

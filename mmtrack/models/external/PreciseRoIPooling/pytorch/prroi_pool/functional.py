@@ -60,7 +60,7 @@ class PrRoIPool2DFunction(ag.Function):
             # everything here is contiguous.
             ctx.save_for_backward(features, rois, output)
         else:
-            raise NotImplementedError('Precise RoI Pooling only supports GPU (cuda) implememtations.')
+            raise NotImplementedError('Precise RoI Pooling only supports GPU (cuda) implementations.')
 
         return output
 
