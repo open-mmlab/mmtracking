@@ -15,7 +15,7 @@ from mmtrack.utils import OptConfigType, imrenormalize
 from .sort_tracker import SORTTracker
 
 
-def cosine_distance(x: Tensor, y: Tensor):
+def cosine_distance(x: Tensor, y: Tensor) -> np.ndarray:
     """compute the cosine distance.
 
     Args:
