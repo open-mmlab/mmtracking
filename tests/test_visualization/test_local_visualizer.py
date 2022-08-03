@@ -101,8 +101,7 @@ class TestDetLocalVisualizer(TestCase):
     @staticmethod
     def _get_gt_data_sample():
         instances_data = dict(
-            bboxes=np.array([[912, 484, 1009, 593], [1338, 418, 1505,
-                                                         797]]),
+            bboxes=np.array([[912, 484, 1009, 593], [1338, 418, 1505, 797]]),
             labels=torch.tensor([0, 1]),
             scores=torch.tensor([1., 1.]))
         instances = InstanceData(**instances_data)
@@ -113,8 +112,7 @@ class TestDetLocalVisualizer(TestCase):
     @staticmethod
     def _get_pred_data_sample():
         instances_data = dict(
-            bboxes=np.array([[900, 500, 1000, 600], [1300, 400, 1500,
-                                                         800]]),
+            bboxes=np.array([[900, 500, 1000, 600], [1300, 400, 1500, 800]]),
             labels=torch.tensor([0, 1]),
             scores=torch.tensor([0.955, 0.876]))
         instances = InstanceData(**instances_data)
