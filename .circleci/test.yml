@@ -116,7 +116,7 @@ jobs:
       - run:
           name: Install mmtrack dependencies
           command: |
-            docker exec mmtrack apt-get install git
+            docker exec mmtrack apt-get -y install git
             docker exec mmtrack pip install -e /mmengine
             docker exec mmtrack pip install << parameters.mmcv >>
             docker exec mmtrack pip install -e /mmdetection
