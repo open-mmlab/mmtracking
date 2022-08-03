@@ -118,6 +118,9 @@ jobs:
             docker exec mmtrack pip install -e /mmdetection
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
+            docker exec mmtrack pip install git+https://github.com/votchallenge/toolkit.git
+            docker exec mmtrack pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            docker exec mmtrack pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
           command: |
