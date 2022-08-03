@@ -120,7 +120,7 @@ model = dict(
             oversample_ratio=3.0,
             importance_sample_ratio=0.75,
             assigner=dict(
-                type='mmtrack.VideoHungarianAssigner',
+                type='mmdet.HungarianAssigner',
                 match_costs=[
                     dict(type='mmdet.ClassificationCost', weight=2.0),
                     dict(
@@ -171,6 +171,15 @@ train_cfg = dict(
     type='IterBasedTrainLoop', max_iters=max_iters, val_interval=6001)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
+
+default_hooks = dict(
+    checkpoint=dict(
+        type='CheckpointHook',
+        by_epoch=False,
+        save_last=True,
+        max_keep_ckpts=3,
+        interval=2000))
+log_processor = dict(type='LogProcessor', window_size=50, by_epoch=False)
 
 train_pipeline = [
     dict(
