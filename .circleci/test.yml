@@ -105,7 +105,6 @@ jobs:
             git clone -b main --depth 1 ssh://git@github.com/open-mmlab/mmengine.git /home/circleci/mmengine
             git clone -b dev-3.x --depth 1 ssh://git@github.com/open-mmlab/mmdetection.git /home/circleci/mmdetection
             git clone -b dev-1.x --depth 1 ssh://git@github.com/open-mmlab/mmclassification.git /home/circleci/mmclassification
-            
       - run:
           name: Build Docker image
           command: |
@@ -152,13 +151,6 @@ workflows:
             branches:
               ignore:
                 - dev-1.x
-      - build_cuda:
-          name: minimum_version_gpu
-          torch: 1.6.0
-          # Use double quotation mark to explicitly specify its type
-          # as string instead of number
-          mmcv: https://download.openmmlab.com/mmcv/dev-2.x/cu101/torch1.6.0/mmcv_full-2.0.0rc0-cp37-cp37m-manylinux1_x86_64.whl
-          cuda: "10.1"
       - build_cpu:
           name: minimum_version_cpu
           torch: 1.6.0
