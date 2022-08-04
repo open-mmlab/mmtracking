@@ -12,9 +12,15 @@ from einops.layers.torch import Rearrange
 from mmcv.runner import BaseModule
 from mmdet.models.builder import BACKBONES
 from timm.models.layers import DropPath, trunc_normal_
-from torch._six import container_abcs
 
 from .utils import FrozenBatchNorm2d
+
+TORCH_MAJOR = int(torch.__version__.split('.')[0])
+TORCH_MINOR = int(torch.__version__.split('.')[1])
+if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
+    from torch._six import container_abcs
+else:
+    import collections.abc as container_abcs
 
 
 # From PyTorch internals
