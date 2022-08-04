@@ -9,7 +9,6 @@ model = dict(
         type='TrackDataPreprocessor',
         mean=[103.530, 116.280, 123.675],
         std=[1.0, 1.0, 1.0],
-        bgr_to_rgb=True,
         pad_size_divisor=32),
     detector=dict(
         backbone=dict(
