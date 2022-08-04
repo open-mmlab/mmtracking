@@ -9,7 +9,8 @@ from mmdet.models.builder import build_head, build_loss
 from timm.models.layers import trunc_normal_
 
 from ..backbones.utils import FrozenBatchNorm2d
-from ..external.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
+from ..external.PreciseRoIPooling.pytorch.prroi_pool.prroi_pool import \
+    PrRoIPool2D
 
 
 def conv(in_planes,
