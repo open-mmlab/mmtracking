@@ -4,7 +4,7 @@ import torch
 from mmtrack.models import PrdimpFilterOptimizer
 
 
-def test_prdimp_steepest_descent_newton():
+def test_prdimp_filter_optimizer():
     optimizer = PrdimpFilterOptimizer(
         num_iters=5,
         feat_stride=16,

@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import math
 from typing import Tuple
 
 import torch
@@ -12,7 +13,8 @@ from torch import Tensor
 from mmtrack.registry import MODELS
 from mmtrack.structures.bbox import (bbox_cxcywh_to_x1y1wh,
                                      bbox_rel_cxcywh_to_xywh,
-                                     bbox_xywh_to_rel_cxcywh)
+                                     bbox_xywh_to_rel_cxcywh,
+                                     bbox_xyxy_to_x1y1wh)
 from mmtrack.utils import OptConfigType, SampleList
 
 
@@ -86,6 +88,9 @@ class IouNetHead(BaseModule):
         super().__init__()
         self.bbox_cfg = bbox_cfg
         self.test_cfg = test_cfg
+        self.train_cfg = train_cfg
+
+        self.loss_bbox = MODELS.build(loss_bbox)
 
         def conv_module(in_planes, out_planes, kernel_size=3, padding=1):
             # The module's pipeline: Conv -> BN -> ReLU.
@@ -433,3 +438,187 @@ class IouNetHead(BaseModule):
         new_target_size = predicted_box[2:] * scale_factor
 
         return torch.cat([new_bbox_center, new_target_size], dim=-1)
+
+    def _gauss_density_centered(self, x, sigma):
+        """Evaluate the probability density of a Gaussian centered at zero.
+        args:
+            x - Samples.
+            sigma - List of standard deviations
+        """
+
+        return torch.exp(-0.5 * (x / sigma)**2) / (
+            math.sqrt(2 * math.pi) * sigma)
+
+    def _gmm_density_centered(self, x, sigma):
+        """Evaluate the probability density of a GMM centered at zero.
+        args:
+            x - Samples. Assumes dim=-1 is the component dimension and dim=-2
+            is feature dimension. Rest are sample dimension.
+            sigma - Tensor of standard deviations
+        """
+        if x.dim() == sigma.dim() - 1:
+            x = x[..., None]
+        elif not (x.dim() == sigma.dim() and x.shape[-1] == 1):
+            raise ValueError('Last dimension must be the gmm sigmas.')
+
+        # `product`` along feature dim of `bbox`, `mean` along component dim of
+        # `sigma``
+        return self._gauss_density_centered(x, sigma).prod(-2).mean(-1)
+
+    def _sample_gmm_centered(self, sigma, num_samples=1):
+        """Sample from a GMM distribution centered at zero:
+        args:
+            sigma - Tensor of standard deviations
+            num_samples - number of samples
+
+        return:
+            x_centered: of shape (num_samples, num_dims)
+            prob_density: of shape (num_samples, )
+        """
+        num_components = sigma.shape[-1]
+        num_dims = sigma.shape[-2]
+
+        sigma = sigma.reshape(1, num_dims, num_components)
+
+        # Sampling component index
+        k = torch.randint(
+            num_components, size=(num_samples, ), dtype=torch.int64)
+        sigma_samples = sigma[0, :, k].t()
+
+        x_centered = sigma_samples * torch.randn(num_samples, num_dims).to(
+            sigma_samples.device)
+        prob_density = self._gmm_density_centered(x_centered, sigma)
+
+        return x_centered, prob_density
+
+    def get_targets(self, bbox):
+        '''
+        bbox: (N, 4) in in [x1, y1, w, h] format
+
+        '''
+        bbox = bbox.clone().reshape(-1, 4)
+        bbox_wh = bbox[:, 2:]
+
+        if not hasattr(self, 'proposals_sigma'):
+            center_sigma = torch.tensor(
+                [s[0] for s in self.train_cfg['proposals_sigma']])
+            size_sigma = torch.tensor(
+                [s[1] for s in self.train_cfg['proposals_sigma']])
+            # of shape (4, len(train_cfg['proposal_sigma']))
+            self.proposals_sigma = torch.stack(
+                (center_sigma, center_sigma, size_sigma, size_sigma),
+                dim=0).to(bbox.device)
+
+        if not hasattr(self, 'gt_bboxes_sigma'):
+            # of shape (1, 4)
+            self.gt_bboxes_sigma = torch.tensor(
+                (self.train_cfg['gt_bboxes_sigma'][0],
+                 self.train_cfg['gt_bboxes_sigma'][0],
+                 self.train_cfg['gt_bboxes_sigma'][1],
+                 self.train_cfg['gt_bboxes_sigma'][1]),
+                dtype=torch.float32,
+                device=bbox.device).reshape(-1, 4)
+
+        # Sample boxes
+        proposals_rel_centered, proposal_density = self._sample_gmm_centered(
+            self.proposals_sigma,
+            self.train_cfg['num_samples'] * bbox.shape[0])
+
+        # Add mean and map back
+        # of shape (num_seq*bs, 4)
+        mean_box_rel = bbox_xywh_to_rel_cxcywh(bbox, bbox_wh)
+        # the first num_samples elements along zero dim are
+        # from the same image
+        # of shape (num_samples*bbox.shape[0] , bbox.shape[-1])
+        mean_box_rel = mean_box_rel.unsqueeze(1).expand(
+            -1, self.train_cfg['num_samples'],
+            -1).reshape(-1, mean_box_rel.shape[-1])
+        proposals_rel = proposals_rel_centered + mean_box_rel
+        # of shape (num_samples * bbox.shape[0], bbox.shape[-1])
+        bbox_wh = bbox_wh.unsqueeze(1).expand(-1,
+                                              self.train_cfg['num_samples'],
+                                              -1).reshape(
+                                                  -1, bbox_wh.shape[-1])
+        proposals = bbox_rel_cxcywh_to_xywh(proposals_rel, bbox_wh)
+
+        # of shape (num_samples, )
+        gt_density = self._gauss_density_centered(
+            proposals_rel_centered, self.gt_bboxes_sigma).prod(-1)
+
+        if self.train_cfg['add_first_bbox']:
+            proposals = torch.cat((bbox, proposals))
+            proposal_density = torch.cat(
+                (torch.tensor([-1.]), proposal_density))
+            gt_density = torch.cat((torch.tensor([1.]), gt_density))
+
+        return proposals, proposal_density, gt_density
+
+    def loss(self, template_feats: Tuple[Tensor], search_feats: Tuple[Tensor],
+             batch_data_samples: SampleList, **kwargs) -> dict:
+        """_summary_
+
+        Args:
+            template_feats (Tuple[Tensor]): _description_
+            search_feats (Tuple[Tensor]): _description_
+            batch_data_samples (SampleList): _description_
+
+        Returns:
+            dict: _description_
+        """
+        batch_size = len(batch_data_samples)
+        batch_gt_bboxes = []
+        batch_img_metas = []
+        batch_search_gt_bboxes = []
+
+        for data_sample in batch_data_samples:
+            batch_img_metas.append(data_sample.metainfo)
+            batch_gt_bboxes.append(data_sample.gt_instances['bboxes'])
+            batch_search_gt_bboxes.append(
+                data_sample.search_gt_instances['bboxes'])
+
+        # Extract the first train sample in each sequence
+        template_feats = [feat[:batch_size, ...] for feat in template_feats]
+        batch_gt_bboxes = torch.stack(batch_gt_bboxes, dim=1)
+
+        # Get modulation vector
+        gt_bboxes = bbox_xyxy_to_x1y1wh(batch_gt_bboxes[0])
+        modulations = self.get_modulation(template_feats, gt_bboxes)
+
+        iou_feats = self(search_feats)
+        num_search_imgs_per_seq = batch_data_samples[0].search_gt_instances[
+            'bboxes'].shape[0]
+        # (num_seq*bs, c). The first `bs` tensors along
+        # zero-dim are from different images of a batch.
+        modulations = [
+            feat.repeat(num_search_imgs_per_seq, 1, 1, 1)
+            for feat in modulations
+        ]
+
+        return self.loss_by_feat(modulations, iou_feats, batch_gt_bboxes,
+                                 batch_search_gt_bboxes)
+
+    def loss_by_feat(self, modulations: Tuple[Tensor],
+                     iou_feats: Tuple[Tensor], batch_gt_bboxes: Tensor,
+                     batch_search_gt_bboxes: Tensor) -> dict:
+        batch_search_gt_bboxes = torch.stack(
+            batch_search_gt_bboxes, dim=1).view(-1, 4)
+        batch_search_gt_bboxes_xywh = bbox_xyxy_to_x1y1wh(
+            batch_search_gt_bboxes)
+        (proposals, proposals_density, search_gt_bboxes_density
+         ) = self.get_targets(batch_search_gt_bboxes_xywh)
+
+        proposals = proposals.view(-1, self.train_cfg['num_samples'],
+                                   proposals.shape[-1])
+        proposals_density = proposals_density.view(
+            -1, self.train_cfg['num_samples'])
+        search_gt_bboxes_density = search_gt_bboxes_density.view(
+            -1, self.train_cfg['num_samples'])
+        pred_iou = self.predict_iou(modulations, iou_feats, proposals)
+
+        loss_bbox = self.loss_bbox(
+            pred_iou,
+            sample_density=proposals_density,
+            gt_density=search_gt_bboxes_density,
+            mc_dim=1) * self.train_cfg['loss_weights']['bbox']
+
+        return dict(loss_bbox=loss_bbox)

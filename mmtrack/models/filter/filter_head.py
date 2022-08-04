@@ -59,9 +59,9 @@ class FilterInitializer(BaseModule):
         feat = self.filter_conv(feat.reshape(-1, *feat.shape[-3:]))
 
         # Add batch_index to rois
-        batch_size = bboxes.shape[0]
         batch_index = torch.arange(
-            batch_size, dtype=torch.float32).reshape(-1, 1).to(bboxes.device)
+            bboxes.shape[0], dtype=torch.float32).reshape(-1,
+                                                          1).to(bboxes.device)
         roi = torch.cat((batch_index, bboxes), dim=1)
         filter_weights = self.filter_pool(feat, roi)
 

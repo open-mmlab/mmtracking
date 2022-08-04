@@ -1,54 +1,68 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import copy
 from unittest import TestCase
 
-import mmcv
+import pytest
 import torch
+from mmengine.data import InstanceData
 
 from mmtrack.models.track_heads.prdimp_cls_head import PrdimpClsHead
+from mmtrack.structures import TrackDataSample
 
 
 class TestLinearBlock(TestCase):
 
     def setUp(self):
-        cfg = mmcv.Config(
-            dict(
-                in_dim=32,
-                out_dim=16,
-                filter_initializer=dict(
-                    type='FilterInitializer',
-                    filter_size=4,
-                    feature_dim=16,
-                    feature_stride=16),
-                filter_optimizer=dict(
-                    type='PrdimpFilterOptimizer',
-                    num_iters=5,
-                    feat_stride=16,
-                    init_step_length=1.0,
-                    init_filter_regular=0.05,
-                    gauss_sigma=0.9,
-                    alpha_eps=0.05,
-                    min_filter_regular=0.05,
-                    label_thres=0),
-                locate_cfg=dict(
-                    no_target_min_score=0.04,
-                    distractor_thres=0.8,
-                    hard_neg_thres=0.5,
-                    target_neighborhood_scale=2.2,
-                    dispalcement_scale=0.8,
-                    update_scale_when_uncertain=True),
-                update_cfg=dict(
-                    sample_memory_size=50,
-                    normal_lr=0.01,
-                    hard_neg_lr=0.02,
-                    init_samples_min_weight=0.25,
-                    train_skipping=20),
-                optimizer_cfg=dict(
-                    init_update_iters=10, update_iters=2, hard_neg_iters=1),
-                test_cfg=dict(img_sample_size=352)))
+        cfg = dict(
+            in_dim=32,
+            out_dim=16,
+            filter_initializer=dict(
+                type='FilterInitializer',
+                filter_size=4,
+                feature_dim=16,
+                feature_stride=16),
+            filter_optimizer=dict(
+                type='PrdimpFilterOptimizer',
+                num_iters=5,
+                feat_stride=16,
+                init_step_length=1.0,
+                init_filter_regular=0.05,
+                gauss_sigma=0.9,
+                alpha_eps=0.05,
+                min_filter_regular=0.05,
+                label_thres=0),
+            locate_cfg=dict(
+                no_target_min_score=0.04,
+                distractor_thres=0.8,
+                hard_neg_thres=0.5,
+                target_neighborhood_scale=2.2,
+                dispalcement_scale=0.8,
+                update_scale_when_uncertain=True),
+            update_cfg=dict(
+                sample_memory_size=50,
+                normal_lr=0.01,
+                hard_neg_lr=0.02,
+                init_samples_min_weight=0.25,
+                train_skipping=20),
+            optimizer_cfg=dict(
+                init_update_iters=10, update_iters=2, hard_neg_iters=1),
+            test_cfg=dict(img_sample_size=352),
+            loss_cls=dict(type='KLGridLoss'),
+            train_cfg=dict(
+                feat_size=(18, 18),
+                img_size=(288, 288),
+                sigma_factor=0.05,
+                end_pad_if_even=True,
+                gauss_label_bias=0.,
+                use_gauss_density=True,
+                label_density_norm=True,
+                label_density_threshold=0.,
+                label_density_shrink=0,
+                loss_weights=dict(cls_init=0.25, cls_iter=1., cls_final=0.25)))
 
         self.model = PrdimpClsHead(**cfg)
 
-    def test_prdimp_cls_head_predict_mode(self):
+    def test_prdimp_cls_head_predict(self):
         self.model.eval()
         backbone_feats = torch.randn(2, 32, 22, 22)
         target_bboxes = torch.rand(4, 4) * 150
@@ -74,3 +88,22 @@ class TestLinearBlock(TestCase):
                                    target_bboxes[:1, :2], 4)
         if torch.cuda.is_available():
             self.model.update_classifier(target_bboxes[1], 1, False)
+
+    @pytest.mark.skipif(
+        not torch.cuda.is_available, reason='test case under gpu environment')
+    def test_prdimp_cls_head_loss(self):
+        self.model.train()
+        model = self.model.to('cuda:0')
+        template_feats = (torch.randn(2, 32, 18, 18).to('cuda:0'), )
+        search_feats = (torch.randn(2, 32, 18, 18).to('cuda:0'), )
+        target_bboxes = (torch.rand(2, 4) * 150).to('cuda:0')
+
+        gt_instances = InstanceData()
+        gt_instances['bboxes'] = target_bboxes
+        search_gt_instances = copy.deepcopy(gt_instances)
+
+        data_sample = TrackDataSample()
+        data_sample.gt_instances = gt_instances
+        data_sample.search_gt_instances = search_gt_instances
+
+        model.loss(template_feats, search_feats, [data_sample])
