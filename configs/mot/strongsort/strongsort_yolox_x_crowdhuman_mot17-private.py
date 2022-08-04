@@ -10,4 +10,8 @@ test_dataloader = dict(
         data_prefix=dict(img_path='test'),
 ))
 
-test_evaluator = dict(format_only=True)
+# test_evaluator = dict(format_only=True)
+test_evaluator = dict(
+    format_only=True,
+    resfile_path='/data1/dyh/results/mmtracking/strongsort++_mot17-test'  #
+)
