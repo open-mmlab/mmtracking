@@ -365,11 +365,12 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
             points_coords = get_uncertain_point_coords_with_randomness(
                 mask_preds.flatten(0, 1).unsqueeze(1), None, self.num_points,
                 self.oversample_ratio, self.importance_sample_ratio)
-            # shape (num_total_gts, h, w) -> (num_total_gts, num_points)
+            # shape (num_total_gts * num_frames, h, w) ->
+            # (num_total_gts, num_points)
             mask_point_targets = point_sample(
                 mask_targets.flatten(0, 1).unsqueeze(1).float(),
                 points_coords).squeeze(1)
-        # shape (num_queries, h, w) -> (num_queries, num_points)
+        # shape (num_total_gts * num_frames, num_points)
         mask_point_preds = point_sample(
             mask_preds.flatten(0, 1).unsqueeze(1), points_coords).squeeze(1)
 
@@ -378,14 +379,15 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
             mask_point_preds, mask_point_targets, avg_factor=num_total_masks)
 
         # mask loss
-        # shape (num_queries, num_points) -> (num_queries * num_points, )
+        # shape (num_total_gts * num_frames, num_points) ->
+        # (num_total_gts * num_frames * num_points, )
         mask_point_preds = mask_point_preds.reshape(-1)
         # shape (num_total_gts, num_points) -> (num_total_gts * num_points, )
         mask_point_targets = mask_point_targets.reshape(-1)
         loss_mask = self.loss_mask(
             mask_point_preds,
             mask_point_targets,
-            avg_factor=num_total_masks * self.num_points)
+            avg_factor=num_total_masks * self.num_points / self.num_frames)
 
         return loss_cls, loss_mask, loss_dice
 
