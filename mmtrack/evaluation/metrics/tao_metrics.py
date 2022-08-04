@@ -161,8 +161,9 @@ class TAOMetric(BaseVideoMetric):
         pred_det_results_path = f'{tmp_dir.name}/tao_bbox.json'
         gt_results_path = f'{tmp_dir.name}/tao_gt.json'
         # LVIS api only supports reading from files
-        mmcv.dump(pred_det_results, pred_det_results_path)
-        mmcv.dump(gt_results, gt_results_path)
+        if 'bbox' in self.metrics:
+            mmcv.dump(pred_det_results, pred_det_results_path)
+            mmcv.dump(gt_results, gt_results_path)
 
         if self.format_only:
             self.save_pred_results(pred_track_results, 'track')
@@ -230,9 +231,7 @@ class TAOMetric(BaseVideoMetric):
         all_seq_tracks_info = []
         for _seq_info in parts_meta:
             all_seq_vids_info.extend(_seq_info['videos'])
-        for _seq_info in parts_meta:
             all_seq_imgs_info.extend(_seq_info['images'])
-        for _seq_info in parts_meta:
             all_seq_tracks_info.extend(_seq_info['tracks'])
 
         # update tao_meta_info
