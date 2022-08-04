@@ -1,5 +1,6 @@
 attributee==0.1.5
 dotty_dict
+einops
 lap
 matplotlib
 mmcls>=0.16.0,<1.0.0
