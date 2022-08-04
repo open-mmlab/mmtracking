@@ -11,5 +11,5 @@ pycocotools
 scipy<=1.7.3
 seaborn
 terminaltables
-timm==0.3.2
+timm
 tqdm
