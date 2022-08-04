@@ -1,15 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from copy import deepcopy
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from addict import Dict
 from mmdet.core.bbox.transforms import bbox_xyxy_to_cxcywh
-from mmdet.models.builder import build_backbone, build_head, build_neck
-from torch.nn.modules.batchnorm import _BatchNorm
-from torch.nn.modules.conv import _ConvNd
+from mmdet.models.builder import build_backbone, build_head
 from torchvision.transforms.functional import normalize
 
 from ..builder import MODELS
@@ -20,8 +17,9 @@ from .base import BaseSingleObjectTracker
 class MixFormer(BaseSingleObjectTracker):
     """MixFormer: End-to-End Tracking with Iterative Mixed Attention.
 
-    This single object tracker is the implementation of `MixFormer<https://arxiv.org/abs/2203.11082>`.
-    
+    This single object tracker is the implementation of
+    `MixFormer<https://arxiv.org/abs/2203.11082>`.
+
     """
 
     def __init__(self,
@@ -36,24 +34,23 @@ class MixFormer(BaseSingleObjectTracker):
         self.backbone = build_backbone(backbone)
         # self.neck = build_neck(neck)
         self.head = build_head(head)
-        print("Done")
+        print('Done')
 
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
 
         # Set the update interval
         self.update_interval = self.test_cfg['update_interval'][0]
-        print("Update interval is: ", self.update_interval)
+        print('Update interval is: ', self.update_interval)
         self.online_size = self.test_cfg['online_size'][0]
-        print("Online size is: ", self.online_size)
+        print('Online size is: ', self.online_size)
         self.max_score_decay = self.test_cfg['max_score_decay'][0]
-        print("Max score decay is: ", self.max_score_decay)
+        print('Max score decay is: ', self.max_score_decay)
 
         # Set update interval, forget, online size
 
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
-
 
     def init_weights(self):
         """Initialize the weights of modules in single object tracker."""
@@ -70,28 +67,26 @@ class MixFormer(BaseSingleObjectTracker):
         if self.with_head:
             self.head.init_weights()
 
-
     def set_online(self, template, online_template):
         self.backbone.set_online(template, online_template)
 
     def init(self, img, bbox):
         """Initialize the single object tracker in the first frame.
-        
+
         Args:
             img: (Tensor): input image of shape (1, C, H, W).
             bbox (list | Tensor): in [cx, cy, w, h] format.
         """
-        self.z_dict_list = []   # store templates
+        self.z_dict_list = []  # store templates
         # get the 1st template
         z_patch, _, z_mask = self.get_cropped_img(
-            img, bbox, self.test_cfg["template_factor"],
-            self.test_cfg["template_size"]
-        )   # z_patch pf shape [1,C,H,W]; z_mask of shape [1,H,W]
+            img, bbox, self.test_cfg['template_factor'],
+            self.test_cfg['template_size']
+        )  # z_patch pf shape [1,C,H,W]; z_mask of shape [1,H,W]
         z_patch = normalize(
             z_patch.squeeze() / 255.,
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        ).unsqueeze(0)
+            std=[0.229, 0.224, 0.225]).unsqueeze(0)
         with torch.no_grad():
             self.set_online(z_patch, z_patch)
 
@@ -106,10 +101,10 @@ class MixFormer(BaseSingleObjectTracker):
         """ Crop Image
         Only used during testing
         This function mainly contains two steps:
-        1. Crop `img` based on target_bbox and search_area_factor.  If the 
+        1. Crop `img` based on target_bbox and search_area_factor.  If the
         cropped image/mask is out of boundary of `img`, use 0 to pad.
         2. Resize the cropped image/mask to `output_size`.
-        
+
         Args:
             img (Tensor): of shape (1, C, H, W)
             target_bbox (list | ndarray): in [cx, cy, w, h] format
@@ -128,10 +123,10 @@ class MixFormer(BaseSingleObjectTracker):
         img_h, img_w = img.shape[2:]
         # 1. Crop image
         # 1.1 calculate crop size and pad size
-        assert w > 0 and h > 0, f"Invalid bbox size ({w}, {h})!"
+        assert w > 0 and h > 0, f'Invalid bbox size ({w}, {h})!'
         crop_size = math.ceil(math.sqrt(w * h) * search_area_factor)
         if crop_size < 1:
-            raise Exception("Too small bounding box.")
+            raise Exception('Too small bounding box.')
 
         x1 = torch.round(cx - crop_size * 0.5).long()
         x2 = x1 + crop_size
@@ -164,13 +159,15 @@ class MixFormer(BaseSingleObjectTracker):
         # 2. Resize cropped image and padding mask
         resize_factor = output_size / crop_size
         img_crop_padded = F.interpolate(
-            img_crop_padded, (output_size, output_size),
-            mode="bilinear",
+            img_crop_padded,
+            (output_size, output_size),
+            mode='bilinear',
             align_corners=False,
         )
         padding_mask = F.interpolate(
-            padding_mask[None, None], (output_size, output_size),
-            mode="bilinear",
+            padding_mask[None, None],
+            (output_size, output_size),
+            mode='bilinear',
             align_corners=False,
         ).squeeze(dim=0).type(torch.bool)
 
@@ -178,7 +175,7 @@ class MixFormer(BaseSingleObjectTracker):
 
     def update_template(self, img, bbox, conf_score):
         """Update the dynamic templates.
-        
+
         Args:
             img (Tensor): of shape (1, C, H, W).
             bbox (list | ndarray): in [cx, cy, w, h] format.
@@ -188,8 +185,8 @@ class MixFormer(BaseSingleObjectTracker):
             z_patch, _, z_mask = self.get_cropped_img(
                 img,
                 bbox,
-                self.test_cfg["template_factor"],
-                output_size=self.test_cfg["template_size"],
+                self.test_cfg['template_factor'],
+                output_size=self.test_cfg['template_size'],
             )
             z_patch = normalize(
                 z_patch.squeeze() / 255.,
@@ -202,10 +199,14 @@ class MixFormer(BaseSingleObjectTracker):
             if self.online_size == 1:
                 self.online_template = self.best_online_template
             elif self.online_template.shape[0] < self.online_size:
-                self.online_template = torch.cat([self.online_template, self.best_online_template])
+                self.online_template = torch.cat(
+                    [self.online_template, self.best_online_template])
             else:
-                self.online_template[self.online_forget_id:self.online_forget_id+1] = self.best_online_template
-                self.online_forget_id = (self.online_forget_id + 1) % self.online_size
+                self.online_template[self.
+                                     online_forget_id:self.online_forget_id +
+                                     1] = self.best_online_template
+                self.online_forget_id = (self.online_forget_id +
+                                         1) % self.online_size
 
             if self.online_size > 1:
                 with torch.no_grad():
@@ -219,30 +220,30 @@ class MixFormer(BaseSingleObjectTracker):
 
         Args:
             img (Tensor): of shape (1, C, H, W).
-            bbox (list | Tensor): The bbox in previous frame. The shape of the 
+            bbox (list | Tensor): The bbox in previous frame. The shape of the
                 bbox is (4, ) in [x, y, w, h] format.
         """
         H, W = img.shape[2:]
         # get the t-th search region
         x_patch, resize_factor, x_mask = self.get_cropped_img(
-            img, bbox, self.test_cfg["search_factor"],
-            self.test_cfg["search_size"]
-        )   # bbox: of shape (x1,y1, w, h), x_mask: of shape (1, h, w)
+            img, bbox, self.test_cfg['search_factor'],
+            self.test_cfg['search_size']
+        )  # bbox: of shape (x1,y1, w, h), x_mask: of shape (1, h, w)
         x_patch = normalize(
             x_patch.squeeze() / 255.,
             mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]
-        ).unsqueeze(0)
+            std=[0.229, 0.224, 0.225]).unsqueeze(0)
 
         with torch.no_grad():
             x_patch.squeeze(1)
             template, search = self.backbone.forward_test(x_patch)
             out_dict = self.head(template, search)
 
-        pred_box = out_dict['pred_bboxes']    # xyxy
+        pred_box = out_dict['pred_bboxes']  # xyxy
         # Baseline: Take the mean of all pred boxes as the final result
 
-        pred_box = self.mapping_bbox_back(pred_box, self.memo.bbox, resize_factor)
+        pred_box = self.mapping_bbox_back(pred_box, self.memo.bbox,
+                                          resize_factor)
         pred_box = self._bbox_clip(pred_box, H, W, margin=10)
 
         # update template
@@ -259,15 +260,15 @@ class MixFormer(BaseSingleObjectTracker):
         """Mapping the `prediction bboxes` from resized cropped image to
         original image. The coordinate origins of them are both the top left
         corner.
-        
+
         Args:
-            pred_bboxes (Tensor): the predicted bboxes of shape (B, Nq, 4), in 
-                [tl_x, tl_y, br_x, br_y] format. The coordinates are based in 
+            pred_bboxes (Tensor): the predicted bboxes of shape (B, Nq, 4), in
+                [tl_x, tl_y, br_x, br_y] format. The coordinates are based in
                 the resized cropped image.
             prev_bbox (Tensor): the previous bbox of shape (B, 4),
-                in [cx, cy, w, h] format. The coordinates are based in the 
+                in [cx, cy, w, h] format. The coordinates are based in the
                 original image.
-            resize_factor (float): the ratio of original image scale to cropped 
+            resize_factor (float): the ratio of original image scale to cropped
                 image scale.
         Returns:
             (Tensor): in [tl_x, tl_y, br_x, br_y] format.
@@ -278,10 +279,12 @@ class MixFormer(BaseSingleObjectTracker):
         pred_bbox = pred_bboxes.mean(dim=0) / resize_factor
 
         # the half size of the original croped image
-        cropped_img_half_size = 0.5 * self.test_cfg["search_size"] / resize_factor
+        cropped_img_half_size = 0.5 * self.test_cfg[
+            'search_size'] / resize_factor
         # (x_shift, y_shift) is the coordinate of top left corner of the
         # cropped image basesd in the original image.
-        x_shift, y_shift = prev_bbox[0] - cropped_img_half_size, prev_bbox[1] - cropped_img_half_size
+        x_shift, y_shift = prev_bbox[0] - cropped_img_half_size, prev_bbox[
+            1] - cropped_img_half_size
         pred_bbox[0:4:2] += x_shift
         pred_bbox[1:4:2] += y_shift
 
@@ -304,11 +307,11 @@ class MixFormer(BaseSingleObjectTracker):
         Args:
             img (Tensor): input image of shape (1, C, H, W).
             img_metas (list[dict]): list of image information dict where each
-                dict has: 'img_shape', 'scale_factor', 'flip', and may also 
-                contain 'filename', 'ori_shape', 'pad_shape', and 
+                dict has: 'img_shape', 'scale_factor', 'flip', and may also
+                contain 'filename', 'ori_shape', 'pad_shape', and
                 'img_norm_cfg'. For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoColloet`.
-            gt_bboxes (list[Tensor]): list of ground truth bboxes for each 
+            gt_bboxes (list[Tensor]): list of ground truth bboxes for each
                 image with shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
 
         Returns:
@@ -316,7 +319,7 @@ class MixFormer(BaseSingleObjectTracker):
         """
         frame_id = img_metas[0].get('frame_id', -1)
         assert frame_id >= 0
-        assert len(img) == 1, "only support batch_size=1 when testing"
+        assert len(img) == 1, 'only support batch_size=1 when testing'
         self.frame_id = frame_id
 
         if frame_id == 0:
@@ -330,26 +333,24 @@ class MixFormer(BaseSingleObjectTracker):
             self.memo.bbox = bbox_xyxy_to_cxcywh(bbox_pred)
 
         results = dict()
-        results["track_bboxes"] = np.concatenate(
-            (bbox_pred.cpu().numpy(), np.array([best_score]))
-        )
+        results['track_bboxes'] = np.concatenate(
+            (bbox_pred.cpu().numpy(), np.array([best_score])))
         return results
 
-    def forward_train(self,
-                      imgs,
-                      img_metas,
-                      search_img,
-                      search_img_metas,
+    def forward_train(self, imgs, img_metas, search_img, search_img_metas,
                       **kwargs):
-        """forward of training
+        """forward of training.
 
         Args:
             img (Tensor): template images of shape (N, num_templates, C, H, W)
-                Typically, there are 2 template images, and H and W are both equal to 128.
+                Typically, there are 2 template images,
+                and H and W are both equal to 128.
 
             img_metas (list[dict]): list of image information dict where each
                 dict has: 'image_shape', 'scale_factor', 'flip', and may also
-                contain 'filename', 'ori_shape', 'pad_shape', and 'img_norm_cfg'. For details on the values of these keys see
+                contain 'filename', 'ori_shape', 'pad_shape',
+                and 'img_norm_cfg'.
+                For details on the values of these keys see
                 `mmtrack/datasets/pipelines/formatting.py:VideoCollect`.
 
             search_img (Tensor): of shape (N, 1, C, H, W) encoding input search
@@ -372,7 +373,8 @@ class MixFormer(BaseSingleObjectTracker):
                 H and W are both equal to that of template images.
 
             search_gt_bboxes (list[Tensor]): Ground truth bboxes for search
-                images with shape (N, 5) in [0., tl_x, tl_y, br_x, br_y] format.
+                images with shape (N, 5) in
+                [0., tl_x, tl_y, br_x, br_y] format.
 
             search_padding_mask (Tensor): padding mask of search images.
                 Its of shape (N, 1, H, W).
@@ -381,7 +383,7 @@ class MixFormer(BaseSingleObjectTracker):
 
             search_gt_labels (list[Tensor], optional): Ground truth labels for
                 search images with shape (N, 2).
-        
+
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
@@ -394,4 +396,3 @@ class MixFormer(BaseSingleObjectTracker):
 
         # compute loss
         return out_dict
-     

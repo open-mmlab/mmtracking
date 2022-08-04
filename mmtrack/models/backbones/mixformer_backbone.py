@@ -1,23 +1,25 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import logging
-from functools import partial
 from collections import OrderedDict
+from functools import partial
 from itertools import repeat
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch._six import container_abcs
 from einops import rearrange
 from einops.layers.torch import Rearrange
-from timm.models.layers import DropPath, trunc_normal_
-from mmdet.models.builder import BACKBONES
 from mmcv.runner import BaseModule
+from mmdet.models.builder import BACKBONES
+from timm.models.layers import DropPath, trunc_normal_
+from torch._six import container_abcs
 
 from .utils import FrozenBatchNorm2d
 
 
 # From PyTorch internals
 def _ntuple(n):
+
     def parse(x):
         if isinstance(x, container_abcs.Iterable):
             return x
@@ -43,11 +45,13 @@ class LayerNorm(nn.LayerNorm):
 
 
 class QuickGELU(nn.Module):
+
     def forward(self, x: torch.Tensor):
         return x * torch.sigmoid(1.702 * x)
 
 
 class Mlp(nn.Module):
+
     def __init__(self,
                  in_features,
                  hidden_features=None,
@@ -72,6 +76,7 @@ class Mlp(nn.Module):
 
 
 class Attention(nn.Module):
+
     def __init__(self,
                  dim_in,
                  dim_out,
@@ -87,15 +92,14 @@ class Attention(nn.Module):
                  padding_q=1,
                  with_cls_token=True,
                  freeze_bn=False,
-                 **kwargs
-                 ):
+                 **kwargs):
         super().__init__()
         self.stride_kv = stride_kv
         self.stride_q = stride_q
         self.dim = dim_out
         self.num_heads = num_heads
         # head_dim = self.qkv_dim // num_heads
-        self.scale = dim_out ** -0.5
+        self.scale = dim_out**-0.5
         self.with_cls_token = with_cls_token
         if freeze_bn:
             conv_proj_post_norm = FrozenBatchNorm2d
@@ -103,17 +107,14 @@ class Attention(nn.Module):
             conv_proj_post_norm = nn.BatchNorm2d
 
         self.conv_proj_q = self._build_projection(
-            dim_in, dim_out, kernel_size, padding_q,
-            stride_q, 'linear' if method == 'avg' else method, conv_proj_post_norm
-        )
-        self.conv_proj_k = self._build_projection(
-            dim_in, dim_out, kernel_size, padding_kv,
-            stride_kv, method, conv_proj_post_norm
-        )
-        self.conv_proj_v = self._build_projection(
-            dim_in, dim_out, kernel_size, padding_kv,
-            stride_kv, method, conv_proj_post_norm
-        )
+            dim_in, dim_out, kernel_size, padding_q, stride_q,
+            'linear' if method == 'avg' else method, conv_proj_post_norm)
+        self.conv_proj_k = self._build_projection(dim_in, dim_out, kernel_size,
+                                                  padding_kv, stride_kv,
+                                                  method, conv_proj_post_norm)
+        self.conv_proj_v = self._build_projection(dim_in, dim_out, kernel_size,
+                                                  padding_kv, stride_kv,
+                                                  method, conv_proj_post_norm)
 
         self.proj_q = nn.Linear(dim_in, dim_out, bias=qkv_bias)
         self.proj_k = nn.Linear(dim_in, dim_out, bias=qkv_bias)
@@ -123,38 +124,34 @@ class Attention(nn.Module):
         self.proj = nn.Linear(dim_out, dim_out)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def _build_projection(self,
-                          dim_in,
-                          dim_out,
-                          kernel_size,
-                          padding,
-                          stride,
-                          method,
-                          norm):
+    def _build_projection(self, dim_in, dim_out, kernel_size, padding, stride,
+                          method, norm):
         if method == 'dw_bn':
-            proj = nn.Sequential(OrderedDict([
-                ('conv', nn.Conv2d(
-                    dim_in,
-                    dim_in,
-                    kernel_size=kernel_size,
-                    padding=padding,
-                    stride=stride,
-                    bias=False,
-                    groups=dim_in
-                )),
-                ('bn', norm(dim_in)),
-                ('rearrage', Rearrange('b c h w -> b (h w) c')),
-            ]))
+            proj = nn.Sequential(
+                OrderedDict([
+                    ('conv',
+                     nn.Conv2d(
+                         dim_in,
+                         dim_in,
+                         kernel_size=kernel_size,
+                         padding=padding,
+                         stride=stride,
+                         bias=False,
+                         groups=dim_in)),
+                    ('bn', norm(dim_in)),
+                    ('rearrage', Rearrange('b c h w -> b (h w) c')),
+                ]))
         elif method == 'avg':
-            proj = nn.Sequential(OrderedDict([
-                ('avg', nn.AvgPool2d(
-                    kernel_size=kernel_size,
-                    padding=padding,
-                    stride=stride,
-                    ceil_mode=True
-                )),
-                ('rearrage', Rearrange('b c h w -> b (h w) c')),
-            ]))
+            proj = nn.Sequential(
+                OrderedDict([
+                    ('avg',
+                     nn.AvgPool2d(
+                         kernel_size=kernel_size,
+                         padding=padding,
+                         stride=stride,
+                         ceil_mode=True)),
+                    ('rearrage', Rearrange('b c h w -> b (h w) c')),
+                ]))
         elif method == 'linear':
             proj = None
         else:
@@ -163,10 +160,15 @@ class Attention(nn.Module):
         return proj
 
     def forward_conv(self, x, t_h, t_w, s_h, s_w):
-        template, online_template, search = torch.split(x, [t_h * t_w, t_h * t_w, s_h * s_w], dim=1)
-        template = rearrange(template, 'b (h w) c -> b c h w', h=t_h, w=t_w).contiguous()
-        online_template = rearrange(online_template, 'b (h w) c -> b c h w', h=t_h, w=t_w).contiguous()
-        search = rearrange(search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
+        template, online_template, search = torch.split(
+            x, [t_h * t_w, t_h * t_w, s_h * s_w], dim=1)
+        template = rearrange(
+            template, 'b (h w) c -> b c h w', h=t_h, w=t_w).contiguous()
+        online_template = rearrange(
+            online_template, 'b (h w) c -> b c h w', h=t_h,
+            w=t_w).contiguous()
+        search = rearrange(
+            search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
 
         if self.conv_proj_q is not None:
             t_q = self.conv_proj_q(template)
@@ -175,7 +177,8 @@ class Attention(nn.Module):
             q = torch.cat([t_q, ot_q, s_q], dim=1)
         else:
             t_q = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_q = rearrange(online_template, 'b c h w -> b (h w) c').contiguous()
+            ot_q = rearrange(online_template,
+                             'b c h w -> b (h w) c').contiguous()
             s_q = rearrange(search, 'b c h w -> b (h w) c').contiguous()
             q = torch.cat([t_q, ot_q, s_q], dim=1)
 
@@ -186,7 +189,8 @@ class Attention(nn.Module):
             k = torch.cat([t_k, ot_k, s_k], dim=1)
         else:
             t_k = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_k = rearrange(online_template, 'b c h w -> b (h w) c').contiguous()
+            ot_k = rearrange(online_template,
+                             'b c h w -> b (h w) c').contiguous()
             s_k = rearrange(search, 'b c h w -> b (h w) c').contiguous()
             k = torch.cat([t_k, ot_k, s_k], dim=1)
 
@@ -197,7 +201,8 @@ class Attention(nn.Module):
             v = torch.cat([t_v, ot_v, s_v], dim=1)
         else:
             t_v = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_v = rearrange(online_template, 'b c h w -> b (h w) c').contiguous()
+            ot_v = rearrange(online_template,
+                             'b c h w -> b (h w) c').contiguous()
             s_v = rearrange(search, 'b c h w -> b (h w) c').contiguous()
             v = torch.cat([t_v, ot_v, s_v], dim=1)
 
@@ -205,7 +210,8 @@ class Attention(nn.Module):
 
     def forward_conv_test(self, x, s_h, s_w):
         search = x
-        search = rearrange(search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
+        search = rearrange(
+            search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
 
         if self.conv_proj_q is not None:
             q = self.conv_proj_q(search)
@@ -226,35 +232,29 @@ class Attention(nn.Module):
 
         return q, k, v
 
-
     def forward(self, x, t_h, t_w, s_h, s_w):
-        """
-        Asymmetric mixed attention.
-        """
-        if (
-            self.conv_proj_q is not None
-            or self.conv_proj_k is not None
-            or self.conv_proj_v is not None
-        ):
+        """Asymmetric mixed attention."""
+        if (self.conv_proj_q is not None or self.conv_proj_k is not None
+                or self.conv_proj_v is not None):
             q, k, v = self.forward_conv(x, t_h, t_w, s_h, s_w)
 
-        q = rearrange(self.proj_q(q), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        k = rearrange(self.proj_k(k), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        v = rearrange(self.proj_v(v), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
+        q = rearrange(
+            self.proj_q(q), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        k = rearrange(
+            self.proj_k(k), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        v = rearrange(
+            self.proj_v(v), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
 
-
-        ### Attention!: k/v compression，1/4 of q_size（conv_stride=2）
-        # q_t, q_ot, q_s = torch.split(q, [t_h*t_w, t_h*t_w, s_h*s_w], dim=2)
-        # # k_t, k_ot, k_s = torch.split(k, [t_h*t_w//4, t_h*t_w//4, s_h*s_w//4], dim=2)
-        # # v_t, v_ot, v_s = torch.split(v, [t_h * t_w // 4, t_h * t_w // 4, s_h * s_w // 4], dim=2)
-        # k_t, k_ot, k_s = torch.split(k, [((t_h + 1) // 2) ** 2, ((t_h + 1) // 2) ** 2, s_h * s_w // 4], dim=2)
-        # v_t, v_ot, v_s = torch.split(v, [((t_h + 1) // 2) ** 2, ((t_h + 1) // 2) ** 2, s_h * s_w // 4], dim=2)
+        # Attention!: k/v compression，1/4 of q_size（conv_stride=2）
 
         q_mt, q_s = torch.split(q, [t_h * t_w * 2, s_h * s_w], dim=2)
-        # k_t, k_ot, k_s = torch.split(k, [t_h*t_w//4, t_h*t_w//4, s_h*s_w//4], dim=2)
-        # v_t, v_ot, v_s = torch.split(v, [t_h * t_w // 4, t_h * t_w // 4, s_h * s_w // 4], dim=2)
-        k_mt, k_s = torch.split(k, [((t_h + 1) // 2) ** 2 * 2, s_h * s_w // 4], dim=2)
-        v_mt, v_s = torch.split(v, [((t_h + 1) // 2) ** 2 * 2, s_h * s_w // 4], dim=2)
+        k_mt, k_s = torch.split(
+            k, [((t_h + 1) // 2)**2 * 2, s_h * s_w // 4], dim=2)
+        v_mt, v_s = torch.split(
+            v, [((t_h + 1) // 2)**2 * 2, s_h * s_w // 4], dim=2)
 
         # template attention
         attn_score = torch.einsum('bhlk,bhtk->bhlt', [q_mt, k_mt]) * self.scale
@@ -262,15 +262,6 @@ class Attention(nn.Module):
         attn = self.attn_drop(attn)
         x_mt = torch.einsum('bhlt,bhtv->bhlv', [attn, v_mt])
         x_mt = rearrange(x_mt, 'b h t d -> b t (h d)')
-
-        # online template attention
-        # k2 = torch.cat([k_t, k_ot], dim=2)
-        # v2 = torch.cat([v_t, v_ot], dim=2)
-        # attn_score = torch.einsum('bhlk,bhtk->bhlt', [q_ot, k2]) * self.scale
-        # attn = F.softmax(attn_score, dim=-1)
-        # attn = self.attn_drop(attn)
-        # x_ot = torch.einsum('bhlt,bhtv->bhlv', [attn, v2])
-        # x_ot = rearrange(x_ot, 'b h t d -> b t (h d)')
 
         # search region attention
         attn_score = torch.einsum('bhlk,bhtk->bhlt', [q_s, k]) * self.scale
@@ -288,16 +279,19 @@ class Attention(nn.Module):
         return x
 
     def forward_test(self, x, s_h, s_w):
-        if (
-                self.conv_proj_q is not None
-                or self.conv_proj_k is not None
-                or self.conv_proj_v is not None
-        ):
+        if (self.conv_proj_q is not None or self.conv_proj_k is not None
+                or self.conv_proj_v is not None):
             q_s, k, v = self.forward_conv_test(x, s_h, s_w)
 
-        q_s = rearrange(self.proj_q(q_s), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        k = rearrange(self.proj_k(k), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        v = rearrange(self.proj_v(v), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
+        q_s = rearrange(
+            self.proj_q(q_s), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        k = rearrange(
+            self.proj_k(k), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        v = rearrange(
+            self.proj_v(v), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
 
         attn_score = torch.einsum('bhlk,bhtk->bhlt', [q_s, k]) * self.scale
         attn = F.softmax(attn_score, dim=-1)
@@ -315,53 +309,53 @@ class Attention(nn.Module):
     def set_online(self, x, t_h, t_w):
         template = x[:, :t_h * t_w]  # 1, 1024, c
         online_template = x[:, t_h * t_w:]  # 1, b*1024, c
-        template = rearrange(template, 'b (h w) c -> b c h w', h=t_h, w=t_w).contiguous()
-        online_template = rearrange(online_template.squeeze(0), '(b h w) c -> b c h w', h=t_h, w=t_w).contiguous()  # b, c, 32, 32
+        template = rearrange(
+            template, 'b (h w) c -> b c h w', h=t_h, w=t_w).contiguous()
+        online_template = rearrange(
+            online_template.squeeze(0), '(b h w) c -> b c h w', h=t_h,
+            w=t_w).contiguous()  # b, c, 32, 32
         if self.conv_proj_q is not None:
             t_q = self.conv_proj_q(template)
-            ot_q = self.conv_proj_q(online_template).flatten(end_dim=1).unsqueeze(0)
+            ot_q = self.conv_proj_q(online_template).flatten(
+                end_dim=1).unsqueeze(0)
         else:
             t_q = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_q = rearrange(online_template, 'b c h w -> (b h w) c').contiguous().unsqueeze(0)
+            ot_q = rearrange(online_template,
+                             'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         q = torch.cat([t_q, ot_q], dim=1)
 
         if self.conv_proj_k is not None:
             self.t_k = self.conv_proj_k(template)
-            self.ot_k = self.conv_proj_k(online_template).flatten(end_dim=1).unsqueeze(0)
+            self.ot_k = self.conv_proj_k(online_template).flatten(
+                end_dim=1).unsqueeze(0)
         else:
             self.t_k = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            self.ot_k = rearrange(online_template, 'b c h w -> (b h w) c').contiguous().unsqueeze(0)
+            self.ot_k = rearrange(
+                online_template,
+                'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         k = torch.cat([self.t_k, self.ot_k], dim=1)
 
         if self.conv_proj_v is not None:
             self.t_v = self.conv_proj_v(template)
-            self.ot_v = self.conv_proj_v(online_template).flatten(end_dim=1).unsqueeze(0)
+            self.ot_v = self.conv_proj_v(online_template).flatten(
+                end_dim=1).unsqueeze(0)
         else:
             self.t_v = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            self.ot_v = rearrange(online_template, 'b c h w -> (b h w) c').contiguous().unsqueeze(0)
+            self.ot_v = rearrange(
+                online_template,
+                'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         v = torch.cat([self.t_v, self.ot_v], dim=1)
 
-        q = rearrange(self.proj_q(q), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        k = rearrange(self.proj_k(k), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
-        v = rearrange(self.proj_v(v), 'b t (h d) -> b h t d', h=self.num_heads).contiguous()
+        q = rearrange(
+            self.proj_q(q), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        k = rearrange(
+            self.proj_k(k), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
+        v = rearrange(
+            self.proj_v(v), 'b t (h d) -> b h t d',
+            h=self.num_heads).contiguous()
 
-        # q_t = q[:, :, :t_h * t_w]
-        # q_ot = q[:, :, t_h * t_w:]
-        # k_t = k[:, :, :t_h * t_w // 4]
-        # k_ot = k[:, :, t_h * t_w // 4:]
-        # v_t = v[:, :, :t_h * t_w // 4]
-        # v_ot = v[:, :, t_h * t_w // 4:]
-        #
-        # k1 = torch.cat([k_t, k_ot], dim=2)
-        # v1 = torch.cat([v_t, v_ot], dim=2)
-        # attn_score = torch.einsum('bhlk,bhtk->bhlt', [q_t, k1]) * self.scale
-        # attn = F.softmax(attn_score, dim=-1)
-        # attn = self.attn_drop(attn)
-        # x_t = torch.einsum('bhlt,bhtv->bhlv', [attn, v1])
-        # self.x_t = rearrange(x_t, 'b h t d -> b t (h d)').contiguous()  # 1, seq, c
-
-        # k2 = torch.cat([k_t, k_ot], dim=2)
-        # v2 = torch.cat([v_t, v_ot], dim=2)
         attn_score = torch.einsum('bhlk,bhtk->bhlt', [q, k]) * self.scale
         attn = F.softmax(attn_score, dim=-1)
         attn = self.attn_drop(attn)
@@ -398,9 +392,14 @@ class Block(nn.Module):
 
         self.norm1 = norm_layer(dim_in)
         self.attn = Attention(
-            dim_in, dim_out, num_heads, qkv_bias, attn_drop, drop, freeze_bn=freeze_bn,
-            **kwargs
-        )
+            dim_in,
+            dim_out,
+            num_heads,
+            qkv_bias,
+            attn_drop,
+            drop,
+            freeze_bn=freeze_bn,
+            **kwargs)
 
         self.drop_path = DropPath(drop_path) \
             if drop_path > 0. else nn.Identity()
@@ -411,8 +410,7 @@ class Block(nn.Module):
             in_features=dim_out,
             hidden_features=dim_mlp_hidden,
             act_layer=act_layer,
-            drop=drop
-        )
+            drop=drop)
 
     def forward(self, x, t_h, t_w, s_h, s_w):
         res = x
@@ -442,9 +440,7 @@ class Block(nn.Module):
 
 
 class ConvEmbed(nn.Module):
-    """ Image to Conv Embedding
-
-    """
+    """Image to Conv Embedding."""
 
     def __init__(self,
                  patch_size=7,
@@ -458,11 +454,11 @@ class ConvEmbed(nn.Module):
         self.patch_size = patch_size
 
         self.proj = nn.Conv2d(
-            in_chans, embed_dim,
+            in_chans,
+            embed_dim,
             kernel_size=patch_size,
             stride=stride,
-            padding=padding
-        )
+            padding=padding)
         self.norm = norm_layer(embed_dim) if norm_layer else None
 
     def forward(self, x):
@@ -478,8 +474,8 @@ class ConvEmbed(nn.Module):
 
 
 class VisionTransformer(BaseModule):
-    """ Vision Transformer with support for patch or hybrid CNN input stage
-    """
+    """Vision Transformer with support for patch or hybrid CNN input stage."""
+
     def __init__(self,
                  patch_size=16,
                  patch_stride=16,
@@ -500,8 +496,8 @@ class VisionTransformer(BaseModule):
                  **kwargs):
         super().__init__()
         self.init = init
-        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
-
+        self.num_features = self.embed_dim = embed_dim
+        # num_features for consistency with other models
         self.rearrage = None
 
         self.patch_embed = ConvEmbed(
@@ -511,19 +507,17 @@ class VisionTransformer(BaseModule):
             stride=patch_stride,
             padding=patch_padding,
             embed_dim=embed_dim,
-            norm_layer=norm_layer
-        )
+            norm_layer=norm_layer)
 
         with_cls_token = kwargs['with_cls_token']
         if with_cls_token:
-            self.cls_token = nn.Parameter(
-                torch.zeros(1, 1, embed_dim)
-            )
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         else:
             self.cls_token = None
 
         self.pos_drop = nn.Dropout(p=drop_rate)
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)
+               ]  # stochastic depth decay rule
 
         blocks = []
         for j in range(depth):
@@ -540,9 +534,7 @@ class VisionTransformer(BaseModule):
                     act_layer=act_layer,
                     norm_layer=norm_layer,
                     freeze_bn=freeze_bn,
-                    **kwargs
-                )
-            )
+                    **kwargs))
         self.blocks = nn.ModuleList(blocks)
 
     def init_weights(self):
@@ -591,7 +583,8 @@ class VisionTransformer(BaseModule):
         s_B, s_C, s_H, s_W = search.size()
 
         template = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-        online_template = rearrange(online_template, 'b c h w -> b (h w) c').contiguous()
+        online_template = rearrange(online_template,
+                                    'b c h w -> b (h w) c').contiguous()
         search = rearrange(search, 'b c h w -> b (h w) c').contiguous()
         x = torch.cat([template, online_template, search], dim=1)
 
@@ -602,10 +595,15 @@ class VisionTransformer(BaseModule):
 
         # if self.cls_token is not None:
         #     cls_tokens, x = torch.split(x, [1, H*W], 1)
-        template, online_template, search = torch.split(x, [t_H*t_W, t_H*t_W, s_H*s_W], dim=1)
-        template = rearrange(template, 'b (h w) c -> b c h w', h=t_H, w=t_W).contiguous()
-        online_template = rearrange(online_template, 'b (h w) c -> b c h w', h=t_H, w=t_W).contiguous()
-        search = rearrange(search, 'b (h w) c -> b c h w', h=s_H, w=s_W).contiguous()
+        template, online_template, search = torch.split(
+            x, [t_H * t_W, t_H * t_W, s_H * s_W], dim=1)
+        template = rearrange(
+            template, 'b (h w) c -> b c h w', h=t_H, w=t_W).contiguous()
+        online_template = rearrange(
+            online_template, 'b (h w) c -> b c h w', h=t_H,
+            w=t_W).contiguous()
+        search = rearrange(
+            search, 'b (h w) c -> b c h w', h=s_H, w=s_W).contiguous()
 
         return template, online_template, search
 
@@ -635,7 +633,8 @@ class VisionTransformer(BaseModule):
         t_B, t_C, t_H, t_W = template.size()
 
         template = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-        online_template = rearrange(online_template, 'b c h w -> (b h w) c').unsqueeze(0).contiguous()
+        online_template = rearrange(
+            online_template, 'b c h w -> (b h w) c').unsqueeze(0).contiguous()
         # 1, 1024, c
         # 1, b*1024, c
         x = torch.cat([template, online_template], dim=1)
@@ -647,16 +646,18 @@ class VisionTransformer(BaseModule):
 
         # if self.cls_token is not None:
         #     cls_tokens, x = torch.split(x, [1, H*W], 1)
-        template = x[:, :t_H*t_W]
-        online_template = x[:, t_H*t_W:]
+        template = x[:, :t_H * t_W]
+        online_template = x[:, t_H * t_W:]
         template = rearrange(template, 'b (h w) c -> b c h w', h=t_H, w=t_W)
-        online_template = rearrange(online_template.squeeze(0), '(b h w) c -> b c h w', h=t_H, w=t_W)
+        online_template = rearrange(
+            online_template.squeeze(0), '(b h w) c -> b c h w', h=t_H, w=t_W)
 
         return template, online_template
 
 
 @BACKBONES.register_module()
 class ConvolutionalVisionTransformer(BaseModule):
+
     def __init__(self,
                  in_chans=3,
                  act_layer=nn.GELU,
@@ -694,8 +695,7 @@ class ConvolutionalVisionTransformer(BaseModule):
                 init=init,
                 act_layer=act_layer,
                 norm_layer=norm_layer,
-                **kwargs
-            )
+                **kwargs)
             setattr(self, f'stage{i}', stage)
 
             in_chans = spec['DIM_EMBED'][i]
@@ -716,7 +716,8 @@ class ConvolutionalVisionTransformer(BaseModule):
         # template = template + self.template_emb
         # search = search + self.search_emb
         for i in range(self.num_stages):
-            template, online_template, search = getattr(self, f'stage{i}')(template, online_template, search)
+            template, online_template, search = getattr(self, f'stage{i}')(
+                template, online_template, search)
 
         return template, search
 
@@ -727,6 +728,6 @@ class ConvolutionalVisionTransformer(BaseModule):
 
     def set_online(self, template, online_template):
         for i in range(self.num_stages):
-            template, online_template = getattr(self, f'stage{i}').set_online(template, online_template)
+            template, online_template = getattr(self, f'stage{i}').set_online(
+                template, online_template)
         self.template = template
-

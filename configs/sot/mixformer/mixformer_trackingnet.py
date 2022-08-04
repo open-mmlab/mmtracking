@@ -26,9 +26,7 @@ model = dict(
             STRIDE_KV=[2, 2, 2],
             PADDING_Q=[1, 1, 1],
             STRIDE_Q=[1, 1, 1],
-            FREEZE_BN=True
-        )
-    ),
+            FREEZE_BN=True)),
     head=dict(
         type='MixFormerHead',
         bbox_head=dict(
@@ -37,8 +35,7 @@ model = dict(
             channel=384,
             feat_sz=20,
             stride=16,
-            freeze_bn=False
-        ),
+            freeze_bn=False),
         score_head=dict(
             type='ScoreDecoder',
             pool_size=4,
@@ -46,9 +43,7 @@ model = dict(
             stride=16,
             num_heads=6,
             hidden_dim=384,
-            num_layers=3
-        )
-   ),
+            num_layers=3)),
     test_cfg=dict(
         search_factor=4.5,
         search_size=320,
@@ -57,12 +52,12 @@ model = dict(
         update_interval=[25],
         online_size=[2],
         max_score_decay=[1.0],
-    )
-)
+    ))
 
 data_root = 'data/'
 data = dict(
     test=dict(
         type='TrackingNetDataset',
-        ann_file=data_root + 'trackingnet/annotations/trackingnet_test_infos.txt',
+        ann_file=data_root +
+        'trackingnet/annotations/trackingnet_test_infos.txt',
         img_prefix=data_root + 'trackingnet'))

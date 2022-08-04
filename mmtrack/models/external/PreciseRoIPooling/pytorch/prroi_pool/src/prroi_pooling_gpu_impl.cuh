@@ -56,4 +56,3 @@ void PrRoIPoolingCoorBackwardGpu(
 #endif
 
 #endif /* !PRROI_POOLING_GPU_IMPL_CUH */
-
