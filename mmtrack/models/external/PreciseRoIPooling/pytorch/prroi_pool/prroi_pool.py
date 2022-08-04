@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
 # File   : prroi_pool.py
 # Author : Jiayuan Mao, Tete Xiao
 # Email  : maojiayuan@gmail.com, jasonhsiao97@gmail.com
@@ -17,6 +16,7 @@ __all__ = ['PrRoIPool2D']
 
 
 class PrRoIPool2D(nn.Module):
+
     def __init__(self, pooled_height, pooled_width, spatial_scale):
         super().__init__()
 
@@ -25,8 +25,9 @@ class PrRoIPool2D(nn.Module):
         self.spatial_scale = float(spatial_scale)
 
     def forward(self, features, rois):
-        return prroi_pool2d(features, rois, self.pooled_height, self.pooled_width, self.spatial_scale)
+        return prroi_pool2d(features, rois, self.pooled_height,
+                            self.pooled_width, self.spatial_scale)
 
     def extra_repr(self):
-        return 'kernel_size=({pooled_height}, {pooled_width}), spatial_scale={spatial_scale}'.format(**self.__dict__)
-
+        return 'kernel_size=({pooled_height}, \
+{pooled_width}), spatial_scale={spatial_scale}'.format(**self.__dict__)

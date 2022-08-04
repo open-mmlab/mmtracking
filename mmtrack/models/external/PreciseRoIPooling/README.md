@@ -1,4 +1,5 @@
 # PreciseRoIPooling
+
 This repo implements the **Precise RoI Pooling** (PrRoI Pooling), proposed in the paper **Acquisition of Localization Confidence for Accurate Object Detection** published at ECCV 2018 (Oral Presentation).
 
 **Acquisition of Localization Confidence for Accurate Object Detection**
@@ -38,7 +39,6 @@ roi_features = avg_pool(features, rois)
 from prroi_pool.functional import prroi_pool2d
 roi_features = prroi_pool2d(features, rois, window_height, window_width, spatial_scale)
 ```
-
 
 ## Usage (PyTorch 0.4)
 
