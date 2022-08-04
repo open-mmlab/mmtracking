@@ -1,12 +1,12 @@
 asynctest
 codecov
 flake8
+git+https://github.com/TAO-Dataset/tao
 interrogate
 isort==4.3.21
 # Note: used for kwarray.group_items, this may be ported to mmcv in the future.
 kwarray
 pytest
-tao
 trackeval
 ubelt
 xdoctest>=0.10.0
