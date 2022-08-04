@@ -40,7 +40,7 @@ We now provide the evaluation results using model weights released in [official 
 |MixFormer | - | - | 81.1 | 86.6 | 80.0 | [config](./mixformer_trackingnet.py) |
 
 ### GOT10k
+
 | Method | Style | Inf time(fps) | Average Overlap | Success Rate 0.5 | Success Rate 0.75 | Config |
 | :----: | :----: | :----: | :----: | :----: | :----: | :----: |
 |MixFormer | - | - | 72.0 | 82.0 | 68.1 | [config](./mixformer_got10k.py) |
-

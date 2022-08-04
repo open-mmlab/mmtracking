@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# Copyright (c) OpenMMLab. All rights reserved.
 # File   : test_prroi_pooling2d.py
 # Author : Jiayuan Mao
 # Email  : maojiayuan@gmail.com
@@ -9,15 +9,13 @@
 import unittest
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-
 from jactorch.utils.unittest import TorchTestCase
-
 from prroi_pool import PrRoIPool2D
 
 
 class TestPrRoIPool2D(TorchTestCase):
+
     def test_forward(self):
         pool = PrRoIPool2D(7, 7, spatial_scale=0.5)
         features = torch.rand((4, 16, 24, 32)).cuda()
@@ -29,10 +27,13 @@ class TestPrRoIPool2D(TorchTestCase):
         out = pool(features, rois)
         out_gold = F.avg_pool2d(features, kernel_size=2, stride=1)
 
-        self.assertTensorClose(out, torch.stack((
-            out_gold[0, :, :7, :7],
-            out_gold[1, :, 7:14, 7:14],
-        ), dim=0))
+        self.assertTensorClose(
+            out,
+            torch.stack((
+                out_gold[0, :, :7, :7],
+                out_gold[1, :, 7:14, 7:14],
+            ),
+                        dim=0))
 
     def test_backward_shapeonly(self):
         pool = PrRoIPool2D(2, 2, spatial_scale=0.5)

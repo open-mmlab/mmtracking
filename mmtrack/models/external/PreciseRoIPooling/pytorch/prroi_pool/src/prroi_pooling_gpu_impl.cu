@@ -440,4 +440,3 @@ void PrRoIPoolingCoorBackwardGpu(
 }
 
 } /* !extern "C" */
-
