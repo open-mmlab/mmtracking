@@ -145,7 +145,7 @@ train_dataloader = dict(
     dataset=dict(
         type='GOT10kDataset',
         data_root=data_root,
-        ann_file='GOT10k/annotations/got10k_train_vot_infos.txt',
+        ann_file='GOT10k/annotations/got10k_train_infos.txt',
         data_prefix=dict(img_path='GOT10k'),
         pipeline=train_pipeline,
         test_mode=False))
