@@ -141,7 +141,7 @@ train_dataloader = dict(
     batch_size=4,
     num_workers=0,
     persistent_workers=False,
-    sampler=dict(type='QuotaSampler', samples_per_epoch=60000),
+    sampler=dict(type='QuotaSampler', samples_per_epoch=26000),
     dataset=dict(
         type='GOT10kDataset',
         data_root=data_root,
