@@ -134,14 +134,14 @@ train_pipeline = [
     dict(type='PackTrackInputs', ref_prefix='search', num_template_frames=3)
 ]
 
-data_root = 'data/'
+data_root = 'openmmlab:s3://openmmlab/datasets/tracking/'
 # dataset settings
 # TODO modify the batch_size
 train_dataloader = dict(
-    batch_size=4,
-    num_workers=0,
-    persistent_workers=False,
-    sampler=dict(type='QuotaSampler', samples_per_epoch=60000),
+    batch_size=10,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='QuotaSampler', samples_per_epoch=40000),
     dataset=dict(
         type='GOT10kDataset',
         data_root=data_root,
@@ -172,4 +172,4 @@ optim_wrapper = dict(
 # checkpoint saving
 default_hooks = dict(
     checkpoint=dict(type='CheckpointHook', interval=10),
-    logger=dict(type='LoggerHook', interval=1))
+    logger=dict(type='LoggerHook', interval=50))
