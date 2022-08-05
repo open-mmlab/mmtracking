@@ -527,33 +527,31 @@ class PrdimpClsHead(BaseModule):
               - ``all_bbox_targets``: in shape (N, H * W * num_base_anchors, 4)
               - ``all_bbox_weights``: in shape (N, H * W * num_base_anchors, 4)
         """
-        self.img_size = self.img_size.to(target_center.device)
-        self.filter_size = self.filter_size.to(target_center.device)
-        self.feat_size = self.feat_size.to(target_center.device)
+        # TODO simplify the different devices
+        img_size = self.img_size.to(target_center.device)
+        filter_size = self.filter_size.to(target_center.device)
+        feat_size = self.feat_size.to(target_center.device)
 
         # set the center of image as coordinate origin
-        target_center_norm = (target_center -
-                              self.img_size / 2.) / self.img_size
+        target_center_norm = (target_center - img_size / 2.) / img_size
 
-        center = self.feat_size * target_center_norm + 0.5 * torch.fmod(
-            self.filter_size + 1, 2)
+        center = feat_size * target_center_norm + 0.5 * torch.fmod(
+            filter_size + 1, 2)
 
-        sigma = self.train_cfg['sigma_factor'] * self.feat_size.prod().sqrt(
-        ).item()
+        sigma = self.train_cfg['sigma_factor'] * feat_size.prod().sqrt().item()
 
         if self.train_cfg['end_pad_if_even']:
-            end_pad = (torch.fmod(self.filter_size,
-                                  2) == 0).to(self.filter_size)
+            end_pad = (torch.fmod(filter_size, 2) == 0).to(filter_size)
         else:
-            end_pad = torch.zeros(2).to(self.filter_size)
+            end_pad = torch.zeros(2).to(filter_size)
 
         # generate gauss labels and density
-        # Both of them are of shape (N, self.feat_size, self.feat_size)
+        # Both of them are of shape (N, feat_size, feat_size)
         gauss_label_density = self._gauss_2d(
-            self.feat_size, sigma, center, end_pad,
+            feat_size, sigma, center, end_pad,
             self.train_cfg['use_gauss_density'])
         # continue to process label density
-        feat_area = (self.feat_size + end_pad).prod()
+        feat_area = (feat_size + end_pad).prod()
         gauss_label_density = (1.0 - self.train_cfg['gauss_label_bias']
                                ) * gauss_label_density + self.train_cfg[
                                    'gauss_label_bias'] / feat_area
