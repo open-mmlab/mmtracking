@@ -156,12 +156,12 @@ class TAOMetric(BaseVideoMetric):
         pred_track_results = self.format_preds(tmp_pred_track_results)
         pred_det_results = self.format_preds(tmp_pred_det_results)
 
-        # save the json result to tmp dir
-        tmp_dir = tempfile.TemporaryDirectory()
-        pred_det_results_path = f'{tmp_dir.name}/tao_bbox.json'
-        gt_results_path = f'{tmp_dir.name}/tao_gt.json'
-        # LVIS api only supports reading from files
         if 'bbox' in self.metrics:
+            # LVIS api only supports reading from files, hence,
+            # save the json result to tmp dir
+            tmp_dir = tempfile.TemporaryDirectory()
+            pred_det_results_path = f'{tmp_dir.name}/tao_bbox.json'
+            gt_results_path = f'{tmp_dir.name}/tao_gt.json'
             mmcv.dump(pred_det_results, pred_det_results_path)
             mmcv.dump(gt_results, gt_results_path)
 
@@ -221,7 +221,7 @@ class TAOMetric(BaseVideoMetric):
                     key = '{}_{}'.format('bbox', k)
                     val = float('{:.3f}'.format(float(v)))
                     eval_results[key] = val
-        tmp_dir.cleanup()
+            tmp_dir.cleanup()
         return eval_results
 
     def format_meta(self, parts_meta: Tuple[dict]) -> dict:
