@@ -50,6 +50,7 @@ class Mask2Former(BaseMultiObjectTracker):
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        # shape (N * T, C, H, W)
         img = img.flatten(0, 1)
 
         x = self.backbone(img)
@@ -61,12 +62,12 @@ class Mask2Former(BaseMultiObjectTracker):
                 batch_inputs: dict,
                 batch_data_samples: SampleList,
                 rescale: bool = True) -> SampleList:
-        """Predict results from a batch of inputs and data samples with post-
-        processing.
+        """Predict results from a batch of inputs and data samples with
+        postprocessing.
 
         Args:
             batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
-                encoding input images. Typically these should be mean centered
+                encoding input images. Typically, these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
@@ -86,6 +87,7 @@ class Mask2Former(BaseMultiObjectTracker):
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        # the "T" is 1
         img = img.squeeze(1)
         feats = self.backbone(img)
         mask_cls_results, mask_pred_results = self.track_head.predict(

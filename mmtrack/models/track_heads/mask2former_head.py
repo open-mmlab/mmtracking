@@ -585,7 +585,7 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
 
                 - mask_cls_results (Tensor): Mask classification logits,\
                     shape (batch_size, num_queries, cls_out_channels).
-                    Note `cls_out_channels` should includes background.
+                    Note `cls_out_channels` should include background.
                 - mask_pred_results (Tensor): Mask logits, shape \
                     (batch_size, num_queries, h, w).
         """
