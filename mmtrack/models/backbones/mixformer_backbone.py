@@ -1,9 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import collections.abc as container_abcs
 import logging
 from collections import OrderedDict
 from functools import partial
-from itertools import repeat
 
 import torch
 import torch.nn as nn
@@ -14,19 +12,8 @@ from mmcv.runner import BaseModule
 from mmdet.models.builder import BACKBONES
 from timm.models.layers import DropPath, trunc_normal_
 
+from mmtrack.core.utils.misc import _ntuple
 from .utils import FrozenBatchNorm2d
-
-
-# From PyTorch internals
-def _ntuple(n):
-
-    def parse(x):
-        if isinstance(x, container_abcs.Iterable):
-            return x
-        return tuple(repeat(x, n))
-
-    return parse
-
 
 to_1tuple = _ntuple(1)
 to_2tuple = _ntuple(2)
