@@ -33,6 +33,8 @@ class LayerNorm(nn.LayerNorm):
 
 
 class QuickGELU(nn.Module):
+    """Approximation of GELU activation function introduced in `Gaussian Error
+    Linear Units<https://arxiv.org/abs/1606.08415v4>`."""
 
     def forward(self, x: torch.Tensor):
         return x * torch.sigmoid(1.702 * x)
@@ -648,8 +650,8 @@ class ConvolutionalVisionTransformer(BaseModule):
 
     def __init__(self,
                  in_chans=3,
-                 act_layer=nn.GELU,
-                 norm_layer=partial(nn.LayerNorm, eps=1e-5),
+                 act_layer=QuickGELU,
+                 norm_layer=partial(LayerNorm, eps=1e-5),
                  init='trunc_norm',
                  spec=None):
         super().__init__()
