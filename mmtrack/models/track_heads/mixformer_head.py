@@ -3,14 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
+from mmcv.ops.prroi_pool import PrRoIPool
 from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
 from mmdet.models.builder import build_head, build_loss
 from timm.models.layers import trunc_normal_
 
 from ..backbones.utils import FrozenBatchNorm2d
-from ..external.PreciseRoIPooling.pytorch.prroi_pool.prroi_pool import \
-    PrRoIPool2D
 
 
 def conv(in_planes,
@@ -171,8 +170,7 @@ class ScoreDecoder(nn.Module):
         self.pool_size = pool_size
         self.score_head = MLP(hidden_dim, hidden_dim, 1, num_layers)
         self.scale = hidden_dim**-0.5
-        self.search_prroipool = PrRoIPool2D(
-            pool_size, pool_size, spatial_scale=1.0)
+        self.search_prroipool = PrRoIPool(pool_size, spatial_scale=1.0)
         self.proj_q = nn.ModuleList(
             nn.Linear(hidden_dim, hidden_dim, bias=True) for _ in range(2))
         self.proj_k = nn.ModuleList(
