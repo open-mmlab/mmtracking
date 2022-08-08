@@ -3,11 +3,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
+from mmcv.cnn.utils.weight_init import trunc_normal_
 from mmcv.ops.prroi_pool import PrRoIPool
 from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
 from mmdet.models.builder import build_head, build_loss
-from timm.models.layers import trunc_normal_
 
 from mmtrack.models.track_heads.stark_head import ScoreHead
 
