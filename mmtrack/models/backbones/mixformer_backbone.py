@@ -8,9 +8,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
+from mmcv.cnn.utils.weight_init import trunc_normal_
 from mmcv.runner import BaseModule
 from mmdet.models.builder import BACKBONES
-from timm.models.layers import DropPath, trunc_normal_
+from timm.models.layers import DropPath
 
 from mmtrack.core.utils.misc import _ntuple
 from .utils import FrozenBatchNorm2d
