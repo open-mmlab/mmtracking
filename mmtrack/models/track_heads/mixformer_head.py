@@ -9,36 +9,11 @@ from mmdet.models import HEADS
 from mmdet.models.builder import build_head, build_loss
 from timm.models.layers import trunc_normal_
 
-
-class MLP(nn.Module):
-    """Very simple multi-layer perceptron (also called FFN)"""
-
-    def __init__(self,
-                 input_dim,
-                 hidden_dim,
-                 output_dim,
-                 num_layers,
-                 BN=False):
-        super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        if BN:
-            self.layers = nn.ModuleList(
-                nn.Sequential(nn.Linear(n, k), nn.BatchNorm1d(k))
-                for n, k in zip([input_dim] + h, h + [output_dim]))
-        else:
-            self.layers = nn.ModuleList(
-                nn.Linear(n, k)
-                for n, k in zip([input_dim] + h, h + [output_dim]))
-
-    def forward(self, x):
-        for i, layer in enumerate(self.layers):
-            x = F.relu(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
+from mmtrack.models.track_heads.stark_head import ScoreHead
 
 
 @HEADS.register_module()
-class ScoreDecoder(nn.Module):
+class MixFormerScoreDecoder(nn.Module):
 
     def __init__(self,
                  pool_size=4,
@@ -53,7 +28,7 @@ class ScoreDecoder(nn.Module):
         self.img_sz = feat_sz * stride
         self.num_heads = num_heads
         self.pool_size = pool_size
-        self.score_head = MLP(hidden_dim, hidden_dim, 1, num_layers)
+        self.score_head = ScoreHead(hidden_dim, hidden_dim, 1, num_layers)
         self.scale = hidden_dim**-0.5
         self.search_prroipool = PrRoIPool(pool_size, spatial_scale=1.0)
         self.proj_q = nn.ModuleList(
