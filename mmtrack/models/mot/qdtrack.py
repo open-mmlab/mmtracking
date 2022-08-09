@@ -2,6 +2,7 @@
 import copy
 from typing import Dict, Optional
 
+import torch
 from torch import Tensor
 
 from mmtrack.registry import MODELS
@@ -94,6 +95,11 @@ class QDTrack(BaseMultiObjectTracker):
         proposal_cfg = self.detector.train_cfg.get('rpn_proposal',
                                                    self.detector.test_cfg.rpn)
         rpn_data_samples = copy.deepcopy(batch_data_samples)
+        # set cat_id of gt_labels to 0 in RPN
+        for data_sample in rpn_data_samples:
+            data_sample.gt_instances.labels = \
+                torch.zeros_like(data_sample.gt_instances.labels)
+
         rpn_losses, rpn_results_list = self.detector.rpn_head. \
             loss_and_predict(x,
                              rpn_data_samples,
