@@ -146,7 +146,8 @@ class AppearanceFreeLink:
         self.model = AFLinkModel()
         if checkpoint:
             load_checkpoint(self.model, checkpoint)
-        self.model.cuda()
+        if torch.cuda.is_available():
+            self.model.cuda()
         self.model.eval()
 
         self.fn_l2 = lambda x, y: np.sqrt(x**2 + y**2)
