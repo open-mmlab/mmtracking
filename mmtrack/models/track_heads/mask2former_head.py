@@ -167,7 +167,24 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
                 nn.init.xavier_normal_(p)
 
     def preprocess_gt(self, batch_gt_instances: InstanceList) -> InstanceList:
-        # preprocess ground truth
+        """Preprocess the ground truth for all images.
+
+        Args:
+            batch_gt_instances (list[:obj:`InstanceData`]): Batch of
+                gt_instance. It usually includes ``labels``, each is
+                ground truth labels of each bbox, with shape (num_gts, )
+                and ``masks``, each is ground truth masks of each instances
+                of an image, shape (num_gts, h, w).
+
+        Returns:
+            list[obj:`InstanceData`]: each contains the following keys
+
+                - labels (Tensor): Ground truth class indices\
+                    for an image, with shape (n, ), n is the sum of\
+                    number of stuff type and number of instance in an image.
+                - masks (Tensor): Ground truth mask for a\
+                    image, with shape (n, t, h, w).
+        """
         final_batch_gt_instances = []
         for gt_instances in batch_gt_instances:
             gt_instances.masks = gt_instances.masks.to_tensor(
@@ -408,7 +425,7 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
 
                 - cls_pred (Tensor): Classification scores in shape \
                     (batch_size, num_queries, cls_out_channels). \
-                    Note `cls_out_channels` should includes background.
+                    Note `cls_out_channels` should include background.
                 - mask_pred (Tensor): Mask scores in shape \
                     (batch_size, num_queries,h, w).
                 - attn_mask (Tensor): Attention mask in shape \
@@ -459,7 +476,7 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
                 - cls_pred_list (list[Tensor)]: Classification logits \
                     for each decoder layer. Each is a 3D-tensor with shape \
                     (batch_size, num_queries, cls_out_channels). \
-                    Note `cls_out_channels` should includes background.
+                    Note `cls_out_channels` should include background.
                 - mask_pred_list (list[Tensor]): Mask logits for each \
                     decoder layer. Each with shape (batch_size, num_queries, \
                     h, w).
@@ -540,8 +557,8 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
         x: Tuple[Tensor],
         batch_data_samples: SampleList,
     ) -> Dict[str, Tensor]:
-        """Perform forward propagation and loss calculation of the panoptic
-        head on the features of the upstream network.
+        """Perform forward propagation and loss calculation of the track head
+        on the features of the upstream network.
 
         Args:
             x (tuple[Tensor]): Multi-level features from the upstream
@@ -572,7 +589,7 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
 
     def predict(self, x: Tuple[Tensor],
                 batch_data_samples: SampleList) -> Tuple[Tensor, Tensor]:
-        """Test without augmentaton.
+        """Test without augmentation.
 
         Args:
             x (tuple[Tensor]): Multi-level features from the

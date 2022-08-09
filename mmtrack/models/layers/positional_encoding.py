@@ -57,7 +57,7 @@ class SinePositionalEncoding3D(BaseModule):
         self.offset = offset
 
     def forward(self, mask: Tensor) -> Tensor:
-        """Forward function for `SinePositionalEncoding`.
+        """Forward function for `SinePositionalEncoding3D`.
 
         Args:
             mask (Tensor): ByteTensor mask. Non-zero values representing

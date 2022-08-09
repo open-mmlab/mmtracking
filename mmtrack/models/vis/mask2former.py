@@ -17,7 +17,17 @@ from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
 class Mask2Former(BaseMultiObjectTracker):
     r"""Implementation of `Masked-attention Mask
     Transformer for Universal Image Segmentation
-    <https://arxiv.org/pdf/2112.01527>`_."""
+    <https://arxiv.org/pdf/2112.01527>`_.
+
+    Args:
+        backbone (dict): Configuration of backbone. Defaults to None.
+        track_head (dict): Configuration of track head. Defaults to None.
+        data_preprocessor (dict or ConfigDict, optional): The pre-process
+           config of :class:`TrackDataPreprocessor`.  it usually includes,
+            ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
+        init_cfg (dict or list[dict]): Configuration of initialization.
+            Defaults to None.
+    """
 
     def __init__(self,
                  backbone: Optional[dict] = None,
@@ -39,7 +49,7 @@ class Mask2Former(BaseMultiObjectTracker):
              batch_data_samples: SampleList, **kwargs) -> Union[dict, tuple]:
         """
         Args:
-            batch_inputs (Tensor): Input images of shape (N, C, H, W).
+            batch_inputs (Tensor): Input images of shape (N, T, C, H, W).
                 These should usually be mean centered and std scaled.
             batch_data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
