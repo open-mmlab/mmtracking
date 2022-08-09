@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
+from mmcv.cnn.bricks.transformer import FFN
 from mmcv.cnn.utils.weight_init import trunc_normal_
 from mmcv.runner import BaseModule
 from mmdet.models.builder import BACKBONES
@@ -38,31 +39,6 @@ class QuickGELU(nn.Module):
 
     def forward(self, x: torch.Tensor):
         return x * torch.sigmoid(1.702 * x)
-
-
-class Mlp(nn.Module):
-
-    def __init__(self,
-                 in_features,
-                 hidden_features=None,
-                 out_features=None,
-                 act_layer=nn.GELU,
-                 drop=0.):
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x
 
 
 class Attention(nn.Module):
@@ -396,11 +372,14 @@ class Block(nn.Module):
         self.norm2 = norm_layer(dim_out)
 
         dim_mlp_hidden = int(dim_out * mlp_ratio)
-        self.mlp = Mlp(
-            in_features=dim_out,
-            hidden_features=dim_mlp_hidden,
-            act_layer=act_layer,
-            drop=drop)
+        self.mlp = FFN(
+            embed_dims=dim_out,
+            feedforward_channels=dim_mlp_hidden,
+            num_fcs=2,
+            act_cfg=dict(type='GELU'),
+            ffn_drop=drop,
+            add_identity=False,
+        )
 
     def forward(self, x, t_h, t_w, s_h, s_w):
         res = x
