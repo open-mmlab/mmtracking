@@ -3,12 +3,9 @@ _base_ = ['./yolox_x_crowdhuman_mot17-private-half.py']
 img_scale = (896, 1600)
 
 model = dict(
-    data_preprocessor=dict(
-        batch_augments=[
-            dict(
-                type='BatchSyncRandomResize',
-                random_size_range=(640, 1152))
-        ]))
+    data_preprocessor=dict(batch_augments=[
+        dict(type='BatchSyncRandomResize', random_size_range=(640, 1152))
+    ]))
 
 train_pipeline = [
     dict(
@@ -34,28 +31,18 @@ train_pipeline = [
         scale=img_scale,
         keep_ratio=True,
         clip_object_border=True),
-    dict(
-        type='Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(
-        type='FilterAnnotations',
-        min_gt_bbox_wh=(1, 1),
-        keep_empty=False),
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='FilterAnnotations', min_gt_bbox_wh=(1, 1), keep_empty=False),
     dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='Resize', scale=img_scale, keep_ratio=True),
-    dict(
-        type='Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor')
-    )
+                   'scale_factor'))
 ]
 
 train_dataloader = dict(
@@ -72,7 +59,7 @@ train_dataloader = dict(
                     ann_file='annotations/train_cocoformat.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -83,7 +70,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_train.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -94,7 +81,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_val.json',
                     data_prefix=dict(img='val'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -108,7 +95,7 @@ val_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/train_cocoformat.json',
         data_prefix=dict(img='train'),
-        metainfo=dict(CLASSES=('pedestrian',)),
+        metainfo=dict(CLASSES=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = dict(
@@ -118,7 +105,7 @@ test_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/test_cocoformat.json',
         data_prefix=dict(img='test'),
-        metainfo=dict(CLASSES=('pedestrian',)),
+        metainfo=dict(CLASSES=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 

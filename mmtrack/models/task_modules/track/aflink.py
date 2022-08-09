@@ -1,13 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Tuple
 from collections import defaultdict
+from typing import Tuple
 
 import numpy as np
 import torch
 from mmengine.model import BaseModule
 from mmengine.runner.checkpoint import load_checkpoint
 from scipy.optimize import linear_sum_assignment
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from mmtrack.registry import TASK_UTILS
 
@@ -151,7 +151,9 @@ class AppearanceFreeLink:
 
         self.fn_l2 = lambda x, y: np.sqrt(x**2 + y**2)
 
-    def data_transform(self, track1: np.ndarray, track2: np.ndarray,
+    def data_transform(self,
+                       track1: np.ndarray,
+                       track2: np.ndarray,
                        length: int = 30) -> Tuple[Tensor]:
         """Data Transformation. This is used to standardize the length of
         tracks to a unified length. Then perform min-max normalization to the

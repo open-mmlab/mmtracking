@@ -18,27 +18,21 @@ model = dict(
         ]),
     _scope_='mmdet',
     type='YOLOX',
-    backbone=dict(
-        type='CSPDarknet', deepen_factor=1.33, widen_factor=1.25),
+    backbone=dict(type='CSPDarknet', deepen_factor=1.33, widen_factor=1.25),
     neck=dict(
         type='YOLOXPAFPN',
         in_channels=[320, 640, 1280],
         out_channels=320,
         num_csp_blocks=4),
     bbox_head=dict(
-        type='YOLOXHead',
-        num_classes=1,
-        in_channels=320,
-        feat_channels=320),
-    train_cfg=dict(
-        assigner=dict(type='SimOTAAssigner', center_radius=2.5)),
+        type='YOLOXHead', num_classes=1, in_channels=320, feat_channels=320),
+    train_cfg=dict(assigner=dict(type='SimOTAAssigner', center_radius=2.5)),
     test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.7)),
     init_cfg=dict(
         type='Pretrained',
         checkpoint=  # noqa: E251
         'https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth'  # noqa: E501
-    )
-)
+    ))
 
 train_pipeline = [
     dict(
@@ -64,28 +58,18 @@ train_pipeline = [
         scale=img_scale,
         keep_ratio=True,
         clip_object_border=False),
-    dict(
-        type='Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(
-        type='FilterAnnotations',
-        min_gt_bbox_wh=(1, 1),
-        keep_empty=False),
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='FilterAnnotations', min_gt_bbox_wh=(1, 1), keep_empty=False),
     dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='Resize', scale=img_scale, keep_ratio=True),
-    dict(
-        type='Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor')
-    )
+                   'scale_factor'))
 ]
 
 train_dataloader = dict(
@@ -106,7 +90,7 @@ train_dataloader = dict(
                     ann_file='annotations/half-train_cocoformat.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -117,7 +101,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_train.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -128,7 +112,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_val.json',
                     data_prefix=dict(img='val'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian',)),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -147,7 +131,7 @@ val_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/half-val_cocoformat.json',
         data_prefix=dict(img='train'),
-        metainfo=dict(CLASSES=('pedestrian',)),
+        metainfo=dict(CLASSES=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = val_dataloader
