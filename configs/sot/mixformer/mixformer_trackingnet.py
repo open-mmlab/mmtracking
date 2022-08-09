@@ -26,7 +26,7 @@ model = dict(
             STRIDE_KV=[2, 2, 2],
             PADDING_Q=[1, 1, 1],
             STRIDE_Q=[1, 1, 1],
-            FREEZE_BN=True)),
+            NORM_CFG=dict(type='BN', requires_grad=False))),
     head=dict(
         type='MixFormerHead',
         bbox_head=dict(

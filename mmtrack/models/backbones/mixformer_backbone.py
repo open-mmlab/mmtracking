@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
+from mmcv.cnn import build_norm_layer
 from mmcv.cnn.bricks.transformer import FFN
 from mmcv.cnn.utils.weight_init import trunc_normal_
 from mmcv.runner import BaseModule
@@ -15,7 +16,6 @@ from mmdet.models.builder import BACKBONES
 from timm.models.layers import DropPath
 
 from mmtrack.core.utils.misc import _ntuple
-from .utils import FrozenBatchNorm2d
 
 to_1tuple = _ntuple(1)
 to_2tuple = _ntuple(2)
@@ -57,7 +57,7 @@ class Attention(nn.Module):
                  padding_kv=1,
                  padding_q=1,
                  with_cls_token=True,
-                 freeze_bn=False,
+                 norm_cfg=dict(type='BN'),
                  **kwargs):
         super().__init__()
         self.stride_kv = stride_kv
@@ -67,20 +67,17 @@ class Attention(nn.Module):
         # head_dim = self.qkv_dim // num_heads
         self.scale = dim_out**-0.5
         self.with_cls_token = with_cls_token
-        if freeze_bn:
-            conv_proj_post_norm = FrozenBatchNorm2d
-        else:
-            conv_proj_post_norm = nn.BatchNorm2d
+        self.norm_cfg = norm_cfg
 
         self.conv_proj_q = self._build_projection(
             dim_in, dim_out, kernel_size, padding_q, stride_q,
-            'linear' if method == 'avg' else method, conv_proj_post_norm)
+            'linear' if method == 'avg' else method)
         self.conv_proj_k = self._build_projection(dim_in, dim_out, kernel_size,
                                                   padding_kv, stride_kv,
-                                                  method, conv_proj_post_norm)
+                                                  method)
         self.conv_proj_v = self._build_projection(dim_in, dim_out, kernel_size,
                                                   padding_kv, stride_kv,
-                                                  method, conv_proj_post_norm)
+                                                  method)
 
         self.proj_q = nn.Linear(dim_in, dim_out, bias=qkv_bias)
         self.proj_k = nn.Linear(dim_in, dim_out, bias=qkv_bias)
@@ -91,7 +88,7 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def _build_projection(self, dim_in, dim_out, kernel_size, padding, stride,
-                          method, norm):
+                          method):
         if method == 'dw_bn':
             proj = nn.Sequential(
                 OrderedDict([
@@ -104,7 +101,7 @@ class Attention(nn.Module):
                          stride=stride,
                          bias=False,
                          groups=dim_in)),
-                    ('bn', norm(dim_in)),
+                    build_norm_layer(self.norm_cfg, dim_in),
                     ('rearrage', Rearrange('b c h w -> b (h w) c')),
                 ]))
         elif method == 'avg':
@@ -350,7 +347,7 @@ class Block(nn.Module):
                  drop_path=0.,
                  act_layer=nn.GELU,
                  norm_layer=nn.LayerNorm,
-                 freeze_bn=False,
+                 norm_cfg=dict(type='BN'),
                  **kwargs):
         super().__init__()
 
@@ -364,7 +361,7 @@ class Block(nn.Module):
             qkv_bias,
             attn_drop,
             drop,
-            freeze_bn=freeze_bn,
+            norm_cfg=norm_cfg,
             **kwargs)
 
         self.drop_path = DropPath(drop_path) \
@@ -461,7 +458,7 @@ class VisionTransformer(BaseModule):
                  act_layer=nn.GELU,
                  norm_layer=nn.LayerNorm,
                  init='trunc_norm',
-                 freeze_bn=False,
+                 norm_cfg=False,
                  **kwargs):
         super().__init__()
         self.init = init
@@ -502,7 +499,7 @@ class VisionTransformer(BaseModule):
                     drop_path=dpr[j],
                     act_layer=act_layer,
                     norm_layer=norm_layer,
-                    freeze_bn=freeze_bn,
+                    norm_cfg=norm_cfg,
                     **kwargs))
         self.blocks = nn.ModuleList(blocks)
 
@@ -656,7 +653,7 @@ class ConvolutionalVisionTransformer(BaseModule):
                 'padding_kv': spec['PADDING_KV'][i],
                 'stride_kv': spec['STRIDE_KV'][i],
                 'stride_q': spec['STRIDE_Q'][i],
-                'freeze_bn': spec['FREEZE_BN'],
+                'norm_cfg': spec['NORM_CFG'],
             }
 
             stage = VisionTransformer(
