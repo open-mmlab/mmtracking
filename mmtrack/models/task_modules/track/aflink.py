@@ -192,8 +192,8 @@ class AppearanceFreeLink:
         track2 = torch.tensor(track2, dtype=torch.float).to(_device)
 
         # unsqueeze channel=1
-        track1 = track1.unsqueeze(0).unsqueeze(0).to()
-        track2 = track2.unsqueeze(0).unsqueeze(0).cuda()
+        track1 = track1.unsqueeze(0).unsqueeze(0)
+        track2 = track2.unsqueeze(0).unsqueeze(0)
         return track1, track2
 
     def forward(self, pred_tracks: np.ndarray) -> np.ndarray:
