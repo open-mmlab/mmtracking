@@ -150,6 +150,7 @@ class AppearanceFreeLink:
             self.model.cuda()
         self.model.eval()
 
+        self.device = next(self.model.parameters()).device
         self.fn_l2 = lambda x, y: np.sqrt(x**2 + y**2)
 
     def data_transform(self,
@@ -187,9 +188,8 @@ class AppearanceFreeLink:
         track2 = (track2 - subtractor) / divisor
 
         # numpy to torch
-        _device = self.model.device
-        track1 = torch.tensor(track1, dtype=torch.float).to(_device)
-        track2 = torch.tensor(track2, dtype=torch.float).to(_device)
+        track1 = torch.tensor(track1, dtype=torch.float).to(self.device)
+        track2 = torch.tensor(track2, dtype=torch.float).to(self.device)
 
         # unsqueeze channel=1
         track1 = track1.unsqueeze(0).unsqueeze(0)
