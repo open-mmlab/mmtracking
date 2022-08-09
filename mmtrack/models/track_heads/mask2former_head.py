@@ -210,9 +210,11 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
                 mask_shape, dtype=torch.bool, device=_device)
             gt_ids_per_video = torch.full((num_instances, self.num_frames),
                                           -1,
+                                          dtype=torch.long,
                                           device=_device)
             gt_labels_per_video = torch.full((num_instances, ),
                                              -1,
+                                             dtype=torch.long,
                                              device=_device)
             for frame_id in range(self.num_frames):
                 cur_frame_gts = per_frame_gts[frame_id]
