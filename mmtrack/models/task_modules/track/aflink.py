@@ -187,11 +187,12 @@ class AppearanceFreeLink:
         track2 = (track2 - subtractor) / divisor
 
         # numpy to torch
-        track1 = torch.tensor(track1, dtype=torch.float)
-        track2 = torch.tensor(track2, dtype=torch.float)
+        _device = self.model.device
+        track1 = torch.tensor(track1, dtype=torch.float).to(_device)
+        track2 = torch.tensor(track2, dtype=torch.float).to(_device)
 
         # unsqueeze channel=1
-        track1 = track1.unsqueeze(0).unsqueeze(0).cuda()  # TODO: device
+        track1 = track1.unsqueeze(0).unsqueeze(0).to()
         track2 = track2.unsqueeze(0).unsqueeze(0).cuda()
         return track1, track2
 
