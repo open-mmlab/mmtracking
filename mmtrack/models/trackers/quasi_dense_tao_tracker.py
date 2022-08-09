@@ -274,10 +274,11 @@ class QuasiDenseTAOTracker(BaseTracker):
 
         self.update(ids, bboxes, labels, embeds, scores, frame_id)
 
+        tracklet_inds = ids > -1
         # update pred_track_instances
-        pred_track_instances.bboxes = bboxes
-        pred_track_instances.labels = labels
-        pred_track_instances.scores = scores
-        pred_track_instances.instances_id = ids
+        pred_track_instances.bboxes = bboxes[tracklet_inds]
+        pred_track_instances.labels = labels[tracklet_inds]
+        pred_track_instances.scores = scores[tracklet_inds]
+        pred_track_instances.instances_id = ids[tracklet_inds]
 
         return pred_track_instances

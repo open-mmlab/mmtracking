@@ -49,7 +49,12 @@ class TestTAOMetric(TestCase):
             'ignore_flag': 0,
             'instance_id': 1,
         }]
-        tao_metric.dataset_meta = dict(CLASSES=['car', 'train'])
+        tao_metric.dataset_meta = dict(
+            CLASSES=['car', 'train'],
+            categories={
+                0: dict(id=0, name='car'),
+                1: dict(id=1, name='train')
+            })
         tao_metric.process([
             dict(
                 inputs=None,
@@ -64,9 +69,13 @@ class TestTAOMetric(TestCase):
                     'neg_category_ids': [3, 4],
                     'not_exhaustive_category_ids': [1, 2]
                 })
-        ], [dict(pred_track_instances=dummy_pred)])
+        ], [
+            dict(
+                pred_track_instances=dummy_pred, pred_det_instances=dummy_pred)
+        ])
         tao_metric.evaluate(size=1)
-        assert osp.exists(f'{outfile_prefix}.json')
+        assert osp.exists(f'{outfile_prefix}_track.json')
+        assert osp.exists(f'{outfile_prefix}_det.json')
 
     def test_evaluate(self):
         """Test using the metric in the same way as Evaluator."""
@@ -85,7 +94,12 @@ class TestTAOMetric(TestCase):
                 outfile_prefix=f'{self.tmp_dir.name}/test',
             ))
 
-        tao_metric.dataset_meta = dict(CLASSES=['car', 'train'])
+        tao_metric.dataset_meta = dict(
+            CLASSES=['car', 'train'],
+            categories={
+                0: dict(id=0, name='car'),
+                1: dict(id=1, name='train')
+            })
         tao_metric.process([
             dict(
                 inputs=None,
@@ -100,7 +114,11 @@ class TestTAOMetric(TestCase):
                     'neg_category_ids': [3, 4],
                     'not_exhaustive_category_ids': [1, 2]
                 })
-        ], [dict(pred_track_instances=dummy_pred_1)])
+        ], [
+            dict(
+                pred_track_instances=dummy_pred_1,
+                pred_det_instances=dummy_pred_1)
+        ])
         tao_metric.process([
             dict(
                 inputs=None,
@@ -115,7 +133,11 @@ class TestTAOMetric(TestCase):
                     'neg_category_ids': [3, 4],
                     'not_exhaustive_category_ids': [1, 2]
                 })
-        ], [dict(pred_track_instances=dummy_pred_2)])
+        ], [
+            dict(
+                pred_track_instances=dummy_pred_2,
+                pred_det_instances=dummy_pred_2)
+        ])
 
         eval_results = tao_metric.evaluate(size=2)
         target = {
