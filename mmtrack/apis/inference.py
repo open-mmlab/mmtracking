@@ -5,7 +5,7 @@ import os
 import tempfile
 from typing import Optional, Union
 
-import mmcv
+import mmengine
 import numpy as np
 import torch
 from mmcv.ops import RoIPool
@@ -18,7 +18,7 @@ from mmtrack.registry import MODELS
 from mmtrack.utils import SampleList
 
 
-def init_model(config: Union[str, mmcv.Config],
+def init_model(config: Union[str, mmengine.Config],
                checkpoint: Optional[str] = None,
                device: str = 'cuda:0',
                cfg_options: Optional[dict] = None,
@@ -41,8 +41,8 @@ def init_model(config: Union[str, mmcv.Config],
         nn.Module: The constructed model.
     """
     if isinstance(config, str):
-        config = mmcv.Config.fromfile(config)
-    elif not isinstance(config, mmcv.Config):
+        config = mmengine.Config.fromfile(config)
+    elif not isinstance(config, mmengine.Config):
         raise TypeError('config must be a filename or Config object, '
                         f'but got {type(config)}')
     if cfg_options is not None:

@@ -625,10 +625,7 @@ class PrdimpClsHead(BaseModule):
                                               batch_gt_bboxes.view(-1, 4))
         bboxes_cxcywh = bbox_xyxy_to_cxcywh(batch_gt_bboxes)
         _, filters_all_iters, _ = self.filter_optimizer(
-            init_filter,
-            feat=template_feats,
-            bboxes=bboxes_cxcywh,
-            num_iters=self.optimizer_cfg['init_update_iters'])
+            init_filter, feat=template_feats, bboxes=bboxes_cxcywh)
 
         # Classify samples using all filters
         # each item in ``target_scores`` is of shape
