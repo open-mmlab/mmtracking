@@ -115,7 +115,7 @@ train_pipeline = [
         type='TransformBroadcaster',
         share_random_params=True,
         transforms=[
-            dict(type='LoadImageFromFile'),
+            dict(type='LoadImageFromFile', to_float32=True),
             dict(type='LoadTrackAnnotations', with_instance_id=False),
             dict(type='GrayAug', prob=0.05)
         ]),
@@ -166,8 +166,8 @@ optim_wrapper = dict(
     paramwise_cfg=dict(
         custom_keys=dict(
             backbone=dict(lr_multi=0.1),
-            cls_head=dict(lr_multi=5),
-            bbox_head=dict(lr_multi=5))))
+            clasifier=dict(lr_multi=5),
+            bbox_regressor=dict(lr_multi=5))))
 
 # checkpoint saving
 default_hooks = dict(
