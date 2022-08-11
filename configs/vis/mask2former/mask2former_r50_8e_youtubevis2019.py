@@ -204,7 +204,7 @@ train_pipeline = [
 ]
 # dataloader
 train_dataloader = dict(
-    batch_size=4,
+    batch_size=16,
     num_workers=4,
     dataset=dict(
         pipeline=train_pipeline,

@@ -25,6 +25,7 @@ class Mask2Former(BaseMultiObjectTracker):
         data_preprocessor (dict or ConfigDict, optional): The pre-process
            config of :class:`TrackDataPreprocessor`.  it usually includes,
             ``pad_size_divisor``, ``pad_value``, ``mean`` and ``std``.
+            Defaults to None.
         init_cfg (dict or list[dict]): Configuration of initialization.
             Defaults to None.
     """

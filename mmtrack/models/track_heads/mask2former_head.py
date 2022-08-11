@@ -33,26 +33,30 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
         out_channels (int): Number of channels for output.
         num_classes (int): Number of VIS classes.
         num_queries (int): Number of query in Transformer decoder.
+            Defaults to 100.
+        num_transformer_feat_level (int): Number of feats levels.
+            Defaults to 3.
         pixel_decoder (:obj:`ConfigDict` or dict): Config for pixel
-            decoder. Defaults to None.
+            decoder.
         enforce_decoder_input_project (bool, optional): Whether to add
-            a layer to change the embed_dim of tranformer encoder in
+            a layer to change the embed_dim of transformer encoder in
             pixel decoder to the embed_dim of transformer decoder.
             Defaults to False.
         transformer_decoder (:obj:`ConfigDict` or dict): Config for
-            transformer decoder. Defaults to None.
+            transformer decoder.
         positional_encoding (:obj:`ConfigDict` or dict): Config for
-            transformer decoder position encoding. Defaults to None.
+            transformer decoder position encoding.
+            Defaults to `SinePositionalEncoding3D`.
         loss_cls (:obj:`ConfigDict` or dict): Config of the classification
-            loss. Defaults to None.
+            loss. Defaults to `CrossEntropyLoss`.
         loss_mask (:obj:`ConfigDict` or dict): Config of the mask loss.
-            Defaults to None.
+            Defaults to 'CrossEntropyLoss'.
         loss_dice (:obj:`ConfigDict` or dict): Config of the dice loss.
-            Defaults to None.
+            Defaults to 'DiceLoss'.
         train_cfg (:obj:`ConfigDict` or dict, optional): Training config of
-            Mask2Former head.
+            Mask2Former head. Defaults to None.
         test_cfg (:obj:`ConfigDict` or dict, optional): Testing config of
-            Mask2Former head.
+            Mask2Former head. Defaults to None.
         init_cfg (:obj:`ConfigDict` or dict or list[:obj:`ConfigDict` or \
             dict], optional): Initialization config dict. Defaults to None.
     """
@@ -187,9 +191,9 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
         """
         final_batch_gt_instances = []
         for gt_instances in batch_gt_instances:
-            gt_instances.masks = gt_instances.masks.to_tensor(
-                dtype=torch.bool, device=gt_instances.labels.device)
             _device = gt_instances.labels.device
+            gt_instances.masks = gt_instances.masks.to_tensor(
+                dtype=torch.bool, device=_device)
 
             all_ins_id = gt_instances.instances_id.unique().tolist()
             map_ins_id = dict()

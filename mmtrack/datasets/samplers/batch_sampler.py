@@ -14,7 +14,7 @@ class EntireVideoBatchSampler(BatchSampler):
         sampler (Sampler): Base sampler.
         batch_size (int): Size of mini-batch.
         drop_last (bool): If ``True``, the sampler will drop the last batch if
-            its size would be less than ``batch_size``.
+            its size would be less than ``batch_size``. Defaults to False.
     """
 
     def __init__(self,
