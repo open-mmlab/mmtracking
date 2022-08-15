@@ -22,7 +22,7 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            '/data1/dyh/results/mmtracking/strongsort_publish/yolox_x_crowdhuman_mot17-private-half_20220812_192036-b6c9ce9a.pth'  # noqa: E501  # TODO
+            'https://download.openmmlab.com/mmtracking/mot/strongsort/mot_dataset/yolox_x_crowdhuman_mot17-private-half_20220812_192036-b6c9ce9a.pth'  # noqa: E501
         )),
     kalman=dict(type='KalmanFilter', center_only=False, use_nsa=True),
     cmc=dict(
@@ -115,7 +115,7 @@ val_evaluator = dict(postprocess_tracklet_cfg=[
     dict(
         type='AppearanceFreeLink',
         checkpoint=  # noqa: E251
-        '/data1/dyh/results/mmtracking/strongsort_publish/aflink_motchallenge_20220812_190310-a7578ad3.pth',  # noqa: E501  # TODO
+        'https://download.openmmlab.com/mmtracking/mot/strongsort/mot_dataset/aflink_motchallenge_20220812_190310-a7578ad3.pth',  # noqa: E501
         temporal_threshold=(0, 30),
         spatial_threshold=50,
         confidence_threshold=0.95,

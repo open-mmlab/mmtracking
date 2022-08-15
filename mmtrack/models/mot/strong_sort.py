@@ -43,8 +43,6 @@ class StrongSORT(DeepSORT):
         if cmc is not None:
             self.cmc = TASK_UTILS.build(cmc)
 
-        self.preprocess_cfg = data_preprocessor
-
     @property
     def with_cmc(self):
         """bool: whether the framework has a camera model compensation

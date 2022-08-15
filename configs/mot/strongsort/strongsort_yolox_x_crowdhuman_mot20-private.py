@@ -13,7 +13,7 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            '/data1/dyh/models/mmtracking/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60_detector.pth'  # noqa: E501  # TODO
+            'https://download.openmmlab.com/mmtracking/mot/strongsort/mot_dataset/yolox_x_crowdhuman_mot20-private_20220812_192123-77c014de.pth'  # noqa: E501
         )),
     reid=dict(
         init_cfg=dict(

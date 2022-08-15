@@ -90,7 +90,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
-                 postprocess_tracklet_cfg: List[dict] = [],
+                 postprocess_tracklet_cfg: Optional[List[dict]] = [],
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
