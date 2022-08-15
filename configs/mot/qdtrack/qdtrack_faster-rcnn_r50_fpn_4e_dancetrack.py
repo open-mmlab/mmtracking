@@ -1,6 +1,6 @@
 _base_ = [
     './qdtrack_faster-rcnn_r50_fpn_4e_base.py',
-    '../../_base_/datasets/mot_challenge.py',
+    '../../_base_/datasets/dancetrack.py',
 ]
 img_norm_cfg = dict(
     mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)

@@ -9,6 +9,7 @@
   - [CrowdHuman](https://www.crowdhuman.org/)
   - [LVIS](https://www.lvisdataset.org/)
   - [TAO](https://taodataset.org/)
+  - [DanceTrack](https://dancetrack.github.io)
 - 单目标跟踪
   - [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
   - [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
@@ -31,7 +32,7 @@
 
 #### 1.2 多目标跟踪
 
-- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17）和 TAO ， CrowdHuman 和 LVIS 可以作为补充数据。
+- 对于多目标跟踪任务的训练和测试，需要 MOT Challenge 中的任意一个数据集（比如 MOT17, TAO和DanceTrack）， CrowdHuman 和 LVIS 可以作为补充数据。
 
 - `tao` 文件夹下包含官方标注的 `annotations` 可以从[这里](https://github.com/TAO-Dataset/annotations)获取。
 
@@ -98,6 +99,11 @@ mmtracking
 |   |   ├── train
 |   |   ├── test
 │   │
+|   ├── DanceTrack
+|   |   ├── train
+|   |   ├── val
+|   |   ├── test
+|   |
 │   ├── crowdhuman
 │   │   ├── annotation_train.odgt
 │   │   ├── annotation_val.odgt
@@ -231,6 +237,9 @@ python ./tools/convert_datasets/ilsvrc/imagenet2coco_vid.py -i ./data/ILSVRC -o 
 python ./tools/convert_datasets/mot/mot2coco.py -i ./data/MOT17/ -o ./data/MOT17/annotations --split-train --convert-det
 python ./tools/convert_datasets/mot/mot2reid.py -i ./data/MOT17/ -o ./data/MOT17/reid --val-split 0.2 --vis-threshold 0.3
 
+# DanceTrack
+python ./tools/convert_datasets/dancetrack/dancetrack2coco.py -i ./data/DanceTrack ./data/DanceTrack/annotations
+
 # CrowdHuman
 python ./tools/convert_datasets/mot/crowdhuman2coco.py -i ./data/crowdhuman -o ./data/crowdhuman/annotations
 
@@ -320,6 +329,12 @@ mmtracking
 |   |   ├── reid
 │   │   │   ├── imgs
 │   │   │   ├── meta
+│   │
+│   ├── DanceTrack
+│   │   ├── train
+│   │   ├── val
+│   │   ├── test
+│   │   ├── annotations
 │   │
 │   ├── crowdhuman
 │   │   ├── annotation_train.odgt

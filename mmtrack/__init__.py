@@ -8,9 +8,10 @@ from packaging.version import parse
 from .version import __version__, version_info
 
 MMCV_MIN = '1.3.17'
-MMCV_MAX = '1.6.0'
+MMCV_MAX = '1.7.0'
 
 MMDET_MIN = '2.19.1'
+MMDET_MAX = '3.0.0'
 
 
 def digit_version(version_str: str, length: int = 4):
@@ -58,16 +59,17 @@ mmcv_max_version = digit_version(MMCV_MAX)
 mmcv_version = digit_version(mmcv.__version__)
 
 
-assert (mmcv_min_version <= mmcv_version <= mmcv_max_version), \
+assert (mmcv_min_version <= mmcv_version < mmcv_max_version), \
     f'MMCV=={mmcv.__version__} is used but incompatible. ' \
-    f'Please install mmcv>={MMCV_MIN}, <={MMCV_MAX}.'
+    f'Please install mmcv>={MMCV_MIN}, <{MMCV_MAX}.'
 
 mmdet_min_version = digit_version(MMDET_MIN)
+mmdet_max_version = digit_version(MMDET_MAX)
 mmdet_version = digit_version(mmdet.__version__)
 
 
-assert (mmdet_min_version <= mmdet_version), \
+assert (mmdet_min_version <= mmdet_version < mmdet_max_version), \
     f'MMDet=={mmdet.__version__} is used but incompatible. ' \
-    f'Please install mmdet>={MMDET_MIN}.'
+    f'Please install mmdet>={MMDET_MIN}, <{MMDET_MAX}.'
 
 __all__ = ['__version__', 'version_info', 'digit_version']

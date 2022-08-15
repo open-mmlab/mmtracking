@@ -208,19 +208,19 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
 3. If you want to test Tracktor with your detector and reid model, you need modify the corresponding key-value pair in config as follows:
 
-    ```python
+   ```python
 
-    model = dict(
-        detector=dict(
-            init_cfg=dict(
-                type='Pretrained',
-                checkpoint='/path/to/detector_model')),
-        reid=dict(
-            init_cfg=dict(
-                type='Pretrained',
-                checkpoint='/path/to/reid_model'))
-        )
-    ```
+   model = dict(
+       detector=dict(
+           init_cfg=dict(
+               type='Pretrained',
+               checkpoint='/path/to/detector_model')),
+       reid=dict(
+           init_cfg=dict(
+               type='Pretrained',
+               checkpoint='/path/to/reid_model'))
+       )
+   ```
 
 #### Examples of testing SOT model
 
@@ -282,7 +282,7 @@ evaluation = dict(interval=12)  # This evaluate the model per 12 epoch.
 ```
 
 **Important**: The default learning rate in all config files is for 8 GPUs.
-According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., `lr=0.01` for 8 GPUs \* 1 img/gpu and `lr=0.04` for 16 GPUs \* 2 imgs/gpu.
+According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677), you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, e.g., `lr=0.01` for 8 GPUs * 1 img/gpu and `lr=0.04` for 16 GPUs * 2 imgs/gpu.
 
 #### Training on a single GPU
 
@@ -383,10 +383,10 @@ When using Slurm, the port option need to be set in one of the following ways:
 
 1. Train DFF on ImageNet VID and ImageNet DET, then evaluate the bbox mAP at the last epoch.
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 #### Examples of training MOT model
 
@@ -394,47 +394,47 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 
 1. Train a detector model
 
-    If you want to train a detector for multiple object tracking or other applications, to be compatible with MMDetection, you only need to add a line of `USE_MMDET=True` in the config and run it with the same manner in mmdetection.
-    A base example can be found at [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py).
+   If you want to train a detector for multiple object tracking or other applications, to be compatible with MMDetection, you only need to add a line of `USE_MMDET=True` in the config and run it with the same manner in mmdetection.
+   A base example can be found at [faster_rcnn_r50_fpn.py](https://github.com/open-mmlab/mmtracking/blob/master/configs/_base_/models/faster_rcnn_r50_fpn.py).
 
-    Please NOTE that there are some differences between the base config in MMTracking and MMDetection: `detector` is only a submodule of the `model`.
-    For example, the config of Faster R-CNN in MMDetection follows
+   Please NOTE that there are some differences between the base config in MMTracking and MMDetection: `detector` is only a submodule of the `model`.
+   For example, the config of Faster R-CNN in MMDetection follows
 
-    ```python
-    model = dict(
-        type='FasterRCNN',
-        ...
-    )
-    ```
+   ```python
+   model = dict(
+       type='FasterRCNN',
+       ...
+   )
+   ```
 
-    But in MMTracking, the config follows
+   But in MMTracking, the config follows
 
-    ```python
-    model = dict(
-        detector=dict(
-            type='FasterRCNN',
-            ...
-        )
-    )
-    ```
+   ```python
+   model = dict(
+       detector=dict(
+           type='FasterRCNN',
+           ...
+       )
+   )
+   ```
 
-    Here is an example to train a detector model on MOT17, and evaluate the bbox mAP after each epoch.
+   Here is an example to train a detector model on MOT17, and evaluate the bbox mAP after each epoch.
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 2. Train a ReID model
 
-    You may want to train a ReID model for multiple object tracking or other applications. We support ReID model training in MMTracking, which is built upon [MMClassification](https://github.com/open-mmlab/mmclassification).
+   You may want to train a ReID model for multiple object tracking or other applications. We support ReID model training in MMTracking, which is built upon [MMClassification](https://github.com/open-mmlab/mmclassification).
 
-    Here is an example to train a reid model on MOT17, then evaluate the mAP after each epoch.
+   Here is an example to train a reid model on MOT17, then evaluate the mAP after each epoch.
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/reid/resnet50_b32x8_MOT17.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 3. After training a detector and a ReID model, you can refer to [Examples of testing MOT model](https://mmtracking.readthedocs.io/en/latest/quick_run.html#examples-of-testing-mot-model) to test your multi-object tracker.
 
@@ -442,19 +442,19 @@ For the training of MOT methods like SORT, DeepSORT and Tracktor, you need train
 
 1. Train SiameseRPN++ on COCO, ImageNet VID and ImageNet DET, then evaluate the success, precision and normed precision from the 10-th epoch to 20-th epoch.
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 #### Examples of training VIS model
 
 1. Train MaskTrack R-CNN on YouTube-VIS 2019 dataset. There are no evaluation results during training, since the annotations of validation dataset in YouTube-VIS are not provided.
 
-    ```shell
-    bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
-        --work-dir ./work_dirs/
-    ```
+   ```shell
+   bash ./tools/dist_train.sh ./configs/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py 8 \
+       --work-dir ./work_dirs/
+   ```
 
 ## Run with Customized Datasets and Models
 

@@ -101,62 +101,62 @@ dataset_A_train = dict(
 
 1. 如果要拼接的数据集类型相同，注释文件不同，可以将配置文件按照如下方式修改：
 
-    ```python
-    dataset_A_train = dict(
-        type='Dataset_A',
-        ann_file = ['anno_file_1', 'anno_file_2'],
-        pipeline=train_pipeline
-    )
-    ```
+   ```python
+   dataset_A_train = dict(
+       type='Dataset_A',
+       ann_file = ['anno_file_1', 'anno_file_2'],
+       pipeline=train_pipeline
+   )
+   ```
 
-    有两种方式支持测试或评估拼接后的数据集，默认的方式为对每个数据集进行单独评估。 如果你想要将拼接后的数据集作为一个整体进行评测，你可以设置 `separate_eval=False` 具体修改方式如下：
+   有两种方式支持测试或评估拼接后的数据集，默认的方式为对每个数据集进行单独评估。 如果你想要将拼接后的数据集作为一个整体进行评测，你可以设置 `separate_eval=False` 具体修改方式如下：
 
-    ```python
-    dataset_A_train = dict(
-        type='Dataset_A',
-        ann_file = ['anno_file_1', 'anno_file_2'],
-        separate_eval=False,
-        pipeline=train_pipeline
-    )
-    ```
+   ```python
+   dataset_A_train = dict(
+       type='Dataset_A',
+       ann_file = ['anno_file_1', 'anno_file_2'],
+       separate_eval=False,
+       pipeline=train_pipeline
+   )
+   ```
 
 2. 如果要连接的数据集类型不同，可以将配置文件按照如下方式修改：
 
-    ```python
-    dataset_A_train = dict()
-    dataset_B_train = dict()
+   ```python
+   dataset_A_train = dict()
+   dataset_B_train = dict()
 
-    data = dict(
-        imgs_per_gpu=2,
-        workers_per_gpu=2,
-        train = [
-            dataset_A_train,
-            dataset_B_train
-        ],
-        val = dataset_A_val,
-        test = dataset_A_test
-        )
-    ```
+   data = dict(
+       imgs_per_gpu=2,
+       workers_per_gpu=2,
+       train = [
+           dataset_A_train,
+           dataset_B_train
+       ],
+       val = dataset_A_val,
+       test = dataset_A_test
+       )
+   ```
 
-    通过该方法拼接的数据集同样支持两种方式评测，默认的方式为对每个数据集进行单独评估。
+   通过该方法拼接的数据集同样支持两种方式评测，默认的方式为对每个数据集进行单独评估。
 
 3. 我们也支持显式定义 `ConcatDataset` 类。
 
-    ```python
-    dataset_A_val = dict()
-    dataset_B_val = dict()
+   ```python
+   dataset_A_val = dict()
+   dataset_B_val = dict()
 
-    data = dict(
-        imgs_per_gpu=2,
-        workers_per_gpu=2,
-        train=dataset_A_train,
-        val=dict(
-            type='ConcatDataset',
-            datasets=[dataset_A_val, dataset_B_val],
-            separate_eval=False))
-    ```
+   data = dict(
+       imgs_per_gpu=2,
+       workers_per_gpu=2,
+       train=dataset_A_train,
+       val=dict(
+           type='ConcatDataset',
+           datasets=[dataset_A_val, dataset_B_val],
+           separate_eval=False))
+   ```
 
-    这种方式允许用户通过设置 `separate_eval=False` 来将所有数据集进行统一的评测。
+   这种方式允许用户通过设置 `separate_eval=False` 来将所有数据集进行统一的评测。
 
 **请注意：**
 
