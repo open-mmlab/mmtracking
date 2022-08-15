@@ -152,7 +152,7 @@ train_dataloader = dict(
 
 # runner loop
 train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=50, val_begin=40, val_interval=1)
+    type='EpochBasedTrainLoop', max_epochs=50, val_begin=50, val_interval=1)
 
 # learning policy
 param_scheduler = dict(type='StepLR', step_size=15, gamma=0.2)
@@ -166,7 +166,7 @@ optim_wrapper = dict(
     paramwise_cfg=dict(
         custom_keys=dict(
             backbone=dict(lr_multi=0.1),
-            clasifier=dict(lr_multi=5),
+            classifier=dict(lr_multi=5),
             bbox_regressor=dict(lr_multi=5))))
 
 # checkpoint saving
