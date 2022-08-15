@@ -581,8 +581,7 @@ class IouNetHead(BaseModule):
         batch_gt_bboxes = torch.stack(batch_gt_bboxes, dim=1)
 
         # Get modulation vector
-        gt_bboxes = bbox_xyxy_to_x1y1wh(batch_gt_bboxes[0])
-        modulations = self.get_modulation(template_feats, gt_bboxes)
+        modulations = self.get_modulation(template_feats, batch_gt_bboxes[0])
 
         iou_feats = self(search_feats)
         num_search_imgs_per_seq = batch_data_samples[0].search_gt_instances[
