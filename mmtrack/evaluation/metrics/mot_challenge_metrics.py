@@ -135,7 +135,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         if resfile_path is None:
             resfile_path = self.tmp_dir.name
         else:
-            if osp.exists(resfile_path):
+            if osp.exists(resfile_path) and is_main_process():
                 logger.info('remove previous results.')
                 shutil.rmtree(resfile_path)
         pred_dir = osp.join(resfile_path, self.TRACKER)
@@ -205,6 +205,15 @@ class MOTChallengeMetrics(BaseVideoMetric):
             self.seq_info[video]['pred_tracks'].extend(pred_tracks)
 
             if frame_id == video_length - 1:
+                # postprocessing
+                if self.postprocess_tracklet_cfg:
+                    info = self.seq_info[video]
+                    pred_tracks = np.array(info['pred_tracks'])
+                    for postprocess_tracklet_methods in \
+                            self.postprocess_tracklet_methods:
+                        pred_tracks = postprocess_tracklet_methods\
+                            .forward(pred_tracks)
+                    info['pred_tracks'] = pred_tracks
                 self._save_one_video_gts_preds(video)
                 break
 
@@ -216,9 +225,6 @@ class MOTChallengeMetrics(BaseVideoMetric):
 
         pred_tracks = np.array(info['pred_tracks'])
 
-        for postprocess_tracklet_methods in self.postprocess_tracklet_methods:
-            pred_tracks = postprocess_tracklet_methods.forward(pred_tracks)
-
         with open(pred_file, 'wt') as f:
             for tracks in pred_tracks:
                 line = '%d,%d,%.3f,%.3f,%.3f,%.3f,%.3f,-1,-1,-1\n' % (
@@ -226,7 +232,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                     tracks[5], tracks[6])
                 f.writelines(line)
 
-        info['pred_tracks'].clear()
+        info['pred_tracks'] = []
         # save gts
         if info['gt_tracks']:
             gt_file = osp.join(self.gt_dir, seq + '.txt')

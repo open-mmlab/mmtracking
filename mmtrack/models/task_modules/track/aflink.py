@@ -22,9 +22,10 @@ class TemporalBlock(BaseModule):
         out_channel (int): the dimension of the output channels.
     """
 
-    def __init__(self, in_channel: int, out_channel: int):
+    def __init__(self, in_channel: int, out_channel: int,
+                 kernel_size: tuple = (7, 1)):
         super(TemporalBlock, self).__init__()
-        self.conv = nn.Conv2d(in_channel, out_channel, (7, 1), bias=False)
+        self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, bias=False)
         self.relu = nn.ReLU(inplace=True)
         self.bnf = nn.BatchNorm1d(out_channel)
         self.bnx = nn.BatchNorm1d(out_channel)
@@ -71,11 +72,11 @@ class Classifier(BaseModule):
         in_channel (int): the dimension of the input channels.
     """
 
-    def __init__(self, in_channel: int):
+    def __init__(self, in_channel: int, out_channel: int):
         super(Classifier, self).__init__()
         self.fc1 = nn.Linear(in_channel * 2, in_channel // 2)
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear(in_channel // 2, 2)
+        self.fc2 = nn.Linear(in_channel // 2, out_channel)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x = torch.cat((x1, x2), dim=1)
@@ -88,18 +89,26 @@ class Classifier(BaseModule):
 class AFLinkModel(BaseModule):
     """Appearance-Free Link Model."""
 
-    def __init__(self):
+    def __init__(self,
+                 temporal_module_channels: list = [1, 32, 64, 128, 256],
+                 fusion_module_channels: list = [256, 256],
+                 classifier_channels: list = [256, 2]):
         super(AFLinkModel, self).__init__()
-        self.TemporalModule_1 = nn.Sequential(
-            TemporalBlock(1, 32), TemporalBlock(32, 64),
-            TemporalBlock(64, 128), TemporalBlock(128, 256))
-        self.TemporalModule_2 = nn.Sequential(
-            TemporalBlock(1, 32), TemporalBlock(32, 64),
-            TemporalBlock(64, 128), TemporalBlock(128, 256))
-        self.FusionBlock_1 = FusionBlock(256, 256)
-        self.FusionBlock_2 = FusionBlock(256, 256)
+        self.TemporalModule_1 = nn.Sequential(*[
+            TemporalBlock(temporal_module_channels[i],
+                          temporal_module_channels[i + 1])
+            for i in range(len(temporal_module_channels) - 1)])
+
+        self.TemporalModule_2 = nn.Sequential(*[
+            TemporalBlock(temporal_module_channels[i],
+                          temporal_module_channels[i + 1])
+            for i in range(len(temporal_module_channels) - 1)])
+
+        self.FusionBlock_1 = FusionBlock(*fusion_module_channels)
+        self.FusionBlock_2 = FusionBlock(*fusion_module_channels)
+
         self.pooling = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = Classifier(256)
+        self.classifier = Classifier(*classifier_channels)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         assert not self.training, 'Only testing is supported for AFLink.'
@@ -117,7 +126,7 @@ class AFLinkModel(BaseModule):
 
 
 @TASK_UTILS.register_module()
-class AppearanceFreeLink:
+class AppearanceFreeLink(BaseModule):
     """Appearance-Free Link method.
 
     This method is proposed in
@@ -139,6 +148,7 @@ class AppearanceFreeLink:
                  temporal_threshold: tuple = (0, 30),
                  spatial_threshold: int = 75,
                  confidence_threshold: float = 0.95):
+        super(AppearanceFreeLink, self).__init__()
         self.temporal_threshold = temporal_threshold
         self.spatial_threshold = spatial_threshold
         self.confidence_threshold = confidence_threshold
@@ -156,7 +166,7 @@ class AppearanceFreeLink:
     def data_transform(self,
                        track1: np.ndarray,
                        track2: np.ndarray,
-                       length: int = 30) -> Tuple[Tensor]:
+                       length: int = 30) -> Tuple[np.ndarray]:
         """Data Transformation. This is used to standardize the length of
         tracks to a unified length. Then perform min-max normalization to the
         motion embeddings.
@@ -167,7 +177,7 @@ class AppearanceFreeLink:
             length (int): the unified length of tracks. Defaults to 30.
 
         Returns:
-            Tuple[Tensor]: the transformed track1 and track2.
+            Tuple[ndarray]: the transformed track1 and track2.
         """
         # fill or cut track1
         length_1 = track1.shape[0]
@@ -187,13 +197,6 @@ class AppearanceFreeLink:
         track1 = (track1 - subtractor) / divisor
         track2 = (track2 - subtractor) / divisor
 
-        # numpy to torch
-        track1 = torch.tensor(track1, dtype=torch.float).to(self.device)
-        track2 = torch.tensor(track2, dtype=torch.float).to(self.device)
-
-        # unsqueeze channel=1
-        track1 = track1.unsqueeze(0).unsqueeze(0)
-        track2 = track2.unsqueeze(0).unsqueeze(0)
         return track1, track2
 
     def forward(self, pred_tracks: np.ndarray) -> np.ndarray:
@@ -237,6 +240,13 @@ class AppearanceFreeLink:
                     continue
                 # confidence constraint
                 track_i, track_j = self.data_transform(info_i, info_j)
+
+                # numpy to torch
+                track_i = torch.tensor(track_i, dtype=torch.float).to(self.device)
+                track_j = torch.tensor(track_j, dtype=torch.float).to(self.device)
+                track_i = track_i.unsqueeze(0).unsqueeze(0)
+                track_j = track_j.unsqueeze(0).unsqueeze(0)
+                
                 confidence = self.model(track_i,
                                         track_j).detach().cpu().numpy()
                 if confidence >= self.confidence_threshold:
