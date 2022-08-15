@@ -270,7 +270,7 @@ class IouNetHead(BaseModule):
         'layer3' of backbone.
 
         Args:
-            iou_backbone_feats (tuple(Tensor)): _description_
+            iou_backbone_feats (tuple(Tensor)): The features from the backbone.
             bboxes (Tensor): of shape (4, ) or (1, 4) in [cx, cy, w, h] format.
         """
         bboxes = bbox_cxcywh_to_xyxy(bboxes.view(-1, 4))
@@ -439,41 +439,46 @@ class IouNetHead(BaseModule):
 
         return torch.cat([new_bbox_center, new_target_size], dim=-1)
 
-    def _gauss_density_centered(self, x, sigma):
+    def _gauss_density_centered(self, x: Tensor, sigma: Tensor) -> Tensor:
         """Evaluate the probability density of a Gaussian centered at zero.
+
         args:
-            x - Samples.
-            sigma - List of standard deviations
+            x (Tensor): of (num_smples, 4) shape.
+            sigma (Tensor): Standard deviations with (1, 4, 2) shape.
         """
 
         return torch.exp(-0.5 * (x / sigma)**2) / (
             math.sqrt(2 * math.pi) * sigma)
 
-    def _gmm_density_centered(self, x, sigma):
+    def _gmm_density_centered(self, x: Tensor, sigma: Tensor) -> Tensor:
         """Evaluate the probability density of a GMM centered at zero.
+
         args:
-            x - Samples. Assumes dim=-1 is the component dimension and dim=-2
-            is feature dimension. Rest are sample dimension.
-            sigma - Tensor of standard deviations
+            x(Tensor): of (num_smples, 4) shape.
+            sigma (Tensor): Tensor of standard deviations with (1, 4, 2) shape.
         """
         if x.dim() == sigma.dim() - 1:
             x = x[..., None]
         elif not (x.dim() == sigma.dim() and x.shape[-1] == 1):
             raise ValueError('Last dimension must be the gmm sigmas.')
 
-        # `product`` along feature dim of `bbox`, `mean` along component dim of
-        # `sigma``
+        # ``product`` along feature dim of ``bbox```, ``mean``` along component
+        # dim of ``sigma``.
         return self._gauss_density_centered(x, sigma).prod(-2).mean(-1)
 
-    def _sample_gmm_centered(self, sigma, num_samples=1):
-        """Sample from a GMM distribution centered at zero:
-        args:
-            sigma - Tensor of standard deviations
-            num_samples - number of samples
+    def _sample_gmm_centered(self,
+                             sigma: Tensor,
+                             num_samples: int = 1) -> Tuple[Tensor, Tensor]:
+        """Sample from a GMM distribution centered at zero.
 
-        return:
-            x_centered: of shape (num_samples, num_dims)
-            prob_density: of shape (num_samples, )
+        Args:
+            sigma (Tensor): Standard deviations of bbox coordinates with
+                [4, 2] shape.
+            num_samples (int, optional): The number of samples.
+
+        Returns:
+            x_centered (Tensor): of shape (num_samples, num_dims)
+            prob_density (Tensor): of shape (num_samples, )
         """
         num_components = sigma.shape[-1]
         num_dims = sigma.shape[-2]
@@ -491,11 +496,19 @@ class IouNetHead(BaseModule):
 
         return x_centered, prob_density
 
-    def get_targets(self, bbox):
-        '''
-        bbox: (N, 4) in in [x1, y1, w, h] format
+    def get_targets(self, bbox: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        """Generate the training targets for search images.
 
-        '''
+        Args:
+            bbox (Tensor): The bbox of (N, 4) shape in [x, y, w, h] format.
+
+        Returns:
+            Tuple[Tensor, Tensor, Tensor]:
+                ``proposals``: proposals with [num_samples, 4] shape.
+                ``proposal_density``: proposal density with [num_samples, ]
+                    shape.
+                ``gt_density``: groundtruth density with [num_samples, ] shape.
+        """
         bbox = bbox.clone().reshape(-1, 4)
         bbox_wh = bbox[:, 2:]
 
@@ -555,15 +568,21 @@ class IouNetHead(BaseModule):
 
     def loss(self, template_feats: Tuple[Tensor], search_feats: Tuple[Tensor],
              batch_data_samples: SampleList, **kwargs) -> dict:
-        """_summary_
+        """Perform forward propagation and loss calculation of the tracking
+        head on the features of the upstream network.
 
         Args:
-            template_feats (Tuple[Tensor]): _description_
-            search_feats (Tuple[Tensor]): _description_
-            batch_data_samples (SampleList): _description_
+            template_feats (tuple[Tensor, ...]): Tuple of Tensor with
+                shape (N, C, H, W) denoting the multi level feature maps of
+                exemplar images.
+            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+                (N, C, H, W) denoting the multi level feature maps of
+                search images.
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
 
         Returns:
-            dict: _description_
+            dict: A dictionary of loss components.
         """
         batch_size = len(batch_data_samples)
         batch_gt_bboxes = []
@@ -599,6 +618,17 @@ class IouNetHead(BaseModule):
     def loss_by_feat(self, modulations: Tuple[Tensor],
                      iou_feats: Tuple[Tensor], batch_gt_bboxes: Tensor,
                      batch_search_gt_bboxes: Tensor) -> dict:
+        """Compute loss.
+
+        Args:
+            modulations (Tuple[Tensor]): The modulation features.
+            iou_feats (Tuple[Tensor]): The features for iou prediction.
+            batch_gt_bboxes (Tensor): The gt_bboxes in a batch.
+            batch_search_gt_bboxes (Tensor): The search gt_bboxes in a batch.
+
+        Returns:
+            dict: a dictionary of loss components.
+        """
         batch_search_gt_bboxes = torch.stack(
             batch_search_gt_bboxes, dim=1).view(-1, 4)
         batch_search_gt_bboxes_xywh = bbox_xyxy_to_x1y1wh(

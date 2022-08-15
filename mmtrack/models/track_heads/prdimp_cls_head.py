@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -446,22 +446,27 @@ class PrdimpClsHead(BaseModule):
         # 4. Normal target
         return target_disp + sample_center, 'normal'
 
-    def _gauss_1d(self, sz, sigma, center, end_pad=0, return_density=True):
-        """_summary_
+    def _gauss_1d(self,
+                  size: Tensor,
+                  sigma: float,
+                  center: Tensor,
+                  end_pad: int = 0,
+                  return_density: bool = True):
+        """Generate gauss labels.
 
         Args:
-            sz (_type_): _description_
-            sigma (_type_): _description_
-            center (_type_): _description_
-            end_pad (int, optional): _description_. Defaults to 0.
-            return_density (bool, optional): _description_. Defaults to True.
+            size (Tensor): The size of score map with (2, ) shape.
+            sigma (float): Standard deviations.
+            center (Tensor): of (N, ) shape.
+            end_pad (int, optional): The padding size.. Defaults to 0.
+            return_density (bool, optional): Whether to return density.
+                Defaults to True.
 
         Returns:
-            _type_: _description_
+            Tensor: Gauss labels with (N, score_map_size) shape.
         """
-        k = torch.arange(-(sz - 1) / 2,
-                         (sz + 1) / 2 + end_pad).reshape(1,
-                                                         -1).to(center.device)
+        k = torch.arange(-(size - 1) / 2, (size + 1) / 2 + end_pad).reshape(
+            1, -1).to(center.device)
         gauss = torch.exp(-1.0 / (2 * sigma**2) *
                           (k - center.reshape(-1, 1))**2)
         if not return_density:
@@ -470,28 +475,31 @@ class PrdimpClsHead(BaseModule):
             return gauss / (math.sqrt(2 * math.pi) * sigma)
 
     def _gauss_2d(self,
-                  sz,
-                  sigma,
-                  center,
-                  end_pad=(0, 0),
-                  return_density=True):
-        """_summary_
+                  size: Tensor,
+                  sigma: float,
+                  center: Tensor,
+                  end_pad: Union[Tensor, List, Tuple] = (0, 0),
+                  return_density: bool = True):
+        """Generate gauss labels.
 
         Args:
-            sz (_type_): _description_
-            sigma (_type_): _description_
-            center (_type_): _description_
-            end_pad (tuple, optional): _description_. Defaults to (0, 0).
-            return_density (bool, optional): _description_. Defaults to True.
+            size (Tensor): The size of score map with (2, ) shape.
+            sigma (Tensor): Standard deviations.
+            center (Tensor): The center of bbox with (N, 2) shape.
+            end_pad (Union[Tensor, List, Tuple], optional): The padding size.
+                Defaults to (0, 0).
+            return_density (bool, optional): Whether to return density.
+                Defaults to True.
 
         Returns:
-            _type_: _description_
+            Tensor: Gauss labels with (N, score_map_size, score_map_size)
+                shape.
         """
         if isinstance(sigma, (float, int)):
             sigma = (sigma, sigma)
 
         gauss_1d_out1 = self._gauss_1d(
-            sz[0].item(),
+            size[0].item(),
             sigma[0],
             center[:, 0],
             end_pad[0],
@@ -499,7 +507,7 @@ class PrdimpClsHead(BaseModule):
         gauss_1d_out1 = gauss_1d_out1.reshape(center.shape[0], 1, -1)
 
         gauss_1d_out2 = self._gauss_1d(
-            sz[1].item(),
+            size[1].item(),
             sigma[1],
             center[:, 1],
             end_pad[1],
@@ -508,24 +516,16 @@ class PrdimpClsHead(BaseModule):
 
         return gauss_1d_out1 * gauss_1d_out2
 
-    def get_targets(self, target_center: Tensor) -> Tuple[Tensor, ...]:
-        """Generate the training targets for exemplar image and search image
-        pairs.
+    def get_targets(self, target_center: Tensor) -> Tensor:
+        """Generate the training targets for search images.
 
         Args:
-            batch_gt_instances (list[InstanceData]): Batch of
-                groundtruth instances. It usually includes ``bboxes`` and
-                ``labels`` attributes. ``bboxes`` of each search image is of
-                shape (1, 4) in [tl_x, tl_y, br_x, br_y] format.
-            score_maps_size (torch.Size): denoting the output size
-                (height, width) of the network.
+            target_center (Tensor): The center of target bboxes with (N, 2)
+                shape, in [x, y] format.
 
         Returns:
-            tuple(Tensor, ...): It contains
-              - ``all_labels``: in shape (N, H * W * num_base_anchors)
-              - ``all_labels_weights``: in shape (N, H * W * num_base_anchors)
-              - ``all_bbox_targets``: in shape (N, H * W * num_base_anchors, 4)
-              - ``all_bbox_weights``: in shape (N, H * W * num_base_anchors, 4)
+            Tensor: The distribution of gauss labels with
+                (N, score_map_size, score_map_size) shape.
         """
         # TODO simplify the different devices
         img_size = self.img_size.to(target_center.device)
@@ -617,6 +617,17 @@ class PrdimpClsHead(BaseModule):
     def loss_by_feat(self, template_feats: Tensor, search_feats: Tensor,
                      batch_gt_bboxes: Tensor,
                      batch_search_gt_bboxes: Tensor) -> dict:
+        """Compute loss.
+
+        Args:
+            modulations (Tuple[Tensor]): The modulation features.
+            iou_feats (Tuple[Tensor]): The features for iou prediction.
+            batch_gt_bboxes (Tensor): The gt_bboxes in a batch.
+            batch_search_gt_bboxes (Tensor): The search gt_bboxes in a batch.
+
+        Returns:
+            dict: a dictionary of loss components.
+        """
         # Train filter
         batch_gt_bboxes = torch.stack(batch_gt_bboxes, dim=1)
         # filter_iter is a list, and each of them is of shape
