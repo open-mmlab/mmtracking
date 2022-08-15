@@ -10,8 +10,9 @@ from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
 from mmcv.ops import point_sample
 from mmcv.runner import ModuleList
 from mmdet.models.dense_heads import AnchorFreeHead
-from mmdet.models.dense_heads import Mask2FormerHead as MMDET_Mask2FormerHead
+from mmdet.models.dense_heads import MaskFormerHead as MMDET_MaskFormerHead
 from mmdet.models.utils import get_uncertain_point_coords_with_randomness
+from mmdet.structures.mask import mask2bbox
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig, reduce_mean
 from mmengine.data import InstanceData
 from torch import Tensor
@@ -21,7 +22,7 @@ from mmtrack.utils import InstanceList, SampleList
 
 
 @MODELS.register_module()
-class Mask2FormerHead(MMDET_Mask2FormerHead):
+class Mask2FormerHead(MMDET_MaskFormerHead):
     """Implements the Mask2Former head.
 
     See `Masked-attention Mask Transformer for Universal Image
@@ -593,8 +594,10 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
 
         return losses
 
-    def predict(self, x: Tuple[Tensor],
-                batch_data_samples: SampleList) -> Tuple[Tensor, Tensor]:
+    def predict(self,
+                x: Tuple[Tensor],
+                batch_data_samples: SampleList,
+                rescale: bool = True) -> InstanceList:
         """Test without augmentation.
 
         Args:
@@ -602,15 +605,17 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
                 upstream network, each is a 4D-tensor.
             batch_data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
+            rescale (bool, Optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to True.
 
         Returns:
-            tuple[Tensor]: A tuple contains two tensors.
-
-                - mask_cls_results (Tensor): Mask classification logits,\
-                    shape (batch_size, num_queries, cls_out_channels).
-                    Note `cls_out_channels` should include background.
-                - mask_pred_results (Tensor): Mask logits, shape \
-                    (batch_size, num_queries, h, w).
+            list[obj:`InstanceData`]: each contains the following keys
+                - labels (Tensor): Prediction class indices\
+                    for an image, with shape (n, ), n is the sum of\
+                    number of stuff type and number of instance in an image.
+                - masks (Tensor): Prediction mask for a\
+                    image, with shape (n, t, h, w).
         """
         batch_img_metas = [
             data_sample.metainfo for data_sample in batch_data_samples
@@ -628,4 +633,72 @@ class Mask2FormerHead(MMDET_Mask2FormerHead):
             mode='bilinear',
             align_corners=False)
 
-        return mask_cls_results, mask_pred_results
+        results = self.predict_by_feat(mask_cls_results, mask_pred_results,
+                                       batch_img_metas)
+        return results
+
+    def predict_by_feat(self,
+                        mask_cls_results: List[Tensor],
+                        mask_pred_results: List[Tensor],
+                        batch_img_metas: List[dict],
+                        rescale: bool = True) -> InstanceList:
+        """Get top-10 predictions.
+
+        Args:
+            mask_cls_results (Tensor): Mask classification logits,\
+                shape (batch_size, num_queries, cls_out_channels).
+                Note `cls_out_channels` should include background.
+            mask_pred_results (Tensor): Mask logits, shape \
+                (batch_size, num_queries, h, w).
+            batch_img_metas (list[dict]): List of image meta information.
+            rescale (bool, Optional): If False, then returned bboxes and masks
+                will fit the scale of img, otherwise, returned bboxes and masks
+                will fit the scale of original image shape. Defaults to True.
+
+        Returns:
+            list[obj:`InstanceData`]: each contains the following keys
+                - labels (Tensor): Prediction class indices\
+                    for an image, with shape (n, ), n is the sum of\
+                    number of stuff type and number of instance in an image.
+                - masks (Tensor): Prediction mask for a\
+                    image, with shape (n, t, h, w).
+        """
+        results = []
+        if len(mask_cls_results) > 0:
+            scores = F.softmax(mask_cls_results, dim=-1)[:, :-1]
+            labels = torch.arange(self.num_classes).unsqueeze(0).repeat(
+                self.num_queries, 1).flatten(0, 1)
+            # keep top-10 predictions
+            scores_per_image, topk_indices = scores.flatten(0, 1).topk(
+                10, sorted=False)
+            labels_per_image = labels[topk_indices]
+            topk_indices = topk_indices // self.num_classes
+            mask_pred_results = mask_pred_results[topk_indices]
+
+            img_shape = batch_img_metas[0]['img_shape']
+            mask_pred_results = \
+                mask_pred_results[:, :, :img_shape[0], :img_shape[1]]
+            if rescale:
+                # return result in original resolution
+                ori_height, ori_width = batch_img_metas[0]['ori_shape'][:2]
+                mask_pred_results = F.interpolate(
+                    mask_pred_results,
+                    size=(ori_height, ori_width),
+                    mode='bilinear',
+                    align_corners=False)
+
+            masks = mask_pred_results > 0.
+
+            # format top-10 predictions
+            for img_idx in range(len(batch_img_metas)):
+                pred_track_instances = InstanceData()
+
+                pred_track_instances.masks = masks[:, img_idx]
+                pred_track_instances.bboxes = mask2bbox(masks[:, img_idx])
+                pred_track_instances.labels = labels_per_image
+                pred_track_instances.scores = scores_per_image
+                pred_track_instances.instances_id = torch.arange(10)
+
+                results.append(pred_track_instances)
+
+            return results

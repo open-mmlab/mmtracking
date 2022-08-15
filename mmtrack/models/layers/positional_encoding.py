@@ -1,5 +1,6 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-# TODO: update Copyright, some code references mask2former
+# Copyright (c) Facebook, Inc. and its affiliates.
+# Modified from
+# https://github.com/facebookresearch/detr/blob/master/models/position_encoding.py
 import math
 from typing import Optional
 

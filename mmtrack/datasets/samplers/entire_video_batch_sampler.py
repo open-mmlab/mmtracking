@@ -12,14 +12,15 @@ class EntireVideoBatchSampler(BatchSampler):
 
     Args:
         sampler (Sampler): Base sampler.
-        batch_size (int): Size of mini-batch.
+        batch_size (int): Size of mini-batch. Here, we take a video as a batch.
+            Defaults to 1.
         drop_last (bool): If ``True``, the sampler will drop the last batch if
             its size would be less than ``batch_size``. Defaults to False.
     """
 
     def __init__(self,
                  sampler: Sampler,
-                 batch_size: int,
+                 batch_size: int = 1,
                  drop_last: bool = False) -> None:
         assert sampler.dataset.test_mode
         if not isinstance(sampler, Sampler):
