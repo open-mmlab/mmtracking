@@ -1,9 +1,7 @@
-_base_ = [
-    './qdtrack_faster-rcnn_r50_fpn_4e_base.py',
-    '../../_base_/datasets/mot_challenge.py',
-]
+# dataset settings
+dataset_type = 'DanceTrackDataset'
 img_norm_cfg = dict(
-    mean=[103.530, 116.280, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadMultiImagesFromFile', to_float32=True),
     dict(type='SeqLoadAnnotations', with_bbox=True, with_track=True),
@@ -47,7 +45,30 @@ test_pipeline = [
             dict(type='VideoCollect', keys=['img'])
         ])
 ]
+data_root = 'data/dancetrack/'
 data = dict(
-    train=dict(pipeline=train_pipeline),
-    val=dict(pipeline=test_pipeline),
-    test=dict(pipeline=test_pipeline))
+    samples_per_gpu=2,
+    workers_per_gpu=2,
+    train=dict(
+        type=dataset_type,
+        visibility_thr=-1,
+        ann_file=data_root + 'annotations/train_cocoformat.json',
+        img_prefix=data_root + 'train',
+        ref_img_sampler=dict(
+            num_ref_imgs=1,
+            frame_range=10,
+            filter_key_img=True,
+            method='uniform'),
+        pipeline=train_pipeline),
+    val=dict(
+        type=dataset_type,
+        ann_file=data_root + 'annotations/val_cocoformat.json',
+        img_prefix=data_root + 'val',
+        ref_img_sampler=None,
+        pipeline=test_pipeline),
+    test=dict(
+        type=dataset_type,
+        ann_file=data_root + 'annotations/val_cocoformat.json',
+        img_prefix=data_root + 'val',
+        ref_img_sampler=None,
+        pipeline=test_pipeline))

@@ -40,17 +40,17 @@ To find the above module defined above, this module should be imported into the 
 
 - Modify `mmtrack/core/optimizer/__init__.py` to import it.
 
-    The newly defined module should be imported in `mmtrack/core/optimizer/__init__.py` so that the registry will find the new module and add it:
+  The newly defined module should be imported in `mmtrack/core/optimizer/__init__.py` so that the registry will find the new module and add it:
 
-    ```python
-    from .my_optimizer import MyOptimizer
-    ```
+  ```python
+  from .my_optimizer import MyOptimizer
+  ```
 
 - Use `custom_imports` in the config to manually import it
 
-    ```python
-    custom_imports = dict(imports=['mmtrack.core.optimizer.my_optimizer.py'], allow_failed_imports=False)
-    ```
+  ```python
+  custom_imports = dict(imports=['mmtrack.core.optimizer.my_optimizer.py'], allow_failed_imports=False)
+  ```
 
 The module `mmtrack.core.optimizer.my_optimizer.MyOptimizer` will be imported at the beginning of the program and the class `MyOptimizer` is then automatically registered.
 Note that only the package containing the class `MyOptimizer` should be imported.
@@ -104,34 +104,34 @@ The default optimizer constructor is implemented [here](https://mmcv.readthedocs
 Tricks not implemented by the optimizer should be implemented through optimizer constructor (e.g., set parameter-wise learning rates) or hooks. We list some common settings that could stabilize the training or accelerate the training. Feel free to create PR, issue for more settings.
 
 - __Use gradient clip to stabilize training__:
-    Some models need gradient clip to clip the gradients to stabilize the training process. An example is as below:
+  Some models need gradient clip to clip the gradients to stabilize the training process. An example is as below:
 
-    ```python
-    optimizer_config = dict(
-        _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
-    ```
+  ```python
+  optimizer_config = dict(
+      _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
+  ```
 
-    If your config inherits the base config which already sets the `optimizer_config`, you might need `_delete_=True` to override the unnecessary settings. See the [config documentation](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for more details.
+  If your config inherits the base config which already sets the `optimizer_config`, you might need `_delete_=True` to override the unnecessary settings. See the [config documentation](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for more details.
 
 - __Use momentum schedule to accelerate model convergence__:
-    We support momentum scheduler to modify model's momentum according to learning rate, which could make the model converge in a faster way.
-    Momentum scheduler is usually used with LR scheduler, for example, the following config is used in 3D detection to accelerate convergence.
-    For more details, please refer to the implementation of [CyclicLrUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/lr_updater.py#L327) and [CyclicMomentumUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/momentum_updater.py#L130).
+  We support momentum scheduler to modify model's momentum according to learning rate, which could make the model converge in a faster way.
+  Momentum scheduler is usually used with LR scheduler, for example, the following config is used in 3D detection to accelerate convergence.
+  For more details, please refer to the implementation of [CyclicLrUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/lr_updater.py#L327) and [CyclicMomentumUpdater](https://github.com/open-mmlab/mmcv/blob/f48241a65aebfe07db122e9db320c31b685dc674/mmcv/runner/hooks/momentum_updater.py#L130).
 
-    ```python
-    lr_config = dict(
-        policy='cyclic',
-        target_ratio=(10, 1e-4),
-        cyclic_times=1,
-        step_ratio_up=0.4,
-    )
-    momentum_config = dict(
-        policy='cyclic',
-        target_ratio=(0.85 / 0.95, 1),
-        cyclic_times=1,
-        step_ratio_up=0.4,
-    )
-    ```
+  ```python
+  lr_config = dict(
+      policy='cyclic',
+      target_ratio=(10, 1e-4),
+      cyclic_times=1,
+      step_ratio_up=0.4,
+  )
+  momentum_config = dict(
+      policy='cyclic',
+      target_ratio=(0.85 / 0.95, 1),
+      cyclic_times=1,
+      step_ratio_up=0.4,
+  )
+  ```
 
 ### Customize training schedules
 
@@ -139,20 +139,20 @@ We support many other learning rate schedule [here](https://github.com/open-mmla
 
 - Poly schedule:
 
-    ```python
-    lr_config = dict(policy='poly', power=0.9, min_lr=1e-4, by_epoch=False)
-    ```
+  ```python
+  lr_config = dict(policy='poly', power=0.9, min_lr=1e-4, by_epoch=False)
+  ```
 
 - ConsineAnnealing schedule:
 
-    ```python
-    lr_config = dict(
-        policy='CosineAnnealing',
-        warmup='linear',
-        warmup_iters=1000,
-        warmup_ratio=1.0 / 10,
-        min_lr_ratio=1e-5)
-    ```
+  ```python
+  lr_config = dict(
+      policy='CosineAnnealing',
+      warmup='linear',
+      warmup_iters=1000,
+      warmup_ratio=1.0 / 10,
+      min_lr_ratio=1e-5)
+  ```
 
 ### Customize workflow
 
@@ -225,17 +225,17 @@ Then we need to make `MyHook` imported. Assuming the file is in `mmtrack/core/ut
 
 - Modify `mmtrack/core/utils/__init__.py` to import it.
 
-    The newly defined module should be imported in `mmtrack/core/utils/__init__.py` so that the registry will find the new module and add it:
+  The newly defined module should be imported in `mmtrack/core/utils/__init__.py` so that the registry will find the new module and add it:
 
-    ```python
-    from .my_hook import MyHook
-    ```
+  ```python
+  from .my_hook import MyHook
+  ```
 
 - Use `custom_imports` in the config to manually import it
 
-    ```python
-    custom_imports = dict(imports=['mmtrack.core.utils.my_hook'], allow_failed_imports=False)
-    ```
+  ```python
+  custom_imports = dict(imports=['mmtrack.core.utils.my_hook'], allow_failed_imports=False)
+  ```
 
 ##### 3. Modify the config
 
