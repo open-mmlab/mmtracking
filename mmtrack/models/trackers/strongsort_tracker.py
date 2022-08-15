@@ -68,8 +68,8 @@ class StrongSORTTracker(SORTTracker):
                  match_iou_thr: float = 0.7,
                  num_tentatives: int = 2,
                  **kwargs):
-        super().__init__(obj_score_thr, reid, match_iou_thr,
-                         num_tentatives, **kwargs)
+        super().__init__(obj_score_thr, reid, match_iou_thr, num_tentatives,
+                         **kwargs)
 
     def update_track(self, id: int, obj: Tuple[Tensor]) -> None:
         """Update a track."""

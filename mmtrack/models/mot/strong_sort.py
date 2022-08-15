@@ -1,10 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Dict, Optional
-
-from torch import Tensor
+from typing import Optional
 
 from mmtrack.registry import MODELS, TASK_UTILS
-from mmtrack.utils import OptConfigType, SampleList
+from mmtrack.utils import OptConfigType
 from .deep_sort import DeepSORT
 
 

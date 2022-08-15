@@ -22,7 +22,9 @@ class TemporalBlock(BaseModule):
         out_channel (int): the dimension of the output channels.
     """
 
-    def __init__(self, in_channel: int, out_channel: int,
+    def __init__(self,
+                 in_channel: int,
+                 out_channel: int,
                  kernel_size: tuple = (7, 1)):
         super(TemporalBlock, self).__init__()
         self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, bias=False)
@@ -97,12 +99,14 @@ class AFLinkModel(BaseModule):
         self.TemporalModule_1 = nn.Sequential(*[
             TemporalBlock(temporal_module_channels[i],
                           temporal_module_channels[i + 1])
-            for i in range(len(temporal_module_channels) - 1)])
+            for i in range(len(temporal_module_channels) - 1)
+        ])
 
         self.TemporalModule_2 = nn.Sequential(*[
             TemporalBlock(temporal_module_channels[i],
                           temporal_module_channels[i + 1])
-            for i in range(len(temporal_module_channels) - 1)])
+            for i in range(len(temporal_module_channels) - 1)
+        ])
 
         self.FusionBlock_1 = FusionBlock(*fusion_module_channels)
         self.FusionBlock_2 = FusionBlock(*fusion_module_channels)
@@ -242,11 +246,13 @@ class AppearanceFreeLink(BaseModule):
                 track_i, track_j = self.data_transform(info_i, info_j)
 
                 # numpy to torch
-                track_i = torch.tensor(track_i, dtype=torch.float).to(self.device)
-                track_j = torch.tensor(track_j, dtype=torch.float).to(self.device)
+                track_i = torch.tensor(
+                    track_i, dtype=torch.float).to(self.device)
+                track_j = torch.tensor(
+                    track_j, dtype=torch.float).to(self.device)
                 track_i = track_i.unsqueeze(0).unsqueeze(0)
                 track_j = track_j.unsqueeze(0).unsqueeze(0)
-                
+
                 confidence = self.model(track_i,
                                         track_j).detach().cpu().numpy()
                 if confidence >= self.confidence_threshold:

@@ -115,7 +115,7 @@ val_evaluator = dict(postprocess_tracklet_cfg=[
     dict(
         type='AppearanceFreeLink',
         checkpoint=  # noqa: E251
-        '/data1/dyh/results/mmtracking/strongsort_publish/aflink_motchallenge_20220812_190310-a7578ad3.pth',  # TODO
+        '/data1/dyh/results/mmtracking/strongsort_publish/aflink_motchallenge_20220812_190310-a7578ad3.pth',  # noqa: E501  # TODO
         temporal_threshold=(0, 30),
         spatial_threshold=50,
         confidence_threshold=0.95,
