@@ -13,7 +13,6 @@ from .base_tracker import BaseTracker
 @TRACKERS.register_module()
 class ByteTracker(BaseTracker):
     """Tracker for ByteTrack.
-
     Args:
         obj_score_thrs (dict): Detection score threshold for matching objects.
             - high (float): Threshold of the first matching. Defaults to 0.6.
@@ -116,7 +115,6 @@ class ByteTracker(BaseTracker):
                 Defaults to False.
             match_iou_thr (float, optional): Matching threshold.
                 Defaults to 0.5.
-
         Returns:
             tuple(int): The assigning ids.
         """
