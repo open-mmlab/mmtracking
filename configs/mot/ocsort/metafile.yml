@@ -21,19 +21,6 @@ Models:
       - Task: Multiple Object Tracking
         Dataset: MOT17-half-val
         Metrics:
-          MOTA: 78.6
-          IDF1: 79.2
-    Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
-
-  - Name: ocsort_yolox_x_crowdhuman_mot17-private
-    In Collection: OCSORT
-    Config: configs/mot/ocsort/ocsort_yolox_x_crowdhuman_mot17-private.py
-    Metadata:
-      Training Data: CrowdHuman + MOT17-half-train
-    Results:
-      - Task: Multiple Object Tracking
-        Dataset: MOT17-test
-        Metrics:
-          MOTA: 78.1
-          IDF1: 74.8
-    Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+          MOTA: 77.8
+          IDF1: 78.4
+    Weights: https://download.openmmlab.com/mmtracking/mot/ocsort/mot_dataset/ocsort_yolox_x_crowdhuman_mot17-private-half_20220813_101618-fe150582.pth
