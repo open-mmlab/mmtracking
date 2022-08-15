@@ -54,7 +54,7 @@ data = dict(
     train=dict(
         dataset=dict(
             ann_file=[
-                'data/MOT20/annotations/half-train_cocoformat.json',
+                'data/MOT20/annotations/train_cocoformat.json',
                 'data/crowdhuman/annotations/crowdhuman_train.json',
                 'data/crowdhuman/annotations/crowdhuman_val.json'
             ],
@@ -64,13 +64,13 @@ data = dict(
             ]),
         pipeline=train_pipeline),
     val=dict(
-        ann_file='data/MOT20/annotations/half-val_cocoformat.json',
-        img_prefix='data/MOT20/train',
+        ann_file='data/MOT17/annotations/train_cocoformat.json',
+        img_prefix='data/MOT17/train',
         pipeline=test_pipeline),
     test=dict(
-        ann_file='data/MOT20/annotations/half-val_cocoformat.json',
-        img_prefix='data/MOT20/train',
+        ann_file='data/MOT20/annotations/test_cocoformat.json',
+        img_prefix='data/MOT20/test',
         pipeline=test_pipeline))
 
 checkpoint_config = dict(interval=1)
-evaluation = dict(metric=['bbox', 'track'], interval=100)
+evaluation = dict(metric=['bbox', 'track'], interval=1)
