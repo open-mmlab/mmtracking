@@ -5,5 +5,8 @@ from .kalman_filter import KalmanFilter
 from .linear_motion import LinearMotion
 
 __all__ = [
-    'FlowNetSimple', 'CameraMotionCompensation', 'LinearMotion', 'KalmanFilter'
+    'FlowNetSimple',
+    'CameraMotionCompensation',
+    'LinearMotion',
+    'KalmanFilter',
 ]
