@@ -141,7 +141,7 @@ train_dataloader = dict(
     batch_size=10,
     num_workers=4,
     persistent_workers=True,
-    sampler=dict(type='QuotaSampler', samples_per_epoch=40000),
+    sampler=dict(type='QuotaSampler', samples_per_epoch=26000),
     dataset=dict(
         type='RandomSampleConcatDataset',
         dataset_sampling_weights=[1, 1, 1, 1],
@@ -169,7 +169,7 @@ train_dataloader = dict(
                 test_mode=False),
             dict(
                 type='SOTCocoDataset',
-                data_root=data_root,
+                data_root='openmmlab:s3://openmmlab/datasets/detection/',
                 ann_file='coco/annotations/instances_train2017.json',
                 data_prefix=dict(img_path='coco/train2017'),
                 pipeline=train_pipeline,

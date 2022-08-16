@@ -14,7 +14,7 @@ val_dataloader = dict(
     sampler=dict(type='VideoSampler'),
     dataset=dict(
         type='LaSOTDataset',
-        data_root='data/',
+        data_root='openmmlab:s3://openmmlab/datasets/tracking/',
         ann_file='LaSOT_full/annotations/lasot_test_infos.txt',
         data_prefix=dict(img_path='LaSOT_full/LaSOTBenchmark'),
         pipeline=test_pipeline,

@@ -99,7 +99,7 @@ class IouNetHead(BaseModule):
                 out_channels=out_planes,
                 kernel_size=kernel_size,
                 padding=padding,
-                bias=True,
+                bias=False,
                 norm_cfg=dict(type='BN', requires_grad=True),
                 act_cfg=dict(type='ReLU'),
                 inplace=True)
