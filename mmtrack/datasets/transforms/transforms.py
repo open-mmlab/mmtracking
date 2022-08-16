@@ -365,11 +365,13 @@ class CropLikeDimp(BaseTransform):
             (always square).
     """
 
-    def __init__(self, crop_size_factor, output_size):
+    def __init__(self, crop_size_factor: float, output_size: float):
         self.crop_size_factor = crop_size_factor
         self.output_size = output_size
 
-    def crop_like_dimp(self, img, bbox, crop_size_factor, output_size):
+    def crop_like_dimp(
+            self, img: np.ndarray, bbox: np.ndarray, crop_size_factor: float,
+            output_size: int) -> Tuple[np.ndarray, float, np.ndarray]:
         """Crop an image as Dimp did.
 
         Note: The difference between dimp and stark is the operation of moving
@@ -377,17 +379,17 @@ class CropLikeDimp(BaseTransform):
         centered on the `bbox`.
 
         Args:
-            image (ndarray): of shape (H, W, 3).
-            bbox (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            image (np.ndarray): of shape (H, W, 3).
+            bbox (np.ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
             crop_size_factor (float): the ratio of crop size to bbox size
             output_size (int): the size of resized image (always square).
 
         Returns:
-            img_crop_padded (ndarray): the cropped image of shape
+            img_crop_padded (np.ndarray): the cropped image of shape
                 (crop_size, crop_size, 3).
             resize_factor (float): the ratio of original image scale to cropped
                 image scale.
-            pdding_mask (ndarray): the padding mask caused by cropping.
+            pdding_mask (np.ndarray): the padding mask caused by cropping.
         """
         x1, y1, x2, y2 = np.split(bbox, 4, axis=-1)
         bbox_w, bbox_h = x2 - x1, y2 - y1
@@ -450,15 +452,17 @@ class CropLikeDimp(BaseTransform):
 
         return img_crop_padded, crop_area_bbox, resize_factor
 
-    def generate_box(self, bbox_gt, crop_area_bbox, resize_factor):
+    def generate_box(self, bbox_gt: np.ndarray, crop_area_bbox: np.ndarray,
+                     resize_factor: np.ndarray) -> np.ndarray:
         """Transform the box coordinates from the original image coordinates to
         the coordinates of the resized cropped image. The center of cropped
         image may be not jittered bbox since the operation of moving box inside
         image.
 
         Args:
-            bbox_gt (ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
-            crop_area_bbox (ndarray): of shape (4, ) in [x1, y1, w, h] format.
+            bbox_gt (np.ndarray): of shape (4, ) in [x1, y1, x2, y2] format.
+            crop_area_bbox (np.ndarray): of shape (4, ) in [x1, y1, w, h]
+                format.
             resize_factor (float): the ratio of original image scale to cropped
                 image scale.
             output_size (float): the size of output image.
@@ -466,7 +470,8 @@ class CropLikeDimp(BaseTransform):
                 Default to True.
 
         Returns:
-            ndarray: generated box of shape (4, ) in [x1, y1, x2, y2] format.
+            np.ndarray: generated box of shape (4, ) in [x1, y1, x2, y2]
+                format.
         """
         bbox_out = bbox_gt.copy()
         # The coordinate origin of `bbox_out` is the top left corner of
@@ -478,7 +483,7 @@ class CropLikeDimp(BaseTransform):
 
         return bbox_out
 
-    def transform(self, results):
+    def transform(self, results: dict) -> dict:
         """Call function. Crop image like DiMP did.
 
         Args:

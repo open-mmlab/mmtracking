@@ -143,12 +143,38 @@ train_dataloader = dict(
     persistent_workers=True,
     sampler=dict(type='QuotaSampler', samples_per_epoch=40000),
     dataset=dict(
-        type='GOT10kDataset',
-        data_root=data_root,
-        ann_file='GOT10k/annotations/got10k_train_infos.txt',
-        data_prefix=dict(img_path='GOT10k'),
-        pipeline=train_pipeline,
-        test_mode=False))
+        type='RandomSampleConcatDataset',
+        dataset_sampling_weights=[1, 1, 1, 1],
+        datasets=[
+            dict(
+                type='GOT10kDataset',
+                data_root=data_root,
+                ann_file='GOT10k/annotations/got10k_train_vot_infos.txt',
+                data_prefix=dict(img_path='GOT10k'),
+                pipeline=train_pipeline,
+                test_mode=False),
+            dict(
+                type='LaSOTDataset',
+                data_root=data_root,
+                ann_file='LaSOT_full/annotations/lasot_train_infos.txt',
+                data_prefix=dict(img_path='LaSOT_full/LaSOTBenchmark'),
+                pipeline=train_pipeline,
+                test_mode=False),
+            dict(
+                type='TrackingNetDataset',
+                data_root=data_root,
+                ann_file='TrackingNet/annotations/trackingnet_train_infos.txt',
+                data_prefix=dict(img_path='TrackingNet'),
+                pipeline=train_pipeline,
+                test_mode=False),
+            dict(
+                type='SOTCocoDataset',
+                data_root=data_root,
+                ann_file='coco/annotations/instances_train2017.json',
+                data_prefix=dict(img_path='coco/train2017'),
+                pipeline=train_pipeline,
+                test_mode=False)
+        ]))
 
 # runner loop
 train_cfg = dict(
