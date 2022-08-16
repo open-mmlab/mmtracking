@@ -351,8 +351,8 @@ class SeqCropLikeStark(BaseTransform):
 
 
 @TRANSFORMS.register_module()
-class CropLikeDimp(BaseTransform):
-    """Crop images as PrDimp did.
+class CropLikeDiMP(BaseTransform):
+    """Crop images as PrDiMP did.
 
     The way of cropping an image is proposed in
     "Learning Discriminative Model Prediction for Tracking."
@@ -372,7 +372,7 @@ class CropLikeDimp(BaseTransform):
     def crop_like_dimp(
             self, img: np.ndarray, bbox: np.ndarray, crop_size_factor: float,
             output_size: int) -> Tuple[np.ndarray, float, np.ndarray]:
-        """Crop an image as Dimp did.
+        """Crop an image as DiMP did.
 
         Note: The difference between dimp and stark is the operation of moving
         box inside image in dimp. This may cause the cropped image is not

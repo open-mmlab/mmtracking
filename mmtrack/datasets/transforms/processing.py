@@ -11,8 +11,8 @@ from mmtrack.registry import TRANSFORMS
 
 
 @TRANSFORMS.register_module()
-class DimpSampling(BaseTransform):
-    """Dimp-style sampling. It's firstly used in `DiMP.
+class DiMPSampling(BaseTransform):
+    """DiMP-style sampling. It's firstly used in `DiMP.
 
     <https://arxiv.org/abs/1904.07220>`_.
 
@@ -240,7 +240,7 @@ class DimpSampling(BaseTransform):
 
 
 @TRANSFORMS.register_module()
-class TridentSampling(DimpSampling):
+class TridentSampling(DiMPSampling):
     """Multitemplate-style sampling in a trident manner. It's firstly used in
     `STARK <https://arxiv.org/abs/2103.17154.>`_.
 

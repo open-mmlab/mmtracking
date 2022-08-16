@@ -107,7 +107,7 @@ model = dict(
 
 train_pipeline = [
     dict(
-        type='DimpSampling',
+        type='DiMPSampling',
         num_search_frames=3,
         num_template_frames=3,
         max_frame_range=200),
@@ -128,7 +128,7 @@ train_pipeline = [
         type='TransformBroadcaster',
         share_random_params=False,
         transforms=[
-            dict(type='CropLikeDimp', crop_size_factor=5, output_size=288),
+            dict(type='CropLikeDiMP', crop_size_factor=5, output_size=288),
             dict(type='BrightnessAug', jitter_range=0.2)
         ]),
     dict(type='PackTrackInputs', ref_prefix='search', num_template_frames=3)
