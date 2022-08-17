@@ -41,7 +41,6 @@ def setup_multi_processes(cfg):
         os.environ['MKL_NUM_THREADS'] = str(mkl_num_threads)
 
 
-# From PyTorch internals
 def ntuple(n):
 
     def parse(x):

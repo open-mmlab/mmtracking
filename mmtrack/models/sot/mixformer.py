@@ -13,7 +13,7 @@ class MixFormer(Stark):
     """MixFormer: End-to-End Tracking with Iterative Mixed Attention.
 
     This single object tracker is the implementation of
-    `MixFormer<https://arxiv.org/abs/2203.11082>`.
+    `MixFormer<https://arxiv.org/abs/2203.11082>`_.
 
     """
 
