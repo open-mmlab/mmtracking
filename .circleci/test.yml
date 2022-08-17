@@ -62,14 +62,14 @@ jobs:
       - run:
           name: Install mmtrack dependencies
           command: |
+            python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
             python -m pip install << parameters.mmcv >>
             python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
             python -m pip install git+ssh://git@github.com/open-mmlab/mmclassification.git@dev-1.x
             python -m pip install -r requirements.txt
-            python -m pip install git+https://github.com/votchallenge/toolkit.git
-            pip install git+https://github.com/JonathonLuiten/TrackEval.git
-            pip install git+https://github.com/TAO-Dataset/tao.git
+            python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            python -m pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
           command: |
@@ -109,15 +109,19 @@ jobs:
           name: Build Docker image
           command: |
             docker build .circleci/docker -t mmtrack:gpu --build-arg PYTORCH=<< parameters.torch >> --build-arg CUDA=<< parameters.cuda >> --build-arg CUDNN=<< parameters.cudnn >>
-            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -w /mmtrack --name mmtrack mmtrack:gpu
+            docker run --gpus all -t -d -v /home/circleci/project:/mmtrack -v /home/circleci/mmengine:/mmengine -v /home/circleci/mmdetection:/mmdetection -v /home/circleci/mmclassification:/mmclassification -w /mmtrack --name mmtrack mmtrack:gpu
       - run:
           name: Install mmtrack dependencies
           command: |
+            docker exec mmtrack apt-get -y install git
             docker exec mmtrack pip install -e /mmengine
             docker exec mmtrack pip install << parameters.mmcv >>
             docker exec mmtrack pip install -e /mmdetection
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
+            docker exec mmtrack python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            docker exec mmtrack python -m pip install git+https://github.com/votchallenge/toolkit.git
+            docker exec mmtrack python -m pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
           command: |

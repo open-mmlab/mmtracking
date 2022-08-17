@@ -4,6 +4,7 @@ import os
 import os.path as osp
 
 from mmengine.config import Config, DictAction
+from mmengine.model import is_model_wrapper
 from mmengine.registry import RUNNERS
 from mmengine.runner import Runner
 
@@ -73,6 +74,11 @@ def main():
         # build customized runner from the registry
         # if 'runner_type' is set in the cfg
         runner = RUNNERS.build(cfg)
+
+    if is_model_wrapper(runner.model):
+        runner.model.module.init_weights()
+    else:
+        runner.model.init_weights()
 
     # start testing
     runner.test()

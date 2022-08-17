@@ -294,6 +294,19 @@ class BaseVideoDataset(BaseDataset):
         ]
         return valid_data_indices
 
+    def get_cat_ids(self, idx: int) -> List[int]:
+        """Get category ids by index.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            List[int]: All categories in the image of specified index.
+        """
+
+        instances = self.get_data_info(idx)['instances']
+        return [instance['bbox_label'] for instance in instances]
+
     @force_full_init
     def get_data_info(self, idx: int) -> dict:
         """Get annotation by the index of `self.valid_data_indices` and
