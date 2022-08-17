@@ -20,7 +20,7 @@ from mmtrack.core.utils.misc import ntuple
 to_2tuple = ntuple(2)
 
 
-class LayerNorm(nn.LayerNorm):
+class LayerNormAutofp32(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""
 
     def forward(self, x: torch.Tensor):
@@ -435,7 +435,7 @@ class ConvEmbed(nn.Module):
         return x
 
 
-class VisionTransformer(BaseModule):
+class ConvVisionTransformerLayer(BaseModule):
     """Vision Transformer with support for patch or hybrid CNN input stage."""
 
     def __init__(self,
@@ -618,12 +618,12 @@ class VisionTransformer(BaseModule):
 
 
 @BACKBONES.register_module()
-class ConvolutionalVisionTransformer(BaseModule):
+class ConvVisionTransformer(BaseModule):
 
     def __init__(self,
                  in_chans=3,
                  act_layer=QuickGELU,
-                 norm_layer=partial(LayerNorm, eps=1e-5),
+                 norm_layer=partial(LayerNormAutofp32, eps=1e-5),
                  init='trunc_norm',
                  spec=None):
         super().__init__()
@@ -652,7 +652,7 @@ class ConvolutionalVisionTransformer(BaseModule):
                 'norm_cfg': spec['NORM_CFG'],
             }
 
-            stage = VisionTransformer(
+            stage = ConvVisionTransformerLayer(
                 in_chans=in_chans,
                 init=init,
                 act_layer=act_layer,
