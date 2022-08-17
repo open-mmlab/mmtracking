@@ -95,7 +95,7 @@ class MixedAttentionModule(nn.Module):
 
         self.conv_proj_q = self._build_projection(
             dim_in, dim_out, kernel_size, padding_q, stride_q,
-            'linear' if method == 'avg' else method)
+            'identity' if method == 'avg' else method)
         self.conv_proj_k = self._build_projection(dim_in, dim_out, kernel_size,
                                                   padding_kv, stride_kv,
                                                   method)
@@ -145,7 +145,7 @@ class MixedAttentionModule(nn.Module):
                          ceil_mode=True)),
                     ('rearrage', Rearrange('b c h w -> b (h w) c')),
                 ]))
-        elif method == 'linear':
+        elif method == 'identity':
             proj = None
         else:
             raise ValueError('Unknown method ({})'.format(method))
