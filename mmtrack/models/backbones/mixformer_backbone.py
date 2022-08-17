@@ -37,7 +37,7 @@ class QuickGELU(nn.Module):
         return x * torch.sigmoid(1.702 * x)
 
 
-class Attention(nn.Module):
+class MixFormerAttentionModule(nn.Module):
 
     def __init__(self,
                  dim_in,
@@ -330,7 +330,7 @@ class Attention(nn.Module):
         return x
 
 
-class Block(nn.Module):
+class MixFormerAttentionBlock(nn.Module):
 
     def __init__(self,
                  dim_in,
@@ -350,7 +350,7 @@ class Block(nn.Module):
         self.with_cls_token = kwargs['with_cls_token']
 
         self.norm1 = norm_layer(dim_in)
-        self.attn = Attention(
+        self.attn = MixFormerAttentionModule(
             dim_in,
             dim_out,
             num_heads,
@@ -484,7 +484,7 @@ class ConvVisionTransformerLayer(BaseModule):
         blocks = []
         for j in range(depth):
             blocks.append(
-                Block(
+                MixFormerAttentionBlock(
                     dim_in=embed_dim,
                     dim_out=embed_dim,
                     num_heads=num_heads,
@@ -625,31 +625,51 @@ class ConvVisionTransformer(BaseModule):
                  act_layer=QuickGELU,
                  norm_layer=partial(LayerNormAutofp32, eps=1e-5),
                  init='trunc_norm',
-                 spec=None):
+                 num_stages=3,
+                 patch_size=[7, 3, 3],
+                 patch_stride=[4, 2, 2],
+                 patch_padding=[2, 1, 1],
+                 dim_embed=[64, 192, 384],
+                 num_heads=[1, 3, 6],
+                 depth=[1, 4, 16],
+                 mlp_ratio=[4, 4, 4],
+                 attn_drop_rate=[0.0, 0.0, 0.0],
+                 drop_rate=[0.0, 0.0, 0.0],
+                 drop_path_rate=[0.0, 0.0, 0.1],
+                 qkv_bias=[True, True, True],
+                 cls_token=[False, False, False],
+                 pos_embed=[False, False, False],
+                 qkv_proj_method=['dw_bn', 'dw_bn', 'dw_bn'],
+                 kernel_qkv=[3, 3, 3],
+                 padding_kv=[1, 1, 1],
+                 stride_kv=[2, 2, 2],
+                 padding_q=[1, 1, 1],
+                 stride_q=[1, 1, 1],
+                 norm_cfg=dict(type='BN', requires_grad=False)):
         super().__init__()
 
-        self.num_stages = spec['NUM_STAGES']
+        self.num_stages = num_stages
         for i in range(self.num_stages):
             kwargs = {
-                'patch_size': spec['PATCH_SIZE'][i],
-                'patch_stride': spec['PATCH_STRIDE'][i],
-                'patch_padding': spec['PATCH_PADDING'][i],
-                'embed_dim': spec['DIM_EMBED'][i],
-                'depth': spec['DEPTH'][i],
-                'num_heads': spec['NUM_HEADS'][i],
-                'mlp_ratio': spec['MLP_RATIO'][i],
-                'qkv_bias': spec['QKV_BIAS'][i],
-                'drop_rate': spec['DROP_RATE'][i],
-                'attn_drop_rate': spec['ATTN_DROP_RATE'][i],
-                'drop_path_rate': spec['DROP_PATH_RATE'][i],
-                'with_cls_token': spec['CLS_TOKEN'][i],
-                'method': spec['QKV_PROJ_METHOD'][i],
-                'kernel_size': spec['KERNEL_QKV'][i],
-                'padding_q': spec['PADDING_Q'][i],
-                'padding_kv': spec['PADDING_KV'][i],
-                'stride_kv': spec['STRIDE_KV'][i],
-                'stride_q': spec['STRIDE_Q'][i],
-                'norm_cfg': spec['NORM_CFG'],
+                'patch_size': patch_size[i],
+                'patch_stride': patch_stride[i],
+                'patch_padding': patch_padding[i],
+                'embed_dim': dim_embed[i],
+                'depth': depth[i],
+                'num_heads': num_heads[i],
+                'mlp_ratio': mlp_ratio[i],
+                'qkv_bias': qkv_bias[i],
+                'drop_rate': drop_rate[i],
+                'attn_drop_rate': attn_drop_rate[i],
+                'drop_path_rate': drop_path_rate[i],
+                'with_cls_token': cls_token[i],
+                'method': qkv_proj_method[i],
+                'kernel_size': kernel_qkv[i],
+                'padding_q': padding_q[i],
+                'padding_kv': padding_kv[i],
+                'stride_kv': stride_kv[i],
+                'stride_q': stride_q[i],
+                'norm_cfg': norm_cfg,
             }
 
             stage = ConvVisionTransformerLayer(
@@ -660,11 +680,11 @@ class ConvVisionTransformer(BaseModule):
                 **kwargs)
             setattr(self, f'stage{i}', stage)
 
-            in_chans = spec['DIM_EMBED'][i]
+            in_chans = dim_embed[i]
 
-        dim_embed = spec['DIM_EMBED'][-1]
+        dim_embed = dim_embed[-1]
         self.norm = norm_layer(dim_embed)
-        self.cls_token = spec['CLS_TOKEN'][-1]
+        self.cls_token = cls_token[-1]
 
         # Classifier head
         self.head = nn.Linear(dim_embed, 1000)
