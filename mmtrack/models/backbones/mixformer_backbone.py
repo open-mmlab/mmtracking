@@ -37,7 +37,36 @@ class QuickGELU(nn.Module):
         return x * torch.sigmoid(1.702 * x)
 
 
-class MixFormerAttentionModule(nn.Module):
+class MixedAttentionModule(nn.Module):
+    """Mixed Attention Module (MAM) proposed in MixFormer.
+
+    It is the core design for simultaneous feature extraction
+    and target information integration. Please refer to
+    `MixFormer<https://arxiv.org/abs/2203.11082>`_ for more details.
+
+    Args:
+        dim_in (int): Input dimension of this module.
+        dim_out (int): Output dimension of this module.
+        num_heads (int): Number of heads in multi-head attention mechanism.
+        qkv_bias (bool): Add bias when projecting to qkv tokens.
+            Default: False
+        attn_drop (float): A Dropout layer on attn_output_weight.
+            Default: 0.0
+        proj_drop (float): A Dropout layer after attention operation.
+            Default: 0.0
+        method (str): Method for building the projection layer. Choices are
+            ['dw_bn', 'avg', 'identity']. Default: 'dw_bn'
+        kernel_size (int): Kernel size of the projection layer. Default: 1
+        stride_q (int): Stride of the query projection layer. Default: 1
+        stride_kv (int): Stride of the key/value projection layer. Default: 1
+        padding_q (int): Padding number of the query projection layer.
+            Default: 1
+        padding_kv (int): Padding number of the key/value projection layer.
+            Default: 1
+        with_cls_token (bool): Add a token for global information collection.
+            Default: False.
+        norm_cfg (dict): Norm layer config.
+    """
 
     def __init__(self,
                  dim_in,
@@ -60,7 +89,6 @@ class MixFormerAttentionModule(nn.Module):
         self.stride_q = stride_q
         self.dim = dim_out
         self.num_heads = num_heads
-        # head_dim = self.qkv_dim // num_heads
         self.scale = dim_out**-0.5
         self.with_cls_token = with_cls_token
         self.norm_cfg = norm_cfg
@@ -85,6 +113,12 @@ class MixFormerAttentionModule(nn.Module):
 
     def _build_projection(self, dim_in, dim_out, kernel_size, padding, stride,
                           method):
+        """Build qkv projection according to `method` argument.
+
+        "dw_bn": Apply a convolution layer with batch norm on the input.
+        "avg": Apply an avgpool2d on the input.
+        "identity": No transformation on the input.
+        """
         if method == 'dw_bn':
             proj = nn.Sequential(
                 OrderedDict([
@@ -119,6 +153,7 @@ class MixFormerAttentionModule(nn.Module):
         return proj
 
     def forward_conv(self, x, t_h, t_w, s_h, s_w):
+        """Projecting the input to qkv tokens."""
         template, online_template, search = torch.split(
             x, [t_h * t_w, t_h * t_w, s_h * s_w], dim=1)
         template = rearrange(
@@ -350,7 +385,7 @@ class MixFormerAttentionBlock(nn.Module):
         self.with_cls_token = kwargs['with_cls_token']
 
         self.norm1 = norm_layer(dim_in)
-        self.attn = MixFormerAttentionModule(
+        self.attn = MixedAttentionModule(
             dim_in,
             dim_out,
             num_heads,
