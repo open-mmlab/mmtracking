@@ -3,6 +3,7 @@ import copy
 import logging
 import os
 import tempfile
+import warnings
 from typing import Optional, Union
 
 import mmcv
@@ -71,14 +72,26 @@ def init_model(config: Union[str, mmcv.Config],
 
     if checkpoint is not None:
         checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
-        if 'meta' in checkpoint and 'CLASSES' in checkpoint['meta']:
-            model.CLASSES = checkpoint['meta']['CLASSES']
-    if not hasattr(model, 'CLASSES'):
-        if hasattr(model, 'detector') and hasattr(model.detector, 'CLASSES'):
-            model.CLASSES = model.detector.CLASSES
+        # Weights converted from elsewhere may not have meta fields.
+        checkpoint_meta = checkpoint.get('meta', {})
+        # save the dataset_meta in the model for convenience
+        if 'dataset_meta' in checkpoint_meta:
+            # mmtrack 1.x
+            model.dataset_meta = checkpoint_meta['dataset_meta']
+        elif 'CLASSES' in checkpoint_meta:
+            # < mmtrack 1.x
+            classes = checkpoint_meta['CLASSES']
+            model.dataset_meta = {'CLASSES': classes}
+    if not hasattr(model, 'dataset_meta'):
+        if hasattr(model, 'detector') and hasattr(model.detector,
+                                                  'dataset_meta'):
+            model.dataset_meta = model.detector.dataset_meta
         else:
-            print("Warning: The model doesn't have classes")
-            model.CLASSES = None
+            warnings.simplefilter('once')
+            warnings.warn('dataset_meta or class names are missed, '
+                          'use None by default.')
+            model.dataset_meta = {'CLASSES': None}
+
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
     model.eval()
