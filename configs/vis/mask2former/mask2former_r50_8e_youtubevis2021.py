@@ -24,7 +24,7 @@ param_scheduler = dict(
     end=max_iters,
     by_epoch=False,
     milestones=[
-        5000,
+        5500,
     ],
     gamma=0.1)
 # runtime settings
