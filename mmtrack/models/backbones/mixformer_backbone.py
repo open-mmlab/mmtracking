@@ -215,9 +215,8 @@ class MixedAttentionModule(nn.Module):
         return q, k, v
 
     def forward_conv_test(self, x, s_h, s_w):
-        search = x
         search = rearrange(
-            search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
+            x, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
 
         if self.conv_proj_q is not None:
             q = self.conv_proj_q(search)
@@ -631,8 +630,7 @@ class ConvVisionTransformerLayer(BaseModule):
         # if self.cls_token is not None:
         #     cls_tokens, x = torch.split(x, [1, H*W], 1)
         # template, search = torch.split(x, [t_H*t_W, s_H*s_W], dim=1)
-        search = x
-        search = rearrange(search, 'b (h w) c -> b c h w', h=s_H, w=s_W)
+        search = rearrange(x, 'b (h w) c -> b c h w', h=s_H, w=s_W)
 
         return search
 
