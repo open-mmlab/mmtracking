@@ -17,15 +17,15 @@ class MixFormerScoreDecoder(nn.Module):
 
     def __init__(self,
                  pool_size=4,
-                 feat_sz=20,
+                 feat_size=20,
                  stride=16,
                  num_heads=6,
                  hidden_dim=384,
                  num_layers=3):
         super().__init__()
-        self.feat_sz = feat_sz
+        self.feat_size = feat_size
         self.stride = stride
-        self.img_sz = feat_sz * stride
+        self.img_sz = feat_size * stride
         self.num_heads = num_heads
         self.pool_size = pool_size
         self.score_head = ScoreHead(hidden_dim, hidden_dim, 1, num_layers)
