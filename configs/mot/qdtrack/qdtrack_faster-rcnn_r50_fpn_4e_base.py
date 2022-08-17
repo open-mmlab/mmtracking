@@ -9,13 +9,16 @@ model = dict(
         type='TrackDataPreprocessor',
         mean=[103.530, 116.280, 123.675],
         std=[1.0, 1.0, 1.0],
+        # TODO: it is different from the master branch
+        bgr_to_rgb=True,
         pad_size_divisor=32),
     detector=dict(
         backbone=dict(
             norm_cfg=dict(requires_grad=False),
             style='caffe',
             init_cfg=dict(
-                type='Pretrained', checkpoint='torchvision://resnet50')),
+                type='Pretrained',
+                checkpoint='open-mmlab://detectron2/resnet50_caffe')),
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
             bbox_head=dict(
