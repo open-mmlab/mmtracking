@@ -82,6 +82,9 @@ def init_model(config: Union[str, mmcv.Config],
             # < mmtrack 1.x
             classes = checkpoint_meta['CLASSES']
             model.dataset_meta = {'CLASSES': classes}
+
+    # Some methods don't load checkpoints or checkpoints don't contain
+    # 'dataset_meta'
     if not hasattr(model, 'dataset_meta'):
         if hasattr(model, 'detector') and hasattr(model.detector,
                                                   'dataset_meta'):
