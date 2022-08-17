@@ -46,18 +46,6 @@ class MixFormer(Stark):
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def init_weights(self):
-        """Initialize the weights of modules in single object tracker."""
-        # We don't use the `init_weights()` function in BaseModule, since it
-        # doesn't support the initialization method from `reset_parameters()`
-        # in Pytorch.
-
-        if self.with_backbone:
-            self.backbone.init_weights()
-
-        if self.with_head:
-            self.head.init_weights()
-
     def set_online(self, template, online_template):
         self.backbone.set_online(template, online_template)
 
