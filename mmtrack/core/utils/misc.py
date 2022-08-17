@@ -42,7 +42,7 @@ def setup_multi_processes(cfg):
 
 
 # From PyTorch internals
-def _ntuple(n):
+def ntuple(n):
 
     def parse(x):
         if isinstance(x, container_abcs.Iterable):
