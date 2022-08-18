@@ -114,7 +114,7 @@ class Stark(BaseSingleObjectTracker):
         args:
             img (Tensor): of shape (1, C, H, W)
             target_bbox (Tensor): in [cx, cy, w, h] format
-            search_area_factor (float): Ratio of crop size to target size
+            search_area_factor (float): Ratio of crop size to target size.
             output_size (float): the size of output cropped image
                 (always square).
         returns:

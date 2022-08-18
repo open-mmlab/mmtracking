@@ -17,7 +17,7 @@
 
 ```python
 import torch.nn as nn
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models.builder import BACKBONES
 
@@ -67,7 +67,7 @@ model = dict(
 创建一个新文件 `mmtrack/models/necks/my_fpn.py`
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models.builder import NECKS
 
@@ -114,7 +114,7 @@ neck=dict(
 创建一个新文件 `mmtrack/models/track_heads/my_head.py`
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models import HEADS
 

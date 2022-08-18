@@ -78,7 +78,7 @@ Create a new file `mmtrack/models/motion/my_flownet.py`.
 You can inherit the motion model from `BaseModule` in `mmcv.runner` if it is a deep learning module, and from `object` if not.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import MOTION
 
@@ -129,7 +129,7 @@ motion=dict(
 Create a new file `mmtrack/models/reid/my_reid.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import REID
 
@@ -180,7 +180,7 @@ reid=dict(
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models import HEADS
 

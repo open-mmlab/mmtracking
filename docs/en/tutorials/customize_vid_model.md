@@ -17,7 +17,7 @@ Please refer to [tutorial in mmdetection](https://mmdetection.readthedocs.io/en/
 Create a new file `mmtrack/models/motion/my_flownet.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import MOTION
 
@@ -68,7 +68,7 @@ motion=dict(
 Create a new file `mmtrack/models/aggregators/my_aggregator.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from ..builder import AGGREGATORS
 
