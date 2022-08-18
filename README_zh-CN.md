@@ -69,6 +69,8 @@ MMTracking是一款基于PyTorch的视频目标感知开源工具箱，是[OpenM
 
 ## 更新
 
+- 添加了 [OC-SORT](configs/mot/ocsort/) 的预训练模型。
+
 v0.13.0版本已于2022年04月29日发布，可通过查阅[更新日志](docs/zh_cn/changelog.md)了解更多细节以及发布历史。
 
 ## 安装
@@ -124,8 +126,8 @@ MMTracking也提供了更详细的[教程](docs/zh_cn/tutorials/)，比如[配�
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
-- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
+- [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
+- [x] [OC-SORT](configs/mot/ocsort) (arXiv 2022)
 
 支持的数据集：
 

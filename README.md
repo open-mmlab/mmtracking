@@ -69,7 +69,7 @@ The master branch works with **PyTorch1.5+**.
 
 ## What's New
 
-Release [QDTrack](configs/mot/qdtrack) pretrained models.
+- Release [OC-SORT](configs/mot/ocsort/) pretrained models.
 
 v0.13.0 was released in 29/04/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -127,8 +127,8 @@ Supported Methods
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
-- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
+- [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
+- [x] [OC-SORT](configs/mot/ocsort) (arXiv 2022)
 
 Supported Datasets
 
