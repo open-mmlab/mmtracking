@@ -1,132 +1,121 @@
-_base_ = [
-    '../../_base_/models/yolox_x_8x8.py',
-    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
-]
+_base_ = ['../_base_/default_runtime.py']
 
-dataset_type = 'MOTChallengeDataset'
 data_root = 'data/MOT17/'
 
 img_scale = (800, 1440)
 batch_size = 4
 
 model = dict(
-    type='ByteTrack',
     data_preprocessor=dict(
-        type='TrackDataPreprocessor',
+        type='DetDataPreprocessor',
         pad_size_divisor=32,
         batch_augments=[
             dict(
-                type='mmdet.BatchSyncRandomResize',
-                random_size_range=(576, 1024),
+                type='BatchSyncRandomResize',
+                random_size_range=(480, 800),
                 size_divisor=32,
                 interval=10)
         ]),
-    detector=dict(
-        _scope_='mmdet',
-        bbox_head=dict(num_classes=1),
-        test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.7)),
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth'  # noqa: E501
-        )),
-    motion=dict(type='KalmanFilter'),
-    tracker=dict(
-        type='ByteTracker',
-        obj_score_thrs=dict(high=0.6, low=0.1),
-        init_track_thr=0.7,
-        weight_iou_with_det_scores=True,
-        match_iou_thrs=dict(high=0.1, low=0.5, tentative=0.3),
-        num_frames_retain=30))
+    _scope_='mmdet',
+    type='YOLOX',
+    backbone=dict(type='CSPDarknet', deepen_factor=1.33, widen_factor=1.25),
+    neck=dict(
+        type='YOLOXPAFPN',
+        in_channels=[320, 640, 1280],
+        out_channels=320,
+        num_csp_blocks=4),
+    bbox_head=dict(
+        type='YOLOXHead', num_classes=1, in_channels=320, feat_channels=320),
+    train_cfg=dict(assigner=dict(type='SimOTAAssigner', center_radius=2.5)),
+    test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.7)),
+    init_cfg=dict(
+        type='Pretrained',
+        checkpoint=  # noqa: E251
+        'https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth'  # noqa: E501
+    ))
 
 train_pipeline = [
     dict(
-        type='mmdet.Mosaic',
+        type='Mosaic',
         img_scale=img_scale,
         pad_val=114.0,
         bbox_clip_border=False),
     dict(
-        type='mmdet.RandomAffine',
+        type='RandomAffine',
         scaling_ratio_range=(0.1, 2),
         border=(-img_scale[0] // 2, -img_scale[1] // 2),
         bbox_clip_border=False),
     dict(
-        type='mmdet.MixUp',
+        type='MixUp',
         img_scale=img_scale,
         ratio_range=(0.8, 1.6),
         pad_val=114.0,
         bbox_clip_border=False),
-    dict(type='mmdet.YOLOXHSVRandomAug'),
-    dict(type='mmdet.RandomFlip', prob=0.5),
+    dict(type='YOLOXHSVRandomAug'),
+    dict(type='RandomFlip', prob=0.5),
     dict(
-        type='mmdet.Resize',
+        type='Resize',
         scale=img_scale,
         keep_ratio=True,
         clip_object_border=False),
-    dict(
-        type='mmdet.Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(
-        type='mmdet.FilterAnnotations',
-        min_gt_bbox_wh=(1, 1),
-        keep_empty=False),
-    dict(type='PackTrackInputs', pack_single_img=True)
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
+    dict(type='FilterAnnotations', min_gt_bbox_wh=(1, 1), keep_empty=False),
+    dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='mmdet.Resize', scale=img_scale, keep_ratio=True),
+    dict(type='Resize', scale=img_scale, keep_ratio=True),
+    dict(type='Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
     dict(
-        type='mmdet.Pad',
-        size_divisor=32,
-        pad_val=dict(img=(114.0, 114.0, 114.0))),
-    dict(type='PackTrackInputs', pack_single_img=True)
+        type='PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor'))
 ]
 
 train_dataloader = dict(
-    _delete_=True,
     batch_size=batch_size,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
-        type='mmdet.MultiImageMixDataset',
+        type='MultiImageMixDataset',
+        _scope_='mmdet',
         dataset=dict(
-            type='mmdet.ConcatDataset',
+            type='ConcatDataset',
+            _scope_='mmdet',
             datasets=[
                 dict(
-                    type='mmdet.CocoDataset',
+                    type='CocoDataset',
                     data_root='data/MOT17',
                     ann_file='annotations/half-train_cocoformat.json',
-                    # TODO: mmdet use img as key, but img_path is needed
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian')),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
-                        dict(type='LoadTrackAnnotations'),
+                        dict(type='LoadAnnotations'),
                     ]),
                 dict(
-                    type='mmdet.CocoDataset',
+                    type='CocoDataset',
                     data_root='data/crowdhuman',
                     ann_file='annotations/crowdhuman_train.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian')),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
-                        dict(type='LoadTrackAnnotations'),
+                        dict(type='LoadAnnotations'),
                     ]),
                 dict(
-                    type='mmdet.CocoDataset',
+                    type='CocoDataset',
                     data_root='data/crowdhuman',
                     ann_file='annotations/crowdhuman_val.json',
                     data_prefix=dict(img='val'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian')),
+                    metainfo=dict(CLASSES=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
-                        dict(type='LoadTrackAnnotations'),
+                        dict(type='LoadAnnotations'),
                     ]),
             ]),
         pipeline=train_pipeline))
@@ -135,17 +124,18 @@ val_dataloader = dict(
     num_workers=2,
     persistent_workers=True,
     drop_last=False,
-    sampler=dict(type='VideoSampler'),
+    sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
-        type=dataset_type,
+        type='CocoDataset',
         data_root=data_root,
+        _scope_='mmdet',
         ann_file='annotations/half-val_cocoformat.json',
-        data_prefix=dict(img_path='train'),
-        ref_img_sampler=None,
-        load_as_video=True,
+        data_prefix=dict(img='train'),
+        metainfo=dict(CLASSES=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = val_dataloader
+
 # optimizer
 # default 8 gpu
 lr = 0.001 / 8 * batch_size
@@ -171,7 +161,6 @@ param_scheduler = [
     dict(
         # use quadratic formula to warm up 1 epochs
         # and lr is updated by iteration
-        # TODO: fix default scope in get function
         type='mmdet.QuadraticWarmupLR',
         by_epoch=True,
         begin=0,
@@ -210,8 +199,11 @@ custom_hooks = [
         priority=49)
 ]
 default_hooks = dict(checkpoint=dict(interval=1))
+
 # evaluator
-val_evaluator = dict(postprocess_tracklet_cfg=[
-    dict(type='InterpolateTracklets', min_num_frames=5, max_num_frames=20)
-])
+val_evaluator = dict(
+    type='mmdet.CocoMetric',
+    ann_file=data_root + 'annotations/half-val_cocoformat.json',
+    metric='bbox',
+    format_only=False)
 test_evaluator = val_evaluator
