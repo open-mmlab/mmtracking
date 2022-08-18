@@ -1,4 +1,4 @@
-_base_ = ['./qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
+_base_ = ['./qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17.py']
 
 # data pipeline
 train_pipeline = [

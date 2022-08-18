@@ -1,5 +1,5 @@
 # model settings
-_base_ = ['./qdtrack_faster-rcnn_r101_fpn_24e_lvis.py']
+_base_ = ['./qdtrack_faster-rcnn_resnet101-fpn_8x2bs-24e_lvis_test-tao.py']
 
 model = dict(freeze_detector=True)
 

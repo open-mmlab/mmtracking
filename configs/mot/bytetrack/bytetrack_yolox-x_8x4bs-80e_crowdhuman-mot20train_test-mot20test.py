@@ -1,4 +1,7 @@
-_base_ = ['./bytetrack_yolox_x_crowdhuman_mot17-private-half.py']
+_base_ = [
+    './bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_'
+    'test-mot17halfval.py'
+]
 
 dataset_type = 'MOTChallengeDataset'
 

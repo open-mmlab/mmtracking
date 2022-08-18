@@ -19,7 +19,8 @@ class TestByteTrack(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
+        'mot/bytetrack/bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_'
+        'test-mot17halfval.py',
     ])
     def test_bytetrack_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -29,8 +30,8 @@ class TestByteTrack(TestCase):
         assert model.motion
 
     @parameterized.expand([
-        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_'
+         'test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_bytetrack_forward_loss_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -59,8 +60,8 @@ class TestByteTrack(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_'
+         'test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_bytetrack_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(

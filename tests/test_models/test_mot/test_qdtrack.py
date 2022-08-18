@@ -20,7 +20,7 @@ class TestQDTrack(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+        'mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17.py',
     ])
     def test_qdtrack_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -30,7 +30,7 @@ class TestQDTrack(TestCase):
         assert model.track_head
 
     @parameterized.expand([
-        ('mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+        ('mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17.py',
          ('cpu', 'cuda')),
     ])
     def test_qdtrack_forward_loss_mode(self, cfg_file, devices):
@@ -66,7 +66,7 @@ class TestQDTrack(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
+        ('mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17.py',
          ('cpu', 'cuda')),
     ])
     def test_qdtrack_forward_predict_mode(self, cfg_file, devices):

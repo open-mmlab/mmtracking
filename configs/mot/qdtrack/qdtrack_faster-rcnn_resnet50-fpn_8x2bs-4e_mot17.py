@@ -1,5 +1,5 @@
 _base_ = [
-    './qdtrack_faster-rcnn_r50_fpn_4e_base.py',
+    './qdtrack_faster-rcnn_resnet50-fpn_4e_base.py',
     '../../_base_/datasets/mot_challenge.py',
 ]
 
