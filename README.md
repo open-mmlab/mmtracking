@@ -128,7 +128,7 @@ Supported Methods
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
-- [x] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
+- [x] [OC-SORT](configs/mot/ocsort) (arXiv 2022)
 
 Supported Datasets
 
