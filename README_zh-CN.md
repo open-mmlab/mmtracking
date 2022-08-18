@@ -126,7 +126,7 @@ MMTracking也提供了更详细的[教程](docs/en/tutorials/)，比如[配置�
 - [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
+- [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
 - [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
 - [x] [StrongSORT](https://arxiv.org/abs/2202.13514) (arxiv 2022)
 
