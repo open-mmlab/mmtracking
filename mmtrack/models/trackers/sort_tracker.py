@@ -220,8 +220,7 @@ class SORTTracker(BaseTracker):
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)
-                ious = bbox_overlaps(track_bboxes,
-                                     bboxes[active_dets])
+                ious = bbox_overlaps(track_bboxes, bboxes[active_dets])
 
                 # support multi-class association
                 track_labels = torch.tensor([
