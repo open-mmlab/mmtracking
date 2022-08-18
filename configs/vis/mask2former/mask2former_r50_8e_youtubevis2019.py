@@ -204,8 +204,8 @@ train_pipeline = [
 ]
 # dataloader
 train_dataloader = dict(
-    batch_size=16,
-    num_workers=4,
+    batch_size=2,
+    num_workers=2,
     dataset=dict(
         pipeline=train_pipeline,
         ref_img_sampler=dict(
