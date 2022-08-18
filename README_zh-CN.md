@@ -127,7 +127,7 @@ MMTracking也提供了更详细的[教程](docs/zh_cn/tutorials/)，比如[配�
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
-- [x] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022)
+- [x] [OC-SORT](configs/mot/ocsort) (arXiv 2022)
 
 支持的数据集：
 
