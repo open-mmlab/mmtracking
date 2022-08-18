@@ -17,7 +17,7 @@ Create a new file `mmtrack/models/backbones/mobilenet.py`.
 
 ```python
 import torch.nn as nn
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models.builder import BACKBONES
 
@@ -69,7 +69,7 @@ model = dict(
 Create a new file `mmtrack/models/necks/my_fpn.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models.builder import NECKS
 
@@ -118,7 +118,7 @@ neck=dict(
 Create a new file `mmtrack/models/track_heads/my_head.py`.
 
 ```python
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 
 from mmdet.models import HEADS
 
