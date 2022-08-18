@@ -13,9 +13,9 @@ Collections:
     README: configs/mot/qdtrack/README.md
 
 Models:
-  - Name: qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17
+  - Name: qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
     In Collection: QDTrack
-    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17.py
+    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17
       Training Memory (GB): 5.83
