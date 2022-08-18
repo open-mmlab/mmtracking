@@ -61,6 +61,10 @@
 
 详情请参考 [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack)。
 
+### StrongSORT (arxiv 2022)
+
+详情请参考 [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/strongsort)。
+
 ## 单目标跟踪基线
 
 ### SiameseRPN++ (CVPR 2019)

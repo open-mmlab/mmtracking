@@ -61,6 +61,10 @@ Please refer to [QDTrack](https://github.com/open-mmlab/mmtracking/blob/master/c
 
 Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack) for details.
 
+### StrongSORT (arvix 2022)
+
+Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/strongsort) for details
+
 ## Baselines of single object tracking
 
 ### SiameseRPN++ (CVPR 2019)

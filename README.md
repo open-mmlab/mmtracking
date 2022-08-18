@@ -69,7 +69,7 @@ The master branch works with **PyTorch1.5+**.
 
 ## What's New
 
-Release [QDTrack](configs/mot/qdtrack) pretrained models.
+Release [StrongSORT](configs/mot/strongsort) pretrained models.
 
 v0.13.0 was released in 29/04/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -129,6 +129,7 @@ Supported Methods
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (arXiv 2021)
 - [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
+- [x] [StrongSORT](https://arxiv.org/abs/2202.13514) (arxiv 2022)
 
 Supported Datasets
 
