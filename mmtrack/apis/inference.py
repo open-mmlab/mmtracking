@@ -86,14 +86,10 @@ def init_model(config: Union[str, mmcv.Config],
     # Some methods don't load checkpoints or checkpoints don't contain
     # 'dataset_meta'
     if not hasattr(model, 'dataset_meta'):
-        if hasattr(model, 'detector') and hasattr(model.detector,
-                                                  'dataset_meta'):
-            model.dataset_meta = model.detector.dataset_meta
-        else:
-            warnings.simplefilter('once')
-            warnings.warn('dataset_meta or class names are missed, '
-                          'use None by default.')
-            model.dataset_meta = {'CLASSES': None}
+        warnings.simplefilter('once')
+        warnings.warn('dataset_meta or class names are missed, '
+                      'use None by default.')
+        model.dataset_meta = {'CLASSES': None}
 
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
