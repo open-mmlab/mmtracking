@@ -5,6 +5,7 @@ from typing import List, Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 
 from ..structures import TrackDataSample
 
@@ -102,3 +103,25 @@ def convert_data_sample_type(
                 ref_data_samples[i].pop(key)
 
     return ref_data_samples, ref_metainfos
+
+
+def max_last2d(input: Tensor) -> Tuple[Tensor, Tensor]:
+    """Computes the value and position of maximum in the last two dimensions.
+
+    Args:
+        input (Tensor): of shape (..., H, W)
+
+    Returns:
+        max_val (Tensor): The maximum value.
+        argmax (Tensor): The position of maximum in [row, col] format.
+    """
+
+    max_val_row, argmax_row = torch.max(input, dim=-2)
+    max_val, argmax_col = torch.max(max_val_row, dim=-1)
+    argmax_row = argmax_row.view(argmax_col.numel(),
+                                 -1)[torch.arange(argmax_col.numel()),
+                                     argmax_col.view(-1)]
+    argmax_row = argmax_row.reshape(argmax_col.shape)
+    argmax = torch.cat((argmax_row.unsqueeze(-1), argmax_col.unsqueeze(-1)),
+                       -1)
+    return max_val, argmax
