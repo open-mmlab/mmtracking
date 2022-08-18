@@ -57,9 +57,13 @@
 
 详情请参考 [QDTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/qdtrack/README.md)。
 
-### ByteTrack (arXiv 2021)
+### ByteTrack (ECCV 2022)
 
 详情请参考 [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack)。
+
+### OC-SORT (ArXiv 2022)
+
+详情请参考 [OC-SORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/ocsort)。
 
 ## 单目标跟踪基线
 
