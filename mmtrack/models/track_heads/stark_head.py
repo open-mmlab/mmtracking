@@ -6,8 +6,7 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
-from mmdet.models.layers import Transformer, build_transformer
-from mmdet.models.layers.builder import TRANSFORMER
+from mmdet.models.layers import Transformer
 from mmengine.data import InstanceData
 from mmengine.model import BaseModule
 from torch import Tensor, nn
@@ -177,8 +176,7 @@ class ScoreHead(nn.Module):
         return x.view(-1, 1)
 
 
-# TODO: wait for the registry refactor of Transform in mmdet
-@TRANSFORMER.register_module()
+@MODELS.register_module()
 class StarkTransformer(Transformer):
     """The transformer head used in STARK. `STARK.
 
@@ -320,8 +318,7 @@ class StarkHead(BaseModule):
                  frozen_modules=None,
                  **kwargs):
         super(StarkHead, self).__init__(init_cfg=init_cfg)
-        # TODO: wait for the registry refactor of Transform in mmdet
-        self.transformer = build_transformer(transformer)
+        self.transformer = MODELS.build(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
         assert bbox_head is not None
