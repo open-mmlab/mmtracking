@@ -15,8 +15,7 @@ from mmengine.dist import (all_gather_object, barrier, broadcast,
                            is_main_process)
 from mmengine.logging import MMLogger
 
-from mmtrack.models.task_modules import interpolate_tracks
-from mmtrack.registry import METRICS
+from mmtrack.registry import METRICS, TASK_UTILS
 from .base_video_metrics import BaseVideoMetric
 
 
@@ -50,12 +49,27 @@ class MOTChallengeMetrics(BaseVideoMetric):
         benchmark (str): Benchmark to be evaluated. Defaults to 'MOT17'.
         format_only (bool): If True, only formatting the results to the
             official format and not performing evaluation. Defaults to False.
-        interpolate_tracks_cfg (dict, optional): If not None, Interpolate
-            tracks linearly to make tracks more complete. Defaults to None.
-            - min_num_frames (int, optional): The minimum length of a track
-                that will be interpolated. Defaults to 5.
-            - max_num_frames (int, optional): The maximum disconnected length
-                in a track. Defaults to 20.
+        postprocess_tracklet_cfg (List[dict], optional): configs for tracklets
+            postprocessing methods. `AppearanceFreeLink` and
+            `InterpolateTracklets` are supported. Defaults to [].
+            - AppearanceFreeLink:
+                - checkpoint (str): Checkpoint path.
+                - temporal_threshold (tuple, optional): The temporal constraint
+                    for tracklets association. Defaults to (0, 30).
+                - spatial_threshold (int, optional): The spatial constraint for
+                    tracklets association. Defaults to 75.
+                - confidence_threshold (float, optional): The minimum
+                    confidence threshold for tracklets association.
+                    Defaults to 0.95.
+            - InterpolateTracklets:
+                - min_num_frames (int, optional): The minimum length of a
+                    track that will be interpolated. Defaults to 5.
+                - max_num_frames (int, optional): The maximum disconnected
+                    length in a track. Defaults to 20.
+                - use_gsi (bool, optional): Whether to use the GSI (Gaussian-
+                    smoothed interpolation) method. Defaults to False.
+                - smooth_tau (int, optional): smoothing parameter in GSI.
+                    Defaults to 10.
         collect_device (str): Device name used for collecting results from
             different ranks during distributed training. Must be 'cpu' or
             'gpu'. Defaults to 'cpu'.
@@ -76,7 +90,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
-                 interpolate_tracks_cfg: Optional[dict] = None,
+                 postprocess_tracklet_cfg: Optional[List[dict]] = [],
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
@@ -91,7 +105,10 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 raise KeyError(f'metric {metric} is not supported.')
         self.metrics = metrics
         self.format_only = format_only
-        self.interpolate_tracks_cfg = interpolate_tracks_cfg
+        self.postprocess_tracklet_cfg = postprocess_tracklet_cfg.copy()
+        self.postprocess_tracklet_methods = [
+            TASK_UTILS.build(cfg) for cfg in self.postprocess_tracklet_cfg
+        ]
         assert benchmark in self.allowed_benchmarks
         self.benchmark = benchmark
         self.track_iou_thr = track_iou_thr
@@ -118,7 +135,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         if resfile_path is None:
             resfile_path = self.tmp_dir.name
         else:
-            if osp.exists(resfile_path):
+            if osp.exists(resfile_path) and is_main_process():
                 logger.info('remove previous results.')
                 shutil.rmtree(resfile_path)
         pred_dir = osp.join(resfile_path, self.TRACKER)
@@ -188,6 +205,15 @@ class MOTChallengeMetrics(BaseVideoMetric):
             self.seq_info[video]['pred_tracks'].extend(pred_tracks)
 
             if frame_id == video_length - 1:
+                # postprocessing
+                if self.postprocess_tracklet_cfg:
+                    info = self.seq_info[video]
+                    pred_tracks = np.array(info['pred_tracks'])
+                    for postprocess_tracklet_methods in \
+                            self.postprocess_tracklet_methods:
+                        pred_tracks = postprocess_tracklet_methods\
+                            .forward(pred_tracks)
+                    info['pred_tracks'] = pred_tracks
                 self._save_one_video_gts_preds(video)
                 break
 
@@ -198,10 +224,6 @@ class MOTChallengeMetrics(BaseVideoMetric):
         pred_file = osp.join(self.pred_dir, seq + '.txt')
 
         pred_tracks = np.array(info['pred_tracks'])
-        if self.interpolate_tracks_cfg is not None:
-            # interpolate tracks
-            pred_tracks = interpolate_tracks(pred_tracks,
-                                             **self.interpolate_tracks_cfg)
 
         with open(pred_file, 'wt') as f:
             for tracks in pred_tracks:
@@ -210,7 +232,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
                     tracks[5], tracks[6])
                 f.writelines(line)
 
-        info['pred_tracks'].clear()
+        info['pred_tracks'] = []
         # save gts
         if info['gt_tracks']:
             gt_file = osp.join(self.gt_dir, seq + '.txt')

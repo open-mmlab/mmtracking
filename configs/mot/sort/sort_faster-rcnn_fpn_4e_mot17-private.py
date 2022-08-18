@@ -7,7 +7,10 @@ model = dict(
             'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-ffa52ae7.pth'  # noqa: E501
         )))
 
-data_root = 'data/MOT17/'
+# dataloader
 val_dataloader = dict(
-    dataset=dict(ann_file=data_root + 'annotations/train_cocoformat.json'))
-test_dataloader = val_dataloader
+    dataset=dict(ann_file='annotations/train_cocoformat.json'))
+test_dataloader = dict(
+    dataset=dict(
+        ann_file='annotations/test_cocoformat.json',
+        data_prefix=dict(img_path='test')))
