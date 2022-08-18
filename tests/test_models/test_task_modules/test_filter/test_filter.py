@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 
-from mmtrack.core import apply_feat_transpose, apply_filter
+from mmtrack.models.task_modules import apply_feat_transpose, apply_filter
 
 
 def test_apply_filter():
