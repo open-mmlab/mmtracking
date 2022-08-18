@@ -179,11 +179,7 @@ test_cfg = dict(type='TestLoop')
 
 default_hooks = dict(
     checkpoint=dict(
-        type='CheckpointHook',
-        by_epoch=False,
-        save_last=True,
-        max_keep_ckpts=3,
-        interval=2000))
+        type='CheckpointHook', by_epoch=False, save_last=True, interval=2000))
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=False)
 
 train_pipeline = [
@@ -214,7 +210,6 @@ train_dataloader = dict(
             filter_key_img=True,
             method='uniform')))
 val_dataloader = dict(
-    batch_size=1,
     num_workers=2,
     sampler=dict(type='VideoSampler'),
     batch_sampler=dict(type='EntireVideoBatchSampler'),

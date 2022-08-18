@@ -174,6 +174,14 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
     def preprocess_gt(self, batch_gt_instances: InstanceList) -> InstanceList:
         """Preprocess the ground truth for all images.
 
+        It aims to reorganize the `gt`. For example, in the
+        `batch_data_sample.gt_instances.mask`, its shape is
+        `(all_num_gts, h, w)`, but we don't know each gt belongs to which `img`
+        (assume `num_frames` is 2). So, this func used to reshape the `gt_mask`
+        to `(num_gts_per_img, num_frames, h, w)`. In addition, we can't
+        guarantee that the number of instances in these two images is equal,
+        so `-1` refers to nonexistent instances.
+
         Args:
             batch_gt_instances (list[:obj:`InstanceData`]): Batch of
                 gt_instance. It usually includes ``labels``, each is
@@ -201,6 +209,7 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
             for i, ins_id in enumerate(all_ins_id):
                 map_ins_id[ins_id] = i
             per_frame_gts = []
+            # a list used to record which image each instance belongs to
             map_info = gt_instances.map_instances_to_img_idx
             for frame_id in range(self.num_frames):
                 ins_index = (map_info == frame_id)
