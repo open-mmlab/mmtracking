@@ -200,7 +200,8 @@ class Prdimp(BaseSingleObjectTracker):
                 img_numpy = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
                 assert img_numpy.ndim == 3
                 # TODO: wait for MMCV to support 'replicate' border_mode.
-                rotated_img = imrotate(img_numpy, angle)
+                rotated_img = imrotate(
+                    img_numpy, angle, border_mode='replicate')
                 img_tensor = torch.from_numpy(rotated_img.transpose(
                     2, 0, 1)).float().unsqueeze(0).to(img.device)
                 shift = get_rand_shift()

@@ -141,10 +141,10 @@ train_dataloader = dict(
     batch_size=10,
     num_workers=4,
     persistent_workers=True,
-    sampler=dict(type='QuotaSampler', samples_per_epoch=26000),
+    sampler=dict(type='QuotaSampler', samples_per_epoch=40000),
     dataset=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[1, 1, 1, 1],
+        dataset_sampling_weights=[1, 0.25, 1, 1],
         datasets=[
             dict(
                 type='GOT10kDataset',
@@ -162,6 +162,7 @@ train_dataloader = dict(
                 test_mode=False),
             dict(
                 type='TrackingNetDataset',
+                chunks_list=[0, 1, 2, 3],
                 data_root=data_root,
                 ann_file='TrackingNet/annotations/trackingnet_train_infos.txt',
                 data_prefix=dict(img_path='TrackingNet'),
@@ -186,9 +187,7 @@ param_scheduler = dict(type='StepLR', step_size=15, gamma=0.2)
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    # TODO: weight_decay>0 and clip_grad may be better
-    optimizer=dict(type='Adam', lr=2e-4, weight_decay=0),
-    # clip_grad=dict(max_norm=0.1, norm_type=2),
+    optimizer=dict(type='Adam', lr=2e-4),
     paramwise_cfg=dict(
         custom_keys=dict(
             backbone=dict(lr_multi=0.1),
