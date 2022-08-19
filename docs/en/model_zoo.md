@@ -57,9 +57,13 @@ Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/
 
 Please refer to [QDTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/qdtrack) for details.
 
-### ByteTrack (arXiv 2021)
+### ByteTrack (ECCV 2022)
 
 Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack) for details.
+
+### StrongSORT (arvix 2022)
+
+Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/strongsort) for details
 
 ## Baselines of single object tracking
 
