@@ -1,1 +1,4 @@
-_base_ = ['../../_base_/datasets/lasot.py', './prdimp_r50_50e_base.py']
+_base_ = [
+    '../../_base_/datasets/lasot.py',
+    './prdimp_resnet50_8x10bs-50e_got10k-lasot-trackingnet-coco_base.py'
+]
