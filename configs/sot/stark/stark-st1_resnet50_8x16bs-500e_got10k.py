@@ -1,4 +1,7 @@
-_base_ = ['../../_base_/datasets/got10k.py', './stark_st1_r50_500e_base.py']
+_base_ = [
+    '../../_base_/datasets/got10k.py',
+    './stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_base.py'
+]
 
 train_pipeline = {{_base_.train_pipeline}}
 

@@ -13,9 +13,9 @@ Collections:
     README: configs/sot/stark/README.md
 
 Models:
-  - Name: stark_st1_r50_500e_got10k
+  - Name: stark-st1_resnet50_8x16bs-500e_got10k
     In Collection: STARK
-    Config: configs/sot/stark/stark_st1_r50_500e_got10k.py
+    Config: configs/sot/stark/stark-st1_resnet50_8x16bs-500e_got10k.py
     Metadata:
       Training Data: GOT10k
       Training Memory (GB): 8.45
@@ -29,9 +29,9 @@ Models:
           SR0.75: 62.4
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_got10k/stark_st1_r50_500e_got10k_20220223_125400-40ead158.pth
 
-  - Name: stark_st2_r50_50e_got10k
+  - Name: stark-st2_resnet50_8x16bs-50e_got10k
     In Collection: STARK
-    Config: configs/sot/stark/stark_st2_r50_50e_got10k.py
+    Config: configs/sot/stark/stark-st2_resnet50_8x16bs-50e_got10k.py
     Metadata:
       Training Data: GOT10k
       Training Memory (GB): 2.31
@@ -45,9 +45,9 @@ Models:
           SR0.75: 62.7
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_got10k/stark_st2_r50_50e_got10k_20220226_124213-ee39bbff.pth
 
-  - Name: stark_st1_r50_500e_lasot
+  - Name: stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_test-lasot
     In Collection: STARK
-    Config: configs/sot/stark/stark_st1_r50_500e_lasot.py
+    Config: configs/sot/stark/stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_test-lasot.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
       Training Memory (GB): 8.45
@@ -61,9 +61,9 @@ Models:
           Precision: 71.7
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_lasot/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
 
-  - Name: stark_st2_r50_50e_lasot
+  - Name: stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_test-lasot
     In Collection: STARK
-    Config: configs/sot/stark/stark_st2_r50_50e_lasot.py
+    Config: configs/sot/stark/stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_test-lasot.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
       Training Memory (GB): 2.31
@@ -77,9 +77,9 @@ Models:
           Precision: 73.0
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_lasot/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
 
-  - Name: stark_st1_r50_500e_trackingnet
+  - Name: stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_test-trackingnet
     In Collection: STARK
-    Config: configs/sot/stark/stark_st1_r50_500e_trackingnet.py
+    Config: configs/sot/stark/stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_test-trackingnet.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
       Training Memory (GB): 8.45
@@ -93,9 +93,9 @@ Models:
           Precision: 77.7
     Weights: https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_trackingnet/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
 
-  - Name: stark_st2_r50_50e_trackingnet
+  - Name: stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_test-trackingnet
     In Collection: STARK
-    Config: configs/sot/stark/stark_st2_r50_50e_trackingnet.py
+    Config: configs/sot/stark/stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_test-trackingnet.py
     Metadata:
       Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
       Training Memory (GB): 2.31
