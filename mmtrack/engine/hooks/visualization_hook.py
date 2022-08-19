@@ -4,6 +4,7 @@ import warnings
 from typing import Optional, Sequence
 
 import mmcv
+from mmengine.fileio import FileClient
 from mmengine.hooks import Hook
 from mmengine.runner import Runner
 from mmengine.visualization import Visualizer
@@ -66,7 +67,7 @@ class TrackVisualizationHook(Hook):
                           'needs to be excluded.')
 
         self.wait_time = wait_time
-        self.file_client = mmcv.FileClient(**file_client_args)
+        self.file_client = FileClient(**file_client_args)
         self.draw = draw
         self.test_out_dir = test_out_dir
 
