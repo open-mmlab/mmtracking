@@ -18,7 +18,7 @@ class TestStrongSORTTracker(TestCase):
         cls.num_objs = 30
 
     @parameterized.expand(
-        ['mot/strongsort/strongsort_yolox_x_crowdhuman_mot17-private-half.py'])
+        ['mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py'])
     def test_init(self, cfg_file):
         cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
@@ -38,7 +38,7 @@ class TestStrongSORTTracker(TestCase):
         ]
 
     @parameterized.expand(
-        ['mot/strongsort/strongsort_yolox_x_crowdhuman_mot17-private-half.py'])
+        ['mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py'])
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 128, 128))
 

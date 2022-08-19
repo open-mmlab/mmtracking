@@ -19,7 +19,7 @@ class TestDeepSORT(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+        ['mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
         model = MODELS.build(model)
@@ -29,7 +29,7 @@ class TestDeepSORT(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
+        ('mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py',
          ('cpu', 'cuda')),
     ])
     def test_deepsort_forward_predict_mode(self, cfg_file, devices):

@@ -15,7 +15,7 @@ Collections:
 Models:
   - Name: sort_faster-rcnn_fpn_4e_mot17-private-half
     In Collection: SORT
-    Config: configs/mot/sort/sort_faster-rcnn_fpn_4e_mot17-private-half.py
+    Config: configs/mot/sort/sort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):

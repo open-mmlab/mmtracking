@@ -19,7 +19,7 @@ class TestStrongSORT(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand(
-        ['mot/strongsort/strongsort_yolox_x_crowdhuman_mot17-private-half.py'])
+        ['mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py'])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
         model = MODELS.build(model)
@@ -30,7 +30,7 @@ class TestStrongSORT(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('mot/strongsort/strongsort_yolox_x_crowdhuman_mot17-private-half.py',
+        ('mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py',
          ('cpu', 'cuda')),
     ])
     def test_strongsort_forward_predict_mode(self, cfg_file, devices):

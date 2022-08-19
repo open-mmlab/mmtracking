@@ -56,23 +56,23 @@ echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${ST2_WORK_DIR} ${CONFIG} ${ROOT_DIR}/${ST2_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 load_from=${ROOT_DIR}/${ST1_WORK_DIR}/epoch_500.pth >/dev/null
 
 # MOT
-REID_CONFIG=configs/reid/resnet50_b32x8_MOT17.py
-REID_WORK_DIR=resnet50_b32x8_MOT17
+REID_CONFIG=configs/reid/reid_r50_8x32bs-6e_mot17train80_test-mot17val20.py
+REID_WORK_DIR=reid_r50_8x32bs-6e_mot17train80_test-mot17val20
 echo ${REID_CONFIG}
 ./tools/slurm_train.sh ${PARTITION} ${REID_WORK_DIR} ${REID_CONFIG} ${ROOT_DIR}/${REID_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1
 
-DET_CONFIG=configs/det/faster-rcnn_r50_fpn_4e_mot17-half.py
-DET_WORK_DIR=faster-rcnn_r50_fpn_4e_mot17-half
+DET_CONFIG=configs/det/faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+DET_WORK_DIR=faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
 echo ${DET_CONFIG}
 ./tools/slurm_train.sh ${PARTITION} ${DET_WORK_DIR} ${DET_CONFIG} ${ROOT_DIR}/${DET_WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1
 
-CONFIG=configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py
-WORK_DIR=deepsort_faster-rcnn_fpn_4e_mot17-private-half
+CONFIG=configs/mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+WORK_DIR=deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
 echo ${CONFIG}
 ./tools/slurm_test.sh ${PARTITION} ${WORK_DIR} ${CONFIG} 8 --work-dir ${ROOT_DIR}/${WORK_DIR} --cfg-options model.detector.init_cfg.checkpoint=${ROOT_DIR}/${DET_WORK_DIR}/epoch_4.pth
 
-CONFIG=configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py
-WORK_DIR=tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half
+CONFIG=configs/mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+WORK_DIR=tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
 echo ${CONFIG}
 ./tools/slurm_test.sh ${PARTITION} ${WORK_DIR} ${CONFIG} 8 --work-dir ${ROOT_DIR}/${WORK_DIR} --cfg-options model.detector.init_cfg.checkpoint=${ROOT_DIR}/${DET_WORK_DIR}/epoch_4.pth model.reid.init_cfg.checkpoint=${ROOT_DIR}/${REID_WORK_DIR}/epoch_6.pth
 

@@ -18,7 +18,7 @@ class TestSORTTracker(TestCase):
         cls.num_objs = 30
 
     @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+        ['mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'])
     def test_init(self, cfg_file):
         cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
@@ -37,7 +37,7 @@ class TestSORTTracker(TestCase):
         ]
 
     @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+        ['mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'])
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 128, 128))
 

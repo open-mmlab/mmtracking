@@ -18,7 +18,7 @@ class TestTracktorTracker(TestCase):
         cls.num_objs = 30
 
     @parameterized.expand(
-        ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
+        ['mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'])
     def test_init(self, cfg_file):
         cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
@@ -36,7 +36,7 @@ class TestTracktorTracker(TestCase):
         ]
 
     @parameterized.expand(
-        ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
+        ['mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'])
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 256, 256))
         x = [torch.rand(1, 256, 4, 4)]

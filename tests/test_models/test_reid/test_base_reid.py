@@ -17,7 +17,7 @@ class TestBaseReID(TestCase):
         register_all_modules()
 
     @parameterized.expand([
-        'reid/resnet50_b32x8_MOT17.py',
+        'reid/reid_r50_8x32bs-6e_mot17train80_test-mot17val20.py',
     ])
     def test_forward(self, cfg_file):
         model_cfg = get_model_cfg(cfg_file)
