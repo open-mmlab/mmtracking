@@ -136,7 +136,6 @@ train_pipeline = [
 
 data_root = 'openmmlab:s3://openmmlab/datasets/tracking/'
 # dataset settings
-# TODO modify the batch_size
 train_dataloader = dict(
     batch_size=10,
     num_workers=4,

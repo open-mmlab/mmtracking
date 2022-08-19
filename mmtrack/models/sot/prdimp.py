@@ -199,7 +199,6 @@ class PrDiMP(BaseSingleObjectTracker):
             for angle in augs['rotate']:
                 img_numpy = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
                 assert img_numpy.ndim == 3
-                # TODO: wait for MMCV to support 'replicate' border_mode.
                 rotated_img = imrotate(
                     img_numpy, angle, border_mode='replicate')
                 img_tensor = torch.from_numpy(rotated_img.transpose(

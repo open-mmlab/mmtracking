@@ -263,9 +263,6 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
 
         return results
 
-    # TODO: Extracting features from backbone and neck can be unified in
-    # base.py
-
     @abstractmethod
     def init(img: Tensor):
         """Initialize the single object tracker in the first frame.
