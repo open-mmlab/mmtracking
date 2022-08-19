@@ -1,4 +1,4 @@
-_base_ = ['./reid_r50_8x32bs-6e_mot17train80_test-mot17val20.py']
+_base_ = ['./reid_resnet50_8x32bs-6e_mot17train80_test-mot17val20.py']
 model = dict(head=dict(num_classes=1701))
 # data
 data_root = 'data/MOT20/'
