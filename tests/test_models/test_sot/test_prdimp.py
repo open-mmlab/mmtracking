@@ -17,7 +17,7 @@ class TestPrDiMP(TestCase):
     def setUpClass(cls):
         register_all_modules(init_default_scope=True)
 
-    @parameterized.expand(['sot/prdimp/prdimp_r50_50e_got10k.py'])
+    @parameterized.expand(['sot/prdimp/prdimp_resnet50_8x10bs-50e_got10k.py'])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
 
@@ -28,8 +28,8 @@ class TestPrDiMP(TestCase):
 
     @pytest.mark.skipif(
         not torch.cuda.is_available, reason='test case under gpu environment')
-    @parameterized.expand(['sot/prdimp/prdimp_r50_50e_got10k.py'])
-    def test_prdimp_forward_predict_mode(self, cfg_file):
+    @parameterized.expand(['sot/prdimp/prdimp_resnet50_8x10bs-50e_got10k.py'])
+    def test_stark_forward_predict_mode(self, cfg_file):
         _model = get_model_cfg(cfg_file)
         model = MODELS.build(_model)
         model = model.cuda()
