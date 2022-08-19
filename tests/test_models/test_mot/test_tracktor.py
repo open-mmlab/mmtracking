@@ -18,8 +18,10 @@ class TestTracktor(TestCase):
     def setUpClass(cls):
         register_all_modules(init_default_scope=True)
 
-    @parameterized.expand(
-        ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
         model = MODELS.build(model)
@@ -29,8 +31,8 @@ class TestTracktor(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e'
+         '_mot17halftrain_test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_deepsort_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(

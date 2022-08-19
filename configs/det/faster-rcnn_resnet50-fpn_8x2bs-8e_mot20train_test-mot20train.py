@@ -1,4 +1,6 @@
-_base_ = ['./faster-rcnn_r50_fpn_4e_mot17-half.py']
+_base_ = [
+    './faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'
+]
 model = dict(
     rpn_head=dict(bbox_coder=dict(clip_border=True)),
     roi_head=dict(

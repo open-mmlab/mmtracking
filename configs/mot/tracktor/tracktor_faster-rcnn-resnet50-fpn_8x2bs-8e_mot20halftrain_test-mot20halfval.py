@@ -1,4 +1,7 @@
-_base_ = ['./tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py']
+_base_ = [
+    './tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain'
+    '_test-mot17halfval.py'
+]
 
 model = dict(
     detector=dict(
@@ -8,7 +11,7 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20_20210804_162232-7fde5e8d.pth'  # noqa: E501
+            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half_20210805_001244-2c323fd1.pth'  # noqa: E501
         )),
     reid=dict(
         head=dict(num_classes=1705),
@@ -23,11 +26,6 @@ data_root = 'data/MOT20/'
 val_dataloader = dict(
     dataset=dict(
         data_root=data_root,
-        ann_file='annotations/train_cocoformat.json',
+        ann_file='annotations/half-val_cocoformat.json',
     ))
-test_dataloader = dict(
-    dataset=dict(
-        data_root=data_root,
-        ann_file='annotations/test_cocoformat.json',
-        data_prefix=dict(img_path='test'),
-    ))
+test_dataloader = val_dataloader
