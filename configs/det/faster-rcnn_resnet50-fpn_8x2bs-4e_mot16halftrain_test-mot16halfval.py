@@ -1,4 +1,6 @@
-_base_ = ['./faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py']
+_base_ = [
+    './faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'
+]
 # data
 data_root = 'data/MOT16/'
 train_dataloader = dict(dataset=dict(data_root=data_root))

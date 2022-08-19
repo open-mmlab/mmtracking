@@ -1,4 +1,7 @@
-_base_ = ['./sort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py']
+_base_ = [
+    './sort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain'
+    '_test-mot17halfval.py'
+]
 model = dict(
     detector=dict(
         init_cfg=dict(

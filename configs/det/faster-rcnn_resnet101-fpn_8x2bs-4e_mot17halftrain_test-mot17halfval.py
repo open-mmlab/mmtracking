@@ -1,4 +1,6 @@
-_base_ = ['./faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py']
+_base_ = [
+    './faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'
+]
 model = dict(
     backbone=dict(
         depth=101,
