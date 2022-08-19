@@ -15,7 +15,7 @@ Collections:
 Models:
   - Name: tracktor_faster-rcnn_r50_fpn_4e_mot15-private-half
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot15-private-half.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot15halftrain_test-mot15halfval.py
     Metadata:
       Training Data: MOT15-half-train
     Results:
@@ -31,7 +31,7 @@ Models:
 
   - Name: tracktor_faster-rcnn_r50_fpn_4e_mot16-private-half
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot16-private-half.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-4e_mot16halftrain_test-mot16halfval.py
     Metadata:
       Training Data: MOT16-half-train
     Results:
@@ -70,7 +70,7 @@ Models:
 
   - Name: tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8e_mot20-private-half.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-8e_mot20halftrain_test-mot20halfval.py
     Metadata:
       Training Data: MOT20-half-train
     Results:
@@ -86,7 +86,7 @@ Models:
 
   - Name: tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_fp16_4e_mot17-private-half.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn-resnet50-fpn_8x2bs-amp-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17-half-train
     Results:

@@ -15,7 +15,7 @@ Collections:
 Models:
   - Name: strongsort_yolox_x_crowdhuman_mot17-private-half
     In Collection: StrongSORT++
-    Config: configs/mot/strongsort/strongsort_yolox_x_crowdhuman_mot17-private-half.py
+    Config: configs/mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: CrowdHuman + MOT17-half-train
     Results:
@@ -32,7 +32,7 @@ Models:
 
   - Name: strongsort_yolox_x_crowdhuman_mot20-private
     In Collection: StrongSORT++
-    Config: configs/mot/strongsort/strongsort_yolox_x_crowdhuman_mot20-private.py
+    Config: configs/mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot20train_test-mot20test.py
     Metadata:
       Training Data: CrowdHuman + MOT20-train
     Results:
