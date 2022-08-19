@@ -10,13 +10,13 @@ from mmengine.model import BaseModule
 from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
-from mmtrack.utils import OptConfigType, SampleList, max2d
+from mmtrack.utils import OptConfigType, SampleList, max_last2d
 from ..task_modules.filter import filter as filter_layer
 
 
 @MODELS.register_module()
-class PrdimpClsHead(BaseModule):
-    """Prdimp classification head.
+class PrDiMPClsHead(BaseModule):
+    """PrDiMP classification head.
 
     Args:
         in_dim (int, optional): The dim of input feature. Defaults to 1024.
@@ -370,7 +370,7 @@ class PrdimpClsHead(BaseModule):
             scores.device)
         score_center = (score_size / 2).to(scores.device)
 
-        max_score, max_pos = max2d(scores)
+        max_score, max_pos = max_last2d(scores)
         max_pos = max_pos.flip(0).float()
         # the displacement of target to the center of score map
         target_disp_score_map = max_pos - score_center
@@ -400,7 +400,7 @@ class PrdimpClsHead(BaseModule):
                       top_left[0]:bottom_right[0]] = 0
 
         # Find new maximum except the neighborhood of the target
-        second_max_score, second_max_pos = max2d(scores_masked)
+        second_max_score, second_max_pos = max_last2d(scores_masked)
         second_max_pos = second_max_pos.flip(0).float().view(-1)
         distractor_disp_score_map = second_max_pos - score_center
         distractor_disp = distractor_disp_score_map * ratio_size

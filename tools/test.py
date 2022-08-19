@@ -5,6 +5,7 @@ import os.path as osp
 
 from mmengine.config import Config, DictAction
 from mmengine.model import is_model_wrapper
+from mmengine.registry import RUNNERS
 from mmengine.runner import Runner
 
 from mmtrack.utils import register_all_modules
@@ -66,12 +67,19 @@ def main():
     cfg.load_from = args.checkpoint
 
     # build the runner from config
-    runner = Runner.from_cfg(cfg)
-    # init weight
+    if 'runner_type' not in cfg:
+        # build the default runner
+        runner = Runner.from_cfg(cfg)
+    else:
+        # build customized runner from the registry
+        # if 'runner_type' is set in the cfg
+        runner = RUNNERS.build(cfg)
+
     if is_model_wrapper(runner.model):
         runner.model.module.init_weights()
     else:
         runner.model.init_weights()
+
     # start testing
     runner.test()
 

@@ -11,7 +11,7 @@ from mmtrack.testing import demo_mm_inputs, get_model_cfg
 from mmtrack.utils import register_all_modules
 
 
-class TestPrdimp(TestCase):
+class TestPrDiMP(TestCase):
 
     @classmethod
     def setUpClass(cls):

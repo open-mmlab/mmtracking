@@ -81,9 +81,7 @@ def main(args):
 
     # build the visualizer
     visualizer = VISUALIZERS.build(model.cfg.visualizer)
-    visualizer.dataset_meta = {
-        'CLASSES': model.CLASSES,
-    }
+    visualizer.dataset_meta = model.dataset_meta
 
     prog_bar = mmcv.ProgressBar(len(imgs))
     # test and show/save the images

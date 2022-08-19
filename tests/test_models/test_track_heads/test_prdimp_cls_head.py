@@ -6,7 +6,7 @@ import pytest
 import torch
 from mmengine.data import InstanceData
 
-from mmtrack.models.track_heads.prdimp_cls_head import PrdimpClsHead
+from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
 from mmtrack.structures import TrackDataSample
 
 
@@ -22,7 +22,7 @@ class TestLinearBlock(TestCase):
                 feature_dim=16,
                 feature_stride=16),
             filter_optimizer=dict(
-                type='PrdimpFilterOptimizer',
+                type='PrDiMPFilterOptimizer',
                 num_iters=5,
                 feat_stride=16,
                 init_step_length=1.0,
@@ -60,7 +60,7 @@ class TestLinearBlock(TestCase):
                 label_density_shrink=0,
                 loss_weights=dict(cls_init=0.25, cls_iter=1., cls_final=0.25)))
 
-        self.model = PrdimpClsHead(**cfg)
+        self.model = PrDiMPClsHead(**cfg)
 
     def test_prdimp_cls_head_predict(self):
         self.model.eval()

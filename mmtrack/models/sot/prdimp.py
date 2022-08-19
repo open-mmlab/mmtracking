@@ -17,7 +17,7 @@ from .base import BaseSingleObjectTracker
 
 
 @MODELS.register_module()
-class Prdimp(BaseSingleObjectTracker):
+class PrDiMP(BaseSingleObjectTracker):
     """PrDiMP: Probabilistic Regression for Visual Tracking.
 
     This single object tracker is the implementation of `PrDiMP
@@ -46,7 +46,7 @@ class Prdimp(BaseSingleObjectTracker):
                  test_cfg: Optional[dict] = None,
                  data_preprocessor: OptConfigType = None,
                  init_cfg: OptMultiConfig = None):
-        super(Prdimp, self).__init__(data_preprocessor, init_cfg)
+        super(PrDiMP, self).__init__(data_preprocessor, init_cfg)
         self.backbone = MODELS.build(backbone)
         cls_head.update(test_cfg=test_cfg)
         bbox_head.update(test_cfg=test_cfg)
