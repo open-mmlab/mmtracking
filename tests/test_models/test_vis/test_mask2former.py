@@ -19,7 +19,7 @@ class TestMask2Former(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'vis/mask2former/mask2former_r50_8e_youtubevis2019.py',
+        'vis/mask2former/mask2former_resnet50_8x2bs-8e_youtubevis2019.py',
     ])
     def test_mask2former_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -29,8 +29,8 @@ class TestMask2Former(TestCase):
         assert model.track_head
 
     @parameterized.expand([
-        ('vis/mask2former/mask2former_r50_8e_youtubevis2019.py', ('cpu',
-                                                                  'cuda')),
+        ('vis/mask2former/mask2former_resnet50_8x2bs-8e_youtubevis2019.py',
+         ('cpu', 'cuda')),
     ])
     def test_mask2former_forward_loss_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -65,8 +65,8 @@ class TestMask2Former(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vis/mask2former/mask2former_r50_8e_youtubevis2019.py', ('cpu',
-                                                                  'cuda')),
+        ('vis/mask2former/mask2former_resnet50_8x2bs-8e_youtubevis2019.py',
+         ('cpu', 'cuda')),
     ])
     def test_mask2former_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(

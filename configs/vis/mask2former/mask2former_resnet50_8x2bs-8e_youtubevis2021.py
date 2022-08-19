@@ -1,4 +1,4 @@
-_base_ = './mask2former_r50_8e_youtubevis2019.py'
+_base_ = './mask2former_resnet50_8x2bs-8e_youtubevis2019.py'
 
 dataset_type = 'YouTubeVISDataset'
 data_root = 'data/youtube_vis_2021/'

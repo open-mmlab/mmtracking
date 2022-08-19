@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/models/mask_rcnn_r50_fpn.py',
+    '../../_base_/models/mask-rcnn_resnet50-fpn.py',
     '../../_base_/datasets/youtube_vis.py', '../../_base_/default_runtime.py'
 ]
 model = dict(

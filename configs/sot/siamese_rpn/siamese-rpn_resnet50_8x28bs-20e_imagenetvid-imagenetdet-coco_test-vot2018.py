@@ -1,4 +1,7 @@
-_base_ = ['../../_base_/datasets/vot2018.py', './siamese_rpn_r50_20e_base.py']
+_base_ = [
+    '../../_base_/datasets/vot2018.py',
+    './siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_base.py'
+]
 
 # model settings
 model = dict(

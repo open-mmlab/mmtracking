@@ -1,4 +1,7 @@
-_base_ = ['../../_base_/datasets/got10k.py', './stark_st2_r50_50e_base.py']
+_base_ = [
+    '../../_base_/datasets/got10k.py',
+    './stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_base.py'
+]
 
 model = dict(test_cfg=dict(update_intervals=[200]))
 

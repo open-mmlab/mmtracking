@@ -1,5 +1,6 @@
 _base_ = [
-    '../../_base_/datasets/trackingnet.py', './stark_st1_r50_500e_base.py'
+    '../../_base_/datasets/trackingnet.py',
+    './stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_base.py'
 ]
 
 # evaluator
