@@ -27,7 +27,7 @@ Models:
           Success: 50.4
           Norm precision: 59.6
           Precision: 49.7
-    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
+    Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
 
   - Name: siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-uav123
     In Collection: SiameseRPN++

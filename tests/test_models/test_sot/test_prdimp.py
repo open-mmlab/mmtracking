@@ -7,7 +7,8 @@ from parameterized import parameterized
 
 from mmtrack.registry import MODELS
 from mmtrack.structures import TrackDataSample
-from mmtrack.utils import _demo_mm_inputs, _get_model_cfg, register_all_modules
+from mmtrack.testing import demo_mm_inputs, get_model_cfg
+from mmtrack.utils import register_all_modules
 
 
 class TestPrDiMP(TestCase):
@@ -18,7 +19,7 @@ class TestPrDiMP(TestCase):
 
     @parameterized.expand(['sot/prdimp/prdimp_resnet50_8x10bs-50e_got10k.py'])
     def test_init(self, cfg_file):
-        model = _get_model_cfg(cfg_file)
+        model = get_model_cfg(cfg_file)
 
         model = MODELS.build(model)
         assert model.backbone
@@ -29,7 +30,7 @@ class TestPrDiMP(TestCase):
         not torch.cuda.is_available, reason='test case under gpu environment')
     @parameterized.expand(['sot/prdimp/prdimp_resnet50_8x10bs-50e_got10k.py'])
     def test_stark_forward_predict_mode(self, cfg_file):
-        _model = _get_model_cfg(cfg_file)
+        _model = get_model_cfg(cfg_file)
         model = MODELS.build(_model)
         model = model.cuda()
 
@@ -37,7 +38,7 @@ class TestPrDiMP(TestCase):
         model.eval()
         with torch.no_grad():
             for i in range(3):
-                packed_inputs = _demo_mm_inputs(
+                packed_inputs = demo_mm_inputs(
                     batch_size=1,
                     frame_id=i,
                     num_key_imgs=1,
