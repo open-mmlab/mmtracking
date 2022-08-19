@@ -142,7 +142,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
 
         Returns:
             SampleList: Tracking results of the input images.
-            Each TrackDataSample usually contains ``pred_det_instances``.
+            Each TrackDataSample usually contains ``pred_track_instances``.
         """
         img = batch_inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'

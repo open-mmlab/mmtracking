@@ -1,4 +1,7 @@
-_base_ = ['./strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py']
+_base_ = [
+    './strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain'
+    '_test-mot17halfval.py'
+]
 
 # dataloader
 val_dataloader = dict(

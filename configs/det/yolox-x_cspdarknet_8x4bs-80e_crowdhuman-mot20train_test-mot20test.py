@@ -1,4 +1,7 @@
-_base_ = ['./yolox-x_cspdarknet_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py']
+_base_ = [
+    './yolox-x_cspdarknet_8x4bs-80e_crowdhuman-mot17halftrain'
+    '_test-mot17halfval.py'
+]
 
 img_scale = (896, 1600)
 
