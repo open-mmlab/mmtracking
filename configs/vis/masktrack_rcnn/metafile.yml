@@ -14,7 +14,7 @@ Collections:
 Models:
   - Name: masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py
     Metadata:
       Training Data: YouTube-VIS 2019
       Training Memory (GB): 1.16
@@ -27,7 +27,7 @@ Models:
 
   - Name: masktrack-rcnn_resnet101-fpn_8x1bs-12e_youtubevis2019
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnet101-fpn_8x1bs-12e_youtubevis2019.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet101-fpn_8x1bs-12e_youtubevis2019.py
     Metadata:
       Training Data: YouTube-VIS 2019
       Training Memory (GB): 2.27
@@ -40,7 +40,7 @@ Models:
 
   - Name: masktrack-rcnn_resnext101-fpn_8x1bs-12e_youtubevis2019
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnext101-fpn_8x1bs-12e_youtubevis2019.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnext101-fpn_8x1bs-12e_youtubevis2019.py
     Metadata:
       Training Data: YouTube-VIS 2019
       Training Memory (GB): 3.69
@@ -53,7 +53,7 @@ Models:
 
   - Name: masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2021
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2021.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2021.py
     Metadata:
       Training Data: YouTube-VIS 2021
       Training Memory (GB): 1.16
@@ -66,7 +66,7 @@ Models:
 
   - Name: masktrack-rcnn_resnet101-fpn_8x1bs-12e_youtubevis2021
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnet101-fpn_8x1bs-12e_youtubevis2021.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet101-fpn_8x1bs-12e_youtubevis2021.py
     Metadata:
       Training Data: YouTube-VIS 2021
       Training Memory (GB): 2.27
@@ -79,7 +79,7 @@ Models:
 
   - Name: masktrack-rcnn_resnext101-fpn_8x1bs-12e_youtubevis2021
     In Collection: MaskTrack R-CNN
-    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_resnext101-fpn_8x1bs-12e_youtubevis2021.py
+    Config: configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnext101-fpn_8x1bs-12e_youtubevis2021.py
     Metadata:
       Training Data: YouTube-VIS 2021
       Training Memory (GB): 3.69

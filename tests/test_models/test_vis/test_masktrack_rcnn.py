@@ -19,7 +19,7 @@ class TestMaskTrackRCNN(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'vis/masktrack_rcnn/masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
+        'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
     ])
     def test_mask_track_rcnn_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -31,7 +31,7 @@ class TestMaskTrackRCNN(TestCase):
 
     @parameterized.expand([
         (
-            'vis/masktrack_rcnn/masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
+            'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
             ('cpu', 'cuda')),
     ])
     def test_mask_track_rcnn_forward_loss_mode(self, cfg_file, devices):
@@ -66,7 +66,7 @@ class TestMaskTrackRCNN(TestCase):
 
     @parameterized.expand([
         (
-            'vis/masktrack_rcnn/masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
+            'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py',  # noqa: E501
             ('cpu', 'cuda')),
     ])
     def test_mask_track_rcnn_forward_predict_mode(self, cfg_file, devices):

@@ -1,4 +1,6 @@
-_base_ = ['./masktrack-rcnn_resnet50-fpn_8x1bs-12e_youtubevis2019.py']
+_base_ = [
+    './masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py'
+]
 model = dict(
     detector=dict(
         backbone=dict(
