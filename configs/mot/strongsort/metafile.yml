@@ -13,7 +13,7 @@ Collections:
     README: configs/mot/strongsort/README.md
 
 Models:
-  - Name: strongsort_yolox_x_crowdhuman_mot17-private-half
+  - Name: strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval
     In Collection: StrongSORT++
     Config: configs/mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
     Metadata:
@@ -30,7 +30,7 @@ Models:
       - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot17-4bf6b63d.pth
       - https://download.openmmlab.com/mmtracking/mot/strongsort/mot_dataset/aflink_motchallenge_20220812_190310-a7578ad3.pth
 
-  - Name: strongsort_yolox_x_crowdhuman_mot20-private
+  - Name: strongsort_yolox-x_8x4bs-80e_crowdhuman-mot20train_test-mot20test
     In Collection: StrongSORT++
     Config: configs/mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot20train_test-mot20test.py
     Metadata:
