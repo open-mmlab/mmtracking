@@ -6,7 +6,7 @@ import zipfile
 from collections import OrderedDict, defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import mmcv
+import mmengine
 import numpy as np
 from mmdet.structures.mask import encode_mask_results
 from mmengine.dist import (all_gather_object, barrier, broadcast_object_list,
@@ -380,7 +380,7 @@ class YouTubeVISMetric(BaseVideoMetric):
             outfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             outfile_prefix = self.outfile_prefix
-        mmcv.dump(pred_results, f'{outfile_prefix}.json')
+        mmengine.dump(pred_results, f'{outfile_prefix}.json')
         # zip the json file in order to submit to the test server.
         zip_file_name = f'{outfile_prefix}.submission_file.zip'
         zf = zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED)

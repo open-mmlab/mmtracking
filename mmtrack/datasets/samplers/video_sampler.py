@@ -54,10 +54,10 @@ class VideoSampler(Sampler):
                 if data_info['frame_id'] == 0:
                     first_frame_indices.append(i)
 
-            if len(first_frame_indices) < self.world_size:
-                raise ValueError(
-                    f'only {len(first_frame_indices)} videos loaded,'
-                    f'but {self.world_size} gpus were given.')
+            self.num_videos = len(first_frame_indices)
+            if self.num_videos < self.world_size:
+                raise ValueError(f'only {self.num_videos} videos loaded,'
+                                 f'but {self.world_size} gpus were given.')
 
             chunks = np.array_split(first_frame_indices, self.world_size)
             split_flags = [c[0] for c in chunks]

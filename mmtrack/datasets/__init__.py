@@ -9,7 +9,7 @@ from .lasot_dataset import LaSOTDataset
 from .mot_challenge_dataset import MOTChallengeDataset
 from .otb_dataset import OTB100Dataset
 from .reid_dataset import ReIDDataset
-from .samplers import QuotaSampler, VideoSampler
+from .samplers import EntireVideoBatchSampler, QuotaSampler, VideoSampler
 from .sot_coco_dataset import SOTCocoDataset
 from .sot_imagenet_vid_dataset import SOTImageNetVIDDataset
 from .tao_dataset import TaoDataset
@@ -24,5 +24,5 @@ __all__ = [
     'SOTImageNetVIDDataset', 'TrackingNetDataset', 'YouTubeVISDataset',
     'ImagenetVIDDataset', 'RandomSampleConcatDataset', 'TaoDataset',
     'UAV123Dataset', 'VOTDataset', 'OTB100Dataset', 'DanceTrackDataset',
-    'VideoSampler', 'QuotaSampler'
+    'VideoSampler', 'QuotaSampler', 'EntireVideoBatchSampler'
 ]

@@ -226,9 +226,11 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             for data_samples in batch_data_samples:
                 masks = data_samples.get(f'{ref_prefix}gt_instances').masks
                 assert isinstance(masks, BitmapMasks)
-                pad_h, pad_w = data_samples.get(
+                batch_input_shape = data_samples.get(
                     f'{ref_prefix}batch_input_shape')
+                # handle cases where the number of image > 1
+                if isinstance(batch_input_shape, list):
+                    batch_input_shape = batch_input_shape[0]
                 data_samples.get(
                     f'{ref_prefix}gt_instances').masks = masks.pad(
-                        data_samples.get(f'{ref_prefix}batch_input_shape'),
-                        pad_val=self.mask_pad_value)
+                        batch_input_shape, pad_val=self.mask_pad_value)
