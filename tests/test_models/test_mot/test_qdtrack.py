@@ -20,7 +20,7 @@ class TestQDTrack(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_'
+        'mot/qdtrack/qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_'
         'test-mot17halfval.py',
     ])
     def test_qdtrack_init(self, cfg_file):
