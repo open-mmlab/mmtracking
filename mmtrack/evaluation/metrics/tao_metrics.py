@@ -4,7 +4,7 @@ import tempfile
 from collections import defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import mmcv
+import mmengine
 import numpy as np
 from mmengine.logging import MMLogger
 
@@ -162,8 +162,8 @@ class TAOMetric(BaseVideoMetric):
             tmp_dir = tempfile.TemporaryDirectory()
             pred_det_results_path = f'{tmp_dir.name}/tao_bbox.json'
             gt_results_path = f'{tmp_dir.name}/tao_gt.json'
-            mmcv.dump(pred_det_results, pred_det_results_path)
-            mmcv.dump(gt_results, gt_results_path)
+            mmengine.dump(pred_det_results, pred_det_results_path)
+            mmengine.dump(gt_results, gt_results_path)
 
         if self.format_only:
             self.save_pred_results(pred_track_results, 'track')
@@ -447,6 +447,6 @@ class TAOMetric(BaseVideoMetric):
             outfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             outfile_prefix = self.outfile_prefix
-        mmcv.dump(pred_results, f'{outfile_prefix}_{res_type}.json')
+        mmengine.dump(pred_results, f'{outfile_prefix}_{res_type}.json')
 
         logger.info(f'save the results to {outfile_prefix}_{res_type}.json')

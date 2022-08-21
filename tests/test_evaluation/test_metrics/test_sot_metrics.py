@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import numpy as np
 import torch
-from mmcv import list_from_file
+from mmengine import list_from_file
 
 from mmtrack.registry import METRICS
 from mmtrack.utils import register_all_modules
