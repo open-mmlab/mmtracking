@@ -18,9 +18,9 @@ class TestVideoDetector(TestCase):
         register_all_modules()
 
     @parameterized.expand([
-        'vid/selsa/selsa_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        'vid/selsa/selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
         'vid/temporal_roi_align/'
-        'selsa_troialign_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py'
+        'selsa-troialign_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py'
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -28,10 +28,10 @@ class TestVideoDetector(TestCase):
         assert model.detector
 
     @parameterized.expand([
-        ('vid/selsa/selsa_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        ('vid/selsa/selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
          ('cpu', 'cuda')),
         ('vid/temporal_roi_align/'
-         'selsa_troialign_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+         'selsa-troialign_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
          ('cpu', 'cuda')),
     ])
     def test_selsa_forward_loss_mode(self, cfg_file, devices):
@@ -57,10 +57,10 @@ class TestVideoDetector(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vid/selsa/selsa_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        ('vid/selsa/selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
          ('cpu', 'cuda')),
         ('vid/temporal_roi_align/'
-         'selsa_troialign_faster_rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+         'selsa-troialign_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
          ('cpu', 'cuda')),
     ])
     def test_selsa_forward_predict_mode(self, cfg_file, devices):
