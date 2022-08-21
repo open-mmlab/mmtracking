@@ -13,7 +13,7 @@ Collections:
     README: configs/mot/qdtrack/README.md
 
 Models:
-  - Name: qdtrack/qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
+  - Name: qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
     In Collection: QDTrack
     Config: configs/mot/qdtrack/qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
