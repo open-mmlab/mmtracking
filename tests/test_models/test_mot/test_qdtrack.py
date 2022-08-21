@@ -31,7 +31,7 @@ class TestQDTrack(TestCase):
         assert model.track_head
 
     @parameterized.expand([
-        ('mot/qdtrack/qdtrack_faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain'
+        ('mot/qdtrack/qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain'
          '_test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_qdtrack_forward_loss_mode(self, cfg_file, devices):
