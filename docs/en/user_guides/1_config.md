@@ -11,22 +11,22 @@ you may run `python tools/misc/print_config.py /PATH/TO/CONFIG` to see the compl
 
 A complete config usually contains the following primary fields:
 
-- `model`: the basic config of model, which may contain `data_preprocessor`, modules (e.g., `detector`, `motion`),`train_cfg`, `test_cfg` and etc.
+- `model`: the basic config of model, which may contain `data_preprocessor`, modules (e.g., `detector`, `motion`),`train_cfg`, `test_cfg`, etc.
 - `train_dataloader`: the config of training dataloader, which usually contains `batch_size`, `num_workers`, `sampler`, `dataset`, etc.
 - `val_dataloader`: the config of validation dataloader, which is similar with `train_dataloader`.
 - `test_dataloader`: the config of testing dataloader, which is similar with `train_dataloader`.
 - `val_evaluator`: the config of validation evaluator. For example, `type='CocoVideoMetric'` for VID task on the ILSVRC benchmark, `type='MOTChallengeMetrics'` for MOT task on the MOTChallenge benchmarks.
-- `test_evaluator`: the config of testing evaluatorm which is similar with `val_evaluator`.
+- `test_evaluator`: the config of testing evaluator, which is similar with `val_evaluator`.
 - `train_cfg`: the config of training loop. For example, `type='EpochBasedTrainLoop'`.
 - `val_cfg`: the config of validation loop. For example, `type='ValLoop'`.
 - `test_cfg`: the config of testing loop. For example, `type='TestLoop'`.
 - `default_hooks`: the config of default hooks, which may include hooks for timer, logger, param_scheduler, checkpoint, sampler_seed, visualization, etc.
-- `vis_backends`: the config of visualization backends, use `type='LocalVisBackend'` as default.
+- `vis_backends`: the config of visualization backends, which uses `type='LocalVisBackend'` as default.
 - `visualizer`: the config of visualizer. For example, `type='DetLocalVisualizer'` for VID task, and `type='TrackLocalVisualizer'` for MOT, VIS, SOT, VOS tasks.
 - `param_scheduler`: the config of parameter scheduler, which usually sets the learning rate scheduler.
 - `optim_wrapper`: the config of optimizer wrapper, which contains optimization-related information, for example optimizer, gradient clipping, etc.
 - `load_from`: load models as a pre-trained model from a given path.
-- `resume`: If `True`, resume checkpoints from `load_from`,
+- `resume`: If `True`, resume checkpoints from `load_from`, and the training will be resumed from the epoch when the checkpoint's is saved.
 
 ## Modify config through script arguments
 
@@ -41,12 +41,14 @@ For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmeng
     For example, `--cfg-options model.detector.backbone.norm_eval=False` changes the all BN modules in model backbones to train mode.
     
 - Update keys inside a list of configs.
+
     Some config dicts are composed as a list in your config. 
     For example, the testing pipeline `test_dataloader.dataset.pipeline` is normally a list e.g. `[dict(type='LoadImageFromFile'), ...]`.
     If you want to change `LoadImageFromFile` to `LoadImageFromWebcam` in the pipeline,
     you may specify `--cfg-options test_dataloader.dataset.pipeline.0.type=LoadImageFromWebcam`.
     
 - Update values of list/tuples.
+
     Maybe the value to be updated is a list or a tuple. 
     For example, you can change the key `mean` of `data_preprocessor` by specifying `--cfg-options model.data_preprocessor.mean=[0,0,0]`.
     Note that **NO** white space is allowed inside the specified value.
@@ -95,11 +97,11 @@ You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/co
 
 **Use intermediate variables in configs**
 
-Some intermediate variables are used in the configs files, like `t`rain_pipeline`/`test_pipeline` in datasets. 
+Some intermediate variables are used in the configs files, like `train_pipeline`/`test_pipeline` in datasets. 
 It's worth noting that when modifying intermediate variables in the children configs,
 user need to pass the intermediate variables into corresponding fields again.
-For example, we would like to use testing strategy of adaptive stride to test a SELSA.
-ref_img_sampler is intermediate variable we would like modify.
+For example, we would like to use testing strategy of adaptive stride to test SELSA.
+ref_img_sampler is intermediate variable we would like to modify.
 
 ```python
 _base_ = ['./selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py']
