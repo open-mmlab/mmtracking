@@ -70,4 +70,4 @@ We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBU
 
 ## FAQ
 
-If you encounter any problems in the process of using MMTracking, you can firstly refer to this [FAQ](docs/en/notes/faq.md). If not solved, you can propose an [issue](https://github.com/open-mmlab/mmtracking/issues/)
+If you encounter any problems in the process of using MMTracking, you can firstly refer to [FAQ](docs/en/notes/faq.md). If not solved, you can post an [issue](https://github.com/open-mmlab/mmtracking/issues/) and we will give a response as soon as possible.

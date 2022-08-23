@@ -126,11 +126,11 @@ The 1.xx versions of MMtracking add [TrackDataPreprocessor](mmtrack/model/data_p
 
 ### Train
 
-The training forward of models and heads is performed by calling `loss` function in their classes. The arguments of `loss` function in models contain a dict of `Tensor` and a list of `TrackDataSample`.
+The training forward of models and heads is performed by calling `loss` function in their respective classes. The arguments of `loss` function in models contain a dict of `Tensor` and a list of `TrackDataSample`.
 
 ### Test
 
-The test forward of models and heads is performed by calling `predict` function in their classes. The arguments of `predict` function in models contain a dict of `Tensor` and a list of `TrackDataSample`.
+The test forward of models and heads is performed by calling `predict` function in their respective classes. The arguments of `predict` function in models contain a dict of `Tensor` and a list of `TrackDataSample`.
 
 ## Data
 
