@@ -66,7 +66,7 @@ The `RESULT_DIR` contains the inference results of all videos and the inference 
 Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
-- `--fps`: FPS of the output video.
+- `FPS`: FPS of the output video.
 - `--show`: Whether show the video on the fly.
 - `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
 

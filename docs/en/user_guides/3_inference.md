@@ -51,11 +51,12 @@ python demo/demo_mot_vis.py \
     [--checkpoint ${CHECKPOINT_FILE}] \
     [--score-thr ${SCORE_THR} \
     [--device ${DEVICE}] \
-    [--backend ${BACKEND}] \
     [--show]
 ```
 
 The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
+**Important:** For `DeepSORT` and `SORT`, they need both the weight of the `reid` and the weight of the `detector`. Therefore, we can't use `--checkpoint` to specify it. We need to use `init_cfg` in the configuration file to set the weight path. Other algorithms such as `ByteTrack` and `QDTrack` need not pay attention to this.
 
 Optional arguments:
 
@@ -63,14 +64,13 @@ Optional arguments:
 - `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `pretrains`.
 - `SCORE_THR`: The threshold of score to filter bboxes.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
-- `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
 - `--show`: Whether show the video on the fly.
 
 **Examples of running mot model:**
 
 ```shell
 python demo/demo_mot_vis.py \
-    configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py \
+    configs/mot/sort/sort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py \
     --input demo/demo.mp4 \
     --output mot.mp4 \
 ```
@@ -110,7 +110,7 @@ Optional arguments:
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `--show`: Whether show the video on the fly.
-- `--gt_bbox_file`: The gt_bbox file path of the video. We only use the gt_bbox of the first frame. If not specified, you would draw init bbox of the video manually.
+- `GT_BBOX_FILE`: The gt_bbox file path of the video. We only use the gt_bbox of the first frame. If not specified, you would draw init bbox of the video manually.
 
 **Examples:**
 
@@ -118,9 +118,9 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
 ```shell
 python ./demo/demo_sot.py \
-    ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
+    ./configs/sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
     --input ${VIDEO_FILE} \
-    --checkpoint checkpoints/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
+    --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     --output ${OUTPUT} \
     --show
 ```
