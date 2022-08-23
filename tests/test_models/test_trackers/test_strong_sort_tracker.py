@@ -18,7 +18,7 @@ class TestStrongSORTTracker(TestCase):
         cls.num_objs = 30
 
     @parameterized.expand([
-        'mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain'
+        'mot/strongsort/strongsort_yolox_x_8xb4-80e_crowdhuman-mot17halftrain'
         '_test-mot17halfval.py'
     ])
     def test_init(self, cfg_file):
@@ -40,7 +40,7 @@ class TestStrongSORTTracker(TestCase):
         ]
 
     @parameterized.expand([
-        'mot/strongsort/strongsort_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain'
+        'mot/strongsort/strongsort_yolox_x_8xb4-80e_crowdhuman-mot17halftrain'
         '_test-mot17halfval.py'
     ])
     def test_track(self, cfg_file):

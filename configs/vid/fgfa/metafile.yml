@@ -8,14 +8,14 @@ Collections:
       Architecture:
         - ResNet
     Paper:
-        URL: https://arxiv.org/abs/1703.10025
-        Title: Flow-Guided Feature Aggregation for Video Object Detection
+      URL: https://arxiv.org/abs/1703.10025
+      Title: Flow-Guided Feature Aggregation for Video Object Detection
     README: configs/vid/fgfa/README.md
 
 Models:
-  - Name: fgfa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid
+  - Name: fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid
     In Collection: FGFA
-    Config: configs/vid/fgfa/fgfa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 4.10
     Results:
@@ -25,9 +25,9 @@ Models:
           box AP@0.5: 74.7
     Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth
 
-  - Name: fgfa_faster-rcnn-resnet101-dc5_8x1bs-7e_imagenetvid
+  - Name: fgfa_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid
     In Collection: FGFA
-    Config: configs/vid/fgfa/fgfa_faster-rcnn-resnet101-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/fgfa/fgfa_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 5.80
     Results:
@@ -37,9 +37,9 @@ Models:
           box AP@0.5: 77.8
     Weights: https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth
 
-  - Name: fgfa_faster-rcnn-resnext101-dc5_8x1bs-7e_imagenetvid
+  - Name: fgfa_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid
     In Collection: FGFA
-    Config: configs/vid/fgfa/fgfa_faster-rcnn-resnext101-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/fgfa/fgfa_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 9.74
     Results:

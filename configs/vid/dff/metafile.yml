@@ -8,14 +8,14 @@ Collections:
       Architecture:
         - ResNet
     Paper:
-        URL: https://arxiv.org/abs/1611.07715
-        Title: Deep Feature Flow for Video Recognition
+      URL: https://arxiv.org/abs/1611.07715
+      Title: Deep Feature Flow for Video Recognition
     README: configs/vid/dff/README.md
 
 Models:
-  - Name: dff_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid
+  - Name: dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid
     In Collection: DFF
-    Config: configs/vid/dff/dff_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 2.50
     Results:
@@ -25,9 +25,9 @@ Models:
           box AP@0.5: 70.3
     Weights: https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid/dff_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_213250-548911a4.pth
 
-  - Name: dff_faster-rcnn-resnet101-dc5_8x1bs-7e_imagenetvid
+  - Name: dff_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid
     In Collection: DFF
-    Config: configs/vid/dff/dff_faster-rcnn-resnet101-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/dff/dff_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 3.25
     Results:
@@ -37,9 +37,9 @@ Models:
           box AP@0.5: 73.5
     Weights: https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r101_dc5_1x_imagenetvid/dff_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172720-ad732e17.pth
 
-  - Name: dff_faster-rcnn-resnext101-dc5_8x1bs-7e_imagenetvid
+  - Name: dff_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid
     In Collection: DFF
-    Config: configs/vid/dff/dff_faster-rcnn-resnext101-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/dff/dff_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 4.95
     Results:
