@@ -1,3 +1,5 @@
+# Migration from MMTracking 0.xx
+
 Compared with the 0.xx series of MMTracking, the latest 1.xx version of MMTracking has some importrant modifications.
 
 ## Overall Structures
@@ -130,19 +132,19 @@ The 1.xx versions of MMtracking add [TrackDataPreprocessor](mmtrack/model/data_p
 
 ### data structure
 
-The 1.xx versions of MMtracking add two new data structure: [TrackDataSample](mmtrack/structures/track_data_sample.py) and [ReIDDataSample](mmtrack/structures/reid_data_sample.py). These data structures wrap the annotations and predictions from one image (sequence) and used as interfaces between different components.
+The 1.xx versions of MMtracking add two new data structure: [TrackDataSample](mmtrack/structures/track_data_sample.py) and [ReIDDataSample](mmtrack/structures/reid_data_sample.py). These data structures wrap the annotations and predictions from one image (sequence) and are used as interfaces between different components.
 
 ### dataset class
 
-The 1.xx versions of MMTracking add two base dataset class which inheient from the `BaseDataset` in MMEngine: `BaseSOTDataset` and `BaseVideoDataset`. The former is only used in SOT and the latter is used for all other tasks.
+The 1.xx versions of MMTracking add two base dataset classes which inherient from the `BaseDataset` in MMEngine: `BaseSOTDataset` and `BaseVideoDataset`. The former is only used in SOT and the latter is used for all other tasks.
 
 ### data pipeline
 
-1. Most of the transforms on the image sequences in the 0.xx versions of MMTracking are refactored. In the 1.xx versions of MMTracking, for the image sequences, we use `TransformBroadcaster` to wrap the transformes of single image.
+1. Most of the transforms on image sequences in the old MMTracking are refactored in the latest MMTracking. Specifically, we use `TransformBroadcaster` to wrap the transforms of single image.
 
-Some tranformers on the images sequences are reserved, such as `SeqCropLikeStark`, since `TransformBroadcaster` doesn't support setting different arguments respectively for each image in the sequence.
+Some transforms on image sequences, such as `SeqCropLikeStark`, are reserved since `TransformBroadcaster` doesn't support setting different arguments respectively for each image in the sequence.
 
-2. We pack the `VideoCollect`, `ConcatSameTypeFrames` and `SeqDefaultFormatBundle` in the old  MMTracking into `PackTrackInputs` in the latest MMTracking.
+2. We pack the `VideoCollect`, `ConcatSameTypeFrames` and `SeqDefaultFormatBundle` in the old MMTracking into `PackTrackInputs` in the latest MMTracking.
 
 3. The normalizaion in the pipeline in the old MMTracking is removed and this operation is implemented in the model forward.
 
