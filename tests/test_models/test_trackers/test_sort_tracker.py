@@ -18,7 +18,7 @@ class TestSORTTracker(TestCase):
         cls.num_objs = 30
 
     @parameterized.expand([
-        'mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e'
+        'mot/deepsort/deepsort_faster-rcnn_r50_fpn_8x2bs-4e'
         '_mot17halftrain_test-mot17halfval.py'
     ])
     def test_init(self, cfg_file):
@@ -39,7 +39,7 @@ class TestSORTTracker(TestCase):
         ]
 
     @parameterized.expand([
-        'mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e'
+        'mot/deepsort/deepsort_faster-rcnn_r50_fpn_8x2bs-4e'
         '_mot17halftrain_test-mot17halfval.py'
     ])
     def test_track(self, cfg_file):

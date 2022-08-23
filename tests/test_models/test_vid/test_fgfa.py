@@ -18,7 +18,7 @@ class TestVideoDetector(TestCase):
         register_all_modules()
 
     @parameterized.expand([
-        'vid/fgfa/fgfa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        'vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py',
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -27,7 +27,7 @@ class TestVideoDetector(TestCase):
         assert model.motion
 
     @parameterized.expand([
-        ('vid/fgfa/fgfa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        ('vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py',
          ('cpu', 'cuda'))
     ])
     def test_fgfa_forward_loss_mode(self, cfg_file, devices):
@@ -53,7 +53,7 @@ class TestVideoDetector(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vid/fgfa/fgfa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py',
+        ('vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py',
          ('cpu', 'cuda'))
     ])
     def test_fgfa_forward_predict_mode(self, cfg_file, devices):

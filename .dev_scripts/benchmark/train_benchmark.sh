@@ -34,8 +34,8 @@ echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
 # VIS
-CONFIG=configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py
-WORK_DIR=masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019
+CONFIG=configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8x1bs-12e_youtubevis2019.py
+WORK_DIR=masktrack-rcnn_mask-rcnn_r50_fpn_8x1bs-12e_youtubevis2019
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
@@ -77,7 +77,7 @@ echo ${CONFIG}
 ./tools/slurm_test.sh ${PARTITION} ${WORK_DIR} ${CONFIG} 8 --work-dir ${ROOT_DIR}/${WORK_DIR} --cfg-options model.detector.init_cfg.checkpoint=${ROOT_DIR}/${DET_WORK_DIR}/epoch_4.pth model.reid.init_cfg.checkpoint=${ROOT_DIR}/${REID_WORK_DIR}/epoch_6.pth
 
 # VIS
-CONFIG=configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py
-WORK_DIR=masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019
+CONFIG=configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8x1bs-12e_youtubevis2019.py
+WORK_DIR=masktrack-rcnn_mask-rcnn_r50_fpn_8x1bs-12e_youtubevis2019
 echo ${CONFIG}
 ./tools/slurm_test.sh ${PARTITION} ${WORK_DIR} ${CONFIG} 8 --cfg-options test_evaluator.outfile_prefix=${ROOT_DIR}/${WORK_DIR} --checkpoint ${ROOT_DIR}/${WORK_DIR}/epoch_12.pth
