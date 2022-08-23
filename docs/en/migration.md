@@ -1,4 +1,4 @@
-Compared with the old version of MMTracking, the latest 1.x series MMTracking has some importrant modification.
+Compared with the 0.xx version of MMTracking, the latest 1.x series MMTracking has some importrant modification.
 
 ## Configs
 
