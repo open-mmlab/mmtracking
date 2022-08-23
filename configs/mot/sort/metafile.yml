@@ -8,14 +8,14 @@ Collections:
         - ResNet
         - FPN
     Paper:
-        URL: https://arxiv.org/abs/1602.00763
-        Title: Simple Online and Realtime Tracking
+      URL: https://arxiv.org/abs/1602.00763
+      Title: Simple Online and Realtime Tracking
     README: configs/mot/sort/README.md
 
 Models:
-  - Name: sort_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
+  - Name: sort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval
     In Collection: SORT
-    Config: configs/mot/sort/sort_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/sort/sort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):

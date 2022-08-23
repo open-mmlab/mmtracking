@@ -1,5 +1,5 @@
 _base_ = [
-    './yolox_x_cspdarknet_8x4bs-80e_crowdhuman-mot17halftrain'
+    './yolox_x_cspdarknet_8xb4-80e_crowdhuman-mot17halftrain'
     '_test-mot17halfval.py'
 ]
 

@@ -8,14 +8,14 @@ Collections:
         - ResNet
         - FPN
     Paper:
-        URL: https://arxiv.org/abs/1903.05625
-        Title: Tracking without bells and whistles
+      URL: https://arxiv.org/abs/1903.05625
+      Title: Tracking without bells and whistles
     README: configs/mot/tracktor/README.md
 
 Models:
-  - Name: tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot15halftrain_test-mot15halfval
+  - Name: tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot15halftrain_test-mot15halfval
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot15halftrain_test-mot15halfval.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot15halftrain_test-mot15halfval.py
     Metadata:
       Training Data: MOT15-half-train
     Results:
@@ -29,9 +29,9 @@ Models:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot15-half_20210804_001040-ae733d0c.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot15_20210803_192157-65b5e2d7.pth
 
-  - Name: tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot16halftrain_test-mot16halfval
+  - Name: tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot16halftrain_test-mot16halfval
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot16halftrain_test-mot16halfval.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot16halftrain_test-mot16halfval.py
     Metadata:
       Training Data: MOT16-half-train
     Results:
@@ -45,9 +45,9 @@ Models:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot16-half_20210804_001054-73477869.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot16_20210803_204826-1b3e3cfd.pth
 
-  - Name: tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
+  - Name: tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17-half-train
       inference time (ms/im):
@@ -68,9 +68,9 @@ Models:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth
 
-  - Name: tracktor_faster-rcnn_r50_fpn_8x2bs-8e_mot20halftrain_test-mot20halfval
+  - Name: tracktor_faster-rcnn_r50_fpn_8xb2-8e_mot20halftrain_test-mot20halfval
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8x2bs-8e_mot20halftrain_test-mot20halfval.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-8e_mot20halftrain_test-mot20halfval.py
     Metadata:
       Training Data: MOT20-half-train
     Results:
@@ -84,9 +84,9 @@ Models:
       - https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_8e_mot20-half_20210805_001244-2c323fd1.pth
       - https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot20_20210803_212426-c83b1c01.pth
 
-  - Name: tracktor_faster-rcnn_r50_fpn_8x2bs-amp-4e_mot17halftrain_test-mot17halfval
+  - Name: tracktor_faster-rcnn_r50_fpn_8xb2-amp-4e_mot17halftrain_test-mot17halfval
     In Collection: Tracktor
-    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8x2bs-amp-4e_mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-amp-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17-half-train
     Results:

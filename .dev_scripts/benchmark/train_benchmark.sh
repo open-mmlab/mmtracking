@@ -40,8 +40,8 @@ echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 
 # SOT
-CONFIG=configs/sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py
-WORK_DIR=siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot
+CONFIG=configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py
+WORK_DIR=siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot
 echo ${CONFIG} &
 ./tools/slurm_train.sh ${PARTITION} ${WORK_DIR} ${CONFIG} ${ROOT_DIR}/${WORK_DIR} 8 --cfg-options default_hooks.checkpoint.max_keep_ckpts=1 >/dev/null &
 

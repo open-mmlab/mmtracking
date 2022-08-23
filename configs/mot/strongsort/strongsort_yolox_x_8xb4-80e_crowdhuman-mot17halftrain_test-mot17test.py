@@ -1,5 +1,5 @@
 _base_ = [
-    './strongsort_yolox_x_8x4bs-80e_crowdhuman-mot17halftrain'
+    './strongsort_yolox_x_8xb4-80e_crowdhuman-mot17halftrain'
     '_test-mot17halfval.py'
 ]
 

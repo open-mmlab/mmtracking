@@ -13,9 +13,9 @@ Collections:
     README: configs/mot/qdtrack/README.md
 
 Models:
-  - Name: qdtrack_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval
+  - Name: qdtrack_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval
     In Collection: QDTrack
-    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17
       Training Memory (GB): 5.83
@@ -29,9 +29,9 @@ Models:
           IDF1: 68.5
     Weights: https://download.openmmlab.com/mmtracking/mot/qdtrack/mot_dataset/qdtrack_faster-rcnn_r50_fpn_4e_mot17_20220315_145635-76f295ef.pth
 
-  - Name: qdtrack_faster-rcnn_r50_fpn_8x2bs-4e_crowdhuman-mot17halftrain_test-mot17halfval
+  - Name: qdtrack_faster-rcnn_r50_fpn_8xb2-4e_crowdhuman-mot17halftrain_test-mot17halfval
     In Collection: QDTrack
-    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_8x2bs-4e_crowdhuman-mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_8xb2-4e_crowdhuman-mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: MOT17, crowdhuman
       Training Memory (GB): 6.31

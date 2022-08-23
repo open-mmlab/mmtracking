@@ -11,6 +11,6 @@ configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
 configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py
 
 # SOT
-configs/sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py
+configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py
 configs/sot/stark/stark-st1_resnet50_8x16bs-500e_got10k-lasot-trackingnet-coco_test-lasot.py
 configs/sot/stark/stark-st2_resnet50_8x16bs-50e_got10k-lasot-trackingnet-coco_test-lasot.py

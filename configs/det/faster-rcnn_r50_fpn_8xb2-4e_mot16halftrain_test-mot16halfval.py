@@ -1,5 +1,5 @@
 _base_ = [
-    './faster-rcnn_resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py'
+    './faster-rcnn_resnet50-fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py'
 ]
 # data
 data_root = 'data/MOT16/'
