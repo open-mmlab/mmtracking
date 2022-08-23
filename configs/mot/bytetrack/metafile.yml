@@ -7,14 +7,14 @@ Collections:
       Architecture:
         - YOLOX
     Paper:
-        URL: https://arxiv.org/abs/2110.06864
-        Title: ByteTrack Multi-Object Tracking by Associating Every Detection Box
+      URL: https://arxiv.org/abs/2110.06864
+      Title: ByteTrack Multi-Object Tracking by Associating Every Detection Box
     README: configs/mot/bytetrack/README.md
 
 Models:
-  - Name: bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17halfval
+  - Name: bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17halfval
     In Collection: ByteTrack
-    Config: configs/mot/bytetrack/bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
+    Config: configs/mot/bytetrack/bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
     Metadata:
       Training Data: CrowdHuman + MOT17-half-train
     Results:
@@ -25,9 +25,9 @@ Models:
           IDF1: 79.2
     Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 
-  - Name: bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17test
+  - Name: bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17test
     In Collection: ByteTrack
-    Config: configs/mot/bytetrack/bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py
+    Config: configs/mot/bytetrack/bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py
     Metadata:
       Training Data: CrowdHuman + MOT17-half-train
     Results:
@@ -38,9 +38,9 @@ Models:
           IDF1: 74.8
     Weights: https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 
-  - Name: bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot20train_test-mot20test
+  - Name: bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot20train_test-mot20test
     In Collection: ByteTrack
-    Config: configs/mot/bytetrack/bytetrack_yolox-x_8x4bs-amp-80e_crowdhuman-mot20train_test-mot20test.py
+    Config: configs/mot/bytetrack/bytetrack_yolox_x_8x4bs-amp-80e_crowdhuman-mot20train_test-mot20test.py
     Metadata:
       Training Data: CrowdHuman + MOT20-train
     Results:
