@@ -4,6 +4,7 @@
 
 This section will show how to train existing models on supported datasets.
 The following training environments are supported:
+
 - CPU
 - single GPU
 - single node multiple GPUs
@@ -12,14 +13,15 @@ The following training environments are supported:
 You can also manage jobs with Slurm.
 
 Important:
+
 - You can change the evaluation interval during training by modifying the `train_cfg` as
-`train_cfg = dict(val_interval=10)`. That means evaluating the model every 10 epochs.
+  `train_cfg = dict(val_interval=10)`. That means evaluating the model every 10 epochs.
 - The default learning rate in all config files is for 8 GPUs.
-According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677),
-you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, 
-e.g., `lr=0.01` for 8 GPUs * 1 img/gpu and lr=0.04 for 16 GPUs * 2 imgs/gpu.
+  According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677),
+  you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU,
+  e.g., `lr=0.01` for 8 GPUs * 1 img/gpu and lr=0.04 for 16 GPUs * 2 imgs/gpu.
 - During training, log files and checkpoints will be saved to the working directory,
-which is specified by CLI argument `--work-dir`. It uses `./work_dirs/CONFIG_NAME` as default.
+  which is specified by CLI argument `--work-dir`. It uses `./work_dirs/CONFIG_NAME` as default.
 - If you want the mixed precision training, simply specify CLI argument `--amp`.
 
 #### 1. Train on CPU
@@ -129,6 +131,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtu
 
 This section will show how to test existing models on supported datasets.
 The following testing environments are supported:
+
 - CPU
 - single GPU
 - single node multiple GPUs
@@ -137,11 +140,12 @@ The following testing environments are supported:
 You can also manage jobs with Slurm.
 
 Important:
+
 - You can set the results saving path by modifying the key `outfile_prefix` in evaluator.
-For example, `val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`.
-Otherwise, a temporal file will be created and will be removed after evaluation.
+  For example, `val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`.
+  Otherwise, a temporal file will be created and will be removed after evaluation.
 - If you just want the formatted results without evaluation, you can set `format_only=True`.
-For example, `test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
+  For example, `test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
 
 #### 1. Test on CPU
 

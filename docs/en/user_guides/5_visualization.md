@@ -18,11 +18,11 @@ Specifically, the `TrackVisualizationHook` has the following arguments:
 - `show`: Whether to display the drawn image. Default to False.
 - `wait_time`: The interval of show (s). Defaults to 0.
 - `test_out_dir`: directory where painted images will be saved in testing process.
-- `file_client_args`: Arguments to instantiate a FileClient. Defaults to ``dict(backend='disk')``.
+- `file_client_args`: Arguments to instantiate a FileClient. Defaults to `dict(backend='disk')`.
 
 In the `TrackVisualizationHook`, a visualizer will be called to implement visualization,
 i.e., `DetLocalVisualizer` for VID task and `TrackLocalVisualizer` for MOT, VIS, SOT, VOS tasks.
-We will present the details below. 
+We will present the details below.
 
 #### Detection Visualization
 

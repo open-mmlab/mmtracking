@@ -2,9 +2,9 @@
 
 We use python files as our config system. You can find all the provided configs under $MMTracking/configs.
 
-We incorporate modular and inheritance design into our config system, 
-which is convenient to conduct various experiments. 
-If you wish to inspect the config file, 
+We incorporate modular and inheritance design into our config system,
+which is convenient to conduct various experiments.
+If you wish to inspect the config file,
 you may run `python tools/misc/print_config.py /PATH/TO/CONFIG` to see the complete config.
 
 ## A brief description of a complete config
@@ -30,43 +30,43 @@ A complete config usually contains the following primary fields:
 
 ## Modify config through script arguments
 
-When submitting jobs using "tools/train.py" or "tools/test.py", 
+When submitting jobs using "tools/train.py" or "tools/test.py",
 you may specify `--cfg-options` to in-place modify the config.
 We present several examples as follows.
 For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/config/config.py#L919)
 
 - Update config keys of dict chains.
 
-    The config options can be specified following the order of the dict keys in the original config.
-    For example, `--cfg-options model.detector.backbone.norm_eval=False` changes the all BN modules in model backbones to train mode.
-    
+  The config options can be specified following the order of the dict keys in the original config.
+  For example, `--cfg-options model.detector.backbone.norm_eval=False` changes the all BN modules in model backbones to train mode.
+
 - Update keys inside a list of configs.
 
-    Some config dicts are composed as a list in your config. 
-    For example, the testing pipeline `test_dataloader.dataset.pipeline` is normally a list e.g. `[dict(type='LoadImageFromFile'), ...]`.
-    If you want to change `LoadImageFromFile` to `LoadImageFromWebcam` in the pipeline,
-    you may specify `--cfg-options test_dataloader.dataset.pipeline.0.type=LoadImageFromWebcam`.
-    
+  Some config dicts are composed as a list in your config.
+  For example, the testing pipeline `test_dataloader.dataset.pipeline` is normally a list e.g. `[dict(type='LoadImageFromFile'), ...]`.
+  If you want to change `LoadImageFromFile` to `LoadImageFromWebcam` in the pipeline,
+  you may specify `--cfg-options test_dataloader.dataset.pipeline.0.type=LoadImageFromWebcam`.
+
 - Update values of list/tuples.
 
-    Maybe the value to be updated is a list or a tuple. 
-    For example, you can change the key `mean` of `data_preprocessor` by specifying `--cfg-options model.data_preprocessor.mean=[0,0,0]`.
-    Note that **NO** white space is allowed inside the specified value.
-    
+  Maybe the value to be updated is a list or a tuple.
+  For example, you can change the key `mean` of `data_preprocessor` by specifying `--cfg-options model.data_preprocessor.mean=[0,0,0]`.
+  Note that **NO** white space is allowed inside the specified value.
+
 ## Config File Structure
 
 There are 3 basic component types under `config/_base_`, i.e., dataset, model and default_runtime.
 Many methods could be easily constructed with one of each like DFF, FGFA, SELSA, SORT, DeepSORT.
 The configs that are composed by components from `_base_` are called *primitive*.
 
-For all configs under the same folder, it is recommended to have only **one** *primitive* config. 
-All other configs should inherit from the *primitive* config. 
+For all configs under the same folder, it is recommended to have only **one** *primitive* config.
+All other configs should inherit from the *primitive* config.
 In this way, the maximum of inheritance level is 3.
 
-For easy understanding, we recommend contributors to inherit from exiting methods. 
-For example, if some modification is made base on Faster R-CNN, 
-user may first inherit the basic Faster R-CNN structure 
-by specifying `_base_ = ../../_base_/models/faster_rcnn_r50_dc5.py`, 
+For easy understanding, we recommend contributors to inherit from exiting methods.
+For example, if some modification is made base on Faster R-CNN,
+user may first inherit the basic Faster R-CNN structure
+by specifying `_base_ = ../../_base_/models/faster_rcnn_r50_dc5.py`,
 then modify the necessary fields in the config files.
 
 If you are building an entirely new method that does not share the structure with any of the existing methods,
@@ -97,7 +97,7 @@ You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/co
 
 **Use intermediate variables in configs**
 
-Some intermediate variables are used in the configs files, like `train_pipeline`/`test_pipeline` in datasets. 
+Some intermediate variables are used in the configs files, like `train_pipeline`/`test_pipeline` in datasets.
 It's worth noting that when modifying intermediate variables in the children configs,
 user need to pass the intermediate variables into corresponding fields again.
 For example, we would like to use testing strategy of adaptive stride to test SELSA.
