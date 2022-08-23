@@ -18,8 +18,8 @@ class TestStark(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'sot/stark/stark-st1_resnet50_8x16bs-500e_got10k.py',
-        'sot/stark/stark-st2_resnet50_8x16bs-50e_got10k.py'
+        'sot/stark/stark-st1_resnet50_8xb16-500e_got10k.py',
+        'sot/stark/stark-st2_resnet50_8xb16-50e_got10k.py'
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -32,9 +32,8 @@ class TestStark(TestCase):
     # TODO: reduce the channels of models in all configs for speed up
     # unit test.
     @parameterized.expand([
-        ('sot/stark/stark-st1_resnet50_8x16bs-500e_got10k.py', ('cpu',
-                                                                'cuda')),
-        ('sot/stark/stark-st2_resnet50_8x16bs-50e_got10k.py', ('cpu', 'cuda'))
+        ('sot/stark/stark-st1_resnet50_8xb16-500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark-st2_resnet50_8xb16-50e_got10k.py', ('cpu', 'cuda'))
     ])
     def test_stark_forward_loss_mode(self, cfg_file, devices):
         _model = get_model_cfg(cfg_file)
@@ -69,9 +68,8 @@ class TestStark(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('sot/stark/stark-st1_resnet50_8x16bs-500e_got10k.py', ('cpu',
-                                                                'cuda')),
-        ('sot/stark/stark-st2_resnet50_8x16bs-50e_got10k.py', ('cpu', 'cuda'))
+        ('sot/stark/stark-st1_resnet50_8xb16-500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark-st2_resnet50_8xb16-50e_got10k.py', ('cpu', 'cuda'))
     ])
     def test_stark_forward_predict_mode(self, cfg_file, devices):
         _model = get_model_cfg(cfg_file)
