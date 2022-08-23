@@ -26,7 +26,7 @@ A complete config usually contains the following primary fields:
 - `param_scheduler`: the config of parameter scheduler, which usually sets the learning rate scheduler.
 - `optim_wrapper`: the config of optimizer wrapper, which contains optimization-related information, for example optimizer, gradient clipping, etc.
 - `load_from`: load models as a pre-trained model from a given path.
-- `resume`: If `True`, resume checkpoints from `load_from`, and the training will be resumed from the epoch when the checkpoint's is saved.
+- `resume`: If `True`, resume checkpoints from `load_from`, and the training will be resumed from the epoch when the checkpoint is saved.
 
 ## Modify config through script arguments
 
@@ -66,7 +66,7 @@ In this way, the maximum of inheritance level is 3.
 For easy understanding, we recommend contributors to inherit from exiting methods.
 For example, if some modification is made base on Faster R-CNN,
 user may first inherit the basic Faster R-CNN structure
-by specifying `_base_ = ../../_base_/models/faster_rcnn_r50_dc5.py`,
+by specifying `_base_ = ../../_base_/models/faster-rcnn_r50-dc5.py`,
 then modify the necessary fields in the config files.
 
 If you are building an entirely new method that does not share the structure with any of the existing methods,
@@ -83,8 +83,8 @@ We follow the below style to name config files. Contributors are advised to foll
 ```
 
 - `{method}`: method name, like `dff`, `deepsort`, `siamese_rpn`.
-- `{module}`: basic modules of the method, like `faster-rcnn-resnet50-fpn`.
-- `{train_cfg}`: training config which usually contains batch size, epochs, etc, like `8x4bs-80e`.
+- `{module}`: basic modules of the method, like `faster-rcnn_r50_fpn`.
+- `{train_cfg}`: training config which usually contains batch size, epochs, etc, like `8xb4-80e`.
 - `{train_data}`: training data, like `imagenetvid`.
 - `{test_data}`: testing data, like `test-mot17halfval`.
 
