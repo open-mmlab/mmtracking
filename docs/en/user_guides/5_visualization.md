@@ -4,7 +4,7 @@
 
 This section will present how to visualize the detection/tracking results with local visualizer.
 
-You can turn this feature on by setting `draw=True` in `TrackVisualizationHook` as follows.
+If you want to draw prediction results, you can turn this feature on by setting `draw=True` in `TrackVisualizationHook` as follows.
 
 ```shell script
 default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True))
@@ -36,7 +36,7 @@ visualizer = dict(type='DetLocalVisualizer')
 It has the following arguments:
 
 - `name`: Name of the instance. Defaults to 'visualizer'.
-- `image`: the origin image to draw. The format should be RGB. Defaults to None.
+- `image`: The origin image to draw. The format should be RGB. Defaults to None.
 - `vis_backends`: Visual backend config list. Defaults to None.
 - `save_dir`: Save file dir for all storage backends. If it is None, the backend storage will not save any data.
 - `bbox_color`: Color of bbox lines. The tuple of color should be in BGR order. Defaults to None.

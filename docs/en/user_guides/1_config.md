@@ -30,24 +30,24 @@ A complete config usually contains the following primary fields:
 
 ## Modify config through script arguments
 
-When submitting jobs using "tools/train.py" or "tools/test.py",
+When submitting jobs using `tools/train.py` or `tools/test.py`,
 you may specify `--cfg-options` to in-place modify the config.
 We present several examples as follows.
-For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/config/config.py#L919)
+For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/config/config.py#L919).
 
-- Update config keys of dict chains.
+- **Update config keys of dict chains.**
 
   The config options can be specified following the order of the dict keys in the original config.
   For example, `--cfg-options model.detector.backbone.norm_eval=False` changes the all BN modules in model backbones to train mode.
 
-- Update keys inside a list of configs.
+- **Update keys inside a list of configs.**
 
   Some config dicts are composed as a list in your config.
   For example, the testing pipeline `test_dataloader.dataset.pipeline` is normally a list e.g. `[dict(type='LoadImageFromFile'), ...]`.
   If you want to change `LoadImageFromFile` to `LoadImageFromWebcam` in the pipeline,
   you may specify `--cfg-options test_dataloader.dataset.pipeline.0.type=LoadImageFromWebcam`.
 
-- Update values of list/tuples.
+- **Update values of list/tuples.**
 
   Maybe the value to be updated is a list or a tuple.
   For example, you can change the key `mean` of `data_preprocessor` by specifying `--cfg-options model.data_preprocessor.mean=[0,0,0]`.
@@ -70,7 +70,7 @@ by specifying `_base_ = ../../_base_/models/faster_rcnn_r50_dc5.py`,
 then modify the necessary fields in the config files.
 
 If you are building an entirely new method that does not share the structure with any of the existing methods,
-you may create a folder `xxx_rcnn` under `configs`.
+you may create a folder `method_name` under `configs`.
 
 Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#config) for detailed documentation.
 
@@ -90,7 +90,7 @@ We follow the below style to name config files. Contributors are advised to foll
 
 ## FAQ
 
-**ignore some fields in the base configs**
+**Ignore some fields in the base configs**
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
 You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for simple illustration.
@@ -104,7 +104,7 @@ For example, we would like to use testing strategy of adaptive stride to test SE
 ref_img_sampler is intermediate variable we would like to modify.
 
 ```python
-_base_ = ['./selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py']
+_base_ = ['./selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py']
 # dataset settings
 ref_img_sampler=dict(
     _delete_=True,

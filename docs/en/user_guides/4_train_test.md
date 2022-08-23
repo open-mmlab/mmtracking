@@ -38,7 +38,7 @@ CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments
 An example of training the VID model DFF on CPU:
 
 ```shell script
-CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py
+CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
 ```
 
 #### 2. Train on single GPU
@@ -54,7 +54,7 @@ You can use `export CUDA_VISIBLE_DEVICES=$GPU_ID` to select the GPU.
 An example of training the MOT model ByteTrack on single GPU:
 
 ```shell script
-CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
+CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
 ```
 
 #### 3. Train on single node multiple GPUs
@@ -80,7 +80,7 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 An example of training the SOT model SiameseRPN++ on single node multiple GPUs:
 
 ```shell script
-bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_resnet50_8x16bs-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
+bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
 ```
 
 #### 4. Train on multiple nodes
@@ -122,7 +122,7 @@ SRUN_ARGS="--quotatype=reserved" \
 bash ./tools/slurm_train.sh \
 mypartition \
 masktrack \
-configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py \
+configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py \
 ./work_dirs/MaskTrack_RCNN \
 8
 ```
@@ -161,7 +161,7 @@ CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
 An example of testing the VID model DFF on CPU:
 
 ```shell script
-CUDA_VISIBLE_DEVICES=-1 python tools/test.py configs/vid/dff/dff_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py
+CUDA_VISIBLE_DEVICES=-1 python tools/test.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
 ```
 
 #### 2. Test on single GPU
@@ -177,7 +177,7 @@ You can use `export CUDA_VISIBLE_DEVICES=$GPU_ID` to select the GPU.
 An example of testing the MOT model ByteTrack on single GPU:
 
 ```shell script
-CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox-x_8x4bs-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
+CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
 ```
 
 #### 3. Test on single node multiple GPUs
@@ -192,7 +192,7 @@ bash ./tools/dist_test.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 An example of testing the SOT model SiameseRPN++ on single node multiple GPUs:
 
 ```shell script
-bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_resnet50_8x16bs-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
+bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
 ```
 
 #### 4. Test on multiple nodes
@@ -219,6 +219,6 @@ SRUN_ARGS="--quotatype=reserved" \
 bash ./tools/slurm_test.sh \
 mypartition \
 masktrack \
-configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py \
+configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py \
 8
 ```
