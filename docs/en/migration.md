@@ -1,10 +1,10 @@
 # Migration from MMTracking 0.xx
 
-Compared with the 0.xx series of MMTracking, the latest 1.xx version of MMTracking has some importrant modifications.
+Compared with the 0.xx versions of MMTracking, the latest 1.xx version of MMTracking has the following importrant modifications.
 
 ## Overall Structures
 
-The `core` in the old versions of MMTracking is removed. We add `engine`, `evaluation`, `structures`, `testing`, `visualization` and `model/task_moduls` in the 1.xx version of MMTracking. Details can be seen in the [user guides](docs/en/user_guides)
+The `core` in the old versions of MMTracking is splited into `engine`, `evaluation`, `structures`, `visualization` and `model/task_moduls` in the 1.xx version of MMTracking. Details can be seen in the [user guides](docs/en/user_guides)
 
 ## Configs
 
