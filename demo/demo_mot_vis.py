@@ -29,11 +29,6 @@ def parse_args():
         '--show',
         action='store_true',
         help='whether show the results on the fly')
-    parser.add_argument(
-        '--backend',
-        choices=['cv2', 'plt'],
-        default='cv2',
-        help='the backend to visualize the results')
     parser.add_argument('--fps', help='FPS of the output video')
     args = parser.parse_args()
     return args
