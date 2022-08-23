@@ -1,5 +1,5 @@
 _base_ = [
-    './qdtrack_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_'
+    './qdtrack_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_'
     'test-mot17halfval.py'
 ]
 
