@@ -7,7 +7,7 @@ The `core` in the old versions of MMTracking is removed. We add `engine`, `evalu
 ## Configs
 
 ### file names
-  
+
 **old**: `deepsort_faster-rcnn_fpn_4e_mot17-private-half.py`
 
 **new**: `deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py`
@@ -46,8 +46,6 @@ data = dict(
         test_mode=True))
 ```
 
-
-
 **new**
 
 ```python
@@ -82,6 +80,7 @@ test_dataloader = val_dataloader
 ### keys of optimizer
 
 **old**
+
 ```python
 optimizer = dict(
     type='AdamW',
@@ -91,7 +90,9 @@ optimizer = dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
 ```
+
 **new**
+
 ```python
 optim_wrapper = dict(
     type='OptimWrapper',
@@ -104,10 +105,13 @@ optim_wrapper = dict(
 ### keys of learning scheduler
 
 **old**
+
 ```python
 lr_config = dict(policy='step', step=[400])
 ```
+
 **new**
+
 ```python
 param_scheduler = dict(type='MultiStepLR', milestones=[400], gamma=0.1)
 ```
@@ -120,9 +124,7 @@ The 1.xx versions of MMtracking add [TrackDataPreprocessor](mmtrack/model/data_p
 
 ### Train
 
-
 ### Test
-
 
 ## Data
 
@@ -136,13 +138,13 @@ The 1.xx versions of MMTracking add two base dataset class which inheient from t
 
 ### data pipeline
 
-1. Most of the transforms on the image sequeces in the 0.xx versions of MMTracking are refactored. In the 1.xx versions of MMTracking, for the image sequences, we use `TransformBroadcaster` to wrap the transformes of single image.
+1. Most of the transforms on the image sequences in the 0.xx versions of MMTracking are refactored. In the 1.xx versions of MMTracking, for the image sequences, we use `TransformBroadcaster` to wrap the transformes of single image.
 
-Some tranformers on the images sequeces are reverved, such as `SeqCropLikeStark`, since `TransformBroadcaster` doesn't support setting different arguments respectively for each image in the sequece.
+Some tranformers on the images sequences are reserved, such as `SeqCropLikeStark`, since `TransformBroadcaster` doesn't support setting different arguments respectively for each image in the sequence.
 
 2. We pack the `VideoCollect`, `ConcatSameTypeFrames` and `SeqDefaultFormatBundle` in the old  MMTracking into `PackTrackInputs` in the latest MMTracking.
 
-3. The normalizaion in the pipeline in the old MMTracking is removed and this operation is implemened in the model forward.
+3. The normalizaion in the pipeline in the old MMTracking is removed and this operation is implemented in the model forward.
 
 ### data sampler
 
@@ -152,11 +154,9 @@ The 1.xx versions of MMtracking add `DATA_SAMPLERS` registry. You can customize 
 
 The old versions of MMTarcking implement evaluation in the dataset class. In the 1.xx versions of MMTracking, we add `METRICS` registry. All evaluation are implemented in the metric classes registered in `METRICS`. Details can be seen [here](mmtrack/evaluation/metrics).
 
-
 ## Visualization
 
 The 1.xx versions of MMTracking add `TrackLocalVisualizer` and `DetLocalVisualizer` which are registered in `VISUALIZER`. Compared with the 0.xx versions of MMTracking, we support the visualization of images and feature maps. Details can be seen [here](mmtrack/visualization/local_visualizer.py)
-
 
 ## Engine
 

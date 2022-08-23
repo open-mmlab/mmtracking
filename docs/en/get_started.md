@@ -35,14 +35,16 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
    ```
 
 2. Install PyTorch and torchvision following the [official instructions](https://pytorch.org/). Here we use PyTorch 1.10.0 and CUDA 11.1.
-You may also switch to other version by specifying the version number.
+   You may also switch to other version by specifying the version number.
 
    **Install with conda**
+
    ```shell
    conda install pytorch=1.11.0 torchvision cudatoolkit=11.3 -c pytorch
    ```
 
    **Install with pip**
+
    ```shell
    pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
    ```
@@ -54,7 +56,6 @@ You may also switch to other version by specifying the version number.
    ```
 
    mmcv-full is only compiled on PyTorch 1.x.0 because the compatibility usually holds between 1.x.0 and 1.x.1. If your PyTorch version is 1.x.1, you can install mmcv-full compiled with PyTorch 1.x.0 and it usually works well.
-
 
    ```shell
    # We can ignore the micro version of PyTorch
@@ -118,6 +119,7 @@ You may also switch to other version by specifying the version number.
   ```
 
 - For VOT evaluation (optional)
+
   ```shell
   pip install git+https://github.com/votchallenge/toolkit.git
   ```
@@ -179,31 +181,32 @@ To use the default MMTracking installed in the environment rather than that you 
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 ```
 
-
-
 ## Verification
 
 To verify whether MMTracking and the required environment are installed correctly, we can run MOT, VIS, VID and SOT [demo scripts](https://github.com/open-mmlab/mmtracking/tree/master/demo/):
 
 ```
-python demo/{DEMO_FILE} \
+python demo/${DEMO_FILE} \
     ${CONFIG_FILE}\
     --input ${INPUT} \
     --checkpoint ${CHECKPOINT_FILE} \
     [--output ${OUTPUT}] \
     [--device ${DEVICE}] \
     [--show] \
-    [--fps ${FPS]
+    [--fps ${FPS}]
 ```
+
 Required arguments：
 
 - `CONFIG_FILE`: the path of configuration file.
+
 - `INPUT`: a given video or a folder that contains continuous images.
 
-    **Note** that if you use a folder as the input,
-    + the image names there must be **sortable**, which means we can re-order the images according to the numbers contained in the filenames.
-    + we now only support reading the images whose filenames end with '.jpg', '.jpeg' and '.png'.
-    + the argument `--fps` must be specified in the command script if you want to show or save the tracking video.
+  **Note** that if you use a folder as the input,
+
+  - the image names there must be **sortable**, which means we can re-order the images according to the numbers contained in the filenames.
+  - we now only support reading the images whose filenames end with '.jpg', '.jpeg' and '.png'.
+  - the argument `--fps` must be specified in the command script if you want to show or save the tracking video.
 
 Optional arguments:
 
@@ -238,8 +241,8 @@ python demo/demo_mot_vis.py \
 ```
 
 **Note**:
-+ Deepsort don't need to load checkpoint since the tracker don't have to be trained. However, for other MOT methods, such as byteytrack and qdtrack, you need to add an input argument `--checkpoint` in the commend script.
-+ When running `demo_mot_vis.py`, we suggest you use the config containing `private`, since `private` means the MOT method doesn't need external detections.
+
+- DeepSORT doesn't need to load checkpoint since the tracker doesn't have to be trained. However, for other MOT methods, such as ByteTrack and QDTrack, you need to add an input argument `--checkpoint` in the command script.
 
 #### Example of VIS
 
@@ -262,7 +265,6 @@ python ./demo/demo_sot.py \
     --output ${OUTPUT} \
     --show
 ```
-**Note** that the SOT demo support load the annotation of the first frame from the annotation file. You can specify an argument 
-`--gt_bbox_file` which menas the gt_bbox file path of the video. The first line annotatioin in the file will be used to initilize the tracker. If not specified, you would draw init bbox of the video manually.**
 
-
+**Note** that the SOT demo supports loading the annotation of the first frame from the annotation file. You can specify an argument
+`--gt_bbox_file` which means the gt_bbox file path of the video. The first line annotation in the file will be used to initialize the tracker. If not specified, you would draw init bbox of the video manually.
