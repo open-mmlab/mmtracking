@@ -1,0 +1,126 @@
+# Inference
+
+We provide demo scripts to inference a given video or a folder that contains continuous images. The source codes are available [here](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/demo/).
+
+Note that if you use a folder as the input, the image names there must be  **sortable** , which means we can re-order the images according to the numbers contained in the filenames. We now only support reading the images whose filenames end with `.jpg`, `.jpeg` and `.png`.
+
+## Inference VID models
+
+This script can inference an input video with a video object detection model.
+
+```
+python demo/demo_vid.py \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
+    [--show]
+```
+
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
+Optional arguments:
+
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
+- `--show`: Whether show the video on the fly.
+
+**Examples:**
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`, your video filename is `demo.mp4`, and your output path is the `./outputs/`
+
+```shell
+python ./demo/demo_vid.py \
+    ./configs/vid/selsa/selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py \
+    --input ./demo.mp4 \
+    --checkpoint checkpoints/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
+    --output ./outputs/ \
+    --show
+```
+
+## Inference MOT/VIS models
+
+This script can inference an input video / images with a multiple object tracking or video instance segmentation model.
+
+```shell
+python demo/demo_mot_vis.py \
+    ${CONFIG_FILE} \
+    --input ${INPUT} \
+    [--output ${OUTPUT}] \
+    [--checkpoint ${CHECKPOINT_FILE}] \
+    [--score-thr ${SCORE_THR} \
+    [--device ${DEVICE}] \
+    [--backend ${BACKEND}] \
+    [--show]
+```
+
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
+Optional arguments:
+
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `pretrains`.
+- `SCORE_THR`: The threshold of score to filter bboxes.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
+- `BACKEND`: The backend to visualize the boxes. Options are `cv2` and `plt`.
+- `--show`: Whether show the video on the fly.
+
+**Examples of running mot model:**
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/mot/deepsort/sort_faster-rcnn_fpn_4e_mot17-private.py \
+    --input demo/demo.mp4 \
+    --output mot.mp4 \
+```
+
+**Examples of running vis model:**
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`, your video filename is `demo.mp4`, and your output path is the `./outputs/`
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py \
+    --input demo.mp4 \
+    --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
+    --output ./outputs/ \
+    --show
+```
+
+## Inference SOT models
+
+This script can inference an input video with a single object tracking model.
+
+```shell
+python demo/demo_sot.py \
+    ${CONFIG_FILE}\
+    --input ${INPUT} \
+    --checkpoint ${CHECKPOINT_FILE} \
+    [--output ${OUTPUT}] \
+    [--device ${DEVICE}] \
+    [--show] \
+    [--gt_bbox_file ${GT_BBOX_FILE}]
+```
+
+The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+
+Optional arguments:
+
+- `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
+- `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
+- `--show`: Whether show the video on the fly.
+- `--gt_bbox_file`: The gt_bbox file path of the video. We only use the gt_bbox of the first frame. If not specified, you would draw init bbox of the video manually.
+
+**Examples:**
+
+Assume that you have already downloaded the checkpoints to the directory `checkpoints/`
+
+```shell
+python ./demo/demo_sot.py \
+    ./configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py \
+    --input ${VIDEO_FILE} \
+    --checkpoint checkpoints/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
+    --output ${OUTPUT} \
+    --show
+```
