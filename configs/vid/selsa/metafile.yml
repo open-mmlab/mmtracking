@@ -39,7 +39,7 @@ Models:
 
   - Name: selsa_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid
     In Collection: SELSA
-    Config: configs/vid/selsa/selsa_faster_rcnn-resnext101-dc5_8x1bs-7e_imagenetvid.py
+    Config: configs/vid/selsa/selsa_faster_rcnn-resnext101-dc5_8xb1-7e_imagenetvid.py
     Metadata:
       Training Memory (GB): 9.15
     Results:

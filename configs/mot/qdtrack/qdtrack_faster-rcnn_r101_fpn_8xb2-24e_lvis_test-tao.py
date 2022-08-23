@@ -1,7 +1,6 @@
 # model settings
 _base_ = [
-    './qdtrack_faster-rcnn_r50_fpn_4e_base.py',
-    '../../_base_/datasets/tao.py'
+    './qdtrack_faster-rcnn_r50_fpn_4e_base.py', '../../_base_/datasets/tao.py'
 ]
 model = dict(
     type='QDTrack',

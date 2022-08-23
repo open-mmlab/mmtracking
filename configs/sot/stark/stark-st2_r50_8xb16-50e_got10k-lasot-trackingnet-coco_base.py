@@ -1,6 +1,4 @@
-_base_ = [
-    './stark-st1_r50_8xb16-500e_got10k-lasot-trackingnet-coco_base.py'
-]
+_base_ = ['./stark-st1_r50_8xb16-500e_got10k-lasot-trackingnet-coco_base.py']
 
 # model setting
 model = dict(

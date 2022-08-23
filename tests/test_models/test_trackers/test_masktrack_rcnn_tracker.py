@@ -33,7 +33,7 @@ class TestMaskTrackRCNNTracker(TestCase):
         assert match_score.size() == similarity_logits.size()
 
     @parameterized.expand([
-        'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8x1bs-12e_youtubevis2019.py'  # noqa: E501
+        'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py'  # noqa: E501
     ])
     def test_track(self, cfg_file):
         _model = get_model_cfg(cfg_file)
