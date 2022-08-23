@@ -3,7 +3,7 @@
 ## Train
 
 This section will show how to train existing models on supported datasets.
-For following training environments are supported:
+The following training environments are supported:
 - CPU
 - single GPU
 - single node multiple GPUs
@@ -19,7 +19,7 @@ According to the [Linear Scaling Rule](https://arxiv.org/abs/1706.02677),
 you need to set the learning rate proportional to the batch size if you use different GPUs or images per GPU, 
 e.g., `lr=0.01` for 8 GPUs * 1 img/gpu and lr=0.04 for 16 GPUs * 2 imgs/gpu.
 - During training, log files and checkpoints will be saved to the working directory,
-which is specified by CLI argument `--work-dir`. It uses './work_dirs/$CONFIG_NAME' as default.
+which is specified by CLI argument `--work-dir`. It uses `./work_dirs/CONFIG_NAME` as default.
 - If you want the mixed precision training, simply specify CLI argument `--amp`.
 
 #### 1. Train on CPU
@@ -128,7 +128,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtu
 ## Test
 
 This section will show how to test existing models on supported datasets.
-For following testing environments are supported:
+The following testing environments are supported:
 - CPU
 - single GPU
 - single node multiple GPUs
@@ -203,7 +203,7 @@ It supports both single-node and multi-node testing.
 The basic usage is as follows.
 
 ```shell script
-bash ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
+bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
 ```
 
 An example of testing the VIS model MaskTrack R-CNN with Slurm:
