@@ -1,5 +1,9 @@
 Compared with the 0.xx series of MMTracking, the latest 1.xx version of MMTracking has some importrant modifications.
 
+## Overall Structures
+
+The `core` in the old versions of MMTracking is removed. We add `engine`, `evaluation`, `structures`, `testing`, `visualization` and `model/task_moduls` in the 1.xx version of MMTracking. Details can be seen in the [user guides](docs/en/user_guides)
+
 ## Configs
 
 ### file names
@@ -8,7 +12,7 @@ Compared with the 0.xx series of MMTracking, the latest 1.xx version of MMTracki
 
 **new**: `deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py`
 
-### keys of datasetloader
+### keys of dataset loader
 
 **old**
 
@@ -110,9 +114,14 @@ param_scheduler = dict(type='MultiStepLR', milestones=[400], gamma=0.1)
 
 ## Model
 
-### The interface of train
+### Data preprocessor
 
-### The interface of test
+The 1.xx versions of MMtracking add [TrackDataPreprocessor](mmtrack/model/data_preprocessors.py). The data out from the data pipeline is transformed by this module and then fed into the model.
+
+### Train
+
+
+### Test
 
 
 ## Data
@@ -123,14 +132,17 @@ The 1.xx versions of MMtracking add two new data structure: [TrackDataSample](mm
 
 ### dataset class
 
-The 1.xx versions of MMTracking have two base dataset class which inheient from the `BaseDataset` in MMEngine: `BaseSOTDataset` and `BaseVideoDataset`. The former is only used in SOT and the latter is used for all other tasks.
+The 1.xx versions of MMTracking add two base dataset class which inheient from the `BaseDataset` in MMEngine: `BaseSOTDataset` and `BaseVideoDataset`. The former is only used in SOT and the latter is used for all other tasks.
 
 ### data pipeline
 
-Most of the transforms on the image sequeces in the 0.xx versions are refactored. In the 1.xx versions of MMTracking, for the image sequences, we use `TransformBroadcaster` to wrap the transformes of single image.
+1. Most of the transforms on the image sequeces in the 0.xx versions of MMTracking are refactored. In the 1.xx versions of MMTracking, for the image sequences, we use `TransformBroadcaster` to wrap the transformes of single image.
 
 Some tranformers on the images sequeces are reverved, such as `SeqCropLikeStark`, since `TransformBroadcaster` doesn't support setting different arguments respectively for each image in the sequece.
 
+2. We pack the `VideoCollect`, `ConcatSameTypeFrames` and `SeqDefaultFormatBundle` in the old  MMTracking into `PackTrackInputs` in the latest MMTracking.
+
+3. The normalizaion in the pipeline in the old MMTracking is removed and this operation is implemened in the model forward.
 
 ### data sampler
 
@@ -138,7 +150,7 @@ The 1.xx versions of MMtracking add `DATA_SAMPLERS` registry. You can customize 
 
 ## Evaluation
 
-The old version of MMTarcking implement evaluation in the dataset class. In the 1.xx versions of MMTracking, we add `METRICS` registry. All evaluation are implemented in the metric classes registered in `METRICS`. Details can be seen [here](mmtrack/evaluation/metrics).
+The old versions of MMTarcking implement evaluation in the dataset class. In the 1.xx versions of MMTracking, we add `METRICS` registry. All evaluation are implemented in the metric classes registered in `METRICS`. Details can be seen [here](mmtrack/evaluation/metrics).
 
 
 ## Visualization
@@ -146,7 +158,6 @@ The old version of MMTarcking implement evaluation in the dataset class. In the 
 The 1.xx versions of MMTracking add `TrackLocalVisualizer` and `DetLocalVisualizer` which are registered in `VISUALIZER`. Compared with the 0.xx versions of MMTracking, we support the visualization of images and feature maps. Details can be seen [here](mmtrack/visualization/local_visualizer.py)
 
 
-
 ## Engine
 
-The runner of training, evaluation and test are upgraded in the 1.xx versions of MMTracking. Details can be seen in MMEngine.
+The runner, hook, logging and optimizer in the training, evaluation and test are refactored in the 1.xx versions of MMTracking. Details can be seen in MMEngine.
