@@ -31,10 +31,10 @@ Please note that the performance on `MOT17-half-val` is comparable with the perf
 
 The reason is that ByteTrack tunes customized hyper-parameters (e.g., image resolution and the high threshold of detection score) for each video in `MOT17-test` set, while we use unified parameters.
 
-|  Method   | Detector |           Train Set           |    Test Set    | Public | Inf time (fps) | HOTA | MOTA | IDF1 |  FP   |  FN   | IDSw. |                                         Config                                          |                                                                                                                                                           Download                                                                                                                                                           |
-| :-------: | :------: | :---------------------------: | :------------: | :----: | :------------: | :--: | :--: | :--: | :---: | :---: | :---: | :-------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| ByteTrack | YOLOX-X  | CrowdHuman + MOT17-half-train | MOT17-half-val |   N    |       -        | 67.7 | 78.6 | 79.2 | 12909 | 21024 |  666  | [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17halfval.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
-| ByteTrack | YOLOX-X  | CrowdHuman + MOT17-half-train |   MOT17-test   |   N    |       -        | 61.7 | 78.1 | 74.8 | 36705 | 85032 | 2049  |  [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py)   | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
+|  Method   | Detector |           Train Set           |    Test Set    | Public | Inf time (fps) | HOTA | MOTA | IDF1 |  FP   |  FN   | IDSw. |                            Config                            |                                                                                                                                                           Download                                                                                                                                                           |
+| :-------: | :------: | :---------------------------: | :------------: | :----: | :------------: | :--: | :--: | :--: | :---: | :---: | :---: | :----------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| ByteTrack | YOLOX-X  | CrowdHuman + MOT17-half-train | MOT17-half-val |   N    |       -        | 67.7 | 78.6 | 79.2 | 12909 | 21024 |  666  | [config](bytetrack_yolox_x_crowdhuman_mot17-private-half.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
+| ByteTrack | YOLOX-X  | CrowdHuman + MOT17-half-train |   MOT17-test   |   N    |       -        | 61.7 | 78.1 | 74.8 | 36705 | 85032 | 2049  |   [config](bytetrack_yolox_x_crowdhuman_mot17-private.py)    | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500.log.json) |
 
 ## Results and models on MOT20
 
@@ -42,7 +42,76 @@ Since there are only 4 videos in `MOT20-train`, ByteTrack is validated on `MOT17
 
 Please note that the MOTA on `MOT20-test` is slightly lower than that reported in the manuscript, because we don't tune the threshold for each video.
 
-|  Method   | Detector |        Train Set         |  Test Set   | Public | Inf time (fps) | HOTA | MOTA | IDF1 |   FP   |   FN   | IDSw. |                                      Config                                      |                                                                                                                                                      Download                                                                                                                                                      |
-| :-------: | :------: | :----------------------: | :---------: | :----: | :------------: | :--: | :--: | :--: | :----: | :----: | :---: | :------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT17-train |   N    |       -        | 57.3 | 64.9 | 71.8 | 33,747 | 83,385 | 1,263 | [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot20train_test-mot20test.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
-| ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT20-test  |   N    |       -        | 61.5 | 77.0 | 75.4 | 33,083 | 84,433 | 1,345 | [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot20train_test-mot20test.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
+|  Method   | Detector |        Train Set         |  Test Set   | Public | Inf time (fps) | HOTA | MOTA | IDF1 |   FP   |   FN   | IDSw. |                         Config                          |                                                                                                                                                      Download                                                                                                                                                      |
+| :-------: | :------: | :----------------------: | :---------: | :----: | :------------: | :--: | :--: | :--: | :----: | :----: | :---: | :-----------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT17-train |   N    |       -        | 57.3 | 64.9 | 71.8 | 33,747 | 83,385 | 1,263 | [config](bytetrack_yolox_x_crowdhuman_mot20-private.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
+| ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT20-test  |   N    |       -        | 61.5 | 77.0 | 75.4 | 33,083 | 84,433 | 1,345 | [config](bytetrack_yolox_x_crowdhuman_mot20-private.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
+
+## Getting Start
+
+### 1. Training
+
+Use the following command to start the training:
+
+```shell
+# Training Bytetrack on 1 GPU with following command
+
+./tools/dist_train.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 1
+
+# Training Bytetrack on multiple GPUs with following command
+# Assume that 8 GPUs are used
+
+./tools/dist_train.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
+```
+
+### 2. Testing and evaluation
+
+For evaluating the track performance of ByteTrack on MOT17 half-val dataset in GPU(s), we should modify `test_evaluator` to achieve our goal. `InterpolateTracklets` means that we use interpolation operations to improve model performance. Set `format_only` to **True** to generate a result file that can be used for submission.
+
+```python
+test_evaluator = dict(
+    type='MOTChallengeMetrics',
+    postprocess_tracklet_cfg=[
+        dict(type='InterpolateTracklets', min_num_frames=5, max_num_frames=20)
+    ],
+    format_only=True)
+```
+
+Use the following command to start the testing:
+
+**You can download the model pretrained weights in the table above.**
+
+```shell
+# Testing Bytetrack on 1 GPU with following command
+
+./tools/dist_test.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 1 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+
+# Testing Bytetrack on multiple GPUs with following command
+# Assume that 8 GPUs are used
+
+./tools/dist_test.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+```
+
+If you want to evaluate the detection results at the same time, you can make the following changes:
+
+```python
+test_evaluator = [
+    # We use classwise here to observe the mAP of person(pedestrian).
+    dict(type='CocoVideoMetric', metric=['bbox'], classwise=True),
+    dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
+]
+```
+
+### 3. Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+If you want to know about more detailed usage of `demo_mot_vis.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py \
+    --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth \
+    --input demo/demo.mp4 \
+    --output mot.mp4 \
+```
