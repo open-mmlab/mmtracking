@@ -7,6 +7,7 @@ import mmcv
 from mmengine.fileio import FileClient
 from mmengine.hooks import Hook
 from mmengine.runner import Runner
+from mmengine.utils import mkdir_or_exist
 from mmengine.visualization import Visualizer
 
 from mmtrack.registry import HOOKS
@@ -122,7 +123,7 @@ class TrackVisualizationHook(Hook):
         if self.test_out_dir is not None:
             self.test_out_dir = osp.join(runner.work_dir, runner.timestamp,
                                          self.test_out_dir)
-            mmcv.mkdir_or_exist(self.test_out_dir)
+            mkdir_or_exist(self.test_out_dir)
 
         assert len(data_batch) == len(outputs) == 1, \
             'only batch_size=1 is supported while testing.'

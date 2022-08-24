@@ -24,6 +24,10 @@ class TestStrongSORT(TestCase):
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
+        model.reid.backbone.depth = 18
+        model.reid.head.fc_channels = 1
+        model.reid.head.out_channels = 1
+        model.reid.head.num_classes = 2
         model = MODELS.build(model)
         assert model.detector
         assert model.reid

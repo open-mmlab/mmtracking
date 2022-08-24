@@ -35,7 +35,7 @@ model = dict(
         transformer=dict(
             type='StarkTransformer',
             encoder=dict(
-                type='DetrTransformerEncoder',
+                type='mmdet.DetrTransformerEncoder',
                 num_layers=6,
                 transformerlayers=dict(
                     type='BaseTransformerLayer',
@@ -53,7 +53,7 @@ model = dict(
                         ffn_drop=0.1),
                     operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
             decoder=dict(
-                type='DetrTransformerDecoder',
+                type='mmdet.DetrTransformerDecoder',
                 return_intermediate=False,
                 num_layers=6,
                 transformerlayers=dict(
@@ -72,7 +72,8 @@ model = dict(
                                      'ffn', 'norm'))),
         ),
         positional_encoding=dict(
-            type='SinePositionalEncoding', num_feats=128, normalize=True),
+            type='mmdet.SinePositionalEncoding', num_feats=128,
+            normalize=True),
         bbox_head=dict(
             type='CornerPredictorHead',
             inplanes=256,

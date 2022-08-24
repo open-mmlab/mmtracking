@@ -2,7 +2,6 @@
 from unittest import TestCase
 
 import mmengine
-import pytest
 import torch
 
 from mmtrack.models.track_heads.iounet_head import IouNetHead, LinearBlock
@@ -41,9 +40,9 @@ class TestIouNetHead(TestCase):
 
         self.model = IouNetHead(**cfg)
 
-    @pytest.mark.skipif(
-        not torch.cuda.is_available, reason='test case under gpu environment')
     def test_prdimp_cls_head_predict_mode(self):
+        if not torch.cuda.is_available():
+            return
 
         backbone_feats = (torch.randn(1, 16, 22, 22, device='cuda:0'),
                           torch.randn(1, 32, 22, 22, device='cuda:0'))

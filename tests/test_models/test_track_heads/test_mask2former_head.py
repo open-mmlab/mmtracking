@@ -13,7 +13,6 @@ class TestMask2FormerHead(TestCase):
 
     @classmethod
     def setUpClass(cls):
-
         cls.config = Config(
             dict(
                 type='Mask2FormerHead',
@@ -27,12 +26,12 @@ class TestMask2FormerHead(TestCase):
                 num_frames=2,
                 num_transformer_feat_level=3,
                 pixel_decoder=dict(
-                    type='MSDeformAttnPixelDecoder',
+                    type='mmdet.MSDeformAttnPixelDecoder',
                     num_outs=3,
                     norm_cfg=dict(type='GN', num_groups=32),
                     act_cfg=dict(type='ReLU'),
                     encoder=dict(
-                        type='DetrTransformerEncoder',
+                        type='mmdet.DetrTransformerEncoder',
                         num_layers=6,
                         transformerlayers=dict(
                             type='BaseTransformerLayer',
@@ -58,7 +57,7 @@ class TestMask2FormerHead(TestCase):
                                              'norm')),
                         init_cfg=None),
                     positional_encoding=dict(
-                        type='SinePositionalEncoding',
+                        type='mmdet.SinePositionalEncoding',
                         num_feats=128,
                         normalize=True),
                     init_cfg=None),
@@ -68,11 +67,11 @@ class TestMask2FormerHead(TestCase):
                     num_feats=128,
                     normalize=True),
                 transformer_decoder=dict(
-                    type='DetrTransformerDecoder',
+                    type='mmdet.DetrTransformerDecoder',
                     return_intermediate=True,
                     num_layers=9,
                     transformerlayers=dict(
-                        type='DetrTransformerDecoderLayer',
+                        type='mmdet.DetrTransformerDecoderLayer',
                         attn_cfgs=dict(
                             type='MultiheadAttention',
                             embed_dims=256,
