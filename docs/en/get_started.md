@@ -224,7 +224,7 @@ Assume that you have already downloaded the checkpoints to the directory `checkp
 
 ```shell
 python ./demo/demo_vid.py \
-    ./configs/vid/selsa/selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py \
+    ./configs/vid/selsa/selsa_faster-rcnn-r50-dc5_8xb1-7e_imagenetvid.py \
     --input ${VIDEO_FILE} \
     --checkpoint checkpoints/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth \
     --output ${OUTPUT} \
@@ -235,7 +235,7 @@ python ./demo/demo_vid.py \
 
 ```shell
 python demo/demo_mot_vis.py \
-    configs/mot/deepsort/deepsort_faster-rcnn-resnet50-fpn_8x2bs-4e_mot17halftrain_test-mot17halfval.py \
+    configs/mot/deepsort/deepsort_faster-rcnn-r50-fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py \
     --input demo/demo.mp4 \
     --output mot.mp4 \
 ```
@@ -248,7 +248,7 @@ python demo/demo_mot_vis.py \
 
 ```shell
 python demo/demo_mot_vis.py \
-    configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-resnet50-fpn_8x1bs-12e_youtubevis2019.py \
+    configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn-r50-fpn_8xb1-12e_youtubevis2019.py \
     --input ${VIDEO_FILE} \
     --checkpoint checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
     --output ${OUTPUT} \
@@ -259,7 +259,7 @@ python demo/demo_mot_vis.py \
 
 ```shell
 python ./demo/demo_sot.py \
-    ./configs/sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
+    ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
     --input ${VIDEO_FILE} \
     --checkpoint checkpoints/siamese_rpn_r50_1x_lasot_20211203_151612-da4b3c66.pth \
     --output ${OUTPUT} \
