@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import torch
 
 from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
@@ -10,7 +10,7 @@ from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
 class TestLinearBlock(TestCase):
 
     def setUp(self):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 in_dim=32,
                 out_dim=16,

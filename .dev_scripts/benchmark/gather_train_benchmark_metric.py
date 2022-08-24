@@ -4,7 +4,7 @@ import glob
 import json
 import os.path as osp
 
-import mmcv
+import mmengine
 
 try:
     import xlrd
@@ -67,7 +67,7 @@ if __name__ == '__main__':
             if osp.exists(result_path):
 
                 # 1 read config and excel
-                cfg = mmcv.Config.fromfile(config)
+                cfg = mmengine.Config.fromfile(config)
                 total_epochs = cfg.train_cfg.max_epochs if cfg.train_cfg else 0
 
                 # the first metric will be used to find the best ckpt

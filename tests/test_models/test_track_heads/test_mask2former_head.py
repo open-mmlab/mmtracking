@@ -13,7 +13,6 @@ class TestMask2FormerHead(TestCase):
 
     @classmethod
     def setUpClass(cls):
-
         cls.config = Config(
             dict(
                 type='Mask2FormerHead',
