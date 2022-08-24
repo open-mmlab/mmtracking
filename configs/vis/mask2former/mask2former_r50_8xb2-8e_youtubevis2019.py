@@ -35,12 +35,12 @@ model = dict(
         num_frames=num_frames,
         num_transformer_feat_level=3,
         pixel_decoder=dict(
-            type='MSDeformAttnPixelDecoder',
+            type='mmdet.MSDeformAttnPixelDecoder',
             num_outs=3,
             norm_cfg=dict(type='GN', num_groups=32),
             act_cfg=dict(type='ReLU'),
             encoder=dict(
-                type='DetrTransformerEncoder',
+                type='mmdet.DetrTransformerEncoder',
                 num_layers=6,
                 transformerlayers=dict(
                     type='BaseTransformerLayer',
@@ -65,17 +65,19 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                 init_cfg=None),
             positional_encoding=dict(
-                type='SinePositionalEncoding', num_feats=128, normalize=True),
+                type='mmdet.SinePositionalEncoding',
+                num_feats=128,
+                normalize=True),
             init_cfg=None),
         enforce_decoder_input_project=False,
         positional_encoding=dict(
             type='SinePositionalEncoding3D', num_feats=128, normalize=True),
         transformer_decoder=dict(
-            type='DetrTransformerDecoder',
+            type='mmdet.DetrTransformerDecoder',
             return_intermediate=True,
             num_layers=9,
             transformerlayers=dict(
-                type='DetrTransformerDecoderLayer',
+                type='mmdet.DetrTransformerDecoderLayer',
                 attn_cfgs=dict(
                     type='MultiheadAttention',
                     embed_dims=256,

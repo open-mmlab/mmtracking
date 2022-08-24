@@ -5,8 +5,7 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import Conv2d, build_plugin_layer
-from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
+from mmcv.cnn import Conv2d
 from mmcv.ops import point_sample
 from mmdet.models.dense_heads import AnchorFreeHead
 from mmdet.models.dense_heads import MaskFormerHead as MMDET_MaskFormerHead
@@ -116,10 +115,8 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
             in_channels=in_channels,
             feat_channels=feat_channels,
             out_channels=out_channels)
-        # TODO: change to `MODELS.build`
-        self.pixel_decoder = build_plugin_layer(pixel_decoder_)[1]
-        self.transformer_decoder = build_transformer_layer_sequence(
-            transformer_decoder)
+        self.pixel_decoder = MODELS.build(pixel_decoder_)
+        self.transformer_decoder = MODELS.build(transformer_decoder)
         self.decoder_embed_dims = self.transformer_decoder.embed_dims
 
         self.decoder_input_projs = ModuleList()
