@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from unittest import TestCase
 
-import pytest
 import torch
 from parameterized import parameterized
 
@@ -26,10 +25,11 @@ class TestPrDiMP(TestCase):
         assert model.classifier
         assert model.bbox_regressor
 
-    @pytest.mark.skipif(
-        not torch.cuda.is_available, reason='test case under gpu environment')
     @parameterized.expand(['sot/prdimp/prdimp_r50_8xb10-50e_got10k.py'])
     def test_stark_forward_predict_mode(self, cfg_file):
+        if not torch.cuda.is_available():
+            return
+
         _model = get_model_cfg(cfg_file)
         model = MODELS.build(_model)
         model = model.cuda()
