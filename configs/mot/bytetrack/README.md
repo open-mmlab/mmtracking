@@ -56,10 +56,11 @@ Due to the influence of parameters such as learning rate in default configuratio
 ```shell
 # Training Bytetrack on multiple GPUs with following command
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs
-./tools/dist_train.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
+./tools/dist_train.sh \
+    configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
 ```
 
-If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train`.sh, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
 
 ### 2. Testing and evaluation
 
@@ -68,7 +69,9 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 ```shell
 # Example 1: Test motXXhalfval
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
-./tools/dist_test.sh configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+./tools/dist_test.sh \
+    configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 \
+    --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 ```
 
 **2.2 Example on MOTxx-test dataset**
@@ -78,7 +81,9 @@ If you want to get the results of the [MOT Challenge](https://motchallenge.net/)
 ```shell
 # Example 2: Test motxxtest
 # The number after config file represents the number of GPUs used
-./tools/dist_test.sh configs/mot/bytetrack/bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+./tools/dist_test.sh \
+    configs/mot/bytetrack/bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py 8 \
+    --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 ```
 
 If you want to know about more detailed usage of `test.py/dist_test.sh/slurm_test.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
