@@ -47,71 +47,52 @@ Please note that the MOTA on `MOT20-test` is slightly lower than that reported i
 | ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT17-train |   N    |       -        | 57.3 | 64.9 | 71.8 | 33,747 | 83,385 | 1,263 | [config](bytetrack_yolox_x_crowdhuman_mot20-private.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
 | ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT20-test  |   N    |       -        | 61.5 | 77.0 | 75.4 | 33,083 | 84,433 | 1,345 | [config](bytetrack_yolox_x_crowdhuman_mot20-private.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
 
-## Getting Start
+## Get Started
 
 ### 1. Training
 
-Use the following command to start the training:
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
 
 ```shell
-# Training Bytetrack on 1 GPU with following command
-
-./tools/dist_train.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 1
-
 # Training Bytetrack on multiple GPUs with following command
-# Assume that 8 GPUs are used
-
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
 ./tools/dist_train.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
 ```
 
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train`.sh, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
 ### 2. Testing and evaluation
 
-For evaluating the track performance of ByteTrack on MOT17 half-val dataset in GPU(s), we should modify `test_evaluator` to achieve our goal. `InterpolateTracklets` means that we use interpolation operations to improve model performance. Set `format_only` to **True** to generate a result file that can be used for submission.
-
-```python
-test_evaluator = dict(
-    type='MOTChallengeMetrics',
-    postprocess_tracklet_cfg=[
-        dict(type='InterpolateTracklets', min_num_frames=5, max_num_frames=20)
-    ],
-    format_only=True)
-```
-
-Use the following command to start the testing:
-
-**You can download the model pretrained weights in the table above.**
+**2.1 Example on MOTxx-halfval dataset**
 
 ```shell
-# Testing Bytetrack on 1 GPU with following command
-
-./tools/dist_test.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 1 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
-
-# Testing Bytetrack on multiple GPUs with following command
-# Assume that 8 GPUs are used
-
-./tools/dist_test.sh  configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+# Example 1: Test motXXhalfval
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 ```
 
-If you want to evaluate the detection results at the same time, you can make the following changes:
+**2.2 Example on MOTxx-test dataset**
 
-```python
-test_evaluator = [
-    # We use classwise here to observe the mAP of person(pedestrian).
-    dict(type='CocoVideoMetric', metric=['bbox'], classwise=True),
-    dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
-]
+If you want to get the results of the [MOT Challenge](https://motchallenge.net/) test set, please use the following command to generate result files that can be used for submission. It will be stored in `./mot_17_test_res`, you can modify the saved path in `test_evaluator` of the config.
+
+```shell
+# Example 2: Test motxxtest
+# The number after config file represents the number of GPUs used
+./tools/dist_test.sh configs/mot/bytetrack/bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py 8 --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 ```
 
-### 3. Inference
+If you want to know about more detailed usage of `test.py/dist_test.sh/slurm_test.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 3.Inference
 
 Use a single GPU to predict a video and save it as a video.
-
-If you want to know about more detailed usage of `demo_mot_vis.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).
 
 ```shell
 python demo/demo_mot_vis.py \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py \
     --checkpoint ./checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth \
     --input demo/demo.mp4 \
-    --output mot.mp4 \
+    --output mot.mp4
 ```
+
+If you want to know about more detailed usage of `demo_mot_vis.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).
