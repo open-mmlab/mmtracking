@@ -2,7 +2,8 @@
 from collections import defaultdict
 
 import mmcv
-from mmdet.core.bbox.demodata import random_boxes
+
+from mmtrack.testing import random_boxes
 
 
 def create_dummy_data():

@@ -64,7 +64,7 @@ def _get_config_directory():
 
 def _get_config_module(fname):
     """Load a configuration as a python module."""
-    from mmcv import Config
+    from mmengine import Config
     config_dpath = _get_config_directory()
     config_fpath = join(config_dpath, fname)
     config_mod = Config.fromfile(config_fpath)

@@ -187,11 +187,11 @@ class StarkTransformer(Transformer):
     <https://arxiv.org/pdf/2005.12872>`_ for details.
 
     Args:
-        encoder (`mmcv.ConfigDict` | Dict): Config of
+        encoder (`mmengine.ConfigDict` | Dict): Config of
             TransformerEncoder. Defaults to None.
-        decoder ((`mmcv.ConfigDict` | Dict)): Config of
+        decoder ((`mmengine.ConfigDict` | Dict)): Config of
             TransformerDecoder. Defaults to None
-        init_cfg (obj:`mmcv.ConfigDict`): The Config for initialization.
+        init_cfg (obj:`mmengine.ConfigDict`): The Config for initialization.
             Defaults to None.
     """
 
@@ -274,23 +274,23 @@ class StarkHead(BaseModule):
 
     Args:
         num_query (int): Number of query in transformer.
-        transformer (obj:`mmcv.ConfigDict`|dict): Config for transformer.
+        transformer (obj:`mmengine.ConfigDict`|dict): Config for transformer.
             Default: None.
-        positional_encoding (obj:`mmcv.ConfigDict`|dict):
+        positional_encoding (obj:`mmengine.ConfigDict`|dict):
             Config for position encoding.
-        bbox_head (obj:`mmcv.ConfigDict`|dict, optional): Config for bbox head.
-            Defaults to None.
-        cls_head (obj:`mmcv.ConfigDict`|dict, optional): Config for
+        bbox_head (obj:`mmengine.ConfigDict`|dict, optional): Config for bbox
+            head. Defaults to None.
+        cls_head (obj:`mmengine.ConfigDict`|dict, optional): Config for
             classification head. Defaults to None.
-        loss_cls (obj:`mmcv.ConfigDict`|dict): Config of the
+        loss_cls (obj:`mmengine.ConfigDict`|dict): Config of the
             classification loss. Default `CrossEntropyLoss`.
-        loss_bbox (obj:`mmcv.ConfigDict`|dict): Config of the bbox
+        loss_bbox (obj:`mmengine.ConfigDict`|dict): Config of the bbox
             regression loss. Default `L1Loss`.
-        loss_iou (obj:`mmcv.ConfigDict`|dict): Config of the bbox
+        loss_iou (obj:`mmengine.ConfigDict`|dict): Config of the bbox
             regression iou loss. Default `GIoULoss`.
-        tran_cfg (obj:`mmcv.ConfigDict`|dict): Training config of
+        tran_cfg (obj:`mmengine.ConfigDict`|dict): Training config of
             transformer head.
-        test_cfg (obj:`mmcv.ConfigDict`|dict): Testing config of
+        test_cfg (obj:`mmengine.ConfigDict`|dict): Testing config of
             transformer head.
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Default: None

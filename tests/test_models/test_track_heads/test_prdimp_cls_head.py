@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import torch
 
 from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
@@ -10,7 +10,7 @@ from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
 class TestLinearBlock(TestCase):
 
     def setUp(self):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 in_dim=32,
                 out_dim=16,
@@ -60,7 +60,7 @@ class TestLinearBlock(TestCase):
             self.model.init_classifier(
                 backbone_feats, target_bboxes, dropout_probs=[0.2, 0.2])
         else:
-            self.target_filter = torch.randn(1, 16, 4, 4)
+            self.model.target_filter = torch.randn(1, 16, 4, 4)
             cls_feats = self.model.get_cls_feats(backbone_feats)
             self.model.init_memory(cls_feats, target_bboxes)
 

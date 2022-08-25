@@ -2,7 +2,7 @@
 from copy import deepcopy
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import numpy as np
 import torch
 from mmengine.data import InstanceData
@@ -31,7 +31,7 @@ class TestSiameseRPNHead(TestCase):
     @classmethod
     def setUpClass(cls):
         register_all_modules(init_default_scope=True)
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 anchor_generator=dict(
                     type='SiameseRPNAnchorGenerator',
