@@ -2,7 +2,6 @@
 import copy
 from unittest import TestCase
 
-import pytest
 import torch
 from mmengine.data import InstanceData
 
@@ -74,7 +73,7 @@ class TestLinearBlock(TestCase):
             self.model.init_classifier(
                 backbone_feats, target_bboxes, dropout_probs=[0.2, 0.2])
         else:
-            self.target_filter = torch.randn(1, 16, 4, 4)
+            self.model.target_filter = torch.randn(1, 16, 4, 4)
             cls_feats = self.model.get_cls_feats(backbone_feats)
             self.model.init_memory(cls_feats, target_bboxes)
 
@@ -89,9 +88,9 @@ class TestLinearBlock(TestCase):
         if torch.cuda.is_available():
             self.model.update_classifier(target_bboxes[1], 1, False)
 
-    @pytest.mark.skipif(
-        not torch.cuda.is_available, reason='test case under gpu environment')
     def test_prdimp_cls_head_loss(self):
+        if not torch.cuda.is_available():
+            return
         self.model.train()
         model = self.model.to('cuda:0')
         template_feats = (torch.randn(2, 32, 18, 18).to('cuda:0'), )

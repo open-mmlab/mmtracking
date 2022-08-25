@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 from mmcv.transforms import BaseTransform
-from mmcv.utils import print_log
+from mmengine.logging import print_log
 
 from mmtrack.registry import TRANSFORMS
 

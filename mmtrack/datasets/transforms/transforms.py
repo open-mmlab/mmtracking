@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform
 from mmcv.transforms.utils import cache_randomness
-from mmcv.utils import print_log
+from mmengine.logging import print_log
 
 from mmtrack.registry import TRANSFORMS
 from mmtrack.utils import crop_image

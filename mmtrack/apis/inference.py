@@ -27,7 +27,7 @@ def init_model(config: Union[str, mmengine.Config],
     """Initialize a model from config file.
 
     Args:
-        config (str or :obj:`mmcv.Config`): Config file path or the config
+        config (str or :obj:`mmengine.Config`): Config file path or the config
             object.
         checkpoint (Optional[str], optional): Checkpoint path. Defaults to
             None.

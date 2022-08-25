@@ -18,7 +18,7 @@ class TestDFF(TestCase):
         register_all_modules()
 
     @parameterized.expand([
-        'vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py',
+        'vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py',
     ])
     def test_dff_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -27,7 +27,8 @@ class TestDFF(TestCase):
         assert model.motion
 
     @parameterized.expand([
-        ('vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu', 'cuda'))
+        ('vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py', ('cpu',
+                                                                    'cuda'))
     ])
     def test_dff_forward_loss_mode(self, cfg_file, devices):
         assert all([device in ['cpu', 'cuda'] for device in devices])
@@ -52,7 +53,8 @@ class TestDFF(TestCase):
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py', ('cpu', 'cuda'))
+        ('vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py', ('cpu',
+                                                                    'cuda'))
     ])
     def test_dff_forward_predict_mode(self, cfg_file, devices):
         assert all([device in ['cpu', 'cuda'] for device in devices])

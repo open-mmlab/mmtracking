@@ -3,39 +3,6 @@ mmtrack.apis
 .. automodule:: mmtrack.apis
     :members:
 
-mmtrack.core
---------------
-
-anchor
-^^^^^^^^^^
-.. automodule:: mmtrack.core.anchor
-    :members:
-
-evaluation
-^^^^^^^^^^
-.. automodule:: mmtrack.core.evaluation
-    :members:
-
-motion
-^^^^^^^^^^
-.. automodule:: mmtrack.core.motion
-    :members:
-
-optimizer
-^^^^^^^^^^
-.. automodule:: mmtrack.core.optimizer
-    :members:
-
-track
-^^^^^^^^^^
-.. automodule:: mmtrack.core.track
-    :members:
-
-utils
-^^^^^^^^^^
-.. automodule:: mmtrack.core.utils
-    :members:
-
 mmtrack.datasets
 ----------------
 
@@ -44,14 +11,9 @@ datasets
 .. automodule:: mmtrack.datasets
     :members:
 
-parsers
+api_wrappers
 ^^^^^^^^^^
 .. automodule:: mmtrack.datasets.api_wrappers
-    :members:
-
-pipelines
-^^^^^^^^^^
-.. automodule:: mmtrack.datasets.pipelines
     :members:
 
 samplers
@@ -59,27 +21,42 @@ samplers
 .. automodule:: mmtrack.datasets.samplers
     :members:
 
+transforms
+^^^^^^^^^^
+.. automodule:: mmtrack.datasets.transforms
+    :members:
+
+mmtrack.engine
+----------------
+
+hooks
+^^^^^^^^^^
+.. automodule:: mmtrack.engine.hooks
+    :members:
+
+schedulers
+^^^^^^^^^^
+.. automodule:: mmtrack.engine.schedulers
+    :members:
+
+mmtrack.evaluation
+----------------
+
+functional
+^^^^^^^^^^
+.. automodule:: mmtrack.evaluation.functional
+    :members:
+
+metrics
+^^^^^^^^^^
+.. automodule:: mmtrack.evaluation.metrics
+    :members:
 
 mmtrack.models
 --------------
 
-mot
-^^^^^^^^^^
-.. automodule:: mmtrack.models.mot
-    :members:
-
-sot
-^^^^^^^^^^
-.. automodule:: mmtrack.models.sot
-    :members:
-
-vid
-^^^^^^^^^^
-.. automodule:: mmtrack.models.vid
-    :members:
-
 aggregators
-^^^^^^^^^^^
+^^^^^^^^^^
 .. automodule:: mmtrack.models.aggregators
     :members:
 
@@ -88,9 +65,29 @@ backbones
 .. automodule:: mmtrack.models.backbones
     :members:
 
+data_preprocessors
+^^^^^^^^^^
+.. automodule:: mmtrack.models.data_preprocessors
+    :members:
+
+filter
+^^^^^^^^^^^
+.. automodule:: mmtrack.models.filter
+    :members:
+
+layers
+^^^^^^^^^^
+.. automodule:: mmtrack.models.layers
+    :members:
+
 losses
 ^^^^^^^^^^
 .. automodule:: mmtrack.models.losses
+    :members:
+
+mot
+^^^^^^^^^^
+.. automodule:: mmtrack.models.mot
     :members:
 
 motion
@@ -104,8 +101,18 @@ reid
     :members:
 
 roi_heads
-^^^^^^^^^^
+^^^^^^^^^^^
 .. automodule:: mmtrack.models.roi_heads
+    :members:
+
+sot
+^^^^^^^^^^^
+.. automodule:: mmtrack.models.sot
+    :members:
+
+task_modules
+^^^^^^^^^^^
+.. automodule:: mmtrack.models.task_modules
     :members:
 
 track_heads
@@ -113,12 +120,46 @@ track_heads
 .. automodule:: mmtrack.models.track_heads
     :members:
 
-builder
+trackers
 ^^^^^^^^^^^
-.. automodule:: mmtrack.models
+.. automodule:: mmtrack.models.trackers
+    :members:
+
+vid
+^^^^^^^^^^^
+.. automodule:: mmtrack.models.vid
+    :members:
+
+vis
+^^^^^^^^^^^
+.. automodule:: mmtrack.models.vis
+    :members:
+
+mmtrack.structures
+----------------
+
+structures
+^^^^^^^^^^
+.. automodule:: mmtrack.structures
+    :members:
+
+bbox
+^^^^^^^^^^
+.. automodule:: mmtrack.structures.bbox
     :members:
 
 mmtrack.utils
---------------
+----------------
+
+utils
+^^^^^^^^^^
 .. automodule:: mmtrack.utils
+    :members:
+
+mmtrack.visualiztion
+----------------
+
+visualiztion
+^^^^^^^^^^
+.. automodule:: mmtrack.visualiztion
     :members:

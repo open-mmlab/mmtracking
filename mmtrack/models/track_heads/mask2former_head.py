@@ -5,16 +5,16 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import Conv2d, build_plugin_layer, caffe2_xavier_init
-from mmcv.cnn.bricks.transformer import build_transformer_layer_sequence
+from mmcv.cnn import Conv2d
 from mmcv.ops import point_sample
-from mmcv.runner import ModuleList
 from mmdet.models.dense_heads import AnchorFreeHead
 from mmdet.models.dense_heads import MaskFormerHead as MMDET_MaskFormerHead
 from mmdet.models.utils import get_uncertain_point_coords_with_randomness
 from mmdet.structures.mask import mask2bbox
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig, reduce_mean
 from mmengine.data import InstanceData
+from mmengine.model import ModuleList
+from mmengine.model.utils import caffe2_xavier_init
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS
@@ -115,10 +115,8 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
             in_channels=in_channels,
             feat_channels=feat_channels,
             out_channels=out_channels)
-        # TODO: change to `MODELS.build`
-        self.pixel_decoder = build_plugin_layer(pixel_decoder_)[1]
-        self.transformer_decoder = build_transformer_layer_sequence(
-            transformer_decoder)
+        self.pixel_decoder = MODELS.build(pixel_decoder_)
+        self.transformer_decoder = MODELS.build(transformer_decoder)
         self.decoder_embed_dims = self.transformer_decoder.embed_dims
 
         self.decoder_input_projs = ModuleList()

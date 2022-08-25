@@ -2,7 +2,6 @@
 import copy
 from unittest import TestCase
 
-import pytest
 import torch
 from mmengine.data import InstanceData
 
@@ -49,9 +48,9 @@ class TestIouNetHead(TestCase):
 
         self.model = IouNetHead(**cfg)
 
-    @pytest.mark.skipif(
-        not torch.cuda.is_available, reason='test case under gpu environment')
-    def test_iou_net_head_predict(self):
+    def test_prdimp_cls_head_predict_mode(self):
+        if not torch.cuda.is_available():
+            return
         backbone_feats = (torch.randn(1, 16, 22, 22, device='cuda:0'),
                           torch.randn(1, 32, 22, 22, device='cuda:0'))
         target_bboxes = torch.rand(1, 4, device='cuda:0') * 150
@@ -64,9 +63,9 @@ class TestIouNetHead(TestCase):
             model.predict(backbone_feats, None, target_bboxes, sample_center,
                           4)
 
-    @pytest.mark.skipif(
-        not torch.cuda.is_available, reason='test case under gpu environment')
     def test_iou_net_head_loss(self):
+        if not torch.cuda.is_available():
+            return
         model = self.model.to('cuda:0')
         model.train()
         model = self.model.to('cuda:0')

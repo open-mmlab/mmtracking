@@ -23,6 +23,8 @@ class TestSelsaBBoxHead(TestCase):
                 target_means=[0., 0., 0., 0.],
                 target_stds=[0.2, 0.2, 0.2, 0.2]),
             reg_class_agnostic=False,
+            reg_predictor_cfg=dict(type='mmdet.Linear'),
+            cls_predictor_cfg=dict(type='mmdet.Linear'),
             loss_cls=dict(
                 type='mmdet.CrossEntropyLoss',
                 use_sigmoid=False,
