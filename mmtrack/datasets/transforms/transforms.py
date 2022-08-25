@@ -371,7 +371,7 @@ class CropLikeDiMP(BaseTransform):
 
     def crop_like_dimp(
             self, img: np.ndarray, bbox: np.ndarray, crop_size_factor: float,
-            output_size: int) -> Tuple[np.ndarray, float, np.ndarray]:
+            output_size: int) -> Tuple[np.ndarray, np.ndarray, float]:
         """Crop an image as DiMP did.
 
         Note: The difference between dimp and stark is the operation of moving
