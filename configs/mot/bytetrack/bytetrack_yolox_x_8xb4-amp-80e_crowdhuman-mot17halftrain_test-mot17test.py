@@ -8,3 +8,10 @@ test_dataloader = dict(
         data_root='data/MOT17/',
         ann_file='annotations/test_cocoformat.json',
         data_prefix=dict(img_path='test')))
+test_evaluator = dict(
+    type='MOTChallengeMetrics',
+    postprocess_tracklet_cfg=[
+        dict(type='InterpolateTracklets', min_num_frames=5, max_num_frames=20)
+    ],
+    format_only=True,
+    resfile_path='./mot_17_test_res')
