@@ -55,8 +55,8 @@ class PrDiMPClsHead(BaseModule):
         self.filter_optimizer = MODELS.build(filter_optimizer)
         self.feat_norm_scale = math.sqrt(1.0 /
                                          (out_dim * filter_size * filter_size))
-        self.channel_mapping = nn.Conv2d(
-            in_dim, out_dim, kernel_size=3, padding=1, bias=False)
+        self.channel_mapping = nn.Sequential(
+            nn.Conv2d(in_dim, out_dim, kernel_size=3, padding=1, bias=False))
 
         self.locate_cfg = locate_cfg
         self.update_cfg = update_cfg
