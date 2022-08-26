@@ -54,7 +54,7 @@ Please note that the MOTA on `MOT20-test` is slightly lower than that reported i
 Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
 
 ```shell
-# Training Bytetrack on multiple GPUs with following command
+# Training Bytetrack on crowdhuman and mot17-half-train dataset with following command
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs
 ./tools/dist_train.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
@@ -67,7 +67,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 **2.1 Example on MOTxx-halfval dataset**
 
 ```shell
-# Example 1: Test motXXhalfval
+# Example 1: Test on motXX-half-val set
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 \
@@ -79,7 +79,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 If you want to get the results of the [MOT Challenge](https://motchallenge.net/) test set, please use the following command to generate result files that can be used for submission. It will be stored in `./mot_17_test_res`, you can modify the saved path in `test_evaluator` of the config.
 
 ```shell
-# Example 2: Test motxxtest
+# Example 2: Test on motxx-test set
 # The number after config file represents the number of GPUs used
 ./tools/dist_test.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py 8 \
