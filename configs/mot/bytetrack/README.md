@@ -67,7 +67,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 **2.1 Example on MOTxx-halfval dataset**
 
 ```shell
-# Example 1: Test motXXhalfval
+# Example 1: Test on motXX-half-val set
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 \
