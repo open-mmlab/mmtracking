@@ -47,7 +47,7 @@ Please note that the MOTA on `MOT20-test` is slightly lower than that reported i
 | ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT17-train |   N    |       -        | 57.3 | 64.9 | 71.8 | 33,747 | 83,385 | 1,263 | [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot20train_test-mot20test.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
 | ByteTrack | YOLOX-X  | CrowdHuman + MOT20-train | MOT20-test  |   N    |       -        | 61.5 | 77.0 | 75.4 | 33,083 | 84,433 | 1,345 | [config](bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot20train_test-mot20test.py) | [model](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040-9ce38a60.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot20-private_20220506_101040.log.json) |
 
-## Get Started
+## Get started
 
 ### 1. Training
 
