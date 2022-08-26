@@ -1,10 +1,10 @@
 # Migration from MMTracking 0.xx
 
-Compared with the 0.xx versions of MMTracking, the latest 1.xx version of MMTracking has the following importrant modifications.
+Compared with the 0.xx versions of MMTracking, the latest 1.xx version of MMTracking has the following important modifications.
 
 ## Overall Structures
 
-The `core` in the old versions of MMTracking is splited into `engine`, `evaluation`, `structures`, `visualization` and `model/task_moduls` in the 1.xx version of MMTracking. Details can be seen in the [user guides](docs/en/user_guides).
+The `core` in the old versions of MMTracking is splited into `engine`, `evaluation`, `structures`, `visualization` and `model/task_moduls` in the 1.xx version of MMTracking. Details can be seen in the [user guides](../../docs/en/user_guides).
 
 ## Configs
 
@@ -122,7 +122,7 @@ param_scheduler = dict(type='MultiStepLR', milestones=[400], gamma=0.1)
 
 ### Data preprocessor
 
-The 1.xx versions of MMtracking add [TrackDataPreprocessor](mmtrack/model/data_preprocessors.py). The data out from the data pipeline is transformed by this module and then fed into the model.
+The 1.xx versions of MMtracking add [TrackDataPreprocessor](../../mmtrack/models/data_preprocessors/data_preprocessor.py). The data out from the data pipeline is transformed by this module and then fed into the model.
 
 ### Train
 
@@ -136,7 +136,7 @@ The test forward of models and heads is performed by calling `predict` function 
 
 ### data structure
 
-The 1.xx versions of MMtracking add two new data structure: [TrackDataSample](mmtrack/structures/track_data_sample.py) and [ReIDDataSample](mmtrack/structures/reid_data_sample.py). These data structures wrap the annotations and predictions from one image (sequence) and are used as interfaces between different components.
+The 1.xx versions of MMtracking add two new data structure: [TrackDataSample](../../mmtrack/structures/track_data_sample.py) and [ReIDDataSample](../../mmtrack/structures/reid_data_sample.py). These data structures wrap the annotations and predictions from one image (sequence) and are used as interfaces between different components.
 
 ### dataset class
 
@@ -154,15 +154,15 @@ Some transforms on image sequences, such as `SeqCropLikeStark`, are reserved sin
 
 ### data sampler
 
-The 1.xx versions of MMtracking add `DATA_SAMPLERS` registry. You can customize different dataset samplers in the configs. Details about the samplers can be seen [here](mmtrack/datasets/samplers).
+The 1.xx versions of MMtracking add `DATA_SAMPLERS` registry. You can customize different dataset samplers in the configs. Details about the samplers can be seen [here](../../mmtrack/datasets/samplers).
 
 ## Evaluation
 
-The old versions of MMTarcking implement evaluation in the dataset class. In the 1.xx versions of MMTracking, we add `METRICS` registry. All evaluation are implemented in the metric classes registered in `METRICS`. Details can be seen [here](mmtrack/evaluation/metrics).
+The old versions of MMTarcking implement evaluation in the dataset class. In the 1.xx versions of MMTracking, we add `METRICS` registry. All evaluation are implemented in the metric classes registered in `METRICS`. Details can be seen [here](../../mmtrack/evaluation/metrics).
 
 ## Visualization
 
-The 1.xx versions of MMTracking add `TrackLocalVisualizer` and `DetLocalVisualizer` which are registered in `VISUALIZER`. Compared with the 0.xx versions of MMTracking, we support the visualization of images and feature maps. Details can be seen [here](mmtrack/visualization/local_visualizer.py).
+The 1.xx versions of MMTracking add `TrackLocalVisualizer` and `DetLocalVisualizer` which are registered in `VISUALIZER`. Compared with the 0.xx versions of MMTracking, we support the visualization of images and feature maps. Details can be seen [here](../../mmtrack/visualization/local_visualizer.py).
 
 ## Engine
 
