@@ -79,7 +79,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 If you want to get the results of the [MOT Challenge](https://motchallenge.net/) test set, please use the following command to generate result files that can be used for submission. It will be stored in `./mot_17_test_res`, you can modify the saved path in `test_evaluator` of the config.
 
 ```shell
-# Example 2: Test motxxtest
+# Example 2: Test on motxx-test set
 # The number after config file represents the number of GPUs used
 ./tools/dist_test.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-amp-80e_crowdhuman-mot17halftrain_test-mot17test.py 8 \
