@@ -54,7 +54,7 @@ We provide the last-epoch model with its configuration and training log.
 
 ### TrackingNet
 
-The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on TrackingNet is submitted to [the evaluation server on TrackingNet Challenge](http://eval.tracking-net.org/web/challenges/challenge-page/39/submission). We provide the model with its configuration and training log.
+The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on TrackingNet is submitted to [the evaluation server on TrackingNet Challenge](https://eval.ai/web/challenges/challenge-page/1805/). We provide the model with its configuration and training log.
 
 |  Method   | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision |                                          Config                                           |                                                                                                                                       Download                                                                                                                                       |
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :-----: | :------------: | :-------: | :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -123,7 +123,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
     --checkpoint ./checkpoints/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
 ```
 
-**2.1 Example on TrackingNet and GOT10k dataset**
+**2.1 Example on TrackingNet and GOT10k datasets**
 
 If you want to get the results of the [TrackingNet](https://eval.ai/web/challenges/challenge-page/1805/) and [GOT10k](http://got-10k.aitestunion.com/), please use the following commands to generate result files that can be used for submission. You can modify the saved path in `test_evaluator` of the config.
 
