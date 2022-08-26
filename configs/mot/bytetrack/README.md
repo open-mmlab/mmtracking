@@ -54,7 +54,7 @@ Please note that the MOTA on `MOT20-test` is slightly lower than that reported i
 Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
 
 ```shell
-# Training Bytetrack on multiple GPUs with following command
+# Training Bytetrack on crowdhuman and mot17-half-train dataset with following command
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs
 ./tools/dist_train.sh \
     configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
