@@ -179,7 +179,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 To verify whether MMTracking and the required environment are installed correctly, we can run **one of** MOT, VIS, VID and SOT [demo scripts](https://github.com/open-mmlab/mmtracking/tree/master/demo/):
 
-Here is an example of MOT demo:
+Here is an example for MOT demo:
 
 ```shell
 python demo/demo_mot_vis.py \
