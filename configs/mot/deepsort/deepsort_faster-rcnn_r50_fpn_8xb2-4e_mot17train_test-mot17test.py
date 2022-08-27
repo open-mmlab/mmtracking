@@ -1,8 +1,7 @@
 _base_ = [
-    './tracktor_faster-rcnn_r50-fpn_8xb2-4e_mot17halftrain'
+    './deepsort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain'
     '_test-mot17halfval.py'
 ]
-
 model = dict(
     detector=dict(
         init_cfg=dict(
@@ -13,12 +12,11 @@ model = dict(
 
 # dataloader
 val_dataloader = dict(
-    dataset=dict(ann_file='annotations/train_cocoformat.json', ))
+    dataset=dict(ann_file='annotations/train_cocoformat.json'))
 test_dataloader = dict(
     dataset=dict(
         ann_file='annotations/test_cocoformat.json',
-        data_prefix=dict(img_path='test'),
-    ))
+        data_prefix=dict(img_path='test')))
 
 # evaluator
 test_evaluator = dict(
