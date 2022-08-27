@@ -72,7 +72,7 @@ then modify the necessary fields in the config files.
 If you are building an entirely new method that does not share the structure with any of the existing methods,
 you may create a folder `method_name` under `configs`.
 
-Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#config) for detailed documentation.
+Please refer to [mmengine](https://mmengine.readthedocs.io/en/latest/understand_mmengine/config.html) for detailed documentation.
 
 ## Config Name Style
 
@@ -85,7 +85,7 @@ We follow the below style to name config files. Contributors are advised to foll
 - `{method}`: method name, like `dff`, `deepsort`, `siamese_rpn`.
 - `{module}`: basic modules of the method, like `faster-rcnn_r50_fpn`.
 - `{train_cfg}`: training config which usually contains batch size, epochs, etc, like `8xb4-80e`.
-- `{train_data}`: training data, like `imagenetvid`.
+- `{train_data}`: training data, like `mot17halftrain`.
 - `{test_data}`: testing data, like `test-mot17halfval`.
 
 ## FAQ
@@ -93,7 +93,7 @@ We follow the below style to name config files. Contributors are advised to foll
 **Ignore some fields in the base configs**
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
-You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/understand_mmcv/config.html#inherit-from-base-config-with-ignored-fields) for simple illustration.
+You may refer to [mmengine](https://mmengine.readthedocs.io/en/latest/understand_mmengine/config.html) for simple illustration.
 
 **Use intermediate variables in configs**
 
