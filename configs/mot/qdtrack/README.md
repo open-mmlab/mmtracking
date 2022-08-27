@@ -50,8 +50,82 @@ The pre-trained checkpoint is given above([model](https://download.openmmlab.com
 
 b. Save the model to `ckpts/tao/**.pth`, and modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
 
+See `1.2 Example on TAO Dataset` to get more details.
+
 We observe around 0.5 track AP fluctuations in performance, and provide the best model.
 
 | Method  |   Detector   | Train Set |    Test Set    | Inf time (fps) | Track AP(50:75) | Track AP50 | Track AP75 |                         Config                         |                                                                                                                                        Download                                                                                                                                        |
 | :-----: | :----------: | :-------: | :------------: | :------------: | :-------------: | :--------: | :--------: | :----------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | QDTrack | Faster R-CNN | TAO train | TAO validation |       -        |      11.0       |    15.8    |    6.1     | [config](qdtrack_faster-rcnn_r101_fpn_8xb2-12e_tao.py) | [model](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth) \| [log](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934.log.json) |
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
+
+**1.1 Example on MOT Challenge Dataset**
+
+```shell
+# Training QDTrack on crowdhuman and mot17-half-train dataset with following command.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_train.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn-r50_fpn_8xb2-4e_crowdhuman-mot17halftrain_test-mot17halfval.py 8
+```
+
+**1.2 Example on TAO Dataset**
+
+- a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set.
+
+```shell
+./tools/dist_train.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-24e_lvis_test-tao.py 8
+```
+
+- b. Save the model to ckpts/tao/\*\*.pth, and modify the configs for TAO accordingly(set `load_from` to your ckpt path).
+
+```shell
+./tools/dist_train.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-12e_tao.py 8 \
+    --cfg-options load_from=checkpoints/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth
+```
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+**2.1 Example on MOTxx-halfval dataset**
+
+```shell
+# Example 1: Test on motXX-half-val set
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn-r50_fpn_8xb2-4e_crowdhuman-mot17halftrain_test-mot17halfval.py 8 \
+    --checkpoint ./checkpoints/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17_20220315_163453-68899b0a.pth
+```
+
+**2.2 Example on TAO dataset**
+
+```shell
+# Example 2: Test on motxx-test set
+# The number after config file represents the number of GPUs used
+./tools/dist_test.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-12e_tao.py 8 \
+    --checkpoint ./checkpoints/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth
+```
+
+If you want to know about more detailed usage of `test.py/dist_test.sh/slurm_test.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 3.Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell
+python demo/demo_mot_vis.py \
+    configs/mot/qdtrack/qdtrack_faster-rcnn-r50_fpn_8xb2-4e_crowdhuman-mot17halftrain_test-mot17halfval.py \
+    --checkpoint ./checkpoints/qdtrack_faster-rcnn_r50_fpn_4e_crowdhuman_mot17_20220315_163453-68899b0a.pth \
+    --input demo/demo.mp4 \
+    --output mot.mp4
+```
+
+If you want to know about more detailed usage of `demo_mot_vis.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).
