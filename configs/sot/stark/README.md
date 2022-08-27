@@ -28,12 +28,6 @@ In this paper, we present a new tracking architecture with an encoder-decoder tr
 
 ## Results and models
 
-The STARK is trained in 2 stages. We denote the 1st-stage model as `STARK-ST1`, and denote the 2nd-stage model as `STARK-ST2`. The following models we provide are the last-epoch models by default.
-
-Models from the 2 stages have different configurations. For example, `stark_st1_r50_500e_got10k` is the configuration of the 1st-stage model and `stark_st2_r50_50e_got10k` is the configuration of the 2nd-stage model.
-
-The shell command to train the 1st-stage model:
-
 ```
 bash ./tools/dist_train.sh \
     ${CONFIG_FILE} \
@@ -60,7 +54,7 @@ We provide the last-epoch model with its configuration and training log.
 
 ### TrackingNet
 
-The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on TrackingNet is submitted to [the evaluation server on TrackingNet Challenge](http://eval.tracking-net.org/web/challenges/challenge-page/39/submission). We provide the model with its configuration and training log.
+The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on TrackingNet is submitted to [the evaluation server on TrackingNet Challenge](https://eval.ai/web/challenges/challenge-page/1805/). We provide the model with its configuration and training log.
 
 |  Method   | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision |                                          Config                                           |                                                                                                                                       Download                                                                                                                                       |
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :-----: | :------------: | :-------: | :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -75,3 +69,112 @@ The results of STARK in GOT10k are reimplemented by ourselves. The last-epoch mo
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :-----: | :------------: | :-------: | :----------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | STARK-ST1 |   R-50   |   -   |  500e   |   8.45   |       -        |  68.1   |      77.4      |   62.4    | [config](stark-st1_resnet50_8xb16-500e_got10k-lasot-trackingnet-coco_test-got10k.py) | [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_got10k/stark_st1_r50_500e_got10k_20220223_125400-40ead158.pth) \| [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st1_r50_500e_got10k/stark_st1_r50_500e_got10k_20220223_125400.log.json) |
 | STARK-ST2 |   R-50   |   -   |   50e   |   2.31   |       -        |  68.3   |      77.6      |   62.7    | [config](stark-st2_resnet50_8xb16-50e_got10k-lasot-trackingnet-coco_test-got10k.py)  |   [model](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_got10k/stark_st2_r50_50e_got10k_20220226_124213-ee39bbff.pth) \| [log](https://download.openmmlab.com/mmtracking/sot/stark/stark_st2_r50_50e_got10k/stark_st2_r50_50e_got10k_20220226_124213.log.json)   |
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy.
+
+The STARK is trained in 2 stages. We denote the 1st-stage model as `STARK-ST1`, and denote the 2nd-stage model as `STARK-ST2`. The following models we provide are the last-epoch models by default.
+
+Models from the 2 stages have different configurations. For example, `stark-st1_r50_8xb16-500e_got10k.py` is the configuration of the 1st-stage model and `stark-st2_r50_8xb16-50e_got10.py` is the configuration of the 2nd-stage model. The following is an example of training STARK on GOT10k dataset. The training on LaSOT and TrackingNet is similar like this.
+
+**Training the 1st-stage model**
+
+```shell
+# Training STARK-ST1 on GOT10k dataset with following command.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/sot/stark/stark-st1_r50_8xb16-500e_got10k.py 8
+```
+
+**Training the 2nd-stage model**
+
+When training the 2nd-stage model, we have to pass an extra parameter `cfg-options` containing the key `load_from` from shell command to load the pretrained 1st-stage model. Here is an example:
+
+```shell
+# Training STARK-ST2 on GOT10k dataset with following command.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/sot/stark/stark-st2_r50_8xb16-50e_got10k.py 8
+    --cfg-options load_from=${STARK-ST1 model}
+```
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+**2.1 Example on LaSOT dataset**
+
+```shell
+# Example 1: Test STARK-ST1 on LaSOT testset
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st1_r50_8xb16-500e_got10k-lasot-trackingnet-coco_test-lasot.py 8 \
+    --checkpoint ./checkpoints/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
+```
+
+```shell
+# Example 2: Test STARK-ST2 on LaSOT testset
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st2_r50_8xb16-50e_got10k-lasot-trackingnet-coco_test-lasot.py 8 \
+    --checkpoint ./checkpoints/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
+```
+
+**2.1 Example on TrackingNet and GOT10k datasets**
+
+If you want to get the results of the [TrackingNet](https://eval.ai/web/challenges/challenge-page/1805/) and [GOT10k](http://got-10k.aitestunion.com/), please use the following commands to generate result files that can be used for submission. You can modify the saved path in `test_evaluator` of the config.
+
+```shell
+# Example 3: Test STARK-ST1 on TrackingNet testset.
+# The result is stored in `./results/stark_st1_trackingnet.zip` by default.
+# We use the lasot checkpoint on LaSOT to test on the TrackingNet.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st1_r50_8xb16-500e_got10k-lasot-trackingnet-coco_test-trackingnet.py 8 \
+    --checkpoint ./checkpoints/stark_st1_r50_500e_lasot_20220414_185654-9c19e39e.pth
+```
+
+```shell
+# Example 4: Test STARK-ST1 on GOT10k testset.
+# The result is stored in `./results/stark_st1_got10k.zip` by default.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st1_r50_8xb16-500e_got10k.py 8 \
+    --checkpoint ./checkpoints/stark_st1_r50_500e_got10k_20220223_125400-40ead158.pth
+```
+
+```shell
+# Example 5: Test STARK-ST2 on TrackingNet testset.
+# The result is stored in `./results/stark_st2_trackingnet.zip` by default.
+# We use the lasot checkpoint on LaSOT to test on the TrackingNet.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st2_r50_8xb16-50e_got10k-lasot-trackingnet-coco_test-trackingnet.py 8 \
+    --checkpoint ./checkpoints/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth
+```
+
+```shell
+# Example 6: Test STARK-ST2 on GOT10k testset.
+# The result is stored in `./results/stark_st2_got10k.zip` by default.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/stark/stark-st2_r50_8xb16-50e_got10k.py 8 \
+    --checkpoint ./checkpoints/stark_st2_r50_50e_got10k_20220226_124213-ee39bbff.pth
+```
+
+### 3.Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell
+python demo/demo_sot.py \
+    configs/sot/stark/stark-st2_r50_8xb16-50e_got10k-lasot-trackingnet-coco_test-lasot.py \
+    --checkpoint ./checkpoints/stark_st2_r50_50e_lasot_20220416_170201-b1484149.pth \
+    --input demo/demo.mp4 \
+    --output sot.mp4
+```
+
+If you want to know about more detailed usage of `demo_sot.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).
