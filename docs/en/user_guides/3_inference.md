@@ -56,12 +56,12 @@ python demo/demo_mot_vis.py \
 
 The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
 
-**Important:** For `DeepSORT` and `SORT`, they need both the weight of the `reid` and the weight of the `detector`. Therefore, we can't use `--checkpoint` to specify it. We need to use `init_cfg` in the configuration file to set the weight path. Other algorithms such as `ByteTrack` and `QDTrack` need not pay attention to this.
+**Important:** For `DeepSORT`, `SORT`, `Tracktor`, `StrongSORT`, they need both the weight of the `reid` and the weight of the `detector`. Therefore, we can't use `--checkpoint` to specify it. We need to use `init_cfg` in the configuration file to set the weight path. Other algorithms such as `ByteTrack`, `OCSORT` and `QDTrack` need not pay attention to this.
 
 Optional arguments:
 
 - `OUTPUT`: Output of the visualized demo. If not specified, the `--show` is obligate to show the video on the fly.
-- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `pretrains`.
+- `CHECKPOINT_FILE`: The checkpoint is optional in case that you already set up the pretrained models in the config by the key `init_cfg`.
 - `SCORE_THR`: The threshold of score to filter bboxes.
 - `DEVICE`: The device for inference. Options are `cpu` or `cuda:0`, etc.
 - `--show`: Whether show the video on the fly.
@@ -69,10 +69,18 @@ Optional arguments:
 **Examples of running mot model:**
 
 ```shell
+# Example 1: do not specify --checkpoint to use the default init_cfg
 python demo/demo_mot_vis.py \
     configs/mot/sort/sort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py \
     --input demo/demo.mp4 \
-    --output mot.mp4 \
+    --output mot.mp4
+
+# Example 2: use --checkpoint
+python demo/demo_mot_vis.py \
+    configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py \
+    --input demo/demo.mp4 \
+    --checkpoint checkpoints/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth \
+    --output mot.mp4
 ```
 
 **Examples of running vis model:**
