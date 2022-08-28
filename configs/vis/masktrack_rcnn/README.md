@@ -54,8 +54,8 @@ The checkpoint provided below is the best one from two experiments.
 Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
 
 ```shell
-# Training MaskTrack R-CNN on YouTube-VIS-2019 dataset with following command
-# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+# Training MaskTrack R-CNN on YouTube-VIS-2019 dataset with following command.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_train.sh \
     configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py 8
 ```
@@ -67,7 +67,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 If you want to get the results of the [YouTube-VOS](https://youtube-vos.org/dataset/vis/) val/test set, please use the following command to generate result files that can be used for submission. It will be stored in `./youtube_vis_results.submission_file.zip`, you can modify the saved path in `test_evaluator` of the config.
 
 ```shell
-# The number after config file represents the number of GPUs used
+# The number after config file represents the number of GPUs used.
 ./tools/dist_test.sh \
     configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py 8 \
     --checkpoint ./checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth
@@ -84,7 +84,7 @@ python demo/demo_mot_vis.py \
     configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py \
     --checkpoint ./checkpoints/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth \
     --input demo/demo.mp4 \
-    --output mot.mp4
+    --output vis.mp4
 ```
 
 If you want to know about more detailed usage of `demo_mot_vis.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).

@@ -44,11 +44,11 @@ Similarity learning has been recognized as a crucial step for object tracking. H
 
 Note: If you want to achieve a track AP of 11.0 on the TAO dataset, you need to do pre-training on LVIS dataset.
 
-a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set.
+a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set and save the model to `checkpoints/lvis/**.pth`.
 
 The pre-trained checkpoint is given above([model](https://download.openmmlab.com/mmtracking/mot/qdtrack/tao_dataset/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth)).
 
-b. Save the model to `ckpts/tao/**.pth`, and modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
+b. Modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
 
 See `1.2 Example on TAO Dataset` to get more details.
 
@@ -75,19 +75,19 @@ Due to the influence of parameters such as learning rate in default configuratio
 
 **1.2 Example on TAO Dataset**
 
-- a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set.
+- a. Pre-train the QDTrack on LVISv0.5+COCO2017 training set and save the model to `checkpoints/lvis/**.pth`.
 
 ```shell
 ./tools/dist_train.sh \
     configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-24e_lvis_test-tao.py 8
 ```
 
-- b. Save the model to ckpts/tao/\*\*.pth, and modify the configs for TAO accordingly(set `load_from` to your ckpt path).
+- b. Modify the configs for TAO accordingly(set `load_from` to your **ckpt path**).
 
 ```shell
 ./tools/dist_train.sh \
     configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-12e_tao.py 8 \
-    --cfg-options load_from=checkpoints/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth
+    --cfg-options load_from=checkpoints/lvis/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth
 ```
 
 If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
@@ -106,12 +106,23 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 
 **2.2 Example on TAO dataset**
 
+Note that the previous section `Results and models on TAO dataset` is evaluated using this command.
+
 ```shell
-# Example 2: Test on motxx-test set
-# The number after config file represents the number of GPUs used
+# Example 2: Test on TAO dataset
+# The number after config file represents the number of GPUs used.
 ./tools/dist_test.sh \
     configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-12e_tao.py 8 \
     --checkpoint ./checkpoints/qdtrack_faster-rcnn_r101_fpn_12e_tao_20220613_211934-7cbf4062.pth
+```
+
+In addition, you can use the following command to check the results of the previous section `Results and models on LVIS dataset`.
+
+```shell
+# Please note that their test sets are the same, only the training sets are different.
+./tools/dist_test.sh \
+    configs/mot/qdtrack/qdtrack_faster-rcnn_r101_fpn_8xb2-24e_lvis_test-tao.py 8 \
+    --checkpoint ./checkpoints/qdtrack_faster-rcnn_r101_fpn_24e_lvis_20220430_024513-88911daf.pth
 ```
 
 If you want to know about more detailed usage of `test.py/dist_test.sh/slurm_test.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
