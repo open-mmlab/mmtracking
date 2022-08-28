@@ -83,7 +83,7 @@ Or, you can specify it in commands as follows.
 ```shell script
 ./tools/dist_test.sh \
     configs/mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py 8 \
-    --cfg-options model.detector.init_cfg.checkpoint='path_to_your_checkpoint.pth'
+    --cfg-options model.detector.init_cfg.checkpoint=path_to_your_checkpoint.pth
 ```
 
 **2.2 Example on MOTxx-test dataset**
