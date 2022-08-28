@@ -6,8 +6,8 @@ import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmdet.structures.bbox.transforms import (bbox_cxcywh_to_xyxy,
                                               bbox_xyxy_to_cxcywh)
-from mmengine.data import InstanceData
 from mmengine.model import BaseModule
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS

@@ -5,7 +5,7 @@ from unittest import TestCase
 import numpy as np
 import torch
 from mmdet.structures.mask import BitmapMasks
-from mmengine.data import LabelData
+from mmengine.structures import LabelData
 
 from mmtrack.datasets.transforms import (CheckPadMaskValidity, PackReIDInputs,
                                          PackTrackInputs)

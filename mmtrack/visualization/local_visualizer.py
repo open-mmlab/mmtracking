@@ -7,9 +7,9 @@ import seaborn as sns
 from mmdet.structures.mask import bitmap_to_polygon
 from mmdet.visualization import DetLocalVisualizer as MMDET_DetLocalVisualizer
 from mmdet.visualization.palette import _get_adaptive_scales
-from mmengine import Visualizer
-from mmengine.data import InstanceData
 from mmengine.dist import master_only
+from mmengine.structures import InstanceData
+from mmengine.visualization import Visualizer
 
 from mmtrack.registry import VISUALIZERS
 from mmtrack.structures import TrackDataSample

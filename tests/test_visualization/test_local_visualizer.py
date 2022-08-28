@@ -5,7 +5,7 @@ from unittest import TestCase
 import cv2
 import numpy as np
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.structures import TrackDataSample
 from mmtrack.visualization import DetLocalVisualizer, TrackLocalVisualizer

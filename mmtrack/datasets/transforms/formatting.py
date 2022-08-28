@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform, to_tensor
 from mmdet.structures.mask import BitmapMasks
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.registry import TRANSFORMS
 from mmtrack.structures import ReIDDataSample, TrackDataSample

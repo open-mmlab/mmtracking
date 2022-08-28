@@ -12,9 +12,9 @@ from mmdet.models.dense_heads import MaskFormerHead as MMDET_MaskFormerHead
 from mmdet.models.utils import get_uncertain_point_coords_with_randomness
 from mmdet.structures.mask import mask2bbox
 from mmdet.utils import ConfigType, OptConfigType, OptMultiConfig, reduce_mean
-from mmengine.data import InstanceData
 from mmengine.model import ModuleList
-from mmengine.model.utils import caffe2_xavier_init
+from mmengine.model.weight_init import caffe2_xavier_init
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS

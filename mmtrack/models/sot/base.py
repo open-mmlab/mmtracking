@@ -5,8 +5,8 @@ from typing import Dict, List, Tuple, Union
 
 import addict
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
-from mmengine.data import InstanceData
 from mmengine.model import BaseModel
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.evaluation import bbox2region

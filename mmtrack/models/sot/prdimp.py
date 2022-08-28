@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from mmcv.image import imrotate
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 from torch import Tensor
 from torchvision.transforms.functional import gaussian_blur
 

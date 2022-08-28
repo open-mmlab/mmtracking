@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from addict import Dict
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS

@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.evaluation import MOTChallengeMetrics
 

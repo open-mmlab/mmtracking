@@ -5,7 +5,7 @@ from os.path import dirname, exists, join
 import numpy as np
 import torch
 from mmdet.utils.util_random import ensure_rng
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.structures import TrackDataSample
 

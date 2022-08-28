@@ -7,7 +7,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.engine import TrackVisualizationHook
 from mmtrack.structures import TrackDataSample

@@ -6,8 +6,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from mmdet.structures.mask import BitmapMasks
-from mmengine.data import BaseDataElement
 from mmengine.model import BaseDataPreprocessor
+from mmengine.structures import BaseDataElement
 
 from mmtrack.registry import MODELS
 from mmtrack.structures import TrackDataSample

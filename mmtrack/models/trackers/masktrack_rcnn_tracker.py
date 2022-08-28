@@ -3,7 +3,7 @@ from typing import List
 
 import torch
 from mmdet.structures.bbox import bbox_overlaps
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS
