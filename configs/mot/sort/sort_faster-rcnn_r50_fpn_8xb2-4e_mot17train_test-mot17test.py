@@ -19,7 +19,4 @@ test_dataloader = dict(
         data_prefix=dict(img_path='test')))
 
 # evaluator
-test_evaluator = dict(
-    format_only=True,
-    outfile_prefix='./mot_17_test_res'
-)
+test_evaluator = dict(format_only=True, outfile_prefix='./mot_17_test_res')
