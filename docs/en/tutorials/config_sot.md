@@ -195,15 +195,18 @@ evaluation = dict(
     rule='greater',
     save_best='success') # The config to build the evaluation hook
 # yapf:disable
-log_config = dict(  # config to register logger hook
-    interval=50,
+log_config = dict(  # Config to register logger hook
+    interval=50,  # Interval to print the log
     hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook', by_epoch=False),
-        dict(type='WandbLoggerHook', by_epoch=False,
-             init_kwargs={'entity': entity, 'project': project, 'config': cfg_dict}), # The Wandb logger is also supported, It requires `wandb` to be installed.
-        # ClearMLLoggerHook, DvcliveLoggerHook, MlflowLoggerHook, NeptuneLoggerHook, PaviLoggerHook, SegmindLoggerHook are also supported based on MMCV implementation.
-    ])
+      dict(type='TextLoggerHook', by_epoch=False),
+      dict(type='TensorboardLoggerHook', by_epoch=False),
+      dict(type='WandbLoggerHook', by_epoch=False,  # The Wandb logger is also supported, It requires `wandb` to be installed.
+           init_kwargs={'entity': "OpenMMLab",  # The entity used to log on Wandb
+                        'project': "MMTracking",  # Project name in WandB 
+                        'config': cfg_dict}),  # Check https://docs.wandb.ai/ref/python/init for more init arguments.
+  ])  # ClearMLLoggerHook, DvcliveLoggerHook, MlflowLoggerHook, NeptuneLoggerHook, PaviLoggerHook, SegmindLoggerHook are also supported based on MMCV implementation.
+
+
 # yapf:enable
 # runtime settings
 total_epochs = 20  # Total epochs to train the model

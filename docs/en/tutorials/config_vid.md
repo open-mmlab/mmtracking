@@ -224,14 +224,15 @@ optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)  # Conf
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))  # Config used to build the optimizer hook, refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/optimizer.py#L8 for implementation details.
 checkpoint_config = dict(interval=1)  # Config to set the checkpoint hook, Refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/checkpoint.py for implementation.
 log_config = dict(
-    interval=50,
+    interval=50, 
     hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook', by_epoch=False),
-        dict(type='WandbLoggerHook', by_epoch=False,
-             init_kwargs={'entity': entity, 'project': project, 'config': cfg_dict}), # The Wandb logger is also supported, It requires `wandb` to be installed.
-        # ClearMLLoggerHook, DvcliveLoggerHook, MlflowLoggerHook, NeptuneLoggerHook, PaviLoggerHook, SegmindLoggerHook are also supported based on MMCV implementation.
-    ])  # config to register logger hook
+      dict(type='TextLoggerHook', by_epoch=False),
+      dict(type='TensorboardLoggerHook', by_epoch=False),
+      dict(type='WandbLoggerHook', by_epoch=False,
+           init_kwargs={'entity': "OpenMMLab", 
+                        'project': "MMTracking",  
+                        'config': cfg_dict}),  
+  ])  
 dist_params = dict(backend='nccl', port='29500') # Parameters to setup distributed training, the port is set to 29500 by default
 log_level = 'INFO'  # The level of logging.
 load_from = None  # load models as a pre-trained model from a given path. This will not resume training.
