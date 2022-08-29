@@ -144,4 +144,4 @@ test_evaluator = dict(
         dict(type='InterpolateTracklets', min_num_frames=5, max_num_frames=20)
     ],
     format_only=True,
-    resfile_path='./mot_20_test_res')
+    outfile_prefix='./mot_20_test_res')
