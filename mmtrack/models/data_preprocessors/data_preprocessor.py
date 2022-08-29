@@ -1,17 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from numbers import Number
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 import torch
 import torch.nn as nn
 from mmdet.structures.mask import BitmapMasks
 from mmengine.model import BaseDataPreprocessor
-from mmengine.structures import BaseDataElement
 
 from mmtrack.registry import MODELS
 from mmtrack.structures import TrackDataSample
-from mmtrack.utils import OptSampleList, stack_batch
+from mmtrack.utils import stack_batch
 
 
 @MODELS.register_module()
@@ -26,7 +25,7 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
     - Pad inputs to the maximum size of current batch with defined
       ``pad_value``. The padding size can be divisible by a defined
       ``pad_size_divisor``
-    - Stack inputs to batch_inputs.
+    - Stack inputs to inputs.
     - Convert inputs from bgr to rgb if the shape of input is (1, 3, H, W).
     - Normalize image with defined std and mean.
     - Do batch augmentations during training.
@@ -93,24 +92,24 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
         else:
             self.batch_augments = None
 
-    def forward(self,
-                data: Sequence[dict],
-                training: bool = False) -> Tuple[Dict, Optional[list]]:
+    def forward(self, data: dict, training: bool = False) -> Dict:
         """Perform normalization、padding and bgr2rgb conversion based on
         ``TrackDataPreprocessor``.
 
         Args:
-            data (Sequence[dict]): data sampled from dataloader.
+            data (dict): data sampled from dataloader.
             training (bool): Whether to enable training time augmentation.
 
         Returns:
             Tuple[Dict[str, List[torch.Tensor]], OptSampleList]: Data in the
             same format as the model input.
         """
-        inputs, batch_data_samples = self.collate_data(data)
         batch_pad_shape = self._get_pad_shape(data)
-        batch_inputs = dict()
-        for imgs_key, imgs in inputs.items():
+        data = super().forward(data=data, training=training)
+        ori_inputs, data_samples = data['inputs'], data['data_samples']
+
+        inputs = dict()
+        for imgs_key, imgs in ori_inputs.items():
             # TODO: whether normalize should be after stack_batch
             # imgs is a list contain multiple Tensor of imgs.
             # The shape of imgs[0] is (T, C, H, W).
@@ -120,19 +119,19 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             if self._enable_normalize:
                 imgs = [(_img - self.mean) / self.std for _img in imgs]
 
-            batch_inputs[imgs_key] = stack_batch(imgs, self.pad_size_divisor,
-                                                 self.pad_value)
+            inputs[imgs_key] = stack_batch(imgs, self.pad_size_divisor,
+                                           self.pad_value)
 
-        if batch_data_samples is not None:
+        if data_samples is not None:
             # NOTE the batched image size information may be useful, e.g.
             # in DETR, this is needed for the construction of masks, which is
             # then used for the transformer_head.
-            for key, imgs in batch_inputs.items():
+            for key, imgs in inputs.items():
                 img_shape = tuple(imgs.size()[-2:])
                 imgs_shape = [img_shape] * imgs.size(1) if imgs.size(
                     1) > 1 else img_shape
                 ref_prefix = key[:-3]
-                for data_sample, pad_shapes in zip(batch_data_samples,
+                for data_sample, pad_shapes in zip(data_samples,
                                                    batch_pad_shape[key]):
                     data_sample.set_metainfo({
                         f'{ref_prefix}batch_input_shape':
@@ -141,7 +140,7 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                         pad_shapes
                     })
                 if self.pad_mask:
-                    self.pad_gt_masks(batch_data_samples, ref_prefix)
+                    self.pad_gt_masks(data_samples, ref_prefix)
 
         if training and self.batch_augments is not None:
             for batch_aug in self.batch_augments:
@@ -149,63 +148,26 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
                 # `img` key. Therefore, only img is processed here.
                 # The shape of `img` is (N, T, C, H, W), hence, we use
                 # [:, 0] to change the shape to (N, C, H, W).
-                assert len(batch_inputs) == 1 and 'img' in batch_inputs
-                aug_batch_inputs, batch_data_samples = batch_aug(
-                    batch_inputs['img'][:, 0], batch_data_samples)
-                batch_inputs['img'] = aug_batch_inputs.unsqueeze(1)
+                assert len(inputs) == 1 and 'img' in inputs
+                aug_inputs, data_samples = batch_aug(inputs['img'][:, 0],
+                                                     data_samples)
+                inputs['img'] = aug_inputs.unsqueeze(1)
 
-        return batch_inputs, batch_data_samples
+        return dict(inputs=inputs, data_samples=data_samples)
 
-    def collate_data(
-        self, data: Sequence[dict]
-    ) -> Tuple[Dict[str, List[torch.Tensor]], OptSampleList]:
-        """Collating and copying data to the target device.
-
-        Collates the data sampled from dataloader into a list of tensor and
-        list of labels, and then copies tensor to the target device.
-
-        Subclasses could override it to be compatible with the custom format
-        data sampled from custom dataloader.
-
-        Args:
-            data (Sequence[dict]): Data sampled from dataloader.
-
-        Returns:
-            Tuple[Dict[str, List[torch.Tensor]], OptSampleList]: Unstacked list
-            of input tensor and annotations at target device.
-        """
-        # Collate inputs (list of dict to dict of list)
-        inputs = {
-            key:
-            [_data['inputs'][key].to(self._device).float() for _data in data]
-            for key in data[0]['inputs']
-        }
-        batch_data_samples: List[BaseDataElement] = []
-        # Model can get predictions without any data samples.
-        for _data in data:
-            if 'data_sample' in _data:
-                batch_data_samples.append(_data['data_sample'].to(
-                    self._device))
-
-        if not batch_data_samples:
-            batch_data_samples = None  # type: ignore
-
-        return inputs, batch_data_samples
-
-    def _get_pad_shape(self, data: Sequence[dict]) -> Dict[str, List]:
+    def _get_pad_shape(self, data: dict) -> Dict[str, List]:
         """Get the pad_shape of each image based on data and pad_size_divisor.
 
         Args:
-            data (Sequence[dict]): Data sampled from dataloader.
+            data (dict): Data sampled from dataloader.
 
         Returns:
             Dict[str, List]: The shape of padding.
         """
         batch_pad_shape = dict()
-        for imgs_key in data[0]['inputs']:
+        for imgs_key in data['inputs']:
             pad_shape_list = []
-            for _data in data:
-                imgs = _data['inputs'][imgs_key]
+            for imgs in data['inputs'][imgs_key]:
                 pad_h = int(
                     np.ceil(imgs.shape[-2] /
                             self.pad_size_divisor)) * self.pad_size_divisor
@@ -219,11 +181,11 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             batch_pad_shape[imgs_key] = pad_shape_list
         return batch_pad_shape
 
-    def pad_gt_masks(self, batch_data_samples: Sequence[TrackDataSample],
+    def pad_gt_masks(self, data_samples: Sequence[TrackDataSample],
                      ref_prefix: str) -> None:
         """Pad gt_masks to shape of batch_input_shape."""
-        if 'masks' in batch_data_samples[0].get(f'{ref_prefix}gt_instances'):
-            for data_samples in batch_data_samples:
+        if 'masks' in data_samples[0].get(f'{ref_prefix}gt_instances'):
+            for data_samples in data_samples:
                 masks = data_samples.get(f'{ref_prefix}gt_instances').masks
                 assert isinstance(masks, BitmapMasks)
                 batch_input_shape = data_samples.get(

@@ -112,9 +112,8 @@ class TestSelsaRoIHead(TestCase):
             num_items=[1],
             num_ref_imgs=2)
         batch_data_samples = []
-        for i in range(len(packed_inputs)):
-            batch_data_samples.append(
-                packed_inputs[i]['data_sample'].to(device='cuda'))
+        for data_sample in packed_inputs['data_samples']:
+            batch_data_samples.append(data_sample.to(device='cuda'))
         out = self.roi_head.loss(feats, ref_feats, proposal_list,
                                  ref_proposal_list, batch_data_samples)
         loss_cls = out['loss_cls']
@@ -133,9 +132,8 @@ class TestSelsaRoIHead(TestCase):
             frame_id=0,
             num_ref_imgs=2)
         batch_data_samples = []
-        for i in range(len(packed_inputs)):
-            batch_data_samples.append(
-                packed_inputs[i]['data_sample'].to(device='cuda'))
+        for data_sample in packed_inputs['data_samples']:
+            batch_data_samples.append(data_sample.to(device='cuda'))
         out = self.roi_head.loss(feats, ref_feats, proposal_list,
                                  ref_proposal_list, batch_data_samples)
         empty_cls_loss = out['loss_cls']
@@ -162,9 +160,8 @@ class TestSelsaRoIHead(TestCase):
             num_items=[1],
             num_ref_imgs=2)
         batch_data_samples = []
-        for i in range(len(packed_inputs)):
-            batch_data_samples.append(
-                packed_inputs[i]['data_sample'].to(device='cuda'))
+        for data_sample in packed_inputs['data_samples']:
+            batch_data_samples.append(data_sample.to(device='cuda'))
         out = self.roi_head.predict(feats, ref_feats, proposal_list,
                                     ref_proposal_list, batch_data_samples)
         assert out[0]['bboxes'].shape[0] == out[0]['scores'].shape[0]

@@ -147,7 +147,7 @@ class TestMask2FormerHead(TestCase):
             image_shapes=[(3, s, s)],
             num_classes=2,
             with_mask=True)
-        data_sample = packed_inputs[0]['data_sample']
+        data_sample = packed_inputs['data_samples'][0]
         data_sample.gt_instances['map_instances_to_img_idx'] = torch.tensor(
             [0, 0, 1])
         loss = mask2former_head.loss(feats, [data_sample])

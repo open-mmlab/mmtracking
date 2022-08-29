@@ -127,7 +127,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -155,7 +155,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -190,7 +190,7 @@ class TestCocoVideoMetric(TestCase):
             coco_metric.process([
                 dict(
                     inputs=None,
-                    data_sample={
+                    data_samples={
                         'img_id': 0,
                         'ori_shape': (640, 640)
                     })
@@ -204,7 +204,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -228,7 +228,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -270,7 +270,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -288,7 +288,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -309,7 +309,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -344,7 +344,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640)
                 })
@@ -389,7 +389,7 @@ class TestCocoVideoMetric(TestCase):
         coco_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 0,
                     'ori_shape': (640, 640),
                     'instances': instances

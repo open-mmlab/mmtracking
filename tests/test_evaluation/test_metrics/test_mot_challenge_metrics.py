@@ -38,7 +38,7 @@ class TestMOTChallengeMetrics(TestCase):
         sep = os.sep
         data_batch = [
             dict(
-                data_sample={
+                data_samples={
                     'frame_id': 0,
                     'video_length': 1,
                     'img_id': 1,

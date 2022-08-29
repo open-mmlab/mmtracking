@@ -72,7 +72,7 @@ class TAOMetric(BaseVideoMetric):
         self.img_ids = []
 
     def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+                data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
         results should be stored in ``self.results``, which will be used to
         compute the metrics when all batches have been processed.
@@ -80,17 +80,17 @@ class TAOMetric(BaseVideoMetric):
         Args:
             data_batch (Sequence[dict]): A batch of data
                 from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from
-                the model.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-        for data, pred in zip(data_batch, predictions):
+        for data, pred in zip(data_batch, data_samples):
             result = dict()
             pred_track = pred['pred_track_instances']
             pred_det = pred['pred_det_instances']
-            frame_id = data['data_sample']['frame_id']
-            video_length = data['data_sample']['video_length']
+            frame_id = data['data_samples']['frame_id']
+            video_length = data['data_samples']['video_length']
 
-            result['img_id'] = data['data_sample']['img_id']
+            result['img_id'] = data['data_samples']['img_id']
             result['track_bboxes'] = pred_track['bboxes'].cpu().numpy()
             result['track_scores'] = pred_track['scores'].cpu().numpy()
             result['track_labels'] = pred_track['labels'].cpu().numpy()
@@ -103,25 +103,25 @@ class TAOMetric(BaseVideoMetric):
 
             # parse gt
             gt = dict()
-            gt['width'] = data['data_sample']['ori_shape'][1]
-            gt['height'] = data['data_sample']['ori_shape'][0]
+            gt['width'] = data['data_samples']['ori_shape'][1]
+            gt['height'] = data['data_samples']['ori_shape'][0]
             keys = [
                 'frame_id', 'frame_index', 'neg_category_ids',
                 'not_exhaustive_category_ids', 'img_id', 'video_id',
                 'video_length'
             ]
             for key in keys:
-                if key not in data['data_sample']:
+                if key not in data['data_samples']:
                     raise KeyError(
                         f'The key {key} is not found in track_data_sample,'
                         f' please pass it into the meta_keys'
                         f' of the PackTrackInputs')
-                gt[key] = data['data_sample'][key]
+                gt[key] = data['data_samples'][key]
 
             # When the ground truth exists, get annotation from `instances`.
             # In general, it contains `bbox`, `bbox_label` and `instance_id`.
-            if 'instances' in data['data_sample']:
-                gt['anns'] = data['data_sample']['instances']
+            if 'instances' in data['data_samples']:
+                gt['anns'] = data['data_samples']['instances']
             else:
                 gt['anns'] = dict()
             self.per_video_res.append((result, gt))

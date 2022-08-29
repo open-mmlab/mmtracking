@@ -67,7 +67,7 @@ class YouTubeVISMetric(BaseVideoMetric):
         self._vis_meta_info = defaultdict(list)  # record video and image infos
 
     def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+                data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
         results should be stored in ``self.results``, which will be used to
         compute the metrics when all batches have been processed.
@@ -78,14 +78,16 @@ class YouTubeVISMetric(BaseVideoMetric):
             predictions (Sequence[dict]): A batch of outputs from
                 the model.
         """
-        for data, pred in zip(data_batch, predictions):
+        # TODO: get anns from data_samples instead of data_batch
+        # TODO: change `pred` to `data_sample`
+        for data, pred in zip(data_batch, data_samples):
             result = dict()
             pred = pred['pred_track_instances']
-            frame_id = data['data_sample']['frame_id']
-            video_length = data['data_sample']['video_length']
-            video_id = data['data_sample']['video_id']
+            frame_id = data['data_samples']['frame_id']
+            video_length = data['data_samples']['video_length']
+            video_id = data['data_samples']['video_id']
 
-            result['img_id'] = data['data_sample']['img_id']
+            result['img_id'] = data['data_samples']['img_id']
             result['bboxes'] = pred['bboxes'].cpu().numpy()
             result['scores'] = pred['scores'].cpu().numpy()
             result['labels'] = pred['labels'].cpu().numpy()
@@ -98,9 +100,9 @@ class YouTubeVISMetric(BaseVideoMetric):
 
             # parse gt
             gt = dict()
-            gt['width'] = data['data_sample']['ori_shape'][1]
-            gt['height'] = data['data_sample']['ori_shape'][0]
-            gt['img_id'] = data['data_sample']['img_id']
+            gt['width'] = data['data_samples']['ori_shape'][1]
+            gt['height'] = data['data_samples']['ori_shape'][0]
+            gt['img_id'] = data['data_samples']['img_id']
             gt['frame_id'] = frame_id
             gt['video_id'] = video_id
             gt['video_length'] = video_length
@@ -108,8 +110,8 @@ class YouTubeVISMetric(BaseVideoMetric):
             # When the ground truth exists, get annotation from `instances`.
             # In general, it contains `bbox`, `bbox_label`, `mask` and
             # `instance_id`.
-            if 'instances' in data['data_sample']:
-                gt['anns'] = data['data_sample']['instances']
+            if 'instances' in data['data_samples']:
+                gt['anns'] = data['data_samples']['instances']
             else:
                 gt['anns'] = dict()
             self.per_video_res.append((result, gt))

@@ -18,13 +18,7 @@ class TestVisualizationHook(TestCase):
 
     def setUp(self) -> None:
         TrackLocalVisualizer.get_instance('visualizer')
-
-        data_sample = TrackDataSample()
-        data_sample.set_metainfo(
-            dict(
-                img_path=osp.join(
-                    osp.dirname(__file__), '../../data/image_1.jpg')))
-        self.data_batch = [dict(data_sample=data_sample)]
+        self.data_batch = [dict(data_sample=None)]
 
         pred_instances_data = dict(
             bboxes=torch.tensor([[100, 100, 200, 200], [150, 150, 400, 200]]),
@@ -32,9 +26,14 @@ class TestVisualizationHook(TestCase):
             labels=torch.tensor([0, 1]),
             scores=torch.tensor([0.955, 0.876]))
         pred_instances = InstanceData(**pred_instances_data)
-        pred_track_data_sample = TrackDataSample()
-        pred_track_data_sample.pred_track_instances = pred_instances
-        self.outputs = [pred_track_data_sample]
+        track_data_sample = TrackDataSample()
+        track_data_sample.pred_track_instances = pred_instances
+        track_data_sample.gt_instances = pred_instances
+        track_data_sample.set_metainfo(
+            dict(
+                img_path=osp.join(
+                    osp.dirname(__file__), '../../data/image_1.jpg')))
+        self.outputs = [track_data_sample]
 
     def test_after_val_iter(self):
         runner = Mock()

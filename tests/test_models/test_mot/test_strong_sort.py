@@ -62,12 +62,12 @@ class TestStrongSORT(TestCase):
                 num_ref_imgs=0,
                 image_shapes=[(3, 256, 256)],
                 num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
+            inputs, data_samples = out_data['inputs'], out_data['data_samples']
 
             # Test forward test
             model.eval()
             with torch.no_grad():
                 batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                    inputs, data_samples, mode='predict')
                 assert len(batch_results) == 1

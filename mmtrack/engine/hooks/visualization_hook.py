@@ -92,15 +92,14 @@ class TrackVisualizationHook(Hook):
         total_curr_iter = runner.iter + batch_idx
 
         if self.every_n_inner_iters(batch_idx, self.interval):
-            data = data_batch[0]
-            pred_sample = outputs[0]
-            img_path = data['data_sample'].img_path
+            data_sample = outputs[0]
+            img_path = data_sample.img_path
             img_bytes = self.file_client.get(img_path)
             img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
             self._visualizer.add_datasample(
                 osp.basename(img_path) if self.show else 'val_img',
                 img,
-                pred_sample=pred_sample,
+                data_sample=data_sample,
                 show=self.show,
                 wait_time=self.wait_time,
                 pred_score_thr=self.score_thr,
@@ -129,9 +128,8 @@ class TrackVisualizationHook(Hook):
             'only batch_size=1 is supported while testing.'
 
         if self.every_n_inner_iters(batch_idx, self.interval):
-            data = data_batch[0]
-            pred_sample = outputs[0]
-            img_path = data['data_sample'].img_path
+            data_sample = outputs[0]
+            img_path = data_sample.img_path
             img_bytes = self.file_client.get(img_path)
             img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
 
@@ -143,7 +141,7 @@ class TrackVisualizationHook(Hook):
             self._visualizer.add_datasample(
                 osp.basename(img_path) if self.show else 'test_img',
                 img,
-                pred_sample=pred_sample,
+                data_sample=data_sample,
                 show=self.show,
                 wait_time=self.wait_time,
                 pred_score_thr=self.score_thr,

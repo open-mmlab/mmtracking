@@ -473,15 +473,14 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
 
         return cls_pred, mask_pred, attn_mask
 
-    def forward(
-            self, x: List[Tensor], batch_data_samples: SampleList
-    ) -> Tuple[List[Tensor], List[Tensor]]:
+    def forward(self, x: List[Tensor],
+                data_samples: SampleList) -> Tuple[List[Tensor], List[Tensor]]:
         """Forward function.
 
         Args:
             x (list[Tensor]): Multi scale Features from the
                 upstream network, each is a 4D-tensor.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
 
         Returns:
@@ -569,7 +568,7 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
     def loss(
         self,
         x: Tuple[Tensor],
-        batch_data_samples: SampleList,
+        data_samples: SampleList,
     ) -> Dict[str, Tensor]:
         """Perform forward propagation and loss calculation of the track head
         on the features of the upstream network.
@@ -577,7 +576,7 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
         Args:
             x (tuple[Tensor]): Multi-level features from the upstream
                 network, each is a 4D-tensor.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
 
         Returns:
@@ -586,12 +585,12 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
         batch_img_metas = []
         batch_gt_instances = []
 
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_img_metas.append(data_sample.metainfo)
             batch_gt_instances.append(data_sample.gt_instances)
 
         # forward
-        all_cls_scores, all_mask_preds = self(x, batch_data_samples)
+        all_cls_scores, all_mask_preds = self(x, data_samples)
 
         # preprocess ground truth
         batch_gt_instances = self.preprocess_gt(batch_gt_instances)
@@ -603,14 +602,14 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
 
     def predict(self,
                 x: Tuple[Tensor],
-                batch_data_samples: SampleList,
+                data_samples: SampleList,
                 rescale: bool = True) -> InstanceList:
         """Test without augmentation.
 
         Args:
             x (tuple[Tensor]): Multi-level features from the
                 upstream network, each is a 4D-tensor.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
             rescale (bool, Optional): If False, then returned bboxes and masks
                 will fit the scale of img, otherwise, returned bboxes and masks
@@ -625,9 +624,9 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
                     image, with shape (n, t, h, w).
         """
         batch_img_metas = [
-            data_sample.metainfo for data_sample in batch_data_samples
+            data_sample.metainfo for data_sample in data_samples
         ]
-        all_cls_scores, all_mask_preds = self(x, batch_data_samples)
+        all_cls_scores, all_mask_preds = self(x, data_samples)
         mask_cls_results = all_cls_scores[-1]
         mask_pred_results = all_mask_preds[-1]
 

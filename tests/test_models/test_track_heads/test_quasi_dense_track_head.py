@@ -92,7 +92,7 @@ class TestQuasiDenseTrackHead(TestCase):
         ref_feats = key_feats
         loss_track = self.track_head.loss(key_feats, ref_feats, proposal_list,
                                           proposal_list,
-                                          [packed_inputs[0]['data_sample']])
+                                          [packed_inputs['data_samples'][0]])
         assert loss_track['loss_track'] >= 0, 'track loss should be zero'
         assert loss_track['loss_track_aux'] > 0, 'aux loss should be non-zero'
 

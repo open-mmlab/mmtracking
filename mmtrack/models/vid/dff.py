@@ -41,39 +41,38 @@ class DFF(BaseVideoDetector):
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
-             **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: SampleList, **kwargs) -> dict:
         """
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size. The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
 
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instance``.
 
         Return:
             dict: A dictionary of loss components.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
         img = img[0]
 
-        ref_img = batch_inputs['ref_img']
+        ref_img = inputs['ref_img']
         assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert ref_img.size(0) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
         ref_img = ref_img[0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
 
         flow_img = torch.cat((img, ref_img), dim=1)
         flow = self.motion(flow_img, metainfo, self.preprocess_cfg)
@@ -93,7 +92,7 @@ class DFF(BaseVideoDetector):
             if self.detector.with_rpn:
                 proposal_cfg = self.detector.train_cfg.get(
                     'rpn_proposal', self.detector.test_cfg.rpn)
-                rpn_data_samples = copy.deepcopy(batch_data_samples)
+                rpn_data_samples = copy.deepcopy(data_samples)
                 # set cat_id of gt_labels to 0 in RPN
                 for data_sample in rpn_data_samples:
                     data_sample.gt_instances.labels = \
@@ -111,18 +110,17 @@ class DFF(BaseVideoDetector):
                 losses.update(rpn_losses)
             else:
                 rpn_results_list = []
-                for i in range(len(batch_data_samples)):
+                for i in range(len(data_samples)):
                     results = InstanceData()
-                    results.bboxes = batch_data_samples[i].proposals
+                    results.bboxes = data_samples[i].proposals
                     rpn_results_list.append(results)
 
             roi_losses = self.detector.roi_head.loss(x, rpn_results_list,
-                                                     batch_data_samples,
-                                                     **kwargs)
+                                                     data_samples, **kwargs)
             losses.update(roi_losses)
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
-            bbox_losses = self.detector.bbox_head.loss(x, batch_data_samples,
+            bbox_losses = self.detector.bbox_head.loss(x, data_samples,
                                                        **kwargs)
             losses.update(bbox_losses)
         else:
@@ -168,13 +166,13 @@ class DFF(BaseVideoDetector):
         return x
 
     def predict(self,
-                batch_inputs: dict,
-                batch_data_samples: SampleList,
+                inputs: dict,
+                data_samples: SampleList,
                 rescale: bool = True) -> SampleList:
         """Test without augmentation.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
@@ -182,7 +180,7 @@ class DFF(BaseVideoDetector):
                 - ref_img (Tensor): The reference images.
                 In test mode, T = 1 and there is only ``img`` and no
                 ``ref_img``.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -193,39 +191,39 @@ class DFF(BaseVideoDetector):
             SampleList: Tracking results of the input images.
             Each TrackDataSample usually contains ``pred_det_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
         img = img[0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'Dff video detectors only support 1 batch size per gpu for now.'
 
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
         x = self.extract_feats(img, metainfo)
 
-        track_data_sample = copy.deepcopy(batch_data_samples[0])
+        track_data_sample = copy.deepcopy(data_samples[0])
 
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):
-            if not hasattr(batch_data_samples[0], 'proposals'):
+            if not hasattr(data_samples[0], 'proposals'):
                 rpn_results_list = self.detector.rpn_head.predict(
-                    x, batch_data_samples, rescale=False)
+                    x, data_samples, rescale=False)
             else:
                 rpn_results_list = []
-                for i in range(len(batch_data_samples)):
+                for i in range(len(data_samples)):
                     results = InstanceData()
-                    results.bboxes = batch_data_samples[i].proposals
+                    results.bboxes = data_samples[i].proposals
                     rpn_results_list.append(results)
 
             results_list = self.detector.roi_head.predict(
-                x, rpn_results_list, batch_data_samples, rescale=rescale)
+                x, rpn_results_list, data_samples, rescale=rescale)
             track_data_sample.pred_det_instances = results_list[0]
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
             results_list = self.detector.bbox_head.predict(
-                x, batch_data_samples, rescale=rescale)
+                x, data_samples, rescale=rescale)
             track_data_sample.pred_det_instances = results_list[0]
         else:
             raise TypeError('detector must has roi_head or bbox_head.')

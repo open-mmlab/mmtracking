@@ -489,7 +489,7 @@ class StarkHead(BaseModule):
 
         return pred_logits, pred_bboxes
 
-    def predict(self, inputs: List[dict], batch_data_samples: SampleList,
+    def predict(self, inputs: List[dict], data_samples: SampleList,
                 prev_bbox: Tensor, scale_factor: Tensor) -> InstanceList:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
@@ -504,7 +504,7 @@ class StarkHead(BaseModule):
                 Here, `h` and `w` denote the height and width of input
                 image respectively. `stride` is the stride of feature map.
 
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
             scale_factor (Tensor): scale factor.
@@ -517,7 +517,7 @@ class StarkHead(BaseModule):
                   the last dimension 4 arrange as [x1, y1, x2, y2].
         """
         batch_img_metas = [
-            data_samples.metainfo for data_samples in batch_data_samples
+            data_samples.metainfo for data_samples in data_samples
         ]
         outs = self(inputs)
         predictions = self.predict_by_feat(
@@ -652,7 +652,7 @@ class StarkHead(BaseModule):
 
     # TODO: unify the `sefl.predict`, `self.loss` and so on in all the heads of
     # SOT.
-    def loss(self, inputs: List[dict], batch_data_samples: SampleList,
+    def loss(self, inputs: List[dict], data_samples: SampleList,
              **kwargs) -> dict:
         """Compute loss.
 
@@ -664,7 +664,7 @@ class StarkHead(BaseModule):
                     - 'mask': (Tensor), of shape (bs, h, w).
                 Here, `h` and `w` denote the height and width of input
                 image respectively. `stride` is the stride of feature map.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`
                 and 'metainfo'.
 
@@ -676,7 +676,7 @@ class StarkHead(BaseModule):
         batch_gt_instances = []
         batch_img_metas = []
         batch_search_gt_instances = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_img_metas.append(data_sample.metainfo)
             batch_gt_instances.append(data_sample.gt_instances)
             batch_search_gt_instances.append(data_sample.search_gt_instances)

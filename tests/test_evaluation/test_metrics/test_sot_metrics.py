@@ -55,7 +55,7 @@ class TestSOTMetric(TestCase):
                     video_length=25,
                     instances=[dict(bbox=gt_bbox, visible=True)])
                 preds.append(dict(pred_track_instances=pred_track_instances))
-                gts.append(dict(data_sample=data_sample))
+                gts.append(dict(data_samples=data_sample))
         return (gts, preds)
 
     def test_evaluate(self):

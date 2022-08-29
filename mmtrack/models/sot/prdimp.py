@@ -236,8 +236,7 @@ class PrDiMP(BaseSingleObjectTracker):
         bbox_size = bbox[2:4] / resize_factor
         return torch.cat([bbox_center, bbox_size])
 
-    def track(self, img: Tensor,
-              batch_data_samples: SampleList) -> InstanceList:
+    def track(self, img: Tensor, data_samples: SampleList) -> InstanceList:
         """Track the box `bbox` of previous frame to current frame `img`.
 
         Args:
@@ -270,7 +269,7 @@ class PrDiMP(BaseSingleObjectTracker):
 
         # 2. Locate the target roughly using score map.
         new_bbox_center, score_map, state = self.classifier.predict(
-            backbone_feats, batch_data_samples, bbox, sample_center,
+            backbone_feats, data_samples, bbox, sample_center,
             sample_scale_factor)
 
         # 3. Refine position and scale of the target.
@@ -286,8 +285,8 @@ class PrDiMP(BaseSingleObjectTracker):
             cls_bboxes = self.generate_bbox(bbox, sample_center,
                                             sample_scale_factor)
             new_bbox = self.bbox_regressor.predict(backbone_feats,
-                                                   batch_data_samples,
-                                                   cls_bboxes, sample_center,
+                                                   data_samples, cls_bboxes,
+                                                   sample_center,
                                                    sample_scale_factor)
             if new_bbox is not None:
                 bbox = new_bbox

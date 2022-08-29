@@ -61,7 +61,7 @@ class TestYouTubeVISMetric(TestCase):
         vis_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 1,
                     'ori_shape': (720, 1280),
                     'frame_id': 0,
@@ -108,7 +108,7 @@ class TestYouTubeVISMetric(TestCase):
         vis_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 1,
                     'ori_shape': (720, 1280),
                     'frame_id': 0,
@@ -120,7 +120,7 @@ class TestYouTubeVISMetric(TestCase):
         vis_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 2,
                     'ori_shape': (720, 1280),
                     'frame_id': 1,
@@ -132,7 +132,7 @@ class TestYouTubeVISMetric(TestCase):
         vis_metric.process([
             dict(
                 inputs=None,
-                data_sample={
+                data_samples={
                     'img_id': 3,
                     'ori_shape': (720, 1280),
                     'frame_id': 0,

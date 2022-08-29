@@ -149,7 +149,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         return output_dir
 
     def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+                data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions.
 
         The processed results should be stored in ``self.results``, which will
@@ -157,12 +157,15 @@ class MOTChallengeMetrics(BaseVideoMetric):
 
         Args:
             data_batch (Sequence[dict]): A batch of data from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from the model.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-        for data, pred in zip(data_batch, predictions):
+        # TODO: get anns from data_samples instead of data_batch
+        # TODO: change `pred` to `data_sample`
+        for data, pred in zip(data_batch, data_samples):
             # load basic info
-            assert 'data_sample' in data
-            data_sample = data['data_sample']
+            assert 'data_samples' in data
+            data_sample = data['data_samples']
             frame_id = data_sample['frame_id']
             video_length = data_sample['video_length']
             video = data_sample['img_path'].split(os.sep)[-3]

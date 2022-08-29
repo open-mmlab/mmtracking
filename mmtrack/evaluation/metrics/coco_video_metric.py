@@ -33,7 +33,7 @@ class CocoVideoMetric(CocoMetric):
             self._coco_api = None
 
     def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+                data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
         results should be stored in ``self.results``, which will be used to
         compute the metrics when all batches have been processed.
@@ -44,13 +44,15 @@ class CocoVideoMetric(CocoMetric):
         Args:
             data_batch (Sequence[dict]): A batch of data
                 from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from
-                the model.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-        for data, pred in zip(data_batch, predictions):
+        # TODO: get anns from data_samples instead of data_batch
+        # TODO: change `pred` to `data_sample`
+        for data, pred in zip(data_batch, data_samples):
             result = dict()
             pred = pred['pred_det_instances']
-            result['img_id'] = data['data_sample']['img_id']
+            result['img_id'] = data['data_samples']['img_id']
             result['bboxes'] = pred['bboxes'].cpu().numpy()
             result['scores'] = pred['scores'].cpu().numpy()
             result['labels'] = pred['labels'].cpu().numpy()
@@ -64,14 +66,14 @@ class CocoVideoMetric(CocoMetric):
 
             # parse gt
             gt = dict()
-            gt['width'] = data['data_sample']['ori_shape'][1]
-            gt['height'] = data['data_sample']['ori_shape'][0]
-            gt['img_id'] = data['data_sample']['img_id']
+            gt['width'] = data['data_samples']['ori_shape'][1]
+            gt['height'] = data['data_samples']['ori_shape'][0]
+            gt['img_id'] = data['data_samples']['img_id']
             if self._coco_api is None:
-                assert 'instances' in data['data_sample'], \
+                assert 'instances' in data['data_samples'], \
                     'ground truth is required for evaluation when ' \
                     '`ann_file` is not provided'
-                gt['anns'] = data['data_sample']['instances']
+                gt['anns'] = data['data_samples']['instances']
             # add converted result to the results list
             self.results.append((gt, result))
 

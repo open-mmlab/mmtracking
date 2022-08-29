@@ -79,7 +79,7 @@ class SOTMetric(BaseVideoMetric):
         self.frame_ids, self.visible_per_video = [], []
 
     def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+                data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
         results should be stored in ``self.results``, which will be used to
         compute the metrics when all batches have been processed.
@@ -87,12 +87,13 @@ class SOTMetric(BaseVideoMetric):
         Args:
             data_batch (Sequence[dict]): A batch of data
                 from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from
-                the model.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-
-        for data, pred in zip(data_batch, predictions):
-            data_sample = data['data_sample']
+        # TODO: get anns from data_samples instead of data_batch
+        # TODO: change `pred` to `data_sample`
+        for data, pred in zip(data_batch, data_samples):
+            data_sample = data['data_samples']
             data_instance = data_sample['instances'][0]
 
             self.preds_per_video.append(

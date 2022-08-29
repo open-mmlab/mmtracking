@@ -17,7 +17,8 @@ class TestReIDMetrics(TestCase):
     def test_evaluate(self):
         """Test using the metric in the same way as Evaluator."""
         data_batch = [{
-            'data_sample': ReIDDataSample().set_gt_label(i).to_dict()
+            'data_samples':
+            ReIDDataSample().set_gt_label(i).to_dict()
         } for i in [0, 0, 1, 1, 1, 1]]
         pred_batch = [
             dict(pred_feature=torch.tensor(

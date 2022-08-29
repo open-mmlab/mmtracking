@@ -83,7 +83,7 @@ class TestQuasiDenseTracker(TestCase):
         for frame_id in range(3):
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0)
-            data_sample = packed_inputs[0]['data_sample']
+            data_sample = packed_inputs['data_samples'][0]
             data_sample.pred_det_instances = data_sample.gt_instances.clone()
             # add fake scores
             scores = torch.ones(5)
@@ -92,7 +92,7 @@ class TestQuasiDenseTracker(TestCase):
                 model=model,
                 img=img,
                 feats=feats,
-                data_sample=packed_inputs[0]['data_sample'])
+                data_sample=packed_inputs['data_samples'][0])
 
             bboxes = pred_track_instances.bboxes
             labels = pred_track_instances.labels

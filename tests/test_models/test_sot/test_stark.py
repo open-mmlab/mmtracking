@@ -57,14 +57,14 @@ class TestStark(TestCase):
                 ref_prefix='search',
                 image_shapes=[[(3, 128, 128), (3, 320, 320)]],
                 num_items=[1])
-            for input in packed_inputs:
-                input['data_sample'].padding_mask = torch.zeros((2, 128, 128),
-                                                                dtype=bool)
-                input['data_sample'].search_padding_mask = torch.zeros(
-                    (1, 128, 128), dtype=bool)
-            batch_inputs, data_samples = model.data_preprocessor(
-                packed_inputs, True)
-            losses = model.forward(batch_inputs, data_samples, mode='loss')
+            for data_sample in packed_inputs['data_samples']:
+                data_sample.padding_mask = torch.zeros((2, 128, 128),
+                                                       dtype=bool)
+                data_sample.search_padding_mask = torch.zeros((1, 128, 128),
+                                                              dtype=bool)
+            out_data = model.data_preprocessor(packed_inputs, False)
+            inputs, data_samples = out_data['inputs'], out_data['data_samples']
+            losses = model.forward(inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -95,12 +95,13 @@ class TestStark(TestCase):
                         num_ref_imgs=0,
                         image_shapes=[(3, 320, 320)],
                         num_items=[1])
-                    for input in packed_inputs:
-                        input['data_sample'].padding_mask = torch.zeros(
-                            (1, 320, 320), dtype=bool)
-                    batch_inputs, data_samples = model.data_preprocessor(
-                        packed_inputs, False)
+                    for data_sample in packed_inputs['data_samples']:
+                        data_sample.padding_mask = torch.zeros((1, 320, 320),
+                                                               dtype=bool)
+                    out_data = model.data_preprocessor(packed_inputs, False)
+                    inputs, data_samples = out_data['inputs'], out_data[
+                        'data_samples']
                     batch_results = model.forward(
-                        batch_inputs, data_samples, mode='predict')
+                        inputs, data_samples, mode='predict')
                     assert len(batch_results) == 1
                     assert isinstance(batch_results[0], TrackDataSample)
