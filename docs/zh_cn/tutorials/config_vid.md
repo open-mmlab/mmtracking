@@ -223,7 +223,14 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)  # 优化器配置
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))  # 优化器钩子配置， 详情请查看 https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/optimizer.py#L8
 checkpoint_config = dict(interval=1)  # 模型权重文件配置，详情请查看 https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/checkpoint.py
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])  # 日志钩子配置
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': entity, 'project': project, 'config': cfg_dict}),
+    ])  # 日志钩子配置
 dist_params = dict(backend='nccl', port='29500') # 分布式训练后端，默认端口号为29500
 log_level = 'INFO'  # 日志记录级别
 load_from = None  # 从给定路径加载模型作为预训练模型

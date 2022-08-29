@@ -252,7 +252,14 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 checkpoint_config = dict(interval=1)
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': entity, 'project': project, 'config': cfg_dict}),
+    ])
 dist_params = dict(backend='nccl', port='29500')
 log_level = 'INFO'
 load_from = None

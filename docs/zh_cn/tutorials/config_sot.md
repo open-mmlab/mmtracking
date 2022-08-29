@@ -197,9 +197,13 @@ evaluation = dict(
 # yapf:disable
 log_config = dict(  # 日志钩子配置
     interval=50,
+log_config = dict(
+    interval=50,
     hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': entity, 'project': project, 'config': cfg_dict}),
     ])
 # yapf:enable
 # 运行时配置
