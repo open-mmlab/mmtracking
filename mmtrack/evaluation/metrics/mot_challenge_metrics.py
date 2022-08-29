@@ -42,7 +42,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         metric (str | list[str]): Metrics to be evaluated. Options are
             'HOTA', 'CLEAR', 'Identity'.
             Defaults to ['HOTA', 'CLEAR', 'Identity'].
-        resfile_path (str, optional): Path to save the formatted results.
+        outfile_prefix (str, optional): Path to save the formatted results.
             Defaults to None.
         track_iou_thr (float): IoU threshold for tracking evaluation.
             Defaults to 0.5.
@@ -86,7 +86,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
 
     def __init__(self,
                  metric: Union[str, List[str]] = ['HOTA', 'CLEAR', 'Identity'],
-                 resfile_path: Optional[str] = None,
+                 outfile_prefix: Optional[str] = None,
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
@@ -117,7 +117,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.seq_info = defaultdict(
             lambda: dict(seq_length=-1, gt_tracks=[], pred_tracks=[]))
         self.gt_dir = self._get_gt_dir()
-        self.pred_dir = self._get_pred_dir(resfile_path)
+        self.pred_dir = self._get_pred_dir(outfile_prefix)
         self.seqmap = osp.join(self.pred_dir, 'videoseq.txt')
         with open(self.seqmap, 'w') as f:
             f.write('name\n')
@@ -128,17 +128,17 @@ class MOTChallengeMetrics(BaseVideoMetric):
         # and calling `tmp_dir.cleanup()` in compute_metrics will cause errors.
         self.tmp_dir.cleanup()
 
-    def _get_pred_dir(self, resfile_path):
+    def _get_pred_dir(self, outfile_prefix):
         """Get directory to save the prediction results."""
         logger: MMLogger = MMLogger.get_current_instance()
 
-        if resfile_path is None:
-            resfile_path = self.tmp_dir.name
+        if outfile_prefix is None:
+            outfile_prefix = self.tmp_dir.name
         else:
-            if osp.exists(resfile_path) and is_main_process():
+            if osp.exists(outfile_prefix) and is_main_process():
                 logger.info('remove previous results.')
-                shutil.rmtree(resfile_path)
-        pred_dir = osp.join(resfile_path, self.TRACKER)
+                shutil.rmtree(outfile_prefix)
+        pred_dir = osp.join(outfile_prefix, self.TRACKER)
         os.makedirs(pred_dir, exist_ok=True)
         return pred_dir
 

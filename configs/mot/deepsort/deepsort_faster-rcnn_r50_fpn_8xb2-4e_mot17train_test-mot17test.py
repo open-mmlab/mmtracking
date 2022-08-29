@@ -1,5 +1,5 @@
 _base_ = [
-    './sort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain'
+    './deepsort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain'
     '_test-mot17halfval.py'
 ]
 model = dict(

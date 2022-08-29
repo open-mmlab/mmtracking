@@ -34,3 +34,6 @@ test_dataloader = dict(
         ann_file='annotations/test_cocoformat.json',
         data_prefix=dict(img_path='test'),
     ))
+
+# evaluator
+test_evaluator = dict(format_only=True, outfile_prefix='./mot_20_test_res')

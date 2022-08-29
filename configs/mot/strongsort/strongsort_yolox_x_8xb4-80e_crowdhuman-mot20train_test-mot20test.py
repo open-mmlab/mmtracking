@@ -49,4 +49,4 @@ test_dataloader = dict(
         data_prefix=dict(img_path='test'),
         pipeline=test_pipeline))
 
-test_evaluator = dict(format_only=True)
+test_evaluator = dict(format_only=True, outfile_prefix='./mot_20_test_res')
