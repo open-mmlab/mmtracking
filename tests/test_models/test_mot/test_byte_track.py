@@ -24,7 +24,10 @@ class TestByteTrack(TestCase):
     ])
     def test_bytetrack_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
-
+        model.detector.neck.out_channels = 1
+        model.detector.neck.num_csp_blocks = 1
+        model.detector.bbox_head.in_channels = 1
+        model.detector.bbox_head.feat_channels = 1
         model = MODELS.build(model)
         assert model.detector
         assert model.motion
@@ -42,6 +45,10 @@ class TestByteTrack(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 

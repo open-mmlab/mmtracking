@@ -24,6 +24,10 @@ class TestStrongSORT(TestCase):
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
+        model.detector.neck.out_channels = 1
+        model.detector.neck.num_csp_blocks = 1
+        model.detector.bbox_head.in_channels = 1
+        model.detector.bbox_head.feat_channels = 1
         model.reid.backbone.depth = 18
         model.reid.head.fc_channels = 1
         model.reid.head.out_channels = 1
@@ -49,6 +53,15 @@ class TestStrongSORT(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
+            _model.reid.backbone.depth = 18
+            _model.reid.head.in_channels = 512
+            _model.reid.head.fc_channels = 1
+            _model.reid.head.out_channels = 1
+            _model.reid.head.num_classes = 2
             model = MODELS.build(_model)
 
             if device == 'cuda':
