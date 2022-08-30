@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform, to_tensor
 from mmdet.structures.mask import BitmapMasks
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.registry import TRANSFORMS
 from mmtrack.structures import ReIDDataSample, TrackDataSample
@@ -150,10 +150,9 @@ class PackTrackInputs(BaseTransform):
 
         Returns:
             dict:
-
             - 'inputs' (dict[Tensor]): The forward data of models.
-            - 'data_sample' (obj:`TrackDataSample`): The annotation info of the
-                sample.
+            - 'data_samples' (obj:`TrackDataSample`): The annotation info of
+                the samples.
         """
         packed_results = dict()
         packed_results['inputs'] = dict()
@@ -307,7 +306,7 @@ class PackTrackInputs(BaseTransform):
                 setattr(data_sample, f'{self.ref_prefix}_padding_mask',
                         to_tensor(ref_padding_mask))
 
-        packed_results['data_sample'] = data_sample
+        packed_results['data_samples'] = data_sample
         return packed_results
 
     def __repr__(self) -> str:
@@ -425,10 +424,10 @@ class PackReIDInputs(BaseTransform):
         Returns:
             dict:
             - 'inputs' (dict[Tensor]): The forward data of models.
-            - 'data_sample' (obj:`ReIDDataSample`): The meta info of the
+            - 'data_samples' (obj:`ReIDDataSample`): The meta info of the
                 sample.
         """
-        packed_results = dict(inputs=dict(), data_sample=None)
+        packed_results = dict(inputs=dict(), data_samples=None)
         assert 'img' in results, 'Missing the key ``img``.'
         _type = type(results['img'])
         label = results['gt_label']
@@ -454,7 +453,7 @@ class PackReIDInputs(BaseTransform):
         for key in self.meta_keys:
             meta_info[key] = results[key]
         data_sample.set_metainfo(meta_info)
-        packed_results['data_sample'] = data_sample
+        packed_results['data_samples'] = data_sample
 
         return packed_results
 

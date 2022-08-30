@@ -5,7 +5,7 @@ from unittest import TestCase
 import mmengine
 import numpy as np
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads import CorrelationHead, SiameseRPNHead
 from mmtrack.structures import TrackDataSample

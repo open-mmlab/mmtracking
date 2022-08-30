@@ -148,21 +148,19 @@ class MOTChallengeMetrics(BaseVideoMetric):
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
-    def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+    def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions.
 
         The processed results should be stored in ``self.results``, which will
         be used to compute the metrics when all batches have been processed.
 
         Args:
-            data_batch (Sequence[dict]): A batch of data from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from the model.
+            data_batch (dict): A batch of data from the dataloader.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-        for data, pred in zip(data_batch, predictions):
+        for data_sample in data_samples:
             # load basic info
-            assert 'data_sample' in data
-            data_sample = data['data_sample']
             frame_id = data_sample['frame_id']
             video_length = data_sample['video_length']
             video = data_sample['img_path'].split(os.sep)[-3]
@@ -188,8 +186,8 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 self.seq_info[video]['gt_tracks'].extend(gt_tracks)
 
             # load predictions
-            assert 'pred_track_instances' in pred
-            pred_instances = pred['pred_track_instances']
+            assert 'pred_track_instances' in data_sample
+            pred_instances = data_sample['pred_track_instances']
             pred_tracks = [
                 np.array([
                     frame_id + 1, pred_instances['instances_id'][i].cpu(),

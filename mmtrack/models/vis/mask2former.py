@@ -5,7 +5,6 @@ from torch import Tensor
 
 from mmtrack.models.mot import BaseMultiObjectTracker
 from mmtrack.registry import MODELS
-from mmtrack.structures import TrackDataSample
 from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
 
 
@@ -54,38 +53,38 @@ class Mask2Former(BaseMultiObjectTracker):
                                       strict, missing_keys, unexpected_keys,
                                       error_msgs)
 
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> Union[dict, tuple]:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> Union[dict, tuple]:
         """
         Args:
-            batch_inputs (Tensor): Input images of shape (N, T, C, H, W).
+            inputs (Tensor): Input images of shape (N, T, C, H, W).
                 These should usually be mean centered and std scaled.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         # shape (N * T, C, H, W)
         img = img.flatten(0, 1)
 
         x = self.backbone(img)
-        losses = self.track_head.loss(x, batch_data_samples)
+        losses = self.track_head.loss(x, data_samples)
 
         return losses
 
     def predict(self,
-                batch_inputs: dict,
-                batch_data_samples: SampleList,
+                inputs: dict,
+                data_samples: SampleList,
                 rescale: bool = True) -> SampleList:
         """Predict results from a batch of inputs and data samples with
         postprocessing.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically, these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
@@ -93,7 +92,7 @@ class Mask2Former(BaseMultiObjectTracker):
                 - ref_img (Tensor): The reference images.
                 In test mode, T = 1 and there is only ``img`` and no
                 ``ref_img``.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -104,18 +103,17 @@ class Mask2Former(BaseMultiObjectTracker):
             SampleList: Tracking results of the input images.
             Each TrackDataSample usually contains ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         # the "T" is 1
         img = img.squeeze(1)
         feats = self.backbone(img)
-        pred_track_ins_list = self.track_head.predict(feats,
-                                                      batch_data_samples,
+        pred_track_ins_list = self.track_head.predict(feats, data_samples,
                                                       rescale)
 
         results = []
-        for pred_track_ins in pred_track_ins_list:
-            track_data_sample = TrackDataSample()
+        for idx, pred_track_ins in enumerate(pred_track_ins_list):
+            track_data_sample = data_samples[idx]
             track_data_sample.pred_track_instances = pred_track_ins
             results.append(track_data_sample)
 

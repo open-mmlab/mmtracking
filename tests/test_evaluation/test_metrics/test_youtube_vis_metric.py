@@ -58,18 +58,18 @@ class TestYouTubeVISMetric(TestCase):
             'mask': rle_mask,
         }]
         vis_metric.dataset_meta = dict(CLASSES=['car', 'train'])
-        vis_metric.process([
+        data_batch = dict(inputs=None, data_samples=None)
+        data_samples = [
             dict(
-                inputs=None,
-                data_sample={
-                    'img_id': 1,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 0,
-                    'video_id': 1,
-                    'video_length': 1,
-                    'instances': instances
-                })
-        ], [dict(pred_track_instances=dummy_pred)])
+                pred_track_instances=dummy_pred,
+                img_id=0,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                video_id=1,
+                video_length=1,
+                instances=instances)
+        ]
+        vis_metric.process(data_batch, data_samples)
         vis_metric.evaluate(size=1)
         assert os.path.exists(f'{outfile_prefix}.json')
         assert os.path.exists(f'{outfile_prefix}.submission_file.zip')
@@ -105,42 +105,40 @@ class TestYouTubeVISMetric(TestCase):
             ))
 
         vis_metric.dataset_meta = dict(CLASSES=['car', 'train'])
-        vis_metric.process([
+        data_batch = dict(inputs=None, data_samples=None)
+        data_samples = [
             dict(
-                inputs=None,
-                data_sample={
-                    'img_id': 1,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 0,
-                    'video_id': 1,
-                    'video_length': 2,
-                    'instances': instances_1
-                })
-        ], [dict(pred_track_instances=dummy_pred_1)])
-        vis_metric.process([
+                pred_track_instances=dummy_pred_1,
+                img_id=1,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                video_id=1,
+                video_length=2,
+                instances=instances_1)
+        ]
+        vis_metric.process(data_batch, data_samples)
+        data_samples = [
             dict(
-                inputs=None,
-                data_sample={
-                    'img_id': 2,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 1,
-                    'video_id': 1,
-                    'video_length': 2,
-                    'instances': instances_1
-                })
-        ], [dict(pred_track_instances=dummy_pred_2)])
-        vis_metric.process([
+                pred_track_instances=dummy_pred_2,
+                img_id=2,
+                ori_shape=(720, 1280),
+                frame_id=1,
+                video_id=1,
+                video_length=2,
+                instances=instances_1)
+        ]
+        vis_metric.process(data_batch, data_samples)
+        data_samples = [
             dict(
-                inputs=None,
-                data_sample={
-                    'img_id': 3,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 0,
-                    'video_id': 2,
-                    'video_length': 1,
-                    'instances': instances_2
-                })
-        ], [dict(pred_track_instances=dummy_pred_3)])
+                pred_track_instances=dummy_pred_3,
+                img_id=3,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                video_id=2,
+                video_length=1,
+                instances=instances_2)
+        ]
+        vis_metric.process(data_batch, data_samples)
 
         eval_results = vis_metric.evaluate(size=3)
         target = {

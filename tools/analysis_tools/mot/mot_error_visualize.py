@@ -7,7 +7,7 @@ import re
 import mmcv
 import motmetrics as mm
 import numpy as np
-from mmcv import Config
+from mmengine import Config
 from mmengine.logging import print_log
 from torch.utils.data import Dataset
 

@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.evaluation import MOTChallengeMetrics
 
@@ -17,7 +17,7 @@ class TestMOTChallengeMetrics(TestCase):
             MOTChallengeMetrics(benchmark='MOT21')
 
     @staticmethod
-    def _get_data_batch_demo():
+    def _get_predictions_demo():
         instances = [{
             'bbox_label': 0,
             'bbox': [0, 0, 100, 100],
@@ -36,21 +36,6 @@ class TestMOTChallengeMetrics(TestCase):
             'visibility': 1.0
         }]
         sep = os.sep
-        data_batch = [
-            dict(
-                data_sample={
-                    'frame_id': 0,
-                    'video_length': 1,
-                    'img_id': 1,
-                    'img_path':
-                    f'xxx{sep}MOT17-09-DPM{sep}img1{sep}000001.jpg',
-                    'instances': instances
-                })
-        ]
-        return data_batch
-
-    @staticmethod
-    def _get_predictions_demo():
         pred_instances_data = dict(
             bboxes=torch.tensor([
                 [0, 0, 100, 100],
@@ -59,7 +44,15 @@ class TestMOTChallengeMetrics(TestCase):
             instances_id=torch.tensor([1, 2]),
             scores=torch.tensor([1.0, 1.0]))
         pred_instances = InstanceData(**pred_instances_data)
-        predictions = [dict(pred_track_instances=pred_instances)]
+        predictions = [
+            dict(
+                pred_track_instances=pred_instances,
+                frame_id=0,
+                video_length=1,
+                img_id=1,
+                img_path=f'xxx{sep}MOT17-09-DPM{sep}img1{sep}000001.jpg',
+                instances=instances)
+        ]
         return predictions
 
     def _test_evaluate(self, format_only):
@@ -67,7 +60,7 @@ class TestMOTChallengeMetrics(TestCase):
         metric = MOTChallengeMetrics(
             metric=['HOTA', 'CLEAR', 'Identity'], format_only=format_only)
         metric.dataset_meta = {'CLASSES': ('pedestrian', )}
-        data_batch = self._get_data_batch_demo()
+        data_batch = dict(input=None, data_samples=None)
         predictions = self._get_predictions_demo()
         metric.process(data_batch, predictions)
         eval_results = metric.evaluate()

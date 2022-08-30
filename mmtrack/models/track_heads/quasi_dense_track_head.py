@@ -34,8 +34,8 @@ class QuasiDenseTrackHead(RoITrackHead):
 
     def loss(self, key_feats: List[Tensor], ref_feats: List[Tensor],
              rpn_results_list: InstanceList,
-             ref_rpn_results_list: InstanceList,
-             batch_data_samples: SampleList, **kwargs) -> dict:
+             ref_rpn_results_list: InstanceList, data_samples: SampleList,
+             **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
@@ -45,7 +45,7 @@ class QuasiDenseTrackHead(RoITrackHead):
                 proposals of key img.
             ref_rpn_results_list (list[:obj:`InstanceData`]): List of region
                 proposals of ref img.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
@@ -53,12 +53,12 @@ class QuasiDenseTrackHead(RoITrackHead):
             dict: A dictionary of loss components.
         """
         assert self.with_track
-        num_imgs = len(batch_data_samples)
+        num_imgs = len(data_samples)
         batch_gt_instances = []
         ref_batch_gt_instances = []
         batch_gt_instances_ignore = []
         gt_match_indices_list = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_gt_instances.append(data_sample.gt_instances)
             ref_batch_gt_instances.append(data_sample.ref_gt_instances)
             if 'ignored_instances' in data_sample:

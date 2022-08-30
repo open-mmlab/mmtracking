@@ -57,13 +57,12 @@ class TestQDTrack(TestCase):
                 num_ref_imgs=1,
                 num_classes=1,
                 num_items=[2])
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
+            inputs, data_samples = out_data['inputs'], out_data['data_samples']
             # Test forward
             # add gt_match_indices
-            batch_data_samples[0].gt_match_indices = np.array([0, 1])
-            losses = model.forward(
-                batch_inputs, batch_data_samples, mode='loss')
+            data_samples[0].gt_match_indices = np.array([0, 1])
+            losses = model.forward(inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -89,12 +88,10 @@ class TestQDTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, False)
 
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1
