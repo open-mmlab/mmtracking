@@ -68,7 +68,7 @@ class TestSOTMetric(TestCase):
                                                 'gt_for_eval.txt')
         for data_sample in data_samples:
             data_batch = dict(inputs=None, data_samples=None)
-            self.sot_metric.process([data_batch], [data_sample])
+            self.sot_metric.process(data_batch, [data_sample])
         eval_results = self.sot_metric.evaluate(size=50)
         assert round(eval_results[f'{metric_prefix}/success'], 4) == 67.5238
         assert eval_results[f'{metric_prefix}/norm_precision'] == 70.0
@@ -78,7 +78,7 @@ class TestSOTMetric(TestCase):
         self.sot_metric.format_only = True
         for data_sample in data_samples:
             data_batch = dict(inputs=None, data_samples=None)
-            self.sot_metric.process([data_batch], [data_sample])
+            self.sot_metric.process(data_batch, [data_sample])
         eval_results = self.sot_metric.evaluate(size=50)
         assert len(eval_results) == 0
         assert os.path.exists(f'{self.outfile_prefix}.zip')
@@ -91,7 +91,7 @@ class TestSOTMetric(TestCase):
                                                 'vot2018_gt_for_eval.txt')
         for data_sample in data_samples:
             data_batch = dict(inputs=None, data_samples=None)
-            self.sot_metric.process([data_batch], [data_sample])
+            self.sot_metric.process(data_batch, [data_sample])
         eval_results = self.sot_metric.evaluate(size=50)
         assert abs(eval_results[f'{metric_prefix}/eao'] - 0.6661) < 0.0001
         assert round(eval_results[f'{metric_prefix}/accuracy'], 4) == 0.5826

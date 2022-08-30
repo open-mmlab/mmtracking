@@ -116,10 +116,11 @@ class TrackDataPreprocessor(BaseDataPreprocessor):
             channel = imgs[0].size(1)
             if self.channel_conversion and channel == 3:
                 imgs = [_img[:, [2, 1, 0], ...] for _img in imgs]
-            if self._enable_normalize:
-                imgs = [(_img - self.mean) / self.std for _img in imgs]
             # change to `float`
             imgs = [_img.float() for _img in imgs]
+            if self._enable_normalize:
+                imgs = [(_img - self.mean) / self.std for _img in imgs]
+
             inputs[imgs_key] = stack_batch(imgs, self.pad_size_divisor,
                                            self.pad_value)
 

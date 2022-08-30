@@ -36,7 +36,7 @@ class TestReIDMetrics(TestCase):
         ]
         # get union
         for idx in range(len(data_samples)):
-            data_samples[idx] = data_samples[idx] | pred_batch[idx]
+            data_samples[idx] = {**data_samples[idx], **pred_batch[idx]}
 
         metric = METRICS.build(
             dict(
