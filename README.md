@@ -82,7 +82,7 @@ Please refer to [inference.md](docs/en/user_guides/3_inference.md) for the basic
 
 A Colab tutorial is also provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
 
-There are also usage [tutorials](docs/en/user_guides/), such as [learning about configs](docs/en/user_guides/config.md), [visualization](docs/en/user_guides/5_visualization.md), [analysis tools](docs/en/user_guides/6_analysis_tools.md),
+There are also usage [tutorials](docs/en/user_guides/), such as [learning about configs](docs/en/user_guides/1_config.md), [visualization](docs/en/user_guides/5_visualization.md), [analysis tools](docs/en/user_guides/6_analysis_tools.md),
 
 ## Benchmark and model zoo
 
