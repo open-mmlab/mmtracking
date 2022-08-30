@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import mmengine
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads import QuasiDenseEmbedHead
 from mmtrack.registry import TASK_UTILS

@@ -4,7 +4,7 @@ from unittest import TestCase
 
 import mmengine
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads.stark_head import (CornerPredictorHead,
                                                    ScoreHead, StarkHead,

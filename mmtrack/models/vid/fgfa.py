@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from addict import Dict
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS
@@ -43,24 +43,23 @@ class FGFA(BaseVideoDetector):
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
-             **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: SampleList, **kwargs) -> dict:
         """
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size and must be 1 in FGFA method.
                 The T denotes the number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'FGFA video detectors only support 1 batch size per gpu for now.'
@@ -68,15 +67,15 @@ class FGFA(BaseVideoDetector):
             'FGFA video detector only has 1 key image per batch.'
         img = img[0]
 
-        ref_img = batch_inputs['ref_img']
+        ref_img = inputs['ref_img']
         assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert ref_img.size(0) == 1, \
             'FGFA video detectors only support 1 batch size per gpu for now.'
         ref_img = ref_img[0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'FGFA video detectors only support 1 batch size per gpu for now.'
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
 
         num_ref_imgs = ref_img.size(0)
         flow_imgs = torch.cat((img.repeat(num_ref_imgs, 1, 1, 1), ref_img),
@@ -101,7 +100,7 @@ class FGFA(BaseVideoDetector):
             if self.detector.with_rpn:
                 proposal_cfg = self.detector.train_cfg.get(
                     'rpn_proposal', self.detector.test_cfg.rpn)
-                rpn_data_samples = copy.deepcopy(batch_data_samples)
+                rpn_data_samples = copy.deepcopy(data_samples)
                 # set cat_id of gt_labels to 0 in RPN
                 for data_sample in rpn_data_samples:
                     data_sample.gt_instances.labels = \
@@ -119,18 +118,17 @@ class FGFA(BaseVideoDetector):
                 losses.update(rpn_losses)
             else:
                 rpn_results_list = []
-                for i in range(len(batch_data_samples)):
+                for i in range(len(data_samples)):
                     results = InstanceData()
-                    results.bboxes = batch_data_samples[i].proposals
+                    results.bboxes = data_samples[i].proposals
                     rpn_results_list.append(results)
 
             roi_losses = self.detector.roi_head.loss(x, rpn_results_list,
-                                                     batch_data_samples,
-                                                     **kwargs)
+                                                     data_samples, **kwargs)
             losses.update(roi_losses)
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
-            bbox_losses = self.detector.bbox_head.loss(x, batch_data_samples,
+            bbox_losses = self.detector.bbox_head.loss(x, data_samples,
                                                        **kwargs)
             losses.update(bbox_losses)
         else:
@@ -221,19 +219,19 @@ class FGFA(BaseVideoDetector):
         return agg_x
 
     def predict(self,
-                batch_inputs: dict,
-                batch_data_samples: SampleList,
+                inputs: dict,
+                data_samples: SampleList,
                 rescale: bool = True) -> SampleList:
         """Test without augmentation.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size and must be 1 in FGFA method.
                 The T denotes the number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor, Optional): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -245,7 +243,7 @@ class FGFA(BaseVideoDetector):
             input images. Each TrackDataSample usually contains
             ``pred_det_instances`` or ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'FGFA video detectors only support 1 batch size per gpu for now.'
@@ -253,8 +251,8 @@ class FGFA(BaseVideoDetector):
             'FGFA video detector only has 1 key image per batch.'
         img = img[0]
 
-        if 'ref_img' in batch_inputs:
-            ref_img = batch_inputs['ref_img']
+        if 'ref_img' in inputs:
+            ref_img = inputs['ref_img']
             assert ref_img.dim(
             ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
             assert ref_img.size(0) == 1, 'FGFA video detectors only support' \
@@ -263,33 +261,33 @@ class FGFA(BaseVideoDetector):
         else:
             ref_img = None
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'FGFA video detectors only support 1 batch size per gpu for now.'
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
 
         x = self.extract_feats(img, ref_img, metainfo)
 
-        track_data_sample = copy.deepcopy(batch_data_samples[0])
+        track_data_sample = copy.deepcopy(data_samples[0])
 
         # Two stage detector
         if hasattr(self.detector, 'roi_head'):
-            if not hasattr(batch_data_samples[0], 'proposals'):
+            if not hasattr(data_samples[0], 'proposals'):
                 rpn_results_list = self.detector.rpn_head.predict(
-                    x, batch_data_samples, rescale=False)
+                    x, data_samples, rescale=False)
             else:
                 rpn_results_list = []
-                for i in range(len(batch_data_samples)):
+                for i in range(len(data_samples)):
                     results = InstanceData()
-                    results.bboxes = batch_data_samples[i].proposals
+                    results.bboxes = data_samples[i].proposals
                     rpn_results_list.append(results)
 
             results_list = self.detector.roi_head.predict(
-                x, rpn_results_list, batch_data_samples, rescale=rescale)
+                x, rpn_results_list, data_samples, rescale=rescale)
             track_data_sample.pred_det_instances = results_list[0]
         # Single stage detector
         elif hasattr(self.detector, 'bbox_head'):
             results_list = self.detector.bbox_head.predict(
-                x, batch_data_samples, rescale=rescale)
+                x, data_samples, rescale=rescale)
 
             track_data_sample.pred_det_instances = results_list[0]
         else:

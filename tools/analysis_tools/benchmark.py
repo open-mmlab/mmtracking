@@ -2,8 +2,7 @@
 import argparse
 import os
 
-from mmcv import Config, DictAction
-from mmengine import MMLogger
+from mmengine import Config, DictAction, MMLogger
 from mmengine.dist import init_dist
 from mmengine.utils import mkdir_or_exist
 

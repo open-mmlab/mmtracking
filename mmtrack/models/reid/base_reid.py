@@ -13,7 +13,7 @@ class BaseReID(ImageClassifier):
     """Base model for re-identification."""
 
     def forward(self,
-                batch_inputs: torch.Tensor,
+                inputs: torch.Tensor,
                 data_samples: Optional[List[ReIDDataSample]] = None,
                 mode: str = 'tensor'):
         """The unified entry for a forward process in both training and test.
@@ -31,10 +31,10 @@ class BaseReID(ImageClassifier):
         optimizer updating, which are done in the :meth:`train_step`.
 
         Args:
-            batch_inputs (torch.Tensor): The input tensor with shape
+            inputs (torch.Tensor): The input tensor with shape
                 (N, C, H, W) or (N, T, C, H, W).
             data_samples (List[ReIDDataSample], optional): The annotation
-                data of every samples. It's required if ``mode="loss"``.
+                data of every sample. It's required if ``mode="loss"``.
                 Defaults to None.
             mode (str): Return what kind of value. Defaults to 'tensor'.
 
@@ -46,7 +46,7 @@ class BaseReID(ImageClassifier):
               :obj:`ReIDDataSample`.
             - If ``mode="loss"``, return a dict of tensor.
         """
-        if len(batch_inputs.size()) == 5:
-            assert batch_inputs.size(0) == 1
-            batch_inputs = batch_inputs[0]
-        return super().forward(batch_inputs, data_samples, mode)
+        if len(inputs.size()) == 5:
+            assert inputs.size(0) == 1
+            inputs = inputs[0]
+        return super().forward(inputs, data_samples, mode)

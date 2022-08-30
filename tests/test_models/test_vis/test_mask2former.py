@@ -55,13 +55,12 @@ class TestMask2Former(TestCase):
                 num_key_imgs=2,
                 num_classes=2,
                 with_mask=True)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
+            inputs, data_samples = out_data['inputs'], out_data['data_samples']
             # Test forward
-            batch_data_samples[0].gt_instances[
+            data_samples[0].gt_instances[
                 'map_instances_to_img_idx'] = torch.tensor([0], device=device)
-            losses = model.forward(
-                batch_inputs, batch_data_samples, mode='loss')
+            losses = model.forward(inputs, data_samples, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -91,12 +90,9 @@ class TestMask2Former(TestCase):
                 image_shapes=[(3, 128, 128), (3, 128, 128)],
                 num_classes=2,
                 with_mask=True)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 2

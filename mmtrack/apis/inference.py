@@ -10,9 +10,9 @@ import mmengine
 import numpy as np
 import torch
 from mmcv.ops import RoIPool
-from mmcv.runner import load_checkpoint
 from mmengine.dataset import Compose
 from mmengine.logging import MMLogger
+from mmengine.runner import load_checkpoint
 from torch import nn
 
 from mmtrack.registry import MODELS

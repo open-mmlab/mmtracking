@@ -186,14 +186,13 @@ class SiamRPN(BaseSingleObjectTracker):
         self.memo.z_feat = self.forward_template(z_crop)
         self.memo.avg_channel = avg_channel
 
-    def track(self, img: Tensor,
-              batch_data_samples: SampleList) -> InstanceList:
+    def track(self, img: Tensor, data_samples: SampleList) -> InstanceList:
         """Track the box of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
 
@@ -219,41 +218,39 @@ class SiamRPN(BaseSingleObjectTracker):
         x_feat = self.forward_search(x_crop)
         scale_factor = self.test_cfg.exemplar_size / z_size
 
-        results = self.head.predict(self.memo.z_feat, x_feat,
-                                    batch_data_samples, prev_bbox,
-                                    scale_factor)
+        results = self.head.predict(self.memo.z_feat, x_feat, data_samples,
+                                    prev_bbox, scale_factor)
 
         return results
 
-    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
-             **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: SampleList, **kwargs) -> dict:
         """
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size. The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
 
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instance``.
 
         Return:
             dict: A dictionary of loss components.
         """
-        search_img = batch_inputs['search_img']
+        search_img = inputs['search_img']
         assert search_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         search_img = search_img[:, 0]
 
-        template_img = batch_inputs['img']
+        template_img = inputs['img']
         assert template_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         template_img = template_img[:, 0]
 
         z_feat = self.forward_template(template_img)
         x_feat = self.forward_search(search_img)
-        losses = self.head.loss(z_feat, x_feat, batch_data_samples, **kwargs)
+        losses = self.head.loss(z_feat, x_feat, data_samples, **kwargs)
         return losses

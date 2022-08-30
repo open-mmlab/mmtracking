@@ -218,13 +218,12 @@ class Stark(BaseSingleObjectTracker):
                 # frame
                 self.memo.z_dict_list[i + 1] = dict(feat=z_feat, mask=z_mask)
 
-    def track(self, img: Tensor,
-              batch_data_samples: SampleList) -> InstanceList:
+    def track(self, img: Tensor, data_samples: SampleList) -> InstanceList:
         """Track the box of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W).
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
 
@@ -243,8 +242,8 @@ class Stark(BaseSingleObjectTracker):
         x_feat = self.extract_feat(x_patch)
         x_dict = dict(feat=x_feat, mask=x_mask)
         head_inputs = self.memo.z_dict_list + [x_dict]
-        results = self.head.predict(head_inputs, batch_data_samples,
-                                    self.memo.bbox, resize_factor)
+        results = self.head.predict(head_inputs, data_samples, self.memo.bbox,
+                                    resize_factor)
 
         if results[0].scores.item() != -1:
             # get confidence score (whether the search region is reliable)
@@ -253,24 +252,23 @@ class Stark(BaseSingleObjectTracker):
 
         return results
 
-    def predict_vot(self, batch_inputs: dict,
-                    batch_data_samples: List[TrackDataSample]):
+    def predict_vot(self, inputs: dict, data_samples: List[TrackDataSample]):
         raise NotImplementedError(
             'STARK does not support testing on VOT datasets yet.')
 
-    def loss(self, batch_inputs: dict,
-             batch_data_samples: List[TrackDataSample], **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: List[TrackDataSample],
+             **kwargs) -> dict:
         """Forward of training.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size. The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
 
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
@@ -278,19 +276,18 @@ class Stark(BaseSingleObjectTracker):
             dict: A dictionary of loss components.
         """
         template_padding_mask = [
-            data_sample.padding_mask for data_sample in batch_data_samples
+            data_sample.padding_mask for data_sample in data_samples
         ]
         template_padding_mask = torch.stack(template_padding_mask, dim=0)
         search_padding_mask = [
-            data_sample.search_padding_mask
-            for data_sample in batch_data_samples
+            data_sample.search_padding_mask for data_sample in data_samples
         ]
         search_padding_mask = torch.stack(search_padding_mask, dim=0)
 
-        search_img = batch_inputs['search_img']
+        search_img = inputs['search_img']
         assert search_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
-        template_img = batch_inputs['img']
+        template_img = inputs['img']
         assert template_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
 
@@ -303,6 +300,6 @@ class Stark(BaseSingleObjectTracker):
         x_dict = dict(feat=x_feat, mask=search_padding_mask[:, 0])
         head_inputs.append(x_dict)
 
-        losses = self.head.loss(head_inputs, batch_data_samples)
+        losses = self.head.loss(head_inputs, data_samples)
 
         return losses

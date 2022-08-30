@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from mmengine.data import BaseDataElement, InstanceData
+from mmengine.structures import BaseDataElement, InstanceData
 
 
 class TrackDataSample(BaseDataElement):

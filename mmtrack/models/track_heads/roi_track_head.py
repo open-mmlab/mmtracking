@@ -86,7 +86,7 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
         return bbox_feats, num_bbox_per_img
 
     def loss(self, key_feats: List[Tensor], ref_feats: List[Tensor],
-             rpn_results_list: InstanceList, batch_data_samples: SampleList,
+             rpn_results_list: InstanceList, data_samples: SampleList,
              **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
@@ -95,17 +95,17 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
             ref_feats (list[Tensor]): list of multi-level ref_img features.
             rpn_results_list (list[:obj:`InstanceData`]): List of region
                 proposals.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
         Returns:
             dict: A dictionary of loss components.
         """
-        assert len(rpn_results_list) == len(batch_data_samples)
+        assert len(rpn_results_list) == len(data_samples)
         batch_gt_instances = []
         batch_gt_instances_ignore = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_gt_instances.append(data_sample.gt_instances)
             if 'ignored_instances' in data_sample:
                 batch_gt_instances_ignore.append(data_sample.ignored_instances)
@@ -113,7 +113,7 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
                 batch_gt_instances_ignore.append(None)
 
         if self.with_track:
-            num_imgs = len(batch_data_samples)
+            num_imgs = len(data_samples)
             if batch_gt_instances_ignore is None:
                 batch_gt_instances_ignore = [None] * num_imgs
             sampling_results = []
@@ -134,15 +134,14 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
 
         if self.with_track:
             track_results = self.track_loss(key_feats, ref_feats,
-                                            sampling_results,
-                                            batch_data_samples)
+                                            sampling_results, data_samples)
             losses.update(track_results['loss_track'])
 
         return losses
 
     def track_loss(self, key_feats: List[Tensor], ref_feats: List[Tensor],
                    sampling_results: List[SamplingResult],
-                   batch_data_samples: SampleList, **kwargs) -> dict:
+                   data_samples: SampleList, **kwargs) -> dict:
         """Run forward function and calculate loss for track head in training.
 
         Args:
@@ -150,7 +149,7 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
             ref_feats (list[Tensor]): list of multi-level ref_img features.
             sampling_results (list[:obj:`SamplingResult`]): List of Bbox
                 sampling result.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
@@ -161,14 +160,12 @@ class RoITrackHead(BaseModule, metaclass=ABCMeta):
         bbox_feats, num_bbox_per_img = self.extract_roi_feats(
             key_feats, bboxes)
         # batch_size is 1
-        ref_gt_bboxes = [batch_data_samples[0].ref_gt_instances.bboxes]
+        ref_gt_bboxes = [data_samples[0].ref_gt_instances.bboxes]
         ref_bbox_feats, num_bbox_per_ref_img = self.extract_roi_feats(
             ref_feats, ref_gt_bboxes)
 
-        gt_instance_ids = [batch_data_samples[0].gt_instances.instances_id]
-        ref_gt_instance_ids = [
-            batch_data_samples[0].ref_gt_instances.instances_id
-        ]
+        gt_instance_ids = [data_samples[0].gt_instances.instances_id]
+        ref_gt_instance_ids = [data_samples[0].ref_gt_instances.instances_id]
 
         loss_track = self.embed_head.loss(bbox_feats, ref_bbox_feats,
                                           num_bbox_per_img,
