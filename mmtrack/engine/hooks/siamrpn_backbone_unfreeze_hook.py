@@ -2,6 +2,7 @@
 from typing import List
 
 from mmengine.hooks import Hook
+from mmengine.model import is_model_wrapper
 from torch.nn.modules.batchnorm import BatchNorm2d
 
 from mmtrack.registry import HOOKS
@@ -30,8 +31,8 @@ class SiamRPNBackboneUnfreezeHook(Hook):
         the backbone."""
         if runner.epoch >= self.backbone_start_train_epoch:
             for layer in self.backbone_train_layers:
-                model = runner.model.module if hasattr(
-                    runner.model, 'module') else runner.model
+                model = runner.model.module if is_model_wrapper(
+                    runner.model) else runner.model
                 for param in getattr(model.backbone, layer).parameters():
                     param.requires_grad = True
                 for m in getattr(model.backbone, layer).modules():
