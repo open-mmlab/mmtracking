@@ -58,9 +58,8 @@ class TestMaskTrackRCNN(TestCase):
                 num_classes=1,
                 with_mask=True)
             out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
             # Test forward
-            losses = model.forward(inputs, data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -91,12 +90,9 @@ class TestMaskTrackRCNN(TestCase):
                 num_ref_imgs=1,
                 num_classes=1,
                 with_mask=True)
-            out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    inputs, data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

@@ -187,7 +187,7 @@ def demo_mm_inputs(batch_size=1,
                 255,
                 size=(num_key_imgs, *image_shape_group[0]),
                 dtype=np.uint8)
-            mm_inputs['inputs']['img'] = torch.from_numpy(key_img).float()
+            mm_inputs['inputs']['img'] = torch.from_numpy(key_img)
         if num_ref_imgs > 0:
             index = int(num_key_imgs > 0)
             ref_img = rng.randint(
@@ -196,7 +196,7 @@ def demo_mm_inputs(batch_size=1,
                 size=(num_ref_imgs, *image_shape_group[index]),
                 dtype=np.uint8)
             mm_inputs['inputs'][f'{ref_prefix}_img'] = torch.from_numpy(
-                ref_img).float()
+                ref_img)
 
         img_meta = {
             'img_id': idx,

@@ -78,26 +78,21 @@ class SOTMetric(BaseVideoMetric):
         self.preds_per_video, self.gts_per_video = [], []
         self.frame_ids, self.visible_per_video = [], []
 
-    def process(self, data_batch: Sequence[dict],
-                data_samples: Sequence[dict]) -> None:
+    def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
         results should be stored in ``self.results``, which will be used to
         compute the metrics when all batches have been processed.
 
         Args:
-            data_batch (Sequence[dict]): A batch of data
-                from the dataloader.
+            data_batch (dict): A batch of data from the dataloader.
             data_samples (Sequence[dict]): A batch of data samples that
                 contain annotations and predictions.
         """
-        # TODO: get anns from data_samples instead of data_batch
-        # TODO: change `pred` to `data_sample`
-        for data, pred in zip(data_batch, data_samples):
-            data_sample = data['data_samples']
+        for data_sample in data_samples:
             data_instance = data_sample['instances'][0]
 
             self.preds_per_video.append(
-                pred['pred_track_instances']['bboxes'][0].cpu().numpy())
+                data_sample['pred_track_instances']['bboxes'][0].cpu().numpy())
             if 'bbox' in data_instance:
                 self.gts_per_video.append(data_instance['bbox'])
             else:

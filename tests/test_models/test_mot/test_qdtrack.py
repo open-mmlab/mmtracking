@@ -88,12 +88,10 @@ class TestQDTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
+            out_data = model.data_preprocessor(packed_inputs, False)
 
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    inputs, data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

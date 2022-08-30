@@ -90,12 +90,9 @@ class TestMask2Former(TestCase):
                 image_shapes=[(3, 128, 128), (3, 128, 128)],
                 num_classes=2,
                 with_mask=True)
-            out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    inputs, data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 2

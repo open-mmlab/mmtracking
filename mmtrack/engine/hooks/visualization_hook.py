@@ -72,21 +72,20 @@ class TrackVisualizationHook(Hook):
         self.draw = draw
         self.test_out_dir = test_out_dir
 
-    def after_val_iter(self, runner: Runner, batch_idx: int,
-                       data_batch: Sequence[dict],
+    def after_val_iter(self, runner: Runner, batch_idx: int, data_batch: dict,
                        outputs: Sequence[TrackDataSample]) -> None:
         """Run after every ``self.interval`` validation iteration.
 
         Args:
             runner (:obj:`Runner`): The runner of the validation process.
             batch_idx (int): The index of the current batch in the val loop.
-            data_batch (Sequence[dict]): Data from dataloader.
+            data_batch (dict): Data from dataloader.
             outputs (Sequence[:obj:`TrackDataSample`]): Outputs from model.
         """
         if self.draw is False:
             return
 
-        assert len(data_batch) == len(outputs) == 1,\
+        assert len(outputs) == 1,\
             'only batch_size=1 is supported while validating.'
 
         total_curr_iter = runner.iter + batch_idx
@@ -105,15 +104,14 @@ class TrackVisualizationHook(Hook):
                 pred_score_thr=self.score_thr,
                 step=total_curr_iter)
 
-    def after_test_iter(self, runner: Runner, batch_idx: int,
-                        data_batch: Sequence[dict],
+    def after_test_iter(self, runner: Runner, batch_idx: int, data_batch: dict,
                         outputs: Sequence[TrackDataSample]) -> None:
         """Run after every testing iteration.
 
         Args:
             runner (:obj:`Runner`): The runner of the testing process.
             batch_idx (int): The index of the current batch in the val loop.
-            data_batch (Sequence[dict]): Data from dataloader.
+            data_batch (dict): Data from dataloader.
             outputs (Sequence[:obj:`TrackDataSample`]): Outputs from model.
         """
         if self.draw is False:
@@ -124,7 +122,7 @@ class TrackVisualizationHook(Hook):
                                          self.test_out_dir)
             mkdir_or_exist(self.test_out_dir)
 
-        assert len(data_batch) == len(outputs) == 1, \
+        assert len(outputs) == 1, \
             'only batch_size=1 is supported while testing.'
 
         if self.every_n_inner_iters(batch_idx, self.interval):

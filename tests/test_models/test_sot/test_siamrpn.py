@@ -55,8 +55,7 @@ class TestSiameseRPN(TestCase):
                 ref_prefix='search',
                 num_items=[1])
             out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
-            losses = model.forward(inputs, data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -88,9 +87,6 @@ class TestSiameseRPN(TestCase):
                         num_ref_imgs=0,
                         num_items=[1])
                     out_data = model.data_preprocessor(packed_inputs, False)
-                    inputs, data_samples = out_data['inputs'], out_data[
-                        'data_samples']
-                    batch_results = model.forward(
-                        inputs, data_samples, mode='predict')
+                    batch_results = model.forward(**out_data, mode='predict')
                     assert len(batch_results) == 1
                     assert isinstance(batch_results[0], TrackDataSample)

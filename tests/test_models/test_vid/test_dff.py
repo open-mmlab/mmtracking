@@ -46,10 +46,9 @@ class TestDFF(TestCase):
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=1)
             out_data = model.data_preprocessor(packed_inputs, True)
-            inputs, data_samples = out_data['inputs'], out_data['data_samples']
 
             # forward in ``loss`` mode
-            losses = model.forward(inputs, data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -76,10 +75,7 @@ class TestDFF(TestCase):
                 for i in range(3):
                     packed_inputs = demo_mm_inputs(
                         batch_size=1, frame_id=i, num_ref_imgs=0)
-                    out_data = model.data_preprocessor(packed_inputs, True)
-                    inputs, data_samples = out_data['inputs'], out_data[
-                        'data_samples']
-                    batch_results = model.forward(
-                        inputs, data_samples, mode='predict')
+                    out_data = model.data_preprocessor(packed_inputs, False)
+                    batch_results = model.forward(**out_data, mode='predict')
                     assert len(batch_results) == 1
                     assert isinstance(batch_results[0], TrackDataSample)

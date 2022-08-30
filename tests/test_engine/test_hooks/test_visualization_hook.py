@@ -18,7 +18,8 @@ class TestVisualizationHook(TestCase):
 
     def setUp(self) -> None:
         TrackLocalVisualizer.get_instance('visualizer')
-        self.data_batch = [dict(data_sample=None)]
+        # pseudo data_batch
+        self.data_batch = dict(data_samples=None, inputs=None)
 
         pred_instances_data = dict(
             bboxes=torch.tensor([[100, 100, 200, 200], [150, 150, 400, 200]]),

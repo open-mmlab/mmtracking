@@ -49,9 +49,6 @@ class TestPrDiMP(TestCase):
                     data_sample.padding_mask = torch.zeros((1, 320, 320),
                                                            dtype=bool)
                 out_data = model.data_preprocessor(packed_inputs, False)
-                inputs, data_samples = out_data['inputs'], out_data[
-                    'data_samples']
-                batch_results = model.forward(
-                    inputs, data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1
                 assert isinstance(batch_results[0], TrackDataSample)

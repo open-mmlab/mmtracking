@@ -5,7 +5,6 @@ from torch import Tensor
 
 from mmtrack.models.mot import BaseMultiObjectTracker
 from mmtrack.registry import MODELS
-from mmtrack.structures import TrackDataSample
 from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
 
 
@@ -113,8 +112,8 @@ class Mask2Former(BaseMultiObjectTracker):
                                                       rescale)
 
         results = []
-        for pred_track_ins in pred_track_ins_list:
-            track_data_sample = TrackDataSample()
+        for idx, pred_track_ins in enumerate(pred_track_ins_list):
+            track_data_sample = data_samples[idx]
             track_data_sample.pred_track_instances = pred_track_ins
             results.append(track_data_sample)
 

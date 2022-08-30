@@ -51,23 +51,21 @@ class ReIDMetrics(BaseMetric):
         for rank in self.metric_options['rank_list']:
             assert 1 <= rank <= self.metric_options['max_rank']
 
-    def process(self, data_batch: Sequence[dict],
-                data_samples: Sequence[dict]) -> None:
+    def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions.
 
         The processed results should be stored in ``self.results``, which will
         be used to compute the metrics when all batches have been processed.
 
         Args:
-            data_batch (Sequence[dict]): A batch of data from the dataloader.
+            data_batch (dict): A batch of data from the dataloader.
             data_samples (Sequence[dict]): A batch of data samples that
                 contain annotations and predictions.
         """
-        # TODO: change `pred` to `data_sample`
-        for data, pred in zip(data_batch, data_samples):
-            pred_feature = pred['pred_feature']
+        for data_sample in data_samples:
+            pred_feature = data_sample['pred_feature']
             assert isinstance(pred_feature, torch.Tensor)
-            gt_label = pred.get('gt_label', data['data_samples']['gt_label'])
+            gt_label = data_sample.get('gt_label', data_sample['gt_label'])
             assert isinstance(gt_label['label'], torch.Tensor)
             result = dict(
                 pred_feature=pred_feature.data.cpu(),

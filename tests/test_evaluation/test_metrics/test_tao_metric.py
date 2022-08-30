@@ -55,24 +55,22 @@ class TestTAOMetric(TestCase):
                 0: dict(id=0, name='car'),
                 1: dict(id=1, name='train')
             })
-        tao_metric.process([
+        data_batch = dict(inputs=None, data_samples=None)
+        data_samples = [
             dict(
-                inputs=None,
-                data_samples={
-                    'img_id': 0,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 0,
-                    'video_id': 1,
-                    'video_length': 1,
-                    'instances': instances,
-                    'frame_index': 0,
-                    'neg_category_ids': [3, 4],
-                    'not_exhaustive_category_ids': [1, 2]
-                })
-        ], [
-            dict(
-                pred_track_instances=dummy_pred, pred_det_instances=dummy_pred)
-        ])
+                pred_track_instances=dummy_pred,
+                pred_det_instances=dummy_pred,
+                img_id=0,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                frame_index=0,
+                video_id=1,
+                video_length=1,
+                instances=instances,
+                neg_category_ids=[3, 4],
+                not_exhaustive_category_ids=[1, 2])
+        ]
+        tao_metric.process(data_batch, data_samples)
         tao_metric.evaluate(size=1)
         assert osp.exists(f'{outfile_prefix}_track.json')
         assert osp.exists(f'{outfile_prefix}_det.json')
@@ -100,44 +98,38 @@ class TestTAOMetric(TestCase):
                 0: dict(id=0, name='car'),
                 1: dict(id=1, name='train')
             })
-        tao_metric.process([
-            dict(
-                inputs=None,
-                data_samples={
-                    'img_id': 0,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 0,
-                    'video_id': 1,
-                    'video_length': 2,
-                    'instances': instances,
-                    'frame_index': 0,
-                    'neg_category_ids': [3, 4],
-                    'not_exhaustive_category_ids': [1, 2]
-                })
-        ], [
+        data_batch = dict(inputs=None, data_samples=None)
+        data_samples = [
             dict(
                 pred_track_instances=dummy_pred_1,
-                pred_det_instances=dummy_pred_1)
-        ])
-        tao_metric.process([
-            dict(
-                inputs=None,
-                data_samples={
-                    'img_id': 1,
-                    'ori_shape': (720, 1280),
-                    'frame_id': 1,
-                    'video_id': 1,
-                    'video_length': 2,
-                    'instances': instances,
-                    'frame_index': 1,
-                    'neg_category_ids': [3, 4],
-                    'not_exhaustive_category_ids': [1, 2]
-                })
-        ], [
+                pred_det_instances=dummy_pred_1,
+                img_id=0,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                frame_index=0,
+                video_id=1,
+                video_length=1,
+                instances=instances,
+                neg_category_ids=[3, 4],
+                not_exhaustive_category_ids=[1, 2])
+        ]
+        tao_metric.process(data_batch, data_samples)
+
+        data_samples = [
             dict(
                 pred_track_instances=dummy_pred_2,
-                pred_det_instances=dummy_pred_2)
-        ])
+                pred_det_instances=dummy_pred_2,
+                img_id=0,
+                ori_shape=(720, 1280),
+                frame_id=0,
+                frame_index=0,
+                video_id=1,
+                video_length=1,
+                instances=instances,
+                neg_category_ids=[3, 4],
+                not_exhaustive_category_ids=[1, 2])
+        ]
+        tao_metric.process(data_batch, data_samples)
 
         eval_results = tao_metric.evaluate(size=2)
         target = {
