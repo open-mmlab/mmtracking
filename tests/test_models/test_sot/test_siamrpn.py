@@ -18,7 +18,7 @@ class TestSiameseRPN(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
+        'sot/siamese_rpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -30,7 +30,7 @@ class TestSiameseRPN(TestCase):
 
     @parameterized.expand([
         (
-            'sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
+            'sot/siamese_rpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
             ('cpu', 'cuda')),
     ])
     def test_siamese_rpn_forward_loss_mode(self, cfg_file, devices):
@@ -61,7 +61,7 @@ class TestSiameseRPN(TestCase):
 
     @parameterized.expand([
         (
-            'sot/siamese_rpn/siamese-rpn_resnet50_8x28bs-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
+            'sot/siamese_rpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py',  # noqa: E501
             ('cpu', 'cuda')),
     ])
     def test_siamese_rpn_forward_predict_mode(self, cfg_file, devices):

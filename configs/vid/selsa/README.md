@@ -30,13 +30,50 @@ Video objection detection (VID) has been a rising research direction in recent y
 
 We observe around 1 mAP fluctuations in performance, and provide the best model.
 
-|      Method       | Backbone  |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 |                                Config                                |                                                                                                                                                                         Download                                                                                                                                                                         |
-| :---------------: | :-------: | :-----: | :-----: | :------: | :------------: | :-------: | :------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|       SELSA       | R-50-DC5  | pytorch |   7e    |   3.49   |      7.5       |   78.4    |   [config](selsa_faster-rcnn-resnet50-dc5_8x1bs-7e_imagenetvid.py)   |   [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835.log.json)   |
-|       SELSA       | R-101-DC5 | pytorch |   7e    |   5.18   |      7.2       |   81.5    |  [config](selsa_faster-rcnn-resnet101-dc5_8x1bs-7e_imagenetvid.py)   | [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724.log.json) |
-|       SELSA       | X-101-DC5 | pytorch |   7e    |   9.15   |       -        |   83.1    |  [config](selsa_faster-rcnn-resnext50-dc5_8x1bs-7e_imagenetvid.py)   | [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641-10252965.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641.log.json) |
-| SELSA <br> (FP16) | R-50-DC5  | pytorch |   7e    |   2.71   |       -        |   78.7    | [config](selsa_faster-rcnn-resnet50-dc5_8x1bs-amp-7e_imagenetvid.py) |                                            [model](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth) \| [log](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846.log.json)                                            |
+|      Method       | Backbone  |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 |                             Config                             |                                                                                                                                                                         Download                                                                                                                                                                         |
+| :---------------: | :-------: | :-----: | :-----: | :------: | :------------: | :-------: | :------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|       SELSA       | R-50-DC5  | pytorch |   7e    |   3.49   |      7.5       |   78.4    |   [config](selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py)   |   [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r50_dc5_1x_imagenetvid/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835.log.json)   |
+|       SELSA       | R-101-DC5 | pytorch |   7e    |   5.18   |      7.2       |   81.5    |  [config](selsa_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid.py)   | [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724-aa961bcc.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_r101_dc5_1x_imagenetvid/selsa_faster_rcnn_r101_dc5_1x_imagenetvid_20201218_172724.log.json) |
+|       SELSA       | X-101-DC5 | pytorch |   7e    |   9.15   |       -        |   83.1    |   [config](selsa_faster-rcnn_x50-dc5_8xb1-7e_imagenetvid.py)   | [model](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641-10252965.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/selsa/selsa_faster_rcnn_x101_dc5_1x_imagenetvid/selsa_faster_rcnn_x101_dc5_1x_imagenetvid_20210825_205641.log.json) |
+| SELSA <br> (FP16) | R-50-DC5  | pytorch |   7e    |   2.71   |       -        |   78.7    | [config](selsa_faster-rcnn_r50-dc5_8xb1-amp-7e_imagenetvid.py) |                                            [model](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846-dce6eb09.pth) \| [log](https://download.openmmlab.com/mmtracking/fp16/selsa_faster_rcnn_r50_dc5_fp16_1x_imagenetvid_20210728_193846.log.json)                                            |
 
 Note:
 
 - `FP16` means Mixed Precision (FP16) is adopted in training.
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
+
+```shell
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/vid/selsa/selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8
+```
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+```shell
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/vid/selsa/selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8 \
+    --checkpoint ./checkpoints/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth
+```
+
+### 3.Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell
+python demo/demo_vid.py \
+    configs/vid/selsa/selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py \
+    --checkpoint ./checkpoints/selsa_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_204835-2f5a4952.pth \
+    --input demo/demo.mp4 \
+    --output vid.mp4
+```
+
+If you want to know about more detailed usage of `demo_vid.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).

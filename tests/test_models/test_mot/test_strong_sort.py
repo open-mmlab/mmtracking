@@ -19,11 +19,15 @@ class TestStrongSORT(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'mot/strongsort/strongsort_yolox-x_8x4bs-80e'
+        'mot/strongsort/strongsort_yolox_x_8xb4-80e'
         '_crowdhuman-mot17halftrain_test-mot17halfval.py'
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
+        model.reid.backbone.depth = 18
+        model.reid.head.fc_channels = 1
+        model.reid.head.out_channels = 1
+        model.reid.head.num_classes = 2
         model = MODELS.build(model)
         assert model.detector
         assert model.reid
@@ -32,7 +36,7 @@ class TestStrongSORT(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('mot/strongsort/strongsort_yolox-x_8x4bs-80e'
+        ('mot/strongsort/strongsort_yolox_x_8xb4-80e'
          '_crowdhuman-mot17halftrain_test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_strongsort_forward_predict_mode(self, cfg_file, devices):

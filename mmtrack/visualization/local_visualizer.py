@@ -73,7 +73,7 @@ class TrackLocalVisualizer(Visualizer):
         classes = self.dataset_meta.get('CLASSES', None)
 
         # get colors and texts
-        if 'labels' in instances:
+        if hasattr(instances, 'instances_id'):
             # for the MOT and VIS tasks
             colors = [random_color(_id) for _id in instances.instances_id]
             categories = [
