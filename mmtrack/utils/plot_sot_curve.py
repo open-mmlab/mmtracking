@@ -65,10 +65,10 @@ def plot_sot_curve(y: np.ndarray,
     matplotlib.rcParams.update({'axes.titleweight': 'black'})
     matplotlib.rcParams.update({'axes.labelsize': font_size_axis})
 
+    # Plot curves
     fig, ax = plt.subplots()
 
     index_sort = np.argsort(scores)
-
     plotted_lines = []
     legend_text = []
 
@@ -81,7 +81,6 @@ def plot_sot_curve(y: np.ndarray,
             linestyle=LINE_STYLE[len(index_sort) - id - 1])
 
         plotted_lines.append(line[0])
-
         legend_text.append('{} [{:.1f}]'.format(tracker_names[id_sort],
                                                 scores[id_sort]))
 
@@ -93,9 +92,7 @@ def plot_sot_curve(y: np.ndarray,
         edgecolor='black',
         fontsize=font_size_legend,
         framealpha=1.0)
-
     ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, title=title)
-
     ax.grid(True, linestyle='-.')
     fig.tight_layout()
 
