@@ -41,6 +41,9 @@ def plot_sot_curve(y: np.ndarray,
             Defaults to None.
         show (bool, optional): Whether to show. Defaults to False.
     """
+    x, scores = x.squeeze(), scores.squeeze()
+    assert y.ndim == 2 and x.ndim == 1 and scores.ndim == 1
+
     # Plot settings
     font_size = plot_opts.get('font_size', 12)
     font_size_axis = plot_opts.get('font_size_axis', 13)
