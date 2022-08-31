@@ -1,8 +1,6 @@
 _base_ = ['../../_base_/default_runtime.py']
 
-cudnn_benchmark = False
-deterministic = True
-seed = 1
+randomness = dict(seed=1, deterministic=True)
 find_unused_parameters = True
 crop_size = 511
 exemplar_size = 127
