@@ -8,10 +8,6 @@ Video objection detection is a challenging task because isolated video frames ma
 
 <!-- [IMAGE] -->
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/34888372/142985575-4560a7c1-0402-428f-9094-ffb00d6b1e38.png"/>
-</div>
-
 ## Citatioin
 
 <!-- [ALGORITHM] -->
