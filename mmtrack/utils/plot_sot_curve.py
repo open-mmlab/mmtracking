@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-# The codes are modified from https://github.com/visionml/pytracking/blob/master/pytracking/analysis/plot_results.py # noqa: E501
+# The code is modified from https://github.com/visionml/pytracking/blob/master/pytracking/analysis/plot_results.py # noqa: E501
 
 from typing import List, Optional
 
@@ -28,7 +28,19 @@ def plot_sot_curve(y: np.ndarray,
                    tracker_names: List,
                    plot_opts: dict,
                    plot_save_path: Optional[str] = None,
-                   show=False):
+                   show: bool = False):
+    """Plot curves for SOT.
+
+    Args:
+        y (np.ndarray): The content along the Y axis.
+        x (np.ndarray): The content along the X axis.
+        scores (np.ndarray): The content of viualized indicators.
+        tracker_names (List): The names of trackers.
+        plot_opts (dict): The options for plot.
+        plot_save_path (Optional[str], optional): The saved path of the figure.
+            Defaults to None.
+        show (bool, optional): Whether to show. Defaults to False.
+    """
     # Plot settings
     font_size = plot_opts.get('font_size', 12)
     font_size_axis = plot_opts.get('font_size_axis', 13)
@@ -100,7 +112,18 @@ def plot_success_curve(scores: np.ndarray,
                        tracker_names: List,
                        plot_opts: Optional[dict] = None,
                        plot_save_path: Optional[str] = None,
-                       show=False):
+                       show: bool = False):
+    """Plot curves of Success for SOT.
+
+    Args:
+        scores (np.ndarray): The content of viualized indicators.
+        tracker_names (List): The names of trackers.
+        plot_opts (Optional[dict], optional): The options for plot.
+            Defaults to None.
+        plot_save_path (Optional[str], optional): The saved path of the figure.
+            Defaults to None.
+        show (bool, optional): Whether to show. Defaults to False.
+    """
     assert len(tracker_names) == len(scores)
     success_plot_opts = {
         'plot_type': 'success',
@@ -123,7 +146,18 @@ def plot_norm_precision_curve(scores: np.ndarray,
                               tracker_names: List,
                               plot_opts: Optional[dict] = None,
                               plot_save_path: Optional[str] = None,
-                              show=False):
+                              show: bool = False):
+    """Plot curves of Norm Precision for SOT.
+
+    Args:
+        scores (np.ndarray): The content of viualized indicators.
+        tracker_names (List): The names of trackers.
+        plot_opts (Optional[dict], optional): The options for plot.
+            Defaults to None.
+        plot_save_path (Optional[str], optional): The saved path of the figure.
+            Defaults to None.
+        show (bool, optional): Whether to show. Defaults to False.
+    """
     assert len(tracker_names) == len(scores)
     norm_precision_plot_opts = {
         'plot_type': 'norm_precision',
@@ -146,7 +180,18 @@ def plot_precision_curve(scores: np.ndarray,
                          tracker_names: List,
                          plot_opts: Optional[dict] = None,
                          plot_save_path: Optional[str] = None,
-                         show=False):
+                         show: bool = False):
+    """Plot curves of Precision for SOT.
+
+    Args:
+        scores (np.ndarray): The content of viualized indicators.
+        tracker_names (List): The names of trackers.
+        plot_opts (Optional[dict], optional): The options for plot.
+            Defaults to None.
+        plot_save_path (Optional[str], optional): The saved path of the figure.
+            Defaults to None.
+        show (bool, optional): Whether to show. Defaults to False.
+    """
     assert len(tracker_names) == len(scores)
     precision_plot_opts = {
         'plot_type': 'precision',
