@@ -45,18 +45,18 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         if tracker is not None:
             self.tracker = MODELS.build(tracker)
 
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> dict:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size.The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
@@ -64,13 +64,13 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
             dict: A dictionary of loss components.
         """
         # modify the inputs shape to fit mmdet
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(1) == 1, \
             'MaskTrackRCNN can only have 1 key frame and 1 reference frame.'
         img = img[:, 0]
 
-        ref_img = batch_inputs['ref_img']
+        ref_img = inputs['ref_img']
         assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert ref_img.size(1) == 1, \
             'MaskTrackRCNN can only have 1 key frame and 1 reference frame.'
@@ -85,7 +85,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
         if self.detector.with_rpn:
             proposal_cfg = self.detector.train_cfg.get(
                 'rpn_proposal', self.detector.test_cfg.rpn)
-            rpn_data_samples = copy.deepcopy(batch_data_samples)
+            rpn_data_samples = copy.deepcopy(data_samples)
             rpn_losses, rpn_results_list = self.detector.rpn_head.\
                 loss_and_predict(x,
                                  rpn_data_samples,
@@ -99,33 +99,32 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
             losses.update(rpn_losses)
         else:
             # TODO: Not support currently, should have a check at Fast R-CNN
-            assert batch_data_samples[0].get('proposals', None) is not None
+            assert data_samples[0].get('proposals', None) is not None
             # use pre-defined proposals in InstanceData for the second stage
             # to extract ROI features.
             rpn_results_list = [
-                data_sample.proposals for data_sample in batch_data_samples
+                data_sample.proposals for data_sample in data_samples
             ]
 
         losses_detect = self.detector.roi_head.loss(x, rpn_results_list,
-                                                    batch_data_samples,
-                                                    **kwargs)
+                                                    data_samples, **kwargs)
         losses.update(losses_detect)
 
         losses_track = self.track_head.loss(x, ref_x, rpn_results_list,
-                                            batch_data_samples, **kwargs)
+                                            data_samples, **kwargs)
         losses.update(losses_track)
 
         return losses
 
     def predict(self,
-                batch_inputs: dict,
-                batch_data_samples: SampleList,
+                inputs: dict,
+                data_samples: SampleList,
                 rescale: bool = True,
                 **kwargs) -> SampleList:
         """Test without augmentation.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
@@ -133,7 +132,7 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
                 - ref_img (Tensor): The reference images.
                 In test mode, T = 1 and there is only ``img`` and no
                 ``ref_img``.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -142,31 +141,30 @@ class MaskTrackRCNN(BaseMultiObjectTracker):
 
         Returns:
             SampleList: Tracking results of the input images.
-            Each TrackDataSample usually contains ``pred_det_instances``.
+            Each TrackDataSample usually contains ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(1) == 1, \
             'MaskTrackRCNN can only have 1 key frame.'
         img = img[:, 0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'MaskTrackRCNN only support 1 batch size per gpu for now.'
 
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
         frame_id = metainfo.get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()
 
         x = self.detector.extract_feat(img)
 
-        rpn_results_list = self.detector.rpn_head.predict(
-            x, batch_data_samples)
+        rpn_results_list = self.detector.rpn_head.predict(x, data_samples)
         det_results = self.detector.roi_head.predict(
-            x, rpn_results_list, batch_data_samples, rescale=rescale)
+            x, rpn_results_list, data_samples, rescale=rescale)
         assert len(det_results) == 1, 'Batch inference is not supported.'
         assert 'masks' in det_results[0], 'There are no mask results.'
-        track_data_sample = batch_data_samples[0]
+        track_data_sample = data_samples[0]
         track_data_sample.pred_det_instances = \
             det_results[0].clone()
 

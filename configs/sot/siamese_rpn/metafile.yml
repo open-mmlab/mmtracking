@@ -8,14 +8,14 @@ Collections:
       Architecture:
         - ResNet
     Paper:
-        URL: https://arxiv.org/abs/1812.11703
-        Title: SiamRPN++ Evolution of Siamese Visual Tracking with Very Deep Networks
+      URL: https://arxiv.org/abs/1812.11703
+      Title: SiamRPN++ Evolution of Siamese Visual Tracking with Very Deep Networks
     README: configs/sot/siamese_rpn/README.md
 
 Models:
-  - Name: siamese_rpn_r50_20e_lasot
+  - Name: siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot
     In Collection: SiameseRPN++
-    Config: configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py
+    Config: configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py
     Metadata:
       Training Data: MSCOCO, ImageNet DET, ImageNet VID
       Training Memory (GB): 7.54
@@ -29,9 +29,9 @@ Models:
           Precision: 49.7
     Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
 
-  - Name: siamese_rpn_r50_20e_uav123
+  - Name: siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-uav123
     In Collection: SiameseRPN++
-    Config: configs/sot/siamese_rpn/siamese_rpn_r50_20e_uav123.py
+    Config: configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-uav123.py
     Metadata:
       Training Data: MSCOCO, ImageNet DET, ImageNet VID
       Training Memory (GB): 7.54
@@ -45,9 +45,9 @@ Models:
           Precision: 80.3
     Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_uav123/siamese_rpn_r50_20e_uav123_20220420_181845-dc2d4831.pth
 
-  - Name: siamese_rpn_r50_20e_trackingnet
+  - Name: siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-trackingnet
     In Collection: SiameseRPN++
-    Config: configs/sot/siamese_rpn/siamese_rpn_r50_20e_trackingnet.py
+    Config: configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-trackingnet.py
     Metadata:
       Training Data: MSCOCO, ImageNet DET, ImageNet VID
       Training Memory (GB): 7.54
@@ -61,9 +61,9 @@ Models:
           Precision: 63.2
     Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_lasot/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
 
-  - Name: siamese_rpn_r50_20e_otb100
+  - Name: siamese-rpn_resnet50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100
     In Collection: SiameseRPN++
-    Config: configs/sot/siamese_rpn/siamese_rpn_r50_20e_otb100.py
+    Config: configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py
     Metadata:
       Training Data: MSCOCO, ImageNet DET, ImageNet VID
       Training Memory (GB): _
@@ -77,9 +77,9 @@ Models:
           Precision: 86.3
     Weights: https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_20e_otb100_20220421_144232-6b8f1730.pth
 
-  - Name: siamese_rpn_r50_20e_vot2018
+  - Name: siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-vot2018
     In Collection: SiameseRPN++
-    Config: configs/sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py
+    Config: configs/sot/siamese_rpn/siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-vot2018.py
     Metadata:
       Training Data: MSCOCO, ImageNet DET, ImageNet VID
       Training Memory (GB): _

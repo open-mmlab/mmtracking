@@ -32,8 +32,9 @@ class TestMaskTrackRCNNTracker(TestCase):
                                                    similarity_logits)
         assert match_score.size() == similarity_logits.size()
 
-    @parameterized.expand(
-        ['vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py'])
+    @parameterized.expand([
+        'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py'  # noqa: E501
+    ])
     def test_track(self, cfg_file):
         _model = get_model_cfg(cfg_file)
         # _scope_ will be popped after build
@@ -42,8 +43,8 @@ class TestMaskTrackRCNNTracker(TestCase):
         for frame_id in range(3):
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, with_mask=True)
-            data_sample = packed_inputs[0]['data_sample']
-            img = packed_inputs[0]['inputs']['img']
+            data_sample = packed_inputs['data_samples'][0]
+            img = packed_inputs['inputs']['img'][0]
             data_sample.pred_det_instances = data_sample.gt_instances.clone()
             # add fake scores
             scores = torch.ones(5)
@@ -59,7 +60,7 @@ class TestMaskTrackRCNNTracker(TestCase):
                 model=model,
                 img=img,
                 feats=tuple(feats),
-                data_sample=packed_inputs[0]['data_sample'])
+                data_sample=packed_inputs['data_samples'][0])
 
             bboxes = pred_track_instances.bboxes
             labels = pred_track_instances.labels

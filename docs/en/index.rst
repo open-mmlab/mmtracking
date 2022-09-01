@@ -1,41 +1,52 @@
 Welcome to MMTracking's documentation!
 =======================================
 
-You can switch between Chinese and English documents in the lower-left corner of the layout.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Get Started
+
+   overview.md
+   get_started.md
 
 .. toctree::
    :maxdepth: 2
-   :caption: Get Started
+   :caption: User Guides
 
-   install.md
-   modelzoo_statistics.md
+   user_guides/index.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Guides
+
+   advanced_guides/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Migration
+
+   migration.md
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
+   api.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Model Zoo
+
    model_zoo.md
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Quick run
-
-   dataset.md
-   quick_run.md
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorials
-
-   tutorials/index.rst
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Useful Tools and Scripts
-
-   useful_tools_scripts.md
-
-.. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Notes
 
-   changelog.md
+   notes/contribution_guide.md
+   notes/projects.md
+   notes/changelog.md
+   notes/faq.md
 
 
 .. toctree::
@@ -43,11 +54,6 @@ You can switch between Chinese and English documents in the lower-left corner of
 
    switch_language.md
 
-
-.. toctree::
-   :caption: API Reference
-
-   api.rst
 
 
 Indices and tables

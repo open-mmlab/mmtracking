@@ -8,7 +8,7 @@
 
 - For fair comparison with other codebases, we report the GPU memory as the maximum value of `torch.cuda.max_memory_allocated()` for all 8 GPUs. Note that this value is usually less than what `nvidia-smi` shows.
 
-- We report the inference time as the total time of network forwarding and post-processing, excluding the data loading time. Results are obtained with the script `tools/analysis/benchmark.py` which computes the average time on 2000 images.
+- We report the inference time as the total time of network forwarding and post-processing, excluding the data loading time. Results are obtained with the script `tools/analysis_tools/benchmark.py` which computes the average time on 2000 images.
 
 - Speed benchmark environments
 
@@ -45,9 +45,13 @@ Please refer to [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/bl
 
 ## Baselines of multiple object tracking
 
-### SORT/DeepSORT (ICIP 2016/2017)
+### SORT (ICIP 2016)
 
-Please refer to [SORT/DeepSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/deepsort) for details.
+Please refer to [SORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/sort) for details.
+
+### DeepSORT (ICIP 2017)
+
+Please refer to [DeepSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/deepsort) for details.
 
 ### Tracktor (ICCV 2019)
 
@@ -57,9 +61,13 @@ Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/
 
 Please refer to [QDTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/qdtrack) for details.
 
-### ByteTrack (arXiv 2021)
+### ByteTrack (ECCV 2022)
 
 Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack) for details.
+
+### StrongSORT (arvix 2022)
+
+Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/strongsort) for details
 
 ## Baselines of single object tracking
 

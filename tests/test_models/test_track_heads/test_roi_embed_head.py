@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads import RoIEmbedHead
 from mmtrack.registry import TASK_UTILS
@@ -48,7 +48,7 @@ class TestRoIEmbedHead(TestCase):
 
     def test_roi_embed_head_loss(self):
         """Test roi embed head loss when truth is non-empty."""
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 num_convs=2,
                 num_fcs=2,
@@ -92,7 +92,7 @@ class TestRoIEmbedHead(TestCase):
             'match_accuracy'] >= 0, 'match accuracy should be non-zero or zero'
 
     def test_roi_embed_head_predict(self):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 num_convs=2,
                 num_fcs=2,

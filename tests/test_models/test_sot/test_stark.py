@@ -18,8 +18,8 @@ class TestStark(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'sot/stark/stark_st1_r50_500e_got10k.py',
-        'sot/stark/stark_st2_r50_50e_got10k.py'
+        'sot/stark/stark-st1_r50_8xb16-500e_got10k.py',
+        'sot/stark/stark-st2_r50_8xb16-50e_got10k.py'
     ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -32,8 +32,8 @@ class TestStark(TestCase):
     # TODO: reduce the channels of models in all configs for speed up
     # unit test.
     @parameterized.expand([
-        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
-        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
+        ('sot/stark/stark-st1_r50_8xb16-500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark-st2_r50_8xb16-50e_got10k.py', ('cpu', 'cuda'))
     ])
     def test_stark_forward_loss_mode(self, cfg_file, devices):
         _model = get_model_cfg(cfg_file)
@@ -57,19 +57,18 @@ class TestStark(TestCase):
                 ref_prefix='search',
                 image_shapes=[[(3, 128, 128), (3, 320, 320)]],
                 num_items=[1])
-            for input in packed_inputs:
-                input['data_sample'].padding_mask = torch.zeros((2, 128, 128),
-                                                                dtype=bool)
-                input['data_sample'].search_padding_mask = torch.zeros(
-                    (1, 128, 128), dtype=bool)
-            batch_inputs, data_samples = model.data_preprocessor(
-                packed_inputs, True)
-            losses = model.forward(batch_inputs, data_samples, mode='loss')
+            for data_sample in packed_inputs['data_samples']:
+                data_sample.padding_mask = torch.zeros((2, 128, 128),
+                                                       dtype=bool)
+                data_sample.search_padding_mask = torch.zeros((1, 128, 128),
+                                                              dtype=bool)
+            out_data = model.data_preprocessor(packed_inputs, True)
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('sot/stark/stark_st1_r50_500e_got10k.py', ('cpu', 'cuda')),
-        ('sot/stark/stark_st2_r50_50e_got10k.py', ('cpu', 'cuda'))
+        ('sot/stark/stark-st1_r50_8xb16-500e_got10k.py', ('cpu', 'cuda')),
+        ('sot/stark/stark-st2_r50_8xb16-50e_got10k.py', ('cpu', 'cuda'))
     ])
     def test_stark_forward_predict_mode(self, cfg_file, devices):
         _model = get_model_cfg(cfg_file)
@@ -95,12 +94,10 @@ class TestStark(TestCase):
                         num_ref_imgs=0,
                         image_shapes=[(3, 320, 320)],
                         num_items=[1])
-                    for input in packed_inputs:
-                        input['data_sample'].padding_mask = torch.zeros(
-                            (1, 320, 320), dtype=bool)
-                    batch_inputs, data_samples = model.data_preprocessor(
-                        packed_inputs, False)
-                    batch_results = model.forward(
-                        batch_inputs, data_samples, mode='predict')
+                    for data_sample in packed_inputs['data_samples']:
+                        data_sample.padding_mask = torch.zeros((1, 320, 320),
+                                                               dtype=bool)
+                    out_data = model.data_preprocessor(packed_inputs, False)
+                    batch_results = model.forward(**out_data, mode='predict')
                     assert len(batch_results) == 1
                     assert isinstance(batch_results[0], TrackDataSample)

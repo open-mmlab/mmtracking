@@ -30,8 +30,45 @@ Extending state-of-the-art object detectors from image to video is challenging. 
 
 We observe around 1 mAP fluctuations in performance, and provide the best model.
 
-| Method | Backbone  |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 |                        Config                         |                                                                                                                                                                      Download                                                                                                                                                                      |
-| :----: | :-------: | :-----: | :-----: | :------: | :------------: | :-------: | :---------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|  FGFA  | R-50-DC5  | pytorch |   7e    |   4.10   |      6.9       |   74.7    | [config](fgfa_faster_rcnn_r50_dc5_1x_imagenetvid.py)  |   [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657.log.json)   |
-|  FGFA  | R-101-DC5 | pytorch |   7e    |   5.80   |      6.4       |   77.8    | [config](fgfa_faster_rcnn_r101_dc5_1x_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831.log.json) |
-|  FGFA  | X-101-DC5 | pytorch |   7e    |   9.74   |       -        |   79.6    | [config](fgfa_faster_rcnn_x101_dc5_1x_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid_20210818_223334-8723c594.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid_20210818_223334.log.json) |
+| Method | Backbone  |  Style  | Lr schd | Mem (GB) | Inf time (fps) | box AP@50 |                           Config                           |                                                                                                                                                                      Download                                                                                                                                                                      |
+| :----: | :-------: | :-----: | :-----: | :------: | :------------: | :-------: | :--------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|  FGFA  | R-50-DC5  | pytorch |   7e    |   4.10   |      6.9       |   74.7    | [config](fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py)  |   [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657.log.json)   |
+|  FGFA  | R-101-DC5 | pytorch |   7e    |   5.80   |      6.4       |   77.8    | [config](fgfa_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831-9c9d8183.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid/fgfa_faster_rcnn_r101_dc5_1x_imagenetvid_20201219_011831.log.json) |
+|  FGFA  | X-101-DC5 | pytorch |   7e    |   9.74   |       -        |   79.6    | [config](fgfa_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid_20210818_223334-8723c594.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/fgfa/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid/fgfa_faster_rcnn_x101_dc5_1x_imagenetvid_20210818_223334.log.json) |
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
+
+```shell
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8
+```
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+```shell
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8 \
+    --checkpoint ./checkpoints/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth
+```
+
+### 3.Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell
+python demo/demo_vid.py \
+    configs/vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py \
+    --checkpoint ./checkpoints/fgfa_faster_rcnn_r50_dc5_1x_imagenetvid_20201228_022657-f42016f3.pth \
+    --input demo/demo.mp4 \
+    --output vid.mp4
+```
+
+If you want to know about more detailed usage of `demo_vid.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).

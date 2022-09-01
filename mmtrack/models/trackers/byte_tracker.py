@@ -5,7 +5,7 @@ import lap
 import numpy as np
 import torch
 from mmdet.structures.bbox import bbox_overlaps
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.registry import MODELS
 from mmtrack.structures import TrackDataSample

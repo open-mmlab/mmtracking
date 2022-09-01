@@ -8,7 +8,7 @@ import mmcv
 import numpy as np
 import seaborn as sns
 from matplotlib.patches import Rectangle
-from mmcv.utils import mkdir_or_exist
+from mmengine.utils import mkdir_or_exist
 
 
 def imshow_mot_errors(*args, backend: str = 'cv2', **kwargs):

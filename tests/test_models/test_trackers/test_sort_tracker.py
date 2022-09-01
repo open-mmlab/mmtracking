@@ -17,8 +17,10 @@ class TestSORTTracker(TestCase):
         register_all_modules(init_default_scope=True)
         cls.num_objs = 30
 
-    @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_init(self, cfg_file):
         cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
@@ -36,8 +38,10 @@ class TestSORTTracker(TestCase):
             'ids', 'bboxes', 'scores', 'labels', 'frame_ids'
         ]
 
-    @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 128, 128))
 
@@ -53,7 +57,7 @@ class TestSORTTracker(TestCase):
             for frame_id in range(3):
                 packed_inputs = demo_mm_inputs(
                     batch_size=1, frame_id=frame_id, num_ref_imgs=0)
-                data_sample = packed_inputs[0]['data_sample']
+                data_sample = packed_inputs['data_samples'][0]
                 data_sample.pred_det_instances = \
                     data_sample.gt_instances.clone()
                 # add fake scores
@@ -65,7 +69,7 @@ class TestSORTTracker(TestCase):
                     model=model,
                     img=img,
                     feats=None,
-                    data_sample=packed_inputs[0]['data_sample'],
+                    data_sample=packed_inputs['data_samples'][0],
                     data_preprocessor=cfg['data_preprocessor'])
 
                 bboxes = pred_track_instances.bboxes

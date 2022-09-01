@@ -42,7 +42,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         metric (str | list[str]): Metrics to be evaluated. Options are
             'HOTA', 'CLEAR', 'Identity'.
             Defaults to ['HOTA', 'CLEAR', 'Identity'].
-        resfile_path (str, optional): Path to save the formatted results.
+        outfile_prefix (str, optional): Path to save the formatted results.
             Defaults to None.
         track_iou_thr (float): IoU threshold for tracking evaluation.
             Defaults to 0.5.
@@ -86,7 +86,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
 
     def __init__(self,
                  metric: Union[str, List[str]] = ['HOTA', 'CLEAR', 'Identity'],
-                 resfile_path: Optional[str] = None,
+                 outfile_prefix: Optional[str] = None,
                  track_iou_thr: float = 0.5,
                  benchmark: str = 'MOT17',
                  format_only: bool = False,
@@ -117,7 +117,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
         self.seq_info = defaultdict(
             lambda: dict(seq_length=-1, gt_tracks=[], pred_tracks=[]))
         self.gt_dir = self._get_gt_dir()
-        self.pred_dir = self._get_pred_dir(resfile_path)
+        self.pred_dir = self._get_pred_dir(outfile_prefix)
         self.seqmap = osp.join(self.pred_dir, 'videoseq.txt')
         with open(self.seqmap, 'w') as f:
             f.write('name\n')
@@ -128,17 +128,17 @@ class MOTChallengeMetrics(BaseVideoMetric):
         # and calling `tmp_dir.cleanup()` in compute_metrics will cause errors.
         self.tmp_dir.cleanup()
 
-    def _get_pred_dir(self, resfile_path):
+    def _get_pred_dir(self, outfile_prefix):
         """Get directory to save the prediction results."""
         logger: MMLogger = MMLogger.get_current_instance()
 
-        if resfile_path is None:
-            resfile_path = self.tmp_dir.name
+        if outfile_prefix is None:
+            outfile_prefix = self.tmp_dir.name
         else:
-            if osp.exists(resfile_path) and is_main_process():
+            if osp.exists(outfile_prefix) and is_main_process():
                 logger.info('remove previous results.')
-                shutil.rmtree(resfile_path)
-        pred_dir = osp.join(resfile_path, self.TRACKER)
+                shutil.rmtree(outfile_prefix)
+        pred_dir = osp.join(outfile_prefix, self.TRACKER)
         os.makedirs(pred_dir, exist_ok=True)
         return pred_dir
 
@@ -148,21 +148,19 @@ class MOTChallengeMetrics(BaseVideoMetric):
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
-    def process(self, data_batch: Sequence[dict],
-                predictions: Sequence[dict]) -> None:
+    def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions.
 
         The processed results should be stored in ``self.results``, which will
         be used to compute the metrics when all batches have been processed.
 
         Args:
-            data_batch (Sequence[dict]): A batch of data from the dataloader.
-            predictions (Sequence[dict]): A batch of outputs from the model.
+            data_batch (dict): A batch of data from the dataloader.
+            data_samples (Sequence[dict]): A batch of data samples that
+                contain annotations and predictions.
         """
-        for data, pred in zip(data_batch, predictions):
+        for data_sample in data_samples:
             # load basic info
-            assert 'data_sample' in data
-            data_sample = data['data_sample']
             frame_id = data_sample['frame_id']
             video_length = data_sample['video_length']
             video = data_sample['img_path'].split(os.sep)[-3]
@@ -188,8 +186,8 @@ class MOTChallengeMetrics(BaseVideoMetric):
                 self.seq_info[video]['gt_tracks'].extend(gt_tracks)
 
             # load predictions
-            assert 'pred_track_instances' in pred
-            pred_instances = pred['pred_track_instances']
+            assert 'pred_track_instances' in data_sample
+            pred_instances = data_sample['pred_track_instances']
             pred_tracks = [
                 np.array([
                     frame_id + 1, pred_instances['instances_id'][i].cpu(),

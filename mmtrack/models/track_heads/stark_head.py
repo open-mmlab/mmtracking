@@ -6,10 +6,9 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
-from mmdet.models.layers import Transformer, build_transformer
-from mmdet.models.layers.builder import TRANSFORMER
-from mmengine.data import InstanceData
+from mmdet.models.layers import Transformer
 from mmengine.model import BaseModule
+from mmengine.structures import InstanceData
 from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
@@ -177,8 +176,7 @@ class ScoreHead(nn.Module):
         return x.view(-1, 1)
 
 
-# TODO: wait for the registry refactor of Transform in mmdet
-@TRANSFORMER.register_module()
+@MODELS.register_module()
 class StarkTransformer(Transformer):
     """The transformer head used in STARK. `STARK.
 
@@ -189,11 +187,11 @@ class StarkTransformer(Transformer):
     <https://arxiv.org/pdf/2005.12872>`_ for details.
 
     Args:
-        encoder (`mmcv.ConfigDict` | Dict): Config of
+        encoder (`mmengine.ConfigDict` | Dict): Config of
             TransformerEncoder. Defaults to None.
-        decoder ((`mmcv.ConfigDict` | Dict)): Config of
+        decoder ((`mmengine.ConfigDict` | Dict)): Config of
             TransformerDecoder. Defaults to None
-        init_cfg (obj:`mmcv.ConfigDict`): The Config for initialization.
+        init_cfg (obj:`mmengine.ConfigDict`): The Config for initialization.
             Defaults to None.
     """
 
@@ -276,23 +274,23 @@ class StarkHead(BaseModule):
 
     Args:
         num_query (int): Number of query in transformer.
-        transformer (obj:`mmcv.ConfigDict`|dict): Config for transformer.
+        transformer (obj:`mmengine.ConfigDict`|dict): Config for transformer.
             Default: None.
-        positional_encoding (obj:`mmcv.ConfigDict`|dict):
+        positional_encoding (obj:`mmengine.ConfigDict`|dict):
             Config for position encoding.
-        bbox_head (obj:`mmcv.ConfigDict`|dict, optional): Config for bbox head.
-            Defaults to None.
-        cls_head (obj:`mmcv.ConfigDict`|dict, optional): Config for
+        bbox_head (obj:`mmengine.ConfigDict`|dict, optional): Config for bbox
+            head. Defaults to None.
+        cls_head (obj:`mmengine.ConfigDict`|dict, optional): Config for
             classification head. Defaults to None.
-        loss_cls (obj:`mmcv.ConfigDict`|dict): Config of the
+        loss_cls (obj:`mmengine.ConfigDict`|dict): Config of the
             classification loss. Default `CrossEntropyLoss`.
-        loss_bbox (obj:`mmcv.ConfigDict`|dict): Config of the bbox
+        loss_bbox (obj:`mmengine.ConfigDict`|dict): Config of the bbox
             regression loss. Default `L1Loss`.
-        loss_iou (obj:`mmcv.ConfigDict`|dict): Config of the bbox
+        loss_iou (obj:`mmengine.ConfigDict`|dict): Config of the bbox
             regression iou loss. Default `GIoULoss`.
-        tran_cfg (obj:`mmcv.ConfigDict`|dict): Training config of
+        tran_cfg (obj:`mmengine.ConfigDict`|dict): Training config of
             transformer head.
-        test_cfg (obj:`mmcv.ConfigDict`|dict): Testing config of
+        test_cfg (obj:`mmengine.ConfigDict`|dict): Testing config of
             transformer head.
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Default: None
@@ -320,8 +318,7 @@ class StarkHead(BaseModule):
                  frozen_modules=None,
                  **kwargs):
         super(StarkHead, self).__init__(init_cfg=init_cfg)
-        # TODO: wait for the registry refactor of Transform in mmdet
-        self.transformer = build_transformer(transformer)
+        self.transformer = MODELS.build(transformer)
         self.positional_encoding = build_positional_encoding(
             positional_encoding)
         assert bbox_head is not None
@@ -492,7 +489,7 @@ class StarkHead(BaseModule):
 
         return pred_logits, pred_bboxes
 
-    def predict(self, inputs: List[dict], batch_data_samples: SampleList,
+    def predict(self, inputs: List[dict], data_samples: SampleList,
                 prev_bbox: Tensor, scale_factor: Tensor) -> InstanceList:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
@@ -507,7 +504,7 @@ class StarkHead(BaseModule):
                 Here, `h` and `w` denote the height and width of input
                 image respectively. `stride` is the stride of feature map.
 
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
             scale_factor (Tensor): scale factor.
@@ -520,7 +517,7 @@ class StarkHead(BaseModule):
                   the last dimension 4 arrange as [x1, y1, x2, y2].
         """
         batch_img_metas = [
-            data_samples.metainfo for data_samples in batch_data_samples
+            data_samples.metainfo for data_samples in data_samples
         ]
         outs = self(inputs)
         predictions = self.predict_by_feat(
@@ -655,7 +652,7 @@ class StarkHead(BaseModule):
 
     # TODO: unify the `sefl.predict`, `self.loss` and so on in all the heads of
     # SOT.
-    def loss(self, inputs: List[dict], batch_data_samples: SampleList,
+    def loss(self, inputs: List[dict], data_samples: SampleList,
              **kwargs) -> dict:
         """Compute loss.
 
@@ -667,7 +664,7 @@ class StarkHead(BaseModule):
                     - 'mask': (Tensor), of shape (bs, h, w).
                 Here, `h` and `w` denote the height and width of input
                 image respectively. `stride` is the stride of feature map.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`
                 and 'metainfo'.
 
@@ -679,7 +676,7 @@ class StarkHead(BaseModule):
         batch_gt_instances = []
         batch_img_metas = []
         batch_search_gt_instances = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_img_metas.append(data_sample.metainfo)
             batch_gt_instances.append(data_sample.gt_instances)
             batch_search_gt_instances.append(data_sample.search_gt_instances)

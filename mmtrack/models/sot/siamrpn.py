@@ -2,14 +2,13 @@
 from typing import List, Optional, Tuple, Union
 
 import torch
-from mmengine import MessageHub
 from torch import Tensor
-from torch.nn.modules.batchnorm import BatchNorm2d, _BatchNorm
+from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
 from mmtrack.registry import MODELS
-from mmtrack.utils import (ForwardResults, InstanceList, OptConfigType,
-                           OptMultiConfig, OptSampleList, SampleList)
+from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
+                           SampleList)
 from .base import BaseSingleObjectTracker
 
 
@@ -187,14 +186,13 @@ class SiamRPN(BaseSingleObjectTracker):
         self.memo.z_feat = self.forward_template(z_crop)
         self.memo.avg_channel = avg_channel
 
-    def track(self, img: Tensor,
-              batch_data_samples: SampleList) -> InstanceList:
+    def track(self, img: Tensor, data_samples: SampleList) -> InstanceList:
         """Track the box of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
 
@@ -220,101 +218,39 @@ class SiamRPN(BaseSingleObjectTracker):
         x_feat = self.forward_search(x_crop)
         scale_factor = self.test_cfg.exemplar_size / z_size
 
-        results = self.head.predict(self.memo.z_feat, x_feat,
-                                    batch_data_samples, prev_bbox,
-                                    scale_factor)
+        results = self.head.predict(self.memo.z_feat, x_feat, data_samples,
+                                    prev_bbox, scale_factor)
 
         return results
 
-    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
-             **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: SampleList, **kwargs) -> dict:
         """
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size. The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
 
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instance``.
 
         Return:
             dict: A dictionary of loss components.
         """
-        search_img = batch_inputs['search_img']
+        search_img = inputs['search_img']
         assert search_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         search_img = search_img[:, 0]
 
-        template_img = batch_inputs['img']
+        template_img = inputs['img']
         assert template_img.dim(
         ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         template_img = template_img[:, 0]
 
         z_feat = self.forward_template(template_img)
         x_feat = self.forward_search(search_img)
-        losses = self.head.loss(z_feat, x_feat, batch_data_samples, **kwargs)
+        losses = self.head.loss(z_feat, x_feat, data_samples, **kwargs)
         return losses
-
-    def forward(self,
-                batch_inputs: dict,
-                batch_data_samples: OptSampleList = None,
-                mode: str = 'predict',
-                **kwargs) -> ForwardResults:
-        """The unified entry for a forward process in both training and test.
-
-        The method should accept three modes: "tensor", "predict" and "loss":
-
-        - "tensor": Forward the whole network and return tensor or tuple of
-        tensor without any post-processing, same as a common nn.Module.
-        - "predict": Forward and return the predictions, which are fully
-        processed to a list of :obj:`TrackDataSample`.
-        - "loss": Forward and return a dict of losses according to the given
-        inputs and data samples.
-
-        Note that this method doesn't handle neither back propagation nor
-        optimizer updating, which are done in the :meth:`train_step`.
-
-        Note:
-        the difference between this function and the ``forward`` in the
-        parent class: We don't train the backbone util the
-        `self.backbone_start_train_epoch`-th epoch. The epoch in this class
-        counts from 0.
-
-        Args:
-            batch_inputs (Dict[str, Tensor]): The input tensor with shape
-                (N, C, ...) in general.
-            batch_data_samples (list[:obj:`TrackDataSample`], optional): The
-                annotation data of every samples. Defaults to None.
-            mode (str): Return what kind of value. Defaults to 'tensor'.
-
-        Returns:
-            The return type depends on ``mode``.
-
-            - If ``mode="tensor"``, return a tensor or a tuple of tensor.
-            - If ``mode="predict"``, return a list of :obj:`TrackDataSample`.
-            - If ``mode="loss"``, return a dict of tensor.
-        """
-        if mode == 'loss':
-            message_hub = MessageHub.get_current_instance()
-            if 'epoch' in message_hub.runtime_info:
-                cur_epoch = message_hub.get_info('epoch')
-                if cur_epoch >= self.train_cfg['backbone_start_train_epoch']:
-                    for layer in self.train_cfg['backbone_train_layers']:
-                        for param in getattr(self.backbone,
-                                             layer).parameters():
-                            param.requires_grad = True
-                        for m in getattr(self.backbone, layer).modules():
-                            if isinstance(m, BatchNorm2d):
-                                m.train()
-            return self.loss(batch_inputs, batch_data_samples, **kwargs)
-        elif mode == 'predict':
-            return self.predict(batch_inputs, batch_data_samples, **kwargs)
-        elif mode == 'tensor':
-            return self._forward(batch_inputs, batch_data_samples, **kwargs)
-        else:
-            raise RuntimeError(f'Invalid mode "{mode}". '
-                               'Only supports loss, predict and tensor mode')

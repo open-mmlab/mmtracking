@@ -19,18 +19,22 @@ class TestByteTrack(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
+        'mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_'
+        'test-mot17halfval.py',
     ])
     def test_bytetrack_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
-
+        model.detector.neck.out_channels = 1
+        model.detector.neck.num_csp_blocks = 1
+        model.detector.bbox_head.in_channels = 1
+        model.detector.bbox_head.feat_channels = 1
         model = MODELS.build(model)
         assert model.detector
         assert model.motion
 
     @parameterized.expand([
-        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_'
+         'test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_bytetrack_forward_loss_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -41,6 +45,10 @@ class TestByteTrack(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 
@@ -51,16 +59,14 @@ class TestByteTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
             # Test forward
-            losses = model.forward(
-                batch_inputs, batch_data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_'
+         'test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_bytetrack_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -72,6 +78,10 @@ class TestByteTrack(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
             model = MODELS.build(_model)
 
             if device == 'cuda':
@@ -81,12 +91,9 @@ class TestByteTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

@@ -18,8 +18,10 @@ class TestDeepSORT(TestCase):
     def setUpClass(cls):
         register_all_modules(init_default_scope=True)
 
-    @parameterized.expand(
-        ['mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
         model = MODELS.build(model)
@@ -29,8 +31,8 @@ class TestDeepSORT(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py',
-         ('cpu', 'cuda')),
+        ('mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e'
+         '_mot17halftrain_test-mot17halfval.py', ('cpu', 'cuda')),
     ])
     def test_deepsort_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -55,12 +57,10 @@ class TestDeepSORT(TestCase):
                 num_ref_imgs=0,
                 image_shapes=[(3, 256, 256)],
                 num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, False)
 
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

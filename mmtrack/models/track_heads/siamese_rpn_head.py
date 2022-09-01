@@ -6,8 +6,8 @@ import torch.nn as nn
 from mmcv.cnn.bricks import ConvModule
 from mmdet.structures.bbox.transforms import (bbox_cxcywh_to_xyxy,
                                               bbox_xyxy_to_cxcywh)
-from mmengine.data import InstanceData
 from mmengine.model import BaseModule
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS, TASK_UTILS
@@ -431,7 +431,7 @@ class SiameseRPNHead(BaseModule):
                 all_bbox_weights)
 
     def loss(self, template_feats: Tuple[Tensor], search_feats: Tuple[Tensor],
-             batch_data_samples: SampleList, **kwargs) -> dict:
+             data_samples: SampleList, **kwargs) -> dict:
         """Perform forward propagation and loss calculation of the tracking
         head on the features of the upstream network.
 
@@ -442,7 +442,7 @@ class SiameseRPNHead(BaseModule):
             search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
                 (N, C, H, W) denoting the multi level feature maps of
                 search images. Typically H and W equal to 31.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
 
         Returns:
@@ -453,7 +453,7 @@ class SiameseRPNHead(BaseModule):
         batch_gt_instances = []
         batch_img_metas = []
         batch_search_gt_instances = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_img_metas.append(data_sample.metainfo)
             batch_gt_instances.append(data_sample.gt_instances)
             batch_search_gt_instances.append(data_sample.search_gt_instances)
@@ -505,7 +505,7 @@ class SiameseRPNHead(BaseModule):
         return losses
 
     def predict(self, template_feats: Tuple[Tensor],
-                search_feats: Tuple[Tensor], batch_data_samples: SampleList,
+                search_feats: Tuple[Tensor], data_samples: SampleList,
                 prev_bbox: Tensor, scale_factor: Tensor) -> InstanceList:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
@@ -518,7 +518,7 @@ class SiameseRPNHead(BaseModule):
                 (N, C, H, W) denoting the multi level feature maps of
                 search images. Typically H and W equal to 31.
 
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
             prev_bbox (Tensor): of shape (4, ) in [cx, cy, w, h] format.
             scale_factor (Tensor): scale factor.
@@ -531,7 +531,7 @@ class SiameseRPNHead(BaseModule):
                   the last dimension 4 arrange as [x1, y1, x2, y2].
         """
         batch_img_metas = [
-            data_samples.metainfo for data_samples in batch_data_samples
+            data_samples.metainfo for data_samples in data_samples
         ]
         outs = self(template_feats, search_feats)
         predictions = self.predict_by_feat(

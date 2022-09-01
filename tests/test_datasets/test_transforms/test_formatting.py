@@ -5,7 +5,7 @@ from unittest import TestCase
 import numpy as np
 import torch
 from mmdet.structures.mask import BitmapMasks
-from mmengine.data import LabelData
+from mmengine.structures import LabelData
 
 from mmtrack.datasets.transforms import (CheckPadMaskValidity, PackReIDInputs,
                                          PackTrackInputs)
@@ -100,7 +100,7 @@ class TestPackTrackInputs:
         assert isinstance(inputs['ref_img'], torch.Tensor)
         assert inputs['ref_img'].shape == (2, 3, self.H, self.W)
 
-        track_data_sample = track_results['data_sample']
+        track_data_sample = track_results['data_samples']
 
         assert track_data_sample.gt_instances.bboxes.shape == (2, 4)
         assert track_data_sample.ref_gt_instances.bboxes.shape == (4, 4)
@@ -143,7 +143,7 @@ class TestPackTrackInputs:
         assert isinstance(inputs['ref_img'], torch.Tensor)
         assert inputs['ref_img'].shape == (2, 3, self.H, self.W)
 
-        track_data_sample = track_results['data_sample']
+        track_data_sample = track_results['data_samples']
 
         assert track_data_sample.gt_instances.bboxes.shape == (1, 4)
         assert track_data_sample.ref_gt_instances.bboxes.shape == (2, 4)
@@ -184,7 +184,7 @@ class TestPackTrackInputs:
         assert isinstance(inputs['img'], torch.Tensor)
         assert inputs['img'].shape == (1, 3, self.H, self.W)
 
-        track_data_sample = track_results['data_sample']
+        track_data_sample = track_results['data_samples']
 
         assert track_data_sample.gt_instances.bboxes.shape == (2, 4)
 
@@ -225,8 +225,8 @@ class TestPackReIDInputs(TestCase):
         results = self.pack_reid_inputs(self.results)
         self.assertIn('inputs', results)
         self.assertIsInstance(results['inputs'], torch.Tensor)
-        self.assertIn('data_sample', results)
-        data_sample = results['data_sample']
+        self.assertIn('data_samples', results)
+        data_sample = results['data_samples']
         self.assertIsInstance(data_sample, ReIDDataSample)
         self.assertIsInstance(data_sample.gt_label, LabelData)
         self.assertEqual(data_sample.img_path, '')

@@ -17,8 +17,10 @@ class TestTracktorTracker(TestCase):
         register_all_modules(init_default_scope=True)
         cls.num_objs = 30
 
-    @parameterized.expand(
-        ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_init(self, cfg_file):
         cfg = get_model_cfg(cfg_file)
         tracker = MODELS.build(cfg['tracker'])
@@ -35,8 +37,10 @@ class TestTracktorTracker(TestCase):
             'ids', 'bboxes', 'scores', 'labels', 'frame_ids'
         ]
 
-    @parameterized.expand(
-        ['mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py'])
+    @parameterized.expand([
+        'mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e'
+        '_mot17halftrain_test-mot17halfval.py'
+    ])
     def test_track(self, cfg_file):
         img = torch.rand((1, 3, 256, 256))
         x = [torch.rand(1, 256, 4, 4)]
@@ -52,7 +56,7 @@ class TestTracktorTracker(TestCase):
 
         packed_inputs = demo_mm_inputs(
             batch_size=1, frame_id=0, num_ref_imgs=0)
-        data_sample = packed_inputs[0]['data_sample']
+        data_sample = packed_inputs['data_samples'][0]
         data_sample.pred_det_instances = data_sample.gt_instances.clone()
         # add fake scores
         scores = torch.ones(5)
@@ -62,7 +66,7 @@ class TestTracktorTracker(TestCase):
                 model=model,
                 img=img,
                 feats=x,
-                data_sample=packed_inputs[0]['data_sample'],
+                data_sample=packed_inputs['data_samples'][0],
                 data_preprocessor=cfg['data_preprocessor'])
 
             bboxes = pred_track_instances.bboxes

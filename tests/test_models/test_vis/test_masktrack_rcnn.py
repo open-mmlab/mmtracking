@@ -19,7 +19,7 @@ class TestMaskTrackRCNN(TestCase):
         register_all_modules(init_default_scope=True)
 
     @parameterized.expand([
-        'vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py',
+        'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py',  # noqa: E501
     ])
     def test_mask_track_rcnn_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
@@ -30,8 +30,9 @@ class TestMaskTrackRCNN(TestCase):
         assert model.tracker
 
     @parameterized.expand([
-        ('vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py',
-         ('cpu', 'cuda')),
+        (
+            'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py',  # noqa: E501
+            ('cpu', 'cuda')),
     ])
     def test_mask_track_rcnn_forward_loss_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -56,16 +57,15 @@ class TestMaskTrackRCNN(TestCase):
                 num_ref_imgs=1,
                 num_classes=1,
                 with_mask=True)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
             # Test forward
-            losses = model.forward(
-                batch_inputs, batch_data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
-        ('vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019.py',
-         ('cpu', 'cuda')),
+        (
+            'vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py',  # noqa: E501
+            ('cpu', 'cuda')),
     ])
     def test_mask_track_rcnn_forward_predict_mode(self, cfg_file, devices):
         message_hub = MessageHub.get_instance(
@@ -90,12 +90,9 @@ class TestMaskTrackRCNN(TestCase):
                 num_ref_imgs=1,
                 num_classes=1,
                 with_mask=True)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

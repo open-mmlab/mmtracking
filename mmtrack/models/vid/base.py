@@ -55,8 +55,8 @@ class BaseVideoDetector(BaseModel, metaclass=ABCMeta):
         return hasattr(self, 'aggregator') and self.aggregator is not None
 
     def forward(self,
-                batch_inputs: Dict[str, Tensor],
-                batch_data_samples: OptSampleList = None,
+                inputs: Dict[str, Tensor],
+                data_samples: OptSampleList = None,
                 mode: str = 'predict',
                 **kwargs) -> ForwardResults:
         """The unified entry for a forward process in both training and test.
@@ -74,13 +74,13 @@ class BaseVideoDetector(BaseModel, metaclass=ABCMeta):
         optimizer updating, which are done in the :meth:`train_step`.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`], optional): The
+            data_samples (list[:obj:`TrackDataSample`], optional): The
                 annotation data of every samples. Defaults to None.
             mode (str): Return what kind of value. Defaults to 'predict'.
 
@@ -92,38 +92,38 @@ class BaseVideoDetector(BaseModel, metaclass=ABCMeta):
             - If ``mode="loss"``, return a dict of tensor.
         """
         if mode == 'loss':
-            return self.loss(batch_inputs, batch_data_samples, **kwargs)
+            return self.loss(inputs, data_samples, **kwargs)
         elif mode == 'predict':
-            return self.predict(batch_inputs, batch_data_samples, **kwargs)
+            return self.predict(inputs, data_samples, **kwargs)
         elif mode == 'tensor':
-            return self._forward(batch_inputs, batch_data_samples, **kwargs)
+            return self._forward(inputs, data_samples, **kwargs)
         else:
             raise RuntimeError(f'Invalid mode "{mode}". '
                                'Only supports loss, predict and tensor mode')
 
     @abstractmethod
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> Union[dict, tuple]:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> Union[dict, tuple]:
         """Calculate losses from a batch of inputs and data samples."""
         pass
 
     @abstractmethod
-    def predict(self, batch_inputs: Dict[str, Tensor],
-                batch_data_samples: SampleList, **kwargs) -> SampleList:
+    def predict(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+                **kwargs) -> SampleList:
         """Predict results from a batch of inputs and data samples with post-
         processing."""
         pass
 
     def _forward(self,
-                 batch_inputs: Dict[str, Tensor],
+                 inputs: Dict[str, Tensor],
                  data_samples: OptSampleList = None,
                  **kwargs):
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
 
          Args:
-            batch_inputs (Dict[str, Tensor]): Inputs with shape (N, C, H, W).
-            batch_data_samples (List[:obj:`TrackDataSample`], optional): The
+            inputs (Dict[str, Tensor]): Inputs with shape (N, C, H, W).
+            data_samples (List[:obj:`TrackDataSample`], optional): The
                 Data Samples. It usually includes information such as
                 `gt_instance`.
 

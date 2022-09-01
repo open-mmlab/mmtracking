@@ -4,7 +4,7 @@ from typing import List
 import torch
 from mmdet.models.layers import multiclass_nms
 from mmdet.structures.bbox import bbox_overlaps
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 # TODO: unify the linear_assignment package for different trackers
 from scipy.optimize import linear_sum_assignment
 from torch import Tensor, nn

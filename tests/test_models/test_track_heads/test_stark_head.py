@@ -2,9 +2,9 @@
 from copy import deepcopy
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads.stark_head import (CornerPredictorHead,
                                                    ScoreHead, StarkHead,
@@ -41,10 +41,10 @@ class TestStarkTransformer(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 encoder=dict(
-                    type='DetrTransformerEncoder',
+                    type='mmdet.DetrTransformerEncoder',
                     num_layers=6,
                     transformerlayers=dict(
                         type='BaseTransformerLayer',
@@ -63,7 +63,7 @@ class TestStarkTransformer(TestCase):
                             ffn_drop=0.1),
                         operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
                 decoder=dict(
-                    type='DetrTransformerDecoder',
+                    type='mmdet.DetrTransformerDecoder',
                     return_intermediate=False,
                     num_layers=6,
                     transformerlayers=dict(
@@ -102,7 +102,7 @@ class TestStarkHead(TestCase):
             transformer=dict(
                 type='StarkTransformer',
                 encoder=dict(
-                    type='DetrTransformerEncoder',
+                    type='mmdet.DetrTransformerEncoder',
                     num_layers=6,
                     transformerlayers=dict(
                         type='BaseTransformerLayer',
@@ -121,7 +121,7 @@ class TestStarkHead(TestCase):
                             ffn_drop=0.1),
                         operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
                 decoder=dict(
-                    type='DetrTransformerDecoder',
+                    type='mmdet.DetrTransformerDecoder',
                     return_intermediate=False,
                     num_layers=6,
                     transformerlayers=dict(
@@ -140,7 +140,9 @@ class TestStarkHead(TestCase):
                                          'norm', 'ffn', 'norm'))),
             ),
             positional_encoding=dict(
-                type='SinePositionalEncoding', num_feats=8, normalize=True),
+                type='mmdet.SinePositionalEncoding',
+                num_feats=8,
+                normalize=True),
             bbox_head=dict(
                 type='CornerPredictorHead',
                 inplanes=16,

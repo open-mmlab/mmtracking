@@ -4,8 +4,10 @@ import warnings
 from typing import Optional, Sequence
 
 import mmcv
+from mmengine.fileio import FileClient
 from mmengine.hooks import Hook
 from mmengine.runner import Runner
+from mmengine.utils import mkdir_or_exist
 from mmengine.visualization import Visualizer
 
 from mmtrack.registry import HOOKS
@@ -66,53 +68,50 @@ class TrackVisualizationHook(Hook):
                           'needs to be excluded.')
 
         self.wait_time = wait_time
-        self.file_client = mmcv.FileClient(**file_client_args)
+        self.file_client = FileClient(**file_client_args)
         self.draw = draw
         self.test_out_dir = test_out_dir
 
-    def after_val_iter(self, runner: Runner, batch_idx: int,
-                       data_batch: Sequence[dict],
+    def after_val_iter(self, runner: Runner, batch_idx: int, data_batch: dict,
                        outputs: Sequence[TrackDataSample]) -> None:
         """Run after every ``self.interval`` validation iteration.
 
         Args:
             runner (:obj:`Runner`): The runner of the validation process.
             batch_idx (int): The index of the current batch in the val loop.
-            data_batch (Sequence[dict]): Data from dataloader.
+            data_batch (dict): Data from dataloader.
             outputs (Sequence[:obj:`TrackDataSample`]): Outputs from model.
         """
         if self.draw is False:
             return
 
-        assert len(data_batch) == len(outputs) == 1,\
+        assert len(outputs) == 1,\
             'only batch_size=1 is supported while validating.'
 
         total_curr_iter = runner.iter + batch_idx
 
         if self.every_n_inner_iters(batch_idx, self.interval):
-            data = data_batch[0]
-            pred_sample = outputs[0]
-            img_path = data['data_sample'].img_path
+            data_sample = outputs[0]
+            img_path = data_sample.img_path
             img_bytes = self.file_client.get(img_path)
             img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
             self._visualizer.add_datasample(
                 osp.basename(img_path) if self.show else 'val_img',
                 img,
-                pred_sample=pred_sample,
+                data_sample=data_sample,
                 show=self.show,
                 wait_time=self.wait_time,
                 pred_score_thr=self.score_thr,
                 step=total_curr_iter)
 
-    def after_test_iter(self, runner: Runner, batch_idx: int,
-                        data_batch: Sequence[dict],
+    def after_test_iter(self, runner: Runner, batch_idx: int, data_batch: dict,
                         outputs: Sequence[TrackDataSample]) -> None:
         """Run after every testing iteration.
 
         Args:
             runner (:obj:`Runner`): The runner of the testing process.
             batch_idx (int): The index of the current batch in the val loop.
-            data_batch (Sequence[dict]): Data from dataloader.
+            data_batch (dict): Data from dataloader.
             outputs (Sequence[:obj:`TrackDataSample`]): Outputs from model.
         """
         if self.draw is False:
@@ -121,15 +120,14 @@ class TrackVisualizationHook(Hook):
         if self.test_out_dir is not None:
             self.test_out_dir = osp.join(runner.work_dir, runner.timestamp,
                                          self.test_out_dir)
-            mmcv.mkdir_or_exist(self.test_out_dir)
+            mkdir_or_exist(self.test_out_dir)
 
-        assert len(data_batch) == len(outputs) == 1, \
+        assert len(outputs) == 1, \
             'only batch_size=1 is supported while testing.'
 
         if self.every_n_inner_iters(batch_idx, self.interval):
-            data = data_batch[0]
-            pred_sample = outputs[0]
-            img_path = data['data_sample'].img_path
+            data_sample = outputs[0]
+            img_path = data_sample.img_path
             img_bytes = self.file_client.get(img_path)
             img = mmcv.imfrombytes(img_bytes, channel_order='rgb')
 
@@ -141,7 +139,7 @@ class TrackVisualizationHook(Hook):
             self._visualizer.add_datasample(
                 osp.basename(img_path) if self.show else 'test_img',
                 img,
-                pred_sample=pred_sample,
+                data_sample=data_sample,
                 show=self.show,
                 wait_time=self.wait_time,
                 pred_score_thr=self.score_thr,

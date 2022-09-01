@@ -1,16 +1,16 @@
 # VID
-configs/vid/dff/dff_faster_rcnn_r50_dc5_7e_imagenetvid.py
-configs/vid/fgfa/fgfa_faster_rcnn_r50_dc5_7e_imagenetvid.py
-configs/vid/selsa/selsa_faster_rcnn_r50_dc5_7e_imagenetvid.py
-configs/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid.py
+configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
+configs/vid/fgfa/fgfa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
+configs/vid/selsa/selsa_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
+configs/vid/temporal_roi_align/selsa-troialign_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
 
 # MOT
-configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py
-configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_4e_mot17-private-half.py
-configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py
-configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_4e_mot17-private-half.py
+configs/mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
+configs/mot/tracktor/tracktor_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
+configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
+configs/mot/qdtrack/qdtrack_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py
 
 # SOT
-configs/sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py
-configs/sot/stark/stark_st1_r50_500e_lasot.py
-configs/sot/stark/stark_st2_r50_50e_lasot.py
+configs/sot/siamese_rpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py
+configs/sot/stark/stark-st1_r50_8xb16-500e_got10k-lasot-trackingnet-coco_test-lasot.py
+configs/sot/stark/stark-st2_r50_8xb16-50e_got10k-lasot-trackingnet-coco_test-lasot.py

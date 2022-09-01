@@ -16,7 +16,7 @@ class SelsaRoIHead(StandardRoIHead):
     def loss(self, x: Tuple[Tensor], ref_x: Tuple[Tensor],
              rpn_results_list: InstanceList,
              ref_rpn_results_list: InstanceList,
-             batch_data_samples: SampleList) -> dict:
+             data_samples: SampleList) -> dict:
         """
         Args:
             x (Tuple[Tensor]): list of multi-level img features.
@@ -24,17 +24,17 @@ class SelsaRoIHead(StandardRoIHead):
             rpn_results_list (InstanceList): list of region proposals.
             ref_rpn_results_list (InstanceList): list of region proposals
                 from reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance` and 'metainfo'.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        assert len(rpn_results_list) == len(batch_data_samples)
+        assert len(rpn_results_list) == len(data_samples)
         batch_gt_instances = []
         batch_gt_instances_ignore = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             batch_gt_instances.append(data_sample.gt_instances)
             if 'ignored_instances' in data_sample:
                 batch_gt_instances_ignore.append(data_sample.ignored_instances)
@@ -43,7 +43,7 @@ class SelsaRoIHead(StandardRoIHead):
 
         # assign gts and sample proposals
         if self.with_bbox or self.with_mask:
-            num_imgs = len(batch_data_samples)
+            num_imgs = len(data_samples)
             sampling_results = []
             for i in range(num_imgs):
                 # rename rpn_results.bboxes to rpn_results.priors
@@ -146,7 +146,7 @@ class SelsaRoIHead(StandardRoIHead):
                 ref_x: Tuple[Tensor],
                 rpn_results_list: InstanceList,
                 ref_rpn_results_list: InstanceList,
-                batch_data_samples: SampleList,
+                data_samples: SampleList,
                 rescale: bool = False) -> InstanceList:
         """Perform forward propagation of the roi head and predict detection
         results on the features of the upstream network.
@@ -158,7 +158,7 @@ class SelsaRoIHead(StandardRoIHead):
             rpn_results_list (InstanceList): list of region proposals.
             ref_rpn_results_list (InstanceList): list of region
                 proposals from reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance` and 'metainfo'.
             rescale (bool, optional): If True, return boxes in original image
@@ -179,7 +179,7 @@ class SelsaRoIHead(StandardRoIHead):
         assert self.with_bbox, 'Bbox head must be implemented.'
 
         batch_img_metas = [
-            data_samples.metainfo for data_samples in batch_data_samples
+            data_samples.metainfo for data_samples in data_samples
         ]
 
         results_list = self.predict_bbox(

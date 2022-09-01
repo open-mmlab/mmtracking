@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from unittest import TestCase
 
-import mmcv
+import mmengine
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads import QuasiDenseEmbedHead
 from mmtrack.registry import TASK_UTILS
@@ -49,7 +49,7 @@ def _dummy_bbox_sampling(rpn_results_list, batch_gt_instances):
 class TestQuasiDenseEmbedHead(TestCase):
 
     def test_quasi_dense_embed_head_loss(self):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 num_convs=4,
                 num_fcs=1,
@@ -93,7 +93,7 @@ class TestQuasiDenseEmbedHead(TestCase):
         assert loss_track['loss_track_aux'] > 0, 'aux loss should be non-zero'
 
     def test_quasi_dense_embed_head_predict(self):
-        cfg = mmcv.Config(
+        cfg = mmengine.Config(
             dict(
                 num_convs=4,
                 num_fcs=1,
