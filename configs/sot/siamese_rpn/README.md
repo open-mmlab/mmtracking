@@ -58,7 +58,7 @@ The results below are achieved without hyperparameters search.
 
 ### TrackingNet
 
-The results of SiameseRPN++ in TrackingNet are reimplemented by ourselves. The best model on LaSOT is submitted to [the evaluation server on TrackingNet Challenge](http://eval.tracking-net.org/web/challenges/challenge-page/39/submission). We provide the best model with its configuration and training log.
+The results of SiameseRPN++ in TrackingNet are reimplemented by ourselves. The best model on LaSOT is submitted to [the evaluation server on TrackingNet Challenge](https://eval.ai/web/challenges/challenge-page/1805/submission). We provide the best model with its configuration and training log.
 
 |  Method   | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision |                                          Config                                           |                                                                                                                                              Download                                                                                                                                              |
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :-----: | :------------: | :-------: | :---------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -87,3 +87,59 @@ If you want to get better results, you can use the best checkpoint to search the
 |  Method   | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) |  EAO  | Accuracy | Robustness |                                        Config                                         |                                                                                                                                                  Download                                                                                                                                                  |
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :---: | :------: | :--------: | :-----------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | SiamRPN++ |   R-50   |   -   |   20e   |    -     |       -        | 0.348 |  0.588   |   0.295    | [config](siamese-rpn_resnet50_8xb28-20e_imagenetvid-imagenetdet-coco_test-vot2018.py) | [model](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_20e_vot2018_20220420_181845-1111f25e.pth) \| [log](https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_vot2018/siamese_rpn_r50_20e_vot2018_20220420_181845.log.json) |
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
+
+```shell
+# Training SiamRPN++ on ImageNetVID、ImageNetDET and coco dataset with following command
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/sot/siamese_fpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py 8
+```
+
+The models tested on LaSOT, TrackingNet, UAV123 and VOT2018 have the same training settings. For OTB100, there are some unique training [settings](./siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py).
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`, please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+**2.1 Example on LaSOT, UAV123, OTB100 and VOT2018 datasets**
+
+```shell
+# Example 1: Test on LaSOT testset
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/siamese_fpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py 8 \
+    --checkpoint ./checkpoints/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
+```
+
+**2.1 Example on TrackingNet dataset**
+
+If you want to get the results of the [TrackingNet](https://eval.ai/web/challenges/challenge-page/1805/) test set, please use the following command to generate result files that can be used for submission. It will be stored in `./results/siamese_rpn_trackingnet.zip`, you can modify the saved path in `test_evaluator` of the config.
+
+```shell
+# Example 1: Test on TrackingNet testset
+# We use the best checkpoint on LaSOT to test on the TrackingNet.
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/sot/siamese_fpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-trackingnet.py 8 \
+    --checkpoint ./checkpoints/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth
+```
+
+### 3.Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell
+python demo/demo_sot.py \
+    configs/sot/siamese_fpn/siamese-rpn_r50_8xb28-20e_imagenetvid-imagenetdet-coco_test-lasot.py \
+    --checkpoint ./checkpoints/siamese_rpn_r50_20e_lasot_20220420_181845-dd0f151e.pth \
+    --input demo/demo.mp4 \
+    --output sot.mp4
+```
+
+If you want to know about more detailed usage of `demo_sot.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).

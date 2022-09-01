@@ -39,3 +39,42 @@ Note that the numbers of selsa modules in this method and `SELSA` are 3 and 2 re
 | Temporal RoI Align | R-50-DC5  | pytorch |   7e    |   4.14   |       -        |   79.8    | [config](selsa-troialign_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py)  |   [model](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid_20210820_162714-939fd657.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid_20210820_162714.log.json)   |
 | Temporal RoI Align | R-101-DC5 | pytorch |   7e    |   5.83   |       -        |   82.6    | [config](selsa-troialign_faster-rcnn_r101-dc5_8xb1-7e_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid_20210822_111621-22cb96b9.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_r101_dc5_7e_imagenetvid_20210822_111621.log.json) |
 | Temporal RoI Align | X-101-DC5 | pytorch |   7e    |   9.74   |       -        |   84.1    | [config](selsa-troialign_faster-rcnn_x101-dc5_8xb1-7e_imagenetvid.py) | [model](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid_20210822_164036-4471ac42.pth) \| [log](https://download.openmmlab.com/mmtracking/vid/temporal_roi_align/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid/selsa_troialign_faster_rcnn_x101_dc5_7e_imagenetvid_20210822_164036.log.json) |
+
+## Get started
+
+### 1. Training
+
+Due to the influence of parameters such as learning rate in default configuration file,
+we recommend using 8 GPUs for training in order to reproduce accuracy. You can use the following command to start the training.
+
+```shell script
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs
+./tools/dist_train.sh \
+    configs/vid/temporal_roi_align/selsa-troialign_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8
+```
+
+If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_train.sh`,
+please refer to this [document](../../../docs/en/user_guides/4_train_test.md).
+
+### 2. Testing and evaluation
+
+```shell script
+# The number after config file represents the number of GPUs used. Here we use 8 GPUs.
+./tools/dist_test.sh \
+    configs/vid/temporal_roi_align/selsa-troialign_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py 8 \
+    --checkpoint ./checkpoints/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid_20210820_162714-939fd657.pth
+```
+
+### 3. Inference
+
+Use a single GPU to predict a video and save it as a video.
+
+```shell script
+python demo/demo_vid.py \
+    configs/vid/temporal_roi_align/selsa-troialign_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py \
+    --checkpoint ./checkpoints/selsa_troialign_faster_rcnn_r50_dc5_7e_imagenetvid_20210820_162714-939fd657.pth \
+    --input demo/demo.mp4 \
+    --output vid.mp4
+```
+
+If you want to know about more detailed usage of `demo_vid.py`, please refer to this [document](../../../docs/en/user_guides/3_inference.md).

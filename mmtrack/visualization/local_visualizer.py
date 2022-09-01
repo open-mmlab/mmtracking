@@ -7,9 +7,9 @@ import seaborn as sns
 from mmdet.structures.mask import bitmap_to_polygon
 from mmdet.visualization import DetLocalVisualizer as MMDET_DetLocalVisualizer
 from mmdet.visualization.palette import _get_adaptive_scales
-from mmengine import Visualizer
-from mmengine.data import InstanceData
 from mmengine.dist import master_only
+from mmengine.structures import InstanceData
+from mmengine.visualization import Visualizer
 
 from mmtrack.registry import VISUALIZERS
 from mmtrack.structures import TrackDataSample
@@ -148,8 +148,7 @@ class TrackLocalVisualizer(Visualizer):
             self,
             name: str,
             image: np.ndarray,
-            gt_sample: Optional[TrackDataSample] = None,
-            pred_sample: Optional[TrackDataSample] = None,
+            data_sample: Optional['TrackDataSample'] = None,
             draw_gt: bool = True,
             draw_pred: bool = True,
             show: bool = False,
@@ -172,10 +171,9 @@ class TrackLocalVisualizer(Visualizer):
         Args:
             name (str): The image identifier.
             image (np.ndarray): The image to draw.
-            gt_sample (:obj:`TrackDataSample`, optional): GT TrackDataSample.
+            data_sample (:obj:`TrackDataSample`, optional): A data
+                sample that contain annotations and predictions.
                 Defaults to None.
-            pred_sample (:obj:`TrackDataSample`, optional): Prediction
-                TrackDataSample. Defaults to None.
             draw_gt (bool): Whether to draw GT TrackDataSample.
                 Default to True.
             draw_pred (bool): Whether to draw Prediction DTrackDataSample.
@@ -190,13 +188,16 @@ class TrackLocalVisualizer(Visualizer):
         gt_img_data = None
         pred_img_data = None
 
-        if draw_gt and gt_sample is not None:
-            assert 'gt_instances' in gt_sample
-            gt_img_data = self._draw_instances(image, gt_sample.gt_instances)
+        if data_sample is not None:
+            data_sample = data_sample.cpu()
 
-        if draw_pred and pred_sample is not None:
-            assert 'pred_track_instances' in pred_sample
-            pred_instances = pred_sample.pred_track_instances
+        if draw_gt and data_sample is not None:
+            assert 'gt_instances' in data_sample
+            gt_img_data = self._draw_instances(image, data_sample.gt_instances)
+
+        if draw_pred and data_sample is not None:
+            assert 'pred_track_instances' in data_sample
+            pred_instances = data_sample.pred_track_instances
             if 'scores' in pred_instances:
                 pred_instances = pred_instances[
                     pred_instances.scores > pred_score_thr].cpu()
@@ -224,9 +225,9 @@ class DetLocalVisualizer(MMDET_DetLocalVisualizer):
 
     def add_datasample(self, *args, **kwargs):
         """Draw datasample and save to all backends."""
-        if 'pred_sample' in kwargs:
+        if 'data_sample' in kwargs:
             # assign `pred_det_instances` to `pred_instances`
             # to hack the interface of `super().add_datasample()`.
-            kwargs['pred_sample'].pred_instances = \
-                kwargs['pred_sample'].pred_det_instances
+            kwargs['data_sample'].pred_instances = \
+                kwargs['data_sample'].pred_det_instances
         super().add_datasample(*args, **kwargs)

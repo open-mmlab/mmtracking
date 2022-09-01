@@ -43,7 +43,7 @@ English | [简体中文](README_zh-CN.md)
 
 MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
 
-The master branch works with **PyTorch1.5+**.
+The master branch works with **PyTorch1.6+**.
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
@@ -71,20 +71,18 @@ The master branch works with **PyTorch1.5+**.
 
 Release [StrongSORT](configs/mot/strongsort) pretrained models.
 
-v0.13.0 was released in 29/04/2022.
+v1.0.0rc0 was released in 31/08/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
 
-## Installation
+## Get Started
 
-Please refer to [install.md](docs/en/install.md) for install instructions.
+Please refer to [get_started.md](docs/en/get_started.md) for install instructions.
 
-## Getting Started
+Please refer to [inference.md](docs/en/user_guides/3_inference.md) for the basic usage of MMTracking. If you want to train and test your own model, please see [dataset_prepare.md](docs/en/user_guides/2_dataset_prepare.md) and [train_test.md](docs/en/user_guides/4_train_test.md).
 
-Please see [dataset.md](docs/en/dataset.md) and [quick_run.md](docs/en/quick_run.md) for the basic usage of MMTracking.
+A Colab tutorial is also provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
 
-A Colab tutorial is provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
-
-There are also usage [tutorials](docs/en/tutorials/), such as [learning about configs](docs/en/tutorials/config.md), [an example about detailed description of vid config](docs/en/tutorials/config_vid.md), [an example about detailed description of mot config](docs/en/tutorials/config_mot.md), [an example about detailed description of sot config](docs/en/tutorials/config_sot.md), [customizing dataset](docs/en/tutorials/customize_dataset.md), [customizing data pipeline](docs/en/tutorials/customize_data_pipeline.md), [customizing vid model](docs/en/tutorials/customize_vid_model.md), [customizing mot model](docs/en/tutorials/customize_mot_model.md), [customizing sot model](docs/en/tutorials/customize_sot_model.md), [customizing runtime settings](docs/en/tutorials/customize_runtime.md) and [useful tools](docs/en/useful_tools_scripts.md).
+There are also usage [tutorials](docs/en/user_guides/), such as [learning about configs](docs/en/user_guides/1_config.md), [visualization](docs/en/user_guides/5_visualization.md), [analysis tools](docs/en/user_guides/6_analysis_tools.md),
 
 ## Benchmark and model zoo
 
@@ -101,35 +99,19 @@ Supported Methods
 
 Supported Datasets
 
-- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
-
-### Single Object Tracking
-
-Supported Methods
-
-- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK](configs/sot/stark) (ICCV 2021)
-- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
-
-Supported Datasets
-
-- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
-- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
-- [x] [TrackingNet](https://tracking-net.org/)
-- [x] [OTB100](http://www.visual-tracking.net/)
-- [x] [GOT10k](http://got-10k.aitestunion.com/)
-- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
+- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2015/)
 
 ### Multi-Object Tracking
 
 Supported Methods
 
-- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
+- [x] [SORT](configs/mot/sort) (ICIP 2016)
+- [x] [DeepSORT](configs/mot/deepsort) (ICIP 2017)
 - [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
-- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360)  (arXiv 2022) (WIP)
-- [x] [StrongSORT](https://arxiv.org/abs/2202.13514) (arxiv 2022)
+- [x] [StrongSORT](configs/mot/strongsort) (arxiv 2022)
+- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360) (arXiv 2022) (WIP)
 
 Supported Datasets
 
@@ -148,6 +130,23 @@ Supported Methods
 Supported Datasets
 
 - [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
+
+### Single Object Tracking
+
+Supported Methods
+
+- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
+
+Supported Datasets
+
+- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
+- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
+- [x] [TrackingNet](https://tracking-net.org/)
+- [x] [OTB100](http://www.visual-tracking.net/)
+- [x] [GOT10k](http://got-10k.aitestunion.com/)
+- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
 
 ## Contributing
 

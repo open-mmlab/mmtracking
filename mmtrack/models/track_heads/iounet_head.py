@@ -329,7 +329,7 @@ class IouNetHead(BaseModule):
 
         return output_bboxes.view(-1, 4), iou_outputs.detach().view(-1)
 
-    def predict(self, backbone_feats: Tensor, batch_data_samples: SampleList,
+    def predict(self, backbone_feats: Tensor, data_samples: SampleList,
                 init_bbox: Tensor, sample_center: Tensor,
                 scale_factor: float) -> Tensor:
         """Refine the target bounding box.

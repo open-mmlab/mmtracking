@@ -5,8 +5,8 @@ from typing import Dict, List, Tuple, Union
 
 import addict
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
-from mmengine.data import InstanceData
 from mmengine.model import BaseModel
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.evaluation import bbox2region
@@ -62,8 +62,8 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         return hasattr(self, 'head') and self.head is not None
 
     def forward(self,
-                batch_inputs: Dict[str, Tensor],
-                batch_data_samples: OptSampleList = None,
+                inputs: Dict[str, Tensor],
+                data_samples: OptSampleList = None,
                 mode: str = 'predict',
                 **kwargs) -> ForwardResults:
         """The unified entry for a forward process in both training and test.
@@ -81,13 +81,13 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         optimizer updating, which are done in the :meth:`train_step`.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`], optional): The
+            data_samples (list[:obj:`TrackDataSample`], optional): The
                 annotation data of every samples. Defaults to None.
             mode (str): Return what kind of value. Defaults to 'predict'.
 
@@ -99,28 +99,28 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             - If ``mode="loss"``, return a dict of tensor.
         """
         if mode == 'loss':
-            return self.loss(batch_inputs, batch_data_samples, **kwargs)
+            return self.loss(inputs, data_samples, **kwargs)
         elif mode == 'predict':
-            return self.predict(batch_inputs, batch_data_samples, **kwargs)
+            return self.predict(inputs, data_samples, **kwargs)
         elif mode == 'tensor':
-            return self._forward(batch_inputs, batch_data_samples, **kwargs)
+            return self._forward(inputs, data_samples, **kwargs)
         else:
             raise RuntimeError(f'Invalid mode "{mode}". '
                                'Only supports loss, predict and tensor mode')
 
     @abstractmethod
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> Union[dict, tuple]:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> Union[dict, tuple]:
         """Calculate losses from a batch of inputs and data samples."""
         pass
 
-    def predict(self, batch_inputs: Dict[str, Tensor],
-                batch_data_samples: SampleList, **kwargs) -> SampleList:
+    def predict(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+                **kwargs) -> SampleList:
         """Predict results from a batch of inputs and data samples with post-
         processing.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W)
+            inputs (dict[Tensor]): of shape (N, T, C, H, W)
                 encodingbinput images. Typically these should be mean centered
                 and stdbscaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
@@ -128,7 +128,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
                 - ref_img (Tensor): The reference images.
                 In test mode, T = 1 and there is only ``img`` and no
                 ``ref_img``.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and ``metainfo``.
 
@@ -140,26 +140,24 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         test_mode = self.test_cfg.get('test_mode', 'OPE')
         assert test_mode in ['OPE', 'VOT']
         if test_mode == 'VOT':
-            pred_track_instances = self.predict_vot(batch_inputs,
-                                                    batch_data_samples)
+            pred_track_instances = self.predict_vot(inputs, data_samples)
         else:
-            pred_track_instances = self.predict_ope(batch_inputs,
-                                                    batch_data_samples)
-        track_data_samples = deepcopy(batch_data_samples)
+            pred_track_instances = self.predict_ope(inputs, data_samples)
+        track_data_samples = deepcopy(data_samples)
         for _data_sample, _pred_instances in zip(track_data_samples,
                                                  pred_track_instances):
             _data_sample.pred_track_instances = _pred_instances
         return track_data_samples
 
-    def predict_ope(self, batch_inputs: dict, batch_data_samples: SampleList):
+    def predict_ope(self, inputs: dict, data_samples: SampleList):
 
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'Only support 1 batch size per gpu in test mode'
         img = img[0]
 
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
         frame_id = metainfo.get('frame_id', -1)
         assert frame_id >= 0
 
@@ -168,7 +166,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             # information in ``self.memo``.
             self.memo = addict.Dict()
             self.memo.frame_id = frame_id
-            gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
+            gt_bboxes = data_samples[0].gt_instances['bboxes']
             self.memo.bbox = quad2bbox_cxcywh(gt_bboxes)
             self.init(img)
             results = [InstanceData()]
@@ -176,17 +174,17 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
             results[0].scores = gt_bboxes.new_tensor([-1.])
         else:
             self.memo.frame_id = frame_id
-            results = self.track(img, batch_data_samples)
+            results = self.track(img, data_samples)
             self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes.squeeze())
 
         return results
 
-    def predict_vot(self, batch_inputs: dict,
-                    batch_data_samples: SampleList) -> List[InstanceData]:
+    def predict_vot(self, inputs: dict,
+                    data_samples: SampleList) -> List[InstanceData]:
         """Test using VOT test mode.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W)
                 encoding input images. Typically these should be mean centered
                 and std scaled. The N denotes batch size. The T denotes the
                 number of key/reference frames.
@@ -194,7 +192,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
                 - ref_img (Tensor): The reference images.
                 In test mode, T = 1 and there is only ``img`` and no
                 ``ref_img``.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
 
@@ -205,14 +203,14 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
                 - bboxes (Tensor): Has a shape (1, 4),
                   the last dimension 4 arrange as [x1, y1, x2, y2].
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'Only support 1 batch size per gpu in test mode'
         img = img[0]
 
-        gt_bboxes = batch_data_samples[0].gt_instances['bboxes']
-        metainfo = batch_data_samples[0].metainfo
+        gt_bboxes = data_samples[0].gt_instances['bboxes']
+        metainfo = data_samples[0].metainfo
         frame_id = metainfo.get('frame_id', -1)
         assert frame_id >= 0
 
@@ -239,7 +237,7 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         else:
             # normal tracking state
             self.memo.frame_id = frame_id
-            results = self.track(img, batch_data_samples)
+            results = self.track(img, data_samples)
             self.memo.bbox = bbox_xyxy_to_cxcywh(results[0].bboxes.squeeze())
 
             # convert bbox to region for overlap calculation
@@ -274,13 +272,13 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def track(img: Tensor, batch_data_samples: SampleList) -> InstanceList:
+    def track(img: Tensor, data_samples: SampleList) -> InstanceList:
         """Track the box of previous frame to current frame `img`.
 
         Args:
             img (Tensor): of shape (1, C, H, W) encoding original input
                 image.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as ``gt_instances`` and 'metainfo'.
 
@@ -293,15 +291,15 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
         pass
 
     def _forward(self,
-                 batch_inputs: Dict[str, Tensor],
+                 inputs: Dict[str, Tensor],
                  data_samples: OptSampleList = None,
                  **kwargs):
         """Network forward process. Usually includes backbone, neck and head
         forward without any post-processing.
 
          Args:
-            batch_inputs (Dict[str, Tensor]): Inputs with shape (N, C, H, W).
-            batch_data_samples (List[:obj:`TrackDataSample`], optional): The
+            inputs (Dict[str, Tensor]): Inputs with shape (N, C, H, W).
+            data_samples (List[:obj:`TrackDataSample`], optional): The
                 Data Samples. It usually includes information such as
                 `gt_instance`.
 

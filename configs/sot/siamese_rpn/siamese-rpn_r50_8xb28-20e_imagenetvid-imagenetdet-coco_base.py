@@ -1,8 +1,6 @@
 _base_ = ['../../_base_/default_runtime.py']
 
-cudnn_benchmark = False
-deterministic = True
-seed = 1
+randomness = dict(seed=1, deterministic=True)
 find_unused_parameters = True
 crop_size = 511
 exemplar_size = 127
@@ -64,9 +62,7 @@ model = dict(
                 add_gt_as_proposals=False),
             num_neg=16,
             exemplar_size=exemplar_size,
-            search_size=search_size),
-        backbone_start_train_epoch=10,
-        backbone_train_layers=['layer2', 'layer3', 'layer4']),
+            search_size=search_size)),
     test_cfg=dict(
         exemplar_size=exemplar_size,
         search_size=search_size,
@@ -168,3 +164,10 @@ optim_wrapper = dict(
     clip_grad=dict(max_norm=10.0, norm_type=2),
     paramwise_cfg=dict(
         custom_keys=dict(backbone=dict(lr_mult=0.1, decay_mult=1.0))))
+
+custom_hooks = [
+    dict(
+        type='SiamRPNBackboneUnfreezeHook',
+        backbone_start_train_epoch=10,
+        backbone_train_layers=['layer2', 'layer3', 'layer4'])
+]

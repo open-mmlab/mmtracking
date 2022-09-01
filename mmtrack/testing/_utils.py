@@ -5,7 +5,8 @@ from os.path import dirname, exists, join
 import numpy as np
 import torch
 from mmdet.utils.util_random import ensure_rng
-from mmengine.data import InstanceData
+from mmengine.dataset import pseudo_collate
+from mmengine.structures import InstanceData
 
 from mmtrack.structures import TrackDataSample
 
@@ -259,9 +260,10 @@ def demo_mm_inputs(batch_size=1,
             setattr(data_sample, f'{ref_prefix}_ignored_instances',
                     ref_ignored_instances)
 
-        mm_inputs['data_sample'] = data_sample
+        mm_inputs['data_samples'] = data_sample
 
         # TODO: gt_ignore
 
         packed_inputs.append(mm_inputs)
-    return packed_inputs
+    data = pseudo_collate(packed_inputs)
+    return data

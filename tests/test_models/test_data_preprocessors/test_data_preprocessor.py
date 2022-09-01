@@ -37,7 +37,8 @@ class TestTrackDataPreprocessor(TestCase):
             ref_prefix='search',
             image_shapes=[(3, 11, 10)],
             num_items=[1])
-        inputs, data_samples = processor(data)
+        out_data = processor(data)
+        inputs, data_samples = out_data['inputs'], out_data['data_samples']
         for _, inputs_single_mode in inputs.items():
             self.assertEqual(inputs_single_mode.shape, (1, 1, 3, 11, 10))
         self.assertEqual(len(data_samples), 1)
@@ -45,7 +46,8 @@ class TestTrackDataPreprocessor(TestCase):
         # test channel_conversion
         processor = TrackDataPreprocessor(
             mean=[0., 0., 0.], std=[1., 1., 1.], bgr_to_rgb=True)
-        inputs, data_samples = processor(data)
+        out_data = processor(data)
+        inputs, data_samples = out_data['inputs'], out_data['data_samples']
         for _, inputs_single_mode in inputs.items():
             self.assertEqual(inputs_single_mode.shape, (1, 1, 3, 11, 10))
         self.assertEqual(len(data_samples), 1)
@@ -58,7 +60,8 @@ class TestTrackDataPreprocessor(TestCase):
             ref_prefix='search',
             image_shapes=[(3, 10, 11), (3, 9, 14)],
             num_items=[1, 1])
-        inputs, data_samples = processor(data)
+        out_data = processor(data)
+        inputs, data_samples = out_data['inputs'], out_data['data_samples']
         for _, inputs_single_mode in inputs.items():
             self.assertEqual(inputs_single_mode.shape, (2, 1, 3, 10, 14))
 
@@ -72,7 +75,8 @@ class TestTrackDataPreprocessor(TestCase):
             num_items=[1, 1])
         processor = TrackDataPreprocessor(
             mean=[0., 0., 0.], std=[1., 1., 1.], pad_size_divisor=5)
-        inputs, data_samples = processor(data)
+        out_data = processor(data)
+        inputs, data_samples = out_data['inputs'], out_data['data_samples']
         for _, inputs_single_mode in inputs.items():
             self.assertEqual(inputs_single_mode.shape, (2, 1, 3, 10, 25))
         self.assertEqual(len(data_samples), 2)
@@ -92,9 +96,10 @@ class TestTrackDataPreprocessor(TestCase):
             with_mask=True)
         processor = TrackDataPreprocessor(pad_mask=True, mask_pad_value=0)
         mask_pad_sums = [
-            x['data_sample'].gt_instances.masks.masks.sum() for x in data
+            x.gt_instances.masks.masks.sum() for x in data['data_samples']
         ]
-        inputs, data_samples = processor(data)
+        out_data = processor(data)
+        inputs, data_samples = out_data['inputs'], out_data['data_samples']
         for data_sample, expected_shape, mask_pad_sum in zip(
                 data_samples, [(10, 24), (10, 24)], mask_pad_sums):
             self.assertEqual(data_sample.gt_instances.masks.masks.shape[-2:],

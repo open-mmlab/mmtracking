@@ -306,16 +306,15 @@ class PrDiMPClsHead(BaseModule):
                 bboxes=target_bboxes,
                 sample_weights=sample_weights)
 
-    def predict(self, backbone_feats: Tuple[Tensor],
-                batch_data_samples: SampleList, prev_bbox: Tensor,
-                sample_center: Tensor,
+    def predict(self, backbone_feats: Tuple[Tensor], data_samples: SampleList,
+                prev_bbox: Tensor, sample_center: Tensor,
                 scale_factor: float) -> Tuple[Tensor, Tensor, bool]:
         """Perform forward propagation of the tracking head and predict
         tracking results on the features of the upstream network.
 
         Args:
             backbone_feats (Tuple[Tensor]): The features from backbone.
-            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+            data_samples (List[:obj:`TrackDataSample`]): The Data
                 Samples. It usually includes information such as `gt_instance`.
             sample_center (Tensor): The coordinate of the sample center based
                 on the original image.

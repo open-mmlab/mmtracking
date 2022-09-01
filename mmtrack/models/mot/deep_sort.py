@@ -49,29 +49,29 @@ class DeepSORT(BaseMultiObjectTracker):
 
         self.preprocess_cfg = data_preprocessor
 
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> dict:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples."""
         raise NotImplementedError(
             'Please train `detector` and `reid` models firstly, then \
                 inference with SORT/DeepSORT.')
 
     def predict(self,
-                batch_inputs: Dict[str, Tensor],
-                batch_data_samples: SampleList,
+                inputs: Dict[str, Tensor],
+                data_samples: SampleList,
                 rescale: bool = True,
                 **kwargs) -> SampleList:
         """Predict results from a batch of inputs and data samples with post-
         processing.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size.The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -83,20 +83,20 @@ class DeepSORT(BaseMultiObjectTracker):
                 input images. Each TrackDataSample usually contains
                 ``pred_det_instances`` or ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'SORT/DeepSORT inference only support ' \
             '1 batch size per gpu for now.'
         img = img[0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'SORT/DeepSORT inference only support ' \
             '1 batch size per gpu for now.'
 
-        track_data_sample = batch_data_samples[0]
+        track_data_sample = data_samples[0]
 
-        det_results = self.detector.predict(img, batch_data_samples)
+        det_results = self.detector.predict(img, data_samples)
         assert len(det_results) == 1, 'Batch inference is not supported.'
         track_data_sample.pred_det_instances = det_results[
             0].pred_instances.clone()

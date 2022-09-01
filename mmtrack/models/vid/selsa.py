@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from addict import Dict
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 from torch import Tensor
 
 from mmtrack.registry import MODELS
@@ -39,25 +39,24 @@ class SELSA(BaseVideoDetector):
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
-    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
-             **kwargs) -> dict:
+    def loss(self, inputs: dict, data_samples: SampleList, **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size and must be 1 in SELSA method.
                 The T denotes the number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'SELSA video detectors only support 1 batch size per gpu for now.'
@@ -65,13 +64,13 @@ class SELSA(BaseVideoDetector):
             'SELSA video detector only has 1 key image per batch.'
         img = img[0]
 
-        ref_img = batch_inputs['ref_img']
+        ref_img = inputs['ref_img']
         assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert ref_img.size(0) == 1, \
             'SELSA video detectors only support 1 batch size per gpu for now.'
         ref_img = ref_img[0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'SELSA video detectors only support 1 batch size per gpu for now.'
 
         all_imgs = torch.cat((img, ref_img), dim=0)
@@ -84,13 +83,13 @@ class SELSA(BaseVideoDetector):
 
         losses = dict()
         ref_data_samples, _ = convert_data_sample_type(
-            batch_data_samples[0], num_ref_imgs=len(ref_img))
+            data_samples[0], num_ref_imgs=len(ref_img))
 
         # RPN forward and loss
         if self.detector.with_rpn:
             proposal_cfg = self.detector.train_cfg.get(
                 'rpn_proposal', self.detector.test_cfg.rpn)
-            rpn_data_samples = deepcopy(batch_data_samples)
+            rpn_data_samples = deepcopy(data_samples)
             # set cat_id of gt_labels to 0 in RPN
             for data_sample in rpn_data_samples:
                 data_sample.gt_instances.labels = torch.zeros_like(
@@ -103,16 +102,16 @@ class SELSA(BaseVideoDetector):
                 ref_x, ref_data_samples)
         else:
             proposal_list, ref_proposals_list = [], []
-            for i in range(len(batch_data_samples)):
+            for i in range(len(data_samples)):
                 proposal, ref_proposals = InstanceData(), InstanceData()
-                proposal.bboxes = batch_data_samples[i].proposals
+                proposal.bboxes = data_samples[i].proposals
                 proposal_list.append(proposal)
-                ref_proposals.bboxes = batch_data_samples[i].ref_proposals
+                ref_proposals.bboxes = data_samples[i].ref_proposals
                 ref_proposals_list.append(ref_proposals)
 
         roi_losses = self.detector.roi_head.loss(x, ref_x, proposal_list,
                                                  ref_proposals_list,
-                                                 batch_data_samples, **kwargs)
+                                                 data_samples, **kwargs)
 
         losses.update(roi_losses)
 
@@ -209,19 +208,19 @@ class SELSA(BaseVideoDetector):
         return x, img_metas, ref_x, ref_img_metas
 
     def predict(self,
-                batch_inputs: dict,
-                batch_data_samples: SampleList,
+                inputs: dict,
+                data_samples: SampleList,
                 rescale: bool = True) -> SampleList:
         """Test without augmentation.
 
         Args:
-            batch_inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (dict[Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size and must be 1 in SELSA method.
                 The T denotes the number of key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor, Optional): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -233,7 +232,7 @@ class SELSA(BaseVideoDetector):
             input images. Each TrackDataSample usually contains
             ``pred_det_instances`` or ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'SELSA video detectors only support 1 batch size per gpu for now.'
@@ -241,8 +240,8 @@ class SELSA(BaseVideoDetector):
             'SELSA video detector only has 1 key image per batch.'
         img = img[0]
 
-        if 'ref_img' in batch_inputs:
-            ref_img = batch_inputs['ref_img']
+        if 'ref_img' in inputs:
+            ref_img = inputs['ref_img']
             assert ref_img.dim(
             ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
             assert ref_img.size(0) == 1, 'SELSA video detectors only support' \
@@ -251,10 +250,10 @@ class SELSA(BaseVideoDetector):
         else:
             ref_img = None
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'SELSA video detectors only support 1 batch size per gpu for now.'
 
-        data_sample = batch_data_samples[0]
+        data_sample = data_samples[0]
         img_metas = data_sample.metainfo
 
         if ref_img is not None:
@@ -272,31 +271,30 @@ class SELSA(BaseVideoDetector):
         for i in range(len(ref_img_metas)):
             ref_data_samples[i].set_metainfo(ref_img_metas[i])
 
-        if batch_data_samples[0].get('proposals', None) is None:
-            proposal_list = self.detector.rpn_head.predict(
-                x, batch_data_samples)
+        if data_samples[0].get('proposals', None) is None:
+            proposal_list = self.detector.rpn_head.predict(x, data_samples)
             ref_proposals_list = self.detector.rpn_head.predict(
                 ref_x, ref_data_samples)
         else:
-            assert hasattr(batch_data_samples[0], 'ref_proposals')
-            proposal_list = batch_data_samples[0].proposals
-            ref_proposals_list = batch_data_samples[0].ref_proposals
+            assert hasattr(data_samples[0], 'ref_proposals')
+            proposal_list = data_samples[0].proposals
+            ref_proposals_list = data_samples[0].ref_proposals
 
         results_list = self.detector.roi_head.predict(
             x,
             ref_x,
             proposal_list,
             ref_proposals_list,
-            batch_data_samples,
+            data_samples,
             rescale=rescale)
 
-        track_data_sample = deepcopy(batch_data_samples[0])
+        track_data_sample = deepcopy(data_samples[0])
         track_data_sample.pred_det_instances = results_list[0]
         return [track_data_sample]
 
     def aug_test(self,
-                 batch_inputs: dict,
-                 batch_data_samples: SampleList,
+                 inputs: dict,
+                 data_samples: SampleList,
                  rescale: bool = True,
                  **kwargs):
         """Test function with test time augmentation."""

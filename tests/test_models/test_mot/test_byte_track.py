@@ -25,9 +25,9 @@ class TestByteTrack(TestCase):
     def test_bytetrack_init(self, cfg_file):
         model = get_model_cfg(cfg_file)
         model.detector.neck.out_channels = 1
+        model.detector.neck.num_csp_blocks = 1
         model.detector.bbox_head.in_channels = 1
         model.detector.bbox_head.feat_channels = 1
-
         model = MODELS.build(model)
         assert model.detector
         assert model.motion
@@ -45,6 +45,10 @@ class TestByteTrack(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
             # _scope_ will be popped after build
             model = MODELS.build(_model)
 
@@ -55,11 +59,9 @@ class TestByteTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
+            out_data = model.data_preprocessor(packed_inputs, True)
             # Test forward
-            losses = model.forward(
-                batch_inputs, batch_data_samples, mode='loss')
+            losses = model.forward(**out_data, mode='loss')
             assert isinstance(losses, dict)
 
     @parameterized.expand([
@@ -76,6 +78,10 @@ class TestByteTrack(TestCase):
 
         for device in devices:
             _model = get_model_cfg(cfg_file)
+            _model.detector.neck.out_channels = 1
+            _model.detector.neck.num_csp_blocks = 1
+            _model.detector.bbox_head.in_channels = 1
+            _model.detector.bbox_head.feat_channels = 1
             model = MODELS.build(_model)
 
             if device == 'cuda':
@@ -85,12 +91,9 @@ class TestByteTrack(TestCase):
 
             packed_inputs = demo_mm_inputs(
                 batch_size=1, frame_id=0, num_ref_imgs=0, num_classes=1)
-            batch_inputs, batch_data_samples = model.data_preprocessor(
-                packed_inputs, True)
-
+            out_data = model.data_preprocessor(packed_inputs, False)
             # Test forward test
             model.eval()
             with torch.no_grad():
-                batch_results = model.forward(
-                    batch_inputs, batch_data_samples, mode='predict')
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1

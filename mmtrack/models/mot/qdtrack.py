@@ -52,18 +52,18 @@ class QDTrack(BaseMultiObjectTracker):
         if self.freeze_detector:
             self.freeze_module('detector')
 
-    def loss(self, batch_inputs: Dict[str, Tensor],
-             batch_data_samples: SampleList, **kwargs) -> dict:
+    def loss(self, inputs: Dict[str, Tensor], data_samples: SampleList,
+             **kwargs) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size.The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
 
@@ -71,13 +71,13 @@ class QDTrack(BaseMultiObjectTracker):
             dict: A dictionary of loss components.
         """
         # modify the inputs shape to fit mmdet
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(1) == 1, \
             'QDTrack can only have 1 key frame and 1 reference frame.'
         img = img[:, 0]
 
-        ref_img = batch_inputs['ref_img']
+        ref_img = inputs['ref_img']
         assert ref_img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert ref_img.size(1) == 1, \
             'QDTrack can only have 1 key frame and 1 reference frame.'
@@ -94,7 +94,7 @@ class QDTrack(BaseMultiObjectTracker):
 
         proposal_cfg = self.detector.train_cfg.get('rpn_proposal',
                                                    self.detector.test_cfg.rpn)
-        rpn_data_samples = copy.deepcopy(batch_data_samples)
+        rpn_data_samples = copy.deepcopy(data_samples)
         # set cat_id of gt_labels to 0 in RPN
         for data_sample in rpn_data_samples:
             data_sample.gt_instances.labels = \
@@ -113,13 +113,12 @@ class QDTrack(BaseMultiObjectTracker):
         losses.update(rpn_losses)
 
         losses_detect = self.detector.roi_head.loss(x, rpn_results_list,
-                                                    batch_data_samples,
-                                                    **kwargs)
+                                                    data_samples, **kwargs)
         losses.update(losses_detect)
 
-        # adjust the key of ref_img in batch_data_samples
+        # adjust the key of ref_img in data_samples
         ref_rpn_data_samples = []
-        for data_sample in batch_data_samples:
+        for data_sample in data_samples:
             ref_rpn_data_sample = TrackDataSample()
             ref_rpn_data_sample.set_metainfo(
                 metainfo=dict(
@@ -129,28 +128,28 @@ class QDTrack(BaseMultiObjectTracker):
         ref_rpn_results_list = self.detector.rpn_head.predict(
             ref_x, ref_rpn_data_samples, **kwargs)
         losses_track = self.track_head.loss(x, ref_x, rpn_results_list,
-                                            ref_rpn_results_list,
-                                            batch_data_samples, **kwargs)
+                                            ref_rpn_results_list, data_samples,
+                                            **kwargs)
         losses.update(losses_track)
 
         return losses
 
     def predict(self,
-                batch_inputs: Dict[str, Tensor],
-                batch_data_samples: SampleList,
+                inputs: Dict[str, Tensor],
+                data_samples: SampleList,
                 rescale: bool = True,
                 **kwargs) -> SampleList:
         """Predict results from a batch of inputs and data samples with post-
         processing.
 
         Args:
-            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+            inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
                 input images. Typically these should be mean centered and std
                 scaled. The N denotes batch size.The T denotes the number of
                 key/reference frames.
                 - img (Tensor) : The key images.
                 - ref_img (Tensor): The reference images.
-            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+            data_samples (list[:obj:`TrackDataSample`]): The batch
                 data samples. It usually includes information such
                 as `gt_instance`.
             rescale (bool, Optional): If False, then returned bboxes and masks
@@ -162,26 +161,25 @@ class QDTrack(BaseMultiObjectTracker):
             Each TrackDataSample usually contains ``pred_det_instances``
             or ``pred_track_instances``.
         """
-        img = batch_inputs['img']
+        img = inputs['img']
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(1) == 1, \
             'QDTrack can only have 1 key frame.'
         img = img[:, 0]
 
-        assert len(batch_data_samples) == 1, \
+        assert len(data_samples) == 1, \
             'QDTrack only support 1 batch size per gpu for now.'
-        metainfo = batch_data_samples[0].metainfo
+        metainfo = data_samples[0].metainfo
         frame_id = metainfo.get('frame_id', -1)
         if frame_id == 0:
             self.tracker.reset()
 
         x = self.detector.extract_feat(img)
-        rpn_results_list = self.detector.rpn_head.predict(
-            x, batch_data_samples)
+        rpn_results_list = self.detector.rpn_head.predict(x, data_samples)
         det_results = self.detector.roi_head.predict(
-            x, rpn_results_list, batch_data_samples, rescale=rescale)
+            x, rpn_results_list, data_samples, rescale=rescale)
 
-        track_data_sample = batch_data_samples[0]
+        track_data_sample = data_samples[0]
         track_data_sample.pred_det_instances = \
             det_results[0].clone()
 

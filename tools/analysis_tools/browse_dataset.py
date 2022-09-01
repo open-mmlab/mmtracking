@@ -4,9 +4,9 @@ import os.path as osp
 
 import mmcv
 import numpy as np
-from mmcv import Config, DictAction
 from mmdet.models.utils import mask2ndarray
-from mmengine.data import InstanceData
+from mmengine import Config, DictAction
+from mmengine.structures import InstanceData
 
 from mmtrack.registry import DATASETS, VISUALIZERS
 from mmtrack.structures import TrackDataSample
