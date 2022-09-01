@@ -45,10 +45,8 @@ class TestPrDiMP(TestCase):
                     num_ref_imgs=0,
                     image_shapes=[(3, 320, 320)],
                     num_items=[1])
-                batch_inputs, data_samples = model.data_preprocessor(
-                    packed_inputs, False)
-                batch_results = model.forward(
-                    batch_inputs, data_samples, mode='predict')
+                out_data = model.data_preprocessor(packed_inputs, False)
+                batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1
                 assert isinstance(batch_results[0], TrackDataSample)
 
@@ -70,7 +68,6 @@ class TestPrDiMP(TestCase):
             image_shapes=[(3, 280, 280), (3, 280, 280)],
             ref_prefix='search',
             num_items=[3, 3])
-        batch_inputs, data_samples = model.data_preprocessor(
-            packed_inputs, True)
-        losses = model.forward(batch_inputs, data_samples, mode='loss')
+        out_data = model.data_preprocessor(packed_inputs, True)
+        losses = model.forward(**out_data, mode='loss')
         assert isinstance(losses, dict)

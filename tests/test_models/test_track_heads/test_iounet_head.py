@@ -3,7 +3,7 @@ import copy
 from unittest import TestCase
 
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads.iounet_head import IouNetHead, LinearBlock
 from mmtrack.structures import TrackDataSample

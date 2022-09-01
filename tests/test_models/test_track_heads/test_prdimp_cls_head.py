@@ -3,7 +3,7 @@ import copy
 from unittest import TestCase
 
 import torch
-from mmengine.data import InstanceData
+from mmengine.structures import InstanceData
 
 from mmtrack.models.track_heads.prdimp_cls_head import PrDiMPClsHead
 from mmtrack.structures import TrackDataSample
