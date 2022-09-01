@@ -1,6 +1,6 @@
 _base_ = ['../../_base_/default_runtime.py']
 
-randomness = dict(seed=1, deterministic=False)
+randomness = dict(seed=1, deterministic=True)
 
 # model settings
 model = dict(
