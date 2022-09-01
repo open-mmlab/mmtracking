@@ -88,10 +88,6 @@ class StrongSORTTracker(SORTTracker):
         assert bbox.ndim == 2 and bbox.shape[0] == 1
         bbox = bbox.squeeze(0).cpu().numpy()
         score = float(self.tracks[id].scores[-1].cpu())
-        track_label = self.tracks[id]['labels'][-1]
-        label_idx = self.memo_items.index('labels')
-        obj_label = obj[label_idx]
-        assert obj_label == track_label
         self.tracks[id].mean, self.tracks[id].covariance = self.kf.update(
             self.tracks[id].mean, self.tracks[id].covariance, bbox, score)
 
