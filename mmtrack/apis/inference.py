@@ -122,10 +122,9 @@ def inference_mot(model: nn.Module, img: np.ndarray,
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
 
-    data['inputs']['img'] = [data['inputs']['img']]
-    data['data_samples'] = [data['data_samples']]
     # forward the model
     with torch.no_grad():
+        data = mmengine.dataset.default_collate([data])
         result = model.test_step(data)[0]
     return result
 
@@ -159,10 +158,9 @@ def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
 
-    data['inputs']['img'] = [data['inputs']['img']]
-    data['data_samples'] = [data['data_samples']]
     # forward the model
     with torch.no_grad():
+        data = mmengine.dataset.default_collate([data])
         result = model.test_step(data)[0]
     return result
 
@@ -234,9 +232,8 @@ def inference_vid(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
 
-    data['inputs']['img'] = [data['inputs']['img']]
-    data['data_samples'] = [data['data_samples']]
     # forward the model
     with torch.no_grad():
+        data = mmengine.dataset.default_collate([data])
         result = model.test_step(data)[0]
     return result
