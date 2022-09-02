@@ -188,8 +188,15 @@ class SORTTracker(BaseTracker):
                         active_ids,
                         self.reid.get('num_samples', None),
                         behavior='mean')
-                    reid_dists = torch.cdist(track_embeds,
-                                             embeds).cpu().numpy()
+                    reid_dists = torch.cdist(track_embeds, embeds)
+
+                    # support multi-class association
+                    track_labels = torch.tensor([
+                        self.tracks[id]['labels'][-1] for id in active_ids
+                    ]).to(bboxes.device)
+                    cate_match = labels[None, :] == track_labels[:, None]
+                    cate_cost = (1 - cate_match.int()) * 1e6
+                    reid_dists = (reid_dists + cate_cost).cpu().numpy()
 
                     valid_inds = [list(self.ids).index(_) for _ in active_ids]
                     reid_dists[~np.isfinite(costs[valid_inds, :])] = np.nan
@@ -209,9 +216,17 @@ class SORTTracker(BaseTracker):
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)
-                ious = bbox_overlaps(track_bboxes,
-                                     bboxes[active_dets]).cpu().numpy()
-                dists = 1 - ious
+                ious = bbox_overlaps(track_bboxes, bboxes[active_dets])
+
+                # support multi-class association
+                track_labels = torch.tensor([
+                    self.tracks[id]['labels'][-1] for id in active_ids
+                ]).to(bboxes.device)
+                cate_match = labels[None, active_dets] == track_labels[:, None]
+                cate_cost = (1 - cate_match.int()) * 1e6
+
+                dists = (1 - ious + cate_cost).cpu().numpy()
+
                 row, col = linear_sum_assignment(dists)
                 for r, c in zip(row, col):
                     dist = dists[r, c]
