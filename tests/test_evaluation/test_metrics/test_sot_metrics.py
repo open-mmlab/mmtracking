@@ -25,7 +25,8 @@ class TestSOTMetric(TestCase):
             dict(
                 type='SOTMetric',
                 outfile_prefix=cls.outfile_prefix,
-            ))
+                eval_options=dict(
+                    eval_show_video_indices=2, eval_sort_show=True)))
 
     @classmethod
     def tearDownClass(cls):

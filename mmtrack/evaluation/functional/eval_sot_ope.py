@@ -61,10 +61,11 @@ def success_error(gt_bboxes_center: np.ndarray, pred_bboxes_center: np.ndarray,
     return success
 
 
-def eval_sot_ope(
-        results,
-        annotations: List[List[np.ndarray]],
-        visible_infos: Optional[List[np.ndarray]] = None) -> Dict[str, float]:
+def eval_sot_ope(results,
+                 annotations: List[List[np.ndarray]],
+                 visible_infos: Optional[List[np.ndarray]] = None,
+                 eval_options: Optional[dict] = None,
+                 save_file_cfg: Optional[dict] = None) -> Dict[str, float]:
     """Evaluation in OPE protocol.
 
     Args:
@@ -79,6 +80,16 @@ def eval_sot_ope(
             list contains the visible information of each video. The ndarray is
             visibility (with bool type) of object in one video. It's in (N,)
             shape. Default to None.
+        eval_options (dict, optional): An example:
+            ```
+            eval_options = dict(
+                    save_file_cfg = dict(
+                        tracker_name ='sot_tracker',
+                        saved_file_path ='./sot_results.json'),
+                    show_indices = -10)
+            ```
+            Here, ``show_indices`` is used to index a numpy.ndarray. It can
+            be int or list.
 
     Returns:
         Dict[str, float]: OPE style evaluation metric (i.e. success,
@@ -125,9 +136,17 @@ def eval_sot_ope(
             success_error(norm_gt_bboxes_center, norm_pred_bboxes_center,
                           norm_pixel_offset_th, video_length))
 
+    success_results = np.stack(success_results)
+    precision_results = np.stack(precision_results)
+    norm_precision_results = np.stack(norm_precision_results)
     success = np.mean(success_results) * 100
     precision = np.mean(precision_results, axis=0)[20] * 100
     norm_precision = np.mean(norm_precision_results, axis=0)[20] * 100
     eval_results = dict(
-        success=success, norm_precision=norm_precision, precision=precision)
+        success=success,
+        norm_precision=norm_precision,
+        precision=precision,
+        ori_success=success_results * 100,
+        ori_precision=precision_results * 100,
+        ori_norm_precision=norm_precision_results * 100)
     return eval_results

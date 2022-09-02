@@ -7,10 +7,14 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import Dict, List, Optional, Sequence, Union
 
+import mmengine
 import numpy as np
 from mmengine.logging import MMLogger
+from mmengine.utils import mkdir_or_exist
+from tabulate import tabulate
 
 from mmtrack.registry import METRICS
+from mmtrack.utils import format_video_level_show
 from ..functional import (eval_sot_accuracy_robustness, eval_sot_eao,
                           eval_sot_ope)
 from .base_video_metrics import BaseVideoMetric
@@ -54,7 +58,8 @@ class SOTMetric(BaseVideoMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
-                 prefix: Optional[str] = None) -> None:
+                 prefix: Optional[str] = None,
+                 eval_options: Optional[dict] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
         self.metrics = metric if isinstance(metric, list) else [metric]
         assert not (
@@ -75,6 +80,7 @@ class SOTMetric(BaseVideoMetric):
                     f'but got {metric_option}.')
         self.outfile_prefix = outfile_prefix
         self.format_only = format_only
+        self.eval_options = eval_options
         self.preds_per_video, self.gts_per_video = [], []
         self.frame_ids, self.visible_per_video = [], []
 
@@ -163,7 +169,50 @@ class SOTMetric(BaseVideoMetric):
                                                all_visible)
                 else:
                     results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes)
+
+                ori_success = results_ope.pop('ori_success')
+                ori_norm_precision = results_ope.pop('ori_norm_precision')
+                ori_precision = results_ope.pop('ori_precision')
                 eval_results.update(results_ope)
+
+                saved_file_path = self.eval_options.get(
+                    'eval_res_saved_file', None)
+                if saved_file_path is not None:
+                    tracker_name = self.eval_options.get(
+                        'tracker_name', 'sot_tracker')
+                    mkdir_or_exist(osp.dirname(saved_file_path))
+                    ori_eval_res = {
+                        tracker_name:
+                        dict(
+                            success=ori_success,
+                            precision=ori_norm_precision,
+                            norm_precision=ori_precision)
+                    }
+                    mmengine.dump(ori_eval_res, saved_file_path)
+
+                if self.eval_options.get('eval_show_video_indices',
+                                         None) is not None:
+                    success_per_video = np.mean(ori_success, axis=1)
+                    precision_per_video = ori_norm_precision[:, 20]
+                    norm_precision_per_video = ori_precision[:, 20]
+
+                    eval_show_results = format_video_level_show(
+                        all_video_names, [
+                            success_per_video, precision_per_video,
+                            norm_precision_per_video
+                        ],
+                        sort_by_first_metric=True,
+                        show_indices=self.
+                        eval_options['eval_show_video_indices'])
+
+                    logger: MMLogger = MMLogger.get_current_instance()
+                    logger.info('\n' + tabulate(
+                        eval_show_results,
+                        headers=[
+                            'video_name', 'success', 'norm_precision',
+                            'precision'
+                        ]))
+
             elif metric == 'VOT':
                 if 'interval' in self.metric_options:
                     interval = self.metric_options['interval']
