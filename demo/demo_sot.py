@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 
 import cv2
 import mmcv
+import mmengine
 
 from mmtrack.apis import inference_sot, init_model
 from mmtrack.registry import VISUALIZERS
@@ -73,7 +74,7 @@ def main(args):
     visualizer = VISUALIZERS.build(model.cfg.visualizer)
     visualizer.dataset_meta = model.dataset_meta
 
-    prog_bar = mmcv.ProgressBar(len(imgs))
+    prog_bar = mmengine.ProgressBar(len(imgs))
     # test and show/save the images
     for i, img in enumerate(imgs):
         if isinstance(img, str):

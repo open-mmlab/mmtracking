@@ -2,7 +2,7 @@
 import argparse
 import os.path as osp
 
-import mmcv
+import mmengine
 import numpy as np
 from mmdet.models.utils import mask2ndarray
 from mmengine import Config, DictAction
@@ -55,10 +55,10 @@ def main():
     visualizer = VISUALIZERS.build(cfg.visualizer)
     visualizer.dataset_meta = dataset.metainfo
 
-    progress_bar = mmcv.ProgressBar(len(dataset))
+    progress_bar = mmengine.ProgressBar(len(dataset))
     gt_sample = TrackDataSample()  # just to wrap the `gt_instances`
     for idx, item in enumerate(dataset):
-        data_sample = item['data_sample']
+        data_sample = item['data_samples']
         for img_key, imgs in item['inputs'].items():
             img_paths = data_sample.get(img_key + '_path')
             img_key_prefix = img_key[:-3]
@@ -98,7 +98,8 @@ def main():
                 visualizer.add_datasample(
                     osp.basename(img_path),
                     img,
-                    gt_sample=gt_sample,
+                    data_sample=gt_sample,
+                    draw_pred=False,
                     show=not args.not_show,
                     wait_time=args.show_interval,
                     out_file=out_file)
