@@ -3,13 +3,14 @@
 ```python
 model = dict(
     type='DFF',  # The name of video detector
-    detector=dict(  # Please refer to https://mmdetection.readthedocs.io/en/latest/tutorials/config.html#an-example-of-mask-r-cnn for detailed comments of detector.
+    detector=dict(
+        # Please refer to https://mmdetection.readthedocs.io/en/latest/tutorials/config.html#an-example-of-mask-r-cnn for detailed comments of detector.
         type='FasterRCNN',
         backbone=dict(
             type='ResNet',
             depth=50,
             num_stages=4,
-            out_indices=(3, ),
+            out_indices=(3,),
             strides=(1, 2, 2, 1),
             dilations=(1, 1, 1, 2),
             frozen_stages=1,
@@ -119,12 +120,12 @@ model = dict(
                 max_per_img=100))),
     motion=dict(
         type='FlowNetSimple',  # The name of motion model
-        img_scale_factor=0.5, # the scale factor to downsample/upsample the input image of motion model
+        img_scale_factor=0.5,  # the scale factor to downsample/upsample the input image of motion model
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/pretrained_weights/flownet_simple.pth'  # noqa: E501
-        )), # The pretrained weights of FlowNetSimple
+        )),  # The pretrained weights of FlowNetSimple
     train_cfg=None,
     test_cfg=dict(key_frame_interval=10))  # The interval of key frame during testing
 dataset_type = 'ImagenetVIDDataset'  # Dataset type, this will be used to define the dataset
@@ -139,9 +140,9 @@ train_pipeline = [  # Training pipeline
         type='SeqLoadAnnotations',  # Second pipeline to load annotations for multi images
         with_bbox=True,  # Whether to use bounding box, True for detection
         with_track=True),  # Whether to use instance ids, True for detection
-    dict(type='SeqResize',   # Augmentation pipeline that resize the multi images and their annotations
-        img_scale=(1000, 600),  # The largest scale of image
-        keep_ratio=True),  # whether to keep the ratio between height and width.
+    dict(type='SeqResize',  # Augmentation pipeline that resize the multi images and their annotations
+         img_scale=(1000, 600),  # The largest scale of image
+         keep_ratio=True),  # whether to keep the ratio between height and width.
     dict(
         type='SeqRandomFlip',  # Augmentation pipeline that flip the multi images and their annotations
         share_params=True,
@@ -152,13 +153,13 @@ train_pipeline = [  # Training pipeline
         std=[58.395, 57.12, 57.375],  # keys of img_norm_cfg are used here as arguments
         to_rgb=True),
     dict(type='SeqPad',  # Padding config
-        size_divisor=16),  # The number the padded images should be divisible
+         size_divisor=16),  # The number the padded images should be divisible
     dict(
         type='VideoCollect',  # Pipeline that decides which keys in the data should be passed to the video detector
         keys=['img', 'gt_bboxes', 'gt_labels', 'gt_instance_ids']),
     dict(type='ConcatVideoReferences'),  # Pipeline that concats references images
     dict(type='SeqDefaultFormatBundle',  # Default format bundle to gather data in the pipeline
-        ref_prefix='ref')  # The prefix key for reference images.
+         ref_prefix='ref')  # The prefix key for reference images.
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),  # First pipeline to load images from file path
@@ -168,14 +169,15 @@ test_pipeline = [
         flip=False,  # Whether to flip images during testing
         transforms=[
             dict(type='Resize',  # Use resize augmentation
-                keep_ratio=True),  # Whether to keep the ratio between height and width, the img_scale set here will be suppressed by the img_scale set above.
+                 keep_ratio=True),
+            # Whether to keep the ratio between height and width, the img_scale set here will be suppressed by the img_scale set above.
             dict(type='RandomFlip'),  # Thought RandomFlip is added in pipeline, it is not used because flip=False
             dict(
                 type='Normalize',  # Normalization config, the values are from img_norm_cfg
                 mean=[123.675, 116.28, 103.53],
                 std=[58.395, 57.12, 57.375],
                 to_rgb=True),
-            dict(type='Pad', size_divisor=16), # Padding config to pad images divisible by 16.
+            dict(type='Pad', size_divisor=16),  # Padding config to pad images divisible by 16.
             dict(type='ImageToTensor', keys=['img']),  # convert image to tensor
             dict(type='VideoCollect', keys=['img'])  # Collect pipeline that collect necessary keys for testing.
         ])
@@ -220,24 +222,29 @@ data = dict(
         ref_img_sampler=None,
         pipeline=test_pipeline,  # Pipeline is passed by test_pipeline created before
         test_mode=True))
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)  # Config used to build optimizer, support all the optimizers in PyTorch whose arguments are also the same as those in PyTorch
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))  # Config used to build the optimizer hook, refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/optimizer.py#L8 for implementation details.
-checkpoint_config = dict(interval=1)  # Config to set the checkpoint hook, Refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/checkpoint.py for implementation.
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9,
+                 weight_decay=0.0001)  # Config used to build optimizer, support all the optimizers in PyTorch whose arguments are also the same as those in PyTorch
+optimizer_config = dict(grad_clip=dict(max_norm=35,
+                                       norm_type=2))  # Config used to build the optimizer hook, refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/optimizer.py#L8 for implementation details.
+checkpoint_config = dict(
+    interval=1)  # Config to set the checkpoint hook, Refer to https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/hooks/checkpoint.py for implementation.
 log_config = dict(
-    interval=50, 
+    interval=50,
     hooks=[
-      dict(type='TextLoggerHook', by_epoch=False),
-      dict(type='TensorboardLoggerHook', by_epoch=False),
-      dict(type='WandbLoggerHook', by_epoch=False,
-           init_kwargs={'entity': "OpenMMLab", 
-                        'project': "MMTracking",  
-                        'config': cfg_dict}),  
-  ])  
-dist_params = dict(backend='nccl', port='29500') # Parameters to setup distributed training, the port is set to 29500 by default
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': "OpenMMLab",
+                          'project': "MMTracking",
+                          'config': cfg_dict}),
+    ])
+dist_params = dict(backend='nccl',
+                   port='29500')  # Parameters to setup distributed training, the port is set to 29500 by default
 log_level = 'INFO'  # The level of logging.
 load_from = None  # load models as a pre-trained model from a given path. This will not resume training.
 resume_from = None  # Resume checkpoints from a given path, the training will be resumed from the epoch when the checkpoint's is saved.
-workflow = [('train', 1)]  # Workflow for runner. [('train', 1)] means there is only one workflow and the workflow named 'train' is executed once. The workflow trains the model by 7 epochs according to the total_epochs.
+workflow = [('train',
+             1)]  # Workflow for runner. [('train', 1)] means there is only one workflow and the workflow named 'train' is executed once. The workflow trains the model by 7 epochs according to the total_epochs.
 lr_config = dict(  # Learning rate scheduler config used to register LrUpdater hook
     policy='step',
     warmup='linear',

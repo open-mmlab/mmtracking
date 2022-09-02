@@ -3,7 +3,8 @@
 ```python
 model = dict(
     type='Tracktor',  # The name of the multiple object tracker
-    detector=dict(  # Please refer to https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/config.md#an-example-of-mask-r-cnn for detailed comments of detector.
+    detector=dict(
+        # Please refer to https://github.com/open-mmlab/mmdetection/blob/master/docs/tutorials/config.md#an-example-of-mask-r-cnn for detailed comments of detector.
         type='FasterRCNN',
         backbone=dict(
             type='ResNet',
@@ -68,8 +69,9 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
-        ), # The pretrained weights of detector. It may also used for testing.
+            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'
+            # noqa: E501
+        ),  # The pretrained weights of detector. It may also used for testing.
         train_cfg=dict(
             rpn=dict(
                 assigner=dict(
@@ -126,12 +128,15 @@ model = dict(
     reid=dict(  # The config of the ReID model
         type='BaseReID',  # The name of the motion model
         backbone=dict(  # The config of the backbone of the ReID model
-            type='ResNet', # The type of the backbone, refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/backbones/resnet.py#L288 for more details.
+            type='ResNet',
+            # The type of the backbone, refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/backbones/resnet.py#L288 for more details.
             depth=50,  # The depth of backbone, usually it is 50 or 101 for ResNet and ResNext backbones.
             num_stages=4,  # Number of stages of the backbone.
-            out_indices=(3, ),  # The index of output feature maps produced in each stages
-            style='pytorch'),  # The style of backbone, 'pytorch' means that stride 2 layers are in 3x3 conv, 'caffe' means stride 2 layers are in 1x1 convs.
-        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),  # The config of the neck of the ReID model. Generally it is a global average pooling module.
+            out_indices=(3,),  # The index of output feature maps produced in each stages
+            style='pytorch'),
+        # The style of backbone, 'pytorch' means that stride 2 layers are in 3x3 conv, 'caffe' means stride 2 layers are in 1x1 convs.
+        neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
+        # The config of the neck of the ReID model. Generally it is a global average pooling module.
         head=dict(  # The config of the head of the ReID model.
             type='LinearReIDHead',  # The type of the classification head
             num_fcs=1,  # Number of the fully-connected layers in the head
@@ -144,11 +149,11 @@ model = dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot17-4bf6b63d.pth'  # noqa: E501
-        )), # The pretrained weights of reid model. It may also used for testing.
+        )),  # The pretrained weights of reid model. It may also used for testing.
     motion=dict(  # The config of the motion model
         type='CameraMotionCompensation',  # The name of the motion model
         warp_mode='cv2.MOTION_EUCLIDEAN',  # The warping mode
-        num_iters=100, # The number of the iterations
+        num_iters=100,  # The number of the iterations
         stop_eps=1e-05),  # The threshold of termination
     tracker=dict(  # The config of the tracker
         type='TracktorTracker',  # The name of the tracker
@@ -160,7 +165,8 @@ model = dict(
         reid=dict(  # The config about the testing process of the ReID model
             num_samples=10,  # The maximum number of samples to calculate the feature embeddings
             img_scale=(256, 128),  # The input scale of the ReID model
-            img_norm_cfg=None,  # The normalization config of the input of the ReID model. None means consistent with the backbone
+            img_norm_cfg=None,
+            # The normalization config of the input of the ReID model. None means consistent with the backbone
             match_score_thr=2.0,  # The threshold for feature similarity
             match_iou_thr=0.2),  # The threshold for IoU matching
         momentums=None,  # The momentums to update the buffers
@@ -251,15 +257,15 @@ optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 checkpoint_config = dict(interval=1)
 log_config = dict(
-    interval=50, 
+    interval=50,
     hooks=[
-      dict(type='TextLoggerHook', by_epoch=False),
-      dict(type='TensorboardLoggerHook', by_epoch=False),
-      dict(type='WandbLoggerHook', by_epoch=False,
-           init_kwargs={'entity': "OpenMMLab", 
-                        'project': "MMTracking",  
-                        'config': cfg_dict}),  
-  ])  
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': "OpenMMLab",
+                          'project': "MMTracking",
+                          'config': cfg_dict}),
+    ])
 
 dist_params = dict(backend='nccl', port='29500')
 log_level = 'INFO'
