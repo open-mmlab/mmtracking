@@ -228,6 +228,7 @@ class DetLocalVisualizer(MMDET_DetLocalVisualizer):
         if 'data_sample' in kwargs:
             # assign `pred_det_instances` to `pred_instances`
             # to hack the interface of `super().add_datasample()`.
-            kwargs['data_sample'].pred_instances = \
-                kwargs['data_sample'].pred_det_instances
+            if 'pred_det_instances' in kwargs['data_sample']:
+                kwargs['data_sample'].pred_instances = \
+                    kwargs['data_sample'].pred_det_instances
         super().add_datasample(*args, **kwargs)
