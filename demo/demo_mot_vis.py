@@ -5,6 +5,7 @@ import tempfile
 from argparse import ArgumentParser
 
 import mmcv
+import mmengine
 
 from mmtrack.apis import inference_mot, init_model
 from mmtrack.registry import VISUALIZERS
@@ -78,7 +79,7 @@ def main(args):
     visualizer = VISUALIZERS.build(model.cfg.visualizer)
     visualizer.dataset_meta = model.dataset_meta
 
-    prog_bar = mmcv.ProgressBar(len(imgs))
+    prog_bar = mmengine.ProgressBar(len(imgs))
     # test and show/save the images
     for i, img in enumerate(imgs):
         if isinstance(img, str):
@@ -97,8 +98,9 @@ def main(args):
         visualizer.add_datasample(
             'mot',
             img[..., ::-1],
-            pred_sample=result[0],
+            data_sample=result,
             show=args.show,
+            draw_gt=False,
             out_file=out_file,
             wait_time=float(1 / int(fps)) if fps else 0,
             pred_score_thr=args.score_thr,
