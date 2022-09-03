@@ -1,0 +1,66 @@
+Collections:
+  - Name: Mask2Former
+    Metadata:
+      Training Techniques:
+        - AdamW
+        - Weight Decay
+      Training Resources: 8x A100 GPUs
+      Architecture:
+        - Mask2Former
+    Paper:
+      URL: https://arxiv.org/pdf/2112.10764.pdf
+      Title: Mask2Former for Video Instance Segmentation
+    README: configs/vis/mask2former/README.md
+
+Models:
+  - Name: mask2former_r50_8xb2-8e_youtubevis2019
+    In Collection: Mask2Former
+    Config: configs/vis/mask2former/mask2former_r50_8xb2-8e_youtubevis2019.py
+    Metadata:
+      Training Data: YouTube-VIS 2019
+      Training Memory (GB):
+    Results:
+      - Task: Video Instance Segmentation
+        Dataset: YouTube-VIS 2019
+        Metrics:
+          AP:
+    Weights:
+
+  - Name: mask2former_r101_8xb2-8e_youtubevis2019
+    In Collection: MaskTrack R-CNN
+    Config: configs/vis/mask2former/mask2former_r101_8xb2-8e_youtubevis2019.py
+    Metadata:
+      Training Data: YouTube-VIS 2019
+      Training Memory (GB):
+    Results:
+      - Task: Video Instance Segmentation
+        Dataset: YouTube-VIS 2019
+        Metrics:
+          AP:
+    Weights:
+
+  - Name: mask2former_r50_8xb2-8e_youtubevis2021
+    In Collection: MaskTrack R-CNN
+    Config: configs/vis/mask2former/mask2former_r50_8xb2-8e_youtubevis2021.py
+    Metadata:
+      Training Data: YouTube-VIS 2021
+      Training Memory (GB):
+    Results:
+      - Task: Video Instance Segmentation
+        Dataset: YouTube-VIS 2021
+        Metrics:
+          AP:
+    Weights:
+
+  - Name: mask2former_r101_8xb2-8e_youtubevis2021
+    In Collection: MaskTrack R-CNN
+    Config: configs/vis/mask2former/mask2former_r101_8xb2-8e_youtubevis2021.py
+    Metadata:
+      Training Data: YouTube-VIS 2021
+      Training Memory (GB):
+    Results:
+      - Task: Video Instance Segmentation
+        Dataset: YouTube-VIS 2021
+        Metrics:
+          AP:
+    Weights:
