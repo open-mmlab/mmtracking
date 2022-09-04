@@ -382,7 +382,7 @@ class MixFormerAttentionBlock(nn.Module):
                  dim_in,
                  dim_out,
                  num_heads,
-                 mlp_ratio=4.,
+                 mlp_channel_ratio=4.,
                  qkv_bias=False,
                  drop=0.,
                  attn_drop=0.,
@@ -408,7 +408,7 @@ class MixFormerAttentionBlock(nn.Module):
             if path_drop_probs > 0. else nn.Identity()
         self.norm2 = norm_layer(dim_out)
 
-        dim_mlp_hidden = int(dim_out * mlp_ratio)
+        dim_mlp_hidden = int(dim_out * mlp_channel_ratio)
         self.mlp = FFN(
             embed_dims=dim_out,
             feedforward_channels=dim_mlp_hidden,
@@ -500,7 +500,7 @@ class ConvVisionTransformerLayer(BaseModule):
         embed_dim (int): embedding dimension
         depth (int): number of attention blocks
         num_heads (int): number of heads in multi-head attention operation
-        mlp_ratio (int): hidden dim ratio of FFN
+        mlp_channel_ratio (int): hidden dim ratio of FFN
         qkv_bias (bool): qkv bias
         drop_rate (float): drop rate after patch embed
         attn_drop_rate (float): drop rate in attention
@@ -519,7 +519,7 @@ class ConvVisionTransformerLayer(BaseModule):
                  embed_dim=768,
                  depth=12,
                  num_heads=12,
-                 mlp_ratio=4.,
+                 mlp_channel_ratio=4.,
                  qkv_bias=False,
                  drop_rate=0.,
                  attn_drop_rate=0.,
@@ -532,7 +532,6 @@ class ConvVisionTransformerLayer(BaseModule):
         super().__init__()
         self.init = init
         self.num_features = self.embed_dim = embed_dim
-        self.rearrage = None
 
         self.patch_embed = ConvEmbed(
             patch_size=patch_size,
@@ -553,7 +552,7 @@ class ConvVisionTransformerLayer(BaseModule):
                     dim_in=embed_dim,
                     dim_out=embed_dim,
                     num_heads=num_heads,
-                    mlp_ratio=mlp_ratio,
+                    mlp_channel_ratio=mlp_channel_ratio,
                     qkv_bias=qkv_bias,
                     drop=drop_rate,
                     attn_drop=attn_drop_rate,
@@ -688,7 +687,7 @@ class ConvVisionTransformer(BaseModule):
         num_heads (List[int]): number of heads in multi-head
         attention operation of each stage
         depth (List[int]): number of attention blocks of each stage
-        mlp_ratio (List[int]): hidden dim ratio of FFN of each stage
+        mlp_channel_ratio (List[int]): hidden dim ratio of FFN of each stage
         attn_drop_rate (List[float]): attn drop rate of each stage
         drop_rate (List[float]): drop rate of each stage
         path_drop_probs (List[float]): drop path of each stage
@@ -713,7 +712,7 @@ class ConvVisionTransformer(BaseModule):
                  dim_embed=[64, 192, 384],
                  num_heads=[1, 3, 6],
                  depth=[1, 4, 16],
-                 mlp_ratio=[4, 4, 4],
+                 mlp_channel_ratio=[4, 4, 4],
                  attn_drop_rate=[0.0, 0.0, 0.0],
                  drop_rate=[0.0, 0.0, 0.0],
                  path_drop_probs=[0.0, 0.0, 0.1],
@@ -736,7 +735,7 @@ class ConvVisionTransformer(BaseModule):
                 'embed_dim': dim_embed[i],
                 'depth': depth[i],
                 'num_heads': num_heads[i],
-                'mlp_ratio': mlp_ratio[i],
+                'mlp_channel_ratio': mlp_channel_ratio[i],
                 'qkv_bias': qkv_bias[i],
                 'drop_rate': drop_rate[i],
                 'attn_drop_rate': attn_drop_rate[i],
