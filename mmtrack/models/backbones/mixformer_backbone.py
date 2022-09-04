@@ -62,8 +62,6 @@ class MixedAttentionModule(nn.Module):
             Default: 1
         padding_kv (int): Padding number of the key/value projection layer.
             Default: 1
-        with_cls_token (bool): Add a token for global information collection.
-            Default: False.
         norm_cfg (dict): Norm layer config.
     """
 
@@ -80,7 +78,6 @@ class MixedAttentionModule(nn.Module):
                  stride_q=1,
                  padding_kv=1,
                  padding_q=1,
-                 with_cls_token=True,
                  norm_cfg=dict(type='BN'),
                  **kwargs):
         super().__init__()
@@ -89,7 +86,6 @@ class MixedAttentionModule(nn.Module):
         self.dim = dim_out
         self.num_heads = num_heads
         self.scale = dim_out**-0.5
-        self.with_cls_token = with_cls_token
         self.norm_cfg = norm_cfg
 
         self.conv_proj_q = self._build_projection(
@@ -238,7 +234,13 @@ class MixedAttentionModule(nn.Module):
         return q, k, v
 
     def forward(self, x, t_h, t_w, s_h, s_w):
-        """Asymmetric mixed attention."""
+        """Asymmetric mixed attention.
+
+        Args:
+            x (Tensor): input of shape (B, N, C)
+            t_h/w (int): template feature size
+            s_h/w (int): search region feature size
+        """
         if (self.conv_proj_q is not None or self.conv_proj_k is not None
                 or self.conv_proj_v is not None):
             q, k, v = self.forward_conv(x, t_h, t_w, s_h, s_w)
@@ -365,10 +367,7 @@ class MixedAttentionModule(nn.Module):
         attn = F.softmax(attn_score, dim=-1)
         attn = self.attn_drop(attn)
         x = torch.einsum('bhlt,bhtv->bhlv', [attn, v])
-        # self.x_ot = rearrange(x, 'b h t d -> b t (h d)').contiguous()
         x = rearrange(x, 'b h t d -> b t (h d)').contiguous()
-
-        # x = torch.cat([self.x_t, self.x_ot], dim=1)
 
         x = self.proj(x)
         x = self.proj_drop(x)
@@ -377,6 +376,7 @@ class MixedAttentionModule(nn.Module):
 
 
 class MixFormerAttentionBlock(nn.Module):
+    """Block containing attention operation, FFN and residual layer."""
 
     def __init__(self,
                  dim_in,
@@ -386,14 +386,12 @@ class MixFormerAttentionBlock(nn.Module):
                  qkv_bias=False,
                  drop=0.,
                  attn_drop=0.,
-                 drop_path=0.,
+                 path_drop_probs=0.,
                  act_layer=nn.GELU,
                  norm_layer=nn.LayerNorm,
                  norm_cfg=dict(type='BN'),
                  **kwargs):
         super().__init__()
-
-        self.with_cls_token = kwargs['with_cls_token']
 
         self.norm1 = norm_layer(dim_in)
         self.attn = MixedAttentionModule(
@@ -406,8 +404,8 @@ class MixFormerAttentionBlock(nn.Module):
             norm_cfg=norm_cfg,
             **kwargs)
 
-        self.drop_path = DropPath(drop_path) \
-            if drop_path > 0. else nn.Identity()
+        self.drop_path = DropPath(path_drop_probs) \
+            if path_drop_probs > 0. else nn.Identity()
         self.norm2 = norm_layer(dim_out)
 
         dim_mlp_hidden = int(dim_out * mlp_ratio)
@@ -448,7 +446,16 @@ class MixFormerAttentionBlock(nn.Module):
 
 
 class ConvEmbed(nn.Module):
-    """Image to Conv Embedding."""
+    """Image to Conv Embedding.
+
+    Args:
+        patch_size (int): patch size
+        in_chans (int): number of input channels
+        embed_dim (int): embedding dimension
+        stride (int): stride of convolution layer
+        padding (int): number of padding
+        norm_layer (nn.Module): normalization layer
+    """
 
     def __init__(self,
                  patch_size=7,
@@ -482,7 +489,27 @@ class ConvEmbed(nn.Module):
 
 
 class ConvVisionTransformerLayer(BaseModule):
-    """Vision Transformer with support for patch or hybrid CNN input stage."""
+    """One stage of ConvVisionTransformer containing one patch embed layer and
+    stacked attention blocks.
+
+    Args:
+        patch_size (int): patch size of ConvEmbed module
+        patch_stride (int): patch stride of ConvEmbed module
+        patch_padding (int): padding of ConvEmbed module
+        in_chans (int): number of input channels
+        embed_dim (int): embedding dimension
+        depth (int): number of attention blocks
+        num_heads (int): number of heads in multi-head attention operation
+        mlp_ratio (int): hidden dim ratio of FFN
+        qkv_bias (bool): qkv bias
+        drop_rate (float): drop rate after patch embed
+        attn_drop_rate (float): drop rate in attention
+        path_drop_probs (float): drop path for stochastic depth decay
+        act_layer (nn.Module): activate function used in FFN
+        norm_layer (nn.Module): normalization layer used in attention block
+        init (str): weight init method
+        norm_cfg (dict): normalization layer config
+    """
 
     def __init__(self,
                  patch_size=16,
@@ -496,7 +523,7 @@ class ConvVisionTransformerLayer(BaseModule):
                  qkv_bias=False,
                  drop_rate=0.,
                  attn_drop_rate=0.,
-                 drop_path_rate=0.,
+                 path_drop_probs=0.,
                  act_layer=nn.GELU,
                  norm_layer=nn.LayerNorm,
                  init='trunc_norm',
@@ -505,11 +532,9 @@ class ConvVisionTransformerLayer(BaseModule):
         super().__init__()
         self.init = init
         self.num_features = self.embed_dim = embed_dim
-        # num_features for consistency with other models
         self.rearrage = None
 
         self.patch_embed = ConvEmbed(
-            # img_size=img_size,
             patch_size=patch_size,
             in_chans=in_chans,
             stride=patch_stride,
@@ -517,14 +542,8 @@ class ConvVisionTransformerLayer(BaseModule):
             embed_dim=embed_dim,
             norm_layer=norm_layer)
 
-        with_cls_token = kwargs['with_cls_token']
-        if with_cls_token:
-            self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        else:
-            self.cls_token = None
-
         self.pos_drop = nn.Dropout(p=drop_rate)
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)
+        dpr = [x.item() for x in torch.linspace(0, path_drop_probs, depth)
                ]  # stochastic depth decay rule
 
         blocks = []
@@ -538,7 +557,7 @@ class ConvVisionTransformerLayer(BaseModule):
                     qkv_bias=qkv_bias,
                     drop=drop_rate,
                     attn_drop=attn_drop_rate,
-                    drop_path=dpr[j],
+                    path_drop_probs=dpr[j],
                     act_layer=act_layer,
                     norm_layer=norm_layer,
                     norm_cfg=norm_cfg,
@@ -546,9 +565,6 @@ class ConvVisionTransformerLayer(BaseModule):
         self.blocks = nn.ModuleList(blocks)
 
     def init_weights(self):
-        if self.cls_token is not None:
-            trunc_normal_(self.cls_token, std=.02)
-
         if self.init == 'xavier':
             self.apply(self._init_weights_xavier)
         else:
@@ -578,12 +594,12 @@ class ConvVisionTransformerLayer(BaseModule):
 
     def forward(self, template, online_template, search):
         """
-        :param template: (batch, c, 128, 128)
-        :param search: (batch, c, 320, 320)
-        :return:
+        Args:
+            template (Tensor): template features of shape (B, C, H, W)
+            online template (Tensor): online template features
+                of shape (B, C, H, W)
+            search (Tensor): search features of shape (B, C, H, W)
         """
-        # x = self.patch_embed(x)
-        # B, C, H, W = x.size()
         template = self.patch_embed(template)
         online_template = self.patch_embed(online_template)
         t_B, t_C, t_H, t_W = template.size()
@@ -601,8 +617,6 @@ class ConvVisionTransformerLayer(BaseModule):
         for i, blk in enumerate(self.blocks):
             x = blk(x, t_H, t_W, s_H, s_W)
 
-        # if self.cls_token is not None:
-        #     cls_tokens, x = torch.split(x, [1, H*W], 1)
         template, online_template, search = torch.split(
             x, [t_H * t_W, t_H * t_W, s_H * s_W], dim=1)
         template = rearrange(
@@ -620,16 +634,12 @@ class ConvVisionTransformerLayer(BaseModule):
         s_B, s_C, s_H, s_W = search.size()
 
         search = rearrange(search, 'b c h w -> b (h w) c').contiguous()
-        x = search
 
-        x = self.pos_drop(x)
+        x = self.pos_drop(search)
 
         for i, blk in enumerate(self.blocks):
             x = blk.forward_test(x, s_H, s_W)
 
-        # if self.cls_token is not None:
-        #     cls_tokens, x = torch.split(x, [1, H*W], 1)
-        # template, search = torch.split(x, [t_H*t_W, s_H*s_W], dim=1)
         search = rearrange(x, 'b (h w) c -> b c h w', h=s_H, w=s_W)
 
         return search
@@ -642,8 +652,6 @@ class ConvVisionTransformerLayer(BaseModule):
         template = rearrange(template, 'b c h w -> b (h w) c').contiguous()
         online_template = rearrange(
             online_template, 'b c h w -> (b h w) c').unsqueeze(0).contiguous()
-        # 1, 1024, c
-        # 1, b*1024, c
         x = torch.cat([template, online_template], dim=1)
 
         x = self.pos_drop(x)
@@ -651,8 +659,6 @@ class ConvVisionTransformerLayer(BaseModule):
         for i, blk in enumerate(self.blocks):
             x = blk.set_online(x, t_H, t_W)
 
-        # if self.cls_token is not None:
-        #     cls_tokens, x = torch.split(x, [1, H*W], 1)
         template = x[:, :t_H * t_W]
         online_template = x[:, t_H * t_W:]
         template = rearrange(template, 'b (h w) c -> b c h w', h=t_H, w=t_W)
@@ -664,6 +670,36 @@ class ConvVisionTransformerLayer(BaseModule):
 
 @BACKBONES.register_module()
 class ConvVisionTransformer(BaseModule):
+    """Vision Transformer with support for patch or hybrid CNN input stage.
+
+    This backbone refers to the implementation of
+    `CvT: <https://arxiv.org/abs/2103.15808>`_.
+
+    Args:
+        in_chans (int): number of input channels
+        act_layer (nn.Module): activate function used in FFN
+        norm_layer (nn.Module): normalization layer used in attention block
+        init (str): weight init method
+        num_stage (int): number of backbone stages
+        patch_size (List[int]): patch size of each stage
+        patch_stride (List[int]): patch stride of each stage
+        patch_padding (List[int]): patch padding of each stage
+        dim_embed (List[int]): embedding dimension of each stage
+        num_heads (List[int]): number of heads in multi-head
+        attention operation of each stage
+        depth (List[int]): number of attention blocks of each stage
+        mlp_ratio (List[int]): hidden dim ratio of FFN of each stage
+        attn_drop_rate (List[float]): attn drop rate of each stage
+        drop_rate (List[float]): drop rate of each stage
+        path_drop_probs (List[float]): drop path of each stage
+        qkv_bias (List[bool]): qkv bias of each stage
+        qkv_proj_method (List[str]): qkv project method of each stage
+        kernel_qkv (List[int]): kernel size for qkv projection of each stage
+        padding_kv/q (List[int]): padding size for kv/q projection
+        of each stage
+        stride_kv/q (List[int]): stride for kv/q project of each stage
+        norm_cfg (dict): normalization layer config
+    """
 
     def __init__(self,
                  in_chans=3,
@@ -680,10 +716,8 @@ class ConvVisionTransformer(BaseModule):
                  mlp_ratio=[4, 4, 4],
                  attn_drop_rate=[0.0, 0.0, 0.0],
                  drop_rate=[0.0, 0.0, 0.0],
-                 drop_path_rate=[0.0, 0.0, 0.1],
+                 path_drop_probs=[0.0, 0.0, 0.1],
                  qkv_bias=[True, True, True],
-                 cls_token=[False, False, False],
-                 pos_embed=[False, False, False],
                  qkv_proj_method=['dw_bn', 'dw_bn', 'dw_bn'],
                  kernel_qkv=[3, 3, 3],
                  padding_kv=[1, 1, 1],
@@ -706,8 +740,7 @@ class ConvVisionTransformer(BaseModule):
                 'qkv_bias': qkv_bias[i],
                 'drop_rate': drop_rate[i],
                 'attn_drop_rate': attn_drop_rate[i],
-                'drop_path_rate': drop_path_rate[i],
-                'with_cls_token': cls_token[i],
+                'path_drop_probs': path_drop_probs[i],
                 'method': qkv_proj_method[i],
                 'kernel_size': kernel_qkv[i],
                 'padding_q': padding_q[i],
@@ -729,19 +762,18 @@ class ConvVisionTransformer(BaseModule):
 
         dim_embed = dim_embed[-1]
         self.norm = norm_layer(dim_embed)
-        self.cls_token = cls_token[-1]
 
         # Classifier head
         self.head = nn.Linear(dim_embed, 1000)
 
     def forward(self, template, online_template, search):
         """
-        :param template: (b, 3, 128, 128)
-        :param search: (b, 3, 320, 320)
-        :return:
+        Args:
+            template (Tensor): template images of shape (B, C, H, W)
+            online template (Tensor): online template images
+            of shape (B, C, H, W)
+            search (Tensor): search images of shape (B, C, H, W)
         """
-        # template = template + self.template_emb
-        # search = search + self.search_emb
         for i in range(self.num_stages):
             template, online_template, search = getattr(self, f'stage{i}')(
                 template, online_template, search)
