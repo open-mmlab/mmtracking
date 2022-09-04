@@ -14,6 +14,19 @@ from mmtrack.models.track_heads.stark_head import ScoreHead as MLPScoreHead
 
 @HEADS.register_module()
 class MixFormerScoreDecoder(nn.Module):
+    """Score Prediction Module (SPM) proposed in
+    "MixFormer: End-to-End Tracking with Iterative
+    Mixed Attention". `MixFormer <https://arxiv.org/abs/2203.11082>`_.
+
+    Args:
+        pool_size (int): pool size for roi pooling
+        feat_size (int): search region feature map size
+        stride (int): ratio between original image size
+        and feature map size
+        num_heads (int): number of heads of attention
+        hidden_dim (int): embedding dimension
+        num_layer (int): number of layers of the mlp
+    """
 
     def __init__(self,
                  pool_size=4,

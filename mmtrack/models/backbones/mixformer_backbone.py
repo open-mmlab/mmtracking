@@ -277,7 +277,6 @@ class MixedAttentionModule(nn.Module):
         x_s = torch.einsum('bhlt,bhtv->bhlv', [attn, v])
         x_s = rearrange(x_s, 'b h t d -> b t (h d)')
 
-        # x = torch.cat([x_t, x_ot, x_s], dim=1)
         x = torch.cat([x_mt, x_s], dim=1)
 
         x = self.proj(x)
@@ -762,7 +761,6 @@ class ConvVisionTransformer(BaseModule):
         dim_embed = dim_embed[-1]
         self.norm = norm_layer(dim_embed)
 
-        # Classifier head
         self.head = nn.Linear(dim_embed, 1000)
 
     def forward(self, template, online_template, search):
