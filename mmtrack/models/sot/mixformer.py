@@ -26,22 +26,14 @@ class MixFormer(Stark):
                  test_cfg=None):
         super(Stark, self).__init__(init_cfg)
         self.backbone = build_backbone(backbone)
-        # self.neck = build_neck(neck)
         self.head = build_head(head)
-        print('Done')
 
         self.test_cfg = test_cfg
         self.train_cfg = train_cfg
 
-        # Set the update interval
         self.update_interval = self.test_cfg['update_interval'][0]
-        print('Update interval is: ', self.update_interval)
         self.online_size = self.test_cfg['online_size'][0]
-        print('Online size is: ', self.online_size)
         self.max_score_decay = self.test_cfg['max_score_decay'][0]
-        print('Max score decay is: ', self.max_score_decay)
-
-        # Set update interval, forget, online size
 
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)

@@ -9,7 +9,7 @@ from mmcv.runner.base_module import BaseModule
 from mmdet.models import HEADS
 from mmdet.models.builder import build_head, build_loss
 
-from mmtrack.models.track_heads.stark_head import ScoreHead
+from mmtrack.models.track_heads.stark_head import ScoreHead as MLPScoreHead
 
 
 @HEADS.register_module()
@@ -28,7 +28,7 @@ class MixFormerScoreDecoder(nn.Module):
         self.img_sz = feat_size * stride
         self.num_heads = num_heads
         self.pool_size = pool_size
-        self.score_head = ScoreHead(hidden_dim, hidden_dim, 1, num_layers)
+        self.score_head = MLPScoreHead(hidden_dim, hidden_dim, 1, num_layers)
         self.scale = hidden_dim**-0.5
         self.search_prroipool = PrRoIPool(pool_size, spatial_scale=1.0)
         self.proj_q = nn.ModuleList(
@@ -79,7 +79,7 @@ class MixFormerScoreDecoder(nn.Module):
             'b c h w -> b (h w) c')
         template_feat = rearrange(template_feat, 'b c h w -> b (h w) c')
         kv_memory = [search_box_feat, template_feat]
-        for i in range(2):
+        for i in range(len(kv_memory)):
             q = rearrange(
                 self.proj_q[i](x), 'b t (n d) -> b n t d', n=self.num_heads)
             k = rearrange(
@@ -123,7 +123,7 @@ class MixFormerHead(BaseModule):
 
         assert bbox_head is not None
         self.bbox_head = build_head(bbox_head)
-        self.score_head = build_head(score_head)
+        self.score_decoder_head = build_head(score_head)
 
         self.loss_iou = build_loss(loss_iou)
         self.loss_bbox = build_loss(loss_bbox)
@@ -163,7 +163,7 @@ class MixFormerHead(BaseModule):
         if run_score_head:
             if gt_bboxes is None:
                 gt_bboxes = outputs_coord.clone().view(-1, 4)
-            pred_scores = self.score_head(search, template, gt_bboxes)
+            pred_scores = self.score_decoder_head(search, template, gt_bboxes)
             track_results['pred_scores'] = pred_scores
 
         return track_results
