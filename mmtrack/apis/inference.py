@@ -124,7 +124,8 @@ def inference_mot(model: nn.Module, img: np.ndarray,
 
     # forward the model
     with torch.no_grad():
-        result = model.test_step([data])
+        data = mmengine.dataset.default_collate([data])
+        result = model.test_step(data)[0]
     return result
 
 
@@ -159,7 +160,8 @@ def inference_sot(model: nn.Module, image: np.ndarray, init_bbox: np.ndarray,
 
     # forward the model
     with torch.no_grad():
-        result = model.test_step([data])
+        data = mmengine.dataset.default_collate([data])
+        result = model.test_step(data)[0]
     return result
 
 
@@ -232,5 +234,6 @@ def inference_vid(
 
     # forward the model
     with torch.no_grad():
-        result = model.test_step([data])
+        data = mmengine.dataset.default_collate([data])
+        result = model.test_step(data)[0]
     return result

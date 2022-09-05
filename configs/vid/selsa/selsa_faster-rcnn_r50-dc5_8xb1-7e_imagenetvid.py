@@ -59,3 +59,5 @@ param_scheduler = [
         milestones=[2, 5],
         gamma=0.1)
 ]
+
+visualizer = dict(type='DetLocalVisualizer')
