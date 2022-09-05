@@ -45,6 +45,17 @@ class SOTMetric(BaseVideoMetric):
             metric names to disambiguate homonymous metrics of different
             evaluators. If prefix is not provided in the argument,
             self.default_prefix will be used instead. Defaults to None.
+        options_after_eval (Optional[dict], optional): The options after
+            evaluation. The usage is the following:
+            ```
+                options_after_eval = dict(
+                    saved_eval_res_file = './results/sot_res.json',
+                    tracker_name = 'siamrpn++',
+                    eval_show_video_indices = 10)
+            ```
+            Here, ``eval_show_video_indices`` is used to index a numpy.ndarray.
+            It can be int (positive or negative) or list.
+            ``saved_eval_res_file`` must be json/yaml/pickle file.
     """
     default_prefix: Optional[str] = 'sot'
     allowed_metrics = ['OPE', 'VOT']
@@ -59,7 +70,7 @@ class SOTMetric(BaseVideoMetric):
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None,
-                 eval_options: Optional[dict] = None) -> None:
+                 options_after_eval: Optional[dict] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
         self.metrics = metric if isinstance(metric, list) else [metric]
         assert not (
@@ -80,7 +91,7 @@ class SOTMetric(BaseVideoMetric):
                     f'but got {metric_option}.')
         self.outfile_prefix = outfile_prefix
         self.format_only = format_only
-        self.eval_options = eval_options
+        self.options_after_eval = options_after_eval
         self.preds_per_video, self.gts_per_video = [], []
         self.frame_ids, self.visible_per_video = [], []
 
@@ -175,11 +186,22 @@ class SOTMetric(BaseVideoMetric):
                 ori_precision = results_ope.pop('ori_precision')
                 eval_results.update(results_ope)
 
-                saved_file_path = self.eval_options.get(
-                    'eval_res_saved_file', None)
+                saved_file_path = self.options_after_eval.get(
+                    'saved_eval_res_file', None)
                 if saved_file_path is not None:
-                    tracker_name = self.eval_options.get(
-                        'tracker_name', 'sot_tracker')
+                    if not saved_file_path.endswith(
+                        ('.json', '.yaml', '.pkl')):  # noqa: E125
+                        raise TypeError(
+                            f'Unsupported file format: {saved_file_path}. '
+                            'Please specify a json, yaml or pickle file.')
+                    if 'tracker_name' not in self.options_after_eval:
+                        logger.warning(
+                            'Not specify tracker name in the '
+                            'argument options_after_eval and use the default '
+                            "tracker name: 'anonymous_tracker'")
+                        tracker_name = 'anonymous_tracker'
+                    else:
+                        tracker_name = self.options_after_eval['tracker_name']
                     mkdir_or_exist(osp.dirname(saved_file_path))
                     ori_eval_res = {
                         tracker_name:
@@ -189,9 +211,11 @@ class SOTMetric(BaseVideoMetric):
                             norm_precision=ori_precision)
                     }
                     mmengine.dump(ori_eval_res, saved_file_path)
+                    logger.info(
+                        f"save evaluation results in '{saved_file_path}'")
 
-                if self.eval_options.get('eval_show_video_indices',
-                                         None) is not None:
+                if self.options_after_eval.get('eval_show_video_indices',
+                                               None) is not None:
                     success_per_video = np.mean(ori_success, axis=1)
                     precision_per_video = ori_norm_precision[:, 20]
                     norm_precision_per_video = ori_precision[:, 20]
@@ -203,9 +227,8 @@ class SOTMetric(BaseVideoMetric):
                         ],
                         sort_by_first_metric=True,
                         show_indices=self.
-                        eval_options['eval_show_video_indices'])
+                        options_after_eval['eval_show_video_indices'])
 
-                    logger: MMLogger = MMLogger.get_current_instance()
                     logger.info('\n' + tabulate(
                         eval_show_results,
                         headers=[

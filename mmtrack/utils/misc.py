@@ -132,20 +132,20 @@ def format_video_level_show(
         eval_results: List[np.ndarray],
         sort_by_first_metric: bool = True,
         show_indices: Optional[Tuple[int, List]] = None) -> List[List]:
-    """Format video_le.
+    """Format video-level performance show.
 
     Args:
-        video_names (List): _description_
-        eval_results (List[np.ndarray]): _description_
-        sort_by_first_metric (bool, optional): _description_. Defaults to True.
-        show_indices (Optional[Tuple[int, List]], optional): _description_.
-            Defaults to None.
-
-    Raises:
-        NotImplementedError: _description_
+        video_names (List): The names of the videos.
+        eval_results (List[np.ndarray]): The evaluation results.
+        sort_by_first_metric (bool, optional): Whether to sort the results by
+            the first metric. Defaults to True.
+        show_indices (Optional[Tuple[int, List]], optional): The video indices
+            to be shown. Defaults to None, i.e., all videos.
 
     Returns:
-        List[List]: _description_
+        List[List]: The formatted video-level evaluation results. For example:
+            [[`video-2`, 46.2, 48.2, 50.2],
+             [`video-1`, 48.2, 49.2, 51.9]]
     """
     all_video_names_str = np.array(video_names, dtype=str)
     eval_show_results = eval_results

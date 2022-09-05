@@ -80,16 +80,6 @@ def eval_sot_ope(results,
             list contains the visible information of each video. The ndarray is
             visibility (with bool type) of object in one video. It's in (N,)
             shape. Default to None.
-        eval_options (dict, optional): An example:
-            ```
-            eval_options = dict(
-                    save_file_cfg = dict(
-                        tracker_name ='sot_tracker',
-                        saved_file_path ='./sot_results.json'),
-                    show_indices = -10)
-            ```
-            Here, ``show_indices`` is used to index a numpy.ndarray. It can
-            be int or list.
 
     Returns:
         Dict[str, float]: OPE style evaluation metric (i.e. success,
