@@ -144,14 +144,15 @@ def format_video_level_show(
 
     Returns:
         List[List]: The formatted video-level evaluation results. For example:
-            [[`video-2`, 46.2, 48.2, 50.2],
-             [`video-1`, 48.2, 49.2, 51.9]]
+            [[`video-2`, 48.2, 49.2, 51.9],
+             [`video-1`, 46.2, 48.2, 50.2]]
     """
     all_video_names_str = np.array(video_names, dtype=str)
     eval_show_results = eval_results
 
     if sort_by_first_metric:
-        sorted_index = np.argsort(eval_results[0])
+        # sort from largest to smallest
+        sorted_index = np.argsort(-eval_results[0])
         all_video_names_str = all_video_names_str[sorted_index]
         sorted_eval_results = []
         for eval_res in eval_results:
