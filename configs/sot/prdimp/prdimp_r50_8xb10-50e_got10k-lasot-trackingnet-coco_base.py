@@ -137,13 +137,13 @@ train_pipeline = [
 data_root = 'openmmlab:s3://openmmlab/datasets/tracking/'
 # dataset settings
 train_dataloader = dict(
-    batch_size=10,
+    batch_size=16,
     num_workers=4,
     persistent_workers=True,
-    sampler=dict(type='QuotaSampler', samples_per_epoch=40000),
+    sampler=dict(type='QuotaSampler', samples_per_epoch=60000),
     dataset=dict(
         type='RandomSampleConcatDataset',
-        dataset_sampling_weights=[1, 0.25, 1, 1],
+        dataset_sampling_weights=[1, 1, 1, 1],
         datasets=[
             dict(
                 type='GOT10kDataset',

@@ -8,11 +8,10 @@ from mmcv.image import imrotate
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.structures import InstanceData
 from torch import Tensor
-from torchvision.transforms.functional import gaussian_blur
 
 from mmtrack.registry import MODELS
 from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
-                           SampleList)
+                           SampleList, gauss_blur)
 from .base import BaseSingleObjectTracker
 
 
@@ -185,8 +184,8 @@ class PrDiMP(BaseSingleObjectTracker):
 
         if 'blur' in augs:
             for sigma in augs['blur']:
-                kernel_size = [2 * s + 1 for s in sigma]
-                img_blur = gaussian_blur(
+                kernel_size = [math.ceil(2 * s) for s in sigma]
+                img_blur = gauss_blur(
                     img, kernel_size=kernel_size, sigma=sigma)
                 shift = get_rand_shift()
                 aug_imgs.append(
