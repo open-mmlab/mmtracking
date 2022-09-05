@@ -190,7 +190,7 @@ class SOTMetric(BaseVideoMetric):
                     'saved_eval_res_file', None)
                 if saved_file_path is not None:
                     if not saved_file_path.endswith(
-                        ('.json', '.yaml', '.pkl')):  # noqa: E125
+                        ('.json', '.yml', '.yaml', '.pkl')):  # noqa: E125
                         raise TypeError(
                             f'Unsupported file format: {saved_file_path}. '
                             'Please specify a json, yaml or pickle file.')
