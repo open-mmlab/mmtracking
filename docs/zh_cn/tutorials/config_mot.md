@@ -5,7 +5,8 @@
 ```python
 model = dict(
     type='Tracktor',  # 多目标跟踪器的名称
-    detector=dict(  # 检测器的详细配置说明请查看 https://github.com/open-mmlab/mmdetection/blob/master/docs_zh-CN/tutorials/config.md#mask-r-cnn-配置文件示例
+    detector=dict(
+        # 检测器的详细配置说明请查看 https://github.com/open-mmlab/mmdetection/blob/master/docs_zh-CN/tutorials/config.md#mask-r-cnn-配置文件示例
         type='FasterRCNN',
         backbone=dict(
             type='ResNet',
@@ -70,8 +71,9 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
-        ), # 检测器预训练权重，它也会在测试中使用
+            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'
+            # noqa: E501
+        ),  # 检测器预训练权重，它也会在测试中使用
         train_cfg=dict(
             rpn=dict(
                 assigner=dict(
@@ -128,10 +130,11 @@ model = dict(
     reid=dict(  # 重识别模型的配置
         type='BaseReID',  # 重识别模型的名称
         backbone=dict(  # 重识别模型的主干网络配置
-            type='ResNet', # 详细请查看 https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/backbones/resnet.py#L288 了解更多的主干网络
+            type='ResNet',
+            # 详细请查看 https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/backbones/resnet.py#L288 了解更多的主干网络
             depth=50,  # 主干网络的深度，对于 ResNet 以及 ResNext 网络，通常使用50或者101深度
             num_stages=4,  # 主干网络中阶段的数目
-            out_indices=(3, ),  # 每个阶段产生的输出特征图的索引
+            out_indices=(3,),  # 每个阶段产生的输出特征图的索引
             style='pytorch'),  # 主干网络的形式，'pytorch' 表示步长为2的网络层在3x3的卷积中，'caffe' 表示步长为2的网络层在1x1卷积中。
         neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),  # 重识别模型的颈部,通常是全局池化层。
         head=dict(  # 重识别模型的头部
@@ -146,11 +149,11 @@ model = dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/mot/reid/reid_r50_6e_mot17-4bf6b63d.pth'  # noqa: E501
-        )), # 重识别模型预训练权重，它也会在测试中使用
+        )),  # 重识别模型预训练权重，它也会在测试中使用
     motion=dict(  # 运动模型配置
         type='CameraMotionCompensation',  # 运动模型名称
         warp_mode='cv2.MOTION_EUCLIDEAN',  # 包装模式
-        num_iters=100, # 迭代次数
+        num_iters=100,  # 迭代次数
         stop_eps=1e-05),  # 停止迭代阈值
     tracker=dict(  # 跟踪器配置
         type='TracktorTracker',  # 跟踪器名称
@@ -252,7 +255,16 @@ data = dict(
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 checkpoint_config = dict(interval=1)
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook', by_epoch=False),
+        dict(type='WandbLoggerHook', by_epoch=False,
+             init_kwargs={'entity': "OpenMMLab",
+                          'project': "MMTracking",
+                          'config': cfg_dict}),
+    ])
 dist_params = dict(backend='nccl', port='29500')
 log_level = 'INFO'
 load_from = None
