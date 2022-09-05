@@ -134,7 +134,7 @@ train_pipeline = [
     dict(type='PackTrackInputs', ref_prefix='search', num_template_frames=3)
 ]
 
-data_root = 'openmmlab:s3://openmmlab/datasets/tracking/'
+data_root = 'data/'
 # dataset settings
 train_dataloader = dict(
     batch_size=16,

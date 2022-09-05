@@ -14,7 +14,7 @@ val_dataloader = dict(
     sampler=dict(type='VideoSampler'),
     dataset=dict(
         type='TrackingNetDataset',
-        data_root='openmmlab:s3://openmmlab/datasets/tracking/',
+        data_root='data/',
         ann_file='TrackingNet/annotations/trackingnet_test_infos.txt',
         data_prefix=dict(img_path='TrackingNet'),
         pipeline=test_pipeline,
