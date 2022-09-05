@@ -55,7 +55,7 @@ class SOTMetric(BaseVideoMetric):
             ```
             Here, ``eval_show_video_indices`` is used to index a numpy.ndarray.
             It can be int (positive or negative) or list.
-            ``saved_eval_res_file`` must be json/yaml/pickle file.
+            ``saved_eval_res_file`` must be a json/yaml/pickle file.
     """
     default_prefix: Optional[str] = 'sot'
     allowed_metrics = ['OPE', 'VOT']
@@ -206,13 +206,14 @@ class SOTMetric(BaseVideoMetric):
                     ori_eval_res = {
                         tracker_name:
                         dict(
-                            success=ori_success,
-                            norm_precision=ori_norm_precision,
-                            precision=ori_precision)
+                            success=np.mean(ori_success, axis=0),
+                            norm_precision=np.mean(ori_norm_precision, axis=0),
+                            precision=np.mean(ori_precision, axis=0))
                     }
                     mmengine.dump(ori_eval_res, saved_file_path)
                     logger.info(
-                        f"save evaluation results in '{saved_file_path}'")
+                        'save evaluation results with different thresholds in '
+                        f"'{saved_file_path}'")
 
                 if self.options_after_eval.get('eval_show_video_indices',
                                                None) is not None:
