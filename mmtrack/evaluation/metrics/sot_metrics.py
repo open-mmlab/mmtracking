@@ -207,8 +207,8 @@ class SOTMetric(BaseVideoMetric):
                         tracker_name:
                         dict(
                             success=ori_success,
-                            precision=ori_norm_precision,
-                            norm_precision=ori_precision)
+                            norm_precision=ori_norm_precision,
+                            precision=ori_precision)
                     }
                     mmengine.dump(ori_eval_res, saved_file_path)
                     logger.info(
@@ -217,13 +217,13 @@ class SOTMetric(BaseVideoMetric):
                 if self.options_after_eval.get('eval_show_video_indices',
                                                None) is not None:
                     success_per_video = np.mean(ori_success, axis=1)
-                    precision_per_video = ori_norm_precision[:, 20]
-                    norm_precision_per_video = ori_precision[:, 20]
+                    norm_precision_per_video = ori_norm_precision[:, 20]
+                    precision_per_video = ori_precision[:, 20]
 
                     eval_show_results = format_video_level_show(
                         all_video_names, [
-                            success_per_video, precision_per_video,
-                            norm_precision_per_video
+                            success_per_video, norm_precision_per_video,
+                            precision_per_video
                         ],
                         sort_by_first_metric=True,
                         show_indices=self.
