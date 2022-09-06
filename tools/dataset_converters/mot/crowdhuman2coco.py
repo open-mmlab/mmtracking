@@ -5,7 +5,7 @@ import os
 import os.path as osp
 from collections import defaultdict
 
-import mmcv
+import mmengine
 from PIL import Image
 from tqdm import tqdm
 
@@ -82,7 +82,7 @@ def convert_crowdhuman(ann_dir, save_dir, mode='train'):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(outputs, osp.join(save_dir, f'crowdhuman_{mode}.json'))
+    mmengine.dump(outputs, osp.join(save_dir, f'crowdhuman_{mode}.json'))
     print(f'-----CrowdHuman {mode} set------')
     print(f'total {records["img_id"] - 1} images')
     if mode != 'test':
