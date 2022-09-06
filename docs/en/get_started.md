@@ -9,11 +9,11 @@
 - [MMEngine](https://mmengine.readthedocs.io/en/latest/get_started/installation.html)
 - [MMDetection](https://mmdetection.readthedocs.io/en/latest/get_started.html#installation)
 
-The compatible MMTracking, MMCV, and MMDetection versions are as below. Please install the correct version to avoid installation issues.
+The compatible MMTracking, MMEngine, MMCV, and MMDetection versions are as below. Please install the correct version to avoid installation issues.
 
-| MMTracking version |       MMCV version        | MMDetection version |
-| :----------------: | :-----------------------: | :-----------------: |
-|       master       | mmcv-full>=2.0.0, \<3.0.0 | MMDetection>=3.0.0  |
+| MMTracking version | MMEngine version |      MMCV version      |   MMDetection version   |
+| :----------------: | :--------------: | :--------------------: | :---------------------: |
+|        1.x         | mmengine>=0.1.0  | mmcv>=2.0.0rc1,\<2.0.0 | mmdet>=3.0.0rc0,\<3.0.0 |
 
 ## Installation
 
@@ -47,17 +47,17 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
    pip install mmengine
    ```
 
-4. Install mmcv-full, we recommend you to install the pre-build package as below.
+4. Install mmcv, we recommend you to install the pre-build package as below.
 
    ```shell
-   pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
+   pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
    ```
 
-   mmcv-full is only compiled on PyTorch 1.x.0 because the compatibility usually holds between 1.x.0 and 1.x.1. If your PyTorch version is 1.x.1, you can install mmcv-full compiled with PyTorch 1.x.0 and it usually works well.
+   mmcv is only compiled on PyTorch 1.x.0 because the compatibility usually holds between 1.x.0 and 1.x.1. If your PyTorch version is 1.x.1, you can install mmcv compiled with PyTorch 1.x.0 and it usually works well.
 
    ```shell
    # We can ignore the micro version of PyTorch
-   pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+   pip install mmcv -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
    ```
 
    See [here](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) for different versions of MMCV compatible to different PyTorch and CUDA versions.
@@ -76,7 +76,7 @@ The compatible MMTracking, MMCV, and MMDetection versions are as below. Please i
 5. Install MMDetection
 
    ```shell
-   pip install mmdet
+   pip install 'mmdet>=3.0.0rc0'
    ```
 
    Optionally, you can also build MMDetection from source in case you want to modify the code:
@@ -149,10 +149,10 @@ conda install pytorch=1.11.0 torchvision cudatoolkit=11.3 -c pytorch
 pip install mmengine
 
 # install the latest mmcv
-pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
 
 # install mmdetection
-pip install mmdet
+pip install 'mmdet>=3.0.0rc0'
 
 # install mmtracking
 git clone https://github.com/open-mmlab/mmtracking.git
