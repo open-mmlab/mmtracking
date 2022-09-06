@@ -156,3 +156,18 @@ Optional arguments:
 
 - `SHOW_INTERVAL`: The interval of show (s).
 - `--not-show`: Whether do not show the images on the fly.
+
+## Show SOT evaluation results in video level
+
+The SOT evaluation results are sorted in video level from largest to smallest by the Success metric.
+You can selectively show the performance results of some good cases or bad cases by setting `eval_show_video_indices`.
+
+```python
+test_evaluator = dict(
+    type='SOTMetric',
+    options_after_eval = dict(eval_show_video_indices = 10))
+```
+
+Here, `eval_show_video_indices` is used to index a numpy.ndarray.
+It can be int (positive or negative) or list. The positive number `k` means all the top-k
+reuslts while the negative number means the bottom-k results.

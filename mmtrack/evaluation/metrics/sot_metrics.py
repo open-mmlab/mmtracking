@@ -7,10 +7,14 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import Dict, List, Optional, Sequence, Union
 
+import mmengine
 import numpy as np
 from mmengine.logging import MMLogger
+from mmengine.utils import mkdir_or_exist
+from tabulate import tabulate
 
 from mmtrack.registry import METRICS
+from mmtrack.utils import format_video_level_show
 from ..functional import (eval_sot_accuracy_robustness, eval_sot_eao,
                           eval_sot_ope)
 from .base_video_metrics import BaseVideoMetric
@@ -41,6 +45,17 @@ class SOTMetric(BaseVideoMetric):
             metric names to disambiguate homonymous metrics of different
             evaluators. If prefix is not provided in the argument,
             self.default_prefix will be used instead. Defaults to None.
+        options_after_eval (Optional[dict], optional): The options after
+            evaluation. The usage is the following:
+            ```
+                options_after_eval = dict(
+                    saved_eval_res_file = './results/sot_res.json',
+                    tracker_name = 'siamrpn++',
+                    eval_show_video_indices = 10)
+            ```
+            Here, ``eval_show_video_indices`` is used to index a numpy.ndarray.
+            It can be int (positive or negative) or list.
+            ``saved_eval_res_file`` must be a json/yaml/pickle file.
     """
     default_prefix: Optional[str] = 'sot'
     allowed_metrics = ['OPE', 'VOT']
@@ -54,7 +69,8 @@ class SOTMetric(BaseVideoMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
-                 prefix: Optional[str] = None) -> None:
+                 prefix: Optional[str] = None,
+                 options_after_eval: Optional[dict] = None) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
         self.metrics = metric if isinstance(metric, list) else [metric]
         assert not (
@@ -75,6 +91,7 @@ class SOTMetric(BaseVideoMetric):
                     f'but got {metric_option}.')
         self.outfile_prefix = outfile_prefix
         self.format_only = format_only
+        self.options_after_eval = options_after_eval
         self.preds_per_video, self.gts_per_video = [], []
         self.frame_ids, self.visible_per_video = [], []
 
@@ -163,7 +180,63 @@ class SOTMetric(BaseVideoMetric):
                                                all_visible)
                 else:
                     results_ope = eval_sot_ope(all_pred_bboxes, all_gt_bboxes)
+
+                ori_success = results_ope.pop('ori_success')
+                ori_norm_precision = results_ope.pop('ori_norm_precision')
+                ori_precision = results_ope.pop('ori_precision')
                 eval_results.update(results_ope)
+
+                saved_file_path = self.options_after_eval.get(
+                    'saved_eval_res_file', None)
+                if saved_file_path is not None:
+                    if not saved_file_path.endswith(
+                        ('.json', '.yml', '.yaml', '.pkl')):  # noqa: E125
+                        raise TypeError(
+                            f'Unsupported file format: {saved_file_path}. '
+                            'Please specify a json, yaml or pickle file.')
+                    if 'tracker_name' not in self.options_after_eval:
+                        logger.warning(
+                            'Not specify tracker name in the '
+                            'argument options_after_eval and use the default '
+                            "tracker name: 'anonymous_tracker'")
+                        tracker_name = 'anonymous_tracker'
+                    else:
+                        tracker_name = self.options_after_eval['tracker_name']
+                    mkdir_or_exist(osp.dirname(saved_file_path))
+                    ori_eval_res = {
+                        tracker_name:
+                        dict(
+                            success=np.mean(ori_success, axis=0),
+                            norm_precision=np.mean(ori_norm_precision, axis=0),
+                            precision=np.mean(ori_precision, axis=0))
+                    }
+                    mmengine.dump(ori_eval_res, saved_file_path)
+                    logger.info(
+                        'save evaluation results with different thresholds in '
+                        f"'{saved_file_path}'")
+
+                if self.options_after_eval.get('eval_show_video_indices',
+                                               None) is not None:
+                    success_per_video = np.mean(ori_success, axis=1)
+                    norm_precision_per_video = ori_norm_precision[:, 20]
+                    precision_per_video = ori_precision[:, 20]
+
+                    eval_show_results = format_video_level_show(
+                        all_video_names, [
+                            success_per_video, norm_precision_per_video,
+                            precision_per_video
+                        ],
+                        sort_by_first_metric=True,
+                        show_indices=self.
+                        options_after_eval['eval_show_video_indices'])
+
+                    logger.info('\n' + tabulate(
+                        eval_show_results,
+                        headers=[
+                            'video_name', 'success', 'norm_precision',
+                            'precision'
+                        ]))
+
             elif metric == 'VOT':
                 if 'interval' in self.metric_options:
                     interval = self.metric_options['interval']
