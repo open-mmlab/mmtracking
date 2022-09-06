@@ -35,6 +35,7 @@ import os.path as osp
 import random
 
 import mmcv
+import mmengine
 import numpy as np
 from tqdm import tqdm
 
@@ -87,7 +88,7 @@ def main():
     for video_name in tqdm(video_names):
         # load video infos
         video_folder = osp.join(in_folder, video_name)
-        infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
+        infos = mmengine.list_from_file(f'{video_folder}/seqinfo.ini')
         # video-level infos
         assert video_name == infos[1].strip().split('=')[1]
         raw_img_folder = infos[2].strip().split('=')[1]
@@ -99,7 +100,7 @@ def main():
         reid_train_folder = osp.join(args.output, 'imgs')
         if not osp.exists(reid_train_folder):
             os.makedirs(reid_train_folder)
-        gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
+        gts = mmengine.list_from_file(f'{video_folder}/gt/gt.txt')
         last_frame_id = -1
         for gt in gts:
             gt = gt.strip().split(',')

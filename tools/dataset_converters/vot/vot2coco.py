@@ -6,6 +6,7 @@ from collections import defaultdict
 
 import cv2
 import mmcv
+import mmengine
 import numpy as np
 from tqdm import tqdm
 
@@ -47,7 +48,7 @@ def parse_attribute(video_path, attr_name, img_num):
     """
     attr_path = osp.join(video_path, attr_name + '.tag')
     if osp.isfile(attr_path):
-        attr_list = mmcv.list_from_file(attr_path)
+        attr_list = mmengine.list_from_file(attr_path)
     else:
         attr_list = []
     # unspecified tag is '0'(default)
@@ -77,7 +78,7 @@ def convert_vot(ann_dir, save_dir, dataset_type):
 
         video_path = osp.join(ann_dir, 'data', video_name)
         ann_file = osp.join(video_path, 'groundtruth.txt')
-        gt_anns = mmcv.list_from_file(ann_file)
+        gt_anns = mmengine.list_from_file(ann_file)
 
         camera_motion = parse_attribute(video_path, 'camera_motion',
                                         len(gt_anns))
@@ -141,7 +142,7 @@ def convert_vot(ann_dir, save_dir, dataset_type):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(vot, osp.join(save_dir, f'{dataset_type}.json'))
+    mmengine.dump(vot, osp.join(save_dir, f'{dataset_type}.json'))
     print(f'-----VOT Challenge {dataset_type} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')

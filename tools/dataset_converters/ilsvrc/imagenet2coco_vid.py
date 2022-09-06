@@ -5,7 +5,7 @@ import os.path as osp
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-import mmcv
+import mmengine
 from tqdm import tqdm
 
 CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
@@ -47,7 +47,7 @@ def parse_args():
 def parse_train_list(ann_dir):
     """Parse the txt file of ImageNet VID train dataset."""
     img_list = osp.join(ann_dir, 'Lists/VID_train_15frames.txt')
-    img_list = mmcv.list_from_file(img_list)
+    img_list = mmengine.list_from_file(img_list)
     train_infos = defaultdict(list)
     for info in img_list:
         info = info.split(' ')
@@ -62,7 +62,7 @@ def parse_train_list(ann_dir):
 def parse_val_list(ann_dir):
     """Parse the txt file of ImageNet VID val dataset."""
     img_list = osp.join(ann_dir, 'Lists/VID_val_videos.txt')
-    img_list = mmcv.list_from_file(img_list)
+    img_list = mmengine.list_from_file(img_list)
     val_infos = defaultdict(list)
     for info in img_list:
         info = info.split(' ')
@@ -173,7 +173,7 @@ def convert_vid(VID, ann_dir, save_dir, mode='train'):
         records['vid_id'] += 1
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(VID, osp.join(save_dir, f'imagenet_vid_{mode}.json'))
+    mmengine.dump(VID, osp.join(save_dir, f'imagenet_vid_{mode}.json'))
     print(f'-----ImageNet VID {mode}------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["img_id"]- 1} images')

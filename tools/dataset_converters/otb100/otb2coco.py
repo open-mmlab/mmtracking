@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 
 import mmcv
+import mmengine
 from tqdm import tqdm
 
 
@@ -71,7 +72,7 @@ def convert_otb100(otb, ann_dir, save_dir):
             video = dict(id=records['vid_id'], name=video_name)
             otb['videos'].append(video)
 
-            gt_bboxes = mmcv.list_from_file(gt_file)
+            gt_bboxes = mmengine.list_from_file(gt_file)
             if video_name == 'Tiger1':
                 gt_bboxes = gt_bboxes[start_frame_id - 1:]
             for frame_id, gt_bbox in enumerate(gt_bboxes):
@@ -107,7 +108,7 @@ def convert_otb100(otb, ann_dir, save_dir):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(otb, osp.join(save_dir, 'otb100.json'))
+    mmengine.dump(otb, osp.join(save_dir, 'otb100.json'))
     print('-----OTB100 Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')
