@@ -13,51 +13,38 @@ Collections:
     README: configs/vis/mask2former/README.md
 
 Models:
-  - Name: mask2former_r50_8xb2-8e_youtubevis2019
-    In Collection: Mask2Former
-    Config: configs/vis/mask2former/mask2former_r50_8xb2-8e_youtubevis2019.py
-    Metadata:
-      Training Data: YouTube-VIS 2019
-      Training Memory (GB):
-    Results:
-      - Task: Video Instance Segmentation
-        Dataset: YouTube-VIS 2019
-        Metrics:
-          AP:
-    Weights:
-
-  - Name: mask2former_r101_8xb2-8e_youtubevis2019
-    In Collection: MaskTrack R-CNN
-    Config: configs/vis/mask2former/mask2former_r101_8xb2-8e_youtubevis2019.py
-    Metadata:
-      Training Data: YouTube-VIS 2019
-      Training Memory (GB):
-    Results:
-      - Task: Video Instance Segmentation
-        Dataset: YouTube-VIS 2019
-        Metrics:
-          AP:
-    Weights:
-
   - Name: mask2former_r50_8xb2-8e_youtubevis2021
-    In Collection: MaskTrack R-CNN
+    In Collection: Mask2Former
     Config: configs/vis/mask2former/mask2former_r50_8xb2-8e_youtubevis2021.py
     Metadata:
       Training Data: YouTube-VIS 2021
-      Training Memory (GB):
+      Training Memory (GB): 6.0
     Results:
       - Task: Video Instance Segmentation
         Dataset: YouTube-VIS 2021
         Metrics:
-          AP:
+          AP: 41.2
     Weights:
 
   - Name: mask2former_r101_8xb2-8e_youtubevis2021
-    In Collection: MaskTrack R-CNN
+    In Collection: Mask2Former
     Config: configs/vis/mask2former/mask2former_r101_8xb2-8e_youtubevis2021.py
     Metadata:
       Training Data: YouTube-VIS 2021
-      Training Memory (GB):
+      Training Memory (GB): 7.5
+    Results:
+      - Task: Video Instance Segmentation
+        Dataset: YouTube-VIS 2021
+        Metrics:
+          AP: 42.3
+    Weights:
+
+  - Name: mask2former_swin-l-p4-w12-384-in21k_8xb2-8e_youtubevis2021.py
+    In Collection: Mask2Former
+    Config: configs/vis/mask2former/mask2former_swin-l-p4-w12-384-in21k_8xb2-8e_youtubevis2021.py
+    Metadata:
+      Training Data: YouTube-VIS 2021
+      Training Memory (GB): 16.1
     Results:
       - Task: Video Instance Segmentation
         Dataset: YouTube-VIS 2021
