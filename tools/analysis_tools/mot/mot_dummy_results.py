@@ -3,7 +3,7 @@ import argparse
 import os
 import os.path as osp
 
-import mmcv
+import mmengine
 
 
 def parse_args():
@@ -17,7 +17,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    anns = mmcv.load(args.json_file)
+    anns = mmengine.load(args.json_file)
 
     if not osp.exists(args.out_folder):
         os.makedirs(args.out_folder)

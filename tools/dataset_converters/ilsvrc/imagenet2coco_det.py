@@ -6,7 +6,7 @@ import os.path as osp
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-import mmcv
+import mmengine
 from tqdm import tqdm
 
 CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
@@ -137,7 +137,7 @@ def convert_det(DET, ann_dir, save_dir):
     obj_num_classes = dict()
 
     vid_train_img_list = osp.join(ann_dir, 'Lists/DET_train_30classes.txt')
-    vid_train_img_list = mmcv.list_from_file(vid_train_img_list)
+    vid_train_img_list = mmengine.list_from_file(vid_train_img_list)
     vid_train_img_names = []
     for vid_train_img_info in vid_train_img_list:
         vid_train_img_names.append(f"{vid_train_img_info.split(' ')[0]}.JPEG")
@@ -170,7 +170,7 @@ def convert_det(DET, ann_dir, save_dir):
                                                       obj_num_classes)
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(DET, osp.join(save_dir, 'imagenet_det_30plus1cls.json'))
+    mmengine.dump(DET, osp.join(save_dir, 'imagenet_det_30plus1cls.json'))
     print('-----ImageNet DET------')
     print(f'total {records["img_id"] - 1} images')
     print(f'{records["num_no_objects"]} images have no objects')
