@@ -159,7 +159,7 @@ Optional arguments:
 
 ## Show SOT evaluation results in video level
 
-The SOT evaluation results are sorted in video level from largest to smallest by the first metric.
+The SOT evaluation results are sorted in video level from largest to smallest by the Success metric.
 You can selectively show the performance results of some good cases or bad cases by setting `eval_show_video_indices`.
 
 ```python
