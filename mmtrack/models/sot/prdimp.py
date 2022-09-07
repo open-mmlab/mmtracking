@@ -8,11 +8,10 @@ from mmcv.image import imrotate
 from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.structures import InstanceData
 from torch import Tensor
-from torchvision.transforms.functional import gaussian_blur
 
 from mmtrack.registry import MODELS
 from mmtrack.utils import (InstanceList, OptConfigType, OptMultiConfig,
-                           SampleList)
+                           SampleList, gauss_blur)
 from .base import BaseSingleObjectTracker
 
 
@@ -185,8 +184,8 @@ class PrDiMP(BaseSingleObjectTracker):
 
         if 'blur' in augs:
             for sigma in augs['blur']:
-                kernel_size = [2 * s + 1 for s in sigma]
-                img_blur = gaussian_blur(
+                kernel_size = [math.ceil(2 * s) for s in sigma]
+                img_blur = gauss_blur(
                     img, kernel_size=kernel_size, sigma=sigma)
                 shift = get_rand_shift()
                 aug_imgs.append(
@@ -199,8 +198,8 @@ class PrDiMP(BaseSingleObjectTracker):
             for angle in augs['rotate']:
                 img_numpy = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
                 assert img_numpy.ndim == 3
-                # TODO: wait for MMCV to support 'replicate' border_mode.
-                rotated_img = imrotate(img_numpy, angle)
+                rotated_img = imrotate(
+                    img_numpy, angle, border_mode='replicate')
                 img_tensor = torch.from_numpy(rotated_img.transpose(
                     2, 0, 1)).float().unsqueeze(0).to(img.device)
                 shift = get_rand_shift()
@@ -390,5 +389,49 @@ class PrDiMP(BaseSingleObjectTracker):
 
         return img_patch, patch_coord
 
-    def loss(self, imgs, img_metas, search_img, search_img_metas, **kwargs):
-        pass
+    def loss(self, batch_inputs: dict, batch_data_samples: SampleList,
+             **kwargs) -> dict:
+        """
+        Args:
+            batch_inputs (Dict[str, Tensor]): of shape (N, T, C, H, W) encoding
+                input images. Typically these should be mean centered and std
+                scaled. The N denotes batch size. The T denotes the number of
+                key/reference frames.
+                - img (Tensor) : The key images.
+                - ref_img (Tensor): The reference images.
+
+            batch_data_samples (list[:obj:`TrackDataSample`]): The batch
+                data samples. It usually includes information such
+                as ``gt_instance``.
+
+        Return:
+            dict: A dictionary of loss components.
+        """
+        search_img = batch_inputs['search_img']
+        assert search_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        # has [T * N, C, H, W] shape and the first N images cover the entire
+        # mini-batch.
+        search_img = search_img.transpose(1, 0).contiguous().view(
+            -1, *search_img.shape[2:])
+
+        template_img = batch_inputs['img']
+        assert template_img.dim(
+        ) == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
+        # has [T * N, C, H, W] shape and the first N images cover the entire
+        # mini-batch.
+        template_img = template_img.transpose(1, 0).contiguous().view(
+            -1, *template_img.shape[2:])
+
+        z_feat = self.backbone(template_img)
+        x_feat = self.backbone(search_img)
+
+        losses = dict()
+        loss_cls = self.classifier.loss(z_feat, x_feat, batch_data_samples,
+                                        **kwargs)
+
+        loss_bbox = self.bbox_regressor.loss(z_feat, x_feat,
+                                             batch_data_samples, **kwargs)
+        losses.update(loss_cls)
+        losses.update(loss_bbox)
+        return losses

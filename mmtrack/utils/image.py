@@ -1,10 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Union
+from typing import Sequence, Union
 
 import cv2
 import mmcv
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import Tensor
 
 
@@ -76,3 +77,40 @@ def _imrenormalize(img: Union[Tensor, np.ndarray], img_norm_cfg: dict,
     img = mmcv.imdenormalize(img, **img_norm_cfg)
     img = mmcv.imnormalize(img, **new_img_norm_cfg)
     return img
+
+
+def gauss_blur(image: Tensor, kernel_size: Sequence,
+               sigma: Sequence) -> Tensor:
+    """The gauss blur transform.
+
+    Args:
+        image (Tensor): of shape (n, c, h, w)
+        kernel_size (Tensor): The argument kernel size for gauss blur.
+        sigma (Sequence): The argument sigma for gauss blur.
+
+    Returns:
+        Tensor: The blurred image.
+    """
+    assert len(kernel_size) == len(sigma) == 2
+    x_coord = [
+        torch.arange(-size, size + 1, dtype=torch.float32)
+        for size in kernel_size
+    ]
+    filter = [
+        torch.exp(-(x**2) / (2 * s**2)).to(image.device)
+        for x, s in zip(x_coord, sigma)
+    ]
+    filter[0] = filter[0].view(1, 1, -1, 1) / filter[0].sum()
+    filter[1] = filter[1].view(1, 1, 1, -1) / filter[1].sum()
+
+    size = image.shape[2:]
+    img_1 = F.conv2d(
+        image.view(-1, 1, size[0], size[1]),
+        filter[0],
+        padding=(kernel_size[0], 0))
+
+    img_2 = F.conv2d(
+        img_1, filter[1],
+        padding=(0, kernel_size[1])).view(1, -1, size[0], size[1])
+
+    return img_2

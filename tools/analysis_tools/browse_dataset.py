@@ -103,12 +103,13 @@ def main():
                     wait_time=args.show_interval,
                     out_file=out_file)
                 # Record file path mapping.
-                with open(
-                        osp.join(args.output_dir,
-                                 str(idx).zfill(6), 'info.txt'), 'a') as f:
-                    f.write(f'The source filepath of'
-                            f' `{img_key_prefix}img_{img_idx}.jpg`'
-                            f' is `{img_path}`.\n')
+                if args.output_dir is not None:
+                    with open(
+                            osp.join(args.output_dir,
+                                     str(idx).zfill(6), 'info.txt'), 'a') as f:
+                        f.write(f'The source filepath of'
+                                f' `{img_key_prefix}img_{img_idx}.jpg`'
+                                f' is `{img_path}`.\n')
 
         progress_bar.update()
 

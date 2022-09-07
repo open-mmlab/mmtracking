@@ -1,11 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
 from addict import Dict
-from mmdet.structures.bbox import bbox_cxcywh_to_xyxy
+from mmdet.structures.bbox import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from mmengine.model import BaseModule
 from torch import Tensor, nn
 
@@ -50,7 +50,7 @@ class PrDiMPClsHead(BaseModule):
                  test_cfg: OptConfigType = None,
                  **kwargs):
         super().__init__()
-        filter_size = filter_initializer.filter_size
+        filter_size = filter_initializer['filter_size']
         self.filter_initializer = MODELS.build(filter_initializer)
         self.filter_optimizer = MODELS.build(filter_optimizer)
         self.feat_norm_scale = math.sqrt(1.0 /
@@ -62,10 +62,17 @@ class PrDiMPClsHead(BaseModule):
         self.update_cfg = update_cfg
         self.optimizer_cfg = optimizer_cfg
         self.test_cfg = test_cfg
+        self.train_cfg = train_cfg
+
+        self.loss_cls = MODELS.build(loss_cls)
 
         if isinstance(filter_size, (int, float)):
             filter_size = [filter_size, filter_size]
         self.filter_size = torch.tensor(filter_size, dtype=torch.float32)
+        self.feat_size = torch.tensor(
+            train_cfg['feat_size'], dtype=torch.float32)
+        self.img_size = torch.tensor(
+            train_cfg['img_size'], dtype=torch.float32)
 
     def init_weights(self):
         """Initialize the parameters of this module."""
@@ -91,10 +98,10 @@ class PrDiMPClsHead(BaseModule):
         """
         cls_feats = self.channel_mapping(backbone_feats)
         scale_factor = (torch.tensor(cls_feats.shape[1:]).prod() / (torch.sum(
-            (cls_feats**2).view(cls_feats.shape[0], 1, 1, -1),
+            (cls_feats**2).reshape(cls_feats.shape[0], 1, 1, -1),
             dim=3,
             keepdim=True) + 1e-5)).sqrt()
-        cls_feats *= self.feat_norm_scale * scale_factor
+        cls_feats = cls_feats * self.feat_norm_scale * scale_factor
 
         return cls_feats
 
@@ -436,3 +443,240 @@ class PrDiMPClsHead(BaseModule):
 
         # 4. Normal target
         return target_disp + sample_center, 'normal'
+
+    def _gauss_1d(self,
+                  size: Tensor,
+                  sigma: float,
+                  center: Tensor,
+                  end_pad: int = 0,
+                  return_density: bool = True):
+        """Generate gauss labels.
+
+        Args:
+            size (Tensor): The size of score map with (2, ) shape.
+            sigma (float): Standard deviations.
+            center (Tensor): of (N, ) shape.
+            end_pad (int, optional): The padding size.. Defaults to 0.
+            return_density (bool, optional): Whether to return density.
+                Defaults to True.
+
+        Returns:
+            Tensor: Gauss labels with (N, score_map_size) shape.
+        """
+        k = torch.arange(-(size - 1) / 2, (size + 1) / 2 + end_pad).reshape(
+            1, -1).to(center.device)
+        gauss = torch.exp(-1.0 / (2 * sigma**2) *
+                          (k - center.reshape(-1, 1))**2)
+        if not return_density:
+            return gauss
+        else:
+            return gauss / (math.sqrt(2 * math.pi) * sigma)
+
+    def _gauss_2d(self,
+                  size: Tensor,
+                  sigma: float,
+                  center: Tensor,
+                  end_pad: Union[Tensor, List, Tuple] = (0, 0),
+                  return_density: bool = True):
+        """Generate gauss labels.
+
+        Args:
+            size (Tensor): The size of score map with (2, ) shape.
+            sigma (Tensor): Standard deviations.
+            center (Tensor): The center of bbox with (N, 2) shape.
+            end_pad (Union[Tensor, List, Tuple], optional): The padding size.
+                Defaults to (0, 0).
+            return_density (bool, optional): Whether to return density.
+                Defaults to True.
+
+        Returns:
+            Tensor: Gauss labels with (N, score_map_size, score_map_size)
+                shape.
+        """
+        if isinstance(sigma, (float, int)):
+            sigma = (sigma, sigma)
+
+        gauss_1d_out1 = self._gauss_1d(
+            size[0].item(),
+            sigma[0],
+            center[:, 0],
+            end_pad[0],
+            return_density=return_density)
+        gauss_1d_out1 = gauss_1d_out1.reshape(center.shape[0], 1, -1)
+
+        gauss_1d_out2 = self._gauss_1d(
+            size[1].item(),
+            sigma[1],
+            center[:, 1],
+            end_pad[1],
+            return_density=return_density)
+        gauss_1d_out2 = gauss_1d_out2.reshape(center.shape[0], -1, 1)
+
+        return gauss_1d_out1 * gauss_1d_out2
+
+    def get_targets(self, target_center: Tensor) -> Tensor:
+        """Generate the training targets for search images.
+
+        Args:
+            target_center (Tensor): The center of target bboxes with (N, 2)
+                shape, in [x, y] format.
+
+        Returns:
+            Tensor: The distribution of gauss labels with
+                (N, score_map_size, score_map_size) shape.
+        """
+        # TODO simplify the different devices
+        img_size = self.img_size.to(target_center.device)
+        filter_size = self.filter_size.to(target_center.device)
+        feat_size = self.feat_size.to(target_center.device)
+
+        # set the center of image as coordinate origin
+        target_center_norm = (target_center - img_size / 2.) / img_size
+
+        center = feat_size * target_center_norm + 0.5 * torch.fmod(
+            filter_size + 1, 2)
+
+        sigma = self.train_cfg['sigma_factor'] * feat_size.prod().sqrt().item()
+
+        if self.train_cfg['end_pad_if_even']:
+            end_pad = (torch.fmod(filter_size, 2) == 0).to(filter_size)
+        else:
+            end_pad = torch.zeros(2).to(filter_size)
+
+        # generate gauss labels and density
+        # Both of them are of shape (N, feat_size, feat_size)
+        gauss_label_density = self._gauss_2d(
+            feat_size, sigma, center, end_pad,
+            self.train_cfg['use_gauss_density'])
+        # continue to process label density
+        feat_area = (feat_size + end_pad).prod()
+        gauss_label_density = (1.0 - self.train_cfg['gauss_label_bias']
+                               ) * gauss_label_density + self.train_cfg[
+                                   'gauss_label_bias'] / feat_area
+
+        mask = (gauss_label_density > self.train_cfg['label_density_threshold']
+                ).to(gauss_label_density)
+        gauss_label_density *= mask
+
+        if self.train_cfg['label_density_norm']:
+            g_sum = gauss_label_density.sum(dim=(-2, -1))
+            valid = g_sum > 0.01
+            gauss_label_density[valid, :, :] /= g_sum[valid].reshape(-1, 1, 1)
+            gauss_label_density[~valid, :, :] = 1.0 / (
+                gauss_label_density.shape[-2] * gauss_label_density.shape[-1])
+        gauss_label_density *= 1.0 - self.train_cfg['label_density_shrink']
+
+        return gauss_label_density
+
+    def loss(self, template_feats: Tuple[Tensor], search_feats: Tuple[Tensor],
+             batch_data_samples: SampleList, **kwargs) -> dict:
+        """Perform forward propagation and loss calculation of the tracking
+        head on the features of the upstream network.
+
+        Args:
+            template_feats (tuple[Tensor, ...]): Tuple of Tensor with
+                shape (N, C, H, W) denoting the multi level feature maps of
+                exemplar images.
+            search_feats (tuple[Tensor, ...]): Tuple of Tensor with shape
+                (N, C, H, W) denoting the multi level feature maps of
+                search images.
+            batch_data_samples (List[:obj:`TrackDataSample`]): The Data
+                Samples. It usually includes information such as `gt_instance`.
+
+        Returns:
+            dict: A dictionary of loss components.
+        """
+        batch_gt_bboxes = []
+        batch_img_metas = []
+        batch_search_gt_bboxes = []
+
+        for data_sample in batch_data_samples:
+            batch_img_metas.append(data_sample.metainfo)
+            batch_gt_bboxes.append(data_sample.gt_instances['bboxes'])
+            batch_search_gt_bboxes.append(
+                data_sample.search_gt_instances['bboxes'])
+
+        num_imgs_per_seq = batch_data_samples[0].gt_instances['bboxes'].shape[
+            0]
+        num_search_imgs_per_seq = batch_data_samples[0].search_gt_instances[
+            'bboxes'].shape[0]
+
+        # Extract features
+        template_feats = self.get_cls_feats(template_feats[-1])
+        template_feats = template_feats.reshape(num_imgs_per_seq, -1,
+                                                *template_feats.shape[-3:])
+        search_feats = self.get_cls_feats(search_feats[-1])
+        search_feats = search_feats.reshape(num_search_imgs_per_seq, -1,
+                                            *search_feats.shape[-3:])
+
+        return self.loss_by_feat(template_feats, search_feats, batch_gt_bboxes,
+                                 batch_search_gt_bboxes)
+
+    def loss_by_feat(self, template_feats: Tensor, search_feats: Tensor,
+                     batch_gt_bboxes: Tensor,
+                     batch_search_gt_bboxes: Tensor) -> dict:
+        """Compute loss.
+
+        Args:
+            modulations (Tuple[Tensor]): The modulation features.
+            iou_feats (Tuple[Tensor]): The features for iou prediction.
+            batch_gt_bboxes (Tensor): The gt_bboxes in a batch.
+            batch_search_gt_bboxes (Tensor): The search gt_bboxes in a batch.
+
+        Returns:
+            dict: a dictionary of loss components.
+        """
+        # Train filter
+        batch_gt_bboxes = torch.stack(batch_gt_bboxes, dim=1)
+        # filter_iter is a list, and each of them is of shape
+        # (bs, C, self.filter_size, self.filter_size)
+        init_filter = self.filter_initializer(template_feats,
+                                              batch_gt_bboxes.view(-1, 4))
+        bboxes_cxcywh = bbox_xyxy_to_cxcywh(batch_gt_bboxes)
+        _, filters_all_iters, _ = self.filter_optimizer(
+            init_filter, feat=template_feats, bboxes=bboxes_cxcywh)
+
+        # Classify samples using all filters
+        # each item in ``target_scores`` is of shape
+        # (num_search_imgs_per_seq, bs, score_map_size, score_map_size)
+        target_scores = [
+            filter_layer.apply_filter(search_feats, filter_weight)
+            for filter_weight in filters_all_iters
+        ]
+
+        batch_search_gt_bboxes = torch.stack(batch_search_gt_bboxes, dim=1)
+        search_gt_bboxes = batch_search_gt_bboxes.view(-1, 4)
+        target_center = (search_gt_bboxes[:, :2] +
+                         search_gt_bboxes[:, 2:4]) / 2.
+        prob_labels_density = self.get_targets(target_center)
+        # of shape (num_search_imgs_per_seq, bs, score_map_size, score_map_size) # noqa: E501
+        prob_labels_density = prob_labels_density.view(
+            batch_search_gt_bboxes.shape[0], -1,
+            *prob_labels_density.shape[-2:])
+
+        # compute loss
+        loss_cls_list = [
+            self.loss_cls(score, prob_labels_density, grid_dim=(-2, -1))
+            for score in target_scores
+        ]
+        loss_cls_final = self.train_cfg['loss_weights'][
+            'cls_final'] * loss_cls_list[-1]
+        loss_cls_init = self.train_cfg['loss_weights'][
+            'cls_init'] * loss_cls_list[0]
+
+        if isinstance(self.train_cfg['loss_weights']['cls_iter'], list):
+            loss_cls_iters = sum([
+                weight * loss for weight, loss in zip(
+                    self.train_cfg['loss_weights']['cls_iter'],
+                    loss_cls_list[1:-1])
+            ])
+        else:
+            loss_cls_iters = (self.train_cfg['loss_weights']['cls_iter'] /
+                              (len(loss_cls_list) - 2)) * sum(
+                                  loss_cls_list[1:-1])
+        losses = dict(
+            loss_cls_init=loss_cls_init,
+            loss_cls_iter=loss_cls_iters,
+            loss_cls_final=loss_cls_final)
+
+        return losses
