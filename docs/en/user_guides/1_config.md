@@ -33,7 +33,7 @@ A complete config usually contains the following primary fields:
 When submitting jobs using `tools/train.py` or `tools/test.py`,
 you may specify `--cfg-options` to in-place modify the config.
 We present several examples as follows.
-For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/config/config.py#L919).
+For more details, please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/config.md).
 
 - **Update config keys of dict chains.**
 
@@ -72,7 +72,7 @@ then modify the necessary fields in the config files.
 If you are building an entirely new method that does not share the structure with any of the existing methods,
 you may create a folder `method_name` under `configs`.
 
-Please refer to [mmengine](https://mmengine.readthedocs.io/en/latest/understand_mmengine/config.html) for detailed documentation.
+Please refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/config.md) for detailed documentation.
 
 ## Config Name Style
 
@@ -93,7 +93,7 @@ We follow the below style to name config files. Contributors are advised to foll
 **Ignore some fields in the base configs**
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
-You may refer to [mmengine](https://mmengine.readthedocs.io/en/latest/understand_mmengine/config.html) for simple illustration.
+You may refer to [MMEngine](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/config.md) for simple illustration.
 
 **Use intermediate variables in configs**
 
