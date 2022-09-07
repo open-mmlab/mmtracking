@@ -38,8 +38,9 @@ def main():
     if osp.isdir(args.sot_eval_res):
         all_eval_results = dict()
         for res_file in os.listdir(args.sot_eval_res):
-            eval_res = mmengine.load(osp.join(args.sot_eval_res, res_file))
-            all_eval_results.update(eval_res)
+            if res_file.endswith(('.json', '.yml', '.yaml', '.pkl')):
+                eval_res = mmengine.load(osp.join(args.sot_eval_res, res_file))
+                all_eval_results.update(eval_res)
     else:
         assert osp.isfile(
             args.sot_eval_res), f'The file {args.sot_eval_res} does not exist'
