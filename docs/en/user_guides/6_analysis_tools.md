@@ -171,3 +171,30 @@ test_evaluator = dict(
 Here, `eval_show_video_indices` is used to index a numpy.ndarray.
 It can be int (positive or negative) or list. The positive number `k` means all the top-k
 reuslts while the negative number means the bottom-k results.
+
+## Save SOT evaluation results and plot them
+
+Saving the sot evaluation result by setting the `SOTMetric` in the config.
+
+```python
+test_evaluator = dict(
+    type='SOTMetric',
+    options_after_eval = dict(tracker_name = 'SiamRPN++', saved_eval_res_file = './results/sot_results.json'))
+```
+
+The saved result is a dict in the format:
+
+```python
+dict{tracker_name=dict(
+      success = np.ndarray,
+      norm_precision = np.ndarray,
+      precision = np.ndarray)}
+```
+
+The metrics have shape (M, ), where M is the number of values corresponding to different thresholds.
+
+Given the saved results, you can plot them using the following command:
+
+```shell
+python ./tools/analysis_tools/sot/sot_plot_curve.py ./results/json_res --plot_save_path ./results
+```
