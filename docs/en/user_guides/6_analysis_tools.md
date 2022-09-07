@@ -168,6 +168,6 @@ test_evaluator=dict(
     options_after_eval=dict(eval_show_video_indices=10))
 ```
 
-Here, `eval_show_video_indices` is used to index a numpy.ndarray.
-It can be int (positive or negative) or list. The positive number `k` means all the top-k
+Here, `eval_show_video_indices` is used to index a `numpy.ndarray`.
+It can be `int` (positive or negative) or `list`. The positive number `k` means all the top-k
 reuslts while the negative number means the bottom-k results.
