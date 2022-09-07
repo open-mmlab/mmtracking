@@ -403,7 +403,7 @@ class PackReIDInputs(BaseTransform):
             ``metainfo`` of the packed ``data_sample``.
     """
     default_meta_keys = ('img_path', 'ori_shape', 'img_shape', 'scale',
-                         'scale_factor', 'flip', 'flip_direction')
+                         'scale_factor')
 
     def __init__(self, meta_keys: Sequence[str] = ()) -> None:
         self.meta_keys = self.default_meta_keys
