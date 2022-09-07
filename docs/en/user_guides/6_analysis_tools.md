@@ -163,7 +163,7 @@ The SOT evaluation results are sorted in video level from largest to smallest by
 You can selectively show the performance results of some good cases or bad cases by setting `eval_show_video_indices`.
 
 ```python
-test_evaluator = dict(
+test_evaluator=dict(
     type='SOTMetric',
     options_after_eval=dict(eval_show_video_indices=10))
 ```
