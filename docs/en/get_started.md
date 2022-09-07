@@ -57,21 +57,21 @@ The compatible MMTracking, MMEngine, MMCV, and MMDetection versions are as below
 
    ```shell
    # We can ignore the micro version of PyTorch
-   pip install mmcv -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+   pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
    ```
 
    See [here](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) for different versions of MMCV compatible to different PyTorch and CUDA versions.
    Optionally you can choose to compile mmcv from source by the following command
 
    ```shell
-   git clone -b dev-2.x https://github.com/open-mmlab/mmcv.git
+   git clone -b 2.x https://github.com/open-mmlab/mmcv.git
    cd mmcv
-   MMCV_WITH_OPS=1 pip install -e .  # package mmcv-full, which contains cuda ops, will be installed after this step
+   MMCV_WITH_OPS=1 pip install -e .  # package mmcv, which contains cuda ops, will be installed after this step
    # pip install -e .  # package mmcv, which contains no cuda ops, will be installed after this step
    cd ..
    ```
 
-   **Important**: You need to run pip uninstall mmcv first if you have mmcv installed. Because if mmcv and mmcv-full are both installed, there will be ModuleNotFoundError.
+   **Important**: You need to run pip uninstall mmcv-lite first if you have mmcv installed. Because if mmcv-lite and mmcv are both installed, there will be ModuleNotFoundError.
 
 5. Install MMDetection
 
@@ -82,7 +82,7 @@ The compatible MMTracking, MMEngine, MMCV, and MMDetection versions are as below
    Optionally, you can also build MMDetection from source in case you want to modify the code:
 
    ```shell
-   git clone -b dev3.x https://github.com/open-mmlab/mmdetection.git
+   git clone -b 3.x https://github.com/open-mmlab/mmdetection.git
    cd mmdetection
    pip install -r requirements/build.txt
    pip install -v -e .  # or "python setup.py develop"
@@ -91,7 +91,7 @@ The compatible MMTracking, MMEngine, MMCV, and MMDetection versions are as below
 6. Clone the MMTracking repository.
 
    ```shell
-   git clone -b dev-1.x https://github.com/open-mmlab/mmtracking.git
+   git clone -b 1.x https://github.com/open-mmlab/mmtracking.git
    cd mmtracking
    ```
 
@@ -155,7 +155,7 @@ pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/t
 pip install 'mmdet>=3.0.0rc0'
 
 # install mmtracking
-git clone https://github.com/open-mmlab/mmtracking.git
+git clone -b 1.x https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
 pip install -r requirements/build.txt
 pip install -v -e .
@@ -177,7 +177,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 ## Verification
 
-To verify whether MMTracking and the required environment are installed correctly, we can run **one of** MOT, VIS, VID and SOT [demo scripts](https://github.com/open-mmlab/mmtracking/blob/dev-1.x/demo/):
+To verify whether MMTracking and the required environment are installed correctly, we can run **one of** MOT, VIS, VID and SOT [demo scripts](https://github.com/open-mmlab/mmtracking/blob/1.x/demo/):
 
 Here is an example for MOT demo:
 
