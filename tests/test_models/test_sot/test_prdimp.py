@@ -45,10 +45,29 @@ class TestPrDiMP(TestCase):
                     num_ref_imgs=0,
                     image_shapes=[(3, 320, 320)],
                     num_items=[1])
-                for data_sample in packed_inputs['data_samples']:
-                    data_sample.padding_mask = torch.zeros((1, 320, 320),
-                                                           dtype=bool)
                 out_data = model.data_preprocessor(packed_inputs, False)
                 batch_results = model.forward(**out_data, mode='predict')
                 assert len(batch_results) == 1
                 assert isinstance(batch_results[0], TrackDataSample)
+
+    @parameterized.expand(['sot/prdimp/prdimp_r50_8xb10-50e_got10k.py'])
+    def test_prdimp_forward_loss_mode(self, cfg_file):
+        if not torch.cuda.is_available():
+            return
+        _model = get_model_cfg(cfg_file)
+        model = MODELS.build(_model)
+        model = model.cuda()
+
+        # forward in ``loss`` mode
+        model.train()
+        packed_inputs = demo_mm_inputs(
+            batch_size=2,
+            frame_id=0,
+            num_key_imgs=3,
+            num_ref_imgs=3,
+            image_shapes=[(3, 280, 280), (3, 280, 280)],
+            ref_prefix='search',
+            num_items=[3, 3])
+        out_data = model.data_preprocessor(packed_inputs, True)
+        losses = model.forward(**out_data, mode='loss')
+        assert isinstance(losses, dict)

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import os
 import os.path as osp
 
 import mmengine
@@ -13,11 +14,15 @@ def main():
     parser = argparse.ArgumentParser(description='sot plot')
     parser.add_argument(
         'sot_eval_res',
-        help='the json/yaml/pickle file path of evaluation results. The '
-        'content of the file must be a collection of name/value pairs. The '
+        help='the json/yaml/pickle file path of evaluation results. It can '
+        "be a file or path directory. If it's a path directory, all the "
+        'files in this directory will be loaded. The final loaded '
+        'content must be a collection of name/value pairs. The '
         'name is a tracker name. The value is also a collection of name/value '
         'pairs in the format dict(success=np.ndarray, '
-        'norm_precision=np.ndarray, precision=np.ndarray)')
+        'norm_precision=np.ndarray, precision=np.ndarray). The metrics have '
+        'shape (M, ), where M is the number of values corresponding to '
+        'different thresholds.')
     parser.add_argument(
         '--show',
         action='store_true',
@@ -30,10 +35,15 @@ def main():
         help='The saved path of the figure.')
     args = parser.parse_args()
 
-    assert osp.isfile(
-        args.sot_eval_res), f'The file {args.sot_eval_res} does not exist'
-
-    all_eval_results = mmengine.load(args.sot_eval_res)
+    if osp.isdir(args.sot_eval_res):
+        all_eval_results = dict()
+        for res_file in os.listdir(args.sot_eval_res):
+            eval_res = mmengine.load(osp.join(args.sot_eval_res, res_file))
+            all_eval_results.update(eval_res)
+    else:
+        assert osp.isfile(
+            args.sot_eval_res), f'The file {args.sot_eval_res} does not exist'
+        all_eval_results = mmengine.load(args.sot_eval_res)
     assert isinstance(all_eval_results, dict)
 
     tracker_names = []

@@ -5,6 +5,7 @@ import os.path as osp
 from collections import defaultdict
 
 import mmcv
+import mmengine
 from tqdm import tqdm
 
 
@@ -36,7 +37,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
     # "anno_name,anno_path,video_path,start_frame,end_frame"
     info_path = osp.join(
         os.path.dirname(__file__), 'uav123_info_deprecated.txt')
-    uav_info = mmcv.list_from_file(info_path)[1:]
+    uav_info = mmengine.list_from_file(info_path)[1:]
 
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     uav123['categories'] = [dict(id=0, name=0)]
@@ -54,7 +55,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
         video = dict(id=records['vid_id'], name=video_name)
         uav123['videos'].append(video)
 
-        gt_bboxes = mmcv.list_from_file(osp.join(ann_dir, anno_path))
+        gt_bboxes = mmengine.list_from_file(osp.join(ann_dir, anno_path))
         assert len(gt_bboxes) == end_frame - start_frame + 1
 
         img = mmcv.imread(
@@ -95,7 +96,7 @@ def convert_uav123(uav123, ann_dir, save_dir):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(uav123, osp.join(save_dir, 'uav123.json'))
+    mmengine.dump(uav123, osp.join(save_dir, 'uav123.json'))
     print('-----UAV123 Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')

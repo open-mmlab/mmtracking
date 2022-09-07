@@ -125,9 +125,17 @@ def eval_sot_ope(
             success_error(norm_gt_bboxes_center, norm_pred_bboxes_center,
                           norm_pixel_offset_th, video_length))
 
-    success = np.mean(success_results) * 100
-    precision = np.mean(precision_results, axis=0)[20] * 100
-    norm_precision = np.mean(norm_precision_results, axis=0)[20] * 100
+    success_results = np.stack(success_results) * 100
+    precision_results = np.stack(precision_results) * 100
+    norm_precision_results = np.stack(norm_precision_results) * 100
+    success = np.mean(success_results)
+    precision = np.mean(precision_results, axis=0)[20]
+    norm_precision = np.mean(norm_precision_results, axis=0)[20]
     eval_results = dict(
-        success=success, norm_precision=norm_precision, precision=precision)
+        success=success,
+        norm_precision=norm_precision,
+        precision=precision,
+        ori_success=success_results,
+        ori_precision=precision_results,
+        ori_norm_precision=norm_precision_results)
     return eval_results

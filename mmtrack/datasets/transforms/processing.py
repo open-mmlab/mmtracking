@@ -11,11 +11,10 @@ from mmtrack.registry import TRANSFORMS
 
 
 @TRANSFORMS.register_module()
-class TridentSampling(BaseTransform):
-    """Multitemplate-style sampling in a trident manner. It's firstly used in
-    `STARK <https://arxiv.org/abs/2103.17154.>`_.
+class DiMPSampling(BaseTransform):
+    """DiMP-style sampling. It's firstly used in `DiMP.
 
-    The input in this transform is a list of dict. In each dict:
+    <https://arxiv.org/abs/1904.07220>`_.
 
     Required Keys:
 
@@ -46,26 +45,17 @@ class TridentSampling(BaseTransform):
             a positive search image for the template image. Its length is equal
             to the number of extra templates, i.e., `num_template_frames`-1.
             Default length is 1.
-        cls_pos_prob (float, optional): the probility of sampling positive
-            samples in classification training.
-        train_cls_head (bool, optional): whether to train classification head.
         min_num_frames (int, optional): the min number of frames to be sampled.
     """
 
     def __init__(self,
-                 num_search_frames: int = 1,
-                 num_template_frames: int = 2,
-                 max_frame_range: List[int] = [200],
-                 cls_pos_prob: float = 0.5,
-                 train_cls_head: bool = False,
+                 num_search_frames: int = 3,
+                 num_template_frames: int = 3,
+                 max_frame_range: int = 200,
                  min_num_frames: int = 20):
-        assert num_template_frames >= 2
-        assert len(max_frame_range) == num_template_frames - 1
         self.num_search_frames = num_search_frames
         self.num_template_frames = num_template_frames
         self.max_frame_range = max_frame_range
-        self.train_cls_head = train_cls_head
-        self.cls_pos_prob = cls_pos_prob
         self.min_num_frames = min_num_frames
 
     def random_sample_inds(self,
@@ -116,7 +106,196 @@ class TridentSampling(BaseTransform):
 
         return random.choices(valid_inds, k=num_samples)
 
-    def sampling_trident(self, video_visibility: np.ndarray) -> List[int]:
+    def sampling_frames(self, video_visibility: np.ndarray) -> List:
+        """Sampling multiple template images and one search images in one
+        video.
+
+        Args:
+            video_visibility (np.ndarray): the visibility of each frame in the
+                video.
+
+        Returns:
+            List: the indexes of template and search images.
+        """
+        search_frame_inds = [None]
+        gap_increase = 0
+        if self.is_video_data:
+            while search_frame_inds[0] is None:
+                # first randomly sample two frames from a video
+                base_frame_ind = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=1,
+                    frame_range=[
+                        self.num_template_frames - 1,
+                        len(video_visibility) - self.num_search_frames
+                    ])
+
+                prev_frame_inds = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=self.num_template_frames - 1,
+                    frame_range=[
+                        base_frame_ind[0] - self.max_frame_range -
+                        gap_increase, base_frame_ind[0]
+                    ])
+
+                if prev_frame_inds[0] is None:
+                    gap_increase += 5
+                    continue
+
+                temp_frame_inds = base_frame_ind + prev_frame_inds
+                search_frame_inds = self.random_sample_inds(
+                    video_visibility,
+                    num_samples=self.num_search_frames,
+                    frame_range=[
+                        temp_frame_inds[0] + 1, temp_frame_inds[0] +
+                        self.max_frame_range + gap_increase
+                    ])
+
+                gap_increase += 5
+
+            sampled_inds = temp_frame_inds + search_frame_inds
+        else:
+            sampled_inds = [0] * (
+                self.num_template_frames + self.num_search_frames)
+
+        return sampled_inds
+
+    def prepare_data(self,
+                     video_info: dict,
+                     sampled_inds: List[int],
+                     is_positive_pairs: bool = True,
+                     results: Optional[dict] = None) -> Dict[str, List]:
+        """Prepare sampled training data according to the sampled index.
+
+        Args:
+            video_info (dict): the video information. It contains the keys:
+                ['bboxes', 'bboxes_isvalid', 'img_paths', 'frame_ids',
+                'video_id', 'visible', 'video_length].
+            sampled_inds (list[int]): the sampled frame indexes.
+            is_positive_pairs (bool, optional): whether it's the positive
+                pairs. Defaults to True.
+            results (dict[list], optional): The prepared results which need to
+                be updated. Defaults to None.
+
+        Returns:
+            Dict[str, List]: contains the information of sampled data.
+        """
+        if results is None:
+            results = defaultdict(list)
+        assert isinstance(results, dict)
+        for frame_ind in sampled_inds:
+            results['img_path'].append(video_info['img_paths'][frame_ind])
+            results['frame_id'].append(video_info['frame_ids'][frame_ind])
+            results['video_id'].append(video_info['video_id'])
+            results['video_length'].append(video_info['video_length'])
+            instance = [
+                dict(
+                    bbox=video_info['bboxes'][frame_ind],
+                    bbox_label=np.array(is_positive_pairs, dtype=np.int32))
+            ]
+            results['instances'].append(instance)
+        return results
+
+    def transform(self,
+                  pair_video_infos: List[dict]) -> Optional[Dict[str, List]]:
+        """
+        Args:
+            pair_video_infos (list[dict]): contains two video infos. Each video
+                info contains the keys: ['bboxes','bboxes_isvalid','filename',
+                'frame_ids','video_id','visible'].
+
+        Returns:
+            Optional[Dict[str, List]]: contains the information of sampled
+                data.
+        """
+        video_info, video_info_another = pair_video_infos
+        self.is_video_data = len(video_info['frame_ids']) > 1 and len(
+            video_info_another['frame_ids']) > 1
+        enough_visible_frames = sum(video_info['visible']) > 2 * (
+            self.num_search_frames + self.num_template_frames) and len(
+                video_info['visible']) >= self.min_num_frames
+        enough_visible_frames = enough_visible_frames or not \
+            self.is_video_data
+
+        if not enough_visible_frames:
+            return None
+
+        sampled_inds = np.array(self.sampling_frames(video_info['visible']))
+        # the sizes of some bboxes may be zero, because extral templates may
+        # get invalid bboxes.
+        if not video_info['bboxes_isvalid'][sampled_inds].all():
+            return None
+
+        results = self.prepare_data(video_info, sampled_inds)
+
+        return results
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'num_search_frames={self.num_search_frames}, '
+        repr_str += f'num_template_frames={self.num_template_frames}, '
+        repr_str += f'max_frame_range={self.max_frame_range})'
+        repr_str += f'min_num_frames={self.min_num_frames})'
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class TridentSampling(DiMPSampling):
+    """Multitemplate-style sampling in a trident manner. It's firstly used in
+    `STARK <https://arxiv.org/abs/2103.17154.>`_.
+
+    The input in this transform is a list of dict. In each dict:
+
+    Required Keys:
+
+    - img_paths
+    - frame_ids
+    - video_id
+    - video_length
+    - bboxes
+    - instance_id (optional)
+    - mask (optional)
+
+    - seg_map_path (optional)
+
+    Added Keys:
+
+    - instances
+
+      - bbox (np.float32)
+      - bbox_label (np.int32)
+      - frame_id (np.int32)
+      - ignore_flag (np.bool)
+      - img_path (str)
+
+    Args:
+        num_search_frames (int, optional): the number of search frames
+        num_template_frames (int, optional): the number of template frames
+        max_frame_range (list[int], optional): the max frame range of sampling
+            a positive search image for the template image. Its length is equal
+            to the number of extra templates, i.e., `num_template_frames`-1.
+            Default length is 1.
+        cls_pos_prob (float, optional): the probility of sampling positive
+            samples in classification training.
+        train_cls_head (bool, optional): whether to train classification head.
+        min_num_frames (int, optional): the min number of frames to be sampled.
+    """
+
+    def __init__(self,
+                 num_search_frames: int = 1,
+                 num_template_frames: int = 2,
+                 max_frame_range: List[int] = [200],
+                 min_num_frames: int = 20,
+                 cls_pos_prob: float = 0.5,
+                 train_cls_head: bool = False):
+        assert num_template_frames >= 2
+        assert len(max_frame_range) == num_template_frames - 1
+        super().__init__(num_search_frames, num_template_frames,
+                         max_frame_range, min_num_frames)
+        self.train_cls_head = train_cls_head
+        self.cls_pos_prob = cls_pos_prob
+
+    def sampling_frames(self, video_visibility: np.ndarray) -> List[int]:
         """Sampling multiple template images and one search images in one
         video.
 
@@ -167,42 +346,6 @@ class TridentSampling(BaseTransform):
                 self.num_template_frames + self.num_search_frames)
 
         return sampled_inds
-
-    def prepare_data(self,
-                     video_info: dict,
-                     sampled_inds: List[int],
-                     is_positive_pairs: bool = True,
-                     results: Optional[dict] = None) -> Dict[str, List]:
-        """Prepare sampled training data according to the sampled index.
-
-        Args:
-            video_info (dict): the video information. It contains the keys:
-                ['bboxes', 'bboxes_isvalid', 'img_paths', 'frame_ids',
-                'video_id', 'visible', 'video_length].
-            sampled_inds (list[int]): the sampled frame indexes.
-            is_positive_pairs (bool, optional): whether it's the positive
-                pairs. Defaults to True.
-            results (dict[list], optional): The prepared results which need to
-                be updated. Defaults to None.
-
-        Returns:
-            Dict[str, List]: contains the information of sampled data.
-        """
-        if results is None:
-            results = defaultdict(list)
-        assert isinstance(results, dict)
-        for frame_ind in sampled_inds:
-            results['img_path'].append(video_info['img_paths'][frame_ind])
-            results['frame_id'].append(video_info['frame_ids'][frame_ind])
-            results['video_id'].append(video_info['video_id'])
-            results['video_length'].append(video_info['video_length'])
-            instance = [
-                dict(
-                    bbox=video_info['bboxes'][frame_ind],
-                    bbox_label=np.array(is_positive_pairs, dtype=np.int32))
-            ]
-            results['instances'].append(instance)
-        return results
 
     def prepare_cls_data(self, video_info: dict, video_info_another: dict,
                          sampled_inds: List[int]) -> Dict[str, List]:
@@ -272,7 +415,7 @@ class TridentSampling(BaseTransform):
         if not enough_visible_frames:
             return None
 
-        sampled_inds = np.array(self.sampling_trident(video_info['visible']))
+        sampled_inds = np.array(self.sampling_frames(video_info['visible']))
         # the sizes of some bboxes may be zero, because extral templates may
         # get invalid bboxes.
         if not video_info['bboxes_isvalid'][sampled_inds].all():

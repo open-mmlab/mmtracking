@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from copy import deepcopy
-from typing import List, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -125,3 +125,56 @@ def max_last2d(input: Tensor) -> Tuple[Tensor, Tensor]:
     argmax = torch.cat((argmax_row.unsqueeze(-1), argmax_col.unsqueeze(-1)),
                        -1)
     return max_val, argmax
+
+
+def format_video_level_show(
+        video_names: List,
+        eval_results: List[np.ndarray],
+        sort_by_first_metric: bool = True,
+        show_indices: Optional[Tuple[int, List]] = None) -> List[List]:
+    """Format video-level performance show.
+
+    Args:
+        video_names (List): The names of the videos.
+        eval_results (List[np.ndarray]): The evaluation results.
+        sort_by_first_metric (bool, optional): Whether to sort the results by
+            the first metric. Defaults to True.
+        show_indices (Optional[Tuple[int, List]], optional): The video indices
+            to be shown. Defaults to None, i.e., all videos.
+
+    Returns:
+        List[List]: The formatted video-level evaluation results. For example:
+            [[`video-2`, 48.2, 49.2, 51.9],
+             [`video-1`, 46.2, 48.2, 50.2]]
+    """
+    all_video_names_str = np.array(video_names, dtype=str)
+    eval_show_results = eval_results
+
+    if sort_by_first_metric:
+        # sort from largest to smallest
+        sorted_index = np.argsort(-eval_results[0])
+        all_video_names_str = all_video_names_str[sorted_index]
+        sorted_eval_results = []
+        for eval_res in eval_results:
+            sorted_eval_results.append(eval_res[sorted_index])
+        eval_show_results = np.stack(sorted_eval_results).T
+
+    if show_indices is not None:
+        if isinstance(show_indices, int):
+            if show_indices < 0:
+                show_indices = np.arange(show_indices, 0)
+            else:
+                show_indices = np.arange(show_indices)
+        elif isinstance(show_indices, Sequence):
+            show_indices = np.array(show_indices, dtype=np.int64)
+        else:
+            raise NotImplementedError(
+                f'{type(show_indices)} is not supported. '
+                'Please use type of int or list')
+        eval_show_results = eval_show_results[show_indices, :]
+
+    eval_show_results = eval_show_results.tolist()
+    for res_line, video_name in zip(eval_show_results, all_video_names_str):
+        res_line.insert(0, video_name)
+
+    return eval_show_results

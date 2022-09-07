@@ -5,7 +5,7 @@ import os
 import os.path as osp
 from collections import defaultdict
 
-import mmcv
+import mmengine
 from tqdm import tqdm
 
 
@@ -48,9 +48,10 @@ def convert_vis(ann_dir, save_dir, dataset_version, mode='train'):
     obj_num_classes = dict()
 
     if dataset_version == '2019':
-        official_anns = mmcv.load(osp.join(ann_dir, f'{mode}.json'))
+        official_anns = mmengine.load(osp.join(ann_dir, f'{mode}.json'))
     elif dataset_version == '2021':
-        official_anns = mmcv.load(osp.join(ann_dir, mode, 'instances.json'))
+        official_anns = mmengine.load(
+            osp.join(ann_dir, mode, 'instances.json'))
     VIS['categories'] = copy.deepcopy(official_anns['categories'])
 
     has_annotations = mode == 'train'
@@ -131,8 +132,8 @@ def convert_vis(ann_dir, save_dir, dataset_version, mode='train'):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(VIS,
-              osp.join(save_dir, f'youtube_vis_{dataset_version}_{mode}.json'))
+    mmengine.dump(
+        VIS, osp.join(save_dir, f'youtube_vis_{dataset_version}_{mode}.json'))
     print(f'-----YouTube VIS {dataset_version} {mode}------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["img_id"]- 1} images')

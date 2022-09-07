@@ -32,8 +32,10 @@ def plot_sot_curve(y: np.ndarray,
     """Plot curves for SOT.
 
     Args:
-        y (np.ndarray): The content along the Y axis.
-        x (np.ndarray): The content along the X axis.
+        y (np.ndarray): The content along the Y axis. It has shape (N, M),
+            where N is the number of trackers and M is the number of values
+            corresponding to the X.
+        x (np.ndarray): The content along the X axis. It has shape (M).
         scores (np.ndarray): The content of viualized indicators.
         tracker_names (List): The names of trackers.
         plot_opts (dict): The options for plot.
@@ -108,7 +110,7 @@ def plot_sot_curve(y: np.ndarray,
         plt.show()
 
 
-def plot_success_curve(scores: np.ndarray,
+def plot_success_curve(success: np.ndarray,
                        tracker_names: List,
                        plot_opts: Optional[dict] = None,
                        plot_save_path: Optional[str] = None,
@@ -116,7 +118,9 @@ def plot_success_curve(scores: np.ndarray,
     """Plot curves of Success for SOT.
 
     Args:
-        scores (np.ndarray): The content of viualized indicators.
+        success (np.ndarray): The content of viualized indicators. It has shape
+            (N, M), where N is the number of trackers and M is the number of
+            ``Success`` corresponding to the X.
         tracker_names (List): The names of trackers.
         plot_opts (Optional[dict], optional): The options for plot.
             Defaults to None.
@@ -124,7 +128,7 @@ def plot_success_curve(scores: np.ndarray,
             Defaults to None.
         show (bool, optional): Whether to show. Defaults to False.
     """
-    assert len(tracker_names) == len(scores)
+    assert len(tracker_names) == len(success)
     success_plot_opts = {
         'plot_type': 'success',
         'legend_loc': 'lower left',
@@ -136,13 +140,13 @@ def plot_success_curve(scores: np.ndarray,
     }
     if plot_opts is not None:
         success_plot_opts.update(success_plot_opts)
-    success = np.mean(scores, axis=1)
+    success_scores = np.mean(success, axis=1)
 
-    plot_sot_curve(scores, np.arange(0, 1.05, 0.05), success, tracker_names,
-                   success_plot_opts, plot_save_path, show)
+    plot_sot_curve(success, np.arange(0, 1.05, 0.05), success_scores,
+                   tracker_names, success_plot_opts, plot_save_path, show)
 
 
-def plot_norm_precision_curve(scores: np.ndarray,
+def plot_norm_precision_curve(norm_precision: np.ndarray,
                               tracker_names: List,
                               plot_opts: Optional[dict] = None,
                               plot_save_path: Optional[str] = None,
@@ -150,7 +154,9 @@ def plot_norm_precision_curve(scores: np.ndarray,
     """Plot curves of Norm Precision for SOT.
 
     Args:
-        scores (np.ndarray): The content of viualized indicators.
+        norm_precision (np.ndarray): The content of viualized indicators. It
+            has shape (N, M), where N is the number of trackers and M is the
+            number of ``Norm Precision`` corresponding to the X.
         tracker_names (List): The names of trackers.
         plot_opts (Optional[dict], optional): The options for plot.
             Defaults to None.
@@ -158,7 +164,7 @@ def plot_norm_precision_curve(scores: np.ndarray,
             Defaults to None.
         show (bool, optional): Whether to show. Defaults to False.
     """
-    assert len(tracker_names) == len(scores)
+    assert len(tracker_names) == len(norm_precision)
     norm_precision_plot_opts = {
         'plot_type': 'norm_precision',
         'legend_loc': 'lower right',
@@ -171,12 +177,12 @@ def plot_norm_precision_curve(scores: np.ndarray,
     if plot_opts is not None:
         norm_precision_plot_opts.update(norm_precision_plot_opts)
 
-    plot_sot_curve(scores, np.arange(0, 0.51, 0.01), scores[:,
-                                                            20], tracker_names,
+    plot_sot_curve(norm_precision, np.arange(0, 0.51, 0.01),
+                   norm_precision[:, 20], tracker_names,
                    norm_precision_plot_opts, plot_save_path, show)
 
 
-def plot_precision_curve(scores: np.ndarray,
+def plot_precision_curve(precision: np.ndarray,
                          tracker_names: List,
                          plot_opts: Optional[dict] = None,
                          plot_save_path: Optional[str] = None,
@@ -184,7 +190,9 @@ def plot_precision_curve(scores: np.ndarray,
     """Plot curves of Precision for SOT.
 
     Args:
-        scores (np.ndarray): The content of viualized indicators.
+        precision (np.ndarray): The content of viualized indicators. It has
+            shape (N, M), where N is the number of trackers and M is the
+            number of ``Precision`` corresponding to the X.
         tracker_names (List): The names of trackers.
         plot_opts (Optional[dict], optional): The options for plot.
             Defaults to None.
@@ -192,7 +200,7 @@ def plot_precision_curve(scores: np.ndarray,
             Defaults to None.
         show (bool, optional): Whether to show. Defaults to False.
     """
-    assert len(tracker_names) == len(scores)
+    assert len(tracker_names) == len(precision)
     precision_plot_opts = {
         'plot_type': 'precision',
         'legend_loc': 'lower right',
@@ -205,5 +213,5 @@ def plot_precision_curve(scores: np.ndarray,
     if plot_opts is not None:
         precision_plot_opts.update(plot_opts)
 
-    plot_sot_curve(scores, np.arange(0, 51, 1), scores[:, 20], tracker_names,
-                   precision_plot_opts, plot_save_path, show)
+    plot_sot_curve(precision, np.arange(0, 51, 1), precision[:, 20],
+                   tracker_names, precision_plot_opts, plot_save_path, show)

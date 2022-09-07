@@ -82,7 +82,7 @@ def main(args):
             img = mmcv.imread(img_path)
         if i == 0:
             if args.gt_bbox_file is not None:
-                bboxes = mmcv.list_from_file(args.gt_bbox_file)
+                bboxes = mmengine.list_from_file(args.gt_bbox_file)
                 init_bbox = list(map(float, bboxes[0].split(',')))
             else:
                 init_bbox = list(cv2.selectROI(args.input, img, False, False))
