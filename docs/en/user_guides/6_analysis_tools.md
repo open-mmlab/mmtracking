@@ -196,5 +196,5 @@ The metrics have shape (M, ), where M is the number of values corresponding to d
 Given the saved results, you can plot them using the following command:
 
 ```shell
-python ./tools/analysis_tools/sot/sot_plot_curve.py ./results/json_res --plot_save_path ./results
+python ./tools/analysis_tools/sot/sot_plot_curve.py ./results --plot_save_path ./results
 ```
