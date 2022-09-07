@@ -12,7 +12,7 @@ Here is an example that shows how to modify the configs:
    For example, you can define the `evaluator` as
 
    ```python
-   test_evaluator = dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
+   test_evaluator=dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
    ```
 
    Of course, you can also customize the content of `metric` in `test_evaluator`. You are free to choose one or more of `['HOTA', 'CLEAR', 'Identity']`.
@@ -22,7 +22,7 @@ Here is an example that shows how to modify the configs:
    Assume you have a tracker like
 
    ```python
-   model = dict(
+   model=dict(
        tracker=dict(
            type='BaseTracker',
            obj_score_thr=0.5,
@@ -34,7 +34,7 @@ Here is an example that shows how to modify the configs:
    If you want to search the parameters of the tracker, just change the value to a list as follow
 
    ```python
-   model = dict(
+   model=dict(
        tracker=dict(
            type='BaseTracker',
            obj_score_thr=[0.4, 0.5, 0.6],
@@ -165,7 +165,7 @@ You can selectively show the performance results of some good cases or bad cases
 ```python
 test_evaluator = dict(
     type='SOTMetric',
-    options_after_eval = dict(eval_show_video_indices = 10))
+    options_after_eval=dict(eval_show_video_indices=10))
 ```
 
 Here, `eval_show_video_indices` is used to index a numpy.ndarray.

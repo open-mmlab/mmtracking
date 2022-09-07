@@ -18,7 +18,7 @@ python demo/demo_vid.py \
     [--show]
 ```
 
-The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+The `INPUT` and `OUTPUT` support both _mp4 video_ format and the _folder_ format.
 
 Optional arguments:
 
@@ -54,7 +54,7 @@ python demo/demo_mot_vis.py \
     [--show]
 ```
 
-The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+The `INPUT` and `OUTPUT` support both _mp4 video_ format and the _folder_ format.
 
 **Important:** For `DeepSORT`, `SORT`, `Tracktor`, `StrongSORT`, they need both the weight of the `reid` and the weight of the `detector`. Therefore, we can't use `--checkpoint` to specify it. We need to use `init_cfg` in the configuration file to set the weight path. Other algorithms such as `ByteTrack`, `OCSORT` and `QDTrack` need not pay attention to this.
 
@@ -111,7 +111,7 @@ python demo/demo_sot.py \
     [--gt_bbox_file ${GT_BBOX_FILE}]
 ```
 
-The `INPUT` and `OUTPUT` support both mp4 video format and the folder format.
+The `INPUT` and `OUTPUT` support both _mp4 video_ format and the _folder_ format.
 
 Optional arguments:
 
