@@ -45,8 +45,8 @@ class SOTMetric(BaseVideoMetric):
             metric names to disambiguate homonymous metrics of different
             evaluators. If prefix is not provided in the argument,
             self.default_prefix will be used instead. Defaults to None.
-        options_after_eval (Optional[dict], optional): The options after
-            evaluation. The usage is the following:
+        options_after_eval (dict, optional): The options after
+            evaluation. Defaults to {}. The usage is the following:
             ```
                 options_after_eval = dict(
                     saved_eval_res_file = './results/sot_res.json',
@@ -70,7 +70,7 @@ class SOTMetric(BaseVideoMetric):
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None,
-                 options_after_eval: Optional[dict] = None) -> None:
+                 options_after_eval: dict = {}) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
         self.metrics = metric if isinstance(metric, list) else [metric]
         assert not (
@@ -119,8 +119,14 @@ class SOTMetric(BaseVideoMetric):
             self.frame_ids.append(data_sample['frame_id'])
 
             if data_sample['frame_id'] == data_sample['video_length'] - 1:
+                img_path_split = data_sample['img_path'].split(os.sep)
+                # The ``img_path`` in LaSOT, OTB100 and VOT2018 have an extra
+                # common directory outside the *.jpg file.
+                video_name = img_path_split[-2] if img_path_split[-2] not in [
+                    'img', 'color'
+                ] else img_path_split[-3]
                 result = dict(
-                    video_name=data_sample['img_path'].split(os.sep)[-2],
+                    video_name=video_name,
                     video_id=data_sample['video_id'],
                     video_size=(data_sample['ori_shape'][1],
                                 data_sample['ori_shape'][0]),
