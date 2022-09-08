@@ -98,7 +98,8 @@ def main():
                 visualizer.add_datasample(
                     osp.basename(img_path),
                     img,
-                    gt_sample=gt_sample,
+                    data_sample=gt_sample,
+                    draw_pred=False,
                     show=not args.not_show,
                     wait_time=args.show_interval,
                     out_file=out_file)
