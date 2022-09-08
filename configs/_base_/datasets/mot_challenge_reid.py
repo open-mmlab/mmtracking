@@ -16,7 +16,7 @@ train_pipeline = [
                 clip_object_border=False),
             dict(type='RandomFlip', prob=0.5, direction='horizontal'),
         ]),
-    dict(type='PackReIDInputs')
+    dict(type='PackReIDInputs', meta_keys=('flip', 'flip_direction'))
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),

@@ -12,7 +12,7 @@ Here is an example that shows how to modify the configs:
    For example, you can define the `evaluator` as
 
    ```python
-   test_evaluator = dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
+   test_evaluator=dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
    ```
 
    Of course, you can also customize the content of `metric` in `test_evaluator`. You are free to choose one or more of `['HOTA', 'CLEAR', 'Identity']`.
@@ -22,7 +22,7 @@ Here is an example that shows how to modify the configs:
    Assume you have a tracker like
 
    ```python
-   model = dict(
+   model=dict(
        tracker=dict(
            type='BaseTracker',
            obj_score_thr=0.5,
@@ -34,7 +34,7 @@ Here is an example that shows how to modify the configs:
    If you want to search the parameters of the tracker, just change the value to a list as follow
 
    ```python
-   model = dict(
+   model=dict(
        tracker=dict(
            type='BaseTracker',
            obj_score_thr=[0.4, 0.5, 0.6],
@@ -156,3 +156,45 @@ Optional arguments:
 
 - `SHOW_INTERVAL`: The interval of show (s).
 - `--not-show`: Whether do not show the images on the fly.
+
+## Show SOT evaluation results in video level
+
+The SOT evaluation results are sorted in video level from largest to smallest by the Success metric.
+You can selectively show the performance results of some good cases or bad cases by setting `eval_show_video_indices`.
+
+```python
+test_evaluator=dict(
+    type='SOTMetric',
+    options_after_eval=dict(eval_show_video_indices=10))
+```
+
+Here, `eval_show_video_indices` is used to index a `numpy.ndarray`.
+It can be `int` (positive or negative) or `list`. The positive number `k` means all the top-k
+reuslts while the negative number means the bottom-k results.
+
+## Save SOT evaluation results and plot them
+
+Saving the sot evaluation result by setting the `SOTMetric` in the config.
+
+```python
+test_evaluator = dict(
+    type='SOTMetric',
+    options_after_eval = dict(tracker_name = 'SiamRPN++', saved_eval_res_file = './results/sot_results.json'))
+```
+
+The saved result is a dict in the format:
+
+```python
+dict{tracker_name=dict(
+      success = np.ndarray,
+      norm_precision = np.ndarray,
+      precision = np.ndarray)}
+```
+
+The metrics have shape (M, ), where M is the number of values corresponding to different thresholds.
+
+Given the saved results, you can plot them using the following command:
+
+```shell
+python ./tools/analysis_tools/sot/sot_plot_curve.py ./results --plot_save_path ./results
+```

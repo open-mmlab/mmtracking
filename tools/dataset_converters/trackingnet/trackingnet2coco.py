@@ -5,6 +5,7 @@ import os.path as osp
 from collections import defaultdict
 
 import mmcv
+import mmengine
 from tqdm import tqdm
 
 
@@ -60,7 +61,7 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
             trackingnet['videos'].append(video)
 
             ann_file = osp.join(chunk_ann_dir, 'anno', video_name + '.txt')
-            gt_bboxes = mmcv.list_from_file(ann_file)
+            gt_bboxes = mmengine.list_from_file(ann_file)
             video_path = osp.join(chunk_ann_dir, 'frames', video_name)
             img_names = os.listdir(video_path)
             img_names = sorted(img_names, key=lambda x: int(x[:-4]))
@@ -104,7 +105,7 @@ def convert_trackingnet(ann_dir, save_dir, split='test'):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(trackingnet, osp.join(save_dir, f'trackingnet_{split}.json'))
+    mmengine.dump(trackingnet, osp.join(save_dir, f'trackingnet_{split}.json'))
     print(f'-----TrackingNet {split} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')

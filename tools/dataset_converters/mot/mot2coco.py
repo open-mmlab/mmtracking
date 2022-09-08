@@ -18,7 +18,7 @@ import os
 import os.path as osp
 from collections import defaultdict
 
-import mmcv
+import mmengine
 import numpy as np
 from tqdm import tqdm
 
@@ -129,7 +129,7 @@ def main():
             ins_maps = dict()
             # load video infos
             video_folder = osp.join(in_folder, video_name)
-            infos = mmcv.list_from_file(f'{video_folder}/seqinfo.ini')
+            infos = mmengine.list_from_file(f'{video_folder}/seqinfo.ini')
             # video-level infos
             assert video_name == infos[1].strip().split('=')[1]
             img_folder = infos[2].strip().split('=')[1]
@@ -148,13 +148,13 @@ def main():
                 height=height)
             # parse annotations
             if parse_gt:
-                gts = mmcv.list_from_file(f'{video_folder}/gt/gt.txt')
+                gts = mmengine.list_from_file(f'{video_folder}/gt/gt.txt')
                 if 'MOT15' in video_folder:
                     img2gts = parse_gts(gts, True)
                 else:
                     img2gts = parse_gts(gts, False)
             if args.convert_det:
-                dets = mmcv.list_from_file(f'{video_folder}/det/det.txt')
+                dets = mmengine.list_from_file(f'{video_folder}/det/det.txt')
                 img2dets = parse_dets(dets)
             # make half sets
             if 'half' in subset:
@@ -208,9 +208,9 @@ def main():
             vid_id += 1
             outputs['num_instances'] = ins_id
         print(f'{subset} has {ins_id} instances.')
-        mmcv.dump(outputs, out_file)
+        mmengine.dump(outputs, out_file)
         if args.convert_det:
-            mmcv.dump(detections, det_file)
+            mmengine.dump(detections, det_file)
             print(f'Done! Saved as {out_file} and {det_file}')
         else:
             print(f'Done! Saved as {out_file}')

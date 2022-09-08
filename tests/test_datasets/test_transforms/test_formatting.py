@@ -219,7 +219,8 @@ class TestPackReIDInputs(TestCase):
             scale_factor=(1., 2.),
             flip=False,
             flip_direction=None)
-        cls.pack_reid_inputs = PackReIDInputs()
+        cls.pack_reid_inputs = PackReIDInputs(
+            meta_keys=('flip', 'flip_direction'))
 
     def test_transform(self):
         results = self.pack_reid_inputs(self.results)

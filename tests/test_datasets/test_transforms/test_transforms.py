@@ -1,8 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
-from mmtrack.datasets.transforms import (BrightnessAug, CropLikeSiamFC,
-                                         GrayAug, SeqBboxJitter, SeqBlurAug,
+from mmtrack.datasets.transforms import (BrightnessAug, CropLikeDiMP,
+                                         CropLikeSiamFC, GrayAug,
+                                         SeqBboxJitter, SeqBlurAug,
                                          SeqColorAug, SeqCropLikeStark,
                                          SeqShiftScaleAug)
 from mmtrack.testing import random_boxes
@@ -142,3 +143,20 @@ class TestSeqCropLikeStark:
         assert results['img_shape'][1] == (320, 320, 3)
         assert results['padding_mask'][0].shape == (128, 128)
         assert results['padding_mask'][1].shape == (320, 320)
+
+
+class TestCropLikeDiMP:
+
+    def setup_class(cls):
+        cls.crop_like_dimp = CropLikeDiMP(crop_size_factor=5, output_size=255)
+        cls.results = dict(
+            img=np.random.randn(500, 500, 3),
+            gt_bboxes=random_boxes(1, 100).numpy(),
+            img_shape=(500, 500, 3),
+            jittered_bboxes=random_boxes(1, 100).numpy())
+
+    def test_transform(self):
+        results = self.crop_like_dimp(self.results)
+        assert results['img'].shape == (255, 255, 3)
+        assert results['gt_bboxes'].shape == (1, 4)
+        assert results['img_shape'] == (255, 255, 3)

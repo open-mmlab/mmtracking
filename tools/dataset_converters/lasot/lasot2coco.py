@@ -5,6 +5,7 @@ import os.path as osp
 from collections import defaultdict
 
 import mmcv
+import mmengine
 from tqdm import tqdm
 
 
@@ -41,7 +42,7 @@ def convert_lasot(ann_dir, save_dir, split='test'):
     lasot = defaultdict(list)
     records = dict(vid_id=1, img_id=1, ann_id=1, global_instance_id=1)
     lasot['categories'] = [dict(id=0, name=0)]
-    videos_list = mmcv.list_from_file(
+    videos_list = mmengine.list_from_file(
         osp.join(osp.dirname(__file__), 'testing_set.txt'))
     if split == 'train':
         train_videos_list = []
@@ -57,12 +58,12 @@ def convert_lasot(ann_dir, save_dir, split='test'):
         video = dict(id=records['vid_id'], name=video_name)
         lasot['videos'].append(video)
 
-        gt_bboxes = mmcv.list_from_file(
+        gt_bboxes = mmengine.list_from_file(
             osp.join(video_path, 'groundtruth.txt'))
-        full_occlusion = mmcv.list_from_file(
+        full_occlusion = mmengine.list_from_file(
             osp.join(video_path, 'full_occlusion.txt'))
         full_occlusion = full_occlusion[0].split(',')
-        out_of_view = mmcv.list_from_file(
+        out_of_view = mmengine.list_from_file(
             osp.join(video_path, 'out_of_view.txt'))
         out_of_view = out_of_view[0].split(',')
 
@@ -101,7 +102,7 @@ def convert_lasot(ann_dir, save_dir, split='test'):
 
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
-    mmcv.dump(lasot, osp.join(save_dir, f'lasot_{split}.json'))
+    mmengine.dump(lasot, osp.join(save_dir, f'lasot_{split}.json'))
     print(f'-----LaSOT {split} Dataset------')
     print(f'{records["vid_id"]- 1} videos')
     print(f'{records["global_instance_id"]- 1} instances')

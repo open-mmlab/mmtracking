@@ -58,7 +58,7 @@ import argparse
 import os.path as osp
 from collections import defaultdict
 
-import mmcv
+import mmengine
 from tao.toolkit.tao import Tao
 from tqdm import tqdm
 
@@ -75,16 +75,16 @@ def parse_args():
 
 
 def get_classes(tao_path, filter_classes=True):
-    train = mmcv.load(osp.join(tao_path, 'train.json'))
+    train = mmengine.load(osp.join(tao_path, 'train.json'))
 
     train_classes = list(set([_['category_id'] for _ in train['annotations']]))
     print(f'TAO train set contains {len(train_classes)} categories.')
 
-    val = mmcv.load(osp.join(tao_path, 'validation.json'))
+    val = mmengine.load(osp.join(tao_path, 'validation.json'))
     val_classes = list(set([_['category_id'] for _ in val['annotations']]))
     print(f'TAO val set contains {len(val_classes)} categories.')
 
-    test = mmcv.load(osp.join(tao_path, 'test_categories.json'))
+    test = mmengine.load(osp.join(tao_path, 'test_categories.json'))
     test_classes = list(set([_['id'] for _ in test['categories']]))
     print(f'TAO test set contains {len(test_classes)} categories.')
 
@@ -106,7 +106,7 @@ def get_classes(tao_path, filter_classes=True):
 
 def convert_tao(file, classes):
     tao = Tao(file)
-    raw = mmcv.load(file)
+    raw = mmengine.load(file)
 
     out = defaultdict(list)
     out['tracks'] = raw['tracks'].copy()
@@ -151,7 +151,7 @@ def main():
         c = '_482' if args.filter_classes else ''
         prefix = file.split('.')[0].split('_')[0]
         out_file = f'{prefix}{c}_classes.json'
-        mmcv.dump(out, osp.join(args.input, out_file))
+        mmengine.dump(out, osp.join(args.input, out_file))
 
 
 if __name__ == '__main__':
