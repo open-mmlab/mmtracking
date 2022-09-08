@@ -174,7 +174,7 @@ reuslts while the negative number means the bottom-k results.
 
 ## Save SOT evaluation results and plot them
 
-Saving the sot evaluation result by setting the `SOTMetric` in the config.
+Save the SOT evaluation result by setting the `SOTMetric` in the config.
 
 ```python
 test_evaluator = dict(
@@ -197,4 +197,20 @@ Given the saved results, you can plot them using the following command:
 
 ```shell
 python ./tools/analysis_tools/sot/sot_plot_curve.py ./results --plot_save_path ./results
+```
+
+# Save tracked results and playback them
+
+Save the tracked result by setting the `SOTMetric` in the config.
+
+```python
+test_evaluator = dict(
+    type='SOTMetric',
+    options_after_eval = dict(saved_track_res_path='./tracked_results'))
+```
+
+Playback the tracked results using the following command:
+
+```shell
+python ./tools/analysis_tools/sot/sot_playback.py  data/OTB100/data/Basketball/img/ tracked_results/basketball.txt --show --output results/basketball.mp4 --fps 20 --gt_bboxes data/OTB100/data/Basketball/groundtruth_rect.txt
 ```
