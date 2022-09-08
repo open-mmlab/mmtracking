@@ -23,6 +23,7 @@ Specifically, the `TrackVisualizationHook` has the following arguments:
 In the `TrackVisualizationHook`, a visualizer will be called to implement visualization,
 i.e., `DetLocalVisualizer` for VID task and `TrackLocalVisualizer` for MOT, VIS, SOT, VOS tasks.
 We will present the details below.
+You can refer to MMEngine for more details about [Visualization](https://github.com/open-mmlab/mmengine/blob/main/docs/en/advanced_tutorials/visualization.md) and [Hook](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/hook.md).
 
 #### Detection Visualization
 

@@ -6,6 +6,8 @@ from .image import crop_image, gauss_blur, imrenormalize
 from .misc import (convert_data_sample_type, format_video_level_show,
                    max_last2d, stack_batch)
 from .mot_error_visualization import imshow_mot_errors
+from .plot_sot_curve import (plot_norm_precision_curve, plot_precision_curve,
+                             plot_success_curve)
 from .setup_env import register_all_modules
 from .typing import (ConfigType, ForwardResults, InstanceList, MultiConfig,
                      OptConfigType, OptInstanceList, OptMultiConfig,
@@ -17,5 +19,6 @@ __all__ = [
     'stack_batch', 'ConfigType', 'ForwardResults', 'InstanceList',
     'MultiConfig', 'OptConfigType', 'OptInstanceList', 'OptMultiConfig',
     'OptSampleList', 'SampleList', 'convert_data_sample_type',
-    'imshow_mot_errors', 'max_last2d', 'gauss_blur', 'format_video_level_show'
+    'imshow_mot_errors', 'max_last2d', 'gauss_blur', 'format_video_level_show',
+    'plot_success_curve', 'plot_norm_precision_curve', 'plot_precision_curve'
 ]

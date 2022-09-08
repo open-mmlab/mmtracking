@@ -58,7 +58,7 @@ def main():
     progress_bar = mmengine.ProgressBar(len(dataset))
     gt_sample = TrackDataSample()  # just to wrap the `gt_instances`
     for idx, item in enumerate(dataset):
-        data_sample = item['data_sample']
+        data_sample = item['data_samples']
         for img_key, imgs in item['inputs'].items():
             img_paths = data_sample.get(img_key + '_path')
             img_key_prefix = img_key[:-3]

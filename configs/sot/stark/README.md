@@ -80,6 +80,8 @@ The STARK is trained in 2 stages. We denote the 1st-stage model as `STARK-ST1`, 
 
 Models from the 2 stages have different configurations. For example, `stark-st1_r50_8xb16-500e_got10k.py` is the configuration of the 1st-stage model and `stark-st2_r50_8xb16-50e_got10.py` is the configuration of the 2nd-stage model. The following is an example of training STARK on GOT10k dataset. The training on LaSOT and TrackingNet is similar like this.
 
+**Note** that the STARK can not be trained in the 1.8.0 version of pytorch since the potential [bug](https://github.com/pytorch/pytorch/pull/52944/files) about AdamW optimizer in pytorch.
+
 **Training the 1st-stage model**
 
 ```shell
