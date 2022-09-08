@@ -220,9 +220,6 @@ python ./tools/analysis_tools/sot/sot_playback.py  data/OTB100/data/Basketball/i
 Here is an example of calling the Visualizer in MMEngine:
 
 ```python
-# inilization of visualizer
-visualizer = Visualizer(vis_backends=[dict(type='LocalVisBackend')], save_dir='temp_dir')
-
 # call visualizer at any position
 visualizer = Visualizer.get_current_instance()
 # set the image as background
@@ -231,8 +228,8 @@ visualizer.set_image(image=image)
 drawn_img = visualizer.draw_featmap(feature_map, image, channel_reduction='squeeze_mean')
 # show
 visualizer.show(drawn_img)
-# saved as temp_dir/vis_data/vis_image/feat_0.png
+# saved as ${saved_dir}/vis_data/vis_image/feat_0.png
 visualizer.add_image('feature_map', drawn_img)
 ```
 
-More details about visualizer can be seen in [visuzlizer docs](https://github.com/open-mmlab/mmengine/blob/main/docs/zh_cn/advanced_tutorials/visualization.md) and [draw_featmap](https://github.com/open-mmlab/mmengine/blob/main/mmengine/visualization/visualizer.py#L864)
+More details about visualization of feature map can be seen in [visualizer docs](https://github.com/open-mmlab/mmengine/blob/main/docs/zh_cn/advanced_tutorials/visualization.md) and [draw_featmap function](https://github.com/open-mmlab/mmengine/blob/main/mmengine/visualization/visualizer.py#L864)
