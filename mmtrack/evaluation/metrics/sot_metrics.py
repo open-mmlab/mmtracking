@@ -119,8 +119,14 @@ class SOTMetric(BaseVideoMetric):
             self.frame_ids.append(data_sample['frame_id'])
 
             if data_sample['frame_id'] == data_sample['video_length'] - 1:
+                img_path_split = data_sample['img_path'].split(os.sep)
+                # The ``img_path`` in LaSOT, OTB100 and VOT2018 have an extra
+                # common directory outside the *.jpg file.
+                video_name = img_path_split[-2] if img_path_split[-2] not in [
+                    'img', 'color'
+                ] else img_path_split[-3]
                 result = dict(
-                    video_name=data_sample['img_path'].split(os.sep)[-2],
+                    video_name=video_name,
                     video_id=data_sample['video_id'],
                     video_size=(data_sample['ori_shape'][1],
                                 data_sample['ori_shape'][0]),
