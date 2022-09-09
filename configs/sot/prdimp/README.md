@@ -65,7 +65,7 @@ The results of PrDiMP in GOT10k are reimplemented by ourselves. We only use the 
 Due to the influence of parameters such as learning rate in default configuration file, we recommend using 8 GPUs for training in order to reproduce accuracy. The following is an example of training PrDiMP tested on LaSOT dataset. The model on GOT10k is similar like this.
 
 ```shell
-# Training PrDiMP on LaSOT、TrackingNet and coco dataset with following command
+# Training PrDiMP on LaSOT、TrackingNet and coco dataset.
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs
 ./tools/dist_train.sh \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot.py 8
@@ -78,7 +78,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 **2.1 Example on LaSOT dataset**
 
 ```shell
-# Example 1: Test PrDiMP on LaSOT testset
+# Test PrDiMP on LaSOT testset
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot.py 8 \
@@ -90,7 +90,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 If you want to get the results of the [TrackingNet](https://eval.ai/web/challenges/challenge-page/1805/) and [GOT10k](http://got-10k.aitestunion.com/), please use the following commands to generate result files that can be used for submission. You can modify the saved path in `test_evaluator` of the config.
 
 ```shell
-# Example 3: Test PrDIMP on TrackingNet testset.
+# Test PrDIMP on TrackingNet testset.
 # The result is stored in `./results/prdimp_trackingnet.zip` by default.
 # We use the lasot checkpoint on LaSOT to test on the TrackingNet.
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
@@ -100,7 +100,7 @@ If you want to get the results of the [TrackingNet](https://eval.ai/web/challeng
 ```
 
 ```shell
-# Example 4: Test PrDiMP on GOT10k testset.
+# Test PrDiMP on GOT10k testset.
 # The result is stored in `./results/prdimp_got10k.zip` by default.
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
