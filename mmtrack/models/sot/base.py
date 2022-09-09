@@ -259,9 +259,6 @@ class BaseSingleObjectTracker(BaseModel, metaclass=ABCMeta):
                 # 2 denotes the failure state
                 results[0].bboxes = img.new_tensor([[2.]])
 
-                import pdb
-                pdb.set_trace()
-
         return results
 
     @abstractmethod
