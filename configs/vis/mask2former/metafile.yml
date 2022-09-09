@@ -24,7 +24,7 @@ Models:
         Dataset: YouTube-VIS 2021
         Metrics:
           AP: 41.2
-    Weights:
+    Weights: https://download.openmmlab.com/mmtracking/vis/mask2former/mask2former_r50_8xb2-8e_youtubevis2021_20220818_164043-1cab1219.pth
 
   - Name: mask2former_r101_8xb2-8e_youtubevis2021
     In Collection: Mask2Former
@@ -37,7 +37,7 @@ Models:
         Dataset: YouTube-VIS 2021
         Metrics:
           AP: 42.3
-    Weights:
+    Weights: https://download.openmmlab.com/mmtracking/vis/mask2former/mask2former_r101_8xb2-8e_youtubevis2021_20220823_092747-b7a7d7cc.pth
 
   - Name: mask2former_swin-l-p4-w12-384-in21k_8xb2-8e_youtubevis2021.py
     In Collection: Mask2Former
@@ -50,4 +50,4 @@ Models:
         Dataset: YouTube-VIS 2021
         Metrics:
           AP: 52.3
-    Weights:
+    Weights: https://download.openmmlab.com/mmtracking/vis/mask2former/mask2former_swin-l-p4-w12-384-in21k_8xb2-8e_youtubevis2021_20220907_124752-c04b720e.pth
