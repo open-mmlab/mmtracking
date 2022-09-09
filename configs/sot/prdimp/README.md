@@ -52,7 +52,7 @@ The last-epoch model on LaSOT is submitted to [the evaluation server on Tracking
 
 ### GOT10k
 
-The results of PrDiMP in GOT10k are reimplemented by ourselves. We only use the GOT10k train set to train the model, which is the common setting on GOT10k, while the setting on the PrDiMP paper is using the GOT10k, LaSOT, TrackingNet and coco.  The last-epoch model is submitted to [the evaluation server on GOT10k Challenge](http://got-10k.aitestunion.com/). We provide the model with its configuration and training log.
+The results of PrDiMP in GOT10k are reimplemented by ourselves. We only use the GOT10k train set to train the model, which is the common setting on GOT10k, while the setting on the PrDiMP paper is using the GOT10k, LaSOT, TrackingNet and coco to train the model. The result on our setting is lower about 1 than the original PrDiMP setting. The last-epoch model is submitted to [the evaluation server on GOT10k Challenge](http://got-10k.aitestunion.com/). We provide the model with its configuration and training log.
 
 | Method | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) |  AO  | SR<sub>0.5</sub> | SR<sub>0.75</sub> |                  Config                  |                                                                                                                                            Download                                                                                                                                            |
 | :----: | :------: | :---: | :-----: | :------: | :------------: | :--: | :--------------: | :---------------: | :--------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -82,7 +82,7 @@ If you want to know about more detailed usage of `train.py/dist_train.sh/slurm_t
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot.py 8 \
-    --checkpoint ./checkpoints/.pth
+    --checkpoint ./checkpoints/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot_20220822_082200-b7dbeca4.pth
 ```
 
 **2.1 Example on TrackingNet and GOT10k datasets**
@@ -96,7 +96,7 @@ If you want to get the results of the [TrackingNet](https://eval.ai/web/challeng
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-trackingnet.py 8 \
-    --checkpoint ./checkpoints/.pth
+    --checkpoint ./checkpoints/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot_20220822_082200-b7dbeca4.pth
 ```
 
 ```shell
@@ -105,7 +105,7 @@ If you want to get the results of the [TrackingNet](https://eval.ai/web/challeng
 # The number after config file represents the number of GPUs used. Here we use 8 GPUs.
 ./tools/dist_test.sh \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k.py 8 \
-    --checkpoint ./checkpoints/.pth
+    --checkpoint ./checkpoints/prdimp_r50_8xb10-50e_got10k_20220907_173919-fa24df25.pth
 ```
 
 ### 3.Inference
@@ -115,7 +115,7 @@ Use a single GPU to predict a video and save it as a video.
 ```shell
 python demo/demo_sot.py \
     configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot.py \
-    --checkpoint ./checkpoints/.pth \
+    --checkpoint ./checkpoints/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot_20220822_082200-b7dbeca4.pth \
     --input demo/demo.mp4 \
     --output sot.mp4
 ```
