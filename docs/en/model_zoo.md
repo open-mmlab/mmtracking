@@ -29,58 +29,62 @@
 
 ### DFF (CVPR 2017)
 
-Please refer to [DFF](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/dff) for details.
+Please refer to [DFF](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vid/dff) for details.
 
 ### FGFA (ICCV 2017)
 
-Please refer to [FGFA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/fgfa) for details.
+Please refer to [FGFA](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vid/fgfa) for details.
 
 ### SELSA (ICCV 2019)
 
-Please refer to [SELSA](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/selsa) for details.
+Please refer to [SELSA](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vid/selsa) for details.
 
 ### Temporal RoI Align (AAAI 2021)
 
-Please refer to [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/blob/master/configs/vid/temporal_roi_align) for details.
+Please refer to [Temporal RoI Align](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vid/temporal_roi_align) for details.
 
 ## Baselines of multiple object tracking
 
 ### SORT (ICIP 2016)
 
-Please refer to [SORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/sort) for details.
+Please refer to [SORT](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/sort) for details.
 
 ### DeepSORT (ICIP 2017)
 
-Please refer to [DeepSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/deepsort) for details.
+Please refer to [DeepSORT](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/deepsort) for details.
 
 ### Tracktor (ICCV 2019)
 
-Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/tracktor) for details.
+Please refer to [Tracktor](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/tracktor) for details.
 
 ### QDTrack (CVPR 2021)
 
-Please refer to [QDTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/qdtrack) for details.
+Please refer to [QDTrack](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/qdtrack) for details.
 
 ### ByteTrack (ECCV 2022)
 
-Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/bytetrack) for details.
+Please refer to [ByteTrack](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/bytetrack) for details.
 
 ### StrongSORT (arvix 2022)
 
-Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/master/configs/mot/strongsort) for details
+Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/mot/strongsort) for details
 
 ## Baselines of single object tracking
 
 ### SiameseRPN++ (CVPR 2019)
 
-Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/siamese_rpn) for details.
+Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/siamese_rpn) for details.
 
 ### STARK (ICCV 2021)
 
-Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark) for details.
+Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/stark) for details.
+
+### PrDiMP (CVPR 2020)
+
+Please refer to [PrDiMP](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/prdimp) for details.
 
 ## Baselines of video instance segmentation
 
 ### MaskTrack R-CNN (ICCV 2019)
 
-Please refer to [MaskTrack R-CNN](https://github.com/open-mmlab/mmtracking/blob/master/configs/vis/masktrack_rcnn) for details.
+Please refer to [MaskTrack R-CNN](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vis/masktrack_rcnn) for details
