@@ -174,7 +174,7 @@ reuslts while the negative number means the bottom-k results.
 
 ## Save SOT evaluation results and plot them
 
-Saving the sot evaluation result by setting the `SOTMetric` in the config.
+Save the SOT evaluation result by setting the `SOTMetric` in the config.
 
 ```python
 test_evaluator = dict(
@@ -198,3 +198,38 @@ Given the saved results, you can plot them using the following command:
 ```shell
 python ./tools/analysis_tools/sot/sot_plot_curve.py ./results --plot_save_path ./results
 ```
+
+# Save tracked results and playback them
+
+Save the tracked result by setting the `SOTMetric` in the config.
+
+```python
+test_evaluator = dict(
+    type='SOTMetric',
+    options_after_eval = dict(saved_track_res_path='./tracked_results'))
+```
+
+Playback the tracked results using the following command:
+
+```shell
+python ./tools/analysis_tools/sot/sot_playback.py  data/OTB100/data/Basketball/img/ tracked_results/basketball.txt --show --output results/basketball.mp4 --fps 20 --gt_bboxes data/OTB100/data/Basketball/groundtruth_rect.txt
+```
+
+## Visualization of feature map
+
+Here is an example of calling the Visualizer in MMEngine:
+
+```python
+# call visualizer at any position
+visualizer = Visualizer.get_current_instance()
+# set the image as background
+visualizer.set_image(image=image)
+# draw feature map on the image
+drawn_img = visualizer.draw_featmap(feature_map, image, channel_reduction='squeeze_mean')
+# show
+visualizer.show(drawn_img)
+# saved as ${saved_dir}/vis_data/vis_image/feat_0.png
+visualizer.add_image('feature_map', drawn_img)
+```
+
+More details about visualization of feature map can be seen in [visualizer docs](https://github.com/open-mmlab/mmengine/blob/main/docs/zh_cn/advanced_tutorials/visualization.md) and [draw_featmap function](https://github.com/open-mmlab/mmengine/blob/main/mmengine/visualization/visualizer.py#L864)
