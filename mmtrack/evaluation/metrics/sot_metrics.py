@@ -45,7 +45,9 @@ class SOTMetric(BaseVideoMetric):
             metric names to disambiguate homonymous metrics of different
             evaluators. If prefix is not provided in the argument,
             self.default_prefix will be used instead. Defaults to None.
-        options_after_eval (dict, optional): The options after
+        saved_track_res_path (Optional[str], optional): The saved path of
+            tracked results. Defaults to None.
+        options_after_eval (Optional[dict], optional): The options after
             evaluation. Defaults to {}. The usage is the following:
             ```
                 options_after_eval = dict(
@@ -70,6 +72,7 @@ class SOTMetric(BaseVideoMetric):
                  outfile_prefix: Optional[str] = None,
                  collect_device: str = 'cpu',
                  prefix: Optional[str] = None,
+                 saved_track_res_path: Optional[str] = None,
                  options_after_eval: dict = {}) -> None:
         super().__init__(collect_device=collect_device, prefix=prefix)
         self.metrics = metric if isinstance(metric, list) else [metric]
@@ -91,6 +94,7 @@ class SOTMetric(BaseVideoMetric):
                     f'but got {metric_option}.')
         self.outfile_prefix = outfile_prefix
         self.format_only = format_only
+        self.saved_track_res_path = saved_track_res_path
         self.options_after_eval = options_after_eval
         self.preds_per_video, self.gts_per_video = [], []
         self.frame_ids, self.visible_per_video = [], []
@@ -169,6 +173,10 @@ class SOTMetric(BaseVideoMetric):
             all_pred_bboxes.append(result['pred_bboxes'])
             all_gt_bboxes.append(result['gt_bboxes'])
             all_visible.append(result['visible'])
+
+        if self.saved_track_res_path is not None:
+            self.save_tracked_results(all_pred_bboxes, all_video_names,
+                                      self.saved_track_res_path)
 
         # 2. Fromat-only (Optional)
         if self.format_only:
@@ -357,4 +365,24 @@ class SOTMetric(BaseVideoMetric):
         shutil.rmtree(outfile_prefix)
         logger.info(
             f'-------- The formatted results are stored in {outfile_prefix}.zip --------'  # noqa: E501
+        )
+
+    def save_tracked_results(self, results: List[List[np.ndarray]],
+                             video_names: List[str], saved_path: str):
+        """Save the tracked results.
+
+        Args:
+            results (List[List[np.ndarray]]): The tracked results.
+            video_names (List[str]): The video names.
+            saved_path (str): The saved path of tracked results.
+        """
+        logger: MMLogger = MMLogger.get_current_instance()
+
+        if not osp.isdir(saved_path):
+            os.makedirs(saved_path, exist_ok=True)
+
+        self.save_formatted_results_trackingnet(results, video_names,
+                                                saved_path)
+        logger.info(
+            f'-------- The whole tracked results are stored in the fold {saved_path}--------'  # noqa: E501
         )
