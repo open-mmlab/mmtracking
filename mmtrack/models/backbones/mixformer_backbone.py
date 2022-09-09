@@ -321,9 +321,12 @@ class MixedAttentionModule(nn.Module):
             online_template.squeeze(0), '(b h w) c -> b c h w', h=t_h,
             w=t_w).contiguous()  # b, c, 32, 32
         if self.conv_proj_q is not None:
-            t_q = self.conv_proj_q(template)
-            ot_q = self.conv_proj_q(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            t_q = rearrange(
+                self.conv_proj_q(template),
+                'b c h w -> b (h w) c').contiguous()
+            ot_q = rearrange(
+                self.conv_proj_q(online_template),
+                'b c h w -> b (h w) c').flatten(end_dim=1).unsqueeze(0)
         else:
             t_q = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             ot_q = rearrange(online_template,
@@ -331,9 +334,12 @@ class MixedAttentionModule(nn.Module):
         q = torch.cat([t_q, ot_q], dim=1)
 
         if self.conv_proj_k is not None:
-            self.t_k = self.conv_proj_k(template)
-            self.ot_k = self.conv_proj_k(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            self.t_k = rearrange(
+                self.conv_proj_k(template),
+                'b c h w -> b (h w) c').contiguous()
+            self.ot_k = rearrange(
+                self.conv_proj_k(online_template),
+                'b c h w -> b (h w) c').flatten(end_dim=1).unsqueeze(0)
         else:
             self.t_k = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             self.ot_k = rearrange(
@@ -342,9 +348,12 @@ class MixedAttentionModule(nn.Module):
         k = torch.cat([self.t_k, self.ot_k], dim=1)
 
         if self.conv_proj_v is not None:
-            self.t_v = self.conv_proj_v(template)
-            self.ot_v = self.conv_proj_v(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            self.t_v = rearrange(
+                self.conv_proj_v(template),
+                'b c h w -> b (h w) c').contiguous()
+            self.ot_v = rearrange(
+                self.conv_proj_v(online_template),
+                'b c h w -> b (h w) c').flatten(end_dim=1).unsqueeze(0)
         else:
             self.t_v = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             self.ot_v = rearrange(
