@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
-import glob
+import os
 import os.path as osp
 import subprocess
 
@@ -18,10 +18,11 @@ def parse_args():
 
 def process_checkpoint(in_file, out_file):
     exp_dir = osp.dirname(in_file)
-    # use `[-2]` to skip `scales.json`
-    log_json_path = list(
-        sorted(glob.glob(osp.join(exp_dir, '*', 'vis_data', '*.json'))))[-2]
-    model_time = osp.split(log_json_path)[-1].split('.')[0]
+    model_time = sorted([
+        x for x in os.listdir(exp_dir) if osp.isdir(osp.join(exp_dir, x))
+    ])[-1]
+    log_json_path = osp.join(exp_dir,
+                             f'{model_time}/vis_data/{model_time}.json')
 
     checkpoint = torch.load(in_file, map_location='cpu')
     # remove optimizer for smaller file size
