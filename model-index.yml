@@ -5,6 +5,7 @@ Import:
   - configs/mot/bytetrack/metafile.yml
   - configs/mot/strongsort/metafile.yml
   - configs/sot/siamese_rpn/metafile.yml
+  - configs/sot/prdimp/metafile.yml
   - configs/sot/stark/metafile.yml
   - configs/vid/dff/metafile.yml
   - configs/vid/fgfa/metafile.yml
