@@ -69,7 +69,7 @@ The master branch works with **PyTorch1.5+**.
 
 ## What's New
 
-We release MMTracking 1.0.0rc0, the first version and MMTracking 1.x.
+We release MMTracking 1.0.0rc0, the first version of MMTracking 1.x.
 
 Built upon the new [training engine](https://github.com/open-mmlab/mmengine), MMTracking 1.x unifies the interfaces of datasets, models, evaluation, and visualization.
 
