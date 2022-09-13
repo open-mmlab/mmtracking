@@ -69,7 +69,11 @@ The master branch works with **PyTorch1.6+**.
 
 ## What's New
 
-Release [PrDiMP](configs/sot/prdimp) pretrained models.
+# \<\<\<\<\<\<\< HEAD Release [PrDiMP](configs/sot/prdimp) pretrained models.
+
+Release [Mask2Former](configs/vis/mask2former) pretrained models.
+
+> > > > > > > c889761cda9e24e4b73c9cd13c35e86d752dcc61
 
 v1.0.0rc0 was released in 31/08/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -126,6 +130,7 @@ Supported Datasets
 Supported Methods
 
 - [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
+- [x] [Mask2Former](configs/vis/mask2former) (CVPR 2022)
 
 Supported Datasets
 

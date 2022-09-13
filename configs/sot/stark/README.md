@@ -54,7 +54,7 @@ We provide the last-epoch model with its configuration and training log.
 
 ### TrackingNet
 
-The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on TrackingNet is submitted to [the evaluation server on TrackingNet Challenge](https://eval.ai/web/challenges/challenge-page/1805/). We provide the model with its configuration and training log.
+The results of STARK in TrackingNet are reimplemented by ourselves. The last-epoch model on LaSOT is submitted to [the evaluation server on TrackingNet Challenge](https://eval.ai/web/challenges/challenge-page/1805/). We provide the model with its configuration and training log.
 
 |  Method   | Backbone | Style | Lr schd | Mem (GB) | Inf time (fps) | Success | Norm precision | Precision |                                          Config                                           |                                                                                                                                       Download                                                                                                                                       |
 | :-------: | :------: | :---: | :-----: | :------: | :------------: | :-----: | :------------: | :-------: | :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |

@@ -12,3 +12,4 @@ Import:
   - configs/vid/selsa/metafile.yml
   - configs/vid/temporal_roi_align/metafile.yml
   - configs/vis/masktrack_rcnn/metafile.yml
+  - configs/vis/mask2former/metafile.yml

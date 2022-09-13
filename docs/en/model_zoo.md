@@ -88,3 +88,7 @@ Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/1.x/config
 ### MaskTrack R-CNN (ICCV 2019)
 
 Please refer to [MaskTrack R-CNN](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vis/masktrack_rcnn) for details
+
+### Mask2Former (CVPR 2022)
+
+Please refer to [Mask2Former](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/vis/mask2former) for details.

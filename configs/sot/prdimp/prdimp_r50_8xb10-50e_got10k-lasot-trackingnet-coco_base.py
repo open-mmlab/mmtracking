@@ -169,7 +169,7 @@ train_dataloader = dict(
                 test_mode=False),
             dict(
                 type='SOTCocoDataset',
-                data_root='openmmlab:s3://openmmlab/datasets/detection/',
+                data_root=data_root,
                 ann_file='coco/annotations/instances_train2017.json',
                 data_prefix=dict(img_path='coco/train2017'),
                 pipeline=train_pipeline,
