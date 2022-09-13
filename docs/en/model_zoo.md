@@ -75,13 +75,13 @@ Please refer to [StrongSORT](https://github.com/open-mmlab/mmtracking/blob/1.x/c
 
 Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/siamese_rpn) for details.
 
-### STARK (ICCV 2021)
-
-Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/stark) for details.
-
 ### PrDiMP (CVPR 2020)
 
 Please refer to [PrDiMP](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/prdimp) for details.
+
+### STARK (ICCV 2021)
+
+Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/1.x/configs/sot/stark) for details.
 
 ## Baselines of video instance segmentation
 
