@@ -69,11 +69,7 @@ The master branch works with **PyTorch1.6+**.
 
 ## What's New
 
-# \<\<\<\<\<\<\< HEAD Release [PrDiMP](configs/sot/prdimp) pretrained models.
-
-Release [Mask2Former](configs/vis/mask2former) pretrained models.
-
-> > > > > > > c889761cda9e24e4b73c9cd13c35e86d752dcc61
+Release [PrDiMP](configs/sot/prdimp) pretrained models.
 
 v1.0.0rc0 was released in 31/08/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
