@@ -69,10 +69,13 @@ The master branch works with **PyTorch1.5+**.
 
 ## What's New
 
-- Release [OC-SORT](configs/mot/ocsort/) pretrained models.
+We release MMTracking 1.0.0rc0, the first version of MMTracking 1.x.
 
-v0.13.0 was released in 29/04/2022.
-Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
+Built upon the new [training engine](https://github.com/open-mmlab/mmengine), MMTracking 1.x unifies the interfaces of datasets, models, evaluation, and visualization.
+
+We also support more methods in MMTracking 1.x, such as [StrongSORT](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/mot/strongsort) for MOT, [Mask2Former](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/vis/mask2former) for VIS, [PrDiMP](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/sot/prdimp) for SOT.
+
+Please refer to [dev-1.x](https://github.com/open-mmlab/mmtracking/tree/dev-1.x) branch for the using of MMTracking 1.x.
 
 ## Installation
 
