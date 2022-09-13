@@ -215,18 +215,21 @@ class MixedAttentionModule(nn.Module):
             x, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
 
         if self.conv_proj_q is not None:
-            q = self.conv_proj_q(search)
+            q = rearrange(self.conv_proj_q(search),
+                          'b c h w -> b (h w) c').contiguous()
         else:
             q = rearrange(search, 'b c h w -> b (h w) c').contiguous()
 
         if self.conv_proj_k is not None:
-            k = self.conv_proj_k(search)
+            k = rearrange(self.conv_proj_k(search),
+                          'b c h w -> b (h w) c').contiguous()
         else:
             k = rearrange(search, 'b c h w -> b (h w) c').contiguous()
         k = torch.cat([self.t_k, self.ot_k, k], dim=1)
 
         if self.conv_proj_v is not None:
-            v = self.conv_proj_v(search)
+            v = rearrange(self.conv_proj_v(search),
+                          'b c h w -> b (h w) c').contiguous()
         else:
             v = rearrange(search, 'b c h w -> b (h w) c').contiguous()
         v = torch.cat([self.t_v, self.ot_v, v], dim=1)
@@ -320,10 +323,14 @@ class MixedAttentionModule(nn.Module):
         online_template = rearrange(
             online_template.squeeze(0), '(b h w) c -> b c h w', h=t_h,
             w=t_w).contiguous()  # b, c, 32, 32
+
         if self.conv_proj_q is not None:
-            t_q = self.conv_proj_q(template)
-            ot_q = self.conv_proj_q(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            t_q = rearrange(
+                self.conv_proj_q(template),
+                'b c h w -> b (h w) c').contiguous()
+            ot_q = rearrange(
+                self.conv_proj_q(online_template),
+                'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         else:
             t_q = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             ot_q = rearrange(online_template,
@@ -331,9 +338,12 @@ class MixedAttentionModule(nn.Module):
         q = torch.cat([t_q, ot_q], dim=1)
 
         if self.conv_proj_k is not None:
-            self.t_k = self.conv_proj_k(template)
-            self.ot_k = self.conv_proj_k(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            self.t_k = rearrange(
+                self.conv_proj_k(template),
+                'b c h w -> b (h w) c').contiguous()
+            self.ot_k = rearrange(
+                self.conv_proj_k(online_template),
+                'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         else:
             self.t_k = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             self.ot_k = rearrange(
@@ -342,9 +352,12 @@ class MixedAttentionModule(nn.Module):
         k = torch.cat([self.t_k, self.ot_k], dim=1)
 
         if self.conv_proj_v is not None:
-            self.t_v = self.conv_proj_v(template)
-            self.ot_v = self.conv_proj_v(online_template).flatten(
-                end_dim=1).unsqueeze(0)
+            self.t_v = rearrange(
+                self.conv_proj_v(template),
+                'b c h w -> b (h w) c').contiguous()
+            self.ot_v = rearrange(
+                self.conv_proj_v(online_template),
+                'b c h w -> (b h w) c').contiguous().unsqueeze(0)
         else:
             self.t_v = rearrange(template, 'b c h w -> b (h w) c').contiguous()
             self.ot_v = rearrange(
