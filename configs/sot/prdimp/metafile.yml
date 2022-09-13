@@ -1,0 +1,62 @@
+Collections:
+  - Name: PrDiMP
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Techniques:
+        - Adam
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - ResNet
+    Paper:
+      URL: https://arxiv.org/abs/2003.12565
+      Title: Probabilistic Regression for Visual Tracking
+    README: configs/sot/prdimp/README.md
+
+Models:
+  - Name: prdimp_r50_8xb10-50e_got10k
+    In Collection: PrDiMP
+    Config: configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k.py
+    Metadata:
+      Training Data: GOT10k
+      Training Memory (GB): 13.9
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: GOT10k
+        Metrics:
+          AO: 62.9
+          SR0.5: 72.5
+          SR0.75: 52.8
+    Weights: https://download.openmmlab.com/mmtracking/sot/prdimp/prdimp_r50_8xb10-50e_got10k_20220907_173919-fa24df25.pth
+
+  - Name: prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot
+    In Collection: PrDiMP
+    Config: configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 13.9
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 59.7
+          Norm Precision: 67.7
+          Precision: 60.5
+    Weights: https://download.openmmlab.com/mmtracking/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot_20220822_082200-b7dbeca4.pth
+
+  - Name: prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-trackingnet
+    In Collection: PrDiMP
+    Config: configs/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-trackingnet.py
+    Metadata:
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Memory (GB): 13.9
+      Epochs: 50
+    Results:
+      - Task: Single Object Tracking
+        Dataset: TrackingNet
+        Metrics:
+          Success: 75.2
+          Norm Precision: 80.5
+          Precision: 70.1
+    Weights: https://download.openmmlab.com/mmtracking/sot/prdimp/prdimp_r50_8xb10-50e_got10k-lasot-trackingnet-coco_test-lasot_20220822_082200-b7dbeca4.pth
