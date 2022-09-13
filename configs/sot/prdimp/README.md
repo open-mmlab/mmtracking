@@ -28,12 +28,6 @@ In this work, we therefore propose a probabilistic regression formulation and ap
 
 ## Results and models
 
-```
-bash ./tools/dist_train.sh \
-    ${CONFIG_FILE} \
-    ${GPU_NUM} \
-```
-
 ### LaSOT
 
 We provide the last-epoch model with its configuration and training log.
