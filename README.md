@@ -69,7 +69,7 @@ The master branch works with **PyTorch1.6+**.
 
 ## What's New
 
-Release [StrongSORT](configs/mot/strongsort) pretrained models.
+Release [PrDiMP](configs/sot/prdimp) pretrained models.
 
 v1.0.0rc0 was released in 31/08/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -136,8 +136,8 @@ Supported Datasets
 Supported Methods
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK](configs/sot/stark) (ICCV 2021)
 - [x] [PrDiMP](configs/sot/prdimp) (CVPR2020)
+- [x] [STARK](configs/sot/stark) (ICCV 2021)
 
 Supported Datasets
 
