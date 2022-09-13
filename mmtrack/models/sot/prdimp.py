@@ -303,9 +303,9 @@ class PrDiMP(BaseSingleObjectTracker):
             self.classifier.update_classifier(target_bbox, self.frame_num,
                                               hard_neg_flag)
 
-        result = InstanceData()
-        result.scores = torch.max(score_map[0]).unsqueeze(0)
-        result.bboxes = bbox_cxcywh_to_xyxy(bbox.unsqueeze(0))
+        result = [InstanceData()]
+        result[0].scores = torch.max(score_map[0]).unsqueeze(0)
+        result[0].bboxes = bbox_cxcywh_to_xyxy(bbox.unsqueeze(0))
 
         return result
 

@@ -69,7 +69,7 @@ The master branch works with **PyTorch1.6+**.
 
 ## What's New
 
-Release [Mask2Former](configs/vis/mask2former) pretrained models.
+Release [Mask2Former](configs/vis/mask2former) and [PrDiMP](configs/sot/prdimp) pretrained models.
 
 v1.0.0rc0 was released in 31/08/2022.
 Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
@@ -137,8 +137,8 @@ Supported Datasets
 Supported Methods
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
+- [x] [PrDiMP](configs/sot/prdimp) (CVPR2020)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
-- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
 
 Supported Datasets
 

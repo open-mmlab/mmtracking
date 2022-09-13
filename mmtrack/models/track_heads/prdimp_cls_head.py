@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -338,6 +338,29 @@ class PrDiMPClsHead(BaseModule):
 
         return new_bbox_center, scores_map, state
 
+    def _gen_2d_hanning_windows(self,
+                                size: Sequence,
+                                device: str = 'cuda') -> Tensor:
+        """Generate 2D hanning window.
+
+        Args:
+            size (Sequence): The size of 2d hanning window.
+            device (str): Device the tensor will be put on. Defaults to 'cuda'.
+
+        Returns:
+            Tensor: 2D hanning window with shape
+            (num_base_anchors[i] * featmap_sizes[i][0] * featmap_sizes[i][1]).
+        """
+
+        def hanning_1d(s):
+            return 0.5 * (1 - torch.cos(
+                (2 * math.pi / (s + 1)) * torch.arange(1, s + 1).float()))
+
+        hanning_win = hanning_1d(size[0]).reshape(-1, 1) * hanning_1d(
+            size[1]).reshape(1, -1)
+
+        return hanning_win.to(device)
+
     def predict_by_feat(self, scores: Tensor, prev_bbox: Tensor,
                         sample_center: Tensor,
                         scale_factor: float) -> Tuple[Tensor, bool]:
@@ -368,7 +391,12 @@ class PrDiMPClsHead(BaseModule):
             scores.device)
         score_center = (score_size / 2).to(scores.device)
 
-        max_score, max_pos = max_last2d(scores)
+        scores_hn = scores
+        if self.locate_cfg.get('hanning_window', False):
+            scores_hn = scores * self._gen_2d_hanning_windows(
+                score_size, device=scores.device)
+
+        max_score, max_pos = max_last2d(scores_hn)
         max_pos = max_pos.flip(0).float()
         # the displacement of target to the center of score map
         target_disp_score_map = max_pos - score_center
