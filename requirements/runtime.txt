@@ -1,4 +1,4 @@
-attributee==0.1.5
+attributee
 dotty_dict
 lap
 matplotlib

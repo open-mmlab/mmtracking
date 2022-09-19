@@ -1,5 +1,21 @@
 ## Changelog
 
+### v0.14.0 (19/09/2022)
+
+#### Highlights
+
+- Introduce the 1.0.0rc0 version of MMTracking ([#725](https://github.com/open-mmlab/mmtracking/pull/725))
+
+#### New Features
+
+- Support OC-SORT method for MOT ([#545](https://github.com/open-mmlab/mmtracking/pull/545))
+
+- Support multi-class tracking in ByteTrack ([#548](https://github.com/open-mmlab/mmtracking/pull/548))
+
+- Support DanceTrack dataset for MOT ([#543](https://github.com/open-mmlab/mmtracking/pull/543))
+
+- Support TAO dataset for QDTrack ([#585](https://github.com/open-mmlab/mmtracking/pull/585))
+
 ### v0.13.0 (29/04/2022)
 
 #### Highlights
