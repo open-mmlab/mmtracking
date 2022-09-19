@@ -10,18 +10,18 @@
 
 兼容的 MMTracking，MMCV 和 MMDetection 版本如下，请安装正确的版本以避免安装问题。
 
-| MMTracking version |        MMCV version        |       MMDetection version       |
-| :----------------: | :------------------------: | :-----------------------------: |
-|       master       | mmcv-full>=1.3.17, \<2.0.0 |  MMDetection>=2.19.1, \<3.0.0   |
-|       0.14.0       | mmcv-full>=1.3.17, \<2.0.0 |  MMDetection>=2.19.1, \<3.0.0   |
-|       0.13.0       | mmcv-full>=1.3.17, \<1.6.0 | MMDetection>=2.19.1  , \<3.0.0  |
-|       0.12.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1   , \<3.0.0 |
-|       0.11.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1  , \<3.0.0  |
-|       0.10.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1   , \<3.0.0 |
-|       0.9.0        | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1   , \<3.0.0 |
-|       0.8.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0   , \<3.0.0 |
-|       0.7.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0   , \<3.0.0 |
-|       0.6.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0   , \<3.0.0 |
+| MMTracking version |        MMCV version        |     MMDetection version      |
+| :----------------: | :------------------------: | :--------------------------: |
+|       master       | mmcv-full>=1.3.17, \<2.0.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.14.0       | mmcv-full>=1.3.17, \<2.0.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.13.0       | mmcv-full>=1.3.17, \<1.6.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.12.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.11.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.10.0       | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.9.0        | mmcv-full>=1.3.17, \<1.5.0 | MMDetection>=2.19.1, \<3.0.0 |
+|       0.8.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0, \<3.0.0 |
+|       0.7.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0, \<3.0.0 |
+|       0.6.0        | mmcv-full>=1.3.8, \<1.4.0  | MMDetection>=2.14.0, \<3.0.0 |
 
 ## 安装
 
