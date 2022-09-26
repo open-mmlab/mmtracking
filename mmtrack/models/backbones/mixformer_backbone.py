@@ -110,9 +110,17 @@ class MixedAttentionModule(nn.Module):
                           method):
         """Build qkv projection according to `method` argument.
 
-        "dw_bn": Apply a convolution layer with batch norm on the input.
-        "avg": Apply an avgpool2d on the input.
-        "identity": No transformation on the input.
+        Args:
+            dim_in (int): input dimension
+            dim_out (int): output dimension
+            kernel_size (int): kernel size of convolution
+            padding (int): padding of convolution
+            stride (int): stride of convolution
+            method (str): description of projection method.
+                ``'dw_bn'``: Apply a convolution layer with batch
+                                    norm on the input.
+                ``'avg'``: Apply an avgpool2d on the input.
+                ``'identity'``: No transformation on the input.
         """
         if method == 'dw_bn':
             proj = nn.Sequential(
@@ -231,9 +239,12 @@ class MixedAttentionModule(nn.Module):
         """Asymmetric mixed attention.
 
         Args:
-            x (Tensor): input of shape (B, N, C)
-            t_h/w (int): template feature size
-            s_h/w (int): search region feature size
+            x (Tensor): concatenated feature of temmlate and search,
+                shape (B, 2*t_h*t_w+s_h*s_w, C)
+            t_h (int): template feature height
+            t_w (int): template feature width
+            s_h (int): search region feature height
+            s_w (int): search region feature width
         """
         if (self.conv_proj_q is not None or self.conv_proj_k is not None
                 or self.conv_proj_v is not None):
@@ -421,6 +432,15 @@ class MixFormerAttentionBlock(nn.Module):
         )
 
     def forward(self, x, t_h, t_w, s_h, s_w):
+        """
+        Args:
+            x (Tensor): concatenated feature of temmlate and search,
+                shape (B, 2*t_h*t_w+s_h*s_w, C)
+            t_h (int): template feature height
+            t_w (int): template feature width
+            s_h (int): search region feature height
+            s_w (int): search region feature width
+        """
         res = x
         x = self.norm1(x)
         attn = self.attn(x, t_h, t_w, s_h, s_w)
@@ -767,7 +787,8 @@ class ConvVisionTransformer(BaseModule):
         self.head = nn.Linear(dim_embed, 1000)
 
     def forward(self, template, online_template, search):
-        """
+        """Forward-pass method in train pipeline.
+
         Args:
             template (Tensor): template images of shape (B, C, H, W)
             online template (Tensor): online template images
@@ -781,11 +802,31 @@ class ConvVisionTransformer(BaseModule):
         return template, search
 
     def forward_test(self, search):
+        """Forward-pass method for search image in test pipeline. The model
+        forwarding strategies are different between train and test. In test
+        pipeline, we call ``search()`` method which only takes in search image
+        when tracker is tracking current frame. This approach reduces
+        computational overhead and thus increases tracking speed.
+
+        Args:
+            search (Tensor): search images of shape (B, C, H, W)
+        """
         for i in range(self.num_stages):
             search = getattr(self, f'stage{i}').forward_test(search)
         return self.template, search
 
     def set_online(self, template, online_template):
+        """Forward-pass method for template image in test pipeline. The model
+        forwarding strategies are different between train and test. In test
+        pipeline, we call ``set_online()`` method which only takes in template
+        images when tracker is initialized or is updating online template. This
+        approach reduces computational overhead and thus increases tracking
+        speed.
+
+        Args:
+            template (_type_): _description_
+            online_template (_type_): _description_
+        """
         for i in range(self.num_stages):
             template, online_template = getattr(self, f'stage{i}').set_online(
                 template, online_template)
