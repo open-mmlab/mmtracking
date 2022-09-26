@@ -158,55 +158,46 @@ class MixedAttentionModule(nn.Module):
             search, 'b (h w) c -> b c h w', h=s_h, w=s_w).contiguous()
 
         if self.conv_proj_q is not None:
-            t_q = rearrange(
-                self.conv_proj_q(template),
-                'b c h w -> b (h w) c').contiguous()
-            ot_q = rearrange(
-                self.conv_proj_q(online_template),
-                'b c h w -> b (h w) c').contiguous()
-            s_q = rearrange(self.conv_proj_q(search),
-                            'b c h w -> b (h w) c').contiguous()
-            q = torch.cat([t_q, ot_q, s_q], dim=1)
+            t_q = self.conv_proj_q(template)
+            ot_q = self.conv_proj_q(online_template)
+            s_q = self.conv_proj_q(search)
         else:
-            t_q = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_q = rearrange(online_template,
-                             'b c h w -> b (h w) c').contiguous()
-            s_q = rearrange(search, 'b c h w -> b (h w) c').contiguous()
-            q = torch.cat([t_q, ot_q, s_q], dim=1)
+            t_q = template
+            ot_q = online_template
+            s_q = search
+
+        t_q = rearrange(t_q, 'b c h w -> b (h w) c').contiguous()
+        ot_q = rearrange(ot_q, 'b c h w -> b (h w) c').contiguous()
+        s_q = rearrange(s_q, 'b c h w -> b (h w) c').contiguous()
+        q = torch.cat([t_q, ot_q, s_q], dim=1)
 
         if self.conv_proj_k is not None:
-            t_k = rearrange(
-                self.conv_proj_k(template),
-                'b c h w -> b (h w) c').contiguous()
-            ot_k = rearrange(
-                self.conv_proj_k(online_template),
-                'b c h w -> b (h w) c').contiguous()
-            s_k = rearrange(self.conv_proj_k(search),
-                            'b c h w -> b (h w) c').contiguous()
-            k = torch.cat([t_k, ot_k, s_k], dim=1)
+            t_k = self.conv_proj_k(template)
+            ot_k = self.conv_proj_k(online_template)
+            s_k = self.conv_proj_k(search)
         else:
-            t_k = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_k = rearrange(online_template,
-                             'b c h w -> b (h w) c').contiguous()
-            s_k = rearrange(search, 'b c h w -> b (h w) c').contiguous()
-            k = torch.cat([t_k, ot_k, s_k], dim=1)
+            t_k = template
+            ot_k = online_template
+            s_k = search
+
+        t_k = rearrange(t_k, 'b c h w -> b (h w) c').contiguous()
+        ot_k = rearrange(ot_k, 'b c h w -> b (h w) c').contiguous()
+        s_k = rearrange(s_k, 'b c h w -> b (h w) c').contiguous()
+        k = torch.cat([t_k, ot_k, s_k], dim=1)
 
         if self.conv_proj_v is not None:
-            t_v = rearrange(
-                self.conv_proj_v(template),
-                'b c h w -> b (h w) c').contiguous()
-            ot_v = rearrange(
-                self.conv_proj_v(online_template),
-                'b c h w -> b (h w) c').contiguous()
-            s_v = rearrange(self.conv_proj_v(search),
-                            'b c h w -> b (h w) c').contiguous()
-            v = torch.cat([t_v, ot_v, s_v], dim=1)
+            t_v = self.conv_proj_v(template)
+            ot_v = self.conv_proj_v(online_template)
+            s_v = self.conv_proj_v(search)
         else:
-            t_v = rearrange(template, 'b c h w -> b (h w) c').contiguous()
-            ot_v = rearrange(online_template,
-                             'b c h w -> b (h w) c').contiguous()
-            s_v = rearrange(search, 'b c h w -> b (h w) c').contiguous()
-            v = torch.cat([t_v, ot_v, s_v], dim=1)
+            t_v = template
+            ot_v = online_template
+            s_v = search
+
+        t_v = rearrange(t_v, 'b c h w -> b (h w) c').contiguous()
+        ot_v = rearrange(ot_v, 'b c h w -> b (h w) c').contiguous()
+        s_v = rearrange(s_v, 'b c h w -> b (h w) c').contiguous()
+        v = torch.cat([t_v, ot_v, s_v], dim=1)
 
         return q, k, v
 
@@ -217,18 +208,21 @@ class MixedAttentionModule(nn.Module):
         if self.conv_proj_q is not None:
             q = self.conv_proj_q(search)
         else:
-            q = rearrange(search, 'b c h w -> b (h w) c').contiguous()
+            q = search
+        q = rearrange(q, 'b c h w -> b (h w) c').contiguous()
 
         if self.conv_proj_k is not None:
             k = self.conv_proj_k(search)
         else:
-            k = rearrange(search, 'b c h w -> b (h w) c').contiguous()
+            k = search
+        k = rearrange(k, 'b c h w -> b (h w) c').contiguous()
         k = torch.cat([self.t_k, self.ot_k, k], dim=1)
 
         if self.conv_proj_v is not None:
             v = self.conv_proj_v(search)
         else:
-            v = rearrange(search, 'b c h w -> b (h w) c').contiguous()
+            v = search
+        v = rearrange(v, 'b c h w -> b (h w) c').contiguous()
         v = torch.cat([self.t_v, self.ot_v, v], dim=1)
 
         return q, k, v
