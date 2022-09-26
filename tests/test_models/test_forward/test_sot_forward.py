@@ -141,7 +141,8 @@ def test_stark_forward():
 @pytest.mark.parametrize('cfg_file', [
     'sot/siamese_rpn/siamese_rpn_r50_20e_lasot.py',
     'sot/siamese_rpn/siamese_rpn_r50_20e_vot2018.py',
-    'sot/stark/stark_st2_r50_50e_got10k.py'
+    'sot/stark/stark_st2_r50_50e_got10k.py',
+    'sot/mixformer/mixformer_got10k.py'
 ])
 def test_sot_test_forward(cfg_file):
     config = _get_config_module(cfg_file)
