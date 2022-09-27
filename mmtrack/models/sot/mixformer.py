@@ -142,7 +142,7 @@ class MixFormer(Stark):
 
         # update template
         conf_score = -1.
-        if self.head.score_head is not None:
+        if self.head.score_decoder_head is not None:
             # get confidence score (whether the search region is reliable)
             conf_score = out_dict['pred_scores'].view(1).sigmoid().item()
             crop_bbox = bbox_xyxy_to_cxcywh(pred_box)
