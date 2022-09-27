@@ -825,8 +825,9 @@ class ConvVisionTransformer(BaseModule):
         speed.
 
         Args:
-            template (_type_): _description_
-            online_template (_type_): _description_
+            template (Tensor): template images of shape (B, C, H, W)
+            online template (Tensor): online template images
+            of shape (B, C, H, W)
         """
         for i in range(self.num_stages):
             template, online_template = getattr(self, f'stage{i}').set_online(
