@@ -7,6 +7,9 @@ from mmtrack.models.track_heads.mixformer_head import (MixFormerHead,
 
 
 def test_score_head():
+    if not torch.cuda.is_available():
+        return
+
     score_head = MixFormerScoreDecoder().cuda()
     search_feat = torch.randn(1, 384, 20, 20).cuda()
     template_feat = torch.randn(1, 384, 8, 8).cuda()
@@ -17,6 +20,9 @@ def test_score_head():
 
 
 def test_mixformer_head():
+    if not torch.cuda.is_available():
+        return
+
     cfg = dict(
         bbox_head=dict(
             type='CornerPredictorHead',

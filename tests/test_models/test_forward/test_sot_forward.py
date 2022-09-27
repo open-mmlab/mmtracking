@@ -150,6 +150,14 @@ def test_sot_test_forward(cfg_file):
     sot = build_model(model)
     sot.eval()
 
+    device = torch.device('cpu')
+    if config.model.type == 'MixFormer':
+        if not torch.cuda.is_available():
+            return
+        else:
+            device = torch.device('cuda')
+    sot = sot.to(device)
+
     input_shape = (1, 3, 127, 127)
     mm_inputs = _demo_mm_inputs(input_shape, num_items=[1])
     imgs = mm_inputs.pop('imgs')
@@ -166,6 +174,8 @@ def test_sot_test_forward(cfg_file):
         results = defaultdict(list)
         for one_img, one_meta, one_gt_bboxes in zip(img_list, img_metas,
                                                     gt_bboxes):
+            one_img = one_img.to(device)
+            one_gt_bboxes = one_gt_bboxes.to(device)
             result = sot.forward([one_img], [[one_meta]],
                                  gt_bboxes=[one_gt_bboxes],
                                  return_loss=False)
