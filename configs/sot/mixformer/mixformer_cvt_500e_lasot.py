@@ -1,4 +1,4 @@
-_base_ = ['./mixformer_got10k.py']
+_base_ = ['./mixformer_cvt_500e_got10k.py']
 
 # model setting
 model = dict(
