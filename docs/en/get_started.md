@@ -14,6 +14,7 @@ The compatible MMTracking, MMEngine, MMCV, and MMDetection versions are as below
 | MMTracking version | MMEngine version |      MMCV version      |   MMDetection version   |
 | :----------------: | :--------------: | :--------------------: | :---------------------: |
 |        1.x         | mmengine>=0.1.0  | mmcv>=2.0.0rc1,\<2.0.0 | mmdet>=3.0.0rc0,\<3.0.0 |
+|      1.0.0rc1      | mmengine>=0.1.0  | mmcv>=2.0.0rc1,\<2.0.0 | mmdet>=3.0.0rc0,\<3.0.0 |
 
 ## Installation
 
