@@ -7,7 +7,7 @@ from packaging.version import parse
 
 from .version import __version__, version_info
 
-MMCV_MIN = '2.0.0rc0'
+MMCV_MIN = '2.0.0rc1'
 MMCV_MAX = '2.0.0'
 
 MMDET_MIN = '3.0.0rc0'

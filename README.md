@@ -20,15 +20,15 @@
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
 [![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/en/latest/)
+[![docs](https://img.shields.io/badge/docs-1.x-blue)](https://mmtracking.readthedocs.io/en/1.x/)
 [![badge](https://github.com/open-mmlab/mmtracking/workflows/build/badge.svg)](https://github.com/open-mmlab/mmtracking/actions)
 [![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
 [![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
 
-[📘Documentation](https://mmtracking.readthedocs.io/) |
-[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/model_zoo.html) |
-[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
+[📘Documentation](https://mmtracking.readthedocs.io/en/1.x/) |
+[🛠️Installation](https://mmtracking.readthedocs.io/en/1.x/get_started.html) |
+[👀Model Zoo](https://mmtracking.readthedocs.io/en/1.x/model_zoo.html) |
+[🆕Update News](https://mmtracking.readthedocs.io/en/1.x/notes/changelog.html) |
 [🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
 
 </div>
@@ -61,7 +61,7 @@ The master branch works with **PyTorch1.6+**.
 
 - **Simple, Fast and Strong**
 
-  **Simple**: MMTracking interacts with other OpenMMLab projects. It is built upon [MMDetection](https://github.com/open-mmlab/mmdetection) that we can capitalize any detector only through modifying the configs.
+  **Simple**: MMTracking interacts with other OpenMMLab projects. It is built upon [MMDetection](https://github.com/open-mmlab/mmdetection/tree/3.x) that we can capitalize any detector only through modifying the configs.
 
   **Fast**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
 
@@ -69,10 +69,10 @@ The master branch works with **PyTorch1.6+**.
 
 ## What's New
 
-Release [Mask2Former](configs/vis/mask2former) and [PrDiMP](configs/sot/prdimp) pretrained models.
+Release [Mask2Former](configs/vis/mask2former), [PrDiMP](configs/sot/prdimp) and [StrongSORT++](configs/mot/strongsort)) pretrained models.
 
-v1.0.0rc0 was released in 31/08/2022.
-Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
+v1.0.0rc1 was released in 10/10/2022.
+Please refer to [changelog.md](docs/en/notes/changelog.md) for details and release history.
 
 ## Get Started
 
@@ -111,7 +111,6 @@ Supported Methods
 - [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
 - [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
 - [x] [StrongSORT](configs/mot/strongsort) (arxiv 2022)
-- [ ] [OC-SORT](https://arxiv.org/abs/2203.14360) (arXiv 2022) (WIP)
 
 Supported Datasets
 
@@ -179,6 +178,7 @@ This project is released under the [Apache 2.0 license](LICENSE).
 
 ## Projects in OpenMMLab
 
+- [MMEngine](https://github.com/open-mmlab/mmengine): OpenMMLab foundational library for training deep learning models.
 - [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
 - [MIM](https://github.com/open-mmlab/mim): MIM installs OpenMMLab packages.
 - [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.

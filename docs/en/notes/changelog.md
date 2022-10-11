@@ -1,5 +1,15 @@
 ## Changelog
 
+### v1.0.0rc1 (10/10/2022)
+
+MMTracking 1.0.0rc1 is the 2-nd version of MMTracking 1.x, a part of the OpenMMLab 2.0 projects.
+
+Built upon the new [training engine](https://github.com/open-mmlab/mmengine), MMTracking 1.x unifies the interfaces of datasets, models, evaluation, and visualization.
+
+And there are some BC-breaking changes. Please check [the migration tutorial](https://mmtracking.readthedocs.io/en/1.x/migration.html) for more details.
+
+We also support more methods in MMTracking 1.x, such as StrongSORT for MOT, Mask2Former for VIS, PrDiMP for SOT.
+
 ### v0.13.0 (29/04/2022)
 
 #### Highlights
