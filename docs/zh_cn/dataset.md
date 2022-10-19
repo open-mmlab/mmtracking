@@ -269,7 +269,7 @@ python ./tools/convert_datasets/trackingnet/gen_trackingnet_infos.py -i ./data/t
 # 解压目录 'data/otb100/zips' 下的所有 '*.zip' 文件
 bash ./tools/convert_datasets/otb100/unzip_otb100.sh ./data/otb100
 # 下载标注
-# 由于UAV123数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
+# 由于OTB100数据集的所有视频的标注信息不具有统一性，我们仅需下载提前生成的数据信息文件即可。
 wget https://download.openmmlab.com/mmtracking/data/otb100_infos.txt -P data/otb100/annotations
 
 # GOT10k
