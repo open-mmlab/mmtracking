@@ -20,23 +20,14 @@ class CocoVideoMetric(CocoMetric):
             distributed data is split. Currently only 'unzip' and 'cat' are
             supported. For samplers in MMTrakcking, 'cat' should
             be used. Defaults to 'cat'.
-    dist_backend (str, optional): The name of the distributed communication
-        backend, you can get all the backend names through
-        ``mmeval.core.list_all_backends()``. Defaults to 'torch_cuda'.
     """
 
-    def __init__(self,
-                 dist_collect_mode='cat',
-                 dist_backend='torch_cuda',
-                 **kwargs) -> None:
-        super().__init__(
-            dist_collect_mode=dist_collect_mode,
-            dist_backend=dist_backend,
-            **kwargs)
+    def __init__(self, dist_collect_mode='cat', **kwargs) -> None:
+        super().__init__(dist_collect_mode=dist_collect_mode, **kwargs)
 
     def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
-        results should be stored in ``self.results``, which will be used to
+        results should be stored in ``self._results``, which will be used to
         compute the metrics when all batches have been processed.
 
         Note that we only modify ``pred['pred_instances']`` in ``CocoMetric``
