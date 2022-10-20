@@ -87,6 +87,6 @@ test_dataloader = val_dataloader
 # evaluator
 val_evaluator = dict(
     type='CocoVideoMetric',
-    ann_file=data_root + 'annotations/imagenet_vid_val.json',
+    # ann_file=data_root + 'annotations/imagenet_vid_val.json',
     metric='bbox')
 test_evaluator = val_evaluator

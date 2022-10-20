@@ -3,17 +3,17 @@ import warnings
 from typing import Optional, Sequence
 
 from mmdet.datasets.api_wrappers import COCO
-from mmdet.evaluation import CocoMetric
 from mmdet.structures.mask import encode_mask_results
 from mmengine.dist import broadcast_object_list, is_main_process
 from mmengine.fileio import FileClient
+from mmeval import CocoMetric as _CocoMetric
 
 from mmtrack.registry import METRICS
 from .base_video_metrics import collect_tracking_results
 
 
 @METRICS.register_module()
-class CocoVideoMetric(CocoMetric):
+class CocoVideoMetric(_CocoMetric):
     """COCO evaluation metric.
 
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
@@ -21,16 +21,19 @@ class CocoVideoMetric(CocoMetric):
     https://cocodataset.org/#detection-eval for more details.
     """
 
-    def __init__(self, ann_file: Optional[str] = None, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self,
+                 ann_file: Optional[str] = None,
+                 dist_collect_mode='cat',
+                 **kwargs) -> None:
+        super().__init__(dist_collect_mode=dist_collect_mode, **kwargs)
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
-        if ann_file:
-            file_client = FileClient.infer_client(uri=ann_file)
-            with file_client.get_local_path(ann_file) as local_path:
-                self._coco_api = COCO(local_path)
-        else:
-            self._coco_api = None
+        # if ann_file:
+        #     file_client = FileClient.infer_client(uri=ann_file)
+        #     with file_client.get_local_path(ann_file) as local_path:
+        #         self._coco_api = COCO(local_path)
+        # else:
+        #     self._coco_api = None
 
     def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
         """Process one batch of data samples and predictions. The processed
@@ -45,6 +48,7 @@ class CocoVideoMetric(CocoMetric):
             data_samples (Sequence[dict]): A batch of data samples that
                 contain annotations and predictions.
         """
+        predictions, groundtruths = [], []
         for data_sample in data_samples:
             result = dict()
             pred = data_sample['pred_det_instances']
@@ -60,52 +64,60 @@ class CocoVideoMetric(CocoMetric):
             if 'mask_scores' in pred:
                 result['mask_scores'] = pred['mask_scores'].cpu().numpy()
 
-            # parse gt
-            gt = dict()
-            gt['width'] = data_sample['ori_shape'][1]
-            gt['height'] = data_sample['ori_shape'][0]
-            gt['img_id'] = data_sample['img_id']
             if self._coco_api is None:
-                assert 'instances' in data_sample, \
-                    'ground truth is required for evaluation when ' \
-                    '`ann_file` is not provided'
-                gt['anns'] = data_sample['instances']
-            # add converted result to the results list
-            self.results.append((gt, result))
+                ann = self.add_gt(data_sample)
+            else:
+                ann = dict()
+            groundtruths.append(ann)
 
-    def evaluate(self, size: int) -> dict:
-        """Evaluate the model performance of the whole dataset after processing
-        all batches.
+            self.add(predictions, groundtruths)
 
-        Args:
-            size (int): Length of the entire validation dataset.
+            # parse gt
+            # gt = dict()
+            # gt['width'] = data_sample['ori_shape'][1]
+            # gt['height'] = data_sample['ori_shape'][0]
+            # gt['img_id'] = data_sample['img_id']
+            # if self._coco_api is None:
+            #     assert 'instances' in data_sample, \
+            #         'ground truth is required for evaluation when ' \
+            #         '`ann_file` is not provided'
+            #     gt['anns'] = data_sample['instances']
+            # # add converted result to the results list
+            # self.results.append((gt, result))
 
-        Returns:
-            dict: Evaluation metrics dict on the val dataset. The keys are the
-            names of the metrics, and the values are corresponding results.
-        """
-        if len(self.results) == 0:
-            warnings.warn(
-                f'{self.__class__.__name__} got empty `self.results`. Please '
-                'ensure that the processed results are properly added into '
-                '`self.results` in `process` method.')
+    # def evaluate(self, size: int) -> dict:
+    #     """Evaluate the model performance of the whole dataset after processing
+    #     all batches.
 
-        results = collect_tracking_results(self.results, self.collect_device)
+    #     Args:
+    #         size (int): Length of the entire validation dataset.
 
-        if is_main_process():
-            _metrics = self.compute_metrics(results)  # type: ignore
-            # Add prefix to metric names
-            if self.prefix:
-                _metrics = {
-                    '/'.join((self.prefix, k)): v
-                    for k, v in _metrics.items()
-                }
-            metrics = [_metrics]
-        else:
-            metrics = [None]  # type: ignore
+    #     Returns:
+    #         dict: Evaluation metrics dict on the val dataset. The keys are the
+    #         names of the metrics, and the values are corresponding results.
+    #     """
+    #     if len(self.results) == 0:
+    #         warnings.warn(
+    #             f'{self.__class__.__name__} got empty `self.results`. Please '
+    #             'ensure that the processed results are properly added into '
+    #             '`self.results` in `process` method.')
 
-        broadcast_object_list(metrics)
+    #     results = collect_tracking_results(self.results, self.collect_device)
 
-        # reset the results list
-        self.results.clear()
-        return metrics[0]
+    #     if is_main_process():
+    #         _metrics = self.compute_metrics(results)  # type: ignore
+    #         # Add prefix to metric names
+    #         if self.prefix:
+    #             _metrics = {
+    #                 '/'.join((self.prefix, k)): v
+    #                 for k, v in _metrics.items()
+    #             }
+    #         metrics = [_metrics]
+    #     else:
+    #         metrics = [None]  # type: ignore
+
+    #     broadcast_object_list(metrics)
+
+    #     # reset the results list
+    #     self.results.clear()
+    #     return metrics[0]
