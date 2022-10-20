@@ -14,6 +14,15 @@ class CocoVideoMetric(CocoMetric):
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
     detection and instance segmentation. Please refer to
     https://cocodataset.org/#detection-eval for more details.
+
+    dist_collect_mode (str, optional): The method of concatenating the
+            collected synchronization results. This depends on how the
+            distributed data is split. Currently only 'unzip' and 'cat' are
+            supported. For samplers in MMTrakcking, 'cat' should
+            be used. Defaults to 'cat'.
+    dist_backend (str, optional): The name of the distributed communication
+        backend, you can get all the backend names through
+        ``mmeval.core.list_all_backends()``. Defaults to 'torch_cuda'.
     """
 
     def __init__(self,
