@@ -10,7 +10,7 @@ import mmcv
 import torch
 import torch.distributed as dist
 from mmcv import Config, DictAction
-from mmcv.runner import init_dist
+from mmcv.runner import get_dist_info, init_dist
 from mmdet.apis import set_random_seed
 
 from mmtrack import __version__
@@ -135,6 +135,9 @@ def main():
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
+        # gpu_ids is used to calculate iter when resuming checkpoint,
+        _, world_size = get_dist_info()
+        cfg.gpu_ids = range(world_size)
 
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
