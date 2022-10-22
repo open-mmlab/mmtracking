@@ -1,6 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch
 
+from ..utils.misc import torch_meshgrid_ij
+
 
 def flow_warp_feats(x, flow):
     """Use flow to warp feature map.
@@ -22,7 +24,7 @@ def flow_warp_feats(x, flow):
 
     # 2. compute the flow_field (grid in the code) used to warp features.
     H, W = x.shape[-2:]
-    h_grid, w_grid = torch.meshgrid(torch.arange(H), torch.arange(W))
+    h_grid, w_grid = torch_meshgrid_ij(torch.arange(H), torch.arange(W))
     # [1, 1, H, W]
     h_grid = h_grid.to(flow)[None, None, ...]
     # [1, 1, H, W]
