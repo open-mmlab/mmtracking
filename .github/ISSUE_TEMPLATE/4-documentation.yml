@@ -10,8 +10,8 @@ body:
     label: Branch
     description: This issue is related to the
     options:
-      - master branch  https://mmediting.readthedocs.io/en/latest/
-      - 1.x branch https://mmediting.readthedocs.io/en/1.x/
+      - master branch  https://mmtracking.readthedocs.io/en/latest/
+      - 1.x branch https://mmtracking.readthedocs.io/en/1.x/
   validations:
     required: true
 
