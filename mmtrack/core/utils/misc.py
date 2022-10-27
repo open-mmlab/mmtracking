@@ -1,8 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import collections.abc as container_abcs
 import multiprocessing as mp
 import os
 import platform
 import warnings
+from itertools import repeat
 
 import cv2
 
@@ -37,3 +39,13 @@ def setup_multi_processes(cfg):
             f'overloaded, please further tune the variable for optimal '
             f'performance in your application as needed.')
         os.environ['MKL_NUM_THREADS'] = str(mkl_num_threads)
+
+
+def ntuple(n):
+
+    def parse(x):
+        if isinstance(x, container_abcs.Iterable):
+            return x
+        return tuple(repeat(x, n))
+
+    return parse

@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from .mixformer_head import MixFormerHead, MixFormerScoreDecoder
 from .quasi_dense_embed_head import QuasiDenseEmbedHead
 from .quasi_dense_track_head import QuasiDenseTrackHead
 from .roi_embed_head import RoIEmbedHead
@@ -9,5 +10,5 @@ from .stark_head import CornerPredictorHead, StarkHead
 __all__ = [
     'CorrelationHead', 'SiameseRPNHead', 'RoIEmbedHead', 'RoITrackHead',
     'StarkHead', 'CornerPredictorHead', 'QuasiDenseEmbedHead',
-    'QuasiDenseTrackHead'
+    'QuasiDenseTrackHead', 'MixFormerHead', 'MixFormerScoreDecoder'
 ]

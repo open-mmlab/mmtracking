@@ -1,0 +1,43 @@
+Collections:
+  - Name: MixFormer
+    Metadata:
+     Architecture:
+        - TransFormer
+    Paper:
+        URL: https://arxiv.org/abs/2203.11082
+        Title: "MixFormer: End-to-End Tracking with Iterative Mixed Attention"
+    README: configs/sot/mixformer/README.md
+
+Models:
+  - Name: mixformer_cvt_500e_got10k
+    In Collection: MixFormer
+    Config: configs/sot/mixformer/mixformer_cvt_500e_got10k.py
+    Results:
+      - Task: Single Object Tracking
+        Dataset: GOT10k
+        Metrics:
+          AO: 72.0
+          SR0.5: 82.0
+          SR0.75: 68.1
+
+  - Name: mixformer_cvt_500e_lasot
+    In Collection: MixFormer
+    Config: configs/sot/mixformer/mixformer_cvt_500e_lasot.py
+    Results:
+      - Task: Single Object Tracking
+        Dataset: LaSOT
+        Metrics:
+          Success: 69.2
+          Norm Precision: 78.8
+          Precision: 74.3
+
+  - Name: mixformer_cvt_500e_trackingnet
+    In Collection: MixFormer
+    Config: configs/sot/mixformer/mixformer_cvt_500e_trackingnet.py
+    Results:
+      - Task: Single Object Tracking
+        Dataset: TrackingNet
+        Metrics:
+          Success: 81.1
+          Norm Precision: 86.6
+          Precision: 80.0
