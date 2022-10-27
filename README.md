@@ -112,6 +112,7 @@ Supported Methods
 
 - [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
 - [x] [STARK](configs/sot/stark) (ICCV 2021)
+- [x] [MixFormer](configs/sot/mixformer) (CVPR 2022)
 - [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
 
 Supported Datasets
