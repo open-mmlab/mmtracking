@@ -29,8 +29,9 @@ class CameraMotionCompensation:
 
     def get_warp_matrix(self, img: np.ndarray, ref_img: np.ndarray) -> Tensor:
         """Calculate warping matrix between two images."""
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        ref_img = cv2.cvtColor(ref_img, cv2.COLOR_RGB2GRAY)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ref_img = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+
 
         warp_matrix = np.eye(2, 3, dtype=np.float32)
         criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
