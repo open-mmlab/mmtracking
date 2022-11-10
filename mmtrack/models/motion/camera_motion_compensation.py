@@ -64,11 +64,16 @@ class CameraMotionCompensation:
         return means
 
     def track(self, img: Tensor, ref_img: Tensor, tracks: dict,
-              num_samples: int, frame_id: int) -> dict:
+              num_samples: int, frame_id: int, metainfo: dict) -> dict:
         """Tracking forward."""
         img = img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         ref_img = ref_img.squeeze(0).cpu().numpy().transpose((1, 2, 0))
         warp_matrix = self.get_warp_matrix(img, ref_img)
+
+        # rescale the warp_matrix due to the `resize` in pipeline
+        scale_factor_h, scale_factor_w = metainfo['scale_factor']
+        warp_matrix[0, 2] = warp_matrix[0, 2] / scale_factor_w
+        warp_matrix[1, 2] = warp_matrix[1, 2] / scale_factor_h
 
         bboxes = []
         num_bboxes = []

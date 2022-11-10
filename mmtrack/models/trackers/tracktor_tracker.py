@@ -182,7 +182,7 @@ class TracktorTracker(BaseTracker):
                 else:
                     num_samples = 1
                 self.tracks = model.cmc.track(self.last_img, img, self.tracks,
-                                              num_samples, frame_id)
+                                              num_samples, frame_id, metainfo)
 
             if model.with_linear_motion:
                 self.tracks = model.linear_motion.track(self.tracks, frame_id)
