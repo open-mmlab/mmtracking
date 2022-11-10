@@ -5,6 +5,7 @@ import torch
 from torch import Tensor
 
 from mmtrack.registry import TASK_UTILS
+from mmtrack.structures.bbox import bbox_cxcyah_to_xyxy, bbox_xyxy_to_cxcyah
 
 
 @TASK_UTILS.register_module()
@@ -52,6 +53,15 @@ class CameraMotionCompensation:
         trans_bboxes = torch.cat((trans_tl, trans_br), dim=1)
         return trans_bboxes.to(bboxes.device)
 
+    def warp_means(self, means: np.ndarray, warp_matrix: Tensor) -> np.ndarray:
+        """Warp track.mean according to the warping matrix."""
+        cxcyah = torch.from_numpy(means[:, :4]).float()
+        xyxy = bbox_cxcyah_to_xyxy(cxcyah)
+        warped_xyxy = self.warp_bboxes(xyxy, warp_matrix)
+        warped_cxcyah = bbox_xyxy_to_cxcyah(warped_xyxy).numpy()
+        means[:, :4] = warped_cxcyah
+        return means
+
     def track(self, img: Tensor, ref_img: Tensor, tracks: dict,
               num_samples: int, frame_id: int) -> dict:
         """Tracking forward."""
@@ -61,6 +71,7 @@ class CameraMotionCompensation:
 
         bboxes = []
         num_bboxes = []
+        means = []
         for k, v in tracks.items():
             if int(v['frame_ids'][-1]) < frame_id - 1:
                 _num = 1
@@ -68,6 +79,8 @@ class CameraMotionCompensation:
                 _num = min(num_samples, len(v.bboxes))
             num_bboxes.append(_num)
             bboxes.extend(v.bboxes[-_num:])
+            if len(v.mean) > 0:
+                means.append(v.mean)
         bboxes = torch.cat(bboxes, dim=0)
         warped_bboxes = self.warp_bboxes(bboxes, warp_matrix.to(bboxes.device))
 
@@ -76,4 +89,11 @@ class CameraMotionCompensation:
             _num = b.shape[0]
             b = torch.split(b, [1] * _num)
             tracks[k].bboxes[-_num:] = b
+
+        if means:
+            means = np.asarray(means)
+            warped_means = self.warp_means(means, warp_matrix)
+            for m, (k, v) in zip(warped_means, tracks.items()):
+                tracks[k].mean = m
+
         return tracks
