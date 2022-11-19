@@ -32,7 +32,6 @@ class CameraMotionCompensation:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ref_img = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
 
-
         warp_matrix = np.eye(2, 3, dtype=np.float32)
         criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                     self.num_iters, self.stop_eps)
