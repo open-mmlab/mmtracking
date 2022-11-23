@@ -1,67 +1,72 @@
-# Learn about Visualization
+# 学习如何进行可视化操作
 
-## Local Visualization
+## 本地可视化
 
-This section will present how to visualize the detection/tracking results with local visualizer.
+本节将介绍如何使用本地可视化工具可视化检测/跟踪结果。
 
-If you want to draw prediction results, you can turn this feature on by setting `draw=True` in `TrackVisualizationHook` as follows.
+如果你想绘制预测结果，你可以通过在`TrackVisualizationHook`中设置`draw=True`打开这个功能，如下所示。
 
 ```shell script
 default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True))
 ```
 
-Specifically, the `TrackVisualizationHook` has the following arguments:
+具体来说，`TrackVisualizationHook`有以下参数：
 
-- `draw`: whether to draw prediction results. If it is False, it means that no drawing will be done. Defaults to False.
-- `interval`: The interval of visualization. Defaults to 30.
-- `score_thr`: The threshold to visualize the bboxes and masks. Defaults to 0.3.
-- `show`: Whether to display the drawn image. Default to False.
-- `wait_time`: The interval of show (s). Defaults to 0.
-- `test_out_dir`: directory where painted images will be saved in testing process.
-- `file_client_args`: Arguments to instantiate a FileClient. Defaults to `dict(backend='disk')`.
+- `draw`：是否绘制预测结果。如果为False，则表示不进行绘图。默认为False。
+- `interval`：可视化的间隔。默认值为30。
+- `score_thr`：可视化框和掩码的阈值。默认值为0.3。
+- `show`：是否显示绘制的图像。默认为False。
+- `wait_time`：展示的间隔。默认值为0。
+- `test_out_dir`：在测试过程中绘制的图像将被保存的目录。
+- `file_client_args`：用于实例化FileClient的参数。默认为 `dict(backend='disk')`。
 
-In the `TrackVisualizationHook`, a visualizer will be called to implement visualization,
-i.e., `DetLocalVisualizer` for VID task and `TrackLocalVisualizer` for MOT, VIS, SOT, VOS tasks.
-We will present the details below.
-You can refer to MMEngine for more details about [Visualization](https://github.com/open-mmlab/mmengine/blob/main/docs/en/advanced_tutorials/visualization.md) and [Hook](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/hook.md).
+在`TrackVisualizationHook`中，将调用一个可视化器来实现可视化，
 
-#### Detection Visualization
+例如，`DetLocalVisualizer`用于VID任务，`TrackLocalVisualizer`用于MOT, VIS, SOT, VOS任务。
 
-We realize the detection visualization with class `DetLocalVisualizer`.
-You can call it as follows.
+我们将在下面详细介绍。
+
+关于[Visualization](https://github.com/open-mmlab/mmengine/blob/main/docs/en/advanced_tutorials/visualization.md)和[Hook](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/hook.md)的更多细节，可以参考MMEngine。
+
+#### 可视化检测
+
+我们用类`DetLocalVisualizer`实现检测可视化。
+
+您可以这样调用它。
 
 ```python
 visualizer = dict(type='DetLocalVisualizer')
 ```
 
-It has the following arguments:
+它有以下参数：
 
-- `name`: Name of the instance. Defaults to 'visualizer'.
-- `image`: The origin image to draw. The format should be RGB. Defaults to None.
-- `vis_backends`: Visual backend config list. Defaults to None.
-- `save_dir`: Save file dir for all storage backends. If it is None, the backend storage will not save any data.
-- `bbox_color`: Color of bbox lines. The tuple of color should be in BGR order. Defaults to None.
-- `text_color`: Color of texts. The tuple of color should be in BGR order. Defaults to (200, 200, 200).
-- `line_width`: The linewidth of lines. Defaults to 3.
-- `alpha`: The transparency of bboxes or mask. Defaults to 0.8.
+- `name`：实例的名称。默认为'visualizer'
+- `image`：要绘制的原始图像。格式应该是RGB。默认为None。
+- `vis_backends`：可视化后端配置列表。默认为None。
+- `save_dir`：为所有存储后端保存文件dir。如果为None，则后端存储将不保存任何数据。
+- `bbox_color`：方框线的颜色。color的元组应该按照BGR顺序。默认为None。
+- `text_color`：文字的颜色。color的元组应该按照BGR顺序。默认为(200,200,200)。
+- `line_width`：线的宽度。默认值为3。
+- `alpha`：盒或遮罩的透明度。默认值为0.8。
 
-Here is a visualization example of DFF:
+下面是一个DFF的可视化示例：
 
 ![test_img_29](https://user-images.githubusercontent.com/99722489/186062793-623f6b1e-163e-4e1a-aa79-efea2d97a16d.png)
 
-#### Tracking Visualization
+#### 跟踪可视化
 
-We realize the tracking visualization with class `TrackLocalVisualizer`.
-You can call it as follows.
+我们通过类`TrackLocalVisualizer`实现跟踪可视化。
+
+您可以这样调用它。
 
 ```python
 visualizer = dict(type='TrackLocalVisualizer')
 ```
 
-It has the following arguments, which has the same meaning of that in `DetLocalVisualizer`.
+它有以下参数，它们与`DetLocalVisualizer`中的含义相同。
 
 `name`, `image`, `vis_backends`, `save_dir`, `line_width`, `alpha`.
 
-Here is a visualization example of DeepSORT:
+下面是一个DeepSORT的可视化示例：
 
 ![test_img_89](https://user-images.githubusercontent.com/99722489/186062929-6d0e4663-0d8e-4045-9ec8-67e0e41da876.png)
