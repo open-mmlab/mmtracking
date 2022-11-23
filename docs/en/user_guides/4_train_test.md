@@ -19,7 +19,7 @@
 
   可以在训练过程中更改评估间隔。这意味着每10个周期对模型进行一次评估。
 
-- 所有配置文件的默认学习率为8个gpu。
+- 所有配置文件的默认学习率为8个GPU。
   
   根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，
   
@@ -34,11 +34,7 @@
 
 #### 1. 基于CPU进行训练
 
-该型号是cuda设备上的默认型号。
-
-只有在没有cuda设备的情况下，模型才会放在CPU上。
-
-所以如果你想在CPU上训练模型，你需要`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850).
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -60,7 +56,7 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 
 你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
 
-在单GPU上训练MOT模型ByteTrack的例子:
+在单GPU上训练MOT模型ByteTrack的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
@@ -70,24 +66,22 @@ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yol
 
 我们提供 `tools/dist_train.sh` 在多个GPU上启动培训。
 
-基本用法如下。
+基本用法如下：
 
 ```shell script
 bash ./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 ```
 
-如果您想在一台机器上启动多个作业，
-例如，在一台8个gpu的机器上进行2个4-GPU训练作业，
-您需要为每个作业指定不同的端口(默认为29500)，以避免通信冲突。
+如果您想在一台机器上启动多个作业，例如，在一台8个gpu的机器上进行2个4-GPU训练作业，您需要为每个作业指定不同的端口(默认为29500)，以避免通信冲突。
 
-例如，可以通过以下命令设置端口。
+例如，可以通过以下命令设置端口：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-在单节点多gpu上训练SOT模型siameserpn++的例子:
+在单节点多gpu上训练SOT模型siameserpn++的例子：
 
 ```shell script
 bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
@@ -95,9 +89,9 @@ bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_i
 
 #### 4. 基于多节点进行训练
 
-如果你启动多台与以太网简单连接的机器，你可以简单地运行以下命令:
+如果你启动多台与以太网简单连接的机器，你可以简单地运行以下命令：
 
-在第一台机器上:
+在第一台机器上：
 
 ```shell script
 NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
@@ -113,11 +107,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 
 #### 5. 基于Slurm进行训练
 
-[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。
-
-在由Slurm管理的集群上，可以使用' slurm_train.sh '生成培训作业。
-
-它支持单节点和多节点训练。
+[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由Slurm管理的集群上，可以使用' slurm_train.sh '生成培训作业。它支持单节点和多节点训练。
 
 基本用法如下：
 
@@ -162,13 +152,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 #### 1. 基于CPU进行测试
 
-该型号是cuda设备上的默认型号。
-
-只有在没有cuda设备的情况下，模型才会放在cpu上。
-
-所以如果你想在CPU上测试模型，你需要`export CUDA_VISIBLE_DEVICES=-1`来禁用GPU可见性。
-
-详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在cpu上。所以如果你想在CPU上测试模型，你需要设置`export CUDA_VISIBLE_DEVICES=-1`来禁用GPU可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
@@ -218,11 +202,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 #### 5. 基于Slurm进行测试
 
-在由Slurm管理的集群上，可以使用`slurm_test.sh`生成测试工作。
-
-它支持单节点和多节点测试。
-
-基本用法如下
+在由Slurm管理的集群上，可以使用`slurm_test.sh`生成测试工作。它支持单节点和多节点测试。基本用法如下
 
 ```shell script
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
