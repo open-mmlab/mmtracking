@@ -21,7 +21,11 @@
 
 - 所有配置文件的默认学习率为8个gpu。
   
-  根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，如果你使用不同的GPU或每个GPU使用不同的图像，你需要设置学习率与批处理大小成正比，例如，`lr=0.01`对应8 gpu * 1 img/gpu， `lr=0.04`对应16 gpu * 2 imgs/gpu 。
+  根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，
+  
+  如果你使用不同的GPU或每个GPU使用不同的图像，你需要设置学习率与批处理大小成正比，
+  
+  例如，`lr=0.01`对应8 gpu * 1 img/gpu， `lr=0.04`对应16 gpu * 2 imgs/gpu 。
   
 - 在训练过程中，日志文件和检查点会保存到工作目录中，
   由CLI参数`--work-dir`指定。 它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
@@ -34,7 +38,7 @@
 
 只有在没有cuda设备的情况下，模型才会放在CPU上。
 
-所以如果你想在CPU上训练模型，你需要`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)
+所以如果你想在CPU上训练模型，你需要`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850).
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -66,7 +70,7 @@ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yol
 
 我们提供 `tools/dist_train.sh` 在多个GPU上启动培训。
 
-基本用法如下
+基本用法如下。
 
 ```shell script
 bash ./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
@@ -164,7 +168,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 所以如果你想在CPU上测试模型，你需要`export CUDA_VISIBLE_DEVICES=-1`来禁用GPU可见性。
 
-详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850).
+详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
@@ -224,7 +228,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
 ```
 
-用Slurm测试VIS模型MaskTrack R-CNN的例子:
+用Slurm测试VIS模型MaskTrack R-CNN的例子：
 
 ```shell script
 PORT=29501 \
