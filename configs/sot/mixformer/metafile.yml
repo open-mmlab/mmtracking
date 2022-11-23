@@ -1,8 +1,12 @@
 Collections:
   - Name: MixFormer
     Metadata:
-     Architecture:
-        - TransFormer
+      Training Data: GOT10k, LaSOT, TrackingNet, MSCOCO
+      Training Techniques:
+        - AdamW
+      Training Resources: 8x V100 GPUs
+      Architecture:
+        - Convolutional Vision TransFormer
     Paper:
         URL: https://arxiv.org/abs/2203.11082
         Title: "MixFormer: End-to-End Tracking with Iterative Mixed Attention"
@@ -16,9 +20,10 @@ Models:
       - Task: Single Object Tracking
         Dataset: GOT10k
         Metrics:
-          AO: 72.0
-          SR0.5: 82.0
-          SR0.75: 68.1
+          AO: 70.1
+          SR0.5: 79.9
+          SR0.75: 65.6
+    Weights: https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_got10k/mixformer_cvt_500e_got10k.pth
 
   - Name: mixformer_cvt_500e_lasot
     In Collection: MixFormer
@@ -27,9 +32,10 @@ Models:
       - Task: Single Object Tracking
         Dataset: LaSOT
         Metrics:
-          Success: 69.2
-          Norm Precision: 78.8
-          Precision: 74.3
+          Success: 69.0
+          Norm Precision: 79.6
+          Precision: 75.2
+    Weights: https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth
 
   - Name: mixformer_cvt_500e_trackingnet
     In Collection: MixFormer
@@ -41,3 +47,4 @@ Models:
           Success: 81.1
           Norm Precision: 86.6
           Precision: 80.0
+    Weights: https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth
