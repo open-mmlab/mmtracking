@@ -102,9 +102,8 @@ class MixFormer(Stark):
                 self.online_forget_id = (self.online_forget_id +
                                          1) % self.online_size
 
-            if self.online_size > 1:
-                with torch.no_grad():
-                    self.set_online(self.template, self.online_template)
+            with torch.no_grad():
+                self.set_online(self.template, self.online_template)
 
             self.best_conf_score = -1
             self.best_online_template = self.template
@@ -134,13 +133,12 @@ class MixFormer(Stark):
             out_dict = self.head(template, search)
 
         pred_box = out_dict['pred_bboxes']  # xyxy
-        # Baseline: Take the mean of all pred boxes as the final result
-
         pred_box = self.mapping_bbox_back(pred_box, self.memo.bbox,
                                           resize_factor)
         pred_box = self._bbox_clip(pred_box, H, W, margin=10)
 
         # update template
+        self.best_conf_score = self.best_conf_score * self.max_score_decay
         conf_score = -1.
         if self.head.score_decoder_head is not None:
             # get confidence score (whether the search region is reliable)
