@@ -6,6 +6,7 @@ Import:
   - configs/mot/ocsort/metafile.yml
   - configs/sot/siamese_rpn/metafile.yml
   - configs/sot/stark/metafile.yml
+  - configs/sot/mixformer/metafile.yml
   - configs/vid/dff/metafile.yml
   - configs/vid/fgfa/metafile.yml
   - configs/vid/selsa/metafile.yml
