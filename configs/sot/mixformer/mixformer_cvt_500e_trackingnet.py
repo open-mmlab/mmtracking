@@ -8,7 +8,7 @@ model = dict(
         template_factor=2.0,
         template_size=128,
         update_interval=[25],
-        online_size=[2],
+        online_size=[1],
         max_score_decay=[1.0],
     ))
 

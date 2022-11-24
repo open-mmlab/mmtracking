@@ -32,16 +32,16 @@ We now provide the evaluation results using model weights released in [official 
 
 |  Method   | Style | Inf time(fps) | Success | Norm precision | Precision |                 Config                  |                                                        Download                                                        |
 | :-------: | :---: | :-----------: | :-----: | :------------: | :-------: | :-------------------------------------: | :--------------------------------------------------------------------------------------------------------------------: |
-| MixFormer |   -   |       -       |  69.2   |      78.8      |   74.3    | [config](./mixformer_cvt_500e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth) |
+| MixFormer |   -   |       -       |  69.0   |      79.6      |   75.2    | [config](./mixformer_cvt_500e_lasot.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth) |
 
 ### TrackingNet
 
 |  Method   | Style | Inf time(fps) | Success | Norm precision | Precision |                    Config                     |                                                        Download                                                        |
 | :-------: | :---: | :-----------: | :-----: | :------------: | :-------: | :-------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------: |
-| MixFormer |   -   |       -       |  81.1   |      86.6      |   80.0    | [config](./mixformer_cvt_500e_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth) |
+| MixFormer |   -   |       -       |  81.4   |      86.8      |   80.3    | [config](./mixformer_cvt_500e_trackingnet.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth) |
 
 ### GOT10k
 
 |  Method   | Style | Inf time(fps) | Average Overlap | Success Rate 0.5 | Success Rate 0.75 |                  Config                  |                                                         Download                                                         |
 | :-------: | :---: | :-----------: | :-------------: | :--------------: | :---------------: | :--------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: |
-| MixFormer |   -   |       -       |      72.0       |       82.0       |       68.1        | [config](./mixformer_cvt_500e_got10k.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_got10k/mixformer_cvt_500e_got10k.pth) |
+| MixFormer |   -   |       -       |      70.1       |       80.1       |       65.6        | [config](./mixformer_cvt_500e_got10k.py) | [model](https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_got10k/mixformer_cvt_500e_got10k.pth) |

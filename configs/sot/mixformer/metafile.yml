@@ -21,7 +21,7 @@ Models:
         Dataset: GOT10k
         Metrics:
           AO: 70.1
-          SR0.5: 79.9
+          SR0.5: 80.1
           SR0.75: 65.6
     Weights: https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_got10k/mixformer_cvt_500e_got10k.pth
 
@@ -44,7 +44,7 @@ Models:
       - Task: Single Object Tracking
         Dataset: TrackingNet
         Metrics:
-          Success: 81.1
-          Norm Precision: 86.6
-          Precision: 80.0
+          Success: 81.4
+          Norm Precision: 86.8
+          Precision: 80.3
     Weights: https://download.openmmlab.com/mmtracking/sot/mixformer/mixformer_cvt_500e_lasot/mixformer_cvt_500e_lasot.pth
