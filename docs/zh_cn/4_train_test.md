@@ -1,0 +1,226 @@
+# 学习如何训练模型并测试
+
+## 训练模型
+
+本节将展示如何在支持的数据集上训练现有模型。
+
+支持以下训练环境：
+
+- CPU
+- 单GPU
+- 单节点多GPU
+- 多节点
+
+您也可以使用Slurm完成工作。
+
+重点：
+
+- 您可以通过修改`train_cfg` 为`train_cfg = dict(val_interval=10)`。
+
+  从而在训练过程中更改评估间隔。这意味着每10个周期对模型进行一次评估。
+
+- 所有配置文件的默认学习率为8个GPU。
+  
+  根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，
+  
+  如果你使用不同的GPU或每个GPU使用不同的图像，你需要设置学习率与批处理大小成正比，
+  
+  例如，`lr=0.01`对应8 GPUs * 1 img/gpu， `lr=0.04`对应16 GPUs * 2 imgs/gpu。
+  
+- 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由CLI参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
+  
+- 如果你想要混合精确训练，只需指定CLI参数 `--amp`。
+
+#### 1. 基于CPU进行训练
+
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+
+```shell script
+CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
+```
+
+在CPU上训练VID模型DFF的例子:
+
+```shell script
+CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
+```
+
+#### 2. 基于单GPU进行训练
+
+如果你想在单GPU上训练模型，你可以直接使用`tools/train.py` 如下所示。
+
+```shell script
+python tools/train.py ${CONFIG_FILE} [optional arguments]
+```
+
+你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
+
+在单GPU上训练MOT模型ByteTrack的例子：
+
+```shell script
+CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
+```
+
+#### 3. 基于单节点多GPU进行训练
+
+我们提供 `tools/dist_train.sh` 在多个GPU上启动培训。
+
+基本用法如下：
+
+```shell script
+bash ./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
+```
+
+如果您想在一台机器上启动多个作业，
+
+例如，在一台8个GPU的机器上进行2个4-GPU训练作业，
+
+您需要为每个作业指定不同的端口(默认为29500)，以避免通信冲突。
+
+您可以通过以下命令设置端口：
+
+```shell script
+CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
+CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
+```
+
+在单节点多GPU上训练SOT模型siameserpn++的例子：
+
+```shell script
+bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
+```
+
+#### 4. 基于多节点进行训练
+
+如果你启动多台与以太网简单连接的机器，你可以简单地运行以下命令：
+
+在第一台机器上：
+
+```shell script
+NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+在第二台机器上：
+
+```shell script
+NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
+```
+
+如果你没有像InfiniBand这样的高速网络，它通常是很慢的。
+
+#### 5. 基于Slurm进行训练
+
+[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由Slurm管理的集群上，可以使用`slurm_train.sh`来生成培训作业。它支持单节点和多节点训练。
+
+基本用法如下：
+
+```shell script
+bash ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR} ${GPUS}
+```
+
+用Slurm训练VIS模型MaskTrack R-CNN的例子:
+
+```shell script
+PORT=29501 \
+GPUS_PER_NODE=8 \
+SRUN_ARGS="--quotatype=reserved" \
+bash ./tools/slurm_train.sh \
+mypartition \
+masktrack \
+configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py \
+./work_dirs/MaskTrack_RCNN \
+8
+```
+
+## 测试
+
+本节将展示如何在受支持的数据集上测试现有模型。
+
+支持以下测试环境:
+
+- CPU
+- 单GPU
+- 单节点多GPU
+- 多节点
+
+您也可以使用Slurm完成工作。
+
+重点：
+
+- 您可以通过修改评估器中的`outfile_prefix`来设置结果保存路径。
+  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`.
+  否则，将创建一个临时文件，并将在评估后删除。
+- 如果你只想要格式化的结果而不需要求值，你可以设置`format_only=True`。
+  例如，`test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
+
+#### 1. 基于CPU进行测试
+
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在cpu上。所以如果你想在CPU上测试模型，你需要设置`export CUDA_VISIBLE_DEVICES=-1`来禁用GPU可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+
+```shell script
+CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
+```
+
+在CPU上测试VID模型DFF的例子：
+
+```shell script
+CUDA_VISIBLE_DEVICES=-1 python tools/test.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py --checkpoint https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid/dff_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_213250-548911a4.pth
+```
+
+#### 2. 基于单GPU进行测试
+
+如果你想在单个GPU上测试模型，你可以直接使用下面的`tools/test.py` 。
+
+```shell script
+python tools/test.py ${CONFIG_FILE} [optional arguments]
+```
+
+你可以使用`export CUDA_VISIBLE_DEVICES=$GPU_ID`来选择GPU。
+
+在单GPU上测试MOT模型ByteTrack的一个例子: 
+
+```shell script
+CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py --checkpoint https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
+```
+
+#### 3. 基于单节点多GPU进行测试
+
+我们提供 `tools/dist_test.sh` 在多个GPU上启动测试。
+
+基本用法如下。
+
+```shell script
+bash ./tools/dist_test.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
+```
+
+在单节点多GPU上测试SOT模型siameserpn++的例子:
+
+```shell script
+bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8 --checkpoint https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_20e_otb100_20220421_144232-6b8f1730.pth
+```
+
+#### 4. 基于多节点进行测试
+
+您可以在多个节点上进行测试，这与“在多个节点上进行训练”类似。
+
+#### 5. 基于Slurm进行测试
+
+在由Slurm管理的集群上，可以使用`slurm_test.sh`生成测试工作。它支持单节点和多节点测试。基本用法如下
+
+```shell script
+bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
+```
+
+用Slurm测试VIS模型MaskTrack R-CNN的例子：
+
+```shell script
+PORT=29501 \
+GPUS_PER_NODE=8 \
+SRUN_ARGS="--quotatype=reserved" \
+bash ./tools/slurm_test.sh \
+mypartition \
+masktrack \
+configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2019.py \
+8 \
+--checkpoint https://download.openmmlab.com/mmtracking/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth
+```
