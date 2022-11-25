@@ -75,6 +75,10 @@ Please refer to [SiameseRPN++](https://github.com/open-mmlab/mmtracking/blob/mas
 
 Please refer to [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark) for details.
 
+### MixFormer (CVPR 2022)
+
+Please refer to [MixFormer](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/mixformer) for details.
+
 ## Baselines of video instance segmentation
 
 ### MaskTrack R-CNN (ICCV 2019)

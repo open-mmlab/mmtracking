@@ -75,6 +75,10 @@
 
 详情请参考 [STARK](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/stark)。
 
+### MixFormer (CVPR 2022)
+
+详情请参考 [MixFormer](https://github.com/open-mmlab/mmtracking/blob/master/configs/sot/mixformer)。
+
 ## 视频个例分割基线
 
 ### MaskTrack R-CNN (ICCV 2019)
