@@ -27,7 +27,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection的兼容版本如下。请安装正�
    ```
 
 2. 基于[PyTorch官方说明](https://pytorch.org/)  安装PyTorch和 torchvision。这里我们使用PyTorch 1.10.0和CUDA 11.1。
-您也可以指定版本号切换其他版本。
+   您也可以指定版本号切换其他版本。
 
    **使用conda安装**
 
@@ -52,14 +52,14 @@ MMTracking, MMEngine, MMCV 和 MMDetection的兼容版本如下。请安装正�
    ```shell
    pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
    ```
-   
+
    mmcv仅在PyTorch 1.x.0上编译，因为通常1.x.0版本与1.x.1版本具有兼容性。如果您的PyTorch版本是1.x.1，则可以安装使用PyTorch 1.x.0编译的mmcv，并且通常运行情况良好。
 
    ```shell
    # 我们可以忽略Pytorch的微型版本
    pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
    ```
-   
+
    请参阅 [此处](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) 的不同版本的MMCV与不同的Pytorch和CUDA版本兼容。
    您可以选择通过以下命令选择从源中编译MMCV。
 
@@ -168,6 +168,7 @@ pip install git+https://github.com/TAO-Dataset/tao.git (optional)
 训练和测试脚本已经修改了`PYTHONPATH`，以确保脚本使用当前目录中的MMTracking。
 
 要使用安装在环境中默认的MMTracking而不是您正在使用的，可以删除出现在相关脚本中的代码：
+
 ```shell
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 ```

@@ -1,12 +1,11 @@
 **我们在`tools/`目录下提供了很多有用的工具。**
-## 多目标跟踪测试时的参数搜索
 
+## 多目标跟踪测试时的参数搜索
 
 `tools/analysis_tools/mot/mot_param_search.py`能够搜索MOT模型中`tracker`的参数。
 它的使用方式与`tools/test.py`一样，但在配置中**有所不同**。
 
 以下是一个展示如何修改配置的示例：
-
 
 1. 定义所需的评估指标。
 
@@ -15,7 +14,7 @@
    ```python
    test_evaluator=dict(type='MOTChallengeMetrics', metric=['HOTA', 'CLEAR', 'Identity'])
    ```
-    
+
    当然，您也可以在`test_evaluator`中自定义`metric`的内容。您可以自由选择`['HOTA', 'CLEAR', 'Identity']`的一个或多个。
 
 2. 定义要搜索的参数和值。
@@ -23,7 +22,7 @@
    假定您有一个tracker如下：
 
    ```python
-   model=dict( 
+   model=dict(
        tracker=dict(
            type='BaseTracker',
            obj_score_thr=0.5,
@@ -46,7 +45,7 @@
 
    然后，脚本将测试总共12个案例，并记录结果。
 
-## 多目标跟踪错误可视化                            
+## 多目标跟踪错误可视化
 
 `tools/analysis_tools/mot/mot_error_visualize.py` 能可视化多目标跟踪的误差。
 
