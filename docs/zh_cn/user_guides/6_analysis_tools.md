@@ -220,15 +220,15 @@ python ./tools/analysis_tools/sot/sot_playback.py  data/OTB100/data/Basketball/i
 这是在mmengine中调用可视化工具的示例：
 
 ```python
-# call visualizer at any position
+# 在任何位置调用可视化器
 visualizer = Visualizer.get_current_instance()
-# set the image as background
+# 设置图像为背景
 visualizer.set_image(image=image)
-# draw feature map on the image
+# 在图像上绘制特征图
 drawn_img = visualizer.draw_featmap(feature_map, image, channel_reduction='squeeze_mean')
-# show
+# 显示
 visualizer.show(drawn_img)
-# saved as ${saved_dir}/vis_data/vis_image/feat_0.png
+# 存储为 ${saved_dir}/vis_data/vis_image/feat_0.png
 visualizer.add_image('feature_map', drawn_img)
 ```
 
