@@ -4,13 +4,13 @@
 
 本节将介绍如何使用本地可视化工具可视化检测/跟踪结果。
 
-如果你想绘制预测结果，你可以通过在`TrackVisualizationHook`中设置`draw=True`打开这个功能，如下所示。
+如果你想绘制预测结果，你可以通过在 `TrackVisualizationHook` 中设置 `draw=True` 打开这个功能，如下所示。
 
 ```shell script
 default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True))
 ```
 
-具体来说，`TrackVisualizationHook`有以下参数：
+具体来说，`TrackVisualizationHook` 有以下参数：
 
 - `draw`：是否绘制预测结果。如果为False，则表示不进行绘图。默认为False。
 - `interval`：可视化的间隔。默认值为30。
@@ -18,11 +18,11 @@ default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True
 - `show`：是否显示绘制的图像。默认为False。
 - `wait_time`：展示的间隔。默认值为0。
 - `test_out_dir`：在测试过程中绘制的图像将被保存的目录。
-- `file_client_args`：用于实例化FileClient的参数。默认为 `dict(backend='disk')`。
+- `file_client_args`：用于实例化 FileClient 的参数。默认为 `dict(backend='disk')`。
 
 在`TrackVisualizationHook`中，将调用一个可视化器来实现可视化，
 
-例如，`DetLocalVisualizer`用于VID任务，`TrackLocalVisualizer`用于MOT, VIS, SOT, VOS任务。
+例如，`DetLocalVisualizer`用于VID任务，`TrackLocalVisualizer` 用于MOT, VIS, SOT, VOS任务。
 
 我们将在下面详细介绍。
 
@@ -30,9 +30,9 @@ default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True
 
 #### 可视化检测
 
-我们用类`DetLocalVisualizer`实现检测可视化。
+我们用类 `DetLocalVisualizer` 实现检测可视化。
 
-您可以这样调用它。
+您可以通过这样增加 configs 配置来调用它
 
 ```python
 visualizer = dict(type='DetLocalVisualizer')
@@ -40,12 +40,12 @@ visualizer = dict(type='DetLocalVisualizer')
 
 它有以下参数：
 
-- `name`：实例的名称。默认为'visualizer'
-- `image`：要绘制的原始图像。格式应该是RGB。默认为None。
-- `vis_backends`：可视化后端配置列表。默认为None。
-- `save_dir`：为所有存储后端保存文件dir。如果为None，则后端存储将不保存任何数据。
-- `bbox_color`：方框线的颜色。color的元组应该按照BGR顺序。默认为None。
-- `text_color`：文字的颜色。color的元组应该按照BGR顺序。默认为(200,200,200)。
+- `name`：实例的名称。默认为 'visualizer'
+- `image`：要绘制的原始图像。格式应该是 RGB 。默认为 None。
+- `vis_backends`：可视化后端配置列表。默认为 None。
+- `save_dir`：为所有存储后端保存文件dir。如果为 None，则后端存储将不保存任何数据。
+- `bbox_color`：方框线的颜色。color的元组应该按照 BGR 顺序。默认为 None。
+- `text_color`：文字的颜色。color的元组应该按照 BGR 顺序。默认为 (200,200,200)。
 - `line_width`：线的宽度。默认值为3。
 - `alpha`：盒或遮罩的透明度。默认值为0.8。
 
@@ -55,15 +55,15 @@ visualizer = dict(type='DetLocalVisualizer')
 
 #### 跟踪可视化
 
-我们通过类`TrackLocalVisualizer`实现跟踪可视化。
+我们通过 `TrackLocalVisualizer` 来实现跟踪可视化。
 
-您可以这样调用它。
+您可以通过这样增加 configs 配置来调用它
 
 ```python
 visualizer = dict(type='TrackLocalVisualizer')
 ```
 
-它有以下参数，它们与`DetLocalVisualizer`中的含义相同。
+它有以下参数，它们与 `DetLocalVisualizer` 中的含义相同。
 
 `name`, `image`, `vis_backends`, `save_dir`, `line_width`, `alpha`.
 

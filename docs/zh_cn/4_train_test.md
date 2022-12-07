@@ -25,15 +25,15 @@
   
   如果你使用不同的GPU或每个GPU使用不同的图像，你需要设置学习率与批处理大小成正比，
   
-  例如，`lr=0.01`对应8 GPUs * 1 img/gpu， `lr=0.04`对应16 GPUs * 2 imgs/gpu。
+  例如，`lr=0.01`对应8 GPUs * 1 img/gpu，`lr=0.04` 对应16 GPUs * 2 imgs/gpu。
   
 - 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由CLI参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
   
-- 如果你想要混合精确训练，只需指定CLI参数 `--amp`。
+- 如果你想要混合精确训练，只需指定CLI参数 `--amp` 。
 
 #### 1. 基于CPU进行训练
 
-该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置`export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -47,7 +47,7 @@ CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r5
 
 #### 2. 基于单GPU进行训练
 
-如果你想在单GPU上训练模型，你可以直接使用`tools/train.py` 如下所示。
+如果你想在单GPU上训练模型，你可以直接使用 `tools/train.py` 如下所示。
 
 ```shell script
 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -55,7 +55,7 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 
 你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
 
-在单GPU上训练MOT模型ByteTrack的例子：
+在单GPU上训练 MOT 模型 ByteTrack 的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
@@ -106,11 +106,11 @@ NNODES=2 NODE_RANK=0 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_train.sh $CONFIG $GPUS
 ```
 
-如果你没有像InfiniBand这样的高速网络，它通常是很慢的。
+如果你没有像 InfiniBand 这样的高速网络，它通常是很慢的。
 
 #### 5. 基于Slurm进行训练
 
-[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由Slurm管理的集群上，可以使用`slurm_train.sh`来生成培训作业。它支持单节点和多节点训练。
+[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由Slurm管理的集群上，可以使用 `slurm_train.sh` 来生成培训作业。它支持单节点和多节点训练。
 
 基本用法如下：
 
@@ -118,7 +118,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 bash ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR} ${GPUS}
 ```
 
-用Slurm训练VIS模型MaskTrack R-CNN的例子:
+用Slurm训练VIS模型 MaskTrack R-CNN 的例子:
 
 ```shell script
 PORT=29501 \
@@ -147,15 +147,15 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 重点：
 
-- 您可以通过修改评估器中的`outfile_prefix`来设置结果保存路径。
-  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`.
+- 您可以通过修改评估器中的 `outfile_prefix` 来设置结果保存路径。
+  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')` 
   否则，将创建一个临时文件，并将在评估后删除。
 - 如果你只想要格式化的结果而不需要求值，你可以设置`format_only=True`。
   例如，`test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
 
 #### 1. 基于CPU进行测试
 
-该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在cpu上。所以如果你想在CPU上测试模型，你需要设置`export CUDA_VISIBLE_DEVICES=-1`来禁用GPU可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在cpu上。所以如果你想在CPU上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
@@ -169,13 +169,13 @@ CUDA_VISIBLE_DEVICES=-1 python tools/test.py configs/vid/dff/dff_faster-rcnn_r50
 
 #### 2. 基于单GPU进行测试
 
-如果你想在单个GPU上测试模型，你可以直接使用下面的`tools/test.py` 。
+如果你想在单个GPU上测试模型，你可以直接使用下面的 `tools/test.py` 。
 
 ```shell script
 python tools/test.py ${CONFIG_FILE} [optional arguments]
 ```
 
-你可以使用`export CUDA_VISIBLE_DEVICES=$GPU_ID`来选择GPU。
+你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
 
 在单GPU上测试MOT模型ByteTrack的一个例子: 
 
@@ -205,7 +205,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 #### 5. 基于Slurm进行测试
 
-在由Slurm管理的集群上，可以使用`slurm_test.sh`生成测试工作。它支持单节点和多节点测试。基本用法如下
+在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。基本用法如下
 
 ```shell script
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
