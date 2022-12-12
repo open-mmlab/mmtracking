@@ -23,7 +23,7 @@ import numpy as np
 from tqdm import tqdm
 
 # Classes in MOT:
-CLASSES = [
+classes = [
     dict(id=1, name='pedestrian'),
     dict(id=2, name='person_on_vehicle'),
     dict(id=3, name='car'),
@@ -118,7 +118,7 @@ def main():
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
-        outputs['categories'] = CLASSES
+        outputs['categories'] = classes
         if args.convert_det:
             det_file = osp.join(args.output, f'{subset}_detections.pkl')
             detections = dict(det_bboxes=dict())

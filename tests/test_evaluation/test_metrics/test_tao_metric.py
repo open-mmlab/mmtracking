@@ -50,7 +50,7 @@ class TestTAOMetric(TestCase):
             'instance_id': 1,
         }]
         tao_metric.dataset_meta = dict(
-            CLASSES=['car', 'train'],
+            classes=['car', 'train'],
             categories={
                 0: dict(id=0, name='car'),
                 1: dict(id=1, name='train')
@@ -93,7 +93,7 @@ class TestTAOMetric(TestCase):
             ))
 
         tao_metric.dataset_meta = dict(
-            CLASSES=['car', 'train'],
+            classes=['car', 'train'],
             categories={
                 0: dict(id=0, name='car'),
                 1: dict(id=1, name='train')

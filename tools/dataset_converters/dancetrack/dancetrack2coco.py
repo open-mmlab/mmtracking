@@ -30,7 +30,7 @@ import mmengine
 from tqdm import tqdm
 
 # Classes in DanceTrack:
-CLASSES = [dict(id=1, name='pedestrian')]
+classes = [dict(id=1, name='pedestrian')]
 
 
 def parse_args():
@@ -78,7 +78,7 @@ def main():
         in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
-        outputs['categories'] = CLASSES
+        outputs['categories'] = classes
 
         video_names = os.listdir(in_folder)
         video_names = [d for d in video_names if d != '.DS_Store']

@@ -40,7 +40,7 @@ train_pipeline = [
 mot_cfg = dict(
     type='MOTChallengeDataset',
     data_root='data/MOT17',
-    metainfo=dict(CLASSES=('pedestrian')),
+    metainfo=dict(classes=('pedestrian')),
     visibility_thr=-1,
     ann_file='annotations/half-train_cocoformat.json',
     data_prefix=dict(img_path='train'),
@@ -51,7 +51,7 @@ crowdhuman_cfg = dict(
     type='BaseVideoDataset',
     data_root='data/crowdhuman',
     load_as_video=False,
-    metainfo=dict(CLASSES=('pedestrian')),
+    metainfo=dict(classes=('pedestrian')),
     ann_file='annotations/crowdhuman_train.json',
     data_prefix=dict(img_path='train'),
     ref_img_sampler=dict(num_ref_imgs=1, frame_range=0),

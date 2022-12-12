@@ -36,7 +36,7 @@ class BaseVideoDataset(BaseDataset):
                 'uniform', 'bilateral_uniform', 'test_with_adaptive_stride',
                 'test_with_fix_stride'. Defaults to 'bilateral_uniform'.
     """
-    META = dict(CLASSES=None)
+    META = dict(classes=None)
 
     def __init__(self,
                  load_as_video: bool = True,
@@ -113,7 +113,7 @@ class BaseVideoDataset(BaseDataset):
         with file_client.get_local_path(self.ann_file) as local_path:
             coco = CocoVID(local_path)
         # The order of returned `cat_ids` will not
-        # change with the order of the CLASSES
+        # change with the order of the classes
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
@@ -159,7 +159,7 @@ class BaseVideoDataset(BaseDataset):
         with file_client.get_local_path(self.ann_file) as local_path:
             coco = COCO(local_path)
         # The order of returned `cat_ids` will not
-        # change with the order of the CLASSES
+        # change with the order of the classes
         self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)

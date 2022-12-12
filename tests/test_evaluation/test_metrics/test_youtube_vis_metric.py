@@ -57,7 +57,7 @@ class TestYouTubeVISMetric(TestCase):
             'instance_id': 1,
             'mask': rle_mask,
         }]
-        vis_metric.dataset_meta = dict(CLASSES=['car', 'train'])
+        vis_metric.dataset_meta = dict(classes=['car', 'train'])
         data_batch = dict(inputs=None, data_samples=None)
         data_samples = [
             dict(
@@ -104,7 +104,7 @@ class TestYouTubeVISMetric(TestCase):
                 outfile_prefix=f'{self.tmp_dir.name}/test',
             ))
 
-        vis_metric.dataset_meta = dict(CLASSES=['car', 'train'])
+        vis_metric.dataset_meta = dict(classes=['car', 'train'])
         data_batch = dict(inputs=None, data_samples=None)
         data_samples = [
             dict(

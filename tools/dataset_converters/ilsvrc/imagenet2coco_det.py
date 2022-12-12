@@ -9,14 +9,14 @@ from collections import defaultdict
 import mmengine
 from tqdm import tqdm
 
-CLASSES = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
+classes = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
            'cattle', 'dog', 'domestic_cat', 'elephant', 'fox', 'giant_panda',
            'hamster', 'horse', 'lion', 'lizard', 'monkey', 'motorcycle',
            'rabbit', 'red_panda', 'sheep', 'snake', 'squirrel', 'tiger',
            'train', 'turtle', 'watercraft', 'whale', 'zebra',
            'other_categeries')
 
-CLASSES_ENCODES = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
+classes_ENCODES = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
                    'n01503061', 'n02924116', 'n02958343', 'n02402425',
                    'n02084071', 'n02121808', 'n02503517', 'n02118333',
                    'n02510455', 'n02342885', 'n02374451', 'n02129165',
@@ -26,7 +26,7 @@ CLASSES_ENCODES = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
                    'n02062744', 'n02391049')
 
 cats_id_maps = {}
-for k, v in enumerate(CLASSES_ENCODES, 1):
+for k, v in enumerate(classes_ENCODES, 1):
     cats_id_maps[v] = k
 
 
@@ -178,20 +178,20 @@ def convert_det(DET, ann_dir, save_dir):
           'for video detection training')
     print(f'{records["ann_id"] - 1} objects are annotated.')
     print('-----------------------')
-    for i in range(1, len(CLASSES) + 1):
-        print(f'Class {i} {CLASSES[i - 1]} has {obj_num_classes[i]} objects.')
+    for i in range(1, len(classes) + 1):
+        print(f'Class {i} {classes[i - 1]} has {obj_num_classes[i]} objects.')
 
 
 def main():
     args = parse_args()
 
     DET = defaultdict(list)
-    for k, v in enumerate(CLASSES, 1):
-        if k == len(CLASSES):
+    for k, v in enumerate(classes, 1):
+        if k == len(classes):
             DET['categories'].append(dict(id=k, name=v, encode_name=None))
         else:
             DET['categories'].append(
-                dict(id=k, name=v, encode_name=CLASSES_ENCODES[k - 1]))
+                dict(id=k, name=v, encode_name=classes_ENCODES[k - 1]))
     convert_det(DET, args.input, args.output)
 
 

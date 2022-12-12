@@ -15,7 +15,7 @@ train_dataloader = dict(
             data_root=data_root,
             data_prefix=dict(img_path=''),
             load_as_video=True,
-            metainfo=dict(CLASSES=(data_root + 'annotations/tao_classes.txt')),
+            metainfo=dict(classes=(data_root + 'annotations/tao_classes.txt')),
             ann_file='annotations/train_482_classes.json',
             ref_img_sampler=dict(
                 num_ref_imgs=1, frame_range=[-1, 1], method='uniform'))))

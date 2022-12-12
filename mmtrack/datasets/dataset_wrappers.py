@@ -35,8 +35,8 @@ class RandomSampleConcatDataset(ConcatDataset):
             ]
 
         datasets = [DATASETS.build(cfg) for cfg in datasets]
-        # add an attribute `CLASSES` for the calling in `tools/train.py`
-        self.CLASSES = datasets[0].META['classes']
+        # add an attribute `classes` for the calling in `tools/train.py`
+        self.classes = datasets[0].META['classes']
 
         super().__init__(datasets)
 
