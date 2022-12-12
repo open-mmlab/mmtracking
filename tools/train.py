@@ -12,6 +12,7 @@ import torch.distributed as dist
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
 from mmdet.apis import set_random_seed
+from mmdet.utils import get_device    # adding from mmdet
 
 from mmtrack import __version__
 from mmtrack.apis import init_random_seed
@@ -158,11 +159,13 @@ def main():
     logger.info('Environment info:\n' + dash_line + env_info + '\n' +
                 dash_line)
     meta['env_info'] = env_info
+    meta['config'] = cfg.pretty_text    # adding from mmdet
 
     # log some basic info
     logger.info(f'Distributed training: {distributed}')
     logger.info(f'Config:\n{cfg.pretty_text}')
 
+    cfg.device = get_device()           # adding from mmdet
     # set random seeds. Force setting fixed seed and deterministic=True in SOT
     # configs
     if args.seed is not None:
