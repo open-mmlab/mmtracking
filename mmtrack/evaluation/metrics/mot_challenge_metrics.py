@@ -377,7 +377,7 @@ class MOTChallengeMetrics(BaseVideoMetric):
             # Use self.TRACKER as the default tracker
             TRACKERS_TO_EVAL=[self.TRACKER],
             # Option values: ['pedestrian']
-            classes_TO_EVAL=['pedestrian'],
+            CLASSES_TO_EVAL=['pedestrian'],
             # Option Values: 'MOT15', 'MOT16', 'MOT17', 'MOT20', 'DanceTrack'
             BENCHMARK=self.benchmark,
             # Option Values: 'train', 'test'
