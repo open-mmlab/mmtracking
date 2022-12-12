@@ -114,7 +114,7 @@ class BaseVideoDataset(BaseDataset):
             coco = CocoVID(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
-        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
+        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
 
@@ -160,7 +160,7 @@ class BaseVideoDataset(BaseDataset):
             coco = COCO(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
-        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
+        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
 

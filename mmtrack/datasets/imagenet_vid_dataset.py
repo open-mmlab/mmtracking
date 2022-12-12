@@ -15,7 +15,7 @@ class ImagenetVIDDataset(BaseVideoDataset):
     """ImageNet VID dataset for video object detection."""
 
     METAINFO = {
-        'CLASSES':
+        'classes':
         ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
          'cattle', 'dog', 'domestic_cat', 'elephant', 'fox', 'giant_panda',
          'hamster', 'horse', 'lion', 'lizard', 'monkey', 'motorcycle',
@@ -55,7 +55,7 @@ class ImagenetVIDDataset(BaseVideoDataset):
             coco = CocoVID(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
-        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
+        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
 
@@ -109,7 +109,7 @@ class ImagenetVIDDataset(BaseVideoDataset):
             coco = COCO(local_path)
         # The order of returned `cat_ids` will not
         # change with the order of the CLASSES
-        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['CLASSES'])
+        self.cat_ids = coco.get_cat_ids(cat_names=self.metainfo['classes'])
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.cat_img_map = copy.deepcopy(coco.cat_img_map)
 

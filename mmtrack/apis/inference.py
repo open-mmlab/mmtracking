@@ -78,10 +78,10 @@ def init_model(config: Union[str, mmengine.Config],
         if 'dataset_meta' in checkpoint_meta:
             # mmtrack 1.x
             model.dataset_meta = checkpoint_meta['dataset_meta']
-        elif 'CLASSES' in checkpoint_meta:
+        elif 'classes' in checkpoint_meta:
             # < mmtrack 1.x
-            classes = checkpoint_meta['CLASSES']
-            model.dataset_meta = {'CLASSES': classes}
+            classes = checkpoint_meta['classes']
+            model.dataset_meta = {'classes': classes}
 
     # Some methods don't load checkpoints or checkpoints don't contain
     # 'dataset_meta'
@@ -89,7 +89,7 @@ def init_model(config: Union[str, mmengine.Config],
         warnings.simplefilter('once')
         warnings.warn('dataset_meta or class names are missed, '
                       'use None by default.')
-        model.dataset_meta = {'CLASSES': None}
+        model.dataset_meta = {'classes': None}
 
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
