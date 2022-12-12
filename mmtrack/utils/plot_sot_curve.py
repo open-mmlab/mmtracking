@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mmengine.utils import mkdir_or_exist
 
-PALETTE = [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0),
+palette = [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0),
            (0.0, 1.0, 1.0), (0.5, 0.5, 0.5),
            (136.0 / 255.0, 0.0, 21.0 / 255.0),
            (1.0, 127.0 / 255.0, 39.0 / 255.0),
@@ -19,7 +19,7 @@ PALETTE = [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0), (1.0, 0.0, 1.0),
            (153.0 / 255.0, 1.0, 153.0 / 255.0),
            (102.0 / 255.0, 102.0 / 255.0, 1.0),
            (1.0, 192.0 / 255.0, 203.0 / 255.0)]
-LINE_STYLE = ['-'] * len(PALETTE)
+LINE_STYLE = ['-'] * len(palette)
 
 
 def plot_sot_curve(y: np.ndarray,
@@ -79,7 +79,7 @@ def plot_sot_curve(y: np.ndarray,
             x.tolist(),
             y[id_sort, :].tolist(),
             linewidth=line_width,
-            color=PALETTE[len(index_sort) - id - 1],
+            color=palette[len(index_sort) - id - 1],
             linestyle=LINE_STYLE[len(index_sort) - id - 1])
 
         plotted_lines.append(line[0])
