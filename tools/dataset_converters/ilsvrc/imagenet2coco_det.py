@@ -16,7 +16,7 @@ classes = ('airplane', 'antelope', 'bear', 'bicycle', 'bird', 'bus', 'car',
            'train', 'turtle', 'watercraft', 'whale', 'zebra',
            'other_categeries')
 
-classes_ENCODES = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
+classes_encodes = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
                    'n01503061', 'n02924116', 'n02958343', 'n02402425',
                    'n02084071', 'n02121808', 'n02503517', 'n02118333',
                    'n02510455', 'n02342885', 'n02374451', 'n02129165',
@@ -26,7 +26,7 @@ classes_ENCODES = ('n02691156', 'n02419796', 'n02131653', 'n02834778',
                    'n02062744', 'n02391049')
 
 cats_id_maps = {}
-for k, v in enumerate(classes_ENCODES, 1):
+for k, v in enumerate(classes_encodes, 1):
     cats_id_maps[v] = k
 
 
@@ -191,7 +191,7 @@ def main():
             DET['categories'].append(dict(id=k, name=v, encode_name=None))
         else:
             DET['categories'].append(
-                dict(id=k, name=v, encode_name=classes_ENCODES[k - 1]))
+                dict(id=k, name=v, encode_name=classes_encodes[k - 1]))
     convert_det(DET, args.input, args.output)
 
 
