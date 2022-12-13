@@ -15,7 +15,7 @@
 
 重点：
 
-- 您可以通过修改`train_cfg` 为`train_cfg = dict(val_interval=10)`。
+- 您可以通过修改 `train_cfg` 为 `train_cfg = dict(val_interval=10)` 。
 
   从而在训练过程中更改评估间隔。这意味着每10个周期对模型进行一次评估。
 
@@ -33,7 +33,7 @@
 
 #### 1. 基于 CPU 进行训练
 
-该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -148,7 +148,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 重点：
 
 - 您可以通过修改评估器中的 `outfile_prefix` 来设置结果保存路径。
-  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')` 
+  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`  。
   否则，将创建一个临时文件，并将在评估后删除。
 - 如果你只想要格式化的结果而不需要求值，你可以设置`format_only=True`。
   例如，`test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
@@ -201,11 +201,13 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 #### 4. 基于多节点进行测试
 
-您可以在多个节点上进行测试，这与”在多个节点上进行训练”类似。
+您可以在多个节点上进行测试，这与 ”在多个节点上进行训练” 类似。
 
 #### 5. 基于Slurm进行测试
 
-在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。基本用法如下。
+在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。
+
+基本用法如下。
 
 ```shell script
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
