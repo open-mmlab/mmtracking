@@ -8,7 +8,7 @@
 
 - CPU
 - 单 GPU
-- 单节点多 GPU
+- 单节点多 GPUs
 - 多节点
 
 您也可以使用Slurm完成工作。
@@ -25,7 +25,7 @@
   
   如果你使用不同的 GPU 或每个 GPU 使用不同的图像，你需要设置学习率与批处理大小成正比，
   
-  例如，`lr=0.01`对应8 GPUs * 1 img/gpu，`lr=0.04` 对应16 GPUs * 2 imgs/gpu。
+  例如，`lr=0.01` 对应8 GPUs * 1 img/gpu，`lr=0.04` 对应16 GPUs * 2 imgs/gpu。
   
 - 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由 CLI 参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
   
@@ -140,7 +140,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 - CPU
 - 单 GPU
-- 单节点多 GPU
+- 单节点多 GPUs
 - 多节点
 
 您也可以使用 Slurm 完成工作。
@@ -155,7 +155,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 #### 1. 基于CPU进行测试
 
-该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850) 。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
