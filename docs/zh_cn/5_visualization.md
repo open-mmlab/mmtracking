@@ -18,19 +18,19 @@ default_hooks = dict(visualization=dict(type='TrackVisualizationHook', draw=True
 - `show`：是否显示绘制的图像。默认为False。
 - `wait_time`：展示的间隔。默认值为0。
 - `test_out_dir`：在测试过程中绘制的图像将被保存的目录。
-- `file_client_args`：用于实例化 FileClient 的参数。默认为 `dict(backend='disk')`。
+- `file_client_args`：用于实例化 FileClient 的参数。默认为 `dict(backend='disk')` 。
 
-在`TrackVisualizationHook`中，将调用一个可视化器来实现可视化，
+在 `TrackVisualizationHook` 中，将调用一个可视化器来实现可视化，
 
-例如，`DetLocalVisualizer`用于VID任务，`TrackLocalVisualizer` 用于MOT, VIS, SOT, VOS任务。
+例如，`DetLocalVisualizer` 用于VID任务，`TrackLocalVisualizer` 用于MOT, VIS, SOT, VOS任务。
 
 我们将在下面详细介绍。
 
-关于[Visualization](https://github.com/open-mmlab/mmengine/blob/main/docs/en/advanced_tutorials/visualization.md)和[Hook](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/hook.md)的更多细节，可以参考MMEngine。
+关于 [Visualization](https://github.com/open-mmlab/mmengine/blob/main/docs/en/advanced_tutorials/visualization.md) 和 [Hook](https://github.com/open-mmlab/mmengine/blob/main/docs/en/tutorials/hook.md) 的更多细节，可以参考MMEngine。
 
 #### 可视化检测
 
-我们用类 `DetLocalVisualizer` 实现检测可视化。
+我们用 `DetLocalVisualizer` 来实现检测可视化。
 
 您可以通过这样增加 configs 配置来调用它
 
@@ -43,13 +43,13 @@ visualizer = dict(type='DetLocalVisualizer')
 - `name`：实例的名称。默认为 'visualizer'
 - `image`：要绘制的原始图像。格式应该是 RGB 。默认为 None。
 - `vis_backends`：可视化后端配置列表。默认为 None。
-- `save_dir`：为所有存储后端保存文件dir。如果为 None，则后端存储将不保存任何数据。
+- `save_dir`：为所有存储后端保存文件 dir 。如果为 None，则后端存储将不保存任何数据。
 - `bbox_color`：方框线的颜色。color的元组应该按照 BGR 顺序。默认为 None。
 - `text_color`：文字的颜色。color的元组应该按照 BGR 顺序。默认为 (200,200,200)。
 - `line_width`：线的宽度。默认值为3。
 - `alpha`：盒或遮罩的透明度。默认值为0.8。
 
-下面是一个DFF的可视化示例：
+下面是一个 DFF 的可视化示例：
 
 ![test_img_29](https://user-images.githubusercontent.com/99722489/186062793-623f6b1e-163e-4e1a-aa79-efea2d97a16d.png)
 
@@ -67,6 +67,6 @@ visualizer = dict(type='TrackLocalVisualizer')
 
 `name`, `image`, `vis_backends`, `save_dir`, `line_width`, `alpha`.
 
-下面是一个DeepSORT的可视化示例：
+下面是一个 DeepSORT 的可视化示例：
 
 ![test_img_89](https://user-images.githubusercontent.com/99722489/186062929-6d0e4663-0d8e-4045-9ec8-67e0e41da876.png)

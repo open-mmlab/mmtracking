@@ -7,8 +7,8 @@
 支持以下训练环境：
 
 - CPU
-- 单GPU
-- 单节点多GPU
+- 单 GPU
+- 单节点多 GPU
 - 多节点
 
 您也可以使用Slurm完成工作。
@@ -19,43 +19,43 @@
 
   从而在训练过程中更改评估间隔。这意味着每10个周期对模型进行一次评估。
 
-- 所有配置文件的默认学习率为8个GPU。
+- 所有配置文件的默认学习率为8个 GPU 。
   
   根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，
   
-  如果你使用不同的GPU或每个GPU使用不同的图像，你需要设置学习率与批处理大小成正比，
+  如果你使用不同的 GPU 或每个 GPU 使用不同的图像，你需要设置学习率与批处理大小成正比，
   
   例如，`lr=0.01`对应8 GPUs * 1 img/gpu，`lr=0.04` 对应16 GPUs * 2 imgs/gpu。
   
-- 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由CLI参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
+- 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由 CLI 参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
   
-- 如果你想要混合精确训练，只需指定CLI参数 `--amp` 。
+- 如果你想要混合精确训练，只需指定 CLI 参数 `--amp` 。
 
-#### 1. 基于CPU进行训练
+#### 1. 基于 CPU 进行训练
 
-该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在CPU上。所以如果你想在CPU上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
 ```
 
-在CPU上训练VID模型DFF的例子:
+在CPU上训练 VID 模型 DFF 的例子:
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
 ```
 
-#### 2. 基于单GPU进行训练
+#### 2. 基于单 GPU 进行训练
 
-如果你想在单GPU上训练模型，你可以直接使用 `tools/train.py` 如下所示。
+如果你想在单 GPU 上训练模型，你可以直接使用 `tools/train.py` 如下所示。
 
 ```shell script
 python tools/train.py ${CONFIG_FILE} [optional arguments]
 ```
 
-你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
+你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择 GPU 。
 
-在单GPU上训练 MOT 模型 ByteTrack 的例子：
+在单 GPU 上训练 MOT 模型 ByteTrack 的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
@@ -63,7 +63,7 @@ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yol
 
 #### 3. 基于单节点多GPU进行训练
 
-我们提供 `tools/dist_train.sh` 在多个GPU上启动培训。
+我们提供 `tools/dist_train.sh` 在多个 GPU 上启动培训。
 
 基本用法如下：
 
@@ -73,7 +73,7 @@ bash ./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 
 如果您想在一台机器上启动多个作业，
 
-例如，在一台8个GPU的机器上进行2个4-GPU训练作业，
+例如，在一台8个 GPU 的机器上进行2个 4-GPU 训练作业，
 
 您需要为每个作业指定不同的端口(默认为29500)，以避免通信冲突。
 
@@ -84,7 +84,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-在单节点多GPU上训练SOT模型siameserpn++的例子：
+在单节点多 GPU 上训练 SOT 模型 siameserpn++ 的例子：
 
 ```shell script
 bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
@@ -139,11 +139,11 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 支持以下测试环境:
 
 - CPU
-- 单GPU
-- 单节点多GPU
+- 单 GPU
+- 单节点多 GPU
 - 多节点
 
-您也可以使用Slurm完成工作。
+您也可以使用 Slurm 完成工作。
 
 重点：
 
@@ -155,37 +155,37 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 #### 1. 基于CPU进行测试
 
-该型号是cuda设备上的默认型号。只有在没有cuda设备的情况下，模型才会放在cpu上。所以如果你想在CPU上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用GPU可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
 ```
 
-在CPU上测试VID模型DFF的例子：
+在 CPU 上测试 VID 模型 DFF 的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py --checkpoint https://download.openmmlab.com/mmtracking/vid/dff/dff_faster_rcnn_r50_dc5_1x_imagenetvid/dff_faster_rcnn_r50_dc5_1x_imagenetvid_20201227_213250-548911a4.pth
 ```
 
-#### 2. 基于单GPU进行测试
+#### 2. 基于单 GPU 进行测试
 
-如果你想在单个GPU上测试模型，你可以直接使用下面的 `tools/test.py` 。
+如果你想在单个 GPU 上测试模型，你可以直接使用下面的 `tools/test.py` 。
 
 ```shell script
 python tools/test.py ${CONFIG_FILE} [optional arguments]
 ```
 
-你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择GPU。
+你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择 GPU 。
 
-在单GPU上测试MOT模型ByteTrack的一个例子: 
+在单 GPU 上测试MOT模型 ByteTrack 的一个例子: 
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py --checkpoint https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
 ```
 
-#### 3. 基于单节点多GPU进行测试
+#### 3. 基于单节点多 GPU 进行测试
 
-我们提供 `tools/dist_test.sh` 在多个GPU上启动测试。
+我们提供 `tools/dist_test.sh` 在多个 GPU 上启动测试。
 
 基本用法如下。
 
@@ -193,7 +193,7 @@ CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolo
 bash ./tools/dist_test.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 ```
 
-在单节点多GPU上测试SOT模型siameserpn++的例子:
+在单节点多 GPU 上测试 SOT 模型 siameserpn++ 的例子：
 
 ```shell script
 bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8 --checkpoint https://download.openmmlab.com/mmtracking/sot/siamese_rpn/siamese_rpn_r50_1x_otb100/siamese_rpn_r50_20e_otb100_20220421_144232-6b8f1730.pth
@@ -201,7 +201,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 #### 4. 基于多节点进行测试
 
-您可以在多个节点上进行测试，这与“在多个节点上进行训练”类似。
+您可以在多个节点上进行测试，这与”在多个节点上进行训练”类似。
 
 #### 5. 基于Slurm进行测试
 
@@ -211,7 +211,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
 ```
 
-用Slurm测试VIS模型MaskTrack R-CNN的例子：
+用 Slurm 测试 VIS 模型 MaskTrack R-CNN 的例子：
 
 ```shell script
 PORT=29501 \
