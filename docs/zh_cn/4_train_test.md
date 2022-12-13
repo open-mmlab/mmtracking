@@ -39,7 +39,7 @@
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
 ```
 
-在CPU上训练 VID 模型 DFF 的例子:
+在CPU上训练 VID 模型 DFF 的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
@@ -118,7 +118,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 bash ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR} ${GPUS}
 ```
 
-用Slurm训练VIS模型 MaskTrack R-CNN 的例子:
+用 Slurm 训练VIS模型 MaskTrack R-CNN 的例子：
 
 ```shell script
 PORT=29501 \
@@ -136,7 +136,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 本节将展示如何在受支持的数据集上测试现有模型。
 
-支持以下测试环境:
+支持以下测试环境：
 
 - CPU
 - 单 GPU
@@ -177,7 +177,7 @@ python tools/test.py ${CONFIG_FILE} [optional arguments]
 
 你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择 GPU 。
 
-在单 GPU 上测试MOT模型 ByteTrack 的一个例子: 
+在单 GPU 上测试MOT模型 ByteTrack 的一个例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py --checkpoint https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
