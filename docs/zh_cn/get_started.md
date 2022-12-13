@@ -186,4 +186,4 @@ python demo/demo_mot_vis.py \
     --output mot.mp4
 ```
 
-如果您想运行更多其他演示，您可以参考 [推理指南](./user_guides/3_inference.md)
+如果您想运行更多其他演示，您可以参考[推理指南](./user_guides/3_inference.md)
