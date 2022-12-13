@@ -56,7 +56,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    mmcv 仅在 PyTorch 1.x.0 上编译，因为通常 1.x.0 版本与 1.x.1 版本具有兼容性。如果您的 PyTorch 版本是 1.x.1，则可以安装使用 PyTorch 1.x.0 编译的 mmcv，并且通常运行情况良好。
 
    ```shell
-   # 我们可以忽略Pytorch的微型版本
+   # 我们可以忽略 Pytorch 的微型版本
    pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
    ```
 
@@ -66,8 +66,8 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    ```shell
    git clone -b 2.x https://github.com/open-mmlab/mmcv.git
    cd mmcv
-   MMCV_WITH_OPS=1 pip install -e .  # 包含CUDA选项的软件包MMCV将在此步骤之后安装
-   # pip install -e .  # 不包含CUDA选项的软件包MMCV将在此步骤之后安装
+   MMCV_WITH_OPS=1 pip install -e .  # 包含 CUDA 选项的软件包MMCV将在此步骤之后安装
+   # pip install -e .  # 不包含 CUDA 选项的软件包 MMCV 将在此步骤之后安装
    cd ..
    ```
 
@@ -146,13 +146,13 @@ conda install pytorch=1.11.0 torchvision cudatoolkit=11.3 -c pytorch
 
 pip install mmengine
 
-# 安装最新的mmcv
+# 安装最新的 mmcv
 pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
 
-# 安装mmdetection
+# 安装 mmdetection
 pip install 'mmdet>=3.0.0rc0'
 
-# 安装mmtracking
+# 安装 mmtracking
 git clone -b 1.x https://github.com/open-mmlab/mmtracking.git
 cd mmtracking
 pip install -r requirements/build.txt
