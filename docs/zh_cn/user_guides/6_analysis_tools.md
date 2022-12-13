@@ -231,4 +231,4 @@ visualizer.show(drawn_img)
 visualizer.add_image('feature_map', drawn_img)
 ```
 
-有关特征图可视化的更多详细信息，请参见[visualizer docs](https://github.com/open-mmlab/mmengine/blob/main/docs/zh_cn/advanced_tutorials/visualization.md) 和 [draw_featmap function](https://github.com/open-mmlab/mmengine/blob/main/mmengine/visualization/visualizer.py#L864)
+有关特征图可视化的更多详细信息，请参见 [visualizer docs](https://github.com/open-mmlab/mmengine/blob/main/docs/zh_cn/advanced_tutorials/visualization.md) 和 [draw_featmap function](https://github.com/open-mmlab/mmengine/blob/main/mmengine/visualization/visualizer.py#L864)

@@ -130,9 +130,9 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
 
 注意：
 
-a. 根据上面的说明，MMTracking 安装在`dev`模式下，对代码的任何本地修改都将生效，无需重新安装。
+a. 根据上面的说明，MMTracking 安装在 `dev` 模式下，对代码的任何本地修改都将生效，无需重新安装。
 
-b. 如果您想用`opencv-python-headless`替换`opencv-python`， 您可以在安装 MMCV 之前安装它。
+b. 如果您想用 `opencv-python-headless` 替换 `opencv-python`， 您可以在安装 MMCV 之前安装它。
 
 ### 从头开始的安装脚本
 
@@ -165,7 +165,7 @@ pip install git+https://github.com/TAO-Dataset/tao.git (optional)
 
 ### 使用多个 MMTracking 版本进行开发
 
-训练和测试脚本已经修改了`PYTHONPATH`，以确保脚本使用当前目录中的 MMTracking。
+训练和测试脚本已经修改了 `PYTHONPATH`，以确保脚本使用当前目录中的 MMTracking。
 
 要使用安装在环境中默认的 MMTracking 而不是您正在使用的，可以删除出现在相关脚本中的代码：
 
