@@ -8,7 +8,7 @@
 
 - CPU
 - 单 GPU
-- 单节点多 GPUs
+- 单节点多 GPU
 - 多节点
 
 您也可以使用Slurm完成工作。
@@ -25,7 +25,7 @@
   
   如果你使用不同的 GPU 或每个 GPU 使用不同的图像，你需要设置学习率与批处理大小成正比，
   
-  例如，`lr=0.01` 对应8 GPUs * 1 img/gpu，`lr=0.04` 对应16 GPUs * 2 imgs/gpu。
+  例如，`lr=0.01` 对应8 GPU * 1 img/gpu，`lr=0.04` 对应16 GPU * 2 imgs/gpu。
   
 - 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由 CLI 参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
   
@@ -140,7 +140,7 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 - CPU
 - 单 GPU
-- 单节点多 GPUs
+- 单节点多 GPU
 - 多节点
 
 您也可以使用 Slurm 完成工作。
@@ -205,7 +205,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 #### 5. 基于Slurm进行测试
 
-在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。基本用法如下
+在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。基本用法如下。
 
 ```shell script
 bash ./tools/slurm_test.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${GPUS}
@@ -224,3 +224,4 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 8 \
 --checkpoint https://download.openmmlab.com/mmtracking/vis/masktrack_rcnn/masktrack_rcnn_r50_fpn_12e_youtubevis2019/masktrack_rcnn_r50_fpn_12e_youtubevis2019_20211022_194830-6ca6b91e.pth
 ```
+
