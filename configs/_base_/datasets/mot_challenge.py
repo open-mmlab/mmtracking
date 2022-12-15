@@ -56,7 +56,7 @@ train_dataloader = dict(
         visibility_thr=-1,
         ann_file='annotations/half-train_cocoformat.json',
         data_prefix=dict(img_path='train'),
-        metainfo=dict(CLASSES=('pedestrian', )),
+        metainfo=dict(classes=('pedestrian', )),
         ref_img_sampler=dict(
             num_ref_imgs=1,
             frame_range=10,

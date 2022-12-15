@@ -17,7 +17,7 @@ class TestTaoDataset(TestCase):
     @classmethod
     def setUpClass(cls):
 
-        cls.metainfo = dict(CLASSES=('bus', 'car'))
+        cls.metainfo = dict(classes=('bus', 'car'))
         cls.ref_img_sampler = dict(
             num_ref_imgs=1,
             frame_range=4,

@@ -123,7 +123,7 @@ class TestCocoVideoMetric(TestCase):
             ann_file=fake_json_file,
             classwise=False,
             outfile_prefix=f'{self.tmp_dir.name}/test')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -150,7 +150,7 @@ class TestCocoVideoMetric(TestCase):
             metric=['bbox', 'segm'],
             classwise=False,
             outfile_prefix=f'{self.tmp_dir.name}/test')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -184,7 +184,7 @@ class TestCocoVideoMetric(TestCase):
                                     'metric item "invalid" is not supported'):
             coco_metric = CocoVideoMetric(
                 ann_file=fake_json_file, metric_items=['invalid'])
-            coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+            coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
             coco_metric.process(
                 dict(inputs=None, data_samples=None), [
                     dict(
@@ -197,7 +197,7 @@ class TestCocoVideoMetric(TestCase):
         # test custom metric_items
         coco_metric = CocoVideoMetric(
             ann_file=fake_json_file, metric_items=['mAP_m'])
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -220,7 +220,7 @@ class TestCocoVideoMetric(TestCase):
         # test single coco dataset evaluation
         coco_metric = CocoVideoMetric(
             ann_file=fake_json_file, metric='bbox', classwise=True)
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -249,7 +249,7 @@ class TestCocoVideoMetric(TestCase):
         # test single coco dataset evaluation
         coco_metric = CocoVideoMetric(
             ann_file=fake_json_file, metric='bbox', iou_thrs=[0.3, 0.6])
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         self.assertEqual(coco_metric.iou_thrs, [0.3, 0.6])
 
     def test_fast_eval_recall(self):
@@ -261,7 +261,7 @@ class TestCocoVideoMetric(TestCase):
         # test default proposal nums
         coco_metric = CocoVideoMetric(
             ann_file=fake_json_file, metric='proposal_fast')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -278,7 +278,7 @@ class TestCocoVideoMetric(TestCase):
             ann_file=fake_json_file,
             metric='proposal_fast',
             proposal_nums=(2, 4))
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -298,7 +298,7 @@ class TestCocoVideoMetric(TestCase):
 
         coco_metric = CocoVideoMetric(
             ann_file=fake_json_file, metric='proposal')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(
@@ -323,7 +323,7 @@ class TestCocoVideoMetric(TestCase):
         fake_json_file = osp.join(self.tmp_dir.name, 'fake_data.json')
         self._create_dummy_coco_json(fake_json_file)
         coco_metric = CocoVideoMetric(ann_file=fake_json_file, metric='bbox')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         bboxes = np.zeros((0, 4))
         labels = np.array([])
         scores = np.array([])
@@ -376,7 +376,7 @@ class TestCocoVideoMetric(TestCase):
             metric=['bbox', 'segm'],
             classwise=False,
             outfile_prefix=f'{self.tmp_dir.name}/test')
-        coco_metric.dataset_meta = dict(CLASSES=['car', 'bicycle'])
+        coco_metric.dataset_meta = dict(classes=['car', 'bicycle'])
         coco_metric.process(
             dict(inputs=None, data_samples=None), [
                 dict(

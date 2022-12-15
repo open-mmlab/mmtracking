@@ -13,7 +13,7 @@ class TestEntireVideoBatchSampler(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.metainfo = dict(CLASSES=('car'))
+        cls.metainfo = dict(classes=('car'))
         cls.video_dataset = BaseVideoDataset(
             ann_file=DEMO_ANN_FILE,
             metainfo=cls.metainfo,

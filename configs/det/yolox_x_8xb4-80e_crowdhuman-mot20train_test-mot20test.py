@@ -62,7 +62,7 @@ train_dataloader = dict(
                     ann_file='annotations/train_cocoformat.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian', )),
+                    metainfo=dict(classes=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -73,7 +73,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_train.json',
                     data_prefix=dict(img='train'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian', )),
+                    metainfo=dict(classes=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -84,7 +84,7 @@ train_dataloader = dict(
                     ann_file='annotations/crowdhuman_val.json',
                     data_prefix=dict(img='val'),
                     filter_cfg=dict(filter_empty_gt=True, min_size=32),
-                    metainfo=dict(CLASSES=('pedestrian', )),
+                    metainfo=dict(classes=('pedestrian', )),
                     pipeline=[
                         dict(type='LoadImageFromFile'),
                         dict(type='LoadAnnotations'),
@@ -98,7 +98,7 @@ val_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/train_cocoformat.json',
         data_prefix=dict(img='train'),
-        metainfo=dict(CLASSES=('pedestrian', )),
+        metainfo=dict(classes=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = dict(
@@ -108,7 +108,7 @@ test_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/test_cocoformat.json',
         data_prefix=dict(img='test'),
-        metainfo=dict(CLASSES=('pedestrian', )),
+        metainfo=dict(classes=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 

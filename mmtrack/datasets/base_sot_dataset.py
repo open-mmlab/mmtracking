@@ -26,7 +26,7 @@ class BaseSOTDataset(BaseDataset, metaclass=ABCMeta):
             where object are visible. Default to False.
     """
 
-    META = dict(CLASSES=None)
+    META = dict(classes=None)
 
     def __init__(self,
                  bbox_min_size: int = 0,

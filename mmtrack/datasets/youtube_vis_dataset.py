@@ -22,7 +22,7 @@ class YouTubeVISDataset(BaseVideoDataset):
         Args:
             dataset_version (str): Select dataset year version.
         """
-        CLASSES_2019_version = ('person', 'giant_panda', 'lizard', 'parrot',
+        classes_2019_version = ('person', 'giant_panda', 'lizard', 'parrot',
                                 'skateboard', 'sedan', 'ape', 'dog', 'snake',
                                 'monkey', 'hand', 'rabbit', 'duck', 'cat',
                                 'cow', 'fish', 'train', 'horse', 'turtle',
@@ -32,7 +32,7 @@ class YouTubeVISDataset(BaseVideoDataset):
                                 'snowboard', 'boat', 'shark', 'mouse', 'frog',
                                 'eagle', 'earless_seal', 'tennis_racket')
 
-        CLASSES_2021_version = ('airplane', 'bear', 'bird', 'boat', 'car',
+        classes_2021_version = ('airplane', 'bear', 'bird', 'boat', 'car',
                                 'cat', 'cow', 'deer', 'dog', 'duck',
                                 'earless_seal', 'elephant', 'fish',
                                 'flying_disc', 'fox', 'frog', 'giant_panda',
@@ -44,9 +44,9 @@ class YouTubeVISDataset(BaseVideoDataset):
                                 'turtle', 'whale', 'zebra')
 
         if dataset_version == '2019':
-            cls.METAINFO = dict(CLASSES=CLASSES_2019_version)
+            cls.METAINFO = dict(classes=classes_2019_version)
         elif dataset_version == '2021':
-            cls.METAINFO = dict(CLASSES=CLASSES_2021_version)
+            cls.METAINFO = dict(classes=classes_2021_version)
         else:
             raise NotImplementedError('Not supported YouTubeVIS dataset'
                                       f'version: {dataset_version}')
