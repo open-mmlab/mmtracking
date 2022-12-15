@@ -62,6 +62,7 @@ jobs:
       - run:
           name: Install mmtrack dependencies
           command: |
+            pip install -U openmim
             python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
             python -m pip install << parameters.mmcv >>

@@ -18,7 +18,7 @@ class TestBasevideoDataset(TestCase):
     @classmethod
     def setUpClass(cls):
 
-        cls.metainfo = dict(CLASSES=('car', ))
+        cls.metainfo = dict(classes=('car', ))
         cls.ref_img_sampler = dict(
             num_ref_imgs=2,
             frame_range=4,

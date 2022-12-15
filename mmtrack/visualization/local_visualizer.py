@@ -70,7 +70,7 @@ class TrackLocalVisualizer(Visualizer):
             np.ndarray: the drawn image which channel is RGB.
         """
         self.set_image(image)
-        classes = self.dataset_meta.get('CLASSES', None)
+        classes = self.dataset_meta.get('classes', None)
 
         # get colors and texts
         if hasattr(instances, 'instances_id'):

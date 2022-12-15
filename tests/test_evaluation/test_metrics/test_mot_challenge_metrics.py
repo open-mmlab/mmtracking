@@ -59,7 +59,7 @@ class TestMOTChallengeMetrics(TestCase):
         """Test using the metric in the same way as Evaluator."""
         metric = MOTChallengeMetrics(
             metric=['HOTA', 'CLEAR', 'Identity'], format_only=format_only)
-        metric.dataset_meta = {'CLASSES': ('pedestrian', )}
+        metric.dataset_meta = {'classes': ('pedestrian', )}
         data_batch = dict(input=None, data_samples=None)
         predictions = self._get_predictions_demo()
         metric.process(data_batch, predictions)

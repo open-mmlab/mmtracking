@@ -38,7 +38,7 @@ train_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/half-train_cocoformat.json',
         data_prefix=dict(img='train/'),
-        metainfo=dict(CLASSES=('pedestrian', )),
+        metainfo=dict(classes=('pedestrian', )),
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         pipeline=train_pipeline))
 val_dataloader = dict(
@@ -53,7 +53,7 @@ val_dataloader = dict(
         _scope_='mmdet',
         ann_file='annotations/half-val_cocoformat.json',
         data_prefix=dict(img='train/'),
-        metainfo=dict(CLASSES=('pedestrian', )),
+        metainfo=dict(classes=('pedestrian', )),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = val_dataloader
