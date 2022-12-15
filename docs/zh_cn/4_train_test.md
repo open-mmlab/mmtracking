@@ -25,7 +25,7 @@
   
   如果你使用不同的 GPU 或每个 GPU 使用不同的图像，你需要设置学习率与批处理大小成正比，
   
-  例如，`lr=0.01` 对应8 GPU * 1 img/gpu，`lr=0.04` 对应16 GPU * 2 imgs/gpu。
+  例如，`lr=0.01` 对应8 GPU * 1 img/gpu，lr=0.04 对应16 GPU * 2 imgs/gpu。
   
 - 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由 CLI 参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
   
@@ -33,13 +33,13 @@
 
 #### 1. 基于 CPU 进行训练
 
-该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见[MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
 ```
 
-在CPU上训练 VID 模型 DFF 的例子：
+在 CPU 上训练 VID 模型 DFF 的例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py configs/vid/dff/dff_faster-rcnn_r50-dc5_8xb1-7e_imagenetvid.py
@@ -71,9 +71,7 @@ CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yol
 bash ./tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
 ```
 
-如果您想在一台机器上启动多个作业，
-
-例如，在一台8个 GPU 的机器上进行2个 4-GPU 训练作业，
+如果您想在一台机器上启动多个作业，例如，在一台8个 GPU 的机器上进行2个 4-GPU 训练作业，
 
 您需要为每个作业指定不同的端口(默认为29500)，以避免通信冲突。
 
@@ -84,7 +82,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 PORT=29500 ./tools/dist_train.sh ${CONFIG_FILE} 4
 CUDA_VISIBLE_DEVICES=4,5,6,7 PORT=29501 ./tools/dist_train.sh ${CONFIG_FILE} 4
 ```
 
-在单节点多 GPU 上训练 SOT 模型 siameserpn++ 的例子：
+在单节点多 GPU 上训练 SOT 模型 SiameseRPN++ 的例子：
 
 ```shell script
 bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_imagenetvid-imagenetdet-coco_test-otb100.py 8
@@ -147,11 +145,8 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 
 重点：
 
-- 您可以通过修改评估器中的 `outfile_prefix` 来设置结果保存路径。
-  例如，`val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')`  。
-  否则，将创建一个临时文件，并将在评估后删除。
-- 如果你只想要格式化的结果而不需要求值，你可以设置`format_only=True`。
-  例如，`test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
+- 您可以通过修改评估器中的 `outfile_prefix` 来设置结果保存路径。例如， `val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')` 。否则，将创建一个临时文件，并将在评估后删除。
+- 如果你只想要格式化的结果而不需要求值，你可以设置 `format_only=True` 。例如， `test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
 
 #### 1. 基于CPU进行测试
 
@@ -185,9 +180,7 @@ CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolo
 
 #### 3. 基于单节点多 GPU 进行测试
 
-我们提供 `tools/dist_test.sh` 在多个 GPU 上启动测试。
-
-基本用法如下。
+我们提供 `tools/dist_test.sh` 在多个 GPU 上启动测试。基本用法如下。
 
 ```shell script
 bash ./tools/dist_test.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
