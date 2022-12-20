@@ -171,7 +171,7 @@ class StrongSORTTracker(SORTTracker):
             if model.with_cmc:
                 num_samples = 1
                 self.tracks = model.cmc.track(self.last_img, img, self.tracks,
-                                              num_samples, frame_id)
+                                              num_samples, frame_id, metainfo)
 
             self.tracks, motion_dists = model.kalman.track(
                 self.tracks, bbox_xyxy_to_cxcyah(bboxes))
