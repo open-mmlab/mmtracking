@@ -11,29 +11,29 @@
 - 单节点多 GPU
 - 多节点
 
-您也可以使用Slurm完成工作。
+您也可以使用 Slurm 完成工作。
 
 重点：
 
 - 您可以通过修改 `train_cfg` 为 `train_cfg = dict(val_interval=10)` 。
 
-  从而在训练过程中更改评估间隔。这意味着每10个周期对模型进行一次评估。
+  从而在训练过程中更改评估间隔。这意味着每 10 个周期对模型进行一次评估。
 
-- 所有配置文件的默认学习率为8个 GPU 。
+- 所有配置文件的学习率设置默认是基于 8 个 GPUs 训练。
 
-  根据[线性缩放规则](https://arxiv.org/abs/1706.02677)，
+  根据 [Linear Scaling Rule](https://arxiv.org/abs/1706.02677) ，
 
-  如果你使用不同的 GPU 或每个 GPU 使用不同的图像，你需要设置学习率与批处理大小成正比，
+  如果你使用不同数量的 GPUs 或者 单张 GPU 上图片数量有改动， 你需要设置学习率与批数据大小成正比。
 
-  例如，`lr=0.01` 对应8 GPU * 1 img/gpu，lr=0.04 对应16 GPU * 2 imgs/gpu。
+  例如，`lr=0.01` 对应 8 GPU * 1 img/gpu，lr=0.04 对应 16 GPU * 2 imgs/gpu 。
 
-- 在培训过程中，日志文件和检查点会保存到工作目录中，工作目录由 CLI 参数`--work-dir`指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
+- 在训练过程中，日志文件和历史模型会保存到工作目录中，工作目录由 CLI 参数 `--work-dir` 指定。它使用 `./work_dirs/CONFIG_NAME` 作为默认值。
 
 - 如果你想要混合精确训练，只需指定 CLI 参数 `--amp` 。
 
 #### 1. 基于 CPU 进行训练
 
-该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见[MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
+模型默认放在 cuda 设备上训练。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850) 。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -61,9 +61,9 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py
 ```
 
-#### 3. 基于单节点多GPU进行训练
+#### 3. 基于单节点多 GPU 进行训练
 
-我们提供 `tools/dist_train.sh` 在多个 GPU 上启动培训。
+我们提供 `tools/dist_train.sh` 在多个 GPU 上训练。
 
 基本用法如下：
 
@@ -90,7 +90,7 @@ bash ./tools/dist_train.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_i
 
 #### 4. 基于多节点进行训练
 
-如果你启动多台与以太网简单连接的机器，你可以简单地运行以下命令：
+如果你启动多台通过以太网简单连接的机器。你可以直接运行以下命令：
 
 在第一台机器上：
 
@@ -106,9 +106,9 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 
 如果你没有像 InfiniBand 这样的高速网络，它通常是很慢的。
 
-#### 5. 基于Slurm进行训练
+#### 5. 基于 Slurm 进行训练
 
-[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由Slurm管理的集群上，可以使用 `slurm_train.sh` 来生成培训作业。它支持单节点和多节点训练。
+[Slurm](https://slurm.schedmd.com/) 是计算集群的一个很好的作业调度系统。在由 Slurm 管理的集群上，可以使用 `slurm_train.sh` 来生成培训作业。它支持单节点和多节点训练。
 
 基本用法如下：
 
@@ -116,7 +116,7 @@ NNODES=2 NODE_RANK=1 PORT=$MASTER_PORT MASTER_ADDR=$MASTER_ADDR bash tools/dist_
 bash ./tools/slurm_train.sh ${PARTITION} ${JOB_NAME} ${CONFIG_FILE} ${WORK_DIR} ${GPUS}
 ```
 
-用 Slurm 训练VIS模型 MaskTrack R-CNN 的例子：
+用 Slurm 训练 VIS 模型 MaskTrack R-CNN 的例子：
 
 ```shell script
 PORT=29501 \
@@ -148,9 +148,9 @@ configs/vis/masktrack_rcnn/masktrack-rcnn_mask-rcnn_r50_fpn_8xb1-12e_youtubevis2
 - 您可以通过修改评估器中的 `outfile_prefix` 来设置结果保存路径。例如， `val_evaluator = dict(outfile_prefix='results/stark_st1_trackingnet')` 。否则，将创建一个临时文件，并将在评估后删除。
 - 如果你只想要格式化的结果而不需要求值，你可以设置 `format_only=True` 。例如， `test_evaluator = dict(type='YouTubeVISMetric', metric='youtube_vis_ap', outfile_prefix='./youtube_vis_results', format_only=True)`
 
-#### 1. 基于CPU进行测试
+#### 1. 基于 CPU 进行测试
 
-该型号是 cuda 设备上的默认型号。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850) 。
+模型默认放在 cuda 设备上训练。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上测试模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。详情请浏览 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850) 。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/test.py ${CONFIG_FILE} [optional arguments]
@@ -172,7 +172,7 @@ python tools/test.py ${CONFIG_FILE} [optional arguments]
 
 你可以使用 `export CUDA_VISIBLE_DEVICES=$GPU_ID` 来选择 GPU 。
 
-在单 GPU 上测试MOT模型 ByteTrack 的一个例子：
+在单 GPU 上测试 MOT 模型 ByteTrack 的一个例子：
 
 ```shell script
 CUDA_VISIBLE_DEVICES=2 python tools/test.py configs/mot/bytetrack/bytetrack_yolox_x_8xb4-80e_crowdhuman-mot17halftrain_test-mot17halfval.py --checkpoint https://download.openmmlab.com/mmtracking/mot/bytetrack/bytetrack_yolox_x/bytetrack_yolox_x_crowdhuman_mot17-private-half_20211218_205500-1985c9f0.pth
@@ -196,7 +196,7 @@ bash ./tools/dist_test.sh ./configs/sot/siamese_rpn/siamese-rpn_r50_8xb16-20e_im
 
 您可以在多个节点上进行测试，这与 ”在多个节点上进行训练” 类似。
 
-#### 5. 基于Slurm进行测试
+#### 5. 基于 Slurm 进行测试
 
 在由Slurm管理的集群上，可以使用 `slurm_test.sh` 生成测试工作。它支持单节点和多节点测试。
 

@@ -47,7 +47,7 @@ visualizer = dict(type='DetLocalVisualizer')
 - `bbox_color`：方框线的颜色。color的元组应该按照 BGR 顺序。默认为 None。
 - `text_color`：文字的颜色。color的元组应该按照 BGR 顺序。默认为 (200,200,200)。
 - `line_width`：线的宽度。默认值为3。
-- `alpha`：盒或遮罩的透明度。默认值为0.8。
+- `alpha`：掩膜的透明度。默认值为0.8。
 
 下面是一个 DFF 的可视化示例：
 
