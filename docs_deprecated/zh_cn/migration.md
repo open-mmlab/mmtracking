@@ -4,7 +4,7 @@
 
 ## 整体架构
 
-MMTracking 0.xx 版本中的`core`，在 1.xx 的新版中被划分为了`engine`、 `evaluation`、 `structures`、 `visualization` 和 `model/task_moduls` 模块。详细信息可见[用户指南](../../docs/en/user_guides)。
+MMTracking 0.xx 版本中的 `core`，在 1.xx 的新版中被划分为了 `engine`、 `evaluation`、 `structures`、 `visualization` 和 `model/task_moduls` 模块。详细信息可见[用户指南](../../docs/en/user_guides)。
 
 ## 配置
 
@@ -126,11 +126,11 @@ MMTracking 的 1.xx 版本增加了 [TrackDataPreprocessor](../../mmtrack/models
 
 ### 训练
 
-在训练阶段的正向传播过程中，Models 及 Heads 的每一类结果都是调用`loss`函数来执行。模型中的`loss`函数包含一个值为`Tensor`的字典和一个元素为 `TrackDataSample`的列表。
+在训练阶段的正向传播过程中，Models 和 Heads 类会通过 `loss` 函数来计算 loss。 `loss` 函数的输入包括一个值为 `Tensor` 的字典和一个元素为 `TrackDataSample` 的列表。
 
 ### 测试
 
-在测试阶段的正向传播过程中，Models 及 Heads 的每一类结果都是调用`predict`函数来执行。模型中的`predict`函数包含一个值为`Tensor`的字典和一个元素为 `TrackDataSample`的列表。
+在测试阶段的正向传播过程中，Models 及 Heads 会通过调用 `predict` 函数来得到预测结果。 `predict` 函数的输入包括一个值为 `Tensor` 的字典和一个元素为 `TrackDataSample` 的列表。
 
 ## 数据
 
@@ -140,15 +140,15 @@ MMTracking 的 1.xx 版本新增了两个数据结构: [TrackDataSample](../../m
 
 ### Dataset 类
 
-MMTracking 的 1.xx 版本新增了两个继承自 MMEngine 的 Dataset 基类：`BaseSOTDataset` 和 `BaseVideoDataset`。前者仅用于单目标跟踪（SOT），后者可用于其余所有任务。
+MMTracking 的 1.xx 版本新增了两个继承自 MMEngine 的 Dataset 基类： `BaseSOTDataset` 和 `BaseVideoDataset`。前者仅用于单目标跟踪（SOT），后者可用于其余所有任务。
 
 ### Data Pipeline
 
-1. MMTracking 旧版中的大部分图像序列变换，在新版本中被重构。具体来说，我们使用`TransformBroadcaster` 来封装单个图像的变换。
+1. MMTracking 旧版中的大部分图像序列变换，在新版本中被重构。具体来说，我们使用 `TransformBroadcaster` 来封装单个图像的变换。
 
-   我们仍旧保留了某些图像序列的变换，例如`SeqCropLikeStark`，因为`TransformBroadcaster`不支持分别为序列中的每个图像设置不同的参数。
+   我们仍旧保留了某些图像序列的变换，例如 `SeqCropLikeStark`，因为 `TransformBroadcaster` 不支持分别为序列中的每个图像设置不同的参数。
 
-2. 我们将旧版的`VideoCollect`, `ConcatSameTypeFrames` 和 `SeqDefaultFormatBundle`进行了封装 ，在新版中使用`PackTrackInputs`。
+2. 我们将旧版的 `VideoCollect`, `ConcatSameTypeFrames` 和 `SeqDefaultFormatBundle` 进行了封装 ，在新版中使用 `PackTrackInputs`。
 
 3. 旧版本 pipeline 中的 normalizaion 被移除，其操作移至模型的正向传播过程。
 
@@ -158,12 +158,12 @@ MMTracking 的 1.xx 版本新增了 `DATA_SAMPLERS` 注册器。您可以在配�
 
 ## 评估
 
-在旧版本的 MMTarcking 中，评估过程使用的是 Dataset 类。在 MMTracking 的 1.xx 版本中，我们新增了`METRICS`器，所有的评估都在 metric 类中实现，它们都注册在 `METRICS`中，详细信息参见[此处](../../mmtrack/evaluation/metrics)。
+在旧版本的 MMTarcking 中，评估过程使用的是 Dataset 类。在 MMTracking 的 1.xx 版本中，我们新增了 `METRICS` 注册器，所有的评估都在 metric 类中实现，它们都注册在 `METRICS` 中，详细信息参见[此处](../../mmtrack/evaluation/metrics)。
 
 ## 可视化
 
-新增了`TrackLocalVisualizer` 和 `DetLocalVisualizer`，它们被注册进`VISUALIZER`注册器中。相较于旧版，新版支持了图像和特征图的可视化，详细信息参见[此处](../../mmtrack/visualization/local_visualizer.py)。
+新增了 `TrackLocalVisualizer` 和 `DetLocalVisualizer`，它们被注册进 `VISUALIZER` 注册器中。相较于旧版，新版支持了图像和特征图的可视化，详细信息参见[此处](../../mmtrack/visualization/local_visualizer.py)。
 
 ## 引擎
 
-MMTracking 的 1.xx 版本重构了`runner`、`hook`、`logging`和`optimizer`，详细信息可见于 MMEngine。
+MMTracking 的 1.xx 版本重构了 `runner`、 `hook`、 `logging` 和 `optimizer`，详细信息可见于 MMEngine。
