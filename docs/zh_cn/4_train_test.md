@@ -33,7 +33,7 @@
 
 #### 1. 基于 CPU 进行训练
 
-模型默认放在 cuda 设备上训练。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850) 。
+模型默认放在 cuda 设备上训练。只有在没有 cuda 设备的情况下，模型才会放在 CPU 上。所以如果你想在 CPU 上训练模型，你需要设置 `export CUDA_VISIBLE_DEVICES=-1` 来禁用 GPU 可见性。更多内容详见 [MMEngine](https://github.com/open-mmlab/mmengine/blob/ca282aee9e402104b644494ca491f73d93a9544f/mmengine/runner/runner.py#L849-L850)。
 
 ```shell script
 CUDA_VISIBLE_DEVICES=-1 python tools/train.py ${CONFIG_FILE} [optional arguments]
