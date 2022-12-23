@@ -169,7 +169,7 @@ test_evaluator=dict(
 ```
 
 这里，`eval_show_video_indices` 用于索引 `numpy.ndarray`。
-它可以是 `int` (正或负)。正数 `k` 表示排顶部的 k 个结果，而负数表示排底部的 k 个结果。
+它可以是 `int` (正或负)。正数 `k` 表示最好的 k 个结果，而负数表示最差的 k 个结果。
 
 ## 保存并绘制单目标跟踪的评估结果
 
