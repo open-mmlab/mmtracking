@@ -47,7 +47,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    pip install mmengine
    ```
 
-4. 安装 mmcv， 我们建议使用预构建包来安装：
+4. 安装 mmcv， 我们建议使用预编译包来安装：
 
    ```shell
    pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
