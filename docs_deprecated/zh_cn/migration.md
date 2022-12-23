@@ -1,4 +1,4 @@
-#  MMTracking 版本迁移
+# MMTracking 版本迁移
 
 与 0.xx 版本的 MMTracking 相比, 最新的 1.xx 版本有以下重要修改。
 
