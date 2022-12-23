@@ -95,7 +95,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    cd mmtracking
    ```
 
-7. 安装构建需求，然后安装 MMTracking。
+7. 安装相关依赖，然后安装 MMTracking。
 
    ```shell
    pip install -r requirements/build.txt
