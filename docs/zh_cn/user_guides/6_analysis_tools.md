@@ -155,7 +155,7 @@ python tools/analysis_tools/browse_dataset.py ${CONFIG_FILE} [--show-interval ${
 可选参数：
 
 - `SHOW_INTERVAL`: 显示间隔（秒）。
-- `--not-show`: 是否不实时显示图片。
+- `--not-show`: 不实时显示图片。
 
 ## 在视频等级上展示单目标跟踪评估结果。
 
