@@ -175,7 +175,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 ## 验证
 
-为了验证 MMTracking 和所需环境是否正确安装, 我们可以运行 MOT, VIS, VID and SOT [演示脚本](https://github.com/open-mmlab/mmtracking/blob/1.x/demo/) 中的**一个** 。
+为了验证 MMTracking 和所需环境是否正确安装, 我们可以运行 MOT, VIS, VID and SOT [演示脚本](https://github.com/open-mmlab/mmtracking/blob/1.x/demo/) 中的**任意一个** 。
 
 以下是 MOT 演示的示例：
 
