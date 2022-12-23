@@ -167,7 +167,7 @@ pip install git+https://github.com/TAO-Dataset/tao.git (optional)
 
 训练和测试脚本已经修改了 `PYTHONPATH`，以确保脚本使用当前目录中的 MMTracking。
 
-要使用安装在环境中默认的 MMTracking 而不是您正在使用的，可以删除出现在相关脚本中的代码：
+要使用安装在环境中默认的 MMTracking 而不是您正在使用的，可以删除出现在相关脚本中的以下代码：
 
 ```shell
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
