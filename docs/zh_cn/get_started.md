@@ -79,7 +79,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    pip install 'mmdet>=3.0.0rc0'
    ```
 
-   如果您想修改代码，您也可以选择从源代码构建 MMDetection:
+   如果您想修改代码，您也可以选择从源代码编译 MMDetection:
 
    ```shell
    git clone -b 3.x https://github.com/open-mmlab/mmdetection.git
