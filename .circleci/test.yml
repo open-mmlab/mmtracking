@@ -62,6 +62,7 @@ jobs:
       - run:
           name: Install mmtrack dependencies
           command: |
+            pip install -U openmim
             python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
             python -m pip install << parameters.mmcv >>
@@ -115,6 +116,7 @@ jobs:
           command: |
             docker exec mmtrack apt-get -y install git
             docker exec mmtrack pip install -e /mmengine
+            docker exec mmtrack pip install -U openmim
             docker exec mmtrack pip install << parameters.mmcv >>
             docker exec mmtrack pip install -e /mmdetection
             docker exec mmtrack pip install -e /mmclassification

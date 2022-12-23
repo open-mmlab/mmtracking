@@ -57,7 +57,7 @@ class TestTrackLocalVisualizer(TestCase):
 
         track_local_visualizer = TrackLocalVisualizer(alpha=0.2)
         track_local_visualizer.dataset_meta = dict(
-            CLASSES=['pedestrian', 'vehicle'])
+            classes=['pedestrian', 'vehicle'])
 
         # test gt_instances
         track_local_visualizer.add_datasample('image', image,
@@ -129,7 +129,7 @@ class TestDetLocalVisualizer(TestCase):
 
         det_local_visualizer = DetLocalVisualizer()
         det_local_visualizer.dataset_meta = dict(
-            CLASSES=['pedestrian', 'vehicle'])
+            classes=['pedestrian', 'vehicle'])
         det_local_visualizer.add_datasample(
             'image', image, track_data_sample, out_file=out_file)
         self._assert_image_and_shape(out_file, (h, 2 * w, 3))

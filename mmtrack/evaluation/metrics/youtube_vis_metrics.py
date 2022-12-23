@@ -191,7 +191,7 @@ class YouTubeVISMetric(BaseVideoMetric):
         """Gather all ground-truth from self.results."""
         self.categories = [
             dict(id=id + 1, name=name)
-            for id, name in enumerate(self.dataset_meta['CLASSES'])
+            for id, name in enumerate(self.dataset_meta['classes'])
         ]
         gt_results = dict(
             categories=self.categories,

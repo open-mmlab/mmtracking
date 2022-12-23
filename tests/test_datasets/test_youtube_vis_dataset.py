@@ -22,4 +22,4 @@ class TestYouTubeVISDataset(TestCase):
 
     def test_set_dataset_classes(self):
         assert isinstance(self.dataset.metainfo, dict)
-        assert len(self.dataset.metainfo['CLASSES']) == 40
+        assert len(self.dataset.metainfo['classes']) == 40
