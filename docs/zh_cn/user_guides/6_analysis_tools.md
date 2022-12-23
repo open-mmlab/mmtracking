@@ -2,7 +2,7 @@
 
 ## 多目标跟踪测试时的参数搜索
 
-`tools/analysis_tools/mot/mot_param_search.py` 能够搜索MOT模型中 `tracker` 的参数。
+`tools/analysis_tools/mot/mot_param_search.py` 能够搜索 MOT 模型中 `tracker` 参数。
 它的使用方式与 `tools/test.py` 一样，但在配置中**有所不同**。
 
 以下是一个展示如何修改配置的示例：
