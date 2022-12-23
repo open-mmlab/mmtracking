@@ -190,7 +190,7 @@ dict{tracker_name=dict(
       precision = np.ndarray)}
 ```
 
-指标形状为（M，），M是对应于不同阈值的值的数量。
+指标形状为（M，），M是不同阈值对应结果的数量。
 
 您可以使用以下命令绘制给定的保存结果：
 
