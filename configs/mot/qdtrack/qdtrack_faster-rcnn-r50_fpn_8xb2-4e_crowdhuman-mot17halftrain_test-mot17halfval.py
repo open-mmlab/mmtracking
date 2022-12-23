@@ -25,7 +25,7 @@ train_pipeline = [
         share_random_params=False,
         transforms=[
             dict(
-                type='mmtrack.RandomCrop',
+                type='RandomCrop',
                 crop_size=(1088, 1088),
                 bbox_clip_border=False)
         ]),
