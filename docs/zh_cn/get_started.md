@@ -60,7 +60,7 @@ MMTracking, MMEngine, MMCV 和 MMDetection 的兼容版本如下。请安装正�
    pip install 'mmcv>=2.0.0rc1' -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
    ```
 
-   请参阅 [此处](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) 的不同版本的MMCV与不同的 Pytorch 和 CUDA 版本兼容。
+   请参阅 [此处](https://mmcv.readthedocs.io/en/latest/get_started/installation.html) 的不同版本的 MMCV 与不同的 Pytorch 和 CUDA 版本兼容。
    您可以选择通过以下命令选择从源中编译 MMCV。
 
    ```shell
