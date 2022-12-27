@@ -176,7 +176,7 @@ class TestRandomCrop:
     def test_transform(self):
         results = self.random_crop(self.results)
         assert results['img'].shape == (256, 256, 3)
+        assert results['img_shape'] == (256, 256, 3)
         # Ensure that the instance_id is also filtered out correctly
         assert results['gt_bboxes'].shape[0] == results[
             'gt_instances_id'].shape[0]
-        assert results['img_shape'] == (256, 256, 3)
