@@ -2,7 +2,7 @@
 import numpy as np
 
 from mmtrack.datasets.transforms import (BrightnessAug, CropLikeDiMP,
-                                         CropLikeSiamFC, GrayAug,
+                                         CropLikeSiamFC, GrayAug, RandomCrop,
                                          SeqBboxJitter, SeqBlurAug,
                                          SeqColorAug, SeqCropLikeStark,
                                          SeqShiftScaleAug)
@@ -160,3 +160,23 @@ class TestCropLikeDiMP:
         assert results['img'].shape == (255, 255, 3)
         assert results['gt_bboxes'].shape == (1, 4)
         assert results['img_shape'] == (255, 255, 3)
+
+
+class TestRandomCrop:
+
+    def setup_class(cls):
+        cls.random_crop = RandomCrop(
+            crop_size=(256, 256), allow_negative_crop=True)
+        cls.results = dict(
+            img=np.random.randn(512, 512, 3),
+            gt_bboxes=random_boxes(10, 100).numpy(),
+            img_shape=(512, 512, 3),
+            gt_instances_id=np.array(list(range(10))))
+
+    def test_transform(self):
+        results = self.random_crop(self.results)
+        assert results['img'].shape == (256, 256, 3)
+        assert results['img_shape'] == (256, 256, 3)
+        # Ensure that the instance_id is also filtered out correctly
+        assert results['gt_bboxes'].shape[0] == results[
+            'gt_instances_id'].shape[0]

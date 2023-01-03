@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from mmcv.transforms import BaseTransform
 from mmcv.transforms.utils import cache_randomness
+from mmdet.datasets.transforms import RandomCrop as MMDET_RandomCrop
 from mmengine.logging import print_log
 
 from mmtrack.registry import TRANSFORMS
@@ -982,3 +983,120 @@ class SeqBlurAug(BaseTransform):
         repr_str = self.__class__.__name__
         repr_str += f'prob={self.prob})'
         return repr_str
+
+
+@TRANSFORMS.register_module()
+class RandomCrop(MMDET_RandomCrop):
+    """Random crop the image & bboxes & masks.
+
+    We have rewritten a part of this function to facilitate the same processing
+    of the `gt_instances_id` attribute during image clipping.For details of the
+    function, see mmdetection.
+
+    Required Keys:
+
+    - img
+    - gt_bboxes (BaseBoxes[torch.float32]) (optional)
+    - gt_bboxes_labels (np.int64) (optional)
+    - gt_instances_id (np.int64) (optional)
+    - gt_masks (BitmapMasks | PolygonMasks) (optional)
+    - gt_ignore_flags (np.bool) (optional)
+    - gt_seg_map (np.uint8) (optional)
+
+    Modified Keys:
+
+    - img
+    - img_shape
+    - gt_bboxes (optional)
+    - gt_bboxes_labels (optional)
+    - gt_instances_id (optional)
+    - gt_masks (optional)
+    - gt_ignore_flags (optional)
+    - gt_seg_map (optional)
+
+    Added Keys:
+
+    - homography_matrix
+    """
+
+    def _crop_data(self, results: dict, crop_size: Tuple[int, int],
+                   allow_negative_crop: bool) -> Union[dict, None]:
+        """Function to randomly crop images, bounding boxes, masks, semantic
+        segmentation maps.
+
+        Args:
+            results (dict): Result dict from loading pipeline.
+            crop_size (Tuple[int, int]): Expected absolute size after
+                cropping, (h, w).
+            allow_negative_crop (bool): Whether to allow a crop that does not
+                contain any bbox area.
+
+        Returns:
+            results (Union[dict, None]): Randomly cropped results, 'img_shape'
+                key in result dict is updated according to crop size. None will
+                be returned when there is no valid bbox after cropping.
+        """
+        assert crop_size[0] > 0 and crop_size[1] > 0
+        img = results['img']
+        margin_h = max(img.shape[0] - crop_size[0], 0)
+        margin_w = max(img.shape[1] - crop_size[1], 0)
+        offset_h, offset_w = self._rand_offset((margin_h, margin_w))
+        crop_y1, crop_y2 = offset_h, offset_h + crop_size[0]
+        crop_x1, crop_x2 = offset_w, offset_w + crop_size[1]
+
+        # Record the homography matrix for the RandomCrop
+        homography_matrix = np.array(
+            [[1, 0, -offset_w], [0, 1, -offset_h], [0, 0, 1]],
+            dtype=np.float32)
+        if results.get('homography_matrix', None) is None:
+            results['homography_matrix'] = homography_matrix
+        else:
+            results['homography_matrix'] = homography_matrix @ results[
+                'homography_matrix']
+
+        # crop the image
+        img = img[crop_y1:crop_y2, crop_x1:crop_x2, ...]
+        img_shape = img.shape
+        results['img'] = img
+        results['img_shape'] = img_shape
+
+        # crop bboxes accordingly and clip to the image boundary
+        if results.get('gt_bboxes', None) is not None:
+            bboxes = results['gt_bboxes']
+            bboxes.translate_([-offset_w, -offset_h])
+            if self.bbox_clip_border:
+                bboxes.clip_(img_shape[:2])
+            valid_inds = bboxes.is_inside(img_shape[:2]).numpy()
+            # If the crop does not contain any gt-bbox area and
+            # allow_negative_crop is False, skip this image.
+            if (not valid_inds.any() and not allow_negative_crop):
+                return None
+
+            results['gt_bboxes'] = bboxes[valid_inds]
+
+            if results.get('gt_ignore_flags', None) is not None:
+                results['gt_ignore_flags'] = \
+                    results['gt_ignore_flags'][valid_inds]
+
+            if results.get('gt_bboxes_labels', None) is not None:
+                results['gt_bboxes_labels'] = \
+                    results['gt_bboxes_labels'][valid_inds]
+
+            if results.get('gt_instances_id', None) is not None:
+                results['gt_instances_id'] = \
+                    results['gt_instances_id'][valid_inds]
+
+            if results.get('gt_masks', None) is not None:
+                results['gt_masks'] = results['gt_masks'][
+                    valid_inds.nonzero()[0]].crop(
+                        np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]))
+                if self.recompute_bbox:
+                    results['gt_bboxes'] = results['gt_masks'].get_bboxes(
+                        type(results['gt_bboxes']))
+
+        # crop semantic seg
+        if results.get('gt_seg_map', None) is not None:
+            results['gt_seg_map'] = results['gt_seg_map'][crop_y1:crop_y2,
+                                                          crop_x1:crop_x2]
+
+        return results
