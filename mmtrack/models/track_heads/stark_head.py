@@ -5,14 +5,12 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
-from mmcv.cnn.bricks.transformer import build_positional_encoding
-from mmdet.models.layers import Transformer
 from mmengine.model import BaseModule
 from mmengine.structures import InstanceData
 from torch import Tensor, nn
 
 from mmtrack.registry import MODELS
-from mmtrack.utils import InstanceList, OptConfigType, SampleList
+from mmtrack.utils import InstanceList, SampleList
 
 
 @MODELS.register_module()
@@ -177,93 +175,6 @@ class ScoreHead(nn.Module):
 
 
 @MODELS.register_module()
-class StarkTransformer(Transformer):
-    """The transformer head used in STARK. `STARK.
-
-    <https://arxiv.org/abs/2103.17154>`_.
-
-    This module follows the official DETR implementation.
-    See `paper: End-to-End Object Detection with Transformers
-    <https://arxiv.org/pdf/2005.12872>`_ for details.
-
-    Args:
-        encoder (`mmengine.ConfigDict` | Dict): Config of
-            TransformerEncoder. Defaults to None.
-        decoder ((`mmengine.ConfigDict` | Dict)): Config of
-            TransformerDecoder. Defaults to None
-        init_cfg (obj:`mmengine.ConfigDict`): The Config for initialization.
-            Defaults to None.
-    """
-
-    def __init__(
-        self,
-        encoder: OptConfigType = None,
-        decoder: OptConfigType = None,
-        init_cfg: OptConfigType = None,
-    ):
-        super(StarkTransformer, self).__init__(
-            encoder=encoder, decoder=decoder, init_cfg=init_cfg)
-
-    def forward(self, x: Tensor, mask: Tensor, query_embed: Tensor,
-                pos_embed: Tensor) -> Tuple[Tensor, Tensor]:
-        """Forward function for `StarkTransformer`.
-
-        The difference with transofrmer module in `MMCV` is the input shape.
-        The sizes of template feature maps and search feature maps are
-        different. Thus, we must flatten and concatenate them outside this
-        module. The `MMCV` flatten the input features inside tranformer module.
-
-        Args:
-            x (Tensor): Input query with shape (feats_flatten_len, bs, c)
-                where c = embed_dims.
-            mask (Tensor): The key_padding_mask used for encoder and decoder,
-                with shape (bs, feats_flatten_len).
-            query_embed (Tensor): The query embedding for decoder, with shape
-                (num_query, c).
-            pos_embed (Tensor): The positional encoding for encoder and
-                decoder, with shape (feats_flatten_len, bs, c).
-
-            Here, 'feats_flatten_len' = z_feat_h*z_feat_w*2 + \
-                x_feat_h*x_feat_w.
-            'z_feat_h' and 'z_feat_w' denote the height and width of the
-            template features respectively.
-            'x_feat_h' and 'x_feat_w' denote the height and width of search
-            features respectively.
-        Returns:
-            tuple[Tensor, Tensor]: results of decoder containing the following
-                tensor.
-                - out_dec: Output from decoder. If return_intermediate_dec \
-                      is True, output has shape [num_dec_layers, bs,
-                      num_query, embed_dims], else has shape [1, bs, \
-                      num_query, embed_dims].
-                      Here, return_intermediate_dec=False
-                - enc_mem: Output results from encoder, with shape \
-                      (feats_flatten_len, bs, embed_dims).
-        """
-        _, bs, _ = x.shape
-        query_embed = query_embed.unsqueeze(1).repeat(
-            1, bs, 1)  # [num_query, embed_dims] -> [num_query, bs, embed_dims]
-
-        enc_mem = self.encoder(
-            query=x,
-            key=None,
-            value=None,
-            query_pos=pos_embed,
-            query_key_padding_mask=mask)
-        target = torch.zeros_like(query_embed)
-        # out_dec: [num_dec_layers, num_query, bs, embed_dims]
-        out_dec = self.decoder(
-            query=target,
-            key=enc_mem,
-            value=enc_mem,
-            key_pos=pos_embed,
-            query_pos=query_embed,
-            key_padding_mask=mask)
-        out_dec = out_dec.transpose(1, 2)
-        return out_dec, enc_mem
-
-
-@MODELS.register_module()
 class StarkHead(BaseModule):
     """STARK head module for bounding box regression and prediction of
     confidence score of tracking bbox.
@@ -273,11 +184,6 @@ class StarkHead(BaseModule):
     `STARK <https://arxiv.org/abs/2103.17154>`_.
 
     Args:
-        num_query (int): Number of query in transformer.
-        transformer (obj:`mmengine.ConfigDict`|dict): Config for transformer.
-            Default: None.
-        positional_encoding (obj:`mmengine.ConfigDict`|dict):
-            Config for position encoding.
         bbox_head (obj:`mmengine.ConfigDict`|dict, optional): Config for bbox
             head. Defaults to None.
         cls_head (obj:`mmengine.ConfigDict`|dict, optional): Config for
@@ -297,12 +203,6 @@ class StarkHead(BaseModule):
     """
 
     def __init__(self,
-                 num_query=1,
-                 transformer=None,
-                 positional_encoding=dict(
-                     type='SinePositionalEncoding',
-                     num_feats=128,
-                     normalize=True),
                  bbox_head=None,
                  cls_head=None,
                  loss_cls=dict(
@@ -318,9 +218,6 @@ class StarkHead(BaseModule):
                  frozen_modules=None,
                  **kwargs):
         super(StarkHead, self).__init__(init_cfg=init_cfg)
-        self.transformer = MODELS.build(transformer)
-        self.positional_encoding = build_positional_encoding(
-            positional_encoding)
         assert bbox_head is not None
         self.bbox_head = MODELS.build(bbox_head)
         if cls_head is None:
@@ -332,10 +229,6 @@ class StarkHead(BaseModule):
             # the stage-2 training
             self.cls_head = MODELS.build(cls_head)
             self.loss_cls = MODELS.build(loss_cls)
-        self.embed_dims = self.transformer.embed_dims
-        self.num_query = num_query
-        self.query_embedding = nn.Embedding(self.num_query, self.embed_dims)
-
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.fp16_enabled = False
@@ -349,10 +242,6 @@ class StarkHead(BaseModule):
                 # The official code doesn't freeze these.
                 for param in m.parameters():
                     param.requires_grad = False
-
-    def init_weights(self):
-        """Parameters initialization."""
-        self.transformer.init_weights()
 
     def _merge_template_search(self, inputs: List[Dict[str, Tensor]]) -> dict:
         """Merge the data of template and search images.
@@ -433,7 +322,7 @@ class StarkHead(BaseModule):
         outputs_coord = self.bbox_head(bbox_feat)
         return outputs_coord
 
-    def forward(self, inputs: List[dict]) -> dict:
+    def forward(self, outs_dec, enc_mem) -> dict:
         """"
         Args:
             inputs (list[dict(tuple(Tensor))]): The list contains the
@@ -451,25 +340,6 @@ class StarkHead(BaseModule):
                     [tl_x, tl_y, br_x, br_y] format
                 - 'pred_logit': (Tensor) of shape (bs * num_query, 1)
         """
-        # 1. preprocess inputs for transformer
-        all_inputs = []
-        for input in inputs:
-            feat = input['feat'][0]
-            feat_size = feat.shape[-2:]
-            mask = F.interpolate(
-                input['mask'][None].float(), size=feat_size).to(torch.bool)[0]
-            pos_embed = self.positional_encoding(mask)
-            all_inputs.append(dict(feat=feat, mask=mask, pos_embed=pos_embed))
-        all_inputs = self._merge_template_search(all_inputs)
-
-        # 2. forward transformer head
-        # outs_dec is in (1, bs, num_query, c) shape
-        # enc_mem is in (feats_flatten_len, bs, c) shape
-        outs_dec, enc_mem = self.transformer(all_inputs['feat'],
-                                             all_inputs['mask'],
-                                             self.query_embedding.weight,
-                                             all_inputs['pos_embed'])
-
         # 3. forward bbox head and classification head
         if not self.training:
             pred_logits = None
@@ -652,7 +522,7 @@ class StarkHead(BaseModule):
 
     # TODO: unify the `sefl.predict`, `self.loss` and so on in all the heads of
     # SOT.
-    def loss(self, inputs: List[dict], data_samples: SampleList,
+    def loss(self, inputs, outs_dec, enc_mem, data_samples: SampleList,
              **kwargs) -> dict:
         """Compute loss.
 
@@ -671,7 +541,7 @@ class StarkHead(BaseModule):
         Returns:
             dict[str, Tensor]: a dictionary of loss components.
         """
-        outs = self(inputs)
+        outs = self(outs_dec, enc_mem)
 
         batch_gt_instances = []
         batch_img_metas = []

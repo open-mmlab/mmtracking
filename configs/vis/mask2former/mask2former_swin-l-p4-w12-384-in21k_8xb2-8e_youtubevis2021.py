@@ -29,10 +29,11 @@ model = dict(
     init_cfg=dict(
         type='Pretrained',
         checkpoint=  # noqa: E251
-        'https://download.openmmlab.com/mmdetection/v2.0/mask2former/'
-        'mask2former_swin-l-p4-w12-384-in21k_lsj_16x1_100e_coco-panoptic/'
-        'mask2former_swin-l-p4-w12-384-in21k_lsj_16x1_100e_coco-panoptic_'
-        '20220407_104949-d4919c44.pth'))
+        'https://download.openmmlab.com/mmdetection/v3.0'
+        '/mask2former/mask2former_swin-l-p4-w12-384-'
+        'in21k_16xb1-lsj-100e_coco-panoptic'
+        '/mask2former_swin-l-p4-w12-384-in21k_16xb1-lsj-100e'
+        '_coco-panoptic_20220407_104949-82f8d28d.pth'))
 
 # set all layers in backbone to lr_mult=0.1
 # set all norm layers, position_embeding,
