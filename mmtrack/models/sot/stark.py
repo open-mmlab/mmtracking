@@ -5,8 +5,11 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
+from mmdet.models.layers import (DetrTransformerDecoder,
+                                 DetrTransformerEncoder,
+                                 SinePositionalEncoding)
 from mmdet.structures.bbox.transforms import bbox_xyxy_to_cxcywh
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd
 
@@ -43,7 +46,11 @@ class Stark(BaseSingleObjectTracker):
     def __init__(self,
                  backbone: dict,
                  neck: Optional[dict] = None,
-                 head: Optional[dict] = None,
+                 encoder: OptConfigType = None,
+                 decoder: OptConfigType = None,
+                 head: OptConfigType = None,
+                 positional_encoding: OptConfigType = None,
+                 num_queries: int = 100,
                  pretrains: Optional[dict] = None,
                  train_cfg: Optional[dict] = None,
                  test_cfg: Optional[dict] = None,
@@ -71,6 +78,29 @@ class Stark(BaseSingleObjectTracker):
         if frozen_modules is not None:
             self.freeze_module(frozen_modules)
 
+        self.encoder = encoder
+        self.decoder = decoder
+        self.positional_encoding = positional_encoding
+        self.num_queries = num_queries
+        self._init_layers()
+
+    def _init_layers(self) -> None:
+        """Initialize layers except for backbone, neck and bbox_head."""
+        self.positional_encoding = SinePositionalEncoding(
+            **self.positional_encoding)
+        self.encoder = DetrTransformerEncoder(**self.encoder)
+        self.decoder = DetrTransformerDecoder(**self.decoder)
+        self.embed_dims = self.encoder.embed_dims
+        # NOTE The embed_dims is typically passed from the inside out.
+        # For example in DETR, The embed_dims is passed as
+        # self_attn -> the first encoder layer -> encoder -> detector.
+        self.query_embedding = nn.Embedding(self.num_queries, self.embed_dims)
+
+        num_feats = self.positional_encoding.num_feats
+        assert num_feats * 2 == self.embed_dims, \
+            'embed_dims should be exactly 2 times of num_feats. ' \
+            f'Found {self.embed_dims} and {num_feats}.'
+
     def init_weights(self):
         """Initialize the weights of modules in single object tracker."""
         # We don't use the `init_weights()` function in BaseModule, since it
@@ -86,6 +116,11 @@ class Stark(BaseSingleObjectTracker):
 
         if self.with_head:
             self.head.init_weights()
+
+        for coder in self.encoder, self.decoder:
+            for p in coder.parameters():
+                if p.dim() > 1:
+                    nn.init.xavier_uniform_(p)
 
     def extract_feat(self, img: Tensor) -> Tensor:
         """Extract the features of the input image.
@@ -300,6 +335,82 @@ class Stark(BaseSingleObjectTracker):
         x_dict = dict(feat=x_feat, mask=search_padding_mask[:, 0])
         head_inputs.append(x_dict)
 
-        losses = self.head.loss(head_inputs, data_samples)
+        outs_dec, enc_mem = self.forward_transformer(head_inputs)
+        losses = self.head.loss(head_inputs, outs_dec, enc_mem, data_samples)
 
         return losses
+
+    def forward_transformer(self, inputs):
+        # 1. preprocess inputs for transformer
+        all_inputs = []
+        for input in inputs:
+            feat = input['feat'][0]
+            feat_size = feat.shape[-2:]
+            mask = F.interpolate(
+                input['mask'][None].float(), size=feat_size).to(torch.bool)[0]
+            pos_embed = self.positional_encoding(mask)
+            all_inputs.append(dict(feat=feat, mask=mask, pos_embed=pos_embed))
+        all_inputs = self.head._merge_template_search(all_inputs)
+
+        # 2. forward transformer head
+        # outs_dec is in (1, bs, num_query, c) shape
+        # enc_mem is in (feats_flatten_len, bs, c) shape
+        outs_dec, enc_mem = self.transformer(
+            all_inputs['feat'].permute(1, 0, 2), all_inputs['mask'],
+            self.query_embedding.weight,
+            all_inputs['pos_embed'].permute(1, 0, 2))
+        return outs_dec, enc_mem
+
+    def transformer(self, x: Tensor, mask: Tensor, query_embed: Tensor,
+                    pos_embed: Tensor) -> Tuple[Tensor, Tensor]:
+        """Forward function for `StarkTransformer`.
+
+        The difference with transofrmer module in `MMCV` is the input shape.
+        The sizes of template feature maps and search feature maps are
+        different. Thus, we must flatten and concatenate them outside this
+        module. The `MMCV` flatten the input features inside tranformer module.
+
+        Args:
+            x (Tensor): Input query with shape (feats_flatten_len, bs, c)
+                where c = embed_dims.
+            mask (Tensor): The key_padding_mask used for encoder and decoder,
+                with shape (bs, feats_flatten_len).
+            query_embed (Tensor): The query embedding for decoder, with shape
+                (num_query, c).
+            pos_embed (Tensor): The positional encoding for encoder and
+                decoder, with shape (feats_flatten_len, bs, c).
+
+            Here, 'feats_flatten_len' = z_feat_h*z_feat_w*2 + \
+                x_feat_h*x_feat_w.
+            'z_feat_h' and 'z_feat_w' denote the height and width of the
+            template features respectively.
+            'x_feat_h' and 'x_feat_w' denote the height and width of search
+            features respectively.
+        Returns:
+            tuple[Tensor, Tensor]: results of decoder containing the following
+                tensor.
+                - out_dec: Output from decoder. If return_intermediate_dec \
+                      is True, output has shape [num_dec_layers, bs,
+                      num_query, embed_dims], else has shape [1, bs, \
+                      num_query, embed_dims].
+                      Here, return_intermediate_dec=False
+                - enc_mem: Output results from encoder, with shape \
+                      (feats_flatten_len, bs, embed_dims).
+        """
+        bs, _, _ = x.shape
+        query_embed = query_embed.unsqueeze(1).repeat(
+            bs, 1, 1)  # [num_query, embed_dims] -> [num_query, bs, embed_dims]
+
+        enc_mem = self.encoder(
+            query=x, query_pos=pos_embed, key_padding_mask=mask)
+        target = torch.zeros_like(query_embed)
+        # out_dec: [num_dec_layers, num_query, bs, embed_dims]
+        out_dec = self.decoder(
+            query=target,
+            key=enc_mem,
+            value=enc_mem,
+            key_pos=pos_embed,
+            query_pos=query_embed,
+            key_padding_mask=mask)
+        enc_mem = enc_mem.permute(1, 0, 2)
+        return out_dec, enc_mem
