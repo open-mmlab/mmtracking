@@ -73,6 +73,7 @@ python ./tools/dataset_converters/vot/download_vot.py --dataset vot2018 --save_p
 #### 1.4 Video Instance Segmentation
 
 - For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
+
 - YouTube-VIS 2019 dataset can be download from [OpenDataLab](https://opendatalab.com/) (recommended for users in China): https://opendatalab.com/YouTubeVIS2019/download
 
 #### 1.5 Data Structure
