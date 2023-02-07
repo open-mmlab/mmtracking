@@ -34,7 +34,7 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - For the training and testing of multi object tracking task, one of the MOT Challenge datasets (e.g. MOT17, TAO and DanceTrack) are needed, CrowdHuman and LVIS can be served as comlementary dataset.
 
-- The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations). 
+- The `annotations` under `tao` contains the official annotations from [here](https://github.com/TAO-Dataset/annotations).
 - The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957). The synset mapping file `coco_to_lvis_synset.json` used in `./tools/dataset_converters/tao/merge_coco_with_lvis.py` script can be found [here](https://github.com/TAO-Dataset/tao/tree/master/data).
 - For users in China, the following datasets can be downloaded from [OpenDataLab](https://opendatalab.com/) with high speed:
   - [MOT17](https://opendatalab.com/MOT17/download)
