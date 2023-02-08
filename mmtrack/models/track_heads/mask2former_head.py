@@ -673,7 +673,7 @@ class Mask2FormerHead(MMDET_MaskFormerHead):
         if len(mask_cls_results) > 0:
             scores = F.softmax(mask_cls_results, dim=-1)[:, :-1]
             labels = torch.arange(self.num_classes).unsqueeze(0).repeat(
-                self.num_queries, 1).flatten(0, 1)
+                self.num_queries, 1).flatten(0, 1).to(scores.device)
             # keep top-10 predictions
             scores_per_image, topk_indices = scores.flatten(0, 1).topk(
                 10, sorted=False)
