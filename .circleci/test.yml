@@ -37,8 +37,6 @@ jobs:
         type: string
       torchvision:
         type: string
-      mmcv:
-        type: string
     docker:
       - image: cimg/python:<< parameters.python >>
     resource_class: large
@@ -91,8 +89,6 @@ jobs:
       cudnn:
         type: integer
         default: 7
-      mmcv:
-        type: string
     machine:
       image: ubuntu-2004-cuda-11.4:202110-01
       # docker_layer_caching: true
