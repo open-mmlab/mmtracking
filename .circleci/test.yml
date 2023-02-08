@@ -63,7 +63,9 @@ jobs:
             pip install -U openmim
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
             mim install 'mmcv >= 2.0.0rc1'
-            python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
+            # TODO: fix bc-breaking from mmdet detr-refactor
+            # python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
+            mim install 'mmdet == 3.0.0rc5'
             python -m pip install git+ssh://git@github.com/open-mmlab/mmclassification.git@dev-1.x
             python -m pip install -r requirements.txt
             python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
@@ -114,7 +116,9 @@ jobs:
             docker exec mmtrack pip install -e /mmengine
             docker exec mmtrack pip install -U openmim
             docker exec mmtrack mim install 'mmcv >= 2.0.0rc1'
-            docker exec mmtrack pip install -e /mmdetection
+            # TODO: fix bc-breaking from mmdet detr-refactor
+            # docker exec mmtrack pip install -e /mmdetection
+            docker exec mmtrack mim install 'mmdet == 3.0.0rc5'
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
             docker exec mmtrack python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
