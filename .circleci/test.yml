@@ -64,7 +64,7 @@ jobs:
           command: |
             pip install -U openmim
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
-            python -m pip install << parameters.mmcv >>
+            mim install 'mmcv >= 2.0.0rc1'
             python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
             python -m pip install git+ssh://git@github.com/open-mmlab/mmclassification.git@dev-1.x
             python -m pip install -r requirements.txt
@@ -117,7 +117,7 @@ jobs:
             docker exec mmtrack apt-get -y install git
             docker exec mmtrack pip install -e /mmengine
             docker exec mmtrack pip install -U openmim
-            docker exec mmtrack pip install << parameters.mmcv >>
+            docker exec mmtrack mim install 'mmcv >= 2.0.0rc1'
             docker exec mmtrack pip install -e /mmdetection
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
@@ -158,7 +158,6 @@ workflows:
           torch: 1.7.0
           torchvision: 0.8.1
           python: 3.7.4  # The lowest python 3.7.x version available on CircleCI images
-          mmcv: https://download.openmmlab.com/mmcv/dist/cpu/torch1.6.0/mmcv-2.0.0rc1-cp36-cp36m-manylinux1_x86_64.whl
           requires:
             - lint
       - build_cpu:
@@ -166,7 +165,6 @@ workflows:
           torch: 1.13.0
           torchvision: 0.14.0
           python: 3.9.0
-          mmcv: https://download.openmmlab.com/mmcv/dist/cpu/torch1.9.0/mmcv-2.0.0rc1-cp39-cp39-manylinux1_x86_64.whl
           requires:
             - minimum_version_cpu
       - hold:
@@ -179,7 +177,6 @@ workflows:
           # Use double quotation mark to explicitly specify its type
           # as string instead of number
           cuda: "10.2"
-          mmcv: https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv-2.0.0rc1-cp37-cp37m-manylinux1_x86_64.whl
           requires:
             - hold
   merge_stage_test:
@@ -192,7 +189,6 @@ workflows:
           torch: 1.8.1
           # Use double quotation mark to explicitly specify its type
           # as string instead of number
-          mmcv: https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv-2.0.0rc1-cp37-cp37m-manylinux1_x86_64.whl
           cuda: "10.2"
           filters:
             branches:
