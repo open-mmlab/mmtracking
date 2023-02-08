@@ -52,4 +52,4 @@ class TestLoadTrackAnnotations:
                                    'with_label=False, with_instance_id=True, '
                                    'with_mask=False, with_seg=False, '
                                    "poly2mask=True, imdecode_backend='cv2', "
-                                   "file_client_args=None)")
+                                   'file_client_args=None)')
