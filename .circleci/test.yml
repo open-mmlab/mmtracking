@@ -37,8 +37,6 @@ jobs:
         type: string
       torchvision:
         type: string
-      mmcv:
-        type: string
     docker:
       - image: cimg/python:<< parameters.python >>
     resource_class: large
@@ -63,13 +61,15 @@ jobs:
           name: Install mmtrack dependencies
           command: |
             pip install -U openmim
-            python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+ssh://git@github.com/open-mmlab/mmengine.git@main
-            python -m pip install << parameters.mmcv >>
-            python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
+            mim install 'mmcv >= 2.0.0rc1'
+            # TODO: fix bc-breaking from mmdet detr-refactor
+            # python -m pip install git+ssh://git@github.com/open-mmlab/mmdetection.git@dev-3.x
+            mim install 'mmdet == 3.0.0rc5'
             python -m pip install git+ssh://git@github.com/open-mmlab/mmclassification.git@dev-1.x
             python -m pip install -r requirements.txt
             python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
+            python -m pip install git+https://github.com/votchallenge/toolkit.git
             python -m pip install git+https://github.com/TAO-Dataset/tao.git
       - run:
           name: Build and install
@@ -91,8 +91,6 @@ jobs:
       cudnn:
         type: integer
         default: 7
-      mmcv:
-        type: string
     machine:
       image: ubuntu-2004-cuda-11.4:202110-01
       # docker_layer_caching: true
@@ -117,8 +115,10 @@ jobs:
             docker exec mmtrack apt-get -y install git
             docker exec mmtrack pip install -e /mmengine
             docker exec mmtrack pip install -U openmim
-            docker exec mmtrack pip install << parameters.mmcv >>
-            docker exec mmtrack pip install -e /mmdetection
+            docker exec mmtrack mim install 'mmcv >= 2.0.0rc1'
+            # TODO: fix bc-breaking from mmdet detr-refactor
+            # docker exec mmtrack pip install -e /mmdetection
+            docker exec mmtrack mim install 'mmdet == 3.0.0rc5'
             docker exec mmtrack pip install -e /mmclassification
             docker exec mmtrack pip install -r requirements.txt
             docker exec mmtrack python -m pip install git+https://github.com/JonathonLuiten/TrackEval.git
@@ -157,8 +157,7 @@ workflows:
           name: minimum_version_cpu
           torch: 1.7.0
           torchvision: 0.8.1
-          python: 3.6.9  # The lowest python 3.6.x version available on CircleCI images
-          mmcv: https://download.openmmlab.com/mmcv/dist/cpu/torch1.6.0/mmcv-2.0.0rc1-cp36-cp36m-manylinux1_x86_64.whl
+          python: 3.7.4  # The lowest python 3.7.x version available on CircleCI images
           requires:
             - lint
       - build_cpu:
@@ -166,7 +165,6 @@ workflows:
           torch: 1.13.0
           torchvision: 0.14.0
           python: 3.9.0
-          mmcv: https://download.openmmlab.com/mmcv/dist/cpu/torch1.9.0/mmcv-2.0.0rc1-cp39-cp39-manylinux1_x86_64.whl
           requires:
             - minimum_version_cpu
       - hold:
@@ -179,7 +177,6 @@ workflows:
           # Use double quotation mark to explicitly specify its type
           # as string instead of number
           cuda: "10.2"
-          mmcv: https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv-2.0.0rc1-cp37-cp37m-manylinux1_x86_64.whl
           requires:
             - hold
   merge_stage_test:
@@ -192,7 +189,6 @@ workflows:
           torch: 1.8.1
           # Use double quotation mark to explicitly specify its type
           # as string instead of number
-          mmcv: https://download.openmmlab.com/mmcv/dist/cu102/torch1.8.0/mmcv-2.0.0rc1-cp37-cp37m-manylinux1_x86_64.whl
           cuda: "10.2"
           filters:
             branches:
