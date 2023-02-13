@@ -1,11 +1,11 @@
 _base_ = [
     '../_base_/default_runtime.py',
-    '../_base_/datasets/mot_challenge_det.py'
 ]
 
-img_scale = (640, 640)
-max_epochs = 300
-save_epoch_intervals = 10
+img_scale = (1088, 1088)
+batch_size = 2
+max_epochs = 5
+save_epoch_intervals = 1
 
 # different from yolov5
 anchors = [
@@ -26,6 +26,7 @@ model = dict(
     _scope_='mmyolo',
     data_preprocessor=dict(
         type='YOLOv5DetDataPreprocessor',
+        pad_size_divisor=32,
         mean=[0., 0., 0.],
         std=[255., 255., 255.],
         bgr_to_rgb=True),
@@ -88,97 +89,98 @@ model = dict(
         type='Pretrained',
         checkpoint='https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth'),
     test_cfg=dict(
-        multi_label=True,
+        multi_label=False,
         nms_pre=30000,
         score_thr=0.001,
         nms=dict(type='nms', iou_threshold=0.65),
         max_per_img=300))
 
-pre_transform = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True)
-]
-
-mosiac4_pipeline = [
-    dict(
-        type='Mosaic',
-        img_scale=img_scale,
-        pad_val=114.0,
-        pre_transform=pre_transform),
-    dict(
-        type='YOLOv5RandomAffine',
-        max_rotate_degree=0.0,
-        max_shear_degree=0.0,
-        max_translate_ratio=0.2,  # note
-        scaling_ratio_range=(0.1, 2.0),  # note
-        # img_scale is (width, height)
-        border=(-img_scale[0] // 2, -img_scale[1] // 2),
-        border_val=(114, 114, 114)),
-]
-
-mosiac9_pipeline = [
-    dict(
-        type='Mosaic9',
-        img_scale=img_scale,
-        pad_val=114.0,
-        pre_transform=pre_transform),
-    dict(
-        type='YOLOv5RandomAffine',
-        max_rotate_degree=0.0,
-        max_shear_degree=0.0,
-        max_translate_ratio=0.2,  # note
-        scaling_ratio_range=(0.1, 2.0),  # note
-        # img_scale is (width, height)
-        border=(-img_scale[0] // 2, -img_scale[1] // 2),
-        border_val=(114, 114, 114)),
-]
-
-randchoice_mosaic_pipeline = dict(
-    type='RandomChoice',
-    transforms=[mosiac4_pipeline, mosiac9_pipeline],
-    prob=[0.8, 0.2])
-
 train_pipeline = [
-    *pre_transform,
-    randchoice_mosaic_pipeline,
+    dict(type='LoadImageFromFile', to_float32=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(
-        type='YOLOv5MixUp',
-        alpha=8.0,  # note
-        beta=8.0,  # note
-        prob=0.15,
-        pre_transform=[*pre_transform, randchoice_mosaic_pipeline]),
-    dict(type='YOLOv5HSVRandomAug'),
+        type='mmdet.Resize',
+        scale=img_scale,
+        keep_ratio=True,
+        clip_object_border=False),
     dict(type='mmdet.RandomFlip', prob=0.5),
-    dict(
-        type='mmdet.PackDetInputs',
-        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape', 'flip',
-                   'flip_direction'))
+    dict(type='mmdet.Pad', size=img_scale, pad_val=0),
+    dict(type='mmdet.PackDetInputs')
 ]
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='YOLOv5KeepRatioResize', scale=img_scale),
-    dict(
-        type='LetterResize',
-        scale=img_scale,
-        allow_scale_up=False,
-        pad_val=dict(img=114)),
-    dict(type='LoadAnnotations', with_bbox=True, _scope_='mmdet'),
+    dict(type='mmdet.Resize', scale=img_scale, keep_ratio=True),
+    dict(type='mmdet.Pad', size_divisor=32, pad_val=dict(img=(114.0, 114.0, 114.0))),
     dict(
         type='mmdet.PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor', 'pad_param'))
+                   'scale_factor'))
 ]
+
+# dataset settings
+dataset_type = 'mmdet.CocoDataset'
+data_root = 'data/MOT17/'
+
+train_dataloader = dict(
+    batch_size=batch_size,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    batch_sampler=dict(type='mmdet.AspectRatioBatchSampler'),
+    collate_fn=dict(type='yolov5_collate'),  # FASTER
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        ann_file='annotations/half-train_cocoformat.json',
+        data_prefix=dict(img='train/'),
+        metainfo=dict(classes=('pedestrian', )),
+        filter_cfg=dict(filter_empty_gt=True, min_size=32),
+        pipeline=train_pipeline))
+
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        _scope_='mmdet',
+        ann_file='annotations/half-val_cocoformat.json',
+        data_prefix=dict(img='train/'),
+        metainfo=dict(classes=('pedestrian', )),
+        test_mode=True,
+        pipeline=test_pipeline))
+
+test_dataloader = val_dataloader
+
+val_evaluator = dict(
+    type='mmdet.CocoMetric',
+    ann_file=data_root + 'annotations/half-val_cocoformat.json',
+    metric='bbox',
+    format_only=False)
+test_evaluator = val_evaluator
 
 param_scheduler = None
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=dict(
         type='SGD',
-        lr=0.01,
+        lr=1e-3,
         momentum=0.937,
         weight_decay=0.0005,
         nesterov=True))
+
+train_cfg = dict(
+    type='EpochBasedTrainLoop',
+    max_epochs=max_epochs,
+    val_interval=save_epoch_intervals,
+    dynamic_intervals=[(270, 1)])
+
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
 
 default_hooks = dict(
     param_scheduler=dict(
@@ -194,22 +196,12 @@ default_hooks = dict(
         save_best='auto',
         max_keep_ckpts=3))
 
-train_cfg = dict(
-    type='EpochBasedTrainLoop',
-    max_epochs=max_epochs,
-    val_interval=save_epoch_intervals,
-    dynamic_intervals=[(270, 1)])
-
 custom_hooks = [
     dict(
-        type='EMAHook',
-        _scope_='mmyolo',
-        ema_type='ExpMomentumEMA',
+        type='mmdet.EMAHook',
+        ema_type='mmdet.ExpMomentumEMA',
         momentum=0.0001,
         update_buffers=True,
         strict_load=False,
         priority=49)
 ]
-
-val_cfg = dict(type='ValLoop')
-test_cfg = dict(type='TestLoop')

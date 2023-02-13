@@ -1,5 +1,5 @@
 # parameters that often need to be modified
-img_scale = (640, 640)  # width, height
+img_scale = (1088, 1088)  # width, height
 
 # different from yolov5
 anchors = [
@@ -9,7 +9,7 @@ anchors = [
 ]
 strides = [8, 16, 32]
 num_det_layers = 3
-num_classes = 80
+num_classes = 1
 
 model = dict(
     data_preprocessor=dict(
@@ -78,7 +78,7 @@ model = dict(
             simota_iou_weight=3.0,
             simota_cls_weight=1.0),
         test_cfg=dict(
-            multi_label=True,
+            multi_label=False,
             nms_pre=30000,
             score_thr=0.001,
             nms=dict(type='nms', iou_threshold=0.65),

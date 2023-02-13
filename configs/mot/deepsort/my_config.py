@@ -4,24 +4,19 @@ _base_ = [
     '../../_base_/default_runtime.py'
 ]
 
-
-# parameters that often need to be modified
-img_scale = (640, 640)  # width, height
-num_classes = 1
-
 model = dict(
     type='DeepSORT',
     detector=dict(
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth'  # noqa: E501
-        )),
         # init_cfg=dict(
         #     type='Pretrained',
         #     checkpoint=  # noqa: E251
-        #     'work_dirs/yolov7_l_syncbn_fast_mot17_v2/epoch_2.pth'  # noqa: E501
+        #     'https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth'  # noqa: E501
         # )),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=  # noqa: E251
+            'work_dirs/yolov7_l_syncbn_fast_mot17/epoch_2.pth'  # noqa: E501
+        )),
     motion=dict(type='KalmanFilter', center_only=False),
     reid=dict(
         type='BaseReID',
