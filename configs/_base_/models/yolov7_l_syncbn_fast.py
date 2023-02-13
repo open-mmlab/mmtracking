@@ -1,21 +1,5 @@
 # parameters that often need to be modified
 img_scale = (640, 640)  # width, height
-max_epochs = 300
-save_epoch_intervals = 10
-train_batch_size_per_gpu = 16
-train_num_workers = 8
-# persistent_workers must be False if num_workers is 0.
-persistent_workers = True
-val_batch_size_per_gpu = 1
-val_num_workers = 2
-
-# only on Val
-batch_shapes_cfg = dict(
-    type='BatchShapePolicy',
-    batch_size=val_batch_size_per_gpu,
-    img_size=img_scale[0],
-    size_divisor=32,
-    extra_pad_ratio=0.5)
 
 # different from yolov5
 anchors = [
