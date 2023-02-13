@@ -130,13 +130,6 @@ class SORTTracker(BaseTracker):
         labels = data_sample.pred_det_instances.labels
         scores = data_sample.pred_det_instances.scores
 
-        classes = 0
-        filter_ids = labels == classes
-        bboxes = bboxes[filter_ids]
-        labels = labels[filter_ids]
-        scores = scores[filter_ids]
-
-
         frame_id = metainfo.get('frame_id', -1)
         if frame_id == 0:
             self.reset()
