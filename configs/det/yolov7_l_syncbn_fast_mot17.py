@@ -2,7 +2,7 @@ _base_ = [
     '../_base_/default_runtime.py',
 ]
 
-img_scale = (1088, 1088)
+img_scale = (800, 1040)
 batch_size = 2
 max_epochs = 5
 save_epoch_intervals = 1
