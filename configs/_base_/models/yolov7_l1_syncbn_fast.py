@@ -3,9 +3,9 @@ img_scale = (1088, 1088)  # width, height
 
 # different from yolov5
 anchors = [
-    [(12, 16), (19, 36), (40, 28)],  # P3/8
-    [(36, 75), (76, 55), (72, 146)],  # P4/16
-    [(142, 110), (192, 243), (459, 401)]  # P5/32
+    [(19, 27), (44, 40), (38, 94)],  # P3/8
+    [(96, 68), (86, 152), (180, 137)],  # P4/16
+    [(140, 301), (303, 264), (238, 542)],  # P5/32
 ]
 strides = [8, 16, 32]
 num_det_layers = 3
@@ -17,7 +17,6 @@ model = dict(
         mean=[0., 0., 0.],
         std=[255., 255., 255.],
         bgr_to_rgb=True,
-        rgb_to_bgr=False,
         pad_size_divisor=32),
     detector=dict(
         type='YOLODetector',
@@ -53,24 +52,6 @@ model = dict(
                 type='mmdet.YOLOAnchorGenerator',
                 base_sizes=anchors,
                 strides=strides),
-            # scaled based on number of detection layers
-            loss_cls=dict(
-                type='mmdet.CrossEntropyLoss',
-                use_sigmoid=True,
-                reduction='mean',
-                loss_weight=0.3 * (num_classes / 80 * 3 / num_det_layers)),
-            loss_bbox=dict(
-                type='IoULoss',
-                iou_mode='ciou',
-                bbox_format='xywh',
-                reduction='mean',
-                loss_weight=0.05 * (3 / num_det_layers),
-                return_iou=True),
-            loss_obj=dict(
-                type='mmdet.CrossEntropyLoss',
-                use_sigmoid=True,
-                reduction='mean',
-                loss_weight=0.7 * ((img_scale[0] / 640)**2 * 3 / num_det_layers)),
             obj_level_weights=[4., 1., 0.4],
             # BatchYOLOv7Assigner params
             prior_match_thr=4.,
@@ -81,5 +62,5 @@ model = dict(
             multi_label=False,
             nms_pre=30000,
             score_thr=0.01,
-            nms=dict(type='nms', iou_threshold=0.65),
+            nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=300)))

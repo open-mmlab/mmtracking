@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/models/yolov7_l_syncbn_fast.py',
+    '../../_base_/models/yolov7_l1_syncbn_fast.py',
     '../../_base_/datasets/mot_challenge.py', 
     '../../_base_/default_runtime.py'
 ]
@@ -15,7 +15,7 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            'work_dirs/yolov7_l_syncbn_fast_mot17/epoch_2.pth'  # noqa: E501
+            'work_dirs/yolov7_l_syncbn_fast_mot17/epoch_30.pth'  # noqa: E501
         )),
     motion=dict(type='KalmanFilter', center_only=False),
     reid=dict(
