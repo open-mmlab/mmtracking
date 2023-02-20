@@ -123,8 +123,7 @@ mmtrack/.mim
 *.sh~
 
 # Debug
-demo/demo.sh
-demo/debug_mot.py
+demo/
 
 # Demo Outputs
 outputs/
