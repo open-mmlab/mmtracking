@@ -1,3 +1,0 @@
-The format of each line in this txt is (video_path,annotation_path,start_frame_id,end_frame_id)
-TRAIN_0/video-1,TRAIN_0/video-1/video-1.txt,0,1
-TRAIN_0/video-2,TRAIN_0/video-2/video-2.txt,0,1
