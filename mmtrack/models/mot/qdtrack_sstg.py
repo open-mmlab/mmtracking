@@ -9,10 +9,11 @@ from mmtrack.registry import MODELS
 from mmtrack.structures import TrackDataSample
 from mmtrack.utils import OptConfigType, OptMultiConfig, SampleList
 from .base import BaseMultiObjectTracker
+from mmdet.models.detectors import SingleStageDetector
 
 @MODELS.register_module()
-class QDTrackPlus(BaseMultiObjectTracker):
-    """Quasi-Dense Similarity Learning for Multiple Object Tracking.
+class QDTrackSSTG(BaseMultiObjectTracker):
+    """Quasi-Dense Similarity Learning Single Stage for Multiple Object Tracking.
 
     This multi object tracker is the implementation of `QDTrack
     <https://arxiv.org/abs/2006.06664>`_.
@@ -32,7 +33,6 @@ class QDTrackPlus(BaseMultiObjectTracker):
 
     def __init__(self,
                  detector: Optional[dict] = None,
-                 rpn_head: Optional[dict] = None,
                  track_head: Optional[dict] = None,
                  tracker: Optional[dict] = None,
                  freeze_detector: bool = False,
@@ -43,9 +43,6 @@ class QDTrackPlus(BaseMultiObjectTracker):
         super().__init__(data_preprocessor, init_cfg)
         if detector is not None:
             self.detector = MODELS.build(detector)
-
-        if rpn_head is not None:
-            self.rpn_head = MODELS.build(rpn_head)
 
         if track_head is not None:
             self.track_head = MODELS.build(track_head)
@@ -96,54 +93,23 @@ class QDTrackPlus(BaseMultiObjectTracker):
 
         losses = dict()
 
-        if hasattr(self.detector, "rpn_head"):
-            assert self.rpn_head is None, "Detector already have rpn_head!"
-            self.rpn_head = self.detector.rpn_head
-            proposal_cfg = self.detector.train_cfg.get('rpn_proposal',
-                                                    self.detector.test_cfg.rpn)
-        else:
-            proposal_cfg = self.train_cfg.get('rpn_proposal',
-                                                    self.test_cfg.rpn)
-                                            
-        rpn_data_samples = copy.deepcopy(data_samples)
-        # set cat_id of gt_labels to 0 in RPN
-        for data_sample in rpn_data_samples:
-            data_sample.gt_instances.labels = \
-                torch.zeros_like(data_sample.gt_instances.labels)
+        bbox_losses, proposal_results = self.detector.bbox_head.loss_and_predict(x, data_samples, **kwargs)
 
-        rpn_losses, rpn_results_list = self.rpn_head. \
-            loss_and_predict(x,
-                             rpn_data_samples,
-                             proposal_cfg=proposal_cfg,
-                             **kwargs)
-        # avoid get same name with roi_head loss
-        keys = rpn_losses.keys()
-        for key in keys:
-            if 'loss' in key and 'rpn' not in key:
-                rpn_losses[f'rpn_{key}'] = rpn_losses.pop(key)
-        losses.update(rpn_losses)
-
-        if hasattr(self.detector, "roi_head"):
-            losses_detect = self.detector.roi_head.loss(x, rpn_results_list, 
-                                                        data_samples, **kwargs)
-        elif hasattr(self.detector, "bbox_head"):
-            losses_detect = self.detector.bbox_head.loss(x, data_samples, **kwargs)
-
-        losses.update(losses_detect)
+        losses.update(bbox_losses)
 
         # adjust the key of ref_img in data_samples
-        ref_rpn_data_samples = []
+        ref_data_samples = []
         for data_sample in data_samples:
             ref_rpn_data_sample = TrackDataSample()
             ref_rpn_data_sample.set_metainfo(
                 metainfo=dict(
                     img_shape=data_sample.metainfo['ref_img_shape'],
                     scale_factor=data_sample.metainfo['ref_scale_factor']))
-            ref_rpn_data_samples.append(ref_rpn_data_sample)
-        ref_rpn_results_list = self.rpn_head.predict(
-            ref_x, ref_rpn_data_samples, **kwargs)
-        losses_track = self.track_head.loss(x, ref_x, rpn_results_list,
-                                            ref_rpn_results_list, data_samples,
+            ref_data_samples.append(ref_rpn_data_sample)
+        ref_proposal_results = self.detector.bbox_head.predict(
+            ref_x, ref_data_samples, **kwargs)
+        losses_track = self.track_head.loss(x, ref_x, proposal_results,
+                                            ref_proposal_results, data_samples,
                                             **kwargs)
         losses.update(losses_track)
 
@@ -191,16 +157,7 @@ class QDTrackPlus(BaseMultiObjectTracker):
 
         x = self.detector.extract_feat(img)
 
-        if hasattr(self.detector, "rpn_head"):
-            assert self.rpn_head is None, "Detector already have rpn_head!"
-            self.rpn_head = self.detector.rpn_head
-
-        if hasattr(self.detector, "roi_head"):
-            rpn_results_list = self.rpn_head.predict(x, data_samples)
-            det_results = self.detector.roi_head.predict(
-                x, rpn_results_list, data_samples, rescale=rescale)
-        elif hasattr(self.detector, "bbox_head"):
-            det_results = self.detector.bbox_head.predict(x, data_samples, rescale=rescale)
+        det_results = self.detector.bbox_head.predict(x, data_samples, rescale=rescale)
 
         track_data_sample = data_samples[0]
         track_data_sample.pred_det_instances = \

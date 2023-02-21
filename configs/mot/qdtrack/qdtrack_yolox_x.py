@@ -1,5 +1,5 @@
 _base_ = [
-    '../../_base_/models/yolov7_l_syncbn_fast.py',
+    '../../_base_/models/yolox_x_8x8.py',
     '../../_base_/default_runtime.py',
     '../../_base_/datasets/mot_challenge.py'
 ]
@@ -8,19 +8,26 @@ img_scale = (800, 1040)
 strides = [8, 16, 32]
 
 model = dict(
-    type='QDTrackPlus',
+    type='QDTrackSSTG',
     data_preprocessor=dict(
-        _delete_=True,
         type='TrackDataPreprocessor',
-        mean=[0, 0, 0],
-        std=[255.0, 255.0, 255.0],
-        bgr_to_rgb=True,
-        pad_size_divisor=32),
+        pad_size_divisor=32,
+        batch_augments=[
+            dict(
+                type='mmdet.BatchSyncRandomResize',
+                random_size_range=(576, 1024),
+                size_divisor=32,
+                interval=10)
+        ]),
     detector=dict(
+        _scope_='mmdet',
+        bbox_head=dict(num_classes=1),
+        test_cfg=dict(score_thr=0.01, nms=dict(type='nms', iou_threshold=0.7)),
         init_cfg=dict(
             type='Pretrained',
-            checkpoint='https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth')  # noqa: E501
-        ),
+            checkpoint=  # noqa: E251
+            'https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth'  # noqa: E501
+        )),
     track_head=dict(
         type='QuasiDenseTrackHead',
         roi_extractor=dict(
