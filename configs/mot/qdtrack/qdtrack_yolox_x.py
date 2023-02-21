@@ -30,18 +30,24 @@ model = dict(
         )),
     track_head=dict(
         type='QuasiDenseTrackHead',
+        # roi_extractor=dict(
+        #     _scope_='mmdet',
+        #     type='GenericRoIExtractor',
+        #     aggregation='concat',
+        #     roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+        #     out_channels=1792, # 256 + 512 + 1024
+        #     featmap_strides=strides),
         roi_extractor=dict(
             _scope_='mmdet',
-            type='GenericRoIExtractor',
-            aggregation='concat',
+            type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
-            out_channels=1792, # 256 + 512 + 1024
+            out_channels=320,
             featmap_strides=strides),
         embed_head=dict(
             type='QuasiDenseEmbedHead',
             num_convs=4,
             num_fcs=1,
-            in_channels=1792,
+            in_channels=320,
             embed_channels=256,
             norm_cfg=dict(type='GN', num_groups=32),
             loss_track=dict(type='MultiPosCrossEntropyLoss', loss_weight=0.25),

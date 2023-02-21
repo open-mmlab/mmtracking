@@ -93,9 +93,9 @@ class QDTrackSSTG(BaseMultiObjectTracker):
 
         losses = dict()
 
-        bbox_losses, proposal_results = self.detector.bbox_head.loss_and_predict(x, data_samples, **kwargs)
+        detect_losses, proposal_results = self.detector.bbox_head.loss_and_predict(x, data_samples, **kwargs)
 
-        losses.update(bbox_losses)
+        losses.update(detect_losses)
 
         # adjust the key of ref_img in data_samples
         ref_data_samples = []
