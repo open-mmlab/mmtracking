@@ -1,21 +1,22 @@
 _base_ = [
-    '../../_base_/models/yolov7_l1_syncbn_fast.py',
-    '../../_base_/datasets/mot_challenge.py', 
-    '../../_base_/default_runtime.py'
+    '../../_base_/models/faster-rcnn_r50_fpn.py',
+    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
+
+custom_imports = dict(
+    imports=['mmtrack.models.trackers.my_sort_tracker'],
+    allow_failed_imports=False)
 
 model = dict(
     type='DeepSORT',
     detector=dict(
-        # init_cfg=dict(
-        #     type='Pretrained',
-        #     checkpoint=  # noqa: E251
-        #     'https://download.openmmlab.com/mmyolo/v0/yolov7/yolov7_l_syncbn_fast_8x16b-300e_coco/yolov7_l_syncbn_fast_8x16b-300e_coco_20221123_023601-8113c0eb.pth'  # noqa: E501
-        # )),
+        rpn_head=dict(bbox_coder=dict(clip_border=False)),
+        roi_head=dict(
+            bbox_head=dict(bbox_coder=dict(clip_border=False), num_classes=1)),
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            'work_dirs/yolov7_l_syncbn_fast_mot17/epoch_30.pth'  # noqa: E501
+            'https://download.openmmlab.com/mmtracking/mot/faster_rcnn/faster-rcnn_r50_fpn_4e_mot17-half-64ee2ed4.pth'  # noqa: E501
         )),
     motion=dict(type='KalmanFilter', center_only=False),
     reid=dict(
@@ -45,7 +46,7 @@ model = dict(
             'https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth'  # noqa: E501
         )),
     tracker=dict(
-        type='SORTTracker',
+        type='MySORTTracker',
         obj_score_thr=0.5,
         reid=dict(
             num_samples=10,
@@ -59,5 +60,6 @@ model = dict(
 
 train_dataloader = None
 
+train_cfg = None
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
