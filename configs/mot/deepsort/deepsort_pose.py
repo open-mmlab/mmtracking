@@ -1,11 +1,13 @@
 _base_ = [
     '../../_base_/models/faster-rcnn_r50_fpn.py',
-    '../../_base_/datasets/mot_challenge.py', 
-    '../../_base_/default_runtime.py'
+    '../../_base_/datasets/mot_challenge.py', '../../_base_/default_runtime.py'
 ]
 
 custom_imports = dict(
-    imports=['mmtrack.models.reid.pose_reid'],
+    imports=[
+        'mmtrack.models.reid.pose_reid',
+        'mmtrack.models.trackers.my_sort_tracker'
+    ],
     allow_failed_imports=False)
 
 model = dict(
@@ -31,7 +33,8 @@ model = dict(
                 num_stages=4,
                 out_indices=(3, ),
                 style='pytorch'),
-            neck=dict(type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
+            neck=dict(
+                type='GlobalAveragePooling', kernel_size=(8, 4), stride=1),
             head=dict(
                 type='LinearReIDHead',
                 num_fcs=1,
@@ -40,7 +43,8 @@ model = dict(
                 out_channels=128,
                 num_classes=380,
                 loss_cls=dict(type='mmcls.CrossEntropyLoss', loss_weight=1.0),
-                loss_triplet=dict(type='TripletLoss', margin=0.3, loss_weight=1.0),
+                loss_triplet=dict(
+                    type='TripletLoss', margin=0.3, loss_weight=1.0),
                 norm_cfg=dict(type='BN1d'),
                 act_cfg=dict(type='ReLU')),
             init_cfg=dict(
@@ -60,24 +64,31 @@ model = dict(
             backbone=dict(
                 type='ResNet',
                 depth=50,
-                init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50'),
+                init_cfg=dict(
+                    type='Pretrained', checkpoint='torchvision://resnet50'),
             ),
             head=dict(
                 type='HeatmapHead',
                 in_channels=2048,
                 out_channels=17,
                 loss=dict(type='KeypointMSELoss', use_target_weight=True),
-                decoder=dict(type='MSRAHeatmap', input_size=(192, 256), heatmap_size=(48, 64), sigma=2)),
+                decoder=dict(
+                    type='MSRAHeatmap',
+                    input_size=(192, 256),
+                    heatmap_size=(48, 64),
+                    sigma=2)),
             init_cfg=dict(
                 type='Pretrained',
-                checkpoint='https://download.openmmlab.com/mmpose/top_down/resnet/res50_coco_256x192-ec54d7f3_20200709.pth'),
+                checkpoint=
+                'https://download.openmmlab.com/mmpose/top_down/resnet/res50_coco_256x192-ec54d7f3_20200709.pth'
+            ),
             test_cfg=dict(
                 flip_test=False,
                 flip_mode='heatmap',
                 shift_heatmap=True,
             ))),
     tracker=dict(
-        type='SORTTracker',
+        type='MySORTTracker',
         obj_score_thr=0.5,
         reid=dict(
             num_samples=10,

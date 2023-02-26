@@ -3,9 +3,8 @@ from mmtrack.registry import MODELS
 from mmtrack.structures import ReIDDataSample
 from mmengine.model import BaseModel
 import torch
-from mmpose.structures import PoseDataSample
-from mmengine.structures import InstanceData
 from mmengine.dataset import Compose
+import numpy as np
 from mmpose.datasets.transforms import LoadImage, GetBBoxCenterScale, PackPoseInputs
 
 
@@ -22,10 +21,15 @@ class PoseReID(BaseModel):
         self.pose_model = MODELS.build(pose_model)
 
         self.pose_pipeline = Compose(
-            [LoadImage(), GetBBoxCenterScale(),
+            [LoadImage(),
+             GetBBoxCenterScale(padding=1.0),
              PackPoseInputs()])
 
         self.pose_embbedder = FullBodyPoseEmbedder()
+
+    @property
+    def head(self):
+        return self.base_reid.head
 
     def forward(self,
                 inputs: torch.Tensor,
@@ -37,19 +41,21 @@ class PoseReID(BaseModel):
             pose_data = []
             bboxes_ = []
             for input in inputs:
-                img = input.detach().moveaxis(0, -1).cpu()
+                img = input.detach().moveaxis(0, -1).cpu().numpy()
                 height, width, _ = img.shape
-                bboxes = torch.Tensor([[0, 0, width, height]],
-                                      dtype=torch.float32)
-                bboxes_.append(bboxes)
-                pds = self.pose_pipeline(dict(img=img, bbox=bboxes))
-                pds = pds['data_samples']
 
-                pds.gt_instances.bbox_scores = torch.ones((1))
+                bboxes = np.array([[0, 0, width, height]], dtype=np.float32)
+                bboxes_.append(bboxes)
+
+                data = self.pose_pipeline(dict(img=img, bbox=bboxes))
+                pds = data['data_samples']
+
+                pds.gt_instances.bbox_scores = np.ones(1)
+                pds.set_field((width, height),
+                              'input_size',
+                              field_type='metainfo')
                 pds.set_field(
-                    input.shape[1:], 'input_size', field_type='metainfo')
-                pds.set_field(
-                    [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15],
+                    (0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15),
                     'flip_indices',
                     field_type='metainfo')
 
@@ -59,8 +65,8 @@ class PoseReID(BaseModel):
         else:
             raise NotImplementedError(f'PoseReID does not support mode {mode}')
 
-        bboxes_ = torch.cat(bboxes_, axis=0)
-        bboxes_ = bboxes_.to(reid_results.device)
+        bboxes_ = np.concatenate(bboxes_, axis=0)
+        bboxes_ = torch.from_numpy(bboxes_).to(reid_results.device)
         pose_embedded = self.pose_embbedder(pose_results,
                                             bboxes_).to(reid_results.device)
         embedded = torch.cat((reid_results, pose_embedded), dim=1)
@@ -100,10 +106,10 @@ class FullBodyPoseEmbedder(object):
         Normalizes pose landmarks and converts to embedding
 
         Args:
-          landmarks - Tensor with 3D landmarks of shape (N, 3).
+          landmarks - NumPy array with 3D landmarks of shape (N, 3).
 
         Result:
-          Tensor with pose embedding of shape (M, 3) where `M` is the number of
+          Numpy array with pose embedding of shape (M, 3) where `M` is the number of
           pairwise distances defined in `_get_pose_distance_embedding`.
         """
         assert landmarks.shape[0] == len(
@@ -111,7 +117,7 @@ class FullBodyPoseEmbedder(object):
                 landmarks.shape[0])
 
         # Get pose landmarks.
-        landmarks = torch.clone(landmarks)
+        landmarks = np.copy(landmarks)
 
         # Normalize landmarks.
         landmarks = self._normalize_pose_landmarks(landmarks)
@@ -127,6 +133,7 @@ class FullBodyPoseEmbedder(object):
         pose_embeddings = []
         for k in range(len(pose_results)):
             w1, h1, w2, h2 = bboxes[k]
+
             landmarks = pose_results[k].pred_instances.keypoints.reshape(-1, 2)
             for i in range(landmarks.shape[0]):
                 w, h = landmarks[i]
@@ -139,7 +146,7 @@ class FullBodyPoseEmbedder(object):
 
     def _normalize_pose_landmarks(self, landmarks):
         """Normalizes landmarks translation and scale."""
-        landmarks = torch.clone(landmarks)
+        landmarks = np.copy(landmarks)
 
         # Normalize translation.
         pose_center = self._get_pose_center(landmarks)
@@ -182,12 +189,11 @@ class FullBodyPoseEmbedder(object):
         shoulders = (left_shoulder + right_shoulder) * 0.5
 
         # Torso size as the minimum body size.
-        torso_size = torch.linalg.norm(shoulders - hips)
+        torso_size = np.linalg.norm(shoulders - hips)
 
         # Max dist to pose center.
         pose_center = self._get_pose_center(landmarks)
-        max_dist = torch.max(
-            torch.linalg.norm(landmarks - pose_center, axis=1))
+        max_dist = np.max(np.linalg.norm(landmarks - pose_center, axis=1))
 
         return max(torso_size * torso_size_multiplier, max_dist)
 
@@ -199,13 +205,13 @@ class FullBodyPoseEmbedder(object):
         different pose classes. Feel free to remove some or add new.
 
         Args:
-          landmarks - Tensor with 3D landmarks of shape (N, 3).
+          landmarks - NumPy array with 3D landmarks of shape (N, 3).
 
         Result:
-          Tensor with pose embedding of shape (M, 3) where `M` is the number of
+          Numpy array with pose embedding of shape (M, 3) where `M` is the number of
           pairwise distances.
         """
-        embedding = torch.Tensor([
+        embedding = np.array([
             # One joint.
             self._get_distance(
                 self._get_average_by_names(landmarks, 'left_hip', 'right_hip'),

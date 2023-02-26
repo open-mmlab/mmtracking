@@ -101,7 +101,8 @@ class MySORTTracker(BaseTracker):
               data_sample: TrackDataSample,
               data_preprocessor: OptConfigType = None,
               rescale: bool = False,
-              biou: bool = False,
+              biou: bool = True,
+              pose: bool = True,
               **kwargs) -> InstanceData:
         """Tracking forward function.
 
@@ -189,7 +190,18 @@ class MySORTTracker(BaseTracker):
                         active_ids,
                         self.reid.get('num_samples', None),
                         behavior='mean')
-                    reid_dists = torch.cdist(track_embeds, embeds)
+
+                    if pose:
+                        reid_dists = torch.cdist(track_embeds[:, 0:128],
+                                                 embeds[:, 0:128])
+
+                        pose_dists = torch.cdist(track_embeds[:, 128:],
+                                                 embeds[:, 128:])
+
+                        reid_dists = reid_dists * 0.8 + pose_dists * 0.2
+
+                    else:
+                        reid_dists = torch.cdist(track_embeds, embeds)
 
                     # support multi-class association
                     track_labels = torch.tensor([
