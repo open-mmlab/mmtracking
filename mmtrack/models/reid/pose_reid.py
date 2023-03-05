@@ -62,15 +62,64 @@ class PoseReID(BaseModel):
                 pose_data.append(pds)
 
             pose_results = self.pose_model.predict(inputs, pose_data)
+
+            # print()
+            # print(pose_results[0].pred_instances.keypoints)
+            # visualize_pose(inputs, pose_results)
+
         else:
             raise NotImplementedError(f'PoseReID does not support mode {mode}')
 
         bboxes_ = np.concatenate(bboxes_, axis=0)
         bboxes_ = torch.from_numpy(bboxes_).to(reid_results.device)
+
         pose_embedded = self.pose_embbedder(pose_results,
                                             bboxes_).to(reid_results.device)
         embedded = torch.cat((reid_results, pose_embedded), dim=1)
         return embedded
+
+
+def visualize_pose(inputs, pose_results):
+    from mmpose.registry import VISUALIZERS
+    from mmpose.structures import merge_data_samples
+    from mmengine.structures import InstanceData
+    from mmpose.structures import PoseDataSample
+    from mmpose.visualization import PoseLocalVisualizer
+
+    pose_local_visualizer = PoseLocalVisualizer(radius=3, line_width=1)
+
+    print("....................")
+
+    # print(inputs.shape)
+    import cv2
+    # img = inputs.detach().moveaxis(0, -1).cpu().numpy()
+    # img = (img * 255.0)
+    # landmarks = pose_results.pred_instances.keypoints.reshape(-1, 2)
+    # print(img.shape)
+    # cv2.imwrite('image.jpg', img)
+    # img = cv2.imread('image.jpg')
+
+    # for i in range(len(landmarks)):
+    #     center_coordinates = (int(landmarks[i][0]), int(landmarks[i][1]))
+    #     radius = 3
+    #     color = (0, 255, 0)
+    #     thickness = 2
+    #     print()
+    #     print(center_coordinates)
+    #     img = cv2.circle(img, center_coordinates, radius, color, thickness)
+    # cv2.imwrite('image1.jpg', img)
+
+    print(pose_results)
+    img = inputs.detach().moveaxis(0, -1).cpu().numpy()
+    img = img * 255.0
+    cv2.imwrite('image.jpg', img)
+    pose_local_visualizer.add_datasample(
+        'image',
+        img,
+        pose_results,
+        draw_heatmap=True,
+        draw_gt=False,
+        out_file='pose.jpg')
 
 
 class FullBodyPoseEmbedder(object):
@@ -141,7 +190,8 @@ class FullBodyPoseEmbedder(object):
                 landmarks[i][1] = (h - h1) / (h2 - h1)
             pose_embeddings.append(self.embbed(landmarks))
 
-        pose_embeddings = torch.Tensor(pose_embeddings)
+        pose_embeddings = torch.from_numpy(np.stack(pose_embeddings, axis=0))
+
         return pose_embeddings
 
     def _normalize_pose_landmarks(self, landmarks):

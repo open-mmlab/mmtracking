@@ -88,6 +88,7 @@ def main(args):
             img_path = osp.join(args.input, img)
             img = mmcv.imread(img_path)
         result = inference_mot(model, img, frame_id=i)
+
         if args.output is not None:
             if IN_VIDEO or OUT_VIDEO:
                 out_file = osp.join(out_path, f'{i:06d}.jpg')

@@ -185,6 +185,7 @@ class TrackLocalVisualizer(Visualizer):
                 and masks. Defaults to 0.3.
             step (int): Global step value to record. Defaults to 0.
         """
+
         gt_img_data = None
         pred_img_data = None
 

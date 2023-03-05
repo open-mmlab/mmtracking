@@ -6,9 +6,7 @@ _base_ = [
 custom_imports = dict(
     imports=[
         'mmtrack.models.reid.pose_reid',
-        'mmtrack.models.trackers.my_sort_tracker'
-    ],
-    allow_failed_imports=False)
+    ], allow_failed_imports=False)
 
 model = dict(
     type='DeepSORT',
@@ -55,11 +53,6 @@ model = dict(
         pose_model=dict(
             type='TopdownPoseEstimator',
             _scope_='mmpose',
-            # data_preprocessor=dict(
-            #     type='PoseDataPreprocessor',
-            #     mean=[123.675, 116.28, 103.53],
-            #     std=[58.395, 57.12, 57.375],
-            #     bgr_to_rgb=True),
             data_preprocessor=None,
             backbone=dict(
                 type='ResNet',
@@ -88,7 +81,7 @@ model = dict(
                 shift_heatmap=True,
             ))),
     tracker=dict(
-        type='MySORTTracker',
+        type='SORTTracker',
         obj_score_thr=0.5,
         reid=dict(
             num_samples=10,
@@ -104,3 +97,32 @@ train_dataloader = None
 
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
+
+# dataset settings
+dataset_type = 'MOTChallengeDataset'
+data_root = '../../datasets/AIC23_Track1_MTMC_Tracking/'
+
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadTrackAnnotations', with_instance_id=True),
+    dict(type='mmdet.Resize', scale=(1088, 1088), keep_ratio=True),
+    dict(type='PackTrackInputs', pack_single_img=True)
+]
+
+# dataloader
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        ann_file='annotations/validation_cocoformat_subset_0.2_consec.json',
+        data_prefix=dict(img_path='validation'),
+        ref_img_sampler=None,
+        load_as_video=True,
+        test_mode=True,
+        pipeline=test_pipeline))
+test_dataloader = val_dataloader

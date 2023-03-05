@@ -4,11 +4,14 @@ _base_ = [
 ]
 
 custom_imports = dict(
-    imports=['mmtrack.models.trackers.my_sort_tracker'],
+    imports=[
+        'mmtrack.models.mot.my_deep_sort',
+        'mmtrack.models.trackers.my_sort_tracker'
+    ],
     allow_failed_imports=False)
 
 model = dict(
-    type='DeepSORT',
+    type='MyDeepSORT',
     detector=dict(
         rpn_head=dict(bbox_coder=dict(clip_border=False)),
         roi_head=dict(
@@ -45,6 +48,36 @@ model = dict(
             checkpoint=  # noqa: E251
             'https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth'  # noqa: E501
         )),
+    pose=dict(
+        type='TopdownPoseEstimator',
+        _scope_='mmpose',
+        data_preprocessor=None,
+        backbone=dict(
+            type='ResNet',
+            depth=50,
+            init_cfg=dict(
+                type='Pretrained', checkpoint='torchvision://resnet50'),
+        ),
+        head=dict(
+            type='HeatmapHead',
+            in_channels=2048,
+            out_channels=17,
+            loss=dict(type='KeypointMSELoss', use_target_weight=True),
+            decoder=dict(
+                type='MSRAHeatmap',
+                input_size=(192, 256),
+                heatmap_size=(48, 64),
+                sigma=2)),
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint=
+            'https://download.openmmlab.com/mmpose/top_down/resnet/res50_coco_256x192-ec54d7f3_20200709.pth'
+        ),
+        test_cfg=dict(
+            flip_test=False,
+            flip_mode='heatmap',
+            shift_heatmap=True,
+        )),
     tracker=dict(
         type='MySORTTracker',
         obj_score_thr=0.5,
@@ -56,7 +89,8 @@ model = dict(
         match_iou_thr=0.5,
         momentums=None,
         num_tentatives=2,
-        num_frames_retain=100))
+        num_frames_retain=100,
+        pose=True))
 
 train_dataloader = None
 
