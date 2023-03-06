@@ -121,6 +121,7 @@ val_dataloader = dict(
         data_root=data_root,
         ann_file='annotations/validation_cocoformat_subset_0.2_consec.json',
         data_prefix=dict(img_path='validation'),
+        metainfo=dict(CLASSES=('person', )),
         ref_img_sampler=None,
         load_as_video=True,
         test_mode=True,

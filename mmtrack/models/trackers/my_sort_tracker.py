@@ -167,6 +167,7 @@ class MySORTTracker(BaseTracker):
         labels = labels[valid_inds]
         scores = scores[valid_inds]
 
+        print()
         print('number of bboxes: ', bboxes.shape[0])
         print('reid_image:', reid_img.shape)
 
@@ -196,10 +197,18 @@ class MySORTTracker(BaseTracker):
             ids = torch.full((bboxes.size(0), ), -1,
                              dtype=torch.long).to(bboxes.device)
 
+            motion_bboxes = self.get('bboxes', self.ids)
+            print(motion_bboxes)
+
             # motion
             if model.with_motion:
+                print('motion')
                 self.tracks, costs = model.motion.track(
                     self.tracks, bbox_xyxy_to_cxcyah(bboxes))
+
+            motion_bboxes = self.get('bboxes', self.ids)
+            print('motion_bboxes: ', len(motion_bboxes))
+            print(motion_bboxes)
 
             active_ids = self.confirmed_ids
             if self.with_reid:
@@ -215,6 +224,9 @@ class MySORTTracker(BaseTracker):
 
                     embeds = torch.cat(
                         (embeds, pose_embedded.to(embeds.device)), dim=1)
+
+                print('reid_mtaching')
+                print('active_ids: ', len(active_ids))
 
                 # reid
                 if len(active_ids) > 0:
@@ -249,6 +261,9 @@ class MySORTTracker(BaseTracker):
                 id for id in self.ids if id not in ids
                 and self.tracks[id].frame_ids[-1] == frame_id - 1
             ]
+
+            print('biou_mtaching')
+            print('active_ids: ', len(active_ids))
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)

@@ -90,7 +90,7 @@ model = dict(
         momentums=None,
         num_tentatives=2,
         num_frames_retain=100,
-        pose=True))
+        pose=False))
 
 train_dataloader = None
 
