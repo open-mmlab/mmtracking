@@ -21,7 +21,8 @@ model = dict(
     reid=dict(
         type='MyReID',
         model_name='osnet_x1_0',
-        model_path='...',
+        model_path=
+        './checkpoints/osnet_x0_75_market_256x128_amsgrad_ep150_stp60_lr0.0015_b64_fb10_softmax_labelsmooth_flip.pth',
         device='cuda',
     ),
     tracker=dict(
@@ -35,8 +36,7 @@ model = dict(
         match_iou_thr=0.5,
         momentums=None,
         num_tentatives=2,
-        num_frames_retain=100,
-        biou=True))
+        num_frames_retain=100))
 
 train_dataloader = None
 
