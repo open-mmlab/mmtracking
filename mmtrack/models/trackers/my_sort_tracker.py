@@ -198,17 +198,17 @@ class MySORTTracker(BaseTracker):
                              dtype=torch.long).to(bboxes.device)
 
             motion_bboxes = self.get('bboxes', self.ids)
-            print(motion_bboxes)
+            # print(motion_bboxes)
 
             # motion
             if model.with_motion:
-                print('motion')
+                # print('motion')
                 self.tracks, costs = model.motion.track(
                     self.tracks, bbox_xyxy_to_cxcyah(bboxes))
 
             motion_bboxes = self.get('bboxes', self.ids)
-            print('motion_bboxes: ', len(motion_bboxes))
-            print(motion_bboxes)
+            # print('motion_bboxes: ', len(motion_bboxes))
+            # print(motion_bboxes)
 
             active_ids = self.confirmed_ids
             if self.with_reid:
