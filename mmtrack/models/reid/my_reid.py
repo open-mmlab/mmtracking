@@ -15,7 +15,11 @@ class MyReID(BaseModel):
 
     @property
     def head(self):
-        return 256
+
+        class Head:
+            out_channels = self.reid.model.feature_dim
+
+        return Head()
 
     def forward(self, inputs, mode: str = 'tensor'):
         return self.reid(inputs)
