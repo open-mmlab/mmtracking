@@ -90,10 +90,40 @@ model = dict(
         momentums=None,
         num_tentatives=2,
         num_frames_retain=100,
-        pose=False))
+        pose=True))
 
 train_dataloader = None
 
 train_cfg = None
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
+
+# dataset settings
+dataset_type = 'MOTChallengeDataset'
+data_root = '../../datasets/AIC23_Track1_MTMC_Tracking/'
+
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadTrackAnnotations', with_instance_id=True),
+    dict(type='mmdet.Resize', scale=(1088, 1088), keep_ratio=True),
+    dict(type='PackTrackInputs', pack_single_img=True)
+]
+
+# dataloader
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='VideoSampler'),
+    dataset=dict(
+        type=dataset_type,
+        data_root=data_root,
+        ann_file='annotations/validation_cocoformat_subset_0.2_consec.json',
+        data_prefix=dict(img_path='validation'),
+        metainfo=dict(CLASSES=('person', )),
+        ref_img_sampler=None,
+        load_as_video=True,
+        test_mode=True,
+        pipeline=test_pipeline))
+test_dataloader = val_dataloader

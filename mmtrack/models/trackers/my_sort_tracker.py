@@ -197,8 +197,17 @@ class MySORTTracker(BaseTracker):
             ids = torch.full((bboxes.size(0), ), -1,
                              dtype=torch.long).to(bboxes.device)
 
-            motion_bboxes = self.get('bboxes', self.ids)
-            # print(motion_bboxes)
+            # motion_bboxes = self.get('bboxes', self.ids)
+            # print('motion_bboxes: ', len(motion_bboxes))
+            # print(motion_bboxes[0])
+
+            # print('number of tracks: ', len(self.tracks))
+            # print(self.tracks[0].keys())
+            # print(self.tracks[0]['ids'])
+            # print(self.tracks[0]['bboxes'])
+            # print(self.tracks[0]['frame_ids'])
+            # print(self.tracks[0]['mean'].shape)
+            # print(self.tracks[0]['covariance'].shape)
 
             # motion
             if model.with_motion:
@@ -206,9 +215,8 @@ class MySORTTracker(BaseTracker):
                 self.tracks, costs = model.motion.track(
                     self.tracks, bbox_xyxy_to_cxcyah(bboxes))
 
-            motion_bboxes = self.get('bboxes', self.ids)
-            # print('motion_bboxes: ', len(motion_bboxes))
-            # print(motion_bboxes)
+            # motion_bboxes = self.get('bboxes', self.ids)
+            # print(motion_bboxes[0])
 
             active_ids = self.confirmed_ids
             if self.with_reid:
@@ -267,6 +275,9 @@ class MySORTTracker(BaseTracker):
             if len(active_ids) > 0:
                 active_dets = torch.nonzero(ids == -1).squeeze(1)
                 track_bboxes = self.get('bboxes', active_ids)
+
+                # print(active_ids)
+                # print(track_bboxes[0])
 
                 if self.biou:
                     ious = bbox_overlaps(
@@ -341,8 +352,11 @@ class MySORTTracker(BaseTracker):
     def draw_img(self, bboxes, img, pose_results):
         print('draw_img')
         import cv2
-        img = (img + 1 / 2) * 255
-        cv2.imwrite('image.jpg', img)
+        mean = np.array([[[123.675, 116.28, 103.53]]])
+        std = np.array([[[58.395, 57.12, 57.375]]])
+        img = img * std + mean
+
+        cv2.imwrite('image.jpg', img[:, :, ::-1])
         img = cv2.imread('image.jpg')
 
         color = (255, 255, 0)
@@ -378,7 +392,7 @@ class MySORTTracker(BaseTracker):
 
         pose_data = self.prepare_pose_data(img, bboxes_scale, scores, crops)
         pose_results = pose_estimator.predict(crops, pose_data)
-        # self.draw_img(bboxes_scale, img, pose_results)
+        self.draw_img(bboxes_scale, img, pose_results)
 
         pose_embedded = self.pose_embbedder(pose_results, bboxes_scale)
 

@@ -84,6 +84,7 @@ class DeepSORT(BaseMultiObjectTracker):
                 ``pred_det_instances`` or ``pred_track_instances``.
         """
         img = inputs['img']
+
         assert img.dim() == 5, 'The img must be 5D Tensor (N, T, C, H, W).'
         assert img.size(0) == 1, \
             'SORT/DeepSORT inference only support ' \
