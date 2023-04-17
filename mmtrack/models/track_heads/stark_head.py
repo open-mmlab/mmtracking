@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 from mmcv.cnn.bricks import ConvModule
 from mmcv.cnn.bricks.transformer import build_positional_encoding
-from mmdet.models.layers import Transformer
 from mmengine.model import BaseModule
 from mmengine.structures import InstanceData
 from torch import Tensor, nn
@@ -177,7 +176,7 @@ class ScoreHead(nn.Module):
 
 
 @MODELS.register_module()
-class StarkTransformer(Transformer):
+class StarkTransformer(BaseModule):
     """The transformer head used in STARK. `STARK.
 
     <https://arxiv.org/abs/2103.17154>`_.
