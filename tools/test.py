@@ -8,13 +8,13 @@ import mmcv
 import torch
 from mmcv import Config, DictAction
 from mmcv.cnn import fuse_conv_bn
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
 from mmdet.apis import set_random_seed
 
 from mmtrack.core import setup_multi_processes
 from mmtrack.datasets import build_dataset
+from mmtrack.utils import build_ddp, build_dp, get_device
 
 
 def parse_args():
@@ -156,6 +156,9 @@ def main():
         dist=distributed,
         shuffle=False)
 
+    cfg.device = get_device() if cfg.get('device',
+                                         None) is None else cfg.device
+
     # build the model and load checkpoint
     if cfg.get('test_cfg', False):
         model = build_model(
@@ -179,7 +182,7 @@ def main():
         model = fuse_conv_bn(model)
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=cfg.gpu_ids)
+        model = build_dp(model, cfg.device, device_ids=cfg.gpu_ids)
         outputs = single_gpu_test(
             model,
             data_loader,
@@ -187,10 +190,18 @@ def main():
             args.show_dir,
             show_score_thr=args.show_score_thr)
     else:
-        model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
+        model = build_ddp(
+            model,
+            cfg.device,
+            device_ids=[int(os.environ['LOCAL_RANK'])],
             broadcast_buffers=False)
+
+        # In multi_gpu_test, if tmpdir is None, some tesnors
+        # will init on cuda by default, and no device choice supported.
+        # Init a tmpdir to avoid error on npu here.
+        if cfg.device == 'npu' and args.tmpdir is None:
+            args.tmpdir = './npu_tmpdir'
+
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
 
