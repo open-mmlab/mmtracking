@@ -17,7 +17,7 @@ from mmtrack import __version__
 from mmtrack.apis import init_random_seed
 from mmtrack.core import setup_multi_processes
 from mmtrack.datasets import build_dataset
-from mmtrack.utils import collect_env, get_root_logger
+from mmtrack.utils import collect_env, get_device, get_root_logger
 
 
 def parse_args():
@@ -165,16 +165,19 @@ def main():
 
     # set random seeds. Force setting fixed seed and deterministic=True in SOT
     # configs
+    cfg.device = get_device() if cfg.get('device',
+                                         None) is None else cfg.device
     if args.seed is not None:
         cfg.seed = args.seed
     elif cfg.get('seed', None) is None:
-        cfg.seed = init_random_seed()
+        cfg.seed = init_random_seed(device=cfg.device)
     cfg.seed = cfg.seed + dist.get_rank() if args.diff_seed else cfg.seed
 
     deterministic = True if args.deterministic else cfg.get(
         'deterministic', False)
     logger.info(f'Set random seed to {cfg.seed}, '
                 f'deterministic: {deterministic}')
+
     set_random_seed(cfg.seed, deterministic=deterministic)
     meta['seed'] = cfg.seed
 

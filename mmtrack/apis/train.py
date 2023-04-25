@@ -1,8 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
+
 import numpy as np
 import torch
 import torch.distributed as dist
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (HOOKS, DistSamplerSeedHook, EpochBasedRunner,
                          build_optimizer, get_dist_info)
 from mmcv.utils import build_from_cfg
@@ -10,7 +11,7 @@ from mmdet.datasets import build_dataset
 
 from mmtrack.core import DistEvalHook, EvalHook
 from mmtrack.datasets import build_dataloader
-from mmtrack.utils import get_root_logger
+from mmtrack.utils import build_ddp, build_dp, get_root_logger
 
 
 def init_random_seed(seed=None, device='cuda'):
@@ -103,13 +104,14 @@ def train_model(model,
             logger.info('set find_unused_parameters = True in DDP')
         # Sets the `find_unused_parameters` parameter in
         # torch.nn.parallel.DistributedDataParallel
-        model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
+        model = build_ddp(
+            model,
+            cfg.device,
+            device_ids=[int(os.environ['LOCAL_RANK'])],
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
     else:
-        model = MMDataParallel(model, device_ids=cfg.gpu_ids)
+        model = build_dp(model, cfg.device, device_ids=cfg.gpu_ids)
 
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
@@ -124,6 +126,8 @@ def train_model(model,
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
+    if fp16_cfg is None and cfg.get('device', None) == 'npu':
+        fp16_cfg = dict(loss_scale='dynamic')
     optimizer_config = cfg.optimizer_config
     if 'type' not in cfg.optimizer_config:
         optimizer_config.type = 'Fp16OptimizerHook' \
