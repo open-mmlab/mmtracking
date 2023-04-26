@@ -39,6 +39,8 @@ English | [简体中文](README_zh-CN.md)
 
 </div>
 
+Jupyter notebook tutorials: https://github.com/TommyZihao/MMTracking_Tutorials
+
 ## Introduction
 
 MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
