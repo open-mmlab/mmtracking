@@ -14,10 +14,13 @@ class SelsaAggregator(BaseModule):
     Object Detection". `SELSA <https://arxiv.org/abs/1907.06390>`_.
 
     Args:
-        in_channels (int): The number of channels of the features of
-            proposal.
-        num_attention_blocks (int): The number of attention blocks used in
-            selsa aggregator module. Defaults to 16.
+        num_convs (int): Number of embedding convs.
+        channels (int): Channels of embedding convs. Defaults to 256.
+        kernel_size (int): Kernel size of embedding convs, Defaults to 3.
+        norm_cfg (dict): Configuration of normlization method after each
+            conv. Defaults to None.
+        act_cfg (dict): Configuration of activation method after each
+            conv. Defaults to dict(type='ReLU').
         init_cfg (dict or list[dict], optional): Initialization config dict.
             Defaults to None.
     """

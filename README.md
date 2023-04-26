@@ -101,6 +101,7 @@ Supported Methods
 - [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
 - [x] [SELSA](configs/vid/selsa) (ICCV 2019)
 - [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
+- [x] [TF-Blender](configs/vid/tf_blender) (ICCV 2021)
 
 Supported Datasets
 
