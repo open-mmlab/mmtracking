@@ -38,12 +38,12 @@ Please download the datasets from the official websites. It is recommended to sy
 
 - The `annotations` under `lvis` contains the official annotations of lvis-v0.5 which can be downloaded according to [here](https://github.com/lvis-dataset/lvis-api/issues/23#issuecomment-894963957). The synset mapping file `coco_to_lvis_synset.json` used in `./tools/dataset_converters/tao/merge_coco_with_lvis.py` script can be found [here](https://github.com/TAO-Dataset/tao/tree/master/data).
 
-- For users in China, the following datasets can be downloaded from [OpenDataLab](https://opendatalab.com/) with high speed:
+- For users in China, the following datasets can be downloaded from [OpenDataLab](https://opendatalab.com/?source=OpenMMLab%20GitHub) with high speed:
 
-  - [MOT17](https://opendatalab.com/MOT17/download)
-  - [CrowdHuman](https://opendatalab.com/CrowdHuman/download)
-  - [LVIS](https://opendatalab.com/LVIS/download)
-  - [TAO](https://opendatalab.com/TAO/download)
+  - [MOT17](https://opendatalab.com/MOT17/download?source=OpenMMLab%20GitHub)
+  - [CrowdHuman](https://opendatalab.com/CrowdHuman/download?source=OpenMMLab%20GitHub)
+  - [LVIS](https://opendatalab.com/LVIS/download?source=OpenMMLab%20GitHub)
+  - [TAO](https://opendatalab.com/TAO/download?source=OpenMMLab%20GitHub)
 
 #### 1.3 Single Object Tracking
 
@@ -63,19 +63,19 @@ python ./tools/dataset_converters/otb100/download_otb100.py -o ./data/OTB100/zip
 python ./tools/dataset_converters/vot/download_vot.py --dataset vot2018 --save_path ./data/VOT2018/data
 ```
 
-- For users in China, the following datasets can be downloaded from [OpenDataLab](https://opendatalab.com/) with high speed:
-  - [LaSOT](https://opendatalab.com/LaSOT/download)
-  - [UAV123](https://opendatalab.com/UAV123/download)
-  - [TrackingNet](https://opendatalab.com/TrackingNet/download)
-  - [OTB100](https://opendatalab.com/OTB100/download)
-  - [GOT-10k](https://opendatalab.com/GOT-10k/download)
-  - [VOT2018](https://opendatalab.com/VOT2018/download)
+- For users in China, the following datasets can be downloaded from [OpenDataLab](https://opendatalab.com/?source=OpenMMLab%20GitHub) with high speed:
+  - [LaSOT](https://opendatalab.com/LaSOT/download?source=OpenMMLab%20GitHub)
+  - [UAV123](https://opendatalab.com/UAV123/download?source=OpenMMLab%20GitHub)
+  - [TrackingNet](https://opendatalab.com/TrackingNet/download?source=OpenMMLab%20GitHub)
+  - [OTB100](https://opendatalab.com/OTB100/download?source=OpenMMLab%20GitHub)
+  - [GOT-10k](https://opendatalab.com/GOT-10k/download?source=OpenMMLab%20GitHub)
+  - [VOT2018](https://opendatalab.com/VOT2018/download?source=OpenMMLab%20GitHub)
 
 #### 1.4 Video Instance Segmentation
 
 - For the training and testing of video instance segmetatioon task, only one of YouTube-VIS datasets (e.g. YouTube-VIS 2019) is needed.
 
-- YouTube-VIS 2019 dataset can be download from [OpenDataLab](https://opendatalab.com/) (recommended for users in China): https://opendatalab.com/YouTubeVIS2019/download
+- YouTube-VIS 2019 dataset can be download from [OpenDataLab](https://opendatalab.com/?source=OpenMMLab%20GitHub) (recommended for users in China): https://opendatalab.com/YouTubeVIS2019/download?source=OpenMMLab%20GitHub
 
 #### 1.5 Data Structure
 
