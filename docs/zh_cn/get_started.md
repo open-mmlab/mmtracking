@@ -181,7 +181,7 @@ PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 
 ```shell
 python demo/demo_mot_vis.py \
-    configs/mot/deepsort/deepsort_faster-rcnn-r50-fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py \
+    configs/mot/deepsort/deepsort_faster-rcnn_r50_fpn_8xb2-4e_mot17halftrain_test-mot17halfval.py \
     --input demo/demo.mp4 \
     --output mot.mp4
 ```
