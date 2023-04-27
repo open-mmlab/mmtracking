@@ -9,9 +9,9 @@ from .mot_error_visualization import imshow_mot_errors
 from .plot_sot_curve import (plot_norm_precision_curve, plot_precision_curve,
                              plot_success_curve)
 from .setup_env import register_all_modules
-from .typing import (ConfigType, ForwardResults, InstanceList, MultiConfig,
-                     OptConfigType, OptInstanceList, OptMultiConfig,
-                     OptSampleList, SampleList)
+from .typing_utils import (ConfigType, ForwardResults, InstanceList,
+                           MultiConfig, OptConfigType, OptInstanceList,
+                           OptMultiConfig, OptSampleList, SampleList)
 
 __all__ = [
     'collect_env', 'register_all_modules', 'DataLoaderBenchmark',
