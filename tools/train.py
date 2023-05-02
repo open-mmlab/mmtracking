@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import copy
+import sys
 import os
 import os.path as osp
 import time
@@ -12,6 +13,9 @@ import torch.distributed as dist
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist
 from mmdet.apis import set_random_seed
+
+BASEDIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+sys.path.append(BASEDIR)
 
 from mmtrack import __version__
 from mmtrack.apis import init_random_seed
@@ -80,6 +84,10 @@ def main():
     args = parse_args()
 
     cfg = Config.fromfile(args.config)
+    cfg.data_root = os.path.join(BASEDIR, cfg.data_root)
+    for dataset in [cfg.data.train, cfg.data.val, cfg.data.test]:
+        dataset.ann_file = os.path.join(BASEDIR, dataset.ann_file)
+        dataset.data_prefix = os.path.join(BASEDIR, dataset.data_prefix)
 
     if cfg.get('USE_MMDET', False):
         from mmdet.apis import train_detector as train_model

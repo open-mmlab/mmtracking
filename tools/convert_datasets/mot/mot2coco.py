@@ -14,18 +14,16 @@
 #       <x>, <y>, <z> # for 3D objects
 #
 # Classes in MOT:
-#   1: 'pedestrian'
-#   2: 'person on vehicle'
-#   3: 'car'
-#   4: 'bicycle'
-#   5: 'motorbike'
-#   6: 'non motorized vehicle'
-#   7: 'static person'
-#   8: 'distractor'
-#   9: 'occluder'
-#   10: 'occluder on the ground',
-#   11: 'occluder full'
-#   12: 'reflection'
+#   1: 'chicken'
+#   2: 'deer'
+#   3: 'dolphin'
+#   4: 'duck'
+#   5: 'goose'
+#   6: 'horse'
+#   7: 'penguin'
+#   8: 'pig'
+#   9: 'rabbit'
+#   10: 'zebra'
 #
 #   USELESS classes are not included into the json file.
 #   IGNORES classes are included with `ignore=True`.
@@ -125,7 +123,18 @@ def main():
             in_folder = osp.join(args.input, subset)
         out_file = osp.join(args.output, f'{subset}_cocoformat.json')
         outputs = defaultdict(list)
-        outputs['categories'] = [dict(id=1, name='pedestrian')]
+        outputs['categories'] = [
+            dict(id=1, name='chicken'),
+            dict(id=2, name='deer'),
+            dict(id=3, name='dolphin'),
+            dict(id=4, name='duck'),
+            dict(id=5, name='goose'),
+            dict(id=6, name='horse'),
+            dict(id=7, name='penguin'),
+            dict(id=8, name='pig'),
+            dict(id=9, name='rabbit'),
+            dict(id=10, name='zebra'),
+        ]
         if args.convert_det:
             det_file = osp.join(args.output, f'{subset}_detections.pkl')
             detections = dict(det_bboxes=dict())

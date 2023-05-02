@@ -14,18 +14,16 @@
 #       <x>, <y>, <z> # for 3D objects
 #
 # Classes in MOT:
-#   1: 'pedestrian'
-#   2: 'person on vehicle'
-#   3: 'car'
-#   4: 'bicycle'
-#   5: 'motorbike'
-#   6: 'non motorized vehicle'
-#   7: 'static person'
-#   8: 'distractor'
-#   9: 'occluder'
-#   10: 'occluder on the ground',
-#   11: 'occluder full'
-#   12: 'reflection'
+#   1: 'chicken'
+#   2: 'deer'
+#   3: 'dolphin'
+#   4: 'duck'
+#   5: 'goose'
+#   6: 'horse'
+#   7: 'penguin'
+#   8: 'pig'
+#   9: 'rabbit'
+#   10: 'zebra'
 #
 #   USELESS classes and IGNORES classes will not be selected
 #   into the dataset for reid model training.
@@ -111,12 +109,12 @@ def main():
             else:
                 class_id = int(gt[7])
                 visibility = float(gt[8])
-            if class_id in USELESS:
-                continue
-            elif class_id in IGNORES:
-                continue
-            elif visibility < args.vis_threshold:
-                continue
+            # if class_id in USELESS:
+            #     continue
+            # elif class_id in IGNORES:
+            #     continue
+            # elif visibility < args.vis_threshold:
+            #     continue
             reid_img_folder = osp.join(reid_train_folder,
                                        f'{video_name}_{ins_id:06d}')
             if not osp.exists(reid_img_folder):
