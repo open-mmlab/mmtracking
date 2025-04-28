@@ -3,12 +3,12 @@ dotty_dict
 einops
 lap
 matplotlib
-mmcls>=0.16.0,<1.0.0
+mmcls
 motmetrics
 packaging
-pandas<=1.3.5
+pandas
 pycocotools
-scipy<=1.7.3
+scipy
 seaborn
 terminaltables
 tqdm
